@@ -103,6 +103,10 @@ class TestLoggingSetup:
         """Should work with default settings when None passed."""
         setup_logging(None)
 
+        # Verify default INFO level is applied
+        root_logger = logging.getLogger()
+        assert root_logger.level == logging.INFO
+
 
 class TestGetLogger:
     """Tests for get_logger function."""
@@ -159,20 +163,39 @@ class TestContextBinding:
         assert payload["participant_id"] == 123
         assert payload["operation"] == "test"
 
-    def test_unbind_context(self) -> None:
+    def test_unbind_context(self, capsys: pytest.CaptureFixture[str]) -> None:
         """Should unbind context variables."""
-        setup_logging(None)
+        settings = LoggingSettings(level="INFO", format="json", include_caller=False)
+        setup_logging(settings)
         clear_context()
         bind_context(key1="value1", key2="value2")
 
         unbind_context("key1", "key2")
 
-    def test_clear_context(self) -> None:
+        # Verify context is actually removed from log output
+        logger = get_logger("test.unbind")
+        logger.info("after unbind")
+
+        payload = _read_json_log(capsys)
+        assert "key1" not in payload
+        assert "key2" not in payload
+
+    def test_clear_context(self, capsys: pytest.CaptureFixture[str]) -> None:
         """Should clear all context variables."""
-        setup_logging(None)
+        settings = LoggingSettings(level="INFO", format="json", include_caller=False)
+        setup_logging(settings)
+        clear_context()
         bind_context(key1="value1", key2="value2")
 
         clear_context()
+
+        # Verify context is actually cleared from log output
+        logger = get_logger("test.clear")
+        logger.info("after clear")
+
+        payload = _read_json_log(capsys)
+        assert "key1" not in payload
+        assert "key2" not in payload
 
 
 class TestWithContextDecorator:

@@ -251,7 +251,10 @@ class APISettings(BaseSettings):
     port: int = Field(default=8000, ge=1, le=65535)
     reload: bool = Field(default=False, description="Enable hot reload (dev only)")
     workers: int = Field(default=1, ge=1, le=16)
-    cors_origins: list[str] = Field(default=["*"])
+    cors_origins: list[str] = Field(
+        default=["*"],
+        description="Allowed CORS origins (restrict in production)",
+    )
 
 
 class Settings(BaseSettings):
