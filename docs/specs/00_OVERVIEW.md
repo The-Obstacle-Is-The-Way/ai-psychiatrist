@@ -201,6 +201,28 @@ Each spec represents a **vertical slice** - a complete feature from API to stora
 - Red → Green → Refactor cycle
 - 80%+ code coverage target
 
+### Testing Philosophy: No Mock Abuse
+
+**CRITICAL**: This codebase explicitly forbids the "mock everything" anti-pattern.
+
+**Acceptable Mocking** (I/O boundaries only):
+- HTTP calls to Ollama API (mock `httpx`, not the client class)
+- File system operations for tests that shouldn't touch disk
+- Time-dependent operations (sparingly)
+
+**Forbidden Mocking**:
+- Business logic (if you mock it, your design is wrong)
+- Domain models (use real instances with test data)
+- Internal functions (test through public API)
+- Mocking to make tests pass (fix the code instead)
+
+**Test Data vs Mocks**:
+- `sample_transcript`, `sample_phq8_scores`: GOOD (real data structures)
+- `sample_ollama_response`: GOOD (real API response for parsing tests)
+- `Mock()` objects replacing real behavior: BAD unless at I/O boundary
+
+See **Spec 01: Testing Philosophy** for detailed examples and rationale.
+
 ## Success Criteria
 
 ### Functional Parity
