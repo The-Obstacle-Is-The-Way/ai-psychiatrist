@@ -1,6 +1,9 @@
 """AI Psychiatrist: LLM-based Multi-Agent System for Depression Assessment."""
 
-from importlib.metadata import version
+from importlib.metadata import PackageNotFoundError, version
 
-__version__ = version("ai-psychiatrist")
+try:
+    __version__ = version("ai-psychiatrist")
+except PackageNotFoundError:  # pragma: no cover
+    __version__ = "0.0.0"
 __all__ = ["__version__"]

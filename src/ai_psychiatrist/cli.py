@@ -4,10 +4,12 @@ from __future__ import annotations
 
 import sys
 
+import ai_psychiatrist
+
 
 def main() -> int:
     """Main entry point for the AI Psychiatrist CLI."""
-    print("AI Psychiatrist v2.0.0")
+    print(f"AI Psychiatrist v{ai_psychiatrist.__version__}")
     print("Run with --help for usage information.")
     return 0
 
