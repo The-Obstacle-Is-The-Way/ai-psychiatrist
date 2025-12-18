@@ -9,6 +9,27 @@ Create a robust transcript loading and chunking service that handles DAIC-WOZ da
 - **Section 2.1**: DAIC-WOZ dataset structure
 - **Section 2.4.2**: Transcript chunking (N_chunk=8, step=2)
 
+## As-Is Transcript Loading (Repo)
+
+There are two transcript ingestion paths in the current repo:
+
+### 1) Demo Pipeline (FastAPI)
+
+- `agents/interview_simulator.py` loads a **single fixed transcript text file**.
+- Path is controlled by `TRANSCRIPT_PATH` (env var) or defaults to `agents/transcript.txt`.
+- `server.py` always uses this loader; the API does not accept transcript text today.
+
+### 2) Research / DAIC-WOZ Scripts + Notebooks
+
+- Scripts and notebooks read DAIC-WOZ transcripts from:
+  `.../{participant_id}_P/{participant_id}_TRANSCRIPT.csv` (tab-separated)
+- They typically join to a single string as either:
+  - `"speaker : value"` (note spaces) or
+  - `"speaker: value"` (no spaces)
+- The chunking implementation used for embeddings is in:
+  - `quantitative_assessment/embedding_batch_script.py:create_sliding_chunks(...)`
+  - `quantitative_assessment/embedding_quantitative_analysis.ipynb` (same logic)
+
 ## Deliverables
 
 1. `src/ai_psychiatrist/services/transcript.py` - Transcript loading service

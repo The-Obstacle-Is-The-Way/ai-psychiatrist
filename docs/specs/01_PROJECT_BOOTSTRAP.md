@@ -4,6 +4,16 @@
 
 Establish modern Python project structure with uv, Ruff, pytest, and Makefile automation. This is the foundation for all subsequent specs.
 
+## As-Is Implementation (Repo)
+
+The current repository is **not** using `uv`/`pyproject.toml` yet. It is primarily driven by:
+
+- Conda environment file: `assets/env_reqs.yml`
+- HPC execution: `slurm/job_ollama.sh`, `slurm/job_assess.sh`
+- Local demo server: `server.py` (requires an Ollama daemon + a transcript file via `TRANSCRIPT_PATH`)
+
+This spec remains the **target bootstrap** for a production-ready rewrite, but it must document current behavior for parity audits.
+
 ## Deliverables
 
 1. `pyproject.toml` - Single source of truth for project config
@@ -263,6 +273,28 @@ clean: ## Remove build artifacts and caches
 	find . -type f -name "*.pyc" -delete
 ```
 
+## Environment Variables (As-Is + Target)
+
+### As-Is (Used by Current Repo)
+
+- `TRANSCRIPT_PATH`: Read by `agents/interview_simulator.py` to locate the transcript file for `server.py`.
+
+### HPC / SLURM (Configured in `slurm/job_ollama.sh`)
+
+These are set in the SLURM script (not in Python) and should be documented because they materially affect Ollama behavior:
+
+- `CUDA_VISIBLE_DEVICES`
+- `OLLAMA_HOST_MEMORY`
+- `OLLAMA_KEEP_ALIVE`
+- `OLLAMA_MMAP`
+- `GGML_CUDA_FORCE_CUBLAS`
+- `GGML_CUDA_FORCE_MMQ`
+- `OLLAMA_HOST`
+- `OLLAMA_FLASH_ATTENTION`
+- `OLLAMA_MODELS`
+- `OLLAMA_BACKEND`
+
+
 ### 3. Directory Structure
 
 ```bash
@@ -341,7 +373,7 @@ def sample_phq8_scores() -> dict[str, int]:
 def mock_ollama_response() -> dict:
     """Return a mock Ollama API response."""
     return {
-        "model": "gemma3:27b",
+        "model": "alibayram/medgemma:27b",  # Paper-optimal (Appendix F)
         "message": {
             "role": "assistant",
             "content": '{"PHQ8_NoInterest": {"evidence": "can\'t be bothered", "reason": "clear anhedonia", "score": 2}}'
@@ -469,36 +501,50 @@ repos:
 ### 8. Environment Template (.env.example)
 
 ```bash
-# AI Psychiatrist Configuration
+# AI Psychiatrist Configuration (Paper-Optimal)
 # Copy to .env and fill in values
 
 # ============== Required ==============
 OLLAMA_HOST=127.0.0.1
 OLLAMA_PORT=11434
 
-# LLM Models (Paper: Gemma 3 27B, Qwen 3 8B Embedding)
-MODEL_CHAT_MODEL=gemma3:27b
+# ============== LLM Models (Paper-Optimal) ==============
+# Paper baseline (Section 2.2): Gemma 3 27B for the multi-agent system
+MODEL_QUALITATIVE_MODEL=gemma3:27b
+MODEL_JUDGE_MODEL=gemma3:27b
+MODEL_META_REVIEW_MODEL=gemma3:27b
+
+# Paper Appendix F: MedGemma improves quantitative MAE (0.505 vs 0.619) but makes fewer predictions
+MODEL_QUANTITATIVE_MODEL=alibayram/medgemma:27b
+
+# Embedding model family (Section 2.2): Qwen 3 8B Embedding
+# Note: the paper does not specify quantization; Q8_0 is a recommended implementation default.
 MODEL_EMBEDDING_MODEL=dengcao/Qwen3-Embedding-8B:Q8_0
 
-# ============== Optional ==============
-# Logging
-LOG_LEVEL=INFO
-LOG_FORMAT=json  # json or console
+# Alternative (paper baseline quantitative model):
+# MODEL_QUANTITATIVE_MODEL=gemma3:27b
 
-# API Server
-API_HOST=0.0.0.0
-API_PORT=8000
+# ============== Feedback Loop (Paper Section 2.3.1) ==============
+FEEDBACK_ENABLED=true
+FEEDBACK_MAX_ITERATIONS=10
+# Paper: "score below four" triggers refinement (threshold=3 means <4)
+FEEDBACK_SCORE_THRESHOLD=3
 
-# Feature Flags
-ENABLE_FEW_SHOT=true
-ENABLE_FEEDBACK_LOOP=true
-MAX_FEEDBACK_ITERATIONS=10
-
-# Performance (Paper optimal: dim=4096, top_k=2, chunk_size=8)
-OLLAMA_TIMEOUT_SECONDS=180
+# ============== Embedding/Few-Shot (Paper Appendix D) ==============
+# Paper optimal hyperparameters:
 EMBEDDING_DIMENSION=4096
 EMBEDDING_TOP_K_REFERENCES=2
 EMBEDDING_CHUNK_SIZE=8
+EMBEDDING_CHUNK_STEP=2
+
+# ============== Server ==============
+OLLAMA_TIMEOUT_SECONDS=180
+API_HOST=0.0.0.0
+API_PORT=8000
+
+# ============== Logging ==============
+LOG_LEVEL=INFO
+LOG_FORMAT=json  # json or console
 ```
 
 ## Acceptance Criteria

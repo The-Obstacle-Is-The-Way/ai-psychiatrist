@@ -8,7 +8,33 @@ Implement centralized configuration management using Pydantic Settings and struc
 
 - **Section 2.2**: Model configuration (Gemma 3 27B, Qwen 3 8B Embedding)
 - **Section 2.3.5**: Agentic system configuration (Ollama API)
-- **Section 2.4.2**: Hyperparameters (chunk_size=8, top_k=2, dim=4096)
+- **Appendix D**: Hyperparameters (chunk_size=8, step_size=2, N_example=2, dim=4096)
+- **Appendix F**: MedGemma quantitative results (MAE 0.505; fewer predictions)
+
+## As-Is Configuration (Repo)
+
+The current repo uses **hardcoded config** spread across files:
+
+- Local demo pipeline: `server.py` + `agents/*` (defaults: `http://localhost:11434`, `llama3`, embedding model `dengcao/Qwen3-Embedding-8B:Q4_K_M`)
+- Cluster scripts: `qualitative_assessment/*.py`, `quantitative_assessment/*.py`, `meta_review/meta_review.py` (defaults: `OLLAMA_NODE=...`, models like `gemma3:27b`, `gemma3-optimized:27b`, `alibayram/medgemma:27b`)
+- SLURM runtime configuration for Ollama: `slurm/job_ollama.sh` (exports several `OLLAMA_*`, `GGML_*`, and `CUDA_VISIBLE_DEVICES`)
+
+## Target Configuration (Paper-Optimal)
+
+This spec defines **paper-optimal defaults**:
+
+| Setting | Value | Paper Reference |
+|---------|-------|-----------------|
+| Qualitative model | `gemma3:27b` | Section 2.2 |
+| Judge model | `gemma3:27b` | Section 2.2 |
+| Meta-review model | `gemma3:27b` | Section 2.2 |
+| Quantitative model | MedGemma 27B (example Ollama tag: `alibayram/medgemma:27b`) | Appendix F |
+| Embedding model family | Qwen 3 8B Embedding (example Ollama tag: `dengcao/Qwen3-Embedding-8B:Q8_0`; quantization not specified in paper) | Section 2.2 |
+| Feedback threshold | 3 (scores < 4 trigger) | Section 2.3.1 |
+| Max iterations | 10 | Section 2.3.1 |
+| top_k references | 2 | Appendix D |
+| chunk_size | 8 | Appendix D |
+| dimension | 4096 | Appendix D |
 
 ## Deliverables
 
@@ -60,21 +86,28 @@ class OllamaSettings(BaseSettings):
 
 
 class ModelSettings(BaseSettings):
-    """LLM model configuration."""
+    """LLM model configuration.
+
+    Paper baseline (Section 2.2): Gemma 3 27B for the multi-agent system.
+    Paper-validated quantitative improvement (Appendix F): MedGemma 27B achieves
+    MAE 0.505 (vs 0.619) but makes fewer predictions.
+
+    Embeddings (Section 2.2): Qwen 3 8B Embedding. The paper does not specify
+    quantization; the default tag below uses Q8_0 to match the research scripts.
+    """
 
     model_config = SettingsConfigDict(env_prefix="MODEL_")
 
-    chat_model: str = Field(
-        default="gemma3:27b",
-        description="Chat/completion model name",
+    qualitative_model: str = Field(default="gemma3:27b", description="Qualitative agent model (Paper Section 2.2)")
+    judge_model: str = Field(default="gemma3:27b", description="Judge agent model (Paper Section 2.2)")
+    meta_review_model: str = Field(default="gemma3:27b", description="Meta-review agent model (Paper Section 2.2)")
+    quantitative_model: str = Field(
+        default="alibayram/medgemma:27b",
+        description="Quantitative agent model (Paper Appendix F: MAE 0.505; fewer predictions)",
     )
     embedding_model: str = Field(
         default="dengcao/Qwen3-Embedding-8B:Q8_0",
-        description="Embedding model name (Qwen 3 8B Embedding, Q8 quantization)",
-    )
-    medgemma_model: str = Field(
-        default="alibayram/medgemma:27b",
-        description="Medical domain model (optional)",
+        description="Embedding model family (Paper Section 2.2: Qwen 3 8B Embedding; quantization not specified)",
     )
     temperature: float = Field(default=0.2, ge=0.0, le=2.0, description="Default temperature")
     temperature_judge: float = Field(default=0.0, ge=0.0, le=2.0, description="Judge agent temperature (deterministic)")
@@ -83,30 +116,34 @@ class ModelSettings(BaseSettings):
 
 
 class EmbeddingSettings(BaseSettings):
-    """Embedding and few-shot configuration."""
+    """Embedding and few-shot configuration.
+
+    Paper-optimal hyperparameters (Appendix D):
+    - chunk_size=8, step_size=2, top_k=2, dimension=4096
+    """
 
     model_config = SettingsConfigDict(env_prefix="EMBEDDING_")
 
     dimension: int = Field(
         default=4096,
-        description="Embedding dimension (paper optimal: 4096)",
+        description="Embedding dimension (Paper Appendix D: 4096 optimal)",
     )
     chunk_size: int = Field(
         default=8,
         ge=2,
         le=20,
-        description="Transcript chunk size in lines (paper optimal: 8)",
+        description="Transcript chunk size in lines (Paper Appendix D: 8 optimal)",
     )
     chunk_step: int = Field(
         default=2,
         ge=1,
-        description="Sliding window step size",
+        description="Sliding window step size (Paper: 2)",
     )
     top_k_references: int = Field(
         default=2,
         ge=1,
         le=10,
-        description="Number of reference examples (paper optimal: 2)",
+        description="Number of reference examples per item (Paper Appendix D: 2 optimal)",
     )
     min_evidence_chars: int = Field(
         default=8,
@@ -115,7 +152,13 @@ class EmbeddingSettings(BaseSettings):
 
 
 class FeedbackLoopSettings(BaseSettings):
-    """Feedback loop configuration."""
+    """Feedback loop configuration.
+
+    Paper (Section 2.3.1): "When an original evaluation score was below four,
+    the judge agent triggered an automatic feedback loop."
+
+    Paper-optimal: threshold=3 means scores <= 3 (i.e., < 4) trigger refinement.
+    """
 
     model_config = SettingsConfigDict(env_prefix="FEEDBACK_")
 
@@ -124,19 +167,19 @@ class FeedbackLoopSettings(BaseSettings):
         default=10,
         ge=1,
         le=20,
-        description="Maximum feedback iterations",
+        description="Maximum feedback iterations (Paper Section 2.3.1: 10)",
     )
     score_threshold: int = Field(
-        default=2,
+        default=3,
         ge=1,
         le=4,
-        description="Scores at or below this trigger refinement",
+        description="Scores at or below this trigger refinement (Paper: 3, meaning scores < 4 trigger)",
     )
     target_score: int = Field(
         default=4,
         ge=3,
         le=5,
-        description="Target score to achieve",
+        description="Target score (Paper: all scores >= 4 means no refinement needed)",
     )
 
 
@@ -498,11 +541,11 @@ class TestEmbeddingSettings:
     """Tests for embedding configuration."""
 
     def test_paper_optimal_defaults(self) -> None:
-        """Defaults should match paper optimal values."""
+        """Defaults should match paper-optimal values."""
         settings = EmbeddingSettings()
-        assert settings.dimension == 4096  # Paper optimal
-        assert settings.chunk_size == 8    # Paper optimal
-        assert settings.top_k_references == 2  # Paper optimal
+        assert settings.dimension == 4096       # Paper Appendix D
+        assert settings.chunk_size == 8         # Paper Appendix D
+        assert settings.top_k_references == 2   # Paper Appendix D
 
     def test_chunk_size_validation(self) -> None:
         """Should validate chunk size range."""
@@ -519,7 +562,7 @@ class TestSettings:
         """Should load settings from environment variables."""
         monkeypatch.setenv("OLLAMA_HOST", "test-host")
         monkeypatch.setenv("OLLAMA_PORT", "9999")
-        monkeypatch.setenv("MODEL_CHAT_MODEL", "test-model")
+        monkeypatch.setenv("MODEL_QUANTITATIVE_MODEL", "test-model")
 
         # Clear cache to reload settings
         get_settings.cache_clear()
@@ -527,7 +570,7 @@ class TestSettings:
 
         assert settings.ollama.host == "test-host"
         assert settings.ollama.port == 9999
-        assert settings.model.chat_model == "test-model"
+        assert settings.model.quantitative_model == "test-model"
 
     def test_nested_delimiter(self, monkeypatch: pytest.MonkeyPatch) -> None:
         """Should support nested delimiter for complex settings."""

@@ -8,7 +8,44 @@ Create a robust, testable abstraction for LLM interactions using the Strategy pa
 
 - **Section 2.2**: Gemma 3 27B for chat, Qwen 3 8B for embeddings
 - **Section 2.3.5**: Ollama API integration
-- **Appendix F**: MedGemma 27B variant
+- **Appendix F**: MedGemma 27B achieves 18% better MAE (0.505 vs 0.619)
+
+## Target Configuration (Paper-Optimal)
+
+| Use | Spec Target | Paper Reference |
+|-----|------------|-----------------|
+| Qualitative/Judge/Meta chat | `gemma3:27b` | Section 2.2 (paper baseline) |
+| Quantitative chat | MedGemma 27B (example Ollama tag: `alibayram/medgemma:27b`) | Appendix F (MAE 0.505; fewer predictions) |
+| Embeddings | Qwen 3 8B Embedding (example Ollama tag: `dengcao/Qwen3-Embedding-8B:Q8_0`; quantization not specified in paper) | Section 2.2 |
+| Quantitative fallback | `gemma3:27b` | Section 2.2 |
+
+## As-Is Ollama Usage (Repo)
+
+The current repo uses **three** Ollama endpoints, via two different client styles:
+
+### HTTP (`requests`)
+
+- `POST /api/generate` (streaming): used by `agents/qualitative_assessor_f.py`, `agents/qualitative_assessor_z.py`, `agents/quantitative_assessor_z.py`, `agents/interview_evaluator.py`
+- `POST /api/chat` (non-stream): used by `agents/quantitative_assessor_f.py`, `agents/qualitive_evaluator.py`, and most cluster scripts/notebooks
+- `POST /api/embeddings` (non-stream): used by `agents/quantitative_assessor_f.py` and `quantitative_assessment/embedding_batch_script.py`
+
+### Python SDK (`ollama.Client`)
+
+- used by `agents/meta_reviewer.py` (chat only)
+
+### As-Is Defaults (Demo Pipeline)
+
+- Host: `http://localhost:11434`
+- Chat model: `llama3`
+- Embedding model: `dengcao/Qwen3-Embedding-8B:Q4_K_M` (quantized)
+
+### As-Is Defaults (Research/Cluster Scripts)
+
+- Host is typically set via `OLLAMA_NODE = "arctrd..."`
+- Models commonly used:
+  - `gemma3:27b` / `gemma3-optimized:27b` (chat)
+  - `dengcao/Qwen3-Embedding-8B:Q8_0` (embeddings)
+  - `alibayram/medgemma:27b` (MedGemma variant)
 
 ## Deliverables
 
@@ -164,7 +201,7 @@ from ai_psychiatrist.infrastructure.llm.protocols import (
 from ai_psychiatrist.infrastructure.logging import get_logger
 
 if TYPE_CHECKING:
-    from ai_psychiatrist.config import OllamaSettings, ModelSettings
+    from ai_psychiatrist.config import OllamaSettings
 
 logger = get_logger(__name__)
 
@@ -183,24 +220,16 @@ class OllamaClient:
     def __init__(
         self,
         ollama_settings: OllamaSettings,
-        model_settings: ModelSettings,
     ) -> None:
         """Initialize Ollama client.
 
         Args:
             ollama_settings: Ollama server configuration.
-            model_settings: Model configuration.
         """
         self._base_url = ollama_settings.base_url
         self._chat_url = ollama_settings.chat_url
         self._embeddings_url = ollama_settings.embeddings_url
         self._default_timeout = ollama_settings.timeout_seconds
-
-        self._chat_model = model_settings.chat_model
-        self._embedding_model = model_settings.embedding_model
-        self._temperature = model_settings.temperature
-        self._top_k = model_settings.top_k
-        self._top_p = model_settings.top_p
 
         self._client = httpx.AsyncClient(timeout=httpx.Timeout(self._default_timeout))
 
@@ -247,7 +276,7 @@ class OllamaClient:
             LLMError: If request fails.
         """
         payload = {
-            "model": request.model or self._chat_model,
+            "model": request.model,
             "messages": [
                 {"role": msg.role, "content": msg.content}
                 for msg in request.messages
@@ -323,7 +352,7 @@ class OllamaClient:
             LLMError: If request fails.
         """
         payload = {
-            "model": request.model or self._embedding_model,
+            "model": request.model,
             "prompt": request.text,
         }
 
@@ -382,16 +411,20 @@ class OllamaClient:
         self,
         user_prompt: str,
         system_prompt: str = "",
-        model: str | None = None,
-        temperature: float | None = None,
+        model: str = "gemma3:27b",
+        temperature: float = 0.2,
+        top_k: int = 20,
+        top_p: float = 0.8,
     ) -> str:
         """Simple chat completion with just user/system prompts.
 
         Args:
             user_prompt: User message content.
             system_prompt: Optional system message.
-            model: Model to use (defaults to configured chat model).
-            temperature: Override temperature (e.g., 0.0 for Judge agent).
+            model: Model to use.
+            temperature: Sampling temperature (e.g., 0.0 for Judge agent).
+            top_k: top-k sampling parameter.
+            top_p: nucleus sampling parameter.
 
         Returns:
             Generated response content.
@@ -403,10 +436,10 @@ class OllamaClient:
 
         request = ChatRequest(
             messages=messages,
-            model=model or self._chat_model,
-            temperature=temperature if temperature is not None else self._temperature,
-            top_k=self._top_k,
-            top_p=self._top_p,
+            model=model,
+            temperature=temperature,
+            top_k=top_k,
+            top_p=top_p,
         )
         response = await self.chat(request)
         return response.content
@@ -414,14 +447,14 @@ class OllamaClient:
     async def simple_embed(
         self,
         text: str,
-        model: str | None = None,
+        model: str = "dengcao/Qwen3-Embedding-8B:Q8_0",
         dimension: int | None = None,
     ) -> tuple[float, ...]:
         """Simple embedding generation.
 
         Args:
             text: Text to embed.
-            model: Model to use (defaults to configured embedding model).
+            model: Model to use.
             dimension: Optional dimension truncation.
 
         Returns:
@@ -429,7 +462,7 @@ class OllamaClient:
         """
         request = EmbeddingRequest(
             text=text,
-            model=model or self._embedding_model,
+            model=model,
             dimension=dimension,
         )
         response = await self.embed(request)

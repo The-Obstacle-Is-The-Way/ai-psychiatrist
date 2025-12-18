@@ -9,6 +9,27 @@ Implement comprehensive observability infrastructure including metrics, distribu
 - **Section 2.3.5**: Performance characteristics (~1 minute on M3 Pro)
 - **Section 3**: Experimental results requiring metric tracking
 
+## As-Is Observability (Repo)
+
+- No structured logging (most scripts use `print`)
+- No metrics/tracing/health endpoints beyond what FastAPI provides by default
+- One notable exception: `agents/quantitative_assessor_f.py` has a `VERBOSE` flag and prints timestamped `[STEP]`, `[CHAT]`, and `[EMB]` logs, including the “exact” user prompt for chat calls.
+- The repo contains evaluation artifacts in `analysis_output/` and plotting code in notebooks, but those are offline—not runtime observability.
+
+## As-Is Validation Artifacts (`analysis_output/`)
+
+These files are used by notebooks and are useful for validating spec parity:
+
+- `analysis_output/quan_gemma_zero_shot.jsonl`: JSONL of per-item predictions
+  - Top-level: `participant_id`, `timestamp`, and `PHQ8_*` keys
+  - Each `PHQ8_*` value: `{ "evidence": str, "reason": str, "score": int | "N/A" }`
+- `analysis_output/quan_medgemma_few_shot.jsonl` (and similar few-shot runs): JSONL with additional retrieval metadata
+  - Some items include fields like `cosine_similarity` and lists like `reference_evidence_scores` / `reference_evidence_total_scores`
+- `analysis_output/qual_gemma.csv`: qualitative outputs
+  - Columns: `participant_id`, `dataset_type`, `qualitative_assessment` (often contains fenced ```xml blocks)
+- `analysis_output/metareview_gemma_few_shot.csv`: meta-review outputs
+  - Columns: `participant_id`, `response`, `severity`, `explanation`
+
 ## Deliverables
 
 1. `src/ai_psychiatrist/infrastructure/metrics.py` - Prometheus metrics

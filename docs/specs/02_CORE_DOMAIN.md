@@ -10,6 +10,19 @@ Define the core domain entities, value objects, and business rules that form the
 - **Section 2.3**: Assessment outputs and severity categories
 - **Table 1**: Performance metrics definitions
 
+## As-Is Domain Representation (Repo)
+
+The current repo does **not** yet implement a dedicated domain layer under `src/ai_psychiatrist/`.
+Instead, domain concepts appear as plain dicts/strings in the agents and scripts:
+
+- **PHQ-8 item keys (as-is):** `PHQ8_NoInterest`, `PHQ8_Depressed`, `PHQ8_Sleep`, `PHQ8_Tired`, `PHQ8_Appetite`, `PHQ8_Failure`, `PHQ8_Concentrating`, `PHQ8_Moving` (see `agents/quantitative_assessor_f.py`).
+- **Item score type (as-is):** `int` 0–3 or the string `"N/A"` (multiple agents/scripts).
+- **Quantitative severity (as-is):** computed by `agents/quantitative_assessor_f.py::_compute_total_and_severity()` and returned as a string in `result["_severity"]`:
+  `minimal`, `mild`, `moderate`, `mod_severe`, `severe`.
+- **Meta-review severity output (as-is):** model returns `<severity>` as an integer 0–4 in XML (see `agents/meta_reviewer.py`).
+
+This spec defines the **target** typed domain layer while preserving these as-is conventions for parity audits.
+
 ## Deliverables
 
 1. `src/ai_psychiatrist/domain/entities.py` - Core business entities

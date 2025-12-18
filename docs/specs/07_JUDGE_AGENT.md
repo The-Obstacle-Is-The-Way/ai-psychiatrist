@@ -10,6 +10,29 @@ Implement the judge agent that evaluates qualitative assessments and the iterati
 - **Appendix B**: Metric definitions (specificity, completeness, coherence, accuracy)
 - **Figure 2**: Evaluation scores before/after feedback loop
 
+## As-Is Implementation (Repo)
+
+### Demo Judge (Used by `server.py`)
+
+- File: `agents/qualitive_evaluator.py`
+- Class: `QualitativeEvaluatorAgent`
+- Endpoint: `POST /api/chat` (non-stream)
+- Default model: `"llama3"`
+- Options: `{"temperature": 0, "top_k": 20, "top_p": 0.9}`
+- Behavior: evaluates metrics **once** and returns a dict of `{metric: score}`; no iterative loop in `server.py`.
+
+### Research Feedback Loop Script (Not Wired Into `server.py`)
+
+- File: `qualitative_assessment/feedback_loop.py`
+- Trigger condition: any metric score `<= 2` (not paper’s `< 4`)
+- Max iterations: `10`
+- Output format expectations differ (it requests `Score:` then `Explanation:` and enforces integer-only scores)
+
+### Paper vs Repo Note
+
+The paper’s feedback loop trigger is “original evaluation score **below four**” with a max of **10** iterations.
+The as-is demo server does not implement this loop; only the standalone cluster script implements a loop (with a different threshold).
+
 ## Deliverables
 
 1. `src/ai_psychiatrist/agents/judge.py` - Judge evaluation agent
@@ -18,6 +41,104 @@ Implement the judge agent that evaluates qualitative assessments and the iterati
 4. `tests/integration/test_feedback_loop.py` - Integration tests
 
 ## Implementation
+
+### As-Is Metric Prompts (Verbatim)
+
+From `agents/qualitive_evaluator.py`:
+
+```python
+coherence_prompt = f"""Evaluate the following qualitative assessment output for COHERENCE only. Consider the qualitative assessment (qualitative_assessment) of the transcript (transcript) and compare qualitative_assessment to the provided transcript.
+            
+            Coherence (1–5): Is the response logically consistent? Mistakes are logically inconsistent statements or contradictions within the assessment.
+            
+            Score from 1-5 solely based on the following criteria:
+            
+             - score of 5 : 0 mistakes
+             - score of 4 : 1-2 mistakes
+             - score of 3 : 3-4 mistakes
+             - score of 2 : 5-6 mistakes
+             - score of 1 : 7 or more mistakes
+            
+            Format your response as:
+            Explanation: [Your rating, as text]
+            Score: [your score, as a number between 1 and 5]
+            
+            ---
+            Here is the transcript:
+            {transcript}
+            
+            Here is the assessment based on the transcript:
+            {qualitative_output}
+            ---"""
+
+completeness_prompt = f"""Evaluate the following qualitative assessment output for COMPLETENESS only. Compare qualitative_assessment to the provided transcript. Consider the qualitative assessment (qualitative_assessment) of the transcript (transcript) and compare qualitative_assessment to the provided transcript.
+
+        Completeness (1–5): Does the assessment cover all relevant symptoms, severities, duration/frequency? Mistakes are missed PHQ-8 symptoms, or duration/frequency details.
+
+        Score from 1-5 solely based on the following criteria: 
+         - score of 5 : 0 mistakes
+         - score of 4 : 1-2 mistakes
+         - score of 3 : 3-4 mistakes
+         - score of 2 : 5-6 mistakes
+         - score of 1 : 7 or more mistakes
+
+        Format your response as:
+        Explanation: [Your rating, as text]
+        Score: [your score, as a number between 1 and 5]
+
+        Here is the transcript: 
+        {transcript}
+
+        Here is the assessment based on the transcript: 
+        {qualitative_output}
+        ---"""
+
+specificity_prompt = f"""Evaluate the following qualitative assessment output for SPECIFICITY only. Consider the qualitative assessment (qualitative_assessment) of the transcript (transcript) and compare qualitative_assessment to the provided transcript.
+
+        Specificity (1–5): Is the assessment specific? Mistakes include using vague/generic statements like 'the patient seems depressed'.
+
+        Score from 1-5 solely based on the following criteria: 
+         - score of 5 : 0 mistakes
+         - score of 4 : 1-2 mistakes
+         - score of 3 : 3-4 mistakes
+         - score of 2 : 5-6 mistakes
+         - score of 1 : 7 or more mistakes
+
+        Format your response as:
+        Explanation: [Your rating, as text]
+        Score: [your score, as a number between 1 and 5]
+
+        ---
+        Here is the transcript: 
+        {transcript}
+
+        Here is the assessment based on the transcript: 
+        {qualitative_output}
+        ---"""
+
+accuracy_prompt = f"""Evaluate the following qualitative assessment output for ACCURACY only. Consider the qualitative assessment (qualitative_assessment) of the transcript (transcript) and compare qualitative_assessment to the provided transcript.
+
+        Accuracy (1–5): Are the signs/symptoms aligned with DSM-5 or PHQ-8? Mistakes are incorrect symptoms or incorrect duration/frequecy. 
+
+        Score from 1-5 solely based on the following criteria: 
+         - score of 5 : 0 mistakes
+         - score of 4 : 1-2 mistakes
+         - score of 3 : 3-4 mistakes
+         - score of 2 : 5-6 mistakes
+         - score of 1 : 7 or more mistakes
+
+        Format your response as:
+        Explanation: [Your rating, as text]
+        Score: [your score, as a number between 1 and 5]
+
+        ---
+        Here is the transcript: 
+        {transcript}
+
+        Here is the assessment based on the transcript: 
+        {qualitative_output}
+        ---"""
+```
 
 ### 1. Judge Agent (agents/judge.py)
 
@@ -538,10 +659,12 @@ Score: 2
 
 - [ ] Evaluates all 4 metrics (coherence, completeness, specificity, accuracy)
 - [ ] Scores extracted correctly from LLM responses (1-5 scale)
-- [ ] Low scores (<=2) trigger feedback loop
-- [ ] Feedback loop respects max iterations (default: 10)
+- [ ] Feedback loop triggered by configurable threshold:
+  - **As-is code**: `score <= 2` triggers (default for parity)
+  - **Paper behavior**: `score < 4` triggers (set `FEEDBACK_SCORE_THRESHOLD=3`)
+- [ ] Feedback loop respects max iterations (default: 10, per paper)
 - [ ] Assessment improves through iterations
-- [ ] Can be disabled via configuration
+- [ ] Can be disabled via configuration (`FEEDBACK_ENABLED=false`)
 - [ ] History preserved for analysis
 - [ ] Comprehensive logging throughout
 
@@ -554,5 +677,3 @@ Score: 2
 ## Specs That Depend on This
 
 - **Spec 11**: Full Pipeline (uses feedback loop)
-
-```

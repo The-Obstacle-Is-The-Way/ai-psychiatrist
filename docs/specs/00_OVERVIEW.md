@@ -17,21 +17,80 @@ This document series outlines a comprehensive plan to transform the AI-Psychiatr
 ## Current State Analysis
 
 ### What Exists (Research Code)
-- 13 Python modules (~3,860 LOC)
-- FastAPI server with single endpoint
-- Four agent implementations (qual/quant assessors, judge, meta-reviewer)
-- Embedding-based few-shot retrieval system
-- Iterative feedback loop for quality improvement
-- SLURM job scripts for HPC execution
-- Conda environment configuration
+- 15 Python files (~4,045 LOC; excluding `_literature/.venv`)
+- FastAPI demo server with a single endpoint (`server.py`)
+- Agent implementations under `agents/` (qualitative, quantitative, judge, meta-review)
+- Research/cluster scripts under `qualitative_assessment/`, `quantitative_assessment/`, `meta_review/`
+- Notebooks under `quantitative_assessment/` and `visualization/` containing key evaluation/plotting logic
+- Embedding-based few-shot retrieval system (pickle-based reference store)
+- SLURM job scripts for HPC execution (`slurm/`)
+- Conda environment configuration (`assets/env_reqs.yml`)
+
+### Codebase → Spec Coverage Map (No Orphaned Files)
+
+This spec series covers both:
+1) **As-is repo code** (current behavior and prompts), and
+2) **Target refactor** (planned `src/ai_psychiatrist/` architecture).
+
+| Codebase file | Purpose | Covered by spec |
+|---|---|---|
+| `server.py` | FastAPI orchestration endpoint | Spec 11 |
+| `agents/interview_simulator.py` | Fixed transcript loader (`TRANSCRIPT_PATH`) | Spec 05 |
+| `agents/qualitative_assessor_f.py` / `agents/qualitative_assessor_z.py` | Qualitative assessor prompts (F/Z variants) | Spec 06 |
+| `agents/qualitive_evaluator.py` | Judge/evaluator (4 metrics) | Spec 07 |
+| `agents/quantitative_assessor_f.py` / `agents/quantitative_assessor_z.py` | Quantitative scoring (few/zero-shot) | Spec 09 |
+| `agents/meta_reviewer.py` | Meta-review prompt + severity output | Spec 10 |
+| `agents/interview_evaluator.py` | Conversation quality evaluator (non-paper) | Spec 11 (as-is extras) |
+| `qualitative_assessment/qual_assessment.py` | Cluster script for qualitative runs (Gemma 3 27B) | Spec 06 (as-is research) |
+| `qualitative_assessment/feedback_loop.py` | Cluster script feedback loop (<=2 threshold, 10 iters) | Spec 07 (as-is research) |
+| `quantitative_assessment/quantitative_analysis.py` | Cluster script zero-shot quantitative analysis | Spec 09 (as-is research) |
+| `quantitative_assessment/embedding_batch_script.py` | Cluster script + sweeps for embeddings few-shot runs | Spec 08/09 (as-is research) |
+| `quantitative_assessment/basic_quantitative_analysis.ipynb` | Zero-shot notebook analysis | Spec 09 (as-is research) |
+| `quantitative_assessment/embedding_quantitative_analysis.ipynb` | Few-shot notebook (splits, t-SNE, retrieval stats) | Spec 08/09 (as-is research) |
+| `visualization/qual_boxplot.ipynb` | Qual judge boxplots + mean/SD | Spec 07 (as-is research) |
+| `visualization/quan_visualization.ipynb` | Quant MAE/confusion + N/A rates + t-SNE | Spec 08/09 (as-is research) |
+| `visualization/meta_review_heatmap.ipynb` | Severity/diagnosis confusion matrices + metrics | Spec 10 (as-is research) |
+| `analysis_output/*` | Example outputs (CSV/JSONL) | Spec 11/12 (as-is validation artifacts) |
+| `slurm/job_ollama.sh` / `slurm/job_assess.sh` | HPC deployment scripts | Spec 01/04 |
+| `assets/env_reqs.yml` / `assets/ollama_example.py` | Conda env + Ollama usage example | Spec 01/04 |
+| `assets/overview.png` | System overview image (non-code artifact) | Spec 00 |
+
+### Paper → Spec Traceability Map (All Figures + Appendices)
+
+This table ensures every paper figure/image extracted under `_literature/markdown/ai_psychiatrist/` is explicitly owned by one or more specs.
+
+| Paper element | Evidence (repo) | What it establishes | Covered by spec(s) |
+|---|---|---|---|
+| Figure 1: Multi-agent system overview | `_literature/markdown/ai_psychiatrist/_page_2_Figure_1.jpeg` | Four-agent orchestration + human review loop | Spec 11 (pipeline), Spec 06/07/09/10 (agents) |
+| Figure 2: Qual scores pre/post feedback | `_literature/markdown/ai_psychiatrist/_page_5_Figure_1.jpeg` | Feedback loop improves judge metrics | Spec 07 |
+| Figure 3: Human vs LLM judge scores | `_literature/markdown/ai_psychiatrist/_page_5_Figure_3.jpeg` | Judge rubric is meaningful vs human | Spec 07 |
+| Figure 4: PHQ-8 confusion matrices (few-shot) | `_literature/markdown/ai_psychiatrist/_page_6_Figure_1.jpeg` | Item-wise quantitative performance + “N/A” availability | Spec 09 (agent), Spec 12 (validation artifacts) |
+| Figure 5: Few-shot vs zero-shot bar chart | `_literature/markdown/ai_psychiatrist/_page_6_Figure_7.jpeg` | Few-shot improves MAE vs zero-shot | Spec 09 |
+| Figure 6: Severity confusion matrices | `_literature/markdown/ai_psychiatrist/_page_7_Figure_1.jpeg` | Meta-review severity performance + comparisons | Spec 10 |
+| Table 1: Severity metrics | `_literature/markdown/ai_psychiatrist/ai_psychiatrist.md` | Accuracy/BA/P/R/F1 targets | Spec 10 |
+| Figure A2: Chunk size × examples sweep | `_literature/markdown/ai_psychiatrist/_page_15_Figure_8.jpeg` | Hyperparameter optimization (chunk_size, N_example) | Spec 08/09 |
+| Figure A3: Embedding dimension sweep | `_literature/markdown/ai_psychiatrist/_page_15_Figure_10.jpeg` | Dimension selection (4096 optimal) | Spec 08 |
+| Figure A4: t-SNE embedding clusters | `_literature/markdown/ai_psychiatrist/_page_16_Figure_1.jpeg` | Retrieval embedding space sanity check | Spec 08 |
+| Figure A5: Retrieval error histograms | `_literature/markdown/ai_psychiatrist/_page_16_Figure_2.jpeg` + `_literature/markdown/ai_psychiatrist/_page_16_Figure_3.jpeg` | Retrieval agreement statistics; symptom gaps (e.g., appetite) | Spec 08/09 |
+| Figure A6: MedGemma confusion matrices | `_literature/markdown/ai_psychiatrist/_page_17_Figure_1.jpeg` | MedGemma quantitative performance (MAE 0.505) | Spec 09 |
+| Figure A7: MedGemma few vs zero bar chart | `_literature/markdown/ai_psychiatrist/_page_17_Figure_3.jpeg` | MedGemma few-shot vs zero-shot comparison | Spec 09 |
+
+| Paper appendix | Evidence (paper markdown) | What it establishes | Covered by spec(s) |
+|---|---|---|---|
+| Appendix B | `_literature/markdown/ai_psychiatrist/ai_psychiatrist.md` | Judge metric definitions + mistake→score mapping | Spec 07 |
+| Appendix C | `_literature/markdown/ai_psychiatrist/ai_psychiatrist.md` | Split strategy + rare-score handling | Spec 05 |
+| Appendix D | `_literature/markdown/ai_psychiatrist/ai_psychiatrist.md` | Hyperparameter search space + chosen optima | Spec 03/08/09 |
+| Appendix E | `_literature/markdown/ai_psychiatrist/ai_psychiatrist.md` | Retrieval statistics + appetite evidence failure case | Spec 08/09 |
+| Appendix F | `_literature/markdown/ai_psychiatrist/ai_psychiatrist.md` | MedGemma quantitative improvement + tradeoffs | Spec 09 |
+| Appendix G | `_literature/markdown/ai_psychiatrist/ai_psychiatrist.md` | Single-prompt experiment failure mode | Spec 11 |
 
 ### Critical Gaps
 
 | Gap | Impact | Priority |
 |-----|--------|----------|
 | No tests | Cannot verify correctness | P0 |
-| No error handling | Production crashes | P0 |
-| No logging/observability | Cannot debug issues | P0 |
+| Inconsistent error handling | Some paths crash; others silently degrade | P0 |
+| No structured logging/observability | Difficult to debug and measure | P0 |
 | Hardcoded paths/configs | Cannot deploy | P0 |
 | No type safety | Runtime errors | P1 |
 | No dependency injection | Untestable | P1 |

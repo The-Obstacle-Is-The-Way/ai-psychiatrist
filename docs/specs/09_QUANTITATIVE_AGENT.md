@@ -9,6 +9,39 @@ Implement the quantitative assessment agent that predicts PHQ-8 scores using emb
 - **Section 2.3.2**: Quantitative Assessment
 - **Section 2.4.2**: Few-shot prompting workflow
 - **Figure 4-5**: Prediction performance comparison
+- **Appendix F**: MedGemma achieves 18% better MAE
+
+## Target Configuration (Paper-Optimal)
+
+| Parameter | Value | Paper Reference |
+|-----------|-------|-----------------|
+| Chat model | MedGemma 27B (example Ollama tag: `alibayram/medgemma:27b`) | Appendix F (MAE 0.505; fewer predictions) |
+| Mode | Few-shot | Section 2.4.2 |
+| top_k references | 2 per item | Appendix D |
+| Temperature | 0.2 | As-is code |
+
+**Expected Performance (Paper):**
+- Few-shot MAE: 0.505 (MedGemma) / 0.619 (Gemma 3)
+- Zero-shot MAE: 0.796
+
+## As-Is Implementation (Repo)
+
+### Demo Agents (Used by `server.py`)
+
+- Few-shot: `agents/quantitative_assessor_f.py:QuantitativeAssessor`
+  - Chat endpoint: `POST /api/chat` with `options={"temperature": 0.2, "top_k": 20, "top_p": 0.8}`
+  - Embedding endpoint: `POST /api/embeddings` (L2-normalized; optional truncation via `dim`)
+  - Default models: `chat_model="llama3"`, `emb_model="dengcao/Qwen3-Embedding-8B:Q4_K_M"`
+  - Default `top_k` references: `3` (paper optimal: `2`)
+  - Output schema: dict keyed by `PHQ8_*` with `{"evidence","reason","score"}` plus `_total` and `_severity`
+- Zero-shot: `agents/quantitative_assessor_z.py:QuantitativeAssessorZ`
+  - Generate endpoint: `POST /api/generate` (streaming)
+  - Output schema: raw model text (expects `<answer>{...}</answer>` JSON, but not validated in code)
+
+### Research Implementations (Scripts/Notebooks)
+
+- `quantitative_assessment/quantitative_analysis.py` and `quantitative_assessment/basic_quantitative_analysis.ipynb` implement zero-shot scoring + evaluation metrics and write `results.csv` + `results_detailed.jsonl`.
+- `quantitative_assessment/embedding_batch_script.py` and `quantitative_assessment/embedding_quantitative_analysis.ipynb` implement few-shot retrieval runs, hyperparameter sweeps, and t-SNE/retrieval diagnostics.
 
 ## Deliverables
 

@@ -9,6 +9,30 @@ Implement the complete assessment pipeline as a FastAPI application, orchestrati
 - **Section 2.3.5**: Agentic System (~1 minute on M3 Pro)
 - **Figure 1**: System overview
 
+## As-Is Implementation (Repo)
+
+### API Surface (Current `server.py`)
+
+- App: `FastAPI(title="AI Psychiatrist Pipeline", version="1.2.0")`
+- Endpoint: `POST /full_pipeline`
+- Request body: `{ "mode": 0 | 1 }`
+  - `0` = quantitative **zero-shot** (`agents/quantitative_assessor_z.py`)
+  - `1` = quantitative **few-shot** (`agents/quantitative_assessor_f.py`)
+- Transcript source: always loaded from `agents/interview_simulator.py` (file path via `TRANSCRIPT_PATH` or default `agents/transcript.txt`)
+- Pipeline steps (as implemented):
+  1. Load transcript text from disk
+  2. Quantitative assess (Z or F)
+  3. Qualitative assess (`agents/qualitative_assessor_f.py`)
+  4. Qualitative evaluation (`agents/qualitive_evaluator.py`)
+  5. Meta review (`agents/meta_reviewer.py`)
+
+### Known As-Is Issues (Affect Parity)
+
+- **Missing inputs in repo:** default transcript path `agents/transcript.txt` is not committed; few-shot defaults require pickle/CSV files not committed (see `agents/quantitative_assessor_f.py` constructor defaults).
+- **Type mismatch into meta reviewer:** few-shot returns a dict but `agents/meta_reviewer.py` expects a string; it is interpolated via Python `str(dict)` in the prompt.
+- **Naming mismatch in response:** the returned key `quantitative_evaluation` is actually the qualitative evaluation (judge) output.
+- `InterviewEvaluatorAgent` is instantiated but not used in the endpoint.
+
 ## Deliverables
 
 1. `src/ai_psychiatrist/api/main.py` - FastAPI application

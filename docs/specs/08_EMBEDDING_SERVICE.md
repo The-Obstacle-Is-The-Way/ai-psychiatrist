@@ -10,12 +10,54 @@ Implement the embedding-based similarity search service for few-shot reference r
 - **Appendix D**: Optimal hyperparameters (chunk_size=8, N_example=2, dim=4096)
 - **Appendix E**: Retrieval statistics and t-SNE visualization
 
+## Target Configuration (Paper-Optimal)
+
+| Parameter | Value | Paper Reference |
+|-----------|-------|-----------------|
+| Embedding model family | Qwen 3 8B Embedding (example Ollama tag: `dengcao/Qwen3-Embedding-8B:Q8_0`; quantization not specified in paper) | Section 2.2 |
+| Dimension | 4096 | Appendix D |
+| Chunk size | 8 lines | Appendix D |
+| Step size | 2 lines | Appendix D |
+| top_k references | 2 per item | Appendix D |
+
+## As-Is Implementation (Repo)
+
+The current repo’s few-shot retrieval is implemented inside the quantitative agent (not as a standalone service):
+
+- File: `agents/quantitative_assessor_f.py`
+- Reference store: a pickle of `{participant_id: [(raw_text, embedding_vec), ...]}` loaded from
+  `pickle_path="agents/chunk_8_step_2_participant_embedded_transcripts.pkl"` (note: this file is not checked into the repo)
+- Embedding endpoint: `POST /api/embeddings`
+- Similarity: cosine similarity (`sklearn.metrics.pairwise.cosine_similarity`)
+- Default demo `top_k`: **3** (paper optimal: **2**)
+
+### As-Is Reference Formatting (Verbatim)
+
+The reference bundle inserted into the scoring prompt is formatted with a pseudo-tag that is **not valid XML** (opening and “closing” markers are both `<Reference Examples>`):
+
+```python
+# agents/quantitative_assessor_f.py
+if len(text) < min_chars:
+    return "<Reference Examples>\nNo valid evidence found\n<Reference Examples>", []
+
+...
+lines.append(f"({item_key} Score: {val})\n{h['raw_text']}")
+
+...
+block = "<Reference Examples>\n\n" + "\n\n".join(lines) + "\n\n<Reference Examples>"
+return block, sims
+```
+
 ## Key Technical Details
 
-### MRL (Matryoshka Representation Learning) Support
-The Qwen3-Embedding model supports Matryoshka Representation Learning, allowing dimension
-truncation without re-training. This enables using smaller dimensions (e.g., 4096) instead
-of the full embedding dimension for efficiency while maintaining quality.
+### Dimension Truncation (Repo Behavior)
+
+Both the demo quantitative agent and the research embedding scripts support **dimension truncation** by slicing the embedding vector to `dim` and then L2-normalizing:
+
+- `agents/quantitative_assessor_f.py:ollama_embed(..., dim=...)`
+- `quantitative_assessment/embedding_batch_script.py:get_embedding(..., dim=...)`
+
+The paper evaluated multiple dimensions (64/256/1024/4096) and selected 4096 as optimal (Appendix D).
 
 ### Embedding Processing Pipeline
 1. Generate raw embedding from LLM
