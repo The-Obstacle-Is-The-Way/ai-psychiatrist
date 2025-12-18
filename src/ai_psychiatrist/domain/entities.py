@@ -184,17 +184,26 @@ class QualitativeAssessment:
     risk_factors: str
     """Risk factors identified (stressors, isolation, etc.)."""
 
+    participant_id: int
+    """Identifier of the assessed participant."""
+
     supporting_quotes: list[str] = field(default_factory=list)
     """Direct quotes from transcript supporting the assessment."""
-
-    participant_id: int = 0
-    """Identifier of the assessed participant."""
 
     created_at: datetime = field(default_factory=lambda: datetime.now(UTC))
     """Timestamp when the assessment was created."""
 
     id: UUID = field(default_factory=uuid4)
     """Unique identifier for this assessment."""
+
+    def __post_init__(self) -> None:
+        """Validate participant_id is positive.
+
+        Raises:
+            ValueError: If participant_id is non-positive.
+        """
+        if self.participant_id <= 0:
+            raise ValueError("Participant ID must be positive")
 
     @property
     def full_text(self) -> str:

@@ -206,6 +206,28 @@ class TestItemAssessment:
         )
         assert assessment.score is None
 
+    @pytest.mark.parametrize("valid_score", [0, 1, 2, 3])
+    def test_valid_scores_accepted(self, valid_score: int) -> None:
+        """PHQ-8 scores 0-3 should be accepted."""
+        assessment = ItemAssessment(
+            item=PHQ8Item.SLEEP,
+            evidence="test",
+            reason="test",
+            score=valid_score,
+        )
+        assert assessment.score == valid_score
+
+    @pytest.mark.parametrize("invalid_score", [-1, 4, 5, 100, -100])
+    def test_invalid_scores_rejected(self, invalid_score: int) -> None:
+        """Scores outside 0-3 should be rejected."""
+        with pytest.raises(ValueError, match="Score must be 0-3"):
+            ItemAssessment(
+                item=PHQ8Item.SLEEP,
+                evidence="test",
+                reason="test",
+                score=invalid_score,
+            )
+
     def test_is_available_with_score(self) -> None:
         """is_available should be True when score is not None."""
         assessment = ItemAssessment(

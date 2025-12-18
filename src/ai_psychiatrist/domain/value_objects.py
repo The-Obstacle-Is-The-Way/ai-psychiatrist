@@ -153,6 +153,15 @@ class ItemAssessment:
     score: int | None
     """Score (0-3) or None for N/A (insufficient evidence)."""
 
+    def __post_init__(self) -> None:
+        """Validate score is within PHQ-8 range.
+
+        Raises:
+            ValueError: If score is not None and not in 0-3 range.
+        """
+        if self.score is not None and not 0 <= self.score <= 3:
+            raise ValueError(f"Score must be 0-3 or None, got {self.score}")
+
     @property
     def is_available(self) -> bool:
         """Check if score is available (not N/A).

@@ -276,6 +276,19 @@ class TestQualitativeAssessment:
         assert assessment.participant_id == 123
         assert isinstance(assessment.id, UUID)
 
+    @pytest.mark.parametrize("invalid_id", [0, -1, -100])
+    def test_reject_non_positive_participant_id(self, invalid_id: int) -> None:
+        """Should reject participant_id <= 0."""
+        with pytest.raises(ValueError, match="must be positive"):
+            QualitativeAssessment(
+                overall="test",
+                phq8_symptoms="test",
+                social_factors="test",
+                biological_factors="test",
+                risk_factors="test",
+                participant_id=invalid_id,
+            )
+
     def test_supporting_quotes_default_empty(self) -> None:
         """supporting_quotes should default to empty list."""
         assessment = QualitativeAssessment(
@@ -284,6 +297,7 @@ class TestQualitativeAssessment:
             social_factors="test",
             biological_factors="test",
             risk_factors="test",
+            participant_id=1,
         )
         assert assessment.supporting_quotes == []
 
@@ -296,6 +310,7 @@ class TestQualitativeAssessment:
             social_factors="test",
             biological_factors="test",
             risk_factors="test",
+            participant_id=1,
             supporting_quotes=quotes,
         )
         assert assessment.supporting_quotes == quotes
@@ -308,6 +323,7 @@ class TestQualitativeAssessment:
             social_factors="Social factors",
             biological_factors="Biological factors",
             risk_factors="Risk factors",
+            participant_id=1,
         )
         full_text = assessment.full_text
         assert "Overall Assessment:" in full_text
