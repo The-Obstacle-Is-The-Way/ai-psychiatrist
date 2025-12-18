@@ -5,6 +5,8 @@ from pathlib import Path
 
 import pytest
 
+import ai_psychiatrist
+
 
 class TestProjectStructure:
     """Test project structure is correct."""
@@ -35,8 +37,6 @@ class TestImports:
 
     def test_import_package(self) -> None:
         """Package should be importable."""
-        import ai_psychiatrist
-
         assert ai_psychiatrist.__version__ == "2.0.0"
 
 

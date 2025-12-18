@@ -19,7 +19,7 @@ This codebase follows a strict testing philosophy to avoid the "mock everything"
 Only mock at **external I/O boundaries** that would make tests slow, flaky, or require external services:
 - HTTP calls to Ollama API (mock the HTTP layer, not the client logic)
 - File system operations for tests that shouldn't touch disk
-- Time-dependent operations (use `freezegun` sparingly)
+- Time-dependent operations (sparingly; prefer injecting clocks)
 
 ### When Mocking is FORBIDDEN
 - **Never mock business logic** - if you need to mock it, your design is wrong
@@ -47,20 +47,22 @@ async def test_ollama_client_parses_response(mock_httpx_client):
     assert result.content == "..."  # Test real parsing logic
 
 # BAD: Mocking the client itself
-def test_bad_mock_everything(mocker):
-    mock_client = mocker.Mock()  # NEVER DO THIS
+from unittest import mock
+
+def test_bad_mock_everything() -> None:
+    mock_client = mock.Mock()  # NEVER DO THIS
     mock_client.chat.return_value = "whatever"  # Tests nothing real
 ```
 
 ## As-Is Implementation (Repo)
 
-The current repository is **not** using `uv`/`pyproject.toml` yet. It is primarily driven by:
+This repository now contains the `uv`/`pyproject.toml` bootstrap defined in this spec **alongside** the original research code. The legacy research execution path is primarily driven by:
 
 - Conda environment file: `assets/env_reqs.yml`
 - HPC execution: `slurm/job_ollama.sh`, `slurm/job_assess.sh`
 - Local demo server: `server.py` (requires an Ollama daemon + a transcript file via `TRANSCRIPT_PATH`)
 
-This spec remains the **target bootstrap** for a production-ready rewrite, but it must document current behavior for parity audits.
+The production rewrite should live under `src/ai_psychiatrist/` and incrementally replace the legacy scripts while preserving paper parity.
 
 ## Deliverables
 
@@ -68,8 +70,13 @@ This spec remains the **target bootstrap** for a production-ready rewrite, but i
 2. `uv.lock` - Locked dependencies for reproducibility
 3. `Makefile` - Developer workflow automation
 4. `.github/workflows/ci.yml` - CI/CD pipeline
-5. `src/ai_psychiatrist/__init__.py` - Package skeleton
-6. `tests/conftest.py` - pytest configuration
+5. `.pre-commit-config.yaml` - Local developer guardrails
+6. `.env.example` - Paper-optimal configuration template
+7. `src/ai_psychiatrist/__init__.py` - Package skeleton
+8. `src/ai_psychiatrist/cli.py` - CLI entry point
+9. `tests/conftest.py` - pytest fixtures
+10. `tests/unit/test_bootstrap.py` - Bootstrap tests
+11. `tests/unit/test_cli.py` - CLI smoke test
 
 ## Implementation
 
@@ -529,14 +536,13 @@ repos:
         args: [--fix]
       - id: ruff-format
 
-  - repo: https://github.com/pre-commit/mirrors-mypy
-    rev: v1.13.0
+  - repo: local
     hooks:
       - id: mypy
-        additional_dependencies:
-          - pydantic>=2.10.0
-          - pydantic-settings>=2.6.0
-        args: [--ignore-missing-imports]
+        name: mypy (uv)
+        entry: uv run mypy src
+        language: system
+        pass_filenames: false
 
   - repo: https://github.com/pre-commit/pre-commit-hooks
     rev: v5.0.0
@@ -608,9 +614,9 @@ LOG_FORMAT=json  # json or console
 """Tests for project bootstrap."""
 
 import subprocess
-import sys
 from pathlib import Path
 
+import ai_psychiatrist
 import pytest
 
 
@@ -631,13 +637,18 @@ class TestProjectStructure:
         assert Path("tests/integration").is_dir()
         assert Path("tests/e2e").is_dir()
 
+    def test_package_subdirectories(self) -> None:
+        """Package should have expected subdirectories."""
+        subdirs = ["api", "agents", "domain", "services", "infrastructure"]
+        for subdir in subdirs:
+            assert Path(f"src/ai_psychiatrist/{subdir}/__init__.py").exists()
+
 
 class TestImports:
     """Test that package can be imported."""
 
     def test_import_package(self) -> None:
         """Package should be importable."""
-        import ai_psychiatrist
         assert ai_psychiatrist.__version__ == "2.0.0"
 
 
@@ -655,6 +666,30 @@ class TestMakefile:
         )
         assert result.returncode == 0
         assert "help" in result.stdout
+
+
+class TestEnvExample:
+    """Test .env.example contains paper-optimal values."""
+
+    def test_env_example_exists(self) -> None:
+        """.env.example should exist."""
+        assert Path(".env.example").exists()
+
+    def test_env_example_has_paper_optimal_values(self) -> None:
+        """.env.example should contain paper-optimal configuration."""
+        content = Path(".env.example").read_text()
+
+        # Paper-optimal models
+        assert "gemma3:27b" in content
+        assert "alibayram/medgemma:27b" in content
+        assert "dengcao/Qwen3-Embedding-8B:Q8_0" in content
+
+        # Paper-optimal hyperparameters
+        assert "EMBEDDING_DIMENSION=4096" in content
+        assert "EMBEDDING_TOP_K_REFERENCES=2" in content
+        assert "EMBEDDING_CHUNK_SIZE=8" in content
+        assert "FEEDBACK_SCORE_THRESHOLD=3" in content
+        assert "FEEDBACK_MAX_ITERATIONS=10" in content
 ```
 
 ## Migration Notes
@@ -663,31 +698,26 @@ class TestMakefile:
 
 1. Move `agents/*.py` → `src/ai_psychiatrist/agents/`
 2. Move `server.py` → `src/ai_psychiatrist/api/main.py`
-3. Delete `assets/env_reqs.yml` (replaced by pyproject.toml)
-4. Keep `slurm/` for HPC compatibility
+3. Keep `assets/env_reqs.yml` temporarily for research reproducibility; remove only after parity is proven
+4. Keep `slurm/` for HPC compatibility (documented in Specs 01/04)
 
 ### Breaking Changes
 
-- Python >= 3.11 required (was 3.11.13 in conda)
+- Python >= 3.11 required for the refactor (`pyproject.toml`)
 - Import path changes: `from agents.x import Y` → `from ai_psychiatrist.agents.x import Y`
-- No more conda environment (use uv instead)
+- Refactor path uses `uv`; legacy scripts may still use conda until migrated
 
 ## Verification Steps
 
 ```bash
-# 1. Initialize project with uv
-uv init --package --name ai-psychiatrist
-
-# 2. Install all dependencies
+# 1. Install all dependencies (incl. dev/docs extras)
 uv sync --all-extras
 
-# 3. Verify tooling works
-uv run ruff check src tests
-uv run mypy src
-uv run pytest --collect-only
-
-# 4. Run full CI check
+# 2. Run full CI check locally
 make ci
+
+# 3. (Optional) Run pre-commit on everything
+uv run pre-commit run --all-files
 ```
 
 ## Dependencies on Other Specs

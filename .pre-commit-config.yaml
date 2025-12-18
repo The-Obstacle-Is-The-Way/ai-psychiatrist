@@ -6,14 +6,13 @@ repos:
         args: [--fix]
       - id: ruff-format
 
-  - repo: https://github.com/pre-commit/mirrors-mypy
-    rev: v1.13.0
+  - repo: local
     hooks:
       - id: mypy
-        additional_dependencies:
-          - pydantic>=2.10.0
-          - pydantic-settings>=2.6.0
-        args: [--ignore-missing-imports]
+        name: mypy (uv)
+        entry: uv run mypy src
+        language: system
+        pass_filenames: false
 
   - repo: https://github.com/pre-commit/pre-commit-hooks
     rev: v5.0.0
