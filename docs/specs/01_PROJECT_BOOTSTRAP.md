@@ -4,6 +4,54 @@
 
 Establish modern Python project structure with uv, Ruff, pytest, and Makefile automation. This is the foundation for all subsequent specs.
 
+## Testing Philosophy
+
+**CRITICAL: No Mock Abuse**
+
+This codebase follows a strict testing philosophy to avoid the "mock everything" anti-pattern:
+
+### What to Test (Real Behavior)
+- **Unit tests**: Test pure functions, data transformations, validation logic with REAL inputs
+- **Integration tests**: Test component interactions with REAL dependencies where possible
+- **E2E tests**: Test full pipeline with REAL Ollama (can use smaller/faster models for CI)
+
+### When Mocking is Acceptable
+Only mock at **external I/O boundaries** that would make tests slow, flaky, or require external services:
+- HTTP calls to Ollama API (mock the HTTP layer, not the client logic)
+- File system operations for tests that shouldn't touch disk
+- Time-dependent operations (use `freezegun` sparingly)
+
+### When Mocking is FORBIDDEN
+- **Never mock business logic** - if you need to mock it, your design is wrong
+- **Never mock to make tests pass** - fix the code, not the test
+- **Never mock domain models** - use real instances with test data
+- **Never mock internal functions** - test them directly or through public API
+
+### Test Data vs Mocks
+- **Test data fixtures** (`sample_transcript`, `sample_phq8_scores`): GOOD - real data structures
+- **Response fixtures** (`sample_ollama_response`): GOOD - real API response structure for parsing tests
+- **Mock objects that replace real behavior**: BAD unless at I/O boundary
+
+### Example: Testing Ollama Client
+```python
+# GOOD: Mock HTTP, test real client logic
+@pytest.fixture
+def mock_httpx_client(sample_ollama_response):
+    with respx.mock:
+        respx.post("http://localhost:11434/api/chat").respond(json=sample_ollama_response)
+        yield
+
+async def test_ollama_client_parses_response(mock_httpx_client):
+    client = OllamaClient(base_url="http://localhost:11434")
+    result = await client.chat(messages=[...])  # Real client, mocked HTTP
+    assert result.content == "..."  # Test real parsing logic
+
+# BAD: Mocking the client itself
+def test_bad_mock_everything(mocker):
+    mock_client = mocker.Mock()  # NEVER DO THIS
+    mock_client.chat.return_value = "whatever"  # Tests nothing real
+```
+
 ## As-Is Implementation (Repo)
 
 The current repository is **not** using `uv`/`pyproject.toml` yet. It is primarily driven by:
@@ -370,13 +418,18 @@ def sample_phq8_scores() -> dict[str, int]:
 
 
 @pytest.fixture
-def mock_ollama_response() -> dict:
-    """Return a mock Ollama API response."""
+def sample_ollama_response() -> dict:
+    """Return sample Ollama API response structure for testing.
+
+    NOTE: This is TEST DATA, not a mock. We use real data structures to test
+    parsing/validation logic. Only mock external I/O boundaries (HTTP calls),
+    never business logic.
+    """
     return {
         "model": "alibayram/medgemma:27b",  # Paper-optimal (Appendix F)
         "message": {
             "role": "assistant",
-            "content": '{"PHQ8_NoInterest": {"evidence": "can\'t be bothered", "reason": "clear anhedonia", "score": 2}}'
+            "content": '{"PHQ8_NoInterest": {"evidence": "can\'t be bothered", "score": 2}}'
         },
         "done": True,
     }
