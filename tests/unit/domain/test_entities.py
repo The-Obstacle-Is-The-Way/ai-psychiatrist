@@ -94,7 +94,7 @@ class TestTranscript:
         assert transcript.line_count == 3
 
     def test_line_count_handles_blank_lines(self) -> None:
-        """line_count should count non-empty lines only."""
+        """line_count should count lines including blanks after stripping edges."""
         transcript = Transcript(
             participant_id=1,
             text="line one\n\nline two\n",

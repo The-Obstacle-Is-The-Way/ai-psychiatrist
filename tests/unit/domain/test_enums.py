@@ -31,7 +31,7 @@ class TestPHQ8Item:
         assert all(isinstance(item, PHQ8Item) for item in items)
 
     def test_item_values_match_legacy_format(self) -> None:
-        """Item values must match as-is repo format: PHQ8_{ItemName}."""
+        """Item values must match legacy item names used in keys (PHQ8_{value})."""
         expected_values = [
             "NoInterest",
             "Depressed",
