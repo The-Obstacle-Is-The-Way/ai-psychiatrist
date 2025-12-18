@@ -69,14 +69,15 @@ class ModelSettings(BaseSettings):
         description="Chat/completion model name",
     )
     embedding_model: str = Field(
-        default="dengcao/Qwen3-Embedding-8B:Q4_K_M",
-        description="Embedding model name",
+        default="dengcao/Qwen3-Embedding-8B:Q8_0",
+        description="Embedding model name (Qwen 3 8B Embedding, Q8 quantization)",
     )
     medgemma_model: str = Field(
         default="alibayram/medgemma:27b",
         description="Medical domain model (optional)",
     )
-    temperature: float = Field(default=0.2, ge=0.0, le=2.0)
+    temperature: float = Field(default=0.2, ge=0.0, le=2.0, description="Default temperature")
+    temperature_judge: float = Field(default=0.0, ge=0.0, le=2.0, description="Judge agent temperature (deterministic)")
     top_k: int = Field(default=20, ge=1, le=100)
     top_p: float = Field(default=0.8, ge=0.0, le=1.0)
 

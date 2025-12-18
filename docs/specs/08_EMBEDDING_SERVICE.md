@@ -10,6 +10,18 @@ Implement the embedding-based similarity search service for few-shot reference r
 - **Appendix D**: Optimal hyperparameters (chunk_size=8, N_example=2, dim=4096)
 - **Appendix E**: Retrieval statistics and t-SNE visualization
 
+## Key Technical Details
+
+### MRL (Matryoshka Representation Learning) Support
+The Qwen3-Embedding model supports Matryoshka Representation Learning, allowing dimension
+truncation without re-training. This enables using smaller dimensions (e.g., 4096) instead
+of the full embedding dimension for efficiency while maintaining quality.
+
+### Embedding Processing Pipeline
+1. Generate raw embedding from LLM
+2. Truncate to target dimension (4096 optimal per paper)
+3. L2 normalize for cosine similarity calculations
+
 ## Deliverables
 
 1. `src/ai_psychiatrist/services/embedding.py` - Embedding generation and search

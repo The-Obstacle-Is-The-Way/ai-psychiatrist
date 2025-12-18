@@ -216,6 +216,23 @@ class OllamaClient:
         """Close the HTTP client."""
         await self._client.aclose()
 
+    async def ping(self) -> bool:
+        """Check if Ollama server is reachable.
+
+        Returns:
+            True if server responds, False otherwise.
+
+        Raises:
+            LLMError: If ping fails.
+        """
+        try:
+            response = await self._client.get(f"{self._base_url}/api/tags")
+            response.raise_for_status()
+            return True
+        except Exception as e:
+            logger.error("Ollama ping failed", error=str(e))
+            raise LLMError(f"Failed to ping Ollama: {e}") from e
+
     async def chat(self, request: ChatRequest) -> ChatResponse:
         """Execute chat completion via Ollama API.
 
@@ -366,6 +383,7 @@ class OllamaClient:
         user_prompt: str,
         system_prompt: str = "",
         model: str | None = None,
+        temperature: float | None = None,
     ) -> str:
         """Simple chat completion with just user/system prompts.
 
@@ -373,6 +391,7 @@ class OllamaClient:
             user_prompt: User message content.
             system_prompt: Optional system message.
             model: Model to use (defaults to configured chat model).
+            temperature: Override temperature (e.g., 0.0 for Judge agent).
 
         Returns:
             Generated response content.
@@ -385,7 +404,7 @@ class OllamaClient:
         request = ChatRequest(
             messages=messages,
             model=model or self._chat_model,
-            temperature=self._temperature,
+            temperature=temperature if temperature is not None else self._temperature,
             top_k=self._top_k,
             top_p=self._top_p,
         )

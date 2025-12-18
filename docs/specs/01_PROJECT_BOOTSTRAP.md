@@ -476,9 +476,9 @@ repos:
 OLLAMA_HOST=127.0.0.1
 OLLAMA_PORT=11434
 
-# LLM Models
-CHAT_MODEL=gemma3:27b
-EMBEDDING_MODEL=dengcao/Qwen3-Embedding-8B:Q4_K_M
+# LLM Models (Paper: Gemma 3 27B, Qwen 3 8B Embedding)
+MODEL_CHAT_MODEL=gemma3:27b
+MODEL_EMBEDDING_MODEL=dengcao/Qwen3-Embedding-8B:Q8_0
 
 # ============== Optional ==============
 # Logging
@@ -494,10 +494,11 @@ ENABLE_FEW_SHOT=true
 ENABLE_FEEDBACK_LOOP=true
 MAX_FEEDBACK_ITERATIONS=10
 
-# Performance
-LLM_TIMEOUT_SECONDS=180
+# Performance (Paper optimal: dim=4096, top_k=2, chunk_size=8)
+OLLAMA_TIMEOUT_SECONDS=180
 EMBEDDING_DIMENSION=4096
-TOP_K_REFERENCES=3
+EMBEDDING_TOP_K_REFERENCES=2
+EMBEDDING_CHUNK_SIZE=8
 ```
 
 ## Acceptance Criteria
