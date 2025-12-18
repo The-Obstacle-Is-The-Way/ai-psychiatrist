@@ -1,11 +1,13 @@
 """Tests for project bootstrap."""
 
+import importlib
 import subprocess
 from pathlib import Path
 
 import pytest
 
 import ai_psychiatrist
+from ai_psychiatrist import domain
 
 
 class TestProjectStructure:
@@ -40,6 +42,20 @@ class TestImports:
         # Version is dynamically read from package metadata (pyproject.toml)
         assert isinstance(ai_psychiatrist.__version__, str)
         assert ai_psychiatrist.__version__  # Not empty
+
+    def test_import_public_packages(self) -> None:
+        """Public packages should be importable and expose expected API."""
+        for module_name in [
+            "ai_psychiatrist.agents",
+            "ai_psychiatrist.api",
+            "ai_psychiatrist.infrastructure",
+            "ai_psychiatrist.services",
+        ]:
+            module = importlib.import_module(module_name)
+            assert module.__doc__
+
+        assert domain.PHQ8Item.NO_INTEREST.value == "NoInterest"
+        assert all(hasattr(domain, name) for name in domain.__all__)
 
 
 class TestMakefile:
