@@ -1,4 +1,6 @@
 """AI Psychiatrist: LLM-based Multi-Agent System for Depression Assessment."""
 
-__version__ = "2.0.0"
+from importlib.metadata import version
+
+__version__ = version("ai-psychiatrist")
 __all__ = ["__version__"]

@@ -1,4 +1,4 @@
-.PHONY: help install dev test lint format typecheck clean docs serve
+.PHONY: help install dev test test-unit test-integration test-e2e test-fast test-parallel lint lint-fix format format-check typecheck check ci serve repl docs docs-serve clean
 
 # Self-documenting help
 help: ## Show this help message

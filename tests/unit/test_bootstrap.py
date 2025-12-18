@@ -36,8 +36,10 @@ class TestImports:
     """Test that package can be imported."""
 
     def test_import_package(self) -> None:
-        """Package should be importable."""
-        assert ai_psychiatrist.__version__ == "2.0.0"
+        """Package should be importable with version from metadata."""
+        # Version is dynamically read from package metadata (pyproject.toml)
+        assert isinstance(ai_psychiatrist.__version__, str)
+        assert ai_psychiatrist.__version__  # Not empty
 
 
 class TestMakefile:
