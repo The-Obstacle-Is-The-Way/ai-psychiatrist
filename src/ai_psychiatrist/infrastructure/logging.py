@@ -38,10 +38,17 @@ def setup_logging(settings: LoggingSettings | None = None) -> None:
         structlog.stdlib.add_log_level,
         structlog.stdlib.add_logger_name,
         structlog.stdlib.PositionalArgumentsFormatter(),
-        structlog.processors.TimeStamper(fmt="iso", utc=True),
-        structlog.processors.StackInfoRenderer(),
-        structlog.processors.UnicodeDecoder(),
     ]
+
+    if settings.include_timestamp:
+        shared_processors.append(structlog.processors.TimeStamper(fmt="iso", utc=True))
+
+    shared_processors.extend(
+        [
+            structlog.processors.StackInfoRenderer(),
+            structlog.processors.UnicodeDecoder(),
+        ]
+    )
 
     if settings.include_caller:
         shared_processors.append(

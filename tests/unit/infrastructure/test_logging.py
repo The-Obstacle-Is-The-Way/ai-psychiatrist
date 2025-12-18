@@ -5,10 +5,10 @@ Tests verify logging setup, context binding, and output formats.
 
 from __future__ import annotations
 
+import json
 import logging
 
 import pytest
-import structlog
 
 from ai_psychiatrist.config import LoggingSettings
 from ai_psychiatrist.infrastructure.logging import (
@@ -20,25 +20,60 @@ from ai_psychiatrist.infrastructure.logging import (
     with_context,
 )
 
+pytestmark = [
+    pytest.mark.filterwarnings("ignore:Data directory does not exist.*:UserWarning"),
+    pytest.mark.filterwarnings("ignore:Few-shot enabled but embeddings not found.*:UserWarning"),
+]
+
+
+def _read_json_log(capsys: pytest.CaptureFixture[str]) -> dict[str, object]:
+    output = capsys.readouterr().out.strip().splitlines()
+    assert output, "No log output captured"
+    return json.loads(output[-1])
+
 
 class TestLoggingSetup:
     """Tests for logging configuration."""
 
-    def test_setup_logging_json_format(self) -> None:
+    def test_setup_logging_json_format(self, capsys: pytest.CaptureFixture[str]) -> None:
         """JSON format should configure structlog correctly."""
-        settings = LoggingSettings(level="INFO", format="json")
+        settings = LoggingSettings(level="INFO", format="json", include_caller=False)
         setup_logging(settings)
 
-        logger = structlog.get_logger("test.json")
+        logger = get_logger("test.json")
         logger.info("test message", key="value")
 
-    def test_setup_logging_console_format(self) -> None:
+        payload = _read_json_log(capsys)
+        assert payload["event"] == "test message"
+        assert payload["key"] == "value"
+        assert payload["level"] == "info"
+        assert payload["logger"] == "test.json"
+        assert "timestamp" in payload
+
+    def test_setup_logging_json_without_timestamp(self, capsys: pytest.CaptureFixture[str]) -> None:
+        """Timestamp should be omitted when disabled."""
+        settings = LoggingSettings(
+            level="INFO", format="json", include_timestamp=False, include_caller=False
+        )
+        setup_logging(settings)
+
+        logger = get_logger("test.json.no_ts")
+        logger.info("test message")
+
+        payload = _read_json_log(capsys)
+        assert "timestamp" not in payload
+
+    def test_setup_logging_console_format(self, capsys: pytest.CaptureFixture[str]) -> None:
         """Console format should configure structlog correctly."""
-        settings = LoggingSettings(level="INFO", format="console")
+        settings = LoggingSettings(level="INFO", format="console", include_caller=False)
         setup_logging(settings)
 
-        logger = structlog.get_logger("test.console")
+        logger = get_logger("test.console")
         logger.info("test message", key="value")
+
+        output = capsys.readouterr().out
+        assert "test message" in output
+        assert "value" in output
 
     def test_setup_logging_sets_log_level(self) -> None:
         """Should set the correct log level."""
@@ -110,12 +145,19 @@ class TestGetLogger:
 class TestContextBinding:
     """Tests for context variable binding."""
 
-    def test_bind_context(self) -> None:
+    def test_bind_context(self, capsys: pytest.CaptureFixture[str]) -> None:
         """Should bind context variables."""
-        setup_logging(None)
+        settings = LoggingSettings(level="INFO", format="json", include_caller=False)
+        setup_logging(settings)
         clear_context()
 
         bind_context(participant_id=123, operation="test")
+        logger = get_logger("test.context")
+        logger.info("bound message")
+
+        payload = _read_json_log(capsys)
+        assert payload["participant_id"] == 123
+        assert payload["operation"] == "test"
 
     def test_unbind_context(self) -> None:
         """Should unbind context variables."""
@@ -189,9 +231,9 @@ class TestWithContextDecorator:
 class TestLoggingIntegration:
     """Integration tests for logging system."""
 
-    def test_full_workflow(self) -> None:
+    def test_full_workflow(self, capsys: pytest.CaptureFixture[str]) -> None:
         """Test complete logging workflow."""
-        settings = LoggingSettings(level="DEBUG", format="json")
+        settings = LoggingSettings(level="DEBUG", format="json", include_caller=False)
         setup_logging(settings)
         clear_context()
 
@@ -200,6 +242,10 @@ class TestLoggingIntegration:
         bind_context(participant_id=456, phase="quantitative")
         logger.info("Processing started", items=8)
         logger.info("Processing complete", score=15)
+
+        payload = _read_json_log(capsys)
+        assert payload["participant_id"] == 456
+        assert payload["phase"] == "quantitative"
 
         clear_context()
 

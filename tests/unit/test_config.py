@@ -24,6 +24,11 @@ from ai_psychiatrist.config import (
     get_settings,
 )
 
+pytestmark = [
+    pytest.mark.filterwarnings("ignore:Data directory does not exist.*:UserWarning"),
+    pytest.mark.filterwarnings("ignore:Few-shot enabled but embeddings not found.*:UserWarning"),
+]
+
 
 class TestOllamaSettings:
     """Tests for Ollama server configuration."""
@@ -270,6 +275,47 @@ class TestSettings:
         assert settings.model.quantitative_model == "test-model"
 
         get_settings.cache_clear()
+
+    def test_loads_from_dotenv(
+        self,
+        monkeypatch: pytest.MonkeyPatch,
+        tmp_path: Path,
+    ) -> None:
+        """Should load nested settings from .env file."""
+        data_dir = tmp_path / "data"
+        transcripts_dir = data_dir / "transcripts"
+        transcripts_dir.mkdir(parents=True)
+        embeddings_path = data_dir / "embeddings.pkl"
+        embeddings_path.write_bytes(b"")
+
+        dotenv = "\n".join(
+            [
+                "OLLAMA_HOST=dotenv-host",
+                "MODEL_QUALITATIVE_MODEL=dotenv-model",
+                f"DATA_BASE_DIR={data_dir}",
+                f"DATA_TRANSCRIPTS_DIR={transcripts_dir}",
+                f"DATA_EMBEDDINGS_PATH={embeddings_path}",
+            ]
+        )
+        (tmp_path / ".env").write_text(dotenv)
+
+        for key in (
+            "OLLAMA_HOST",
+            "MODEL_QUALITATIVE_MODEL",
+            "DATA_BASE_DIR",
+            "DATA_TRANSCRIPTS_DIR",
+            "DATA_EMBEDDINGS_PATH",
+        ):
+            monkeypatch.delenv(key, raising=False)
+
+        monkeypatch.chdir(tmp_path)
+        settings = Settings()
+
+        assert settings.ollama.host == "dotenv-host"
+        assert settings.model.qualitative_model == "dotenv-model"
+        assert settings.data.base_dir == data_dir
+        assert settings.data.transcripts_dir == transcripts_dir
+        assert settings.data.embeddings_path == embeddings_path
 
 
 class TestSettingsCaching:

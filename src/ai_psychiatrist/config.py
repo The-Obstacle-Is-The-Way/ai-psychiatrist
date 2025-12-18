@@ -20,11 +20,19 @@ from typing import Literal
 from pydantic import Field, field_validator, model_validator
 from pydantic_settings import BaseSettings, SettingsConfigDict
 
+ENV_FILE = ".env"
+ENV_FILE_ENCODING = "utf-8"
+
 
 class OllamaSettings(BaseSettings):
     """Ollama server configuration."""
 
-    model_config = SettingsConfigDict(env_prefix="OLLAMA_")
+    model_config = SettingsConfigDict(
+        env_prefix="OLLAMA_",
+        env_file=ENV_FILE,
+        env_file_encoding=ENV_FILE_ENCODING,
+        extra="ignore",
+    )
 
     host: str = Field(default="127.0.0.1", description="Ollama server host")
     port: int = Field(default=11434, ge=1, le=65535, description="Ollama server port")
@@ -57,7 +65,12 @@ class ModelSettings(BaseSettings):
     quantization; the default tag below uses Q8_0 to match the research scripts.
     """
 
-    model_config = SettingsConfigDict(env_prefix="MODEL_")
+    model_config = SettingsConfigDict(
+        env_prefix="MODEL_",
+        env_file=ENV_FILE,
+        env_file_encoding=ENV_FILE_ENCODING,
+        extra="ignore",
+    )
 
     qualitative_model: str = Field(
         default="gemma3:27b", description="Qualitative agent model (Paper Section 2.2)"
@@ -91,7 +104,12 @@ class EmbeddingSettings(BaseSettings):
     - chunk_size=8, step_size=2, top_k=2, dimension=4096
     """
 
-    model_config = SettingsConfigDict(env_prefix="EMBEDDING_")
+    model_config = SettingsConfigDict(
+        env_prefix="EMBEDDING_",
+        env_file=ENV_FILE,
+        env_file_encoding=ENV_FILE_ENCODING,
+        extra="ignore",
+    )
 
     dimension: int = Field(
         default=4096,
@@ -129,7 +147,12 @@ class FeedbackLoopSettings(BaseSettings):
     Paper-optimal: threshold=3 means scores <= 3 (i.e., < 4) trigger refinement.
     """
 
-    model_config = SettingsConfigDict(env_prefix="FEEDBACK_")
+    model_config = SettingsConfigDict(
+        env_prefix="FEEDBACK_",
+        env_file=ENV_FILE,
+        env_file_encoding=ENV_FILE_ENCODING,
+        extra="ignore",
+    )
 
     enabled: bool = Field(default=True, description="Enable iterative refinement")
     max_iterations: int = Field(
@@ -155,7 +178,12 @@ class FeedbackLoopSettings(BaseSettings):
 class DataSettings(BaseSettings):
     """Data path configuration."""
 
-    model_config = SettingsConfigDict(env_prefix="DATA_")
+    model_config = SettingsConfigDict(
+        env_prefix="DATA_",
+        env_file=ENV_FILE,
+        env_file_encoding=ENV_FILE_ENCODING,
+        extra="ignore",
+    )
 
     base_dir: Path = Field(
         default=Path("data"),
@@ -190,7 +218,12 @@ class DataSettings(BaseSettings):
 class LoggingSettings(BaseSettings):
     """Logging configuration."""
 
-    model_config = SettingsConfigDict(env_prefix="LOG_")
+    model_config = SettingsConfigDict(
+        env_prefix="LOG_",
+        env_file=ENV_FILE,
+        env_file_encoding=ENV_FILE_ENCODING,
+        extra="ignore",
+    )
 
     level: Literal["DEBUG", "INFO", "WARNING", "ERROR", "CRITICAL"] = Field(
         default="INFO",
@@ -207,7 +240,12 @@ class LoggingSettings(BaseSettings):
 class APISettings(BaseSettings):
     """API server configuration."""
 
-    model_config = SettingsConfigDict(env_prefix="API_")
+    model_config = SettingsConfigDict(
+        env_prefix="API_",
+        env_file=ENV_FILE,
+        env_file_encoding=ENV_FILE_ENCODING,
+        extra="ignore",
+    )
 
     host: str = Field(default="0.0.0.0")
     port: int = Field(default=8000, ge=1, le=65535)
@@ -220,8 +258,8 @@ class Settings(BaseSettings):
     """Root settings combining all configuration groups."""
 
     model_config = SettingsConfigDict(
-        env_file=".env",
-        env_file_encoding="utf-8",
+        env_file=ENV_FILE,
+        env_file_encoding=ENV_FILE_ENCODING,
         env_nested_delimiter="__",
         extra="ignore",
     )
