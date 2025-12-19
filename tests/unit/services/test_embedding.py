@@ -2,11 +2,14 @@
 
 from __future__ import annotations
 
+import pickle
 from unittest.mock import MagicMock
 
 import numpy as np
+import pandas as pd
 import pytest
 
+from ai_psychiatrist.config import DataSettings
 from ai_psychiatrist.domain.enums import PHQ8Item
 from ai_psychiatrist.domain.value_objects import SimilarityMatch, TranscriptChunk
 from ai_psychiatrist.services.embedding import EmbeddingService, ReferenceBundle
@@ -293,6 +296,19 @@ class TestEmbeddingService:
 class TestReferenceStore:
     """Tests for ReferenceStore."""
 
+    @pytest.fixture
+    def mock_data_settings(self, tmp_path) -> DataSettings:
+        """Create data settings with temporary paths."""
+        transcripts_dir = tmp_path / "transcripts"
+        transcripts_dir.mkdir(parents=True, exist_ok=True)
+        return DataSettings(
+            base_dir=tmp_path,
+            transcripts_dir=transcripts_dir,
+            embeddings_path=tmp_path / "embeddings.pkl",
+            train_csv=tmp_path / "train.csv",
+            dev_csv=tmp_path / "dev.csv",
+        )
+
     def test_l2_normalize_unit_vector(self) -> None:
         """Unit vector should stay the same after normalization."""
         unit = [1.0, 0.0, 0.0]
@@ -324,6 +340,87 @@ class TestReferenceStore:
         for item in PHQ8Item.all_items():
             assert item in PHQ8_COLUMN_MAP
             assert PHQ8_COLUMN_MAP[item].startswith("PHQ8_")
+
+    def test_load_embeddings_success(self, mock_data_settings: DataSettings) -> None:
+        """Should successfully load and normalize embeddings from file."""
+        # Create dummy embeddings file
+        raw_data = {
+            "100": [("chunk1", [3.0, 4.0])],  # Norm = 5.0 -> [0.6, 0.8]
+            "101": [("chunk2", [1.0, 0.0])],
+        }
+        with mock_data_settings.embeddings_path.open("wb") as f:
+            pickle.dump(raw_data, f)
+
+        mock_embed = MagicMock()
+        mock_embed.dimension = 2  # Match dummy data dimension
+
+        store = ReferenceStore(mock_data_settings, mock_embed)
+        embeddings = store.get_all_embeddings()
+
+        assert len(embeddings) == 2
+        assert 100 in embeddings
+        assert 101 in embeddings
+
+        # Check normalization
+        text, vector = embeddings[100][0]
+        assert text == "chunk1"
+        np.testing.assert_array_almost_equal(vector, [0.6, 0.8])
+
+        assert store.is_loaded is True
+        assert store.participant_count == 2
+
+    def test_load_scores_success(self, mock_data_settings: DataSettings) -> None:
+        """Should successfully load scores from CSVs."""
+        # Create dummy train CSV
+        train_df = pd.DataFrame({
+            "Participant_ID": [100],
+            "PHQ8_NoInterest": [1],
+            "PHQ8_Depressed": [2],
+        })
+        train_df.to_csv(mock_data_settings.train_csv, index=False)
+
+        # Create dummy dev CSV
+        dev_df = pd.DataFrame({
+            "Participant_ID": [101],
+            "PHQ8_NoInterest": [3],
+            "PHQ8_Depressed": [0],
+        })
+        dev_df.to_csv(mock_data_settings.dev_csv, index=False)
+
+        mock_embed = MagicMock()
+        store = ReferenceStore(mock_data_settings, mock_embed)
+
+        # Check scores from train split
+        assert store.get_score(100, PHQ8Item.NO_INTEREST) == 1
+        assert store.get_score(100, PHQ8Item.DEPRESSED) == 2
+
+        # Check scores from dev split
+        assert store.get_score(101, PHQ8Item.NO_INTEREST) == 3
+        assert store.get_score(101, PHQ8Item.DEPRESSED) == 0
+
+        # Check missing score
+        assert store.get_score(999, PHQ8Item.NO_INTEREST) is None
+
+    def test_get_participant_embeddings(self, mock_data_settings: DataSettings) -> None:
+        """Should return embeddings for specific participant."""
+        raw_data = {
+            "100": [("text1", [1.0, 0.0])],
+            "101": [("text2", [0.0, 1.0])],
+        }
+        with mock_data_settings.embeddings_path.open("wb") as f:
+            pickle.dump(raw_data, f)
+
+        mock_embed = MagicMock()
+        mock_embed.dimension = 2
+
+        store = ReferenceStore(mock_data_settings, mock_embed)
+
+        p100 = store.get_participant_embeddings(100)
+        assert len(p100) == 1
+        assert p100[0][0] == "text1"
+
+        p999 = store.get_participant_embeddings(999)
+        assert len(p999) == 0
 
     def test_get_score_missing_participant(self) -> None:
         """Should return None for missing participant."""
