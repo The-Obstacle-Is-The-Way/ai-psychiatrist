@@ -19,7 +19,7 @@ Score from 1-5 solely based on the following criteria:
  - score of 3 : 3-4 mistakes
  - score of 2 : 5-6 mistakes
  - score of 1 : 7 or more mistakes
-""",  # noqa: E501
+""",
     EvaluationMetric.COMPLETENESS: """
 Completeness (1-5): Does the assessment cover all relevant symptoms, severities, duration/frequency? Mistakes are missed PHQ-8 symptoms, or duration/frequency details.
 
@@ -29,7 +29,7 @@ Score from 1-5 solely based on the following criteria:
  - score of 3 : 3-4 mistakes
  - score of 2 : 5-6 mistakes
  - score of 1 : 7 or more mistakes
-""",  # noqa: E501
+""",
     EvaluationMetric.COHERENCE: """
 Coherence (1-5): Is the response logically consistent? Mistakes are logically inconsistent statements or contradictions within the assessment.
 
@@ -39,7 +39,7 @@ Score from 1-5 solely based on the following criteria:
  - score of 3 : 3-4 mistakes
  - score of 2 : 5-6 mistakes
  - score of 1 : 7 or more mistakes
-""",  # noqa: E501
+""",
     EvaluationMetric.ACCURACY: """
 Accuracy (1-5): Are the signs/symptoms aligned with DSM-5 or PHQ-8? Mistakes are incorrect symptoms or incorrect duration/frequency.
 
@@ -49,7 +49,7 @@ Score from 1-5 solely based on the following criteria:
  - score of 3 : 3-4 mistakes
  - score of 2 : 5-6 mistakes
  - score of 1 : 7 or more mistakes
-""",  # noqa: E501
+""",
 }
 
 
