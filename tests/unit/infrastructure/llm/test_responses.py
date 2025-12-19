@@ -2,6 +2,8 @@
 
 Tests verify robust parsing of JSON, XML, and score extraction from
 various LLM output formats.
+
+NOTE: MockLLMClient lives in tests/fixtures/ per BUG-001 (test/prod separation).
 """
 
 from __future__ import annotations
@@ -9,13 +11,13 @@ from __future__ import annotations
 import pytest
 
 from ai_psychiatrist.domain.exceptions import LLMResponseParseError
-from ai_psychiatrist.infrastructure.llm.mock import MockLLMClient
 from ai_psychiatrist.infrastructure.llm.responses import (
     extract_json_from_response,
     extract_score_from_text,
     extract_xml_tags,
     repair_json_with_llm,
 )
+from tests.fixtures.mock_llm import MockLLMClient
 
 
 class TestExtractJson:

@@ -563,7 +563,7 @@ from uuid import uuid4
 from ai_psychiatrist.agents.judge import JudgeAgent
 from ai_psychiatrist.domain.entities import QualitativeAssessment, Transcript
 from ai_psychiatrist.domain.enums import EvaluationMetric
-from ai_psychiatrist.infrastructure.llm.mock import MockLLMClient
+from tests.fixtures.mock_llm import MockLLMClient
 
 
 class TestJudgeAgent:

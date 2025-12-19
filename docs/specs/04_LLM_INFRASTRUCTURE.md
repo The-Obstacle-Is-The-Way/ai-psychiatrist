@@ -52,8 +52,30 @@ The current repo uses **three** Ollama endpoints, via two different client style
 1. `src/ai_psychiatrist/infrastructure/llm/protocols.py` - Abstract interfaces
 2. `src/ai_psychiatrist/infrastructure/llm/ollama.py` - Ollama implementation
 3. `src/ai_psychiatrist/infrastructure/llm/responses.py` - Response parsing
-4. `src/ai_psychiatrist/infrastructure/llm/mock.py` - Test doubles
+4. `tests/fixtures/mock_llm.py` - Test doubles (TEST-ONLY, not in src/)
 5. `tests/unit/infrastructure/llm/` - Comprehensive tests
+
+## Test Double Location Policy
+
+**MockLLMClient is a TEST-ONLY artifact and MUST NOT exist in `src/`.**
+
+Location: `tests/fixtures/mock_llm.py`
+
+Rationale:
+- **Clean Architecture (Robert C. Martin)**: Test doubles are outer circle concerns. The Dependency Rule states that source code dependencies can only point inwards. Nothing in an inner circle can know anything about an outer circle.
+- **ISO 27001 Control 8.31**: Development, testing and production environments should be separated to reduce risks of unauthorized access or changes to the production environment.
+- **Safety**: For a medical AI system evaluating psychiatric assessments, mock responses contaminating production is a patient safety issue.
+
+Import pattern for tests:
+```python
+# CORRECT: Import from tests/fixtures
+from tests.fixtures.mock_llm import MockLLMClient
+
+# WRONG: Never import from src (this file no longer exists)
+# from ai_psychiatrist.infrastructure.llm.mock import MockLLMClient
+```
+
+See: `docs/bugs/BUG-001_MOCK_IN_PRODUCTION_PATH.md`
 
 ## Implementation
 
@@ -703,13 +725,21 @@ async def repair_json_with_llm(
     return extract_json_from_response(response)
 ```
 
-### 4. Mock Implementation (mock.py)
+### 4. Mock Implementation (tests/fixtures/mock_llm.py)
+
+**NOTE: This file lives in `tests/fixtures/`, NOT in `src/`. See Test Double Location Policy above.**
 
 ```python
-"""Mock LLM client for testing."""
+"""Mock LLM client for testing.
+
+IMPORTANT: This is a TEST-ONLY artifact. It MUST NOT be imported from
+production code (src/). Per Clean Architecture, test doubles belong in
+the outer test layer, not in production packages.
+"""
 
 from __future__ import annotations
 
+import math
 from typing import TYPE_CHECKING, Any
 
 if TYPE_CHECKING:
@@ -722,6 +752,14 @@ from ai_psychiatrist.infrastructure.llm.protocols import (
     EmbeddingRequest,
     EmbeddingResponse,
 )
+
+
+def _l2_normalize(embedding: tuple[float, ...]) -> tuple[float, ...]:
+    """L2 normalize an embedding vector for test/prod parity."""
+    norm = math.sqrt(sum(x * x for x in embedding))
+    if norm > 0:
+        return tuple(x / norm for x in embedding)
+    return embedding
 
 
 class MockLLMClient:
@@ -808,9 +846,10 @@ class MockLLMClient:
                 return response
             embedding = response
         else:
-            # Default: deterministic embedding based on dimension
+            # Default: deterministic embedding based on dimension, L2-normalized
             dim = request.dimension or 256
-            embedding = tuple(0.1 * (i % 10) for i in range(dim))
+            raw = tuple(0.1 * (i % 10) for i in range(dim))
+            embedding = _l2_normalize(raw)
 
         return EmbeddingResponse(
             embedding=embedding,
@@ -880,7 +919,6 @@ from __future__ import annotations
 import pytest
 
 from ai_psychiatrist.domain.exceptions import LLMResponseParseError
-from ai_psychiatrist.infrastructure.llm.mock import MockLLMClient
 from ai_psychiatrist.infrastructure.llm.protocols import (
     ChatMessage,
     ChatRequest,
@@ -892,6 +930,8 @@ from ai_psychiatrist.infrastructure.llm.responses import (
     extract_xml_tags,
     repair_json_with_llm,
 )
+# NOTE: MockLLMClient lives in tests/fixtures/ per BUG-001
+from tests.fixtures.mock_llm import MockLLMClient
 
 
 class TestExtractJson:

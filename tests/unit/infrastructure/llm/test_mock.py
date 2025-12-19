@@ -1,13 +1,14 @@
 """Tests for MockLLMClient.
 
 Tests verify the mock client behavior for unit testing without real LLM calls.
+
+NOTE: MockLLMClient lives in tests/fixtures/ per BUG-001 (test/prod separation).
 """
 
 from __future__ import annotations
 
 import pytest
 
-from ai_psychiatrist.infrastructure.llm.mock import MockLLMClient
 from ai_psychiatrist.infrastructure.llm.protocols import (
     ChatClient,
     ChatMessage,
@@ -18,6 +19,7 @@ from ai_psychiatrist.infrastructure.llm.protocols import (
     EmbeddingResponse,
     LLMClient,
 )
+from tests.fixtures.mock_llm import MockLLMClient
 
 
 class TestMockLLMClientChat:

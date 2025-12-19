@@ -605,7 +605,7 @@ class TestEmbeddingService:
     @pytest.fixture
     def mock_llm_client(self):
         """Create mock LLM client."""
-        from ai_psychiatrist.infrastructure.llm.mock import MockLLMClient
+        from tests.fixtures.mock_llm import MockLLMClient
 
         def embed_func(req):
             # Return deterministic embedding based on text length
