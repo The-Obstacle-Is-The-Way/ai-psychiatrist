@@ -118,7 +118,7 @@ specificity_prompt = f"""Evaluate the following qualitative assessment output fo
 
 accuracy_prompt = f"""Evaluate the following qualitative assessment output for ACCURACY only. Consider the qualitative assessment (qualitative_assessment) of the transcript (transcript) and compare qualitative_assessment to the provided transcript.
 
-        Accuracy (1–5): Are the signs/symptoms aligned with DSM-5 or PHQ-8? Mistakes are incorrect symptoms or incorrect duration/frequecy. 
+        Accuracy (1–5): Are the signs/symptoms aligned with DSM-5 or PHQ-8? Mistakes are incorrect symptoms or incorrect duration/frequency. 
 
         Score from 1-5 solely based on the following criteria: 
          - score of 5 : 0 mistakes
@@ -155,12 +155,13 @@ from ai_psychiatrist.domain.entities import (
     Transcript,
 )
 from ai_psychiatrist.domain.enums import EvaluationMetric
+from ai_psychiatrist.domain.exceptions import LLMError
 from ai_psychiatrist.domain.value_objects import EvaluationScore
 from ai_psychiatrist.infrastructure.llm.responses import extract_score_from_text
 from ai_psychiatrist.infrastructure.logging import get_logger
 
 if TYPE_CHECKING:
-from ai_psychiatrist.infrastructure.llm.responses import SimpleChatClient
+    from ai_psychiatrist.infrastructure.llm.responses import SimpleChatClient
 
 logger = get_logger(__name__)
 
@@ -198,7 +199,7 @@ Score from 1-5 solely based on the following criteria:
  - score of 1 : 7 or more mistakes
 """,
     EvaluationMetric.ACCURACY: """
-Accuracy (1-5): Are the signs/symptoms aligned with DSM-5 or PHQ-8? Mistakes are incorrect symptoms or incorrect duration/frequecy. 
+Accuracy (1-5): Are the signs/symptoms aligned with DSM-5 or PHQ-8? Mistakes are incorrect symptoms or incorrect duration/frequency. 
 
 Score from 1-5 solely based on the following criteria: 
  - score of 5 : 0 mistakes
@@ -332,10 +333,22 @@ class JudgeAgent:
         prompt = make_evaluation_prompt(metric, transcript, assessment)
 
         # Note: The original implementation used temperature=0, top_k=20, top_p=0.9
-        response = await self._llm_client.simple_chat(
-            user_prompt=prompt,
-            temperature=0.0,
-        )
+        try:
+            response = await self._llm_client.simple_chat(
+                user_prompt=prompt,
+                temperature=0.0,
+            )
+        except LLMError as e:
+            logger.error(
+                "LLM call failed during metric evaluation",
+                metric=metric.value,
+                error=str(e),
+            )
+            return EvaluationScore(
+                metric=metric,
+                score=3,
+                explanation="LLM evaluation failed; default score used.",
+            )
 
         # Extract score from response
         score = extract_score_from_text(response)

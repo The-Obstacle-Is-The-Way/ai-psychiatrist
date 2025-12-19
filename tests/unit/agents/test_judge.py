@@ -7,6 +7,7 @@ import pytest
 from ai_psychiatrist.agents.judge import JudgeAgent
 from ai_psychiatrist.domain.entities import QualitativeAssessment, Transcript
 from ai_psychiatrist.domain.enums import EvaluationMetric
+from ai_psychiatrist.domain.exceptions import LLMError
 from tests.fixtures.mock_llm import MockLLMClient
 
 
@@ -150,3 +151,32 @@ Score: 2
 
         for score in evaluation.scores.values():
             assert score.score == 3
+
+    @pytest.mark.asyncio
+    async def test_default_score_on_llm_error(
+        self,
+        sample_assessment: QualitativeAssessment,
+        sample_transcript: Transcript,
+    ) -> None:
+        """Should default to 3 and use safe explanation on LLM errors."""
+
+        class FailingClient:
+            """Chat client that raises LLMError for every request."""
+
+            async def simple_chat(
+                self,
+                user_prompt: str,  # noqa: ARG002
+                system_prompt: str = "",  # noqa: ARG002
+                model: str | None = None,  # noqa: ARG002
+                temperature: float = 0.2,  # noqa: ARG002
+                top_k: int = 20,  # noqa: ARG002
+                top_p: float = 0.8,  # noqa: ARG002
+            ) -> str:
+                raise LLMError("LLM unavailable")
+
+        agent = JudgeAgent(llm_client=FailingClient())
+        evaluation = await agent.evaluate(sample_assessment, sample_transcript)
+
+        for score in evaluation.scores.values():
+            assert score.score == 3
+            assert score.explanation == "LLM evaluation failed; default score used."

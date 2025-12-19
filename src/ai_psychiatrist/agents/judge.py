@@ -11,6 +11,7 @@ from ai_psychiatrist.domain.entities import (
     Transcript,
 )
 from ai_psychiatrist.domain.enums import EvaluationMetric
+from ai_psychiatrist.domain.exceptions import LLMError
 from ai_psychiatrist.domain.value_objects import EvaluationScore
 from ai_psychiatrist.infrastructure.llm.responses import extract_score_from_text
 from ai_psychiatrist.infrastructure.logging import get_logger
@@ -115,7 +116,7 @@ class JudgeAgent:
                 user_prompt=prompt,
                 temperature=0.0,
             )
-        except Exception as e:
+        except LLMError as e:
             logger.error(
                 "LLM call failed during metric evaluation",
                 metric=metric.value,
@@ -125,7 +126,7 @@ class JudgeAgent:
             return EvaluationScore(
                 metric=metric,
                 score=3,
-                explanation=f"LLM evaluation failed: {e!s}",
+                explanation="LLM evaluation failed; default score used.",
             )
 
         # Extract score from response
