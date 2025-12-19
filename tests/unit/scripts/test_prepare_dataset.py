@@ -68,6 +68,31 @@ class TestDatasetPreparation:
         assert stats["extracted"] == 0
         assert stats["skipped"] == 1
 
+    def test_extract_transcripts_skips_macos_resource_forks(self, tmp_path: Path) -> None:
+        """Extraction should ignore macOS resource fork entries."""
+        module = _load_prepare_dataset_module()
+
+        downloads_dir = tmp_path / "downloads"
+        participants_dir = downloads_dir / "participants"
+        participants_dir.mkdir(parents=True)
+
+        zip_path = participants_dir / "300_P.zip"
+        with zipfile.ZipFile(zip_path, "w") as zf:
+            zf.writestr("__MACOSX/._300_TRANSCRIPT.csv", "Mac OS X resource fork")
+            zf.writestr(
+                "300_TRANSCRIPT.csv",
+                "start_time\tstop_time\tspeaker\tvalue\n0\t1\tParticipant\thello\n",
+            )
+
+        output_dir = tmp_path / "data"
+        stats = module.extract_transcripts(downloads_dir, output_dir, include_audio=False)
+
+        assert stats["errors"] == 0
+        transcript_path = output_dir / "transcripts/300_P/300_TRANSCRIPT.csv"
+        content = transcript_path.read_text()
+        assert "speaker" in content
+        assert "Participant" in content
+
     def test_copy_split_csvs_includes_full_test(self, tmp_path: Path) -> None:
         """Copying split CSVs includes full_test_split.csv when present."""
         module = _load_prepare_dataset_module()
