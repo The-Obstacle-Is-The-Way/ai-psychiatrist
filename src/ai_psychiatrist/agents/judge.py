@@ -1,0 +1,154 @@
+"""Judge agent for evaluating qualitative assessments."""
+
+from __future__ import annotations
+
+from typing import TYPE_CHECKING
+
+from ai_psychiatrist.agents.prompts.judge import make_evaluation_prompt
+from ai_psychiatrist.domain.entities import (
+    QualitativeAssessment,
+    QualitativeEvaluation,
+    Transcript,
+)
+from ai_psychiatrist.domain.enums import EvaluationMetric
+from ai_psychiatrist.domain.value_objects import EvaluationScore
+from ai_psychiatrist.infrastructure.llm.responses import extract_score_from_text
+from ai_psychiatrist.infrastructure.logging import get_logger
+
+if TYPE_CHECKING:
+    from ai_psychiatrist.infrastructure.llm.protocols import ChatClient
+
+logger = get_logger(__name__)
+
+
+class JudgeAgent:
+    """Agent for evaluating qualitative assessments.
+
+    Implements the LLM-as-a-judge approach described in Section 2.3.1.
+    Evaluates assessments on 4 metrics using a 5-point Likert scale.
+    """
+
+    def __init__(self, llm_client: ChatClient) -> None:
+        """Initialize judge agent.
+
+        Args:
+            llm_client: LLM client for evaluations.
+        """
+        self._llm_client = llm_client
+
+    async def evaluate(
+        self,
+        assessment: QualitativeAssessment,
+        transcript: Transcript,
+        iteration: int = 0,
+    ) -> QualitativeEvaluation:
+        """Evaluate a qualitative assessment on all metrics.
+
+        Args:
+            assessment: Qualitative assessment to evaluate.
+            transcript: Original transcript for reference.
+            iteration: Current feedback loop iteration (0 = initial).
+
+        Returns:
+            QualitativeEvaluation with scores for all metrics.
+        """
+        logger.info(
+            "Starting qualitative evaluation",
+            participant_id=transcript.participant_id,
+            iteration=iteration,
+        )
+
+        scores: dict[EvaluationMetric, EvaluationScore] = {}
+
+        for metric in EvaluationMetric.all_metrics():
+            score = await self._evaluate_metric(
+                metric=metric,
+                transcript=transcript.text,
+                assessment=assessment.full_text,
+            )
+            scores[metric] = score
+
+            logger.debug(
+                "Metric evaluated",
+                metric=metric.value,
+                score=score.score,
+                participant_id=transcript.participant_id,
+            )
+
+        evaluation = QualitativeEvaluation(
+            scores=scores,
+            assessment_id=assessment.id,
+            iteration=iteration,
+        )
+
+        logger.info(
+            "Evaluation complete",
+            participant_id=transcript.participant_id,
+            average_score=f"{evaluation.average_score:.2f}",
+            low_scores=[m.value for m in evaluation.low_scores],
+        )
+
+        return evaluation
+
+    async def _evaluate_metric(
+        self,
+        metric: EvaluationMetric,
+        transcript: str,
+        assessment: str,
+    ) -> EvaluationScore:
+        """Evaluate a single metric.
+
+        Args:
+            metric: Metric to evaluate.
+            transcript: Original transcript text.
+            assessment: Assessment text to evaluate.
+
+        Returns:
+            EvaluationScore for the metric.
+        """
+        prompt = make_evaluation_prompt(metric, transcript, assessment)
+
+        # Note: The original implementation used temperature=0, top_k=20, top_p=0.9
+        # Spec 07 mandates temperature=0.0
+        response = await self._llm_client.simple_chat(
+            user_prompt=prompt,
+            temperature=0.0,
+        )
+
+        # Extract score from response
+        score = extract_score_from_text(response)
+
+        # Default to 3 if extraction fails
+        if score is None:
+            logger.warning(
+                "Could not extract score, defaulting to 3",
+                metric=metric.value,
+                response_preview=response[:200],
+            )
+            score = 3
+
+        return EvaluationScore(
+            metric=metric,
+            score=score,
+            explanation=response.strip(),
+        )
+
+    async def get_feedback_for_low_scores(
+        self,
+        evaluation: QualitativeEvaluation,
+    ) -> dict[str, str]:
+        """Extract feedback text for low-scoring metrics.
+
+        Args:
+            evaluation: Evaluation with scores.
+
+        Returns:
+            Dictionary of metric name -> feedback explanation.
+        """
+        feedback = {}
+        for metric in evaluation.low_scores:
+            score = evaluation.get_score(metric)
+            feedback[metric.value] = (
+                f"Scored {score.score}/5. {score.explanation}"
+            )
+        return feedback
