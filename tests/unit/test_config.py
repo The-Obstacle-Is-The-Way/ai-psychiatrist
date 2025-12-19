@@ -6,6 +6,7 @@ proper validation, caching, and environment variable loading.
 
 from __future__ import annotations
 
+import os
 from pathlib import Path
 
 import pytest
@@ -276,6 +277,10 @@ class TestSettings:
 
         get_settings.cache_clear()
 
+    @pytest.mark.skipif(
+        os.environ.get("TESTING") == "1",
+        reason="TESTING mode disables .env loading to ensure test isolation",
+    )
     def test_loads_from_dotenv(
         self,
         monkeypatch: pytest.MonkeyPatch,

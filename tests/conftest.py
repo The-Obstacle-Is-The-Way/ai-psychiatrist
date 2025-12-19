@@ -2,7 +2,56 @@
 
 from __future__ import annotations
 
+import os
+
+# Set TESTING mode BEFORE any app imports to prevent .env file loading
+os.environ["TESTING"] = "1"
+
 import pytest
+
+# Clear environment variables BEFORE any imports that might use Pydantic Settings
+# This runs at conftest import time, before test collection
+_ENV_VARS_TO_CLEAR = [
+    "OLLAMA_HOST",
+    "OLLAMA_PORT",
+    "MODEL_EMBEDDING_MODEL",
+    "MODEL_JUDGE_MODEL",
+    "MODEL_META_REVIEW_MODEL",
+    "MODEL_QUALITATIVE_MODEL",
+    "MODEL_QUANTITATIVE_MODEL",
+    "EMBEDDING_CHUNK_SIZE",
+    "EMBEDDING_CHUNK_STEP",
+    "EMBEDDING_DIMENSION",
+    "EMBEDDING_TOP_K_REFERENCES",
+    "FEEDBACK_ENABLED",
+    "FEEDBACK_MAX_ITERATIONS",
+    "FEEDBACK_SCORE_THRESHOLD",
+    "API_HOST",
+    "API_PORT",
+    "OLLAMA_TIMEOUT_SECONDS",
+    "LOG_FORMAT",
+    "LOG_LEVEL",
+]
+
+# Clear at import time for test isolation from local .env
+for _var in _ENV_VARS_TO_CLEAR:
+    os.environ.pop(_var, None)
+
+
+@pytest.fixture(autouse=True)
+def isolate_env(monkeypatch: pytest.MonkeyPatch) -> None:
+    """Clear environment variables that might be set by .env file.
+
+    This ensures tests use code defaults, not local developer overrides.
+    Also clears any cached settings to force re-read of defaults.
+    """
+    for var in _ENV_VARS_TO_CLEAR:
+        monkeypatch.delenv(var, raising=False)
+
+    # Clear the settings cache to ensure fresh reads
+    from ai_psychiatrist.config import get_settings  # noqa: PLC0415
+
+    get_settings.cache_clear()
 
 
 @pytest.fixture(scope="session")

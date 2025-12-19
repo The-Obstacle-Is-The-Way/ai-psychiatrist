@@ -12,6 +12,7 @@ Paper references:
 
 from __future__ import annotations
 
+import os
 import warnings
 from functools import lru_cache
 from pathlib import Path
@@ -20,7 +21,8 @@ from typing import Literal
 from pydantic import Field, field_validator, model_validator
 from pydantic_settings import BaseSettings, SettingsConfigDict
 
-ENV_FILE = ".env"
+# Skip reading .env file during testing to use code defaults
+ENV_FILE = None if os.environ.get("TESTING") else ".env"
 ENV_FILE_ENCODING = "utf-8"
 
 
