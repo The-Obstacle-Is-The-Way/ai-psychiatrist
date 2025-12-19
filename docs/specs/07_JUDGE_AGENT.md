@@ -160,7 +160,7 @@ from ai_psychiatrist.infrastructure.llm.responses import extract_score_from_text
 from ai_psychiatrist.infrastructure.logging import get_logger
 
 if TYPE_CHECKING:
-    from ai_psychiatrist.infrastructure.llm.ollama import OllamaClient
+from ai_psychiatrist.infrastructure.llm.responses import SimpleChatClient
 
 logger = get_logger(__name__)
 
@@ -251,7 +251,7 @@ class JudgeAgent:
     Evaluates assessments on 4 metrics using a 5-point Likert scale.
     """
 
-    def __init__(self, llm_client: OllamaClient) -> None:
+    def __init__(self, llm_client: SimpleChatClient) -> None:
         """Initialize judge agent.
 
         Args:

@@ -20,7 +20,15 @@ logger = get_logger(__name__)
 class SimpleChatClient(Protocol):
     """Protocol for LLM clients with simple_chat method."""
 
-    async def simple_chat(self, prompt: str) -> str:
+    async def simple_chat(
+        self,
+        user_prompt: str,
+        system_prompt: str = "",
+        model: str | None = None,
+        temperature: float = 0.2,
+        top_k: int = 20,
+        top_p: float = 0.8,
+    ) -> str:
         """Send a simple chat prompt and return response."""
         ...
 

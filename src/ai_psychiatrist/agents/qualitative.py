@@ -12,7 +12,7 @@ iterative refinement.
 from __future__ import annotations
 
 import re
-from typing import ClassVar, Protocol, runtime_checkable
+from typing import ClassVar
 
 from ai_psychiatrist.agents.prompts.qualitative import (
     QUALITATIVE_SYSTEM_PROMPT,
@@ -20,27 +20,13 @@ from ai_psychiatrist.agents.prompts.qualitative import (
     make_qualitative_prompt,
 )
 from ai_psychiatrist.domain.entities import QualitativeAssessment, Transcript
-from ai_psychiatrist.infrastructure.llm.responses import extract_xml_tags
+from ai_psychiatrist.infrastructure.llm.responses import (
+    SimpleChatClient,
+    extract_xml_tags,
+)
 from ai_psychiatrist.infrastructure.logging import get_logger
 
 logger = get_logger(__name__)
-
-
-@runtime_checkable
-class ChatClient(Protocol):
-    """Protocol for LLM clients with simple_chat method."""
-
-    async def simple_chat(
-        self,
-        user_prompt: str,
-        system_prompt: str = "",
-        model: str | None = None,
-        temperature: float = 0.2,
-        top_k: int = 20,
-        top_p: float = 0.8,
-    ) -> str:
-        """Send a simple chat prompt and return response."""
-        ...
 
 
 class QualitativeAssessmentAgent:
@@ -70,7 +56,7 @@ class QualitativeAssessmentAgent:
         "risk_factors",
     ]
 
-    def __init__(self, llm_client: ChatClient) -> None:
+    def __init__(self, llm_client: SimpleChatClient) -> None:
         """Initialize qualitative assessment agent.
 
         Args:
