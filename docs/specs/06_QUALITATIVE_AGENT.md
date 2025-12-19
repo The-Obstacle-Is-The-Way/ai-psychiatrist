@@ -418,7 +418,7 @@ import pytest
 
 from ai_psychiatrist.agents.qualitative import QualitativeAssessmentAgent
 from ai_psychiatrist.domain.entities import Transcript
-from ai_psychiatrist.infrastructure.llm.mock import MockLLMClient
+from tests.fixtures.mock_llm import MockLLMClient
 
 
 class TestQualitativeAssessmentAgent:

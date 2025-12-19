@@ -2,6 +2,15 @@
 
 This module provides test doubles for LLM clients, enabling unit testing
 without real LLM calls. Follows the principles of test isolation.
+
+IMPORTANT: This is a TEST-ONLY artifact. It MUST NOT be imported from
+production code (src/). Per Clean Architecture, test doubles belong in
+the outer test layer, not in production packages.
+
+Location Policy (BUG-001):
+    - Clean Architecture: Test doubles are outer circle concerns
+    - ISO 27001 8.31: Separation of test and production environments
+    - Safety: Medical AI system cannot risk mock contamination
 """
 
 from __future__ import annotations
