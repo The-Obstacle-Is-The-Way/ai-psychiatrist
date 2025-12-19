@@ -287,13 +287,13 @@ Rationale:
 
 ---
 
-## Decision Required
+## Decisions Made
 
-**Awaiting senior consensus on**:
+**Senior consensus reached on 2025-12-18**:
 
-1. Is Option A (move to `tests/`) the correct approach?
-2. Should we add a pre-commit hook to prevent `mock` imports in `src/`?
-3. Should the spec be updated to include explicit location policies for all test artifacts?
+1. **Option A implemented**: MockLLMClient moved to `tests/fixtures/mock_llm.py`
+2. **Pre-commit hook**: Deferred - current separation provides sufficient protection; docstring policy in `__init__.py` serves as guard rail
+3. **Spec updates**: Completed - Spec 04 now includes Test Double Location Policy section; specs 06, 07, 08 updated with correct import paths
 
 ---
 
