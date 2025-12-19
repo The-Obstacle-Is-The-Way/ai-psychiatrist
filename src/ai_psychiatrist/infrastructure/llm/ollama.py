@@ -151,9 +151,10 @@ class OllamaClient:
             logger.error(
                 "Chat request failed",
                 status_code=e.response.status_code,
-                detail=e.response.text,
+                detail="response body redacted",
+                response_length=len(e.response.text),
             )
-            raise LLMError(f"HTTP {e.response.status_code}: {e.response.text}") from e
+            raise LLMError(f"HTTP {e.response.status_code}: response body redacted") from e
         except httpx.RequestError as e:
             logger.error("Chat request error", error=str(e))
             raise LLMError(f"Request failed: {e}") from e
@@ -162,7 +163,7 @@ class OllamaClient:
             data = response.json()
             content = data["message"]["content"]
         except (KeyError, ValueError) as e:
-            logger.error("Failed to parse chat response", raw=response.text[:500])
+            logger.error("Failed to parse chat response", raw_length=len(response.text))
             raise LLMResponseParseError(response.text, str(e)) from e
 
         logger.debug(
@@ -218,8 +219,10 @@ class OllamaClient:
             logger.error(
                 "Embedding request failed",
                 status_code=e.response.status_code,
+                detail="response body redacted",
+                response_length=len(e.response.text),
             )
-            raise LLMError(f"HTTP {e.response.status_code}: {e.response.text}") from e
+            raise LLMError(f"HTTP {e.response.status_code}: response body redacted") from e
         except httpx.RequestError as e:
             logger.error("Embedding request error", error=str(e))
             raise LLMError(f"Request failed: {e}") from e
@@ -228,7 +231,7 @@ class OllamaClient:
             data = response.json()
             embedding = data["embedding"]
         except (KeyError, ValueError) as e:
-            logger.error("Failed to parse embedding response")
+            logger.error("Failed to parse embedding response", raw_length=len(response.text))
             raise LLMResponseParseError(response.text, str(e)) from e
 
         # Truncate to requested dimension if specified (MRL support)

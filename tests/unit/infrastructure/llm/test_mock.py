@@ -9,11 +9,14 @@ import pytest
 
 from ai_psychiatrist.infrastructure.llm.mock import MockLLMClient
 from ai_psychiatrist.infrastructure.llm.protocols import (
+    ChatClient,
     ChatMessage,
     ChatRequest,
     ChatResponse,
+    EmbeddingClient,
     EmbeddingRequest,
     EmbeddingResponse,
+    LLMClient,
 )
 
 
@@ -161,9 +164,7 @@ class TestMockLLMClientEmbed:
         )
         mock = MockLLMClient(embedding_responses=[response])
 
-        result = await mock.embed(
-            EmbeddingRequest(text="test", model="test-model")
-        )
+        result = await mock.embed(EmbeddingRequest(text="test", model="test-model"))
 
         assert result.embedding == (0.1, 0.2, 0.3)
         assert result.model == "custom-embed-model"
@@ -317,21 +318,15 @@ class TestMockLLMClientProtocolCompliance:
 
     def test_implements_chat_client(self) -> None:
         """Should implement ChatClient protocol."""
-        from ai_psychiatrist.infrastructure.llm.protocols import ChatClient
-
         mock = MockLLMClient()
         assert isinstance(mock, ChatClient)
 
     def test_implements_embedding_client(self) -> None:
         """Should implement EmbeddingClient protocol."""
-        from ai_psychiatrist.infrastructure.llm.protocols import EmbeddingClient
-
         mock = MockLLMClient()
         assert isinstance(mock, EmbeddingClient)
 
     def test_implements_llm_client(self) -> None:
         """Should implement LLMClient protocol (combined)."""
-        from ai_psychiatrist.infrastructure.llm.protocols import LLMClient
-
         mock = MockLLMClient()
         assert isinstance(mock, LLMClient)

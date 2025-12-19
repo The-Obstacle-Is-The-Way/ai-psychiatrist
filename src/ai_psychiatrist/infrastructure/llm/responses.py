@@ -32,7 +32,11 @@ def extract_json_from_response(raw: str) -> dict[str, Any]:
         LLMResponseParseError: If no valid JSON found.
     """
     # Try extracting from <answer> tags first
-    answer_match = re.search(r"<answer>\s*(\{.*?\})\s*</answer>", raw, flags=re.DOTALL)
+    answer_match = re.search(
+        r"<answer>\s*(.*?)\s*</answer>",
+        raw,
+        flags=re.DOTALL | re.IGNORECASE,
+    )
     text = answer_match.group(1) if answer_match else raw
 
     # Strip markdown code blocks
@@ -115,8 +119,8 @@ def _strip_markdown_fences(text: str) -> str:
 def _normalize_json_text(text: str) -> str:
     """Normalize JSON text by fixing common issues."""
     # Replace smart quotes
-    text = text.replace(""", '"').replace(""", '"')
-    text = text.replace("'", "'").replace("'", "'")
+    text = text.replace("\u201c", '"').replace("\u201d", '"')
+    text = text.replace("\u2018", "'").replace("\u2019", "'")
 
     # Remove zero-width spaces
     text = text.replace("\u200b", "")
@@ -156,20 +160,19 @@ async def repair_json_with_llm(
     Raises:
         LLMResponseParseError: If repair fails.
     """
-    keys_str = ", ".join(expected_keys)
-    value_template = '{"evidence": <str>, "reason": <str>, "score": <int 0-3 or "N/A">}'
-    default_value = '{"evidence":"No evidence","reason":"Auto-repaired","score":"N/A"}'
-
-    repair_prompt = f"""You will be given malformed JSON. Output ONLY valid JSON with these keys:
-{keys_str}
-
-Each value must be an object: {value_template}.
-If missing, fill with {default_value}.
-
-Malformed JSON:
-{broken_json}
-
-Return only the fixed JSON. No prose, no markdown, no tags."""
+    value_template = '{"evidence": <string>, "reason": <string>, "score": <int 0-3 or "N/A">}'
+    default_value = (
+        '{"evidence":"No relevant evidence found","reason":"Auto-repaired","score":"N/A"}'
+    )
+    repair_prompt = (
+        "You will be given malformed JSON. Output ONLY a valid JSON object with these EXACT keys:\n"
+        f"{', '.join(expected_keys)}\n\n"
+        f"Each value must be an object: {value_template}.\n"
+        f"If something is missing, fill with {default_value}.\n\n"
+        "Malformed JSON:\n"
+        f"{broken_json}\n\n"
+        "Return only the fixed JSON. No prose, no markdown, no tags."
+    )
 
     response = await llm_client.simple_chat(repair_prompt)
     return extract_json_from_response(response)

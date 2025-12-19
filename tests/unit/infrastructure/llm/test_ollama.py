@@ -5,6 +5,8 @@ Tests use respx to mock HTTP requests to the Ollama API.
 
 from __future__ import annotations
 
+import math
+
 import httpx
 import pytest
 import respx
@@ -17,9 +19,12 @@ from ai_psychiatrist.domain.exceptions import (
 )
 from ai_psychiatrist.infrastructure.llm.ollama import OllamaClient, _l2_normalize
 from ai_psychiatrist.infrastructure.llm.protocols import (
+    ChatClient,
     ChatMessage,
     ChatRequest,
+    EmbeddingClient,
     EmbeddingRequest,
+    LLMClient,
 )
 
 
@@ -47,8 +52,6 @@ class TestL2Normalize:
 
     def test_normalizes_to_unit_length(self) -> None:
         """Normalized vector should have length ~1."""
-        import math
-
         embedding = [1.0, 2.0, 3.0, 4.0]
         result = _l2_normalize(embedding)
 
@@ -138,9 +141,7 @@ class TestOllamaClientChat:
 
     @respx.mock
     @pytest.mark.asyncio
-    async def test_chat_sends_correct_payload(
-        self, ollama_client: OllamaClient
-    ) -> None:
+    async def test_chat_sends_correct_payload(self, ollama_client: OllamaClient) -> None:
         """Should send correct request payload."""
         route = respx.post("http://localhost:11434/api/chat").mock(
             return_value=httpx.Response(
@@ -215,9 +216,7 @@ class TestOllamaClientChat:
 
     @respx.mock
     @pytest.mark.asyncio
-    async def test_chat_request_error_raises(
-        self, ollama_client: OllamaClient
-    ) -> None:
+    async def test_chat_request_error_raises(self, ollama_client: OllamaClient) -> None:
         """Should raise LLMError on request error."""
         respx.post("http://localhost:11434/api/chat").mock(
             side_effect=httpx.RequestError("Connection failed")
@@ -282,9 +281,7 @@ class TestOllamaClientEmbed:
 
     @respx.mock
     @pytest.mark.asyncio
-    async def test_embed_with_dimension_truncation(
-        self, ollama_client: OllamaClient
-    ) -> None:
+    async def test_embed_with_dimension_truncation(self, ollama_client: OllamaClient) -> None:
         """Should truncate embedding to requested dimension (MRL)."""
         respx.post("http://localhost:11434/api/embeddings").mock(
             return_value=httpx.Response(
@@ -336,9 +333,7 @@ class TestOllamaClientEmbed:
 
     @respx.mock
     @pytest.mark.asyncio
-    async def test_embed_request_error_raises(
-        self, ollama_client: OllamaClient
-    ) -> None:
+    async def test_embed_request_error_raises(self, ollama_client: OllamaClient) -> None:
         """Should raise LLMError on request error."""
         respx.post("http://localhost:11434/api/embeddings").mock(
             side_effect=httpx.RequestError("Connection refused")
@@ -353,9 +348,7 @@ class TestOllamaClientEmbed:
 
     @respx.mock
     @pytest.mark.asyncio
-    async def test_embed_parse_error_raises(
-        self, ollama_client: OllamaClient
-    ) -> None:
+    async def test_embed_parse_error_raises(self, ollama_client: OllamaClient) -> None:
         """Should raise LLMResponseParseError on malformed response."""
         respx.post("http://localhost:11434/api/embeddings").mock(
             return_value=httpx.Response(200, json={"no_embedding": True})
@@ -374,9 +367,7 @@ class TestOllamaClientSimpleMethods:
 
     @respx.mock
     @pytest.mark.asyncio
-    async def test_simple_chat_with_system(
-        self, ollama_client: OllamaClient
-    ) -> None:
+    async def test_simple_chat_with_system(self, ollama_client: OllamaClient) -> None:
         """simple_chat should work with system prompt."""
         route = respx.post("http://localhost:11434/api/chat").mock(
             return_value=httpx.Response(
@@ -398,9 +389,7 @@ class TestOllamaClientSimpleMethods:
 
     @respx.mock
     @pytest.mark.asyncio
-    async def test_simple_chat_without_system(
-        self, ollama_client: OllamaClient
-    ) -> None:
+    async def test_simple_chat_without_system(self, ollama_client: OllamaClient) -> None:
         """simple_chat should work without system prompt."""
         respx.post("http://localhost:11434/api/chat").mock(
             return_value=httpx.Response(
@@ -434,9 +423,7 @@ class TestOllamaClientSimpleMethods:
 
     @respx.mock
     @pytest.mark.asyncio
-    async def test_simple_embed_with_dimension(
-        self, ollama_client: OllamaClient
-    ) -> None:
+    async def test_simple_embed_with_dimension(self, ollama_client: OllamaClient) -> None:
         """simple_embed should pass dimension for MRL truncation."""
         respx.post("http://localhost:11434/api/embeddings").mock(
             return_value=httpx.Response(
@@ -458,9 +445,7 @@ class TestOllamaClientContextManager:
 
     @respx.mock
     @pytest.mark.asyncio
-    async def test_async_context_manager(
-        self, ollama_settings: OllamaSettings
-    ) -> None:
+    async def test_async_context_manager(self, ollama_settings: OllamaSettings) -> None:
         """Should work as async context manager."""
         respx.post("http://localhost:11434/api/chat").mock(
             return_value=httpx.Response(
@@ -479,18 +464,12 @@ class TestOllamaClientProtocolCompliance:
 
     def test_implements_chat_client(self, ollama_client: OllamaClient) -> None:
         """Should implement ChatClient protocol."""
-        from ai_psychiatrist.infrastructure.llm.protocols import ChatClient
-
         assert isinstance(ollama_client, ChatClient)
 
     def test_implements_embedding_client(self, ollama_client: OllamaClient) -> None:
         """Should implement EmbeddingClient protocol."""
-        from ai_psychiatrist.infrastructure.llm.protocols import EmbeddingClient
-
         assert isinstance(ollama_client, EmbeddingClient)
 
     def test_implements_llm_client(self, ollama_client: OllamaClient) -> None:
         """Should implement LLMClient protocol (combined)."""
-        from ai_psychiatrist.infrastructure.llm.protocols import LLMClient
-
         assert isinstance(ollama_client, LLMClient)

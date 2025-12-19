@@ -9,10 +9,12 @@ from __future__ import annotations
 import pytest
 
 from ai_psychiatrist.domain.exceptions import LLMResponseParseError
+from ai_psychiatrist.infrastructure.llm.mock import MockLLMClient
 from ai_psychiatrist.infrastructure.llm.responses import (
     extract_json_from_response,
     extract_score_from_text,
     extract_xml_tags,
+    repair_json_with_llm,
 )
 
 
@@ -37,6 +39,12 @@ class TestExtractJson:
         result = extract_json_from_response(raw)
         assert result == {"key": "value"}
 
+    def test_json_in_answer_tags_nested(self) -> None:
+        """Should extract nested JSON from answer tags."""
+        raw = '<answer>\n{"outer": {"inner": 1}}\n</answer>'
+        result = extract_json_from_response(raw)
+        assert result == {"outer": {"inner": 1}}
+
     def test_markdown_code_block_json(self) -> None:
         """Should strip markdown json fences."""
         raw = '```json\n{"key": "value"}\n```'
@@ -51,14 +59,13 @@ class TestExtractJson:
 
     def test_smart_quotes_double(self) -> None:
         """Should handle smart double quotes."""
-        # Using actual curly quote characters
-        raw = '{"key": "value"}'
+        raw = "{\u201ckey\u201d: \u201cvalue\u201d}"
         result = extract_json_from_response(raw)
         assert result == {"key": "value"}
 
     def test_smart_quotes_single(self) -> None:
         """Should handle smart single quotes in strings."""
-        raw = '{"key": "it\'s working"}'
+        raw = "{\u201ckey\u201d: \u201cit\u2019s working\u201d}"
         result = extract_json_from_response(raw)
         assert result == {"key": "it's working"}
 
@@ -245,3 +252,34 @@ class TestExtractScore:
         # This tests edge case - should find valid integer score
         text = "Score: 3.5 is invalid, but the real Score: 3 is valid"
         assert extract_score_from_text(text) == 3
+
+
+class TestRepairJsonWithLlm:
+    """Tests for repair_json_with_llm."""
+
+    @pytest.mark.asyncio
+    async def test_repair_json_success(self) -> None:
+        """Should return repaired JSON from LLM output."""
+        mock = MockLLMClient(
+            chat_responses=['```json\\n{"a": {"evidence": "x", "reason": "y", "score": 1}}\\n```']
+        )
+
+        result = await repair_json_with_llm(
+            mock,
+            broken_json='{"a": {"evidence": "x", "reason": "y", "score": 1,}}',
+            expected_keys=["a"],
+        )
+
+        assert result == {"a": {"evidence": "x", "reason": "y", "score": 1}}
+
+    @pytest.mark.asyncio
+    async def test_repair_json_invalid_raises(self) -> None:
+        """Should raise when LLM output is not valid JSON."""
+        mock = MockLLMClient(chat_responses=["not json"])
+
+        with pytest.raises(LLMResponseParseError):
+            await repair_json_with_llm(
+                mock,
+                broken_json='{"a": [}',
+                expected_keys=["a"],
+            )
