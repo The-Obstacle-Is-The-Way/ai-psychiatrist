@@ -164,9 +164,7 @@ class ReferenceStore:
         """
         return self._load_embeddings()
 
-    def get_participant_embeddings(
-        self, participant_id: int
-    ) -> list[tuple[str, list[float]]]:
+    def get_participant_embeddings(self, participant_id: int) -> list[tuple[str, list[float]]]:
         """Get embeddings for a specific participant.
 
         Args:

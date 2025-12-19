@@ -372,19 +372,23 @@ class TestReferenceStore:
     def test_load_scores_success(self, mock_data_settings: DataSettings) -> None:
         """Should successfully load scores from CSVs."""
         # Create dummy train CSV
-        train_df = pd.DataFrame({
-            "Participant_ID": [100],
-            "PHQ8_NoInterest": [1],
-            "PHQ8_Depressed": [2],
-        })
+        train_df = pd.DataFrame(
+            {
+                "Participant_ID": [100],
+                "PHQ8_NoInterest": [1],
+                "PHQ8_Depressed": [2],
+            }
+        )
         train_df.to_csv(mock_data_settings.train_csv, index=False)
 
         # Create dummy dev CSV
-        dev_df = pd.DataFrame({
-            "Participant_ID": [101],
-            "PHQ8_NoInterest": [3],
-            "PHQ8_Depressed": [0],
-        })
+        dev_df = pd.DataFrame(
+            {
+                "Participant_ID": [101],
+                "PHQ8_NoInterest": [3],
+                "PHQ8_Depressed": [0],
+            }
+        )
         dev_df.to_csv(mock_data_settings.dev_csv, index=False)
 
         mock_embed = MagicMock()

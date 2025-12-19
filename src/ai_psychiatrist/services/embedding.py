@@ -61,9 +61,7 @@ class ReferenceBundle:
                     lines.append(f"{score_text}\n{match.chunk.text}")
                 block = (
                     f"[{item.value}]\n"
-                    "<Reference Examples>\n\n"
-                    + "\n\n".join(lines)
-                    + "\n\n</Reference Examples>"
+                    "<Reference Examples>\n\n" + "\n\n".join(lines) + "\n\n</Reference Examples>"
                 )
             blocks.append(block)
         return "\n\n".join(blocks)
