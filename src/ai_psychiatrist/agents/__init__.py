@@ -13,8 +13,10 @@ assessment pipeline.
 
 from ai_psychiatrist.agents.judge import JudgeAgent
 from ai_psychiatrist.agents.qualitative import QualitativeAssessmentAgent
+from ai_psychiatrist.agents.quantitative import QuantitativeAssessmentAgent
 
 __all__ = [
     "JudgeAgent",
     "QualitativeAssessmentAgent",
+    "QuantitativeAssessmentAgent",
 ]
