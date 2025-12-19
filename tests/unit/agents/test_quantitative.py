@@ -28,6 +28,21 @@ from ai_psychiatrist.domain.value_objects import ItemAssessment
 from ai_psychiatrist.infrastructure.llm.responses import SimpleChatClient
 from tests.fixtures.mock_llm import MockLLMClient
 
+
+def _to_smart_quotes(text: str) -> str:
+    """Convert ASCII quotes to smart quotes for parsing tests."""
+    left_double = True
+    out: list[str] = []
+    for char in text:
+        if char == '"':
+            out.append("\u201c" if left_double else "\u201d")
+            left_double = not left_double
+        elif char == "'":
+            out.append("\u2019")
+        else:
+            out.append(char)
+    return "".join(out)
+
 # Sample evidence extraction response
 SAMPLE_EVIDENCE_RESPONSE = json.dumps(
     {
@@ -326,16 +341,20 @@ class TestQuantitativeAgentParsing:
         sample_transcript: Transcript,
     ) -> None:
         """Should handle JSON with smart quotes."""
-        json_with_smart_quotes = """{
-    "PHQ8_NoInterest": {"evidence": "test", "reason": "test", "score": 1},
-    "PHQ8_Depressed": {"evidence": "test", "reason": "test", "score": 0},
-    "PHQ8_Sleep": {"evidence": "test", "reason": "test", "score": 0},
-    "PHQ8_Tired": {"evidence": "test", "reason": "test", "score": 0},
-    "PHQ8_Appetite": {"evidence": "test", "reason": "test", "score": 0},
-    "PHQ8_Failure": {"evidence": "test", "reason": "test", "score": 0},
-    "PHQ8_Concentrating": {"evidence": "test", "reason": "test", "score": 0},
-    "PHQ8_Moving": {"evidence": "test", "reason": "test", "score": 0}
-}"""
+        json_with_smart_quotes = _to_smart_quotes(
+            json.dumps(
+                {
+                    "PHQ8_NoInterest": {"evidence": "test", "reason": "test", "score": 1},
+                    "PHQ8_Depressed": {"evidence": "test", "reason": "test", "score": 0},
+                    "PHQ8_Sleep": {"evidence": "test", "reason": "test", "score": 0},
+                    "PHQ8_Tired": {"evidence": "test", "reason": "test", "score": 0},
+                    "PHQ8_Appetite": {"evidence": "test", "reason": "test", "score": 0},
+                    "PHQ8_Failure": {"evidence": "test", "reason": "test", "score": 0},
+                    "PHQ8_Concentrating": {"evidence": "test", "reason": "test", "score": 0},
+                    "PHQ8_Moving": {"evidence": "test", "reason": "test", "score": 0},
+                }
+            )
+        )
         client = MockLLMClient(chat_responses=[SAMPLE_EVIDENCE_RESPONSE, json_with_smart_quotes])
         agent = QuantitativeAssessmentAgent(llm_client=client, mode=AssessmentMode.ZERO_SHOT)
         result = await agent.assess(sample_transcript)

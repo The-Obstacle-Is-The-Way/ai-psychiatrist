@@ -249,6 +249,8 @@ class QuantitativeAssessmentAgent:
             clean = self._strip_json_block(raw)
             clean = self._tolerant_fixups(clean)
             data = json.loads(clean)
+            if not isinstance(data, dict):
+                raise ValueError("Quantitative response JSON must be an object")
             return self._validate_and_normalize(data)
         except (json.JSONDecodeError, ValueError):
             pass
@@ -260,6 +262,8 @@ class QuantitativeAssessmentAgent:
                 block = match.group(1)
                 clean = self._tolerant_fixups(block)
                 data = json.loads(clean)
+                if not isinstance(data, dict):
+                    raise ValueError("Quantitative response JSON must be an object")
                 return self._validate_and_normalize(data)
         except (json.JSONDecodeError, ValueError):
             pass
@@ -303,6 +307,8 @@ class QuantitativeAssessmentAgent:
             clean = self._strip_json_block(fixed)
             clean = self._tolerant_fixups(clean)
             result: dict[str, object] = json.loads(clean)
+            if not isinstance(result, dict):
+                return None
             return result
         except (json.JSONDecodeError, ValueError):
             return None
@@ -356,8 +362,12 @@ class QuantitativeAssessmentAgent:
             Fixed JSON string.
         """
         # Replace smart quotes
-        text = text.replace(""", '"').replace(""", '"')
-        text = text.replace("'", "'").replace("'", "'")
+        text = (
+            text.replace("\u201c", '"')
+            .replace("\u201d", '"')
+            .replace("\u2018", "'")
+            .replace("\u2019", "'")
+        )
 
         # Remove trailing commas
         text = re.sub(r",\s*([}\]])", r"\1", text)
