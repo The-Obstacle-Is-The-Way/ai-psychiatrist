@@ -364,9 +364,7 @@ class QuantitativeAssessmentAgent:
 
         return text
 
-    def _validate_and_normalize(
-        self, data: dict[str, object]
-    ) -> dict[PHQ8Item, ItemAssessment]:
+    def _validate_and_normalize(self, data: dict[str, object]) -> dict[PHQ8Item, ItemAssessment]:
         """Convert raw dict to typed ItemAssessment objects.
 
         Args:
