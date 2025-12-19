@@ -175,6 +175,7 @@ Each spec represents a **vertical slice** - a complete feature from API to stora
 | **11.5** | Integration Checkpoint | Full pipeline verification |
 | **12** | Observability | Metrics, tracing, health checks |
 | **12.5** | Final Cleanup | Legacy removal, cruft cleanup |
+| **13** | Structured Outputs (Pydantic AI) | Post-replication refactor for validated outputs |
 
 ## Integration Checkpoints
 
@@ -323,9 +324,11 @@ The specs are ordered for **maximum early value** with **mandatory checkpoints**
 8. **CHECKPOINT 11.5**: Verify paper metrics reproduced
 9. **Spec 12**: Polish (observability)
 10. **CHECKPOINT 12.5**: Remove legacy code, clean codebase
+11. **Spec 13 (Optional)**: Structured outputs via Pydantic AI (post-replication enhancement)
 
 Each spec produces a **working increment** that can be demoed and tested.
 Each checkpoint produces a **quality gate** that must pass before proceeding.
+Spec 13 is **optional** and should only be considered after paper replication is validated.
 
 ## References
 

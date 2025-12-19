@@ -95,6 +95,17 @@ class MockLLMClient:
         """List of embedding requests received."""
         return self._embedding_requests.copy()
 
+    def add_chat_response(self, response: str | ChatResponse) -> None:
+        """Add a chat response to the queue.
+
+        Use this to dynamically add responses during tests, e.g., for
+        multi-turn conversations or refinement loops.
+
+        Args:
+            response: Response string or ChatResponse to add.
+        """
+        self._chat_responses.append(response)
+
     async def chat(self, request: ChatRequest) -> ChatResponse:
         """Return mock chat response."""
         self._chat_requests.append(request)
