@@ -259,7 +259,7 @@ class OllamaClient:
         self,
         user_prompt: str,
         system_prompt: str = "",
-        model: str = "gemma3:27b",
+        model: str | None = None,
         temperature: float = 0.2,
         top_k: int = 20,
         top_p: float = 0.8,
@@ -284,7 +284,7 @@ class OllamaClient:
 
         request = ChatRequest(
             messages=messages,
-            model=model,
+            model=model or "gemma3:27b",
             temperature=temperature,
             top_k=top_k,
             top_p=top_p,
@@ -295,7 +295,7 @@ class OllamaClient:
     async def simple_embed(
         self,
         text: str,
-        model: str = "qwen3-embedding:8b",
+        model: str | None = None,
         dimension: int | None = None,
     ) -> tuple[float, ...]:
         """Simple embedding generation.
@@ -310,7 +310,7 @@ class OllamaClient:
         """
         request = EmbeddingRequest(
             text=text,
-            model=model,
+            model=model or "qwen3-embedding:8b",
             dimension=dimension,
         )
         response = await self.embed(request)

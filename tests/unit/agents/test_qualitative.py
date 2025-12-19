@@ -16,8 +16,9 @@ from ai_psychiatrist.agents.prompts.qualitative import (
     make_feedback_prompt,
     make_qualitative_prompt,
 )
-from ai_psychiatrist.agents.qualitative import ChatClient, QualitativeAssessmentAgent
+from ai_psychiatrist.agents.qualitative import QualitativeAssessmentAgent
 from ai_psychiatrist.domain.entities import QualitativeAssessment, Transcript
+from ai_psychiatrist.infrastructure.llm.responses import SimpleChatClient
 from tests.fixtures.mock_llm import MockLLMClient
 
 # Sample LLM response for fixtures
@@ -383,16 +384,16 @@ class TestQualitativePrompts:
 
 
 class TestAgentProtocol:
-    """Tests for ChatClient protocol compatibility."""
+    """Tests for SimpleChatClient protocol compatibility."""
 
     def test_mock_client_implements_protocol(self) -> None:
-        """MockLLMClient should implement ChatClient protocol."""
+        """MockLLMClient should implement SimpleChatClient protocol."""
         client = MockLLMClient()
-        assert isinstance(client, ChatClient)
+        assert isinstance(client, SimpleChatClient)
 
     @pytest.mark.asyncio
     async def test_agent_works_with_protocol(self) -> None:
-        """Agent should work with any ChatClient implementation."""
+        """Agent should work with any SimpleChatClient implementation."""
 
         class CustomClient:
             """Custom chat client for testing."""
@@ -409,7 +410,7 @@ class TestAgentProtocol:
                 return "<assessment>Custom response</assessment>"
 
         client = CustomClient()
-        assert isinstance(client, ChatClient)
+        assert isinstance(client, SimpleChatClient)
 
         agent = QualitativeAssessmentAgent(llm_client=client)
         transcript = Transcript(participant_id=1, text="Test")
