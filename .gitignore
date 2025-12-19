@@ -218,3 +218,8 @@ __marimo__/
 *.tar.gz
 *.mat
 .DS_Store
+
+# DAIC-WOZ Dataset (requires license agreement from USC ICT)
+# See: docs/specs/04A_DATA_ORGANIZATION.md
+# Run `python scripts/prepare_dataset.py` to regenerate from downloads/
+data/
