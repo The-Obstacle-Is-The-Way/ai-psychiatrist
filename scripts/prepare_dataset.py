@@ -56,10 +56,16 @@ def log_error(msg: str, **kwargs: Any) -> None:
     print(f"[ERROR] {msg} {extras}".strip())
 
 
+def _is_macos_resource(name: str) -> bool:
+    """Return True for macOS resource fork entries."""
+    base_name = Path(name).name
+    return name.startswith("__MACOSX/") or base_name.startswith("._")
+
+
 def _read_first_matching(zf: zipfile.ZipFile, suffix: str) -> bytes | None:
-    """Read the first zip member matching a suffix."""
+    """Read the first non-resource zip member matching a suffix."""
     for name in zf.namelist():
-        if name.endswith(suffix):
+        if name.endswith(suffix) and not _is_macos_resource(name):
             return zf.read(name)
     return None
 
