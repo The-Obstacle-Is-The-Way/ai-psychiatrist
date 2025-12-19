@@ -162,14 +162,75 @@ Each spec represents a **vertical slice** - a complete feature from API to stora
 | **03** | Configuration & Logging | Pydantic settings, structlog |
 | **04** | LLM Infrastructure | Ollama client abstraction |
 | **04A** | Data Organization | DAIC-WOZ dataset preparation script |
+| **04.5** | Integration Checkpoint | Foundation verification, bug hunt |
 | **05** | Transcript Loader | Interview data ingestion |
 | **06** | Qualitative Agent | PHQ-8 symptom analysis |
 | **07** | Judge Agent | Self-refinement feedback loop |
+| **07.5** | Integration Checkpoint | Qualitative path verification |
 | **08** | Embedding Service | Vector similarity search |
 | **09** | Quantitative Agent | Few-shot PHQ-8 scoring |
+| **09.5** | Integration Checkpoint | Quantitative path verification |
 | **10** | Meta-Review Agent | Severity integration |
 | **11** | Full Pipeline API | Complete assessment endpoint |
+| **11.5** | Integration Checkpoint | Full pipeline verification |
 | **12** | Observability | Metrics, tracing, health checks |
+| **12.5** | Final Cleanup | Legacy removal, cruft cleanup |
+
+## Integration Checkpoints
+
+The `.5` specs are **mandatory pause points** for quality review:
+
+```text
+Spec 01-04A: Foundation
+      │
+      ▼
+┌─────────────────────────────┐
+│  CHECKPOINT 04.5            │  Verify foundation before services
+│  Bug hunt: P0/P1/P2 issues  │
+└─────────────────────────────┘
+      │
+      ▼
+Spec 05-07: Qualitative Path
+      │
+      ▼
+┌─────────────────────────────┐
+│  CHECKPOINT 07.5            │  First complete vertical slice
+│  Verify qual → judge flow   │
+└─────────────────────────────┘
+      │
+      ▼
+Spec 08-09: Quantitative Path
+      │
+      ▼
+┌─────────────────────────────┐
+│  CHECKPOINT 09.5            │  Both paths ready for merge
+│  Verify embeddings + quant  │
+└─────────────────────────────┘
+      │
+      ▼
+Spec 10-11: Integration
+      │
+      ▼
+┌─────────────────────────────┐
+│  CHECKPOINT 11.5            │  Functional complete
+│  Paper metrics verified     │
+└─────────────────────────────┘
+      │
+      ▼
+Spec 12: Observability (Polish)
+      │
+      ▼
+┌─────────────────────────────┐
+│  CHECKPOINT 12.5            │  FINAL: Remove legacy code
+│  Clean codebase only        │
+└─────────────────────────────┘
+```
+
+Each checkpoint includes:
+- **Bug Hunt Protocol**: P0/P1/P2/P3/P4 issue detection
+- **Quality Gates**: CI, coverage, type checking
+- **Technical Debt Inventory**: What's acceptable vs. must-fix
+- **Exit Criteria**: Must pass before proceeding
 
 ## Design Principles
 
@@ -250,16 +311,21 @@ See **Spec 01: Testing Philosophy** for detailed examples and rationale.
 
 ## Implementation Order
 
-The specs are ordered for **maximum early value**:
+The specs are ordered for **maximum early value** with **mandatory checkpoints**:
 
-1. **Spec 01-03**: Foundation (can't build without it)
-2. **Spec 04-05**: Infrastructure (LLM + data)
-3. **Spec 06-07**: Qualitative path (first testable feature)
-4. **Spec 08-09**: Quantitative path (second testable feature)
-5. **Spec 10-11**: Integration (full pipeline)
-6. **Spec 12**: Polish (observability)
+1. **Spec 01-04A**: Foundation (can't build without it)
+2. **CHECKPOINT 04.5**: Verify foundation, bug hunt
+3. **Spec 05-07**: Qualitative path (first testable feature)
+4. **CHECKPOINT 07.5**: Verify qualitative pipeline
+5. **Spec 08-09**: Quantitative path (second testable feature)
+6. **CHECKPOINT 09.5**: Verify quantitative pipeline
+7. **Spec 10-11**: Integration (full pipeline)
+8. **CHECKPOINT 11.5**: Verify paper metrics reproduced
+9. **Spec 12**: Polish (observability)
+10. **CHECKPOINT 12.5**: Remove legacy code, clean codebase
 
 Each spec produces a **working increment** that can be demoed and tested.
+Each checkpoint produces a **quality gate** that must pass before proceeding.
 
 ## References
 
