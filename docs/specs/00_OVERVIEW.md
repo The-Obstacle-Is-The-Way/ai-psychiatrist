@@ -161,6 +161,7 @@ Each spec represents a **vertical slice** - a complete feature from API to stora
 | **02** | Core Domain | PHQ8, Transcript, Assessment entities |
 | **03** | Configuration & Logging | Pydantic settings, structlog |
 | **04** | LLM Infrastructure | Ollama client abstraction |
+| **04A** | Data Organization | DAIC-WOZ dataset preparation script |
 | **05** | Transcript Loader | Interview data ingestion |
 | **06** | Qualitative Agent | PHQ-8 symptom analysis |
 | **07** | Judge Agent | Self-refinement feedback loop |
