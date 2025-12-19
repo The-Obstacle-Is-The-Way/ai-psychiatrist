@@ -11,8 +11,10 @@ This module provides the agent implementations for the depression
 assessment pipeline.
 """
 
+from ai_psychiatrist.agents.judge import JudgeAgent
 from ai_psychiatrist.agents.qualitative import QualitativeAssessmentAgent
 
 __all__ = [
+    "JudgeAgent",
     "QualitativeAssessmentAgent",
 ]

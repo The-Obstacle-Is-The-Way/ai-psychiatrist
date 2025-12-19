@@ -96,7 +96,7 @@ Score: 2
 
         evaluation = await agent.evaluate(sample_assessment, sample_transcript)
 
-        # We don't know exactly which metric got which score without peeking internal iteration order
+        # We don't know which metric got which score without peeking iteration order.
         # But we know we should have two 5s and two 2s.
         scores = [s.score for s in evaluation.scores.values()]
         assert scores.count(5) == 2

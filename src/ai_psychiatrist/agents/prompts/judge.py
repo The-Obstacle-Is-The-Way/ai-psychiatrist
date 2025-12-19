@@ -69,8 +69,11 @@ def make_evaluation_prompt(
         Formatted evaluation prompt.
     """
     definition = METRIC_DEFINITIONS[metric]
+    metric_name = metric.value.upper()
 
-    return f"""Evaluate the following qualitative assessment output for {metric.value.upper()} only. Consider the qualitative assessment (qualitative_assessment) of the transcript (transcript) and compare qualitative_assessment to the provided transcript.  # noqa: E501
+    return f"""Evaluate the following qualitative assessment output for {metric_name} only.
+
+Consider the qualitative assessment of the transcript and compare it to the provided transcript.
 
 {definition}
 

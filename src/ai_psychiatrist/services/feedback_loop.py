@@ -27,9 +27,7 @@ class FeedbackLoopResult:
     final_assessment: QualitativeAssessment
     final_evaluation: QualitativeEvaluation
     iterations_used: int
-    history: list[tuple[QualitativeAssessment, QualitativeEvaluation]] = field(
-        default_factory=list
-    )
+    history: list[tuple[QualitativeAssessment, QualitativeEvaluation]] = field(default_factory=list)
 
     @property
     def improved(self) -> bool:
@@ -166,6 +164,4 @@ class FeedbackLoopService:
 
     def _needs_improvement(self, evaluation: QualitativeEvaluation) -> bool:
         """Check if evaluation needs improvement based on configured threshold."""
-        return any(
-            score.score <= self._score_threshold for score in evaluation.scores.values()
-        )
+        return any(score.score <= self._score_threshold for score in evaluation.scores.values())

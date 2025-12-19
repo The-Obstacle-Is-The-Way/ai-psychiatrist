@@ -49,8 +49,7 @@ class TestFeedbackLoopService:
         # Default behavior: Acceptable scores
         agent.evaluate.return_value = QualitativeEvaluation(
             scores={
-                m: EvaluationScore(metric=m, score=5, explanation="Good")
-                for m in EvaluationMetric
+                m: EvaluationScore(metric=m, score=5, explanation="Good") for m in EvaluationMetric
             },
             assessment_id=Mock(),
             iteration=0,
@@ -69,7 +68,7 @@ class TestFeedbackLoopService:
         return FeedbackLoopSettings(
             enabled=True,
             max_iterations=3,
-            score_threshold=3, # Scores <= 3 trigger refinement
+            score_threshold=3,  # Scores <= 3 trigger refinement
         )
 
     @pytest.mark.asyncio
@@ -81,9 +80,7 @@ class TestFeedbackLoopService:
         default_settings: FeedbackLoopSettings,
     ) -> None:
         """Should return result immediately if initial assessment is good."""
-        service = FeedbackLoopService(
-            mock_qualitative_agent, mock_judge_agent, default_settings
-        )
+        service = FeedbackLoopService(mock_qualitative_agent, mock_judge_agent, default_settings)
 
         result = await service.run(sample_transcript)
 
@@ -107,8 +104,7 @@ class TestFeedbackLoopService:
 
         bad_eval = QualitativeEvaluation(
             scores={
-                m: EvaluationScore(metric=m, score=2, explanation="Bad")
-                for m in EvaluationMetric
+                m: EvaluationScore(metric=m, score=2, explanation="Bad") for m in EvaluationMetric
             },
             assessment_id=Mock(),
             iteration=0,
@@ -116,8 +112,7 @@ class TestFeedbackLoopService:
 
         good_eval = QualitativeEvaluation(
             scores={
-                m: EvaluationScore(metric=m, score=5, explanation="Good")
-                for m in EvaluationMetric
+                m: EvaluationScore(metric=m, score=5, explanation="Good") for m in EvaluationMetric
             },
             assessment_id=Mock(),
             iteration=1,
@@ -126,9 +121,7 @@ class TestFeedbackLoopService:
         mock_judge_agent.evaluate.side_effect = [bad_eval, good_eval]
         mock_judge_agent.get_feedback_for_low_scores.return_value = {"metric": "feedback"}
 
-        service = FeedbackLoopService(
-            mock_qualitative_agent, mock_judge_agent, default_settings
-        )
+        service = FeedbackLoopService(mock_qualitative_agent, mock_judge_agent, default_settings)
 
         result = await service.run(sample_transcript)
 
@@ -150,8 +143,7 @@ class TestFeedbackLoopService:
         """Should stop after max iterations."""
         bad_eval = QualitativeEvaluation(
             scores={
-                m: EvaluationScore(metric=m, score=2, explanation="Bad")
-                for m in EvaluationMetric
+                m: EvaluationScore(metric=m, score=2, explanation="Bad") for m in EvaluationMetric
             },
             assessment_id=Mock(),
             iteration=0,
@@ -161,14 +153,12 @@ class TestFeedbackLoopService:
         mock_judge_agent.evaluate.return_value = bad_eval
         mock_judge_agent.get_feedback_for_low_scores.return_value = {"metric": "feedback"}
 
-        service = FeedbackLoopService(
-            mock_qualitative_agent, mock_judge_agent, default_settings
-        )
+        service = FeedbackLoopService(mock_qualitative_agent, mock_judge_agent, default_settings)
 
         result = await service.run(sample_transcript)
 
         assert result.iterations_used == default_settings.max_iterations
-        assert not result.improved # Initial and final are both bad (same score)
+        assert not result.improved  # Initial and final are both bad (same score)
         assert len(result.history) == default_settings.max_iterations + 1
         assert mock_qualitative_agent.refine.call_count == default_settings.max_iterations
 
@@ -185,17 +175,14 @@ class TestFeedbackLoopService:
         # Even if eval is bad
         bad_eval = QualitativeEvaluation(
             scores={
-                m: EvaluationScore(metric=m, score=2, explanation="Bad")
-                for m in EvaluationMetric
+                m: EvaluationScore(metric=m, score=2, explanation="Bad") for m in EvaluationMetric
             },
             assessment_id=Mock(),
             iteration=0,
         )
         mock_judge_agent.evaluate.return_value = bad_eval
 
-        service = FeedbackLoopService(
-            mock_qualitative_agent, mock_judge_agent, settings
-        )
+        service = FeedbackLoopService(mock_qualitative_agent, mock_judge_agent, settings)
 
         result = await service.run(sample_transcript)
 

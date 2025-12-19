@@ -148,7 +148,5 @@ class JudgeAgent:
         feedback = {}
         for metric in evaluation.low_scores:
             score = evaluation.get_score(metric)
-            feedback[metric.value] = (
-                f"Scored {score.score}/5. {score.explanation}"
-            )
+            feedback[metric.value] = f"Scored {score.score}/5. {score.explanation}"
         return feedback

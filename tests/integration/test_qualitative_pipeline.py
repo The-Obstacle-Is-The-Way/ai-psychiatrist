@@ -81,16 +81,16 @@ No current suicidal ideation.
         # 4. Judge (4 metrics) -> all high
 
         responses = [
-            mock_assessment_response,          # 1. Assess
-            mock_low_score_response,           # 2. Judge Metric 1
-            mock_low_score_response,           #    Judge Metric 2
-            mock_low_score_response,           #    Judge Metric 3
-            mock_low_score_response,           #    Judge Metric 4
+            mock_assessment_response,  # 1. Assess
+            mock_low_score_response,  # 2. Judge Metric 1
+            mock_low_score_response,  #    Judge Metric 2
+            mock_low_score_response,  #    Judge Metric 3
+            mock_low_score_response,  #    Judge Metric 4
             mock_refined_assessment_response,  # 3. Refine
-            mock_high_score_response,          # 4. Judge Metric 1
-            mock_high_score_response,          #    Judge Metric 2
-            mock_high_score_response,          #    Judge Metric 3
-            mock_high_score_response,          #    Judge Metric 4
+            mock_high_score_response,  # 4. Judge Metric 1
+            mock_high_score_response,  #    Judge Metric 2
+            mock_high_score_response,  #    Judge Metric 3
+            mock_high_score_response,  #    Judge Metric 4
         ]
 
         client = MockLLMClient(chat_responses=responses)
@@ -116,7 +116,7 @@ No current suicidal ideation.
         assert result.iterations_used == 1
         assert result.improved
         assert result.final_evaluation.average_score == 5.0
-        assert len(result.history) == 2 # Initial + 1 refinement
+        assert len(result.history) == 2  # Initial + 1 refinement
 
         # Verify initial was bad
         initial_eval = result.history[0][1]
