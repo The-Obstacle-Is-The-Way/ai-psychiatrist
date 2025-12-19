@@ -214,12 +214,12 @@ class EvaluationScore:
     def is_low(self) -> bool:
         """Check if score is considered low (needs improvement).
 
-        Per paper, scores <= 2 trigger the feedback loop.
+        Per paper, scores < 4 (i.e., <= 3) trigger the feedback loop.
 
         Returns:
-            True if score is 1 or 2.
+            True if score is 1, 2, or 3.
         """
-        return self.score <= 2
+        return self.score <= 3
 
     @property
     def is_acceptable(self) -> bool:
