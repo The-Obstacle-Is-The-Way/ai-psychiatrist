@@ -40,13 +40,14 @@ class TestQuantitativeCoverage:
         assert result.total_score is not None
 
     @pytest.mark.asyncio
-    async def test_parse_response_strategy_2_failure(self, transcript: Transcript) -> None:
-        """Test Strategy 2 (Answer block) finding a block but failing to parse JSON."""
+    async def test_parse_response_answer_block_failure(self, transcript: Transcript) -> None:
+        """Test <answer> block with invalid JSON falls back to LLM repair."""
         # Evidence response (valid)
         evidence_resp = SAMPLE_EVIDENCE_RESPONSE
 
         # Scoring response: Has <answer> tags but content is invalid JSON
-        # This forces it to go to Strategy 3 (LLM Repair)
+        # Strategy 1 (_strip_json_block) extracts content but JSON parsing fails
+        # This forces it to go to Strategy 2 (LLM Repair)
         bad_answer_block = "<answer>{ invalid json </answer>"
 
         # Repair response (valid)
@@ -64,8 +65,8 @@ class TestQuantitativeCoverage:
         assert result.items[PHQ8Item.DEPRESSED].score == 1
 
     @pytest.mark.asyncio
-    async def test_parse_response_strategy_3_failure(self, transcript: Transcript) -> None:
-        """Test Strategy 3 (LLM Repair) failing to produce valid JSON."""
+    async def test_parse_response_llm_repair_failure(self, transcript: Transcript) -> None:
+        """Test LLM Repair (Strategy 2) failing falls back to empty skeleton."""
         evidence_resp = SAMPLE_EVIDENCE_RESPONSE
         # Initial response: completely broken
         raw_resp = "COMPLETE GARBAGE"
@@ -77,7 +78,7 @@ class TestQuantitativeCoverage:
         agent = QuantitativeAssessmentAgent(client, mode=AssessmentMode.ZERO_SHOT)
         result = await agent.assess(transcript)
 
-        # Should fall back to empty skeleton (Strategy 4)
+        # Should fall back to empty skeleton (Strategy 3)
         assert result.items[PHQ8Item.DEPRESSED].score is None
         assert result.items[PHQ8Item.DEPRESSED].evidence == "No relevant evidence found"
 
@@ -98,6 +99,38 @@ class TestQuantitativeCoverage:
         assert result.items[PHQ8Item.DEPRESSED].evidence == "fixed"
 
     @pytest.mark.asyncio
+    async def test_validate_and_normalize_float_scores(self, transcript: Transcript) -> None:
+        """Test float score handling (e.g., 2.0 from JSON parsing)."""
+        evidence_resp = SAMPLE_EVIDENCE_RESPONSE
+
+        # JSON with float scores (JSON parsers may return floats)
+        float_scores = json.dumps(
+            {
+                "PHQ8_NoInterest": {"score": 2.0},  # float 2.0 -> 2
+                "PHQ8_Depressed": {"score": 0.0},  # float 0.0 -> 0
+                "PHQ8_Sleep": {"score": 3.0},  # float 3.0 -> 3
+                "PHQ8_Tired": {"score": 1.5},  # float 1.5 -> None (not whole number)
+                "PHQ8_Appetite": {"score": 4.0},  # float 4.0 -> None (out of bounds)
+                "PHQ8_Failure": {"score": -1.0},  # float -1.0 -> None (out of bounds)
+                "PHQ8_Concentrating": {"score": 1},  # int 1 -> 1
+                "PHQ8_Moving": {"score": "N/A"},  # str "N/A" -> None
+            }
+        )
+
+        client = MockLLMClient(chat_responses=[evidence_resp, float_scores])
+        agent = QuantitativeAssessmentAgent(client, mode=AssessmentMode.ZERO_SHOT)
+        result = await agent.assess(transcript)
+
+        assert result.items[PHQ8Item.NO_INTEREST].score == 2  # float 2.0 -> 2
+        assert result.items[PHQ8Item.DEPRESSED].score == 0  # float 0.0 -> 0
+        assert result.items[PHQ8Item.SLEEP].score == 3  # float 3.0 -> 3
+        assert result.items[PHQ8Item.TIRED].score is None  # float 1.5 -> None
+        assert result.items[PHQ8Item.APPETITE].score is None  # float 4.0 out of bounds
+        assert result.items[PHQ8Item.FAILURE].score is None  # float -1.0 out of bounds
+        assert result.items[PHQ8Item.CONCENTRATING].score == 1  # int 1 -> 1
+        assert result.items[PHQ8Item.MOVING].score is None  # str "N/A" -> None
+
+    @pytest.mark.asyncio
     async def test_validate_and_normalize_score_types(self, transcript: Transcript) -> None:
         """Test various score formats in _validate_and_normalize."""
         evidence_resp = SAMPLE_EVIDENCE_RESPONSE
@@ -108,7 +141,7 @@ class TestQuantitativeCoverage:
                 "PHQ8_NoInterest": {"score": 3},  # int 3 -> 3
                 "PHQ8_Depressed": {"score": "2"},  # str "2" -> 2
                 "PHQ8_Sleep": {"score": "N/A"},  # str "N/A" -> None
-                "PHQ8_Tired": {"score": "n/a"},  # str "n/a" -> None (case insensitive check?)
+                "PHQ8_Tired": {"score": "n/a"},  # str "n/a" -> None (case insensitive)
                 "PHQ8_Appetite": {"score": "invalid"},  # str "invalid" -> None
                 "PHQ8_Failure": {"score": 4},  # int 4 -> None (out of bounds)
                 "PHQ8_Concentrating": {"score": -1},  # int -1 -> None (out of bounds)

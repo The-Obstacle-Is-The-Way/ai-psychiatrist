@@ -81,6 +81,13 @@ class QuantitativeAssessmentAgent:
         self._embedding = embedding_service
         self._mode = mode
 
+        # Warn if FEW_SHOT mode is used without embedding service
+        if mode == AssessmentMode.FEW_SHOT and embedding_service is None:
+            logger.warning(
+                "FEW_SHOT mode selected but no embedding_service provided; "
+                "will operate without reference examples (similar to zero-shot)"
+            )
+
     async def assess(self, transcript: Transcript) -> PHQ8Assessment:
         """Generate PHQ-8 assessment for transcript.
 
@@ -233,10 +240,12 @@ class QuantitativeAssessmentAgent:
         """Parse JSON response with multi-level repair.
 
         Strategies:
-        1. Clean and parse JSON directly
-        2. Extract from <answer> block
-        3. LLM repair for malformed JSON
-        4. Fallback to empty skeleton
+        1. Clean and parse JSON directly (handles <answer> tags and markdown)
+        2. LLM repair for malformed JSON
+        3. Fallback to empty skeleton
+
+        Note: _strip_json_block already handles <answer> tag extraction via string
+        splitting, so a separate regex-based strategy is not needed.
 
         Args:
             raw: Raw LLM response text.
@@ -244,7 +253,7 @@ class QuantitativeAssessmentAgent:
         Returns:
             Dictionary mapping PHQ8Item to ItemAssessment.
         """
-        # Strategy 1: Clean and Parse
+        # Strategy 1: Clean and Parse (handles <answer> tags and markdown blocks)
         try:
             clean = self._strip_json_block(raw)
             clean = self._tolerant_fixups(clean)
@@ -255,20 +264,7 @@ class QuantitativeAssessmentAgent:
         except (json.JSONDecodeError, ValueError):
             pass
 
-        # Strategy 2: Extract <answer> block
-        try:
-            match = re.search(r"<answer>\s*(\{.*?\})\s*</answer>", raw, flags=re.DOTALL)
-            if match:
-                block = match.group(1)
-                clean = self._tolerant_fixups(block)
-                data = json.loads(clean)
-                if not isinstance(data, dict):
-                    raise ValueError("Quantitative response JSON must be an object")
-                return self._validate_and_normalize(data)
-        except (json.JSONDecodeError, ValueError):
-            pass
-
-        # Strategy 3: LLM Repair
+        # Strategy 2: LLM Repair
         try:
             repaired_json = await self._llm_repair(raw)
             if repaired_json:
@@ -276,7 +272,7 @@ class QuantitativeAssessmentAgent:
         except (json.JSONDecodeError, ValueError):
             pass
 
-        # Fallback: Return empty skeleton
+        # Strategy 3: Fallback to empty skeleton
         logger.error("Failed to parse quantitative response after all attempts")
         return self._validate_and_normalize({})
 
@@ -395,13 +391,18 @@ class QuantitativeAssessmentAgent:
             evidence = str(item_data.get("evidence", "No relevant evidence found"))
             reason = str(item_data.get("reason", "Unable to assess"))
 
-            # Parse score (can be int, string "N/A", or None)
+            # Parse score (can be int, float, string "N/A", or None)
             raw_score = item_data.get("score")
             score: int | None = None
 
             if raw_score is not None:
                 if isinstance(raw_score, int) and 0 <= raw_score <= 3:
                     score = raw_score
+                elif isinstance(raw_score, float) and raw_score == int(raw_score):
+                    # Handle float scores like 2.0 from JSON parsing
+                    parsed = int(raw_score)
+                    if 0 <= parsed <= 3:
+                        score = parsed
                 elif isinstance(raw_score, str) and raw_score.upper() != "N/A":
                     try:
                         parsed = int(raw_score)
