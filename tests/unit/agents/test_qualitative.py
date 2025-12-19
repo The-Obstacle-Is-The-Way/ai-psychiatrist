@@ -124,6 +124,36 @@ class TestQualitativeAssessmentAgent:
         assert any("tired" in q.lower() for q in result.supporting_quotes)
 
     @pytest.mark.asyncio
+    async def test_assess_extracts_inline_quotes_when_no_exact_quotes(
+        self,
+        sample_transcript: Transcript,
+    ) -> None:
+        """Should extract quotes embedded in domain text."""
+        response = """
+<assessment>
+Participant reports feeling "empty and hopeless".
+</assessment>
+<PHQ8_symptoms>
+Sleep issues: "I can't sleep most nights."
+</PHQ8_symptoms>
+<social_factors>
+No major changes reported.
+</social_factors>
+<biological_factors>
+No family history mentioned.
+</biological_factors>
+<risk_factors>
+None noted.
+</risk_factors>
+"""
+        client = MockLLMClient(chat_responses=[response])
+        agent = QualitativeAssessmentAgent(llm_client=client)
+        result = await agent.assess(sample_transcript)
+
+        assert "empty and hopeless" in result.supporting_quotes
+        assert any("can't sleep" in q for q in result.supporting_quotes)
+
+    @pytest.mark.asyncio
     async def test_assess_sends_correct_prompt(
         self,
         mock_client: MockLLMClient,
@@ -314,6 +344,13 @@ class TestQualitativePrompts:
         assert "<social_factors>" in prompt
         assert "<biological_factors>" in prompt
         assert "<risk_factors>" in prompt
+        assert "<exact_quotes>" in prompt
+
+    def test_make_qualitative_prompt_includes_examples(self) -> None:
+        """Prompt should include example guidance."""
+        prompt = make_qualitative_prompt("test")
+
+        assert "Examples" in prompt
 
     def test_make_feedback_prompt_includes_feedback(self) -> None:
         """Feedback prompt should include all feedback metrics."""

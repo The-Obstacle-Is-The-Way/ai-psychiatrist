@@ -39,9 +39,16 @@ Please produce a qualitative assessment across these domains:
 4) Biological factors that may influence mental health
 5) Risk factors the subject may be experiencing
 
+Examples (for format only, do NOT reuse content):
+- PHQ-8 symptoms: "I don't enjoy anything anymore" (frequency: nearly every day)
+- Social factors: "Things have been tense at home"
+- Biological factors: "My mother had depression"
+- Risk factors: "I feel isolated since losing my job"
+
 Requirements:
 - Be objective, concise, and clinically grounded (avoid vague generalities).
 - Use exact quotes from the transcript as evidence within each domain.
+- Collect all quoted evidence again in <exact_quotes> as bullet points.
 - If a domain is not covered in the interview, write "not assessed in interview".
 
 Return ONLY this XML (each tag on its own line; no additional text outside the tags):
@@ -51,6 +58,7 @@ Return ONLY this XML (each tag on its own line; no additional text outside the t
 <social_factors>...</social_factors>
 <biological_factors>...</biological_factors>
 <risk_factors>...</risk_factors>
+<exact_quotes>...</exact_quotes>
 """
 
 
@@ -91,6 +99,7 @@ Please provide an improved assessment that addresses the feedback above. Use the
 <social_factors>...</social_factors>
 <biological_factors>...</biological_factors>
 <risk_factors>...</risk_factors>
+<exact_quotes>...</exact_quotes>
 
 Ensure:
 1. More specific evidence with exact quotes

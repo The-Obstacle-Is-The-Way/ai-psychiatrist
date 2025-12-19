@@ -11,6 +11,7 @@ iterative refinement.
 
 from __future__ import annotations
 
+import re
 from typing import ClassVar, Protocol, runtime_checkable
 
 from ai_psychiatrist.agents.prompts.qualitative import (
@@ -172,7 +173,7 @@ class QualitativeAssessmentAgent:
         extracted = extract_xml_tags(raw_response, self.ASSESSMENT_TAGS)
 
         # Extract quotes if present
-        quotes = self._extract_quotes(raw_response)
+        quotes = self._extract_quotes(raw_response, extracted)
 
         return QualitativeAssessment(
             overall=extracted.get("assessment") or "Assessment not generated",
@@ -184,7 +185,11 @@ class QualitativeAssessmentAgent:
             participant_id=participant_id,
         )
 
-    def _extract_quotes(self, raw_response: str) -> list[str]:
+    def _extract_quotes(
+        self,
+        raw_response: str,
+        extracted: dict[str, str],
+    ) -> list[str]:
         """Extract supporting quotes from response.
 
         Args:
@@ -199,9 +204,42 @@ class QualitativeAssessmentAgent:
             quotes_section = extract_xml_tags(raw_response, ["exact_quotes"])
             if quotes_section.get("exact_quotes"):
                 quotes = [
-                    q.strip()
-                    for q in quotes_section["exact_quotes"].split("\n")
-                    if q.strip() and q.strip() != "-"
+                    self._clean_quote_line(line)
+                    for line in quotes_section["exact_quotes"].split("\n")
                 ]
+                quotes = [q for q in quotes if q]
+
+        if not quotes:
+            combined = "\n".join(value for value in extracted.values() if value)
+            quotes = self._extract_inline_quotes(combined)
 
         return quotes
+
+    @staticmethod
+    def _clean_quote_line(line: str) -> str:
+        """Normalize a quote line from an exact_quotes block."""
+        cleaned = line.strip()
+        if not cleaned or cleaned == "-":
+            return ""
+        if cleaned[0] in {"-", "*", "•"}:
+            cleaned = cleaned[1:].strip()
+        return cleaned
+
+    @staticmethod
+    def _extract_inline_quotes(text: str) -> list[str]:
+        """Extract quoted substrings from assessment sections."""
+        matches: list[str] = []
+        for match in re.finditer(r'"([^"]+)"|\'([^\']+)\'', text):
+            value = match.group(1) or match.group(2) or ""
+            cleaned = value.strip()
+            if cleaned:
+                matches.append(cleaned)
+
+        deduped: list[str] = []
+        seen: set[str] = set()
+        for quote in matches:
+            if quote not in seen:
+                seen.add(quote)
+                deduped.append(quote)
+
+        return deduped
