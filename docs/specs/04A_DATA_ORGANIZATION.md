@@ -16,7 +16,7 @@ Define the canonical data directory structure, document the DAIC-WOZ dataset for
 
 The DAIC-WOZ dataset is distributed as individual participant zip files:
 
-```
+```text
 downloads/
 ├── participants/
 │   ├── 300_P.zip
@@ -106,7 +106,7 @@ Notes:
 
 The codebase expects data in this canonical structure:
 
-```
+```text
 data/
 ├── transcripts/                    # Extracted transcripts
 │   ├── 300_P/
