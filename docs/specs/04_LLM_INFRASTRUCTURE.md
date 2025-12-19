@@ -79,6 +79,15 @@ class ChatMessage:
     role: str  # "system", "user", "assistant"
     content: str
 
+    def __post_init__(self) -> None:
+        """Validate message after initialization."""
+        if self.role not in ("system", "user", "assistant"):
+            msg = f"Invalid role '{self.role}', must be 'system', 'user', or 'assistant'"
+            raise ValueError(msg)
+        if not self.content:
+            msg = "Message content cannot be empty"
+            raise ValueError(msg)
+
 
 @dataclass(frozen=True, slots=True)
 class ChatRequest:
@@ -90,6 +99,27 @@ class ChatRequest:
     top_k: int = 20
     top_p: float = 0.8
     timeout_seconds: int = 180
+
+    def __post_init__(self) -> None:
+        """Validate request after initialization."""
+        if not self.messages:
+            msg = "Messages cannot be empty"
+            raise ValueError(msg)
+        if not self.model:
+            msg = "Model cannot be empty"
+            raise ValueError(msg)
+        if not 0.0 <= self.temperature <= 2.0:
+            msg = f"Temperature {self.temperature} must be between 0.0 and 2.0"
+            raise ValueError(msg)
+        if not 1 <= self.top_k <= 100:
+            msg = f"top_k {self.top_k} must be between 1 and 100"
+            raise ValueError(msg)
+        if not 0.0 <= self.top_p <= 1.0:
+            msg = f"top_p {self.top_p} must be between 0.0 and 1.0"
+            raise ValueError(msg)
+        if self.timeout_seconds < 1:
+            msg = f"timeout_seconds {self.timeout_seconds} must be >= 1"
+            raise ValueError(msg)
 
 
 @dataclass(frozen=True, slots=True)
@@ -113,6 +143,21 @@ class EmbeddingRequest:
     dimension: int | None = None
     timeout_seconds: int = 120
 
+    def __post_init__(self) -> None:
+        """Validate request after initialization."""
+        if not self.text:
+            msg = "Text cannot be empty"
+            raise ValueError(msg)
+        if not self.model:
+            msg = "Model cannot be empty"
+            raise ValueError(msg)
+        if self.dimension is not None and self.dimension < 1:
+            msg = f"dimension {self.dimension} must be >= 1"
+            raise ValueError(msg)
+        if self.timeout_seconds < 1:
+            msg = f"timeout_seconds {self.timeout_seconds} must be >= 1"
+            raise ValueError(msg)
+
 
 @dataclass(frozen=True, slots=True)
 class EmbeddingResponse:
@@ -124,6 +169,9 @@ class EmbeddingResponse:
 
     def __post_init__(self) -> None:
         """Set dimension from embedding length."""
+        if not self.embedding:
+            msg = "Embedding cannot be empty"
+            raise ValueError(msg)
         object.__setattr__(self, "dimension", len(self.embedding))
 
 
@@ -309,9 +357,10 @@ class OllamaClient:
             logger.error(
                 "Chat request failed",
                 status_code=e.response.status_code,
-                detail=e.response.text,
+                detail="response body redacted",
+                response_length=len(e.response.text),
             )
-            raise LLMError(f"HTTP {e.response.status_code}: {e.response.text}") from e
+            raise LLMError(f"HTTP {e.response.status_code}: response body redacted") from e
         except httpx.RequestError as e:
             logger.error("Chat request error", error=str(e))
             raise LLMError(f"Request failed: {e}") from e
@@ -320,7 +369,7 @@ class OllamaClient:
             data = response.json()
             content = data["message"]["content"]
         except (KeyError, ValueError) as e:
-            logger.error("Failed to parse chat response", raw=response.text[:500])
+            logger.error("Failed to parse chat response", raw_length=len(response.text))
             raise LLMResponseParseError(response.text, str(e)) from e
 
         logger.debug(
@@ -376,8 +425,10 @@ class OllamaClient:
             logger.error(
                 "Embedding request failed",
                 status_code=e.response.status_code,
+                detail="response body redacted",
+                response_length=len(e.response.text),
             )
-            raise LLMError(f"HTTP {e.response.status_code}: {e.response.text}") from e
+            raise LLMError(f"HTTP {e.response.status_code}: response body redacted") from e
         except httpx.RequestError as e:
             logger.error("Embedding request error", error=str(e))
             raise LLMError(f"Request failed: {e}") from e
@@ -386,7 +437,7 @@ class OllamaClient:
             data = response.json()
             embedding = data["embedding"]
         except (KeyError, ValueError) as e:
-            logger.error("Failed to parse embedding response")
+            logger.error("Failed to parse embedding response", raw_length=len(response.text))
             raise LLMResponseParseError(response.text, str(e)) from e
 
         # Truncate to requested dimension if specified
@@ -502,7 +553,11 @@ def extract_json_from_response(raw: str) -> dict[str, Any]:
         LLMResponseParseError: If no valid JSON found.
     """
     # Try extracting from <answer> tags first
-    answer_match = re.search(r"<answer>\s*(\{.*?\})\s*</answer>", raw, flags=re.DOTALL)
+    answer_match = re.search(
+        r"<answer>\s*(.*?)\s*</answer>",
+        raw,
+        flags=re.DOTALL | re.IGNORECASE,
+    )
     if answer_match:
         text = answer_match.group(1)
     else:
@@ -555,14 +610,15 @@ def extract_score_from_text(text: str) -> int | None:
         Extracted score (1-5) or None if not found.
     """
     patterns = [
-        r"[Ss]core[:\s]*(\d+)",
-        r"(\d+)[/\s]*(?:out of\s*)?5",
-        r"[Rr]ating[:\s]*(\d+)",
+        r"score\s*[:\s]\s*(\d+)",  # Score: 4, score : 3, etc.
+        r"score\s+of\s+(\d+)",  # score of 4
+        r"rating\s*[:\s]\s*(\d+)",  # Rating: 5, rating: 3, etc.
+        r"(\d+)\s*[/\s]\s*(?:out of\s*)?5",  # 4/5, 3 out of 5
         r"^(\d+)\b",  # Number at start
     ]
 
     for pattern in patterns:
-        match = re.search(pattern, text, re.MULTILINE)
+        match = re.search(pattern, text, re.MULTILINE | re.IGNORECASE)
         if match:
             score = int(match.group(1))
             if 1 <= score <= 5:
@@ -586,8 +642,8 @@ def _strip_markdown_fences(text: str) -> str:
 def _normalize_json_text(text: str) -> str:
     """Normalize JSON text by fixing common issues."""
     # Replace smart quotes
-    text = text.replace(""", '"').replace(""", '"')
-    text = text.replace("'", "'").replace("'", "'")
+    text = text.replace("\u201c", '"').replace("\u201d", '"')
+    text = text.replace("\u2018", "'").replace("\u2019", "'")
 
     # Remove zero-width spaces
     text = text.replace("\u200b", "")
@@ -627,16 +683,21 @@ async def repair_json_with_llm(
     Raises:
         LLMResponseParseError: If repair fails.
     """
-    repair_prompt = f"""You will be given malformed JSON. Output ONLY a valid JSON object with these EXACT keys:
-{', '.join(expected_keys)}
-
-Each value must be an object: {{"evidence": <string>, "reason": <string>, "score": <int 0-3 or "N/A">}}.
-If something is missing, fill with {{"evidence":"No relevant evidence found","reason":"Auto-repaired","score":"N/A"}}.
-
-Malformed JSON:
-{broken_json}
-
-Return only the fixed JSON. No prose, no markdown, no tags."""
+    value_template = (
+        '{"evidence": <string>, "reason": <string>, "score": <int 0-3 or "N/A">}'
+    )
+    default_value = (
+        '{"evidence":"No relevant evidence found","reason":"Auto-repaired","score":"N/A"}'
+    )
+    repair_prompt = (
+        "You will be given malformed JSON. Output ONLY a valid JSON object with these EXACT keys:\n"
+        f"{', '.join(expected_keys)}\n\n"
+        f"Each value must be an object: {value_template}.\n"
+        f"If something is missing, fill with {default_value}.\n\n"
+        "Malformed JSON:\n"
+        f"{broken_json}\n\n"
+        "Return only the fixed JSON. No prose, no markdown, no tags."
+    )
 
     response = await llm_client.simple_chat(repair_prompt)
     return extract_json_from_response(response)
@@ -649,9 +710,13 @@ Return only the fixed JSON. No prose, no markdown, no tags."""
 
 from __future__ import annotations
 
-from typing import Any, Callable
+from typing import TYPE_CHECKING, Any
+
+if TYPE_CHECKING:
+    from collections.abc import Callable
 
 from ai_psychiatrist.infrastructure.llm.protocols import (
+    ChatMessage,
     ChatRequest,
     ChatResponse,
     EmbeddingRequest,
@@ -702,12 +767,12 @@ class MockLLMClient:
     @property
     def chat_requests(self) -> list[ChatRequest]:
         """List of chat requests received."""
-        return self._chat_requests
+        return self._chat_requests.copy()
 
     @property
     def embedding_requests(self) -> list[EmbeddingRequest]:
         """List of embedding requests received."""
-        return self._embedding_requests
+        return self._embedding_requests.copy()
 
     async def chat(self, request: ChatRequest) -> ChatResponse:
         """Return mock chat response."""
@@ -743,7 +808,7 @@ class MockLLMClient:
                 return response
             embedding = response
         else:
-            # Default: random-ish embedding
+            # Default: deterministic embedding based on dimension
             dim = request.dimension or 256
             embedding = tuple(0.1 * (i % 10) for i in range(dim))
 
@@ -757,16 +822,23 @@ class MockLLMClient:
         user_prompt: str,
         system_prompt: str = "",
         model: str | None = None,
+        temperature: float = 0.2,
+        top_k: int = 20,
+        top_p: float = 0.8,
     ) -> str:
         """Simple chat interface matching OllamaClient."""
-        from ai_psychiatrist.infrastructure.llm.protocols import ChatMessage
-
-        messages = []
+        messages: list[ChatMessage] = []
         if system_prompt:
             messages.append(ChatMessage(role="system", content=system_prompt))
         messages.append(ChatMessage(role="user", content=user_prompt))
 
-        request = ChatRequest(messages=messages, model=model or "mock")
+        request = ChatRequest(
+            messages=messages,
+            model=model or "mock",
+            temperature=temperature,
+            top_k=top_k,
+            top_p=top_p,
+        )
         response = await self.chat(request)
         return response.content
 
@@ -807,6 +879,7 @@ from __future__ import annotations
 
 import pytest
 
+from ai_psychiatrist.domain.exceptions import LLMResponseParseError
 from ai_psychiatrist.infrastructure.llm.mock import MockLLMClient
 from ai_psychiatrist.infrastructure.llm.protocols import (
     ChatMessage,
@@ -817,6 +890,7 @@ from ai_psychiatrist.infrastructure.llm.responses import (
     extract_json_from_response,
     extract_score_from_text,
     extract_xml_tags,
+    repair_json_with_llm,
 )
 
 
@@ -835,6 +909,12 @@ class TestExtractJson:
         result = extract_json_from_response(raw)
         assert result == {"key": "value"}
 
+    def test_json_in_answer_tags_nested(self) -> None:
+        """Should extract nested JSON from answer tags."""
+        raw = '<answer>\n{"outer": {"inner": 1}}\n</answer>'
+        result = extract_json_from_response(raw)
+        assert result == {"outer": {"inner": 1}}
+
     def test_markdown_code_block(self) -> None:
         """Should strip markdown fences."""
         raw = '```json\n{"key": "value"}\n```'
@@ -843,7 +923,7 @@ class TestExtractJson:
 
     def test_smart_quotes(self) -> None:
         """Should handle smart quotes."""
-        raw = '{"key": "value"}'  # curly quotes
+        raw = "{\u201ckey\u201d: \u201cvalue\u201d}"
         result = extract_json_from_response(raw)
         assert result == {"key": "value"}
 
@@ -911,6 +991,39 @@ class TestMockLLMClient:
         assert resp1 == "first"
         assert resp2 == "second"
         assert mock.chat_call_count == 2
+
+
+class TestRepairJsonWithLlm:
+    """Tests for repair_json_with_llm."""
+
+    @pytest.mark.asyncio
+    async def test_repair_json_success(self) -> None:
+        """Should return repaired JSON from LLM output."""
+        mock = MockLLMClient(
+            chat_responses=[
+                '```json\\n{"a": {"evidence": "x", "reason": "y", "score": 1}}\\n```'
+            ]
+        )
+
+        result = await repair_json_with_llm(
+            mock,
+            broken_json='{"a": {"evidence": "x", "reason": "y", "score": 1,}}',
+            expected_keys=["a"],
+        )
+
+        assert result == {"a": {"evidence": "x", "reason": "y", "score": 1}}
+
+    @pytest.mark.asyncio
+    async def test_repair_json_invalid_raises(self) -> None:
+        """Should raise when LLM output is not valid JSON."""
+        mock = MockLLMClient(chat_responses=["not json"])
+
+        with pytest.raises(LLMResponseParseError):
+            await repair_json_with_llm(
+                mock,
+                broken_json='{"a": [}',
+                expected_keys=["a"],
+            )
 
     @pytest.mark.asyncio
     async def test_custom_function(self) -> None:
