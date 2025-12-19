@@ -67,7 +67,7 @@ class TranscriptService:
 
         try:
             text = self._parse_daic_woz_transcript(transcript_path)
-        except Exception as e:
+        except (pd.errors.ParserError, pd.errors.EmptyDataError, KeyError, UnicodeDecodeError) as e:
             logger.error(
                 "Failed to parse transcript",
                 participant_id=participant_id,

@@ -1,4 +1,4 @@
-# BUG-003: MacOS Resource Fork Extracted Instead of Transcript
+# BUG-003: macOS Resource Fork Extracted Instead of Transcript
 
 **Severity**: MEDIUM (P2)
 **Status**: RESOLVED (code fix), DATA RE-EXTRACT REQUIRED

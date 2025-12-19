@@ -110,20 +110,20 @@ class TranscriptChunker:
                 )
 
         # If the last chunk doesn't include the final lines, add one more chunk
+        # Note: last_chunk_start % step_size != 0 guarantees this position was never
+        # visited in the sliding window loop, so no duplicate check is needed.
         last_chunk_start = len(lines) - self._chunk_size
         if last_chunk_start > 0 and (last_chunk_start % self._step_size) != 0:
             final_chunk_lines = lines[last_chunk_start:]
             final_chunk_text = "\n".join(final_chunk_lines)
-            # Only add if not already included
-            if final_chunk_text not in [c.text for c in chunks]:
-                chunks.append(
-                    TranscriptChunk(
-                        text=final_chunk_text,
-                        participant_id=transcript.participant_id,
-                        line_start=last_chunk_start,
-                        line_end=len(lines) - 1,
-                    )
+            chunks.append(
+                TranscriptChunk(
+                    text=final_chunk_text,
+                    participant_id=transcript.participant_id,
+                    line_start=last_chunk_start,
+                    line_end=len(lines) - 1,
                 )
+            )
 
         logger.debug(
             "Chunked transcript",
