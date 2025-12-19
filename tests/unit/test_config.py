@@ -87,7 +87,7 @@ class TestModelSettings:
         assert settings.judge_model == "gemma3:27b"
         assert settings.meta_review_model == "gemma3:27b"
         assert settings.quantitative_model == "alibayram/medgemma:27b"
-        assert "Qwen3-Embedding-8B" in settings.embedding_model
+        assert settings.embedding_model == "qwen3-embedding:8b"
 
     def test_temperature_defaults(self) -> None:
         """Temperature defaults should be set correctly."""

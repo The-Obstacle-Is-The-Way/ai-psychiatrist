@@ -225,7 +225,7 @@ class TestEmbeddingRequest:
         """Should create request with MRL dimension truncation."""
         req = EmbeddingRequest(
             text="Hello world",
-            model="dengcao/Qwen3-Embedding-8B:Q8_0",
+            model="qwen3-embedding:8b",
             dimension=4096,
             timeout_seconds=60,
         )

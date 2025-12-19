@@ -295,7 +295,7 @@ class OllamaClient:
     async def simple_embed(
         self,
         text: str,
-        model: str = "dengcao/Qwen3-Embedding-8B:Q8_0",
+        model: str = "qwen3-embedding:8b",
         dimension: int | None = None,
     ) -> tuple[float, ...]:
         """Simple embedding generation.

@@ -42,7 +42,7 @@ class PHQ8ScoresWithExplanations(BaseModel):
 ##################### Created 4 line chunks (with a 2 lines sliding window) for each reference transcript and embedded them 
 ############################################################################################################################
 
-def get_embedding(text, model="dengcao/Qwen3-Embedding-8B:Q8_0", dim=None):
+def get_embedding(text, model="qwen3-embedding:8b", dim=None):
     """
     Creates embedding from given text input and model 
 

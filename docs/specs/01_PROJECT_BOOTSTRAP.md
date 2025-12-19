@@ -583,7 +583,7 @@ MODEL_QUANTITATIVE_MODEL=alibayram/medgemma:27b
 
 # Embedding model family (Section 2.2): Qwen 3 8B Embedding
 # Note: the paper does not specify quantization; Q8_0 is a recommended implementation default.
-MODEL_EMBEDDING_MODEL=dengcao/Qwen3-Embedding-8B:Q8_0
+MODEL_EMBEDDING_MODEL=qwen3-embedding:8b
 
 # Alternative (paper baseline quantitative model):
 # MODEL_QUANTITATIVE_MODEL=gemma3:27b
@@ -688,7 +688,7 @@ class TestEnvExample:
         # Paper-optimal models
         assert "gemma3:27b" in content
         assert "alibayram/medgemma:27b" in content
-        assert "dengcao/Qwen3-Embedding-8B:Q8_0" in content
+        assert "qwen3-embedding:8b" in content
 
         # Paper-optimal hyperparameters
         assert "EMBEDDING_DIMENSION=4096" in content

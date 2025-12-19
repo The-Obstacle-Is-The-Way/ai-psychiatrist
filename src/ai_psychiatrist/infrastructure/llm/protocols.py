@@ -118,7 +118,7 @@ class EmbeddingRequest:
 
     Attributes:
         text: Text to embed.
-        model: Model identifier (e.g., "dengcao/Qwen3-Embedding-8B:Q8_0").
+        model: Model identifier (e.g., "qwen3-embedding:8b").
         dimension: Optional dimension truncation for MRL support.
         timeout_seconds: Request timeout in seconds.
     """

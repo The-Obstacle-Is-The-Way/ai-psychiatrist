@@ -88,7 +88,7 @@ class ModelSettings(BaseSettings):
         description="Quantitative agent model (Paper Appendix F: MAE 0.505)",
     )
     embedding_model: str = Field(
-        default="dengcao/Qwen3-Embedding-8B:Q8_0",
+        default="qwen3-embedding:8b",
         description="Embedding model (Paper Section 2.2: Qwen 3 8B Embedding)",
     )
     temperature: float = Field(default=0.2, ge=0.0, le=2.0, description="Default temperature")

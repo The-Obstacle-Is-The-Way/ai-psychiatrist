@@ -31,7 +31,7 @@ Implement the quantitative assessment agent that predicts PHQ-8 scores using emb
 - Few-shot: `agents/quantitative_assessor_f.py:QuantitativeAssessor`
   - Chat endpoint: `POST /api/chat` with `options={"temperature": 0.2, "top_k": 20, "top_p": 0.8}`
   - Embedding endpoint: `POST /api/embeddings` (L2-normalized; optional truncation via `dim`)
-  - Default models: `chat_model="llama3"`, `emb_model="dengcao/Qwen3-Embedding-8B:Q4_K_M"`
+  - Default models: `chat_model="llama3"`, `emb_model="qwen3-embedding:8b"`
   - Default `top_k` references: `3` (paper optimal: `2`)
   - Output schema: dict keyed by `PHQ8_*` with `{"evidence","reason","score"}` plus `_total` and `_severity`
 - Zero-shot: `agents/quantitative_assessor_z.py:QuantitativeAssessorZ`

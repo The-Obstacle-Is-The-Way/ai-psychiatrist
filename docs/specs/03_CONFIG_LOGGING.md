@@ -15,7 +15,7 @@ Implement centralized configuration management using Pydantic Settings and struc
 
 The current repo uses **hardcoded config** spread across files:
 
-- Local demo pipeline: `server.py` + `agents/*` (defaults: `http://localhost:11434`, `llama3`, embedding model `dengcao/Qwen3-Embedding-8B:Q4_K_M`)
+- Local demo pipeline: `server.py` + `agents/*` (defaults: `http://localhost:11434`, `llama3`, embedding model `qwen3-embedding:8b`)
 - Cluster scripts: `qualitative_assessment/*.py`, `quantitative_assessment/*.py`, `meta_review/meta_review.py` (defaults: `OLLAMA_NODE=...`, models like `gemma3:27b`, `gemma3-optimized:27b`, `alibayram/medgemma:27b`)
 - SLURM runtime configuration for Ollama: `slurm/job_ollama.sh` (exports several `OLLAMA_*`, `GGML_*`, and `CUDA_VISIBLE_DEVICES`)
 
@@ -29,7 +29,7 @@ This spec defines **paper-optimal defaults**:
 | Judge model | `gemma3:27b` | Section 2.2 |
 | Meta-review model | `gemma3:27b` | Section 2.2 |
 | Quantitative model | MedGemma 27B (example Ollama tag: `alibayram/medgemma:27b`) | Appendix F |
-| Embedding model family | Qwen 3 8B Embedding (example Ollama tag: `dengcao/Qwen3-Embedding-8B:Q8_0`; quantization not specified in paper) | Section 2.2 |
+| Embedding model family | Qwen 3 8B Embedding (example Ollama tag: `qwen3-embedding:8b`; quantization not specified in paper) | Section 2.2 |
 | Feedback threshold | 3 (scores < 4 trigger) | Section 2.3.1 |
 | Max iterations | 10 | Section 2.3.1 |
 | top_k references | 2 | Appendix D |
@@ -106,7 +106,7 @@ class ModelSettings(BaseSettings):
         description="Quantitative agent model (Paper Appendix F: MAE 0.505; fewer predictions)",
     )
     embedding_model: str = Field(
-        default="dengcao/Qwen3-Embedding-8B:Q8_0",
+        default="qwen3-embedding:8b",
         description="Embedding model family (Paper Section 2.2: Qwen 3 8B Embedding; quantization not specified)",
     )
     temperature: float = Field(default=0.2, ge=0.0, le=2.0, description="Default temperature")
