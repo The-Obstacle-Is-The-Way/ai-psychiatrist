@@ -133,7 +133,7 @@ class TestOllamaClientChat:
         assert response.content == "Hello!"
         assert response.model == "gemma3:27b"
         assert response.done is True
-        assert response.total_duration_ms == 5000000000
+        assert response.total_duration_ms == 5000  # 5 seconds in ms (converted from ns)
         assert response.prompt_tokens == 10
         assert response.completion_tokens == 5
 

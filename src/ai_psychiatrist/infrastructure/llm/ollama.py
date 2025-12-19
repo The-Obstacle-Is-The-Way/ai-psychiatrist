@@ -103,7 +103,7 @@ class OllamaClient:
             response = await self._client.get(f"{self._base_url}/api/tags")
             response.raise_for_status()
             return True
-        except Exception as e:
+        except (httpx.RequestError, httpx.HTTPStatusError) as e:
             logger.error("Ollama ping failed", error=str(e))
             raise LLMError(f"Failed to ping Ollama: {e}") from e
 
@@ -172,11 +172,15 @@ class OllamaClient:
             content_length=len(content),
         )
 
+        # Convert nanoseconds to milliseconds (Ollama returns timing in ns)
+        total_duration_ns = data.get("total_duration")
+        total_duration_ms = total_duration_ns // 1_000_000 if total_duration_ns else None
+
         return ChatResponse(
             content=content,
             model=data.get("model", request.model),
             done=data.get("done", True),
-            total_duration_ms=data.get("total_duration"),
+            total_duration_ms=total_duration_ms,
             prompt_tokens=data.get("prompt_eval_count"),
             completion_tokens=data.get("eval_count"),
         )

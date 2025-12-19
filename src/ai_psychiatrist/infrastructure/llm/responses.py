@@ -8,12 +8,21 @@ from __future__ import annotations
 
 import json
 import re
-from typing import Any
+from typing import Any, Protocol, runtime_checkable
 
 from ai_psychiatrist.domain.exceptions import LLMResponseParseError
 from ai_psychiatrist.infrastructure.logging import get_logger
 
 logger = get_logger(__name__)
+
+
+@runtime_checkable
+class SimpleChatClient(Protocol):
+    """Protocol for LLM clients with simple_chat method."""
+
+    async def simple_chat(self, prompt: str) -> str:
+        """Send a simple chat prompt and return response."""
+        ...
 
 
 def extract_json_from_response(raw: str) -> dict[str, Any]:
@@ -143,14 +152,14 @@ def _extract_json_object(text: str) -> str:
 
 
 async def repair_json_with_llm(
-    llm_client: Any,
+    llm_client: SimpleChatClient,
     broken_json: str,
     expected_keys: list[str],
 ) -> dict[str, Any]:
     """Attempt to repair malformed JSON using LLM.
 
     Args:
-        llm_client: LLM client with simple_chat method.
+        llm_client: LLM client implementing SimpleChatClient protocol.
         broken_json: Malformed JSON string.
         expected_keys: Expected keys in output.
 

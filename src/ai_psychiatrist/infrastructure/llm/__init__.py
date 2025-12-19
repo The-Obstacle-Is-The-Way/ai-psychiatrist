@@ -23,13 +23,13 @@ from ai_psychiatrist.infrastructure.llm.protocols import (
     LLMClient,
 )
 from ai_psychiatrist.infrastructure.llm.responses import (
+    SimpleChatClient,
     extract_json_from_response,
     extract_score_from_text,
     extract_xml_tags,
 )
 
 __all__ = [
-    # Protocols
     "ChatClient",
     "ChatMessage",
     "ChatRequest",
@@ -38,10 +38,9 @@ __all__ = [
     "EmbeddingRequest",
     "EmbeddingResponse",
     "LLMClient",
-    # Implementations
     "MockLLMClient",
     "OllamaClient",
-    # Utilities
+    "SimpleChatClient",
     "extract_json_from_response",
     "extract_score_from_text",
     "extract_xml_tags",

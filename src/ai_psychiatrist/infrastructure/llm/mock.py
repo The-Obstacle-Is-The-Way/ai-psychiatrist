@@ -6,6 +6,7 @@ without real LLM calls. Follows the principles of test isolation.
 
 from __future__ import annotations
 
+import math
 from typing import TYPE_CHECKING, Any
 
 if TYPE_CHECKING:
@@ -18,6 +19,14 @@ from ai_psychiatrist.infrastructure.llm.protocols import (
     EmbeddingRequest,
     EmbeddingResponse,
 )
+
+
+def _l2_normalize(embedding: tuple[float, ...]) -> tuple[float, ...]:
+    """L2 normalize an embedding vector for test/prod parity."""
+    norm = math.sqrt(sum(x * x for x in embedding))
+    if norm > 0:
+        return tuple(x / norm for x in embedding)
+    return embedding
 
 
 class MockLLMClient:
@@ -111,9 +120,10 @@ class MockLLMClient:
                 return response
             embedding = response
         else:
-            # Default: deterministic embedding based on dimension
+            # Default: deterministic embedding based on dimension, L2-normalized
             dim = request.dimension or 256
-            embedding = tuple(0.1 * (i % 10) for i in range(dim))
+            raw = tuple(0.1 * (i % 10) for i in range(dim))
+            embedding = _l2_normalize(raw)
 
         return EmbeddingResponse(
             embedding=embedding,
