@@ -127,7 +127,7 @@ Score: 2
 
         evaluation = await agent.evaluate(sample_assessment, sample_transcript)
 
-        feedback = await agent.get_feedback_for_low_scores(evaluation)
+        feedback = agent.get_feedback_for_low_scores(evaluation)
 
         assert len(feedback) == 1
         # The low score one

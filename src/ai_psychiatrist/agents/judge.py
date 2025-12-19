@@ -110,10 +110,23 @@ class JudgeAgent:
 
         # Note: The original implementation used temperature=0, top_k=20, top_p=0.9
         # Spec 07 mandates temperature=0.0
-        response = await self._llm_client.simple_chat(
-            user_prompt=prompt,
-            temperature=0.0,
-        )
+        try:
+            response = await self._llm_client.simple_chat(
+                user_prompt=prompt,
+                temperature=0.0,
+            )
+        except Exception as e:
+            logger.error(
+                "LLM call failed during metric evaluation",
+                metric=metric.value,
+                error=str(e),
+            )
+            # Return default score on LLM failure (triggers refinement as fail-safe)
+            return EvaluationScore(
+                metric=metric,
+                score=3,
+                explanation=f"LLM evaluation failed: {e!s}",
+            )
 
         # Extract score from response
         score = extract_score_from_text(response)
@@ -133,7 +146,7 @@ class JudgeAgent:
             explanation=response.strip(),
         )
 
-    async def get_feedback_for_low_scores(
+    def get_feedback_for_low_scores(
         self,
         evaluation: QualitativeEvaluation,
     ) -> dict[str, str]:

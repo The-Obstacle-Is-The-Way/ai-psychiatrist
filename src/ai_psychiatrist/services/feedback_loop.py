@@ -116,7 +116,7 @@ class FeedbackLoopService:
             )
 
             # Get feedback for low-scoring metrics
-            feedback = await self._judge_agent.get_feedback_for_low_scores(evaluation)
+            feedback = self._judge_agent.get_feedback_for_low_scores(evaluation)
 
             # Refine assessment
             assessment = await self._qualitative_agent.refine(

@@ -41,7 +41,7 @@ Score from 1-5 solely based on the following criteria:
  - score of 1 : 7 or more mistakes
 """,  # noqa: E501
     EvaluationMetric.ACCURACY: """
-Accuracy (1-5): Are the signs/symptoms aligned with DSM-5 or PHQ-8? Mistakes are incorrect symptoms or incorrect duration/frequecy.
+Accuracy (1-5): Are the signs/symptoms aligned with DSM-5 or PHQ-8? Mistakes are incorrect symptoms or incorrect duration/frequency.
 
 Score from 1-5 solely based on the following criteria:
  - score of 5 : 0 mistakes
