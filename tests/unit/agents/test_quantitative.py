@@ -43,6 +43,7 @@ def _to_smart_quotes(text: str) -> str:
             out.append(char)
     return "".join(out)
 
+
 # Sample evidence extraction response
 SAMPLE_EVIDENCE_RESPONSE = json.dumps(
     {

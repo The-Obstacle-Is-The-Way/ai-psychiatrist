@@ -3,7 +3,6 @@
 from __future__ import annotations
 
 import json
-from unittest.mock import MagicMock
 
 import pytest
 
@@ -81,6 +80,22 @@ class TestQuantitativeCoverage:
         # Should fall back to empty skeleton (Strategy 4)
         assert result.items[PHQ8Item.DEPRESSED].score is None
         assert result.items[PHQ8Item.DEPRESSED].evidence == "No relevant evidence found"
+
+    @pytest.mark.asyncio
+    async def test_parse_response_non_dict_json(self, transcript: Transcript) -> None:
+        """Non-dict JSON should fall back to LLM repair."""
+        evidence_resp = SAMPLE_EVIDENCE_RESPONSE
+        list_response = json.dumps([1, 2, 3])
+        repair_resp = json.dumps(
+            {k: {"evidence": "fixed", "reason": "r", "score": 1} for k in DOMAIN_KEYWORDS}
+        )
+
+        client = MockLLMClient(chat_responses=[evidence_resp, list_response, repair_resp])
+        agent = QuantitativeAssessmentAgent(client, mode=AssessmentMode.ZERO_SHOT)
+        result = await agent.assess(transcript)
+
+        assert result.items[PHQ8Item.DEPRESSED].score == 1
+        assert result.items[PHQ8Item.DEPRESSED].evidence == "fixed"
 
     @pytest.mark.asyncio
     async def test_validate_and_normalize_score_types(self, transcript: Transcript) -> None:
