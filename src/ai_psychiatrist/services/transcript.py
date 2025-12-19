@@ -131,11 +131,7 @@ class TranscriptService:
 
     def _get_transcript_path(self, participant_id: int) -> Path:
         """Get path to transcript file for participant."""
-        return (
-            self._transcripts_dir
-            / f"{participant_id}_P"
-            / f"{participant_id}_TRANSCRIPT.csv"
-        )
+        return self._transcripts_dir / f"{participant_id}_P" / f"{participant_id}_TRANSCRIPT.csv"
 
     def _parse_daic_woz_transcript(self, path: Path) -> str:
         """Parse DAIC-WOZ transcript CSV format.

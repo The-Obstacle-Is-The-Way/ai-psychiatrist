@@ -68,9 +68,7 @@ class TestDatasetPreparation:
         assert stats["extracted"] == 0
         assert stats["skipped"] == 1
 
-    def test_extract_transcripts_skips_macos_resource_forks(
-        self, tmp_path: Path
-    ) -> None:
+    def test_extract_transcripts_skips_macos_resource_forks(self, tmp_path: Path) -> None:
         """Extraction should ignore macOS resource fork entries."""
         module = _load_prepare_dataset_module()
 

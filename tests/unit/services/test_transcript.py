@@ -74,10 +74,12 @@ class TestTranscriptService:
 
         # Create mock transcript CSV
         transcript_path = participant_dir / "300_TRANSCRIPT.csv"
-        df = pd.DataFrame({
-            "speaker": ["Ellie", "Participant", "Ellie"],
-            "value": ["How are you?", "I'm doing okay.", "That's good."],
-        })
+        df = pd.DataFrame(
+            {
+                "speaker": ["Ellie", "Participant", "Ellie"],
+                "value": ["How are you?", "I'm doing okay.", "That's good."],
+            }
+        )
         df.to_csv(transcript_path, sep="\t", index=False)
 
         settings = MockDataSettings(transcripts_dir=tmp_path)
@@ -95,10 +97,12 @@ class TestTranscriptService:
         participant_dir.mkdir()
 
         transcript_path = participant_dir / "301_TRANSCRIPT.csv"
-        df = pd.DataFrame({
-            "speaker": ["Ellie", None, "Participant"],
-            "value": ["Hello", "invalid", None],
-        })
+        df = pd.DataFrame(
+            {
+                "speaker": ["Ellie", None, "Participant"],
+                "value": ["Hello", "invalid", None],
+            }
+        )
         df.to_csv(transcript_path, sep="\t", index=False)
 
         settings = MockDataSettings(transcripts_dir=tmp_path)
