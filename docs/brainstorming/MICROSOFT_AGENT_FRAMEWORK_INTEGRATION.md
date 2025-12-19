@@ -37,7 +37,7 @@ Our codebase already implements:
 
 ### 1. Multi-Agent Orchestration (HIGH VALUE)
 Our paper describes a multi-agent pipeline:
-```
+```text
 Transcript → Qualitative Agent → Judge Agent → [Feedback Loop] → Quantitative Agent → Meta-Review
 ```
 
@@ -74,13 +74,13 @@ MS Agent Framework is **generic**:
 - Would need adapters to convert to our domain entities
 
 ### 2. Dependency Weight
-```
+```text
 agent-framework-core
 agent-framework-ollama
 + transitive deps (ollama SDK, pydantic, opentelemetry, etc.)
 ```
 vs our current:
-```
+```text
 httpx (already have for Ollama)
 ```
 
@@ -133,7 +133,7 @@ Integrate MS Agent Framework when:
 
 ## If We Integrate Later: Migration Path
 
-```
+```text
 Phase 1: Adapter Layer
   - Create OllamaChatClientAdapter that wraps MS client
   - Keep our domain entities and parsing

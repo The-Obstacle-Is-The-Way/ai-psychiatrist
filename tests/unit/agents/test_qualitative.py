@@ -258,7 +258,7 @@ Nested unclosed tags
     ) -> None:
         """Refinement should include feedback in prompt."""
         # Need two responses: one for assess, one for refine
-        mock_client._chat_responses.append(mock_client._chat_responses[0])
+        mock_client.add_chat_response(SAMPLE_LLM_RESPONSE)
 
         agent = QualitativeAssessmentAgent(llm_client=mock_client)
         initial = await agent.assess(sample_transcript)
@@ -285,7 +285,7 @@ Nested unclosed tags
         sample_transcript: Transcript,
     ) -> None:
         """Refinement should include original assessment."""
-        mock_client._chat_responses.append(mock_client._chat_responses[0])
+        mock_client.add_chat_response(SAMPLE_LLM_RESPONSE)
 
         agent = QualitativeAssessmentAgent(llm_client=mock_client)
         initial = await agent.assess(sample_transcript)

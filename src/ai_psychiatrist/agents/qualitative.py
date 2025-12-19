@@ -192,8 +192,12 @@ class QualitativeAssessmentAgent:
     ) -> list[str]:
         """Extract supporting quotes from response.
 
+        Tries to extract from an explicit <exact_quotes> tag first,
+        then falls back to inline quoted strings from assessment sections.
+
         Args:
             raw_response: Raw LLM output.
+            extracted: Previously extracted tag content for fallback.
 
         Returns:
             List of extracted quotes.
