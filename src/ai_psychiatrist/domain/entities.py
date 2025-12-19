@@ -273,7 +273,7 @@ class QualitativeEvaluation:
 
     @property
     def low_scores(self) -> list[EvaluationMetric]:
-        """Get list of metrics with low scores (<=2).
+        """Get list of metrics with low scores (<=3).
 
         Returns:
             List of metrics that need improvement.

@@ -6,6 +6,7 @@ proper validation, caching, and environment variable loading.
 
 from __future__ import annotations
 
+import os
 from pathlib import Path
 
 import pytest
@@ -86,7 +87,7 @@ class TestModelSettings:
         assert settings.judge_model == "gemma3:27b"
         assert settings.meta_review_model == "gemma3:27b"
         assert settings.quantitative_model == "alibayram/medgemma:27b"
-        assert "Qwen3-Embedding-8B" in settings.embedding_model
+        assert settings.embedding_model == "qwen3-embedding:8b"
 
     def test_temperature_defaults(self) -> None:
         """Temperature defaults should be set correctly."""
@@ -276,6 +277,10 @@ class TestSettings:
 
         get_settings.cache_clear()
 
+    @pytest.mark.skipif(
+        os.environ.get("TESTING") == "1",
+        reason="TESTING mode disables .env loading to ensure test isolation",
+    )
     def test_loads_from_dotenv(
         self,
         monkeypatch: pytest.MonkeyPatch,

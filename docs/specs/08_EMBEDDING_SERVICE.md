@@ -14,7 +14,7 @@ Implement the embedding-based similarity search service for few-shot reference r
 
 | Parameter | Value | Paper Reference |
 |-----------|-------|-----------------|
-| Embedding model family | Qwen 3 8B Embedding (example Ollama tag: `dengcao/Qwen3-Embedding-8B:Q8_0`; quantization not specified in paper) | Section 2.2 |
+| Embedding model family | Qwen 3 8B Embedding (example Ollama tag: `qwen3-embedding:8b`; quantization not specified in paper) | Section 2.2 |
 | Dimension | 4096 | Appendix D |
 | Chunk size | 8 lines | Appendix D |
 | Step size | 2 lines | Appendix D |

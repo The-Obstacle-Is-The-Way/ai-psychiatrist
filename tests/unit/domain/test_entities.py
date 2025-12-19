@@ -415,7 +415,7 @@ class TestQualitativeEvaluation:
         assert evaluation.average_score == 4.0
 
     def test_low_scores_detection(self, assessment_id: UUID) -> None:
-        """low_scores should return metrics with score <= 2."""
+        """low_scores should return metrics with score <= 3."""
         scores = {
             EvaluationMetric.COHERENCE: EvaluationScore(
                 metric=EvaluationMetric.COHERENCE, score=5, explanation=""
@@ -424,7 +424,7 @@ class TestQualitativeEvaluation:
                 metric=EvaluationMetric.COMPLETENESS, score=2, explanation=""
             ),
             EvaluationMetric.SPECIFICITY: EvaluationScore(
-                metric=EvaluationMetric.SPECIFICITY, score=4, explanation=""
+                metric=EvaluationMetric.SPECIFICITY, score=3, explanation=""
             ),
             EvaluationMetric.ACCURACY: EvaluationScore(
                 metric=EvaluationMetric.ACCURACY, score=1, explanation=""
@@ -435,7 +435,7 @@ class TestQualitativeEvaluation:
         assert EvaluationMetric.COMPLETENESS in low
         assert EvaluationMetric.ACCURACY in low
         assert EvaluationMetric.COHERENCE not in low
-        assert EvaluationMetric.SPECIFICITY not in low
+        assert EvaluationMetric.SPECIFICITY in low
 
     def test_needs_improvement(self, assessment_id: UUID) -> None:
         """needs_improvement should be True when any score is low."""

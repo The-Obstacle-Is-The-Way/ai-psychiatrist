@@ -417,7 +417,7 @@ class QuantitativeAssessor:
         self,
         ollama_host: str = "127.0.0.1",
         chat_model: str = "llama3",
-        emb_model: str  = "dengcao/Qwen3-Embedding-8B:Q4_K_M",
+        emb_model: str  = "qwen3-embedding:8b",
         pickle_path: str = "agents/chunk_8_step_2_participant_embedded_transcripts.pkl",
         gt_train_csv: str = "agents/train_split_Depression_AVEC2017.csv",
         gt_dev_csv: str   = "agents/dev_split_Depression_AVEC2017.csv",
@@ -546,7 +546,7 @@ if __name__ == "__main__":
     parser = argparse.ArgumentParser()
     parser.add_argument("--ollama_host", default="127.0.0.1")
     parser.add_argument("--chat_model", default="llama3")
-    parser.add_argument("--emb_model",  default="dengcao/Qwen3-Embedding-8B:Q4_K_M")
+    parser.add_argument("--emb_model",  default="qwen3-embedding:8b")
     parser.add_argument("--pickle_path", default="chunk_8_step_2_participant_embedded_transcripts.pkl")
     parser.add_argument("--gt_train_csv", default="train_split_Depression_AVEC2017.csv")
     parser.add_argument("--gt_dev_csv",   default="dev_split_Depression_AVEC2017.csv")

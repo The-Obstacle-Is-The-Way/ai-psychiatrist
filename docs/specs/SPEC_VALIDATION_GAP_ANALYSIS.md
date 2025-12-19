@@ -10,7 +10,7 @@ This report audits the research paper (`_literature/markdown/ai_psychiatrist/ai_
 |--------|-------|-----------------|
 | Qualitative/Judge/Meta chat | `gemma3:27b` | Section 2.2 (paper baseline) |
 | Quantitative chat | MedGemma 27B (example Ollama tag: `alibayram/medgemma:27b`) | Appendix F (MAE 0.505; fewer predictions) |
-| Embedding model family | Qwen 3 8B Embedding (example Ollama tag: `dengcao/Qwen3-Embedding-8B:Q8_0`; quantization not specified in paper) | Section 2.2 |
+| Embedding model family | Qwen 3 8B Embedding (example Ollama tag: `qwen3-embedding:8b`; quantization not specified in paper) | Section 2.2 |
 | Feedback threshold | 3 (scores < 4 trigger) | Section 2.3.1 |
 | Max iterations | 10 | Section 2.3.1 |
 | top_k references | 2 | Appendix D |
@@ -63,7 +63,7 @@ Remaining “coverage gaps” are primarily depth gaps (e.g., not every notebook
 | Parameter | Paper Value | Spec Target | As-Is Code | Status |
 |-----------|------------|-------------|------------|--------|
 | Chat model | Gemma 3 27B (Section 2.2); MedGemma 27B evaluated for quantitative (Appendix F) | `gemma3:27b` (qual/judge/meta), MedGemma 27B for quantitative | `llama3` (demo), `gemma3*` (scripts) | **Spec aligned; demo deviates** |
-| Embedding model | Qwen 3 8B Embedding (quantization not specified) | Qwen 3 8B Embedding (example tag `:Q8_0`) | `:Q4_K_M` (demo), `:Q8_0` (scripts) | **Aligned (tag is impl choice)** |
+| Embedding model | Qwen 3 8B Embedding (quantization not specified) | Qwen 3 8B Embedding (example tag `qwen3-embedding:8b`) | `qwen3-embedding:8b` (demo), `qwen3-embedding:8b` (scripts) | **Aligned (tag is impl choice)** |
 | `chunk_size` | 8 (optimal) | 8 | 8 (pickle naming) | **Aligned** |
 | `step_size` | 2 | 2 | 2 | **Aligned** |
 | `top_k` examples | 2 (optimal) | 2 | 3 (demo default) | **Spec aligned with paper** |

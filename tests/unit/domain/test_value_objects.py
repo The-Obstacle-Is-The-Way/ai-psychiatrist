@@ -314,9 +314,9 @@ class TestEvaluationScore:
                 explanation="test",
             )
 
-    @pytest.mark.parametrize("low_score", [1, 2])
-    def test_is_low_for_scores_one_and_two(self, low_score: int) -> None:
-        """is_low should be True for scores <= 2."""
+    @pytest.mark.parametrize("low_score", [1, 2, 3])
+    def test_is_low_for_scores_at_or_below_three(self, low_score: int) -> None:
+        """is_low should be True for scores <= 3."""
         score = EvaluationScore(
             metric=EvaluationMetric.SPECIFICITY,
             score=low_score,
@@ -324,9 +324,9 @@ class TestEvaluationScore:
         )
         assert score.is_low is True
 
-    @pytest.mark.parametrize("not_low_score", [3, 4, 5])
-    def test_is_low_false_for_scores_above_two(self, not_low_score: int) -> None:
-        """is_low should be False for scores > 2."""
+    @pytest.mark.parametrize("not_low_score", [4, 5])
+    def test_is_low_false_for_scores_above_three(self, not_low_score: int) -> None:
+        """is_low should be False for scores > 3."""
         score = EvaluationScore(
             metric=EvaluationMetric.SPECIFICITY,
             score=not_low_score,

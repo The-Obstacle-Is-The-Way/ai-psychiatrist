@@ -16,7 +16,7 @@ Create a robust, testable abstraction for LLM interactions using the Strategy pa
 |-----|------------|-----------------|
 | Qualitative/Judge/Meta chat | `gemma3:27b` | Section 2.2 (paper baseline) |
 | Quantitative chat | MedGemma 27B (example Ollama tag: `alibayram/medgemma:27b`) | Appendix F (MAE 0.505; fewer predictions) |
-| Embeddings | Qwen 3 8B Embedding (example Ollama tag: `dengcao/Qwen3-Embedding-8B:Q8_0`; quantization not specified in paper) | Section 2.2 |
+| Embeddings | Qwen 3 8B Embedding (example Ollama tag: `qwen3-embedding:8b`; quantization not specified in paper) | Section 2.2 |
 | Quantitative fallback | `gemma3:27b` | Section 2.2 |
 
 ## As-Is Ollama Usage (Repo)
@@ -37,14 +37,14 @@ The current repo uses **three** Ollama endpoints, via two different client style
 
 - Host: `http://localhost:11434`
 - Chat model: `llama3`
-- Embedding model: `dengcao/Qwen3-Embedding-8B:Q4_K_M` (quantized)
+- Embedding model: `qwen3-embedding:8b` (Ollama tag)
 
 ### As-Is Defaults (Research/Cluster Scripts)
 
 - Host is typically set via `OLLAMA_NODE = "arctrd..."`
 - Models commonly used:
   - `gemma3:27b` / `gemma3-optimized:27b` (chat)
-  - `dengcao/Qwen3-Embedding-8B:Q8_0` (embeddings)
+  - `qwen3-embedding:8b` (embeddings)
   - `alibayram/medgemma:27b` (MedGemma variant)
 
 ## Deliverables
@@ -520,7 +520,7 @@ class OllamaClient:
     async def simple_embed(
         self,
         text: str,
-        model: str = "dengcao/Qwen3-Embedding-8B:Q8_0",
+        model: str = "qwen3-embedding:8b",
         dimension: int | None = None,
     ) -> tuple[float, ...]:
         """Simple embedding generation.

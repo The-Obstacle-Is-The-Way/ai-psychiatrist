@@ -233,7 +233,7 @@ class EvaluationScore:
     @property
     def is_low(self) -> bool:
         """Check if score is considered low (needs improvement)."""
-        return self.score <= 2
+        return self.score <= 3
 
     @property
     def is_acceptable(self) -> bool:
@@ -407,7 +407,7 @@ class QualitativeEvaluation:
 
     @property
     def low_scores(self) -> list[EvaluationMetric]:
-        """Get list of metrics with low scores (<=2)."""
+        """Get list of metrics with low scores (<=3)."""
         return [m for m, s in self.scores.items() if s.is_low]
 
     @property
@@ -795,7 +795,7 @@ class TestQualitativeEvaluation:
         assert evaluation.average_score == 4.0
 
     def test_low_scores_detection(self) -> None:
-        """Should detect low scores (<= 2)."""
+        """Should detect low scores (<= 3)."""
         scores = {
             EvaluationMetric.COHERENCE: EvaluationScore(
                 metric=EvaluationMetric.COHERENCE, score=5, explanation="Great"
@@ -804,7 +804,7 @@ class TestQualitativeEvaluation:
                 metric=EvaluationMetric.COMPLETENESS, score=2, explanation="Low"
             ),
             EvaluationMetric.SPECIFICITY: EvaluationScore(
-                metric=EvaluationMetric.SPECIFICITY, score=4, explanation="Good"
+                metric=EvaluationMetric.SPECIFICITY, score=3, explanation="Low"
             ),
             EvaluationMetric.ACCURACY: EvaluationScore(
                 metric=EvaluationMetric.ACCURACY, score=1, explanation="Very low"
@@ -816,6 +816,7 @@ class TestQualitativeEvaluation:
         )
         low = evaluation.low_scores
         assert EvaluationMetric.COMPLETENESS in low
+        assert EvaluationMetric.SPECIFICITY in low
         assert EvaluationMetric.ACCURACY in low
         assert EvaluationMetric.COHERENCE not in low
 ```
