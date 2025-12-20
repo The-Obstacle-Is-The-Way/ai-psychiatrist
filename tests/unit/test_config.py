@@ -260,7 +260,8 @@ class TestSettings:
         """Feature flags should have correct defaults."""
         settings = Settings()
         assert settings.enable_few_shot is True
-        assert settings.enable_medgemma is False
+        # NOTE: enable_medgemma removed - use MODEL__QUANTITATIVE_MODEL directly.
+        # Default quantitative_model is already alibayram/medgemma:27b (Paper Appendix F).
 
     def test_loads_from_env(self, monkeypatch: pytest.MonkeyPatch) -> None:
         """Should load settings from environment variables."""

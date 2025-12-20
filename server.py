@@ -14,7 +14,7 @@ from fastapi import Depends, FastAPI, HTTPException
 from pydantic import BaseModel, Field
 
 from ai_psychiatrist.agents import QualitativeAssessmentAgent, QuantitativeAssessmentAgent
-from ai_psychiatrist.config import get_settings
+from ai_psychiatrist.config import ModelSettings, Settings, get_settings
 from ai_psychiatrist.domain.entities import Transcript
 from ai_psychiatrist.domain.enums import AssessmentMode
 from ai_psychiatrist.infrastructure.llm import OllamaClient
@@ -24,14 +24,20 @@ from ai_psychiatrist.services import EmbeddingService, ReferenceStore, Transcrip
 _ollama_client: OllamaClient | None = None
 _transcript_service: TranscriptService | None = None
 _embedding_service: EmbeddingService | None = None
+_model_settings: ModelSettings | None = None
+_settings: Settings | None = None
 
 
 @asynccontextmanager
 async def lifespan(_app: FastAPI):
     """Manage application lifecycle resources."""
-    global _ollama_client, _transcript_service, _embedding_service  # noqa: PLW0603
+    global _ollama_client, _transcript_service, _embedding_service, _model_settings, _settings  # noqa: PLW0603
 
     settings = get_settings()
+    _settings = settings
+
+    # Store model settings for agents
+    _model_settings = settings.model
 
     # Initialize OllamaClient
     _ollama_client = OllamaClient(settings.ollama)
@@ -45,6 +51,7 @@ async def lifespan(_app: FastAPI):
         llm_client=_ollama_client,
         reference_store=reference_store,
         settings=settings.embedding,
+        model_settings=_model_settings,
     )
 
     yield
@@ -84,6 +91,20 @@ def get_embedding_service() -> EmbeddingService:
     return _embedding_service
 
 
+def get_model_settings() -> ModelSettings:
+    """Get initialized ModelSettings."""
+    if _model_settings is None:
+        raise HTTPException(status_code=503, detail="Model settings not initialized")
+    return _model_settings
+
+
+def get_app_settings() -> Settings:
+    """Get initialized Settings."""
+    if _settings is None:
+        raise HTTPException(status_code=503, detail="Settings not initialized")
+    return _settings
+
+
 # --- Request/Response Models ---
 class AssessmentRequest(BaseModel):
     """Assessment request with participant ID or transcript text."""
@@ -96,16 +117,25 @@ class AssessmentRequest(BaseModel):
         default=None,
         description="Raw transcript text (alternative to participant_id)",
     )
-    mode: int = Field(
-        default=1,
+    mode: int | None = Field(
+        default=None,
         ge=0,
         le=1,
-        description="0=zero-shot, 1=few-shot (default, paper-optimal)",
+        description="0=zero-shot, 1=few-shot. If not specified, uses settings.enable_few_shot.",
     )
 
-    def get_mode(self) -> AssessmentMode:
-        """Convert mode int to AssessmentMode enum."""
-        return AssessmentMode.ZERO_SHOT if self.mode == 0 else AssessmentMode.FEW_SHOT
+    def get_mode(self, enable_few_shot: bool = True) -> AssessmentMode:
+        """Convert mode to AssessmentMode enum.
+
+        Args:
+            enable_few_shot: Fallback from settings when mode is not specified.
+
+        Returns:
+            AssessmentMode based on request mode or settings fallback.
+        """
+        if self.mode is not None:
+            return AssessmentMode.ZERO_SHOT if self.mode == 0 else AssessmentMode.FEW_SHOT
+        return AssessmentMode.FEW_SHOT if enable_few_shot else AssessmentMode.ZERO_SHOT
 
 
 class QuantitativeResult(BaseModel):
@@ -154,17 +184,20 @@ async def assess_quantitative(
     ollama: Annotated[OllamaClient, Depends(get_ollama_client)],
     transcript_service: Annotated[TranscriptService, Depends(get_transcript_service)],
     embedding_service: Annotated[EmbeddingService, Depends(get_embedding_service)],
+    model_settings: Annotated[ModelSettings, Depends(get_model_settings)],
+    app_settings: Annotated[Settings, Depends(get_app_settings)],
 ):
     """Run quantitative (PHQ-8) assessment."""
     # Load or create transcript
     transcript = _resolve_transcript(request, transcript_service)
 
-    # Create agent with appropriate mode
-    mode = request.get_mode()
+    # Create agent with appropriate mode (request overrides settings.enable_few_shot)
+    mode = request.get_mode(app_settings.enable_few_shot)
     agent = QuantitativeAssessmentAgent(
         llm_client=ollama,
         embedding_service=embedding_service if mode == AssessmentMode.FEW_SHOT else None,
         mode=mode,
+        model_settings=model_settings,
     )
 
     try:
@@ -192,11 +225,12 @@ async def assess_qualitative(
     request: AssessmentRequest,
     ollama: Annotated[OllamaClient, Depends(get_ollama_client)],
     transcript_service: Annotated[TranscriptService, Depends(get_transcript_service)],
+    model_settings: Annotated[ModelSettings, Depends(get_model_settings)],
 ):
     """Run qualitative assessment."""
     transcript = _resolve_transcript(request, transcript_service)
 
-    agent = QualitativeAssessmentAgent(llm_client=ollama)
+    agent = QualitativeAssessmentAgent(llm_client=ollama, model_settings=model_settings)
 
     try:
         assessment = await agent.assess(transcript)
@@ -219,6 +253,8 @@ async def run_full_pipeline(
     ollama: Annotated[OllamaClient, Depends(get_ollama_client)],
     transcript_service: Annotated[TranscriptService, Depends(get_transcript_service)],
     embedding_service: Annotated[EmbeddingService, Depends(get_embedding_service)],
+    model_settings: Annotated[ModelSettings, Depends(get_model_settings)],
+    app_settings: Annotated[Settings, Depends(get_app_settings)],
 ):
     """Run full assessment pipeline (quantitative + qualitative).
 
@@ -227,15 +263,17 @@ async def run_full_pipeline(
     """
     transcript = _resolve_transcript(request, transcript_service)
 
-    mode = request.get_mode()
+    # Mode from request, falling back to settings.enable_few_shot
+    mode = request.get_mode(app_settings.enable_few_shot)
 
-    # Create agents
+    # Create agents with model settings
     quant_agent = QuantitativeAssessmentAgent(
         llm_client=ollama,
         embedding_service=embedding_service if mode == AssessmentMode.FEW_SHOT else None,
         mode=mode,
+        model_settings=model_settings,
     )
-    qual_agent = QualitativeAssessmentAgent(llm_client=ollama)
+    qual_agent = QualitativeAssessmentAgent(llm_client=ollama, model_settings=model_settings)
 
     try:
         # Run assessments in parallel for better performance
