@@ -4,10 +4,17 @@ from __future__ import annotations
 
 import os
 
-# Set TESTING mode BEFORE any app imports to prevent .env file loading
-os.environ["TESTING"] = "1"
-
 import pytest
+
+# Real Ollama tests are opt-in and must be able to read developer `.env` / env vars.
+# Default test runs stay isolated from local configuration to keep unit tests deterministic.
+_RUN_REAL_OLLAMA_TESTS = os.environ.get("AI_PSYCHIATRIST_OLLAMA_TESTS") == "1"
+
+# Set TESTING mode BEFORE any app imports to prevent .env file loading (default).
+if _RUN_REAL_OLLAMA_TESTS:
+    os.environ.pop("TESTING", None)
+else:
+    os.environ["TESTING"] = "1"
 
 # Clear environment variables BEFORE any imports that might use Pydantic Settings
 # This runs at conftest import time, before test collection
@@ -33,9 +40,10 @@ _ENV_VARS_TO_CLEAR = [
     "LOG_LEVEL",
 ]
 
-# Clear at import time for test isolation from local .env
-for _var in _ENV_VARS_TO_CLEAR:
-    os.environ.pop(_var, None)
+# Clear at import time for test isolation from local .env (default).
+if not _RUN_REAL_OLLAMA_TESTS:
+    for _var in _ENV_VARS_TO_CLEAR:
+        os.environ.pop(_var, None)
 
 
 @pytest.fixture(autouse=True)
@@ -45,6 +53,9 @@ def isolate_env(monkeypatch: pytest.MonkeyPatch) -> None:
     This ensures tests use code defaults, not local developer overrides.
     Also clears any cached settings to force re-read of defaults.
     """
+    if _RUN_REAL_OLLAMA_TESTS:
+        return
+
     for var in _ENV_VARS_TO_CLEAR:
         monkeypatch.delenv(var, raising=False)
 

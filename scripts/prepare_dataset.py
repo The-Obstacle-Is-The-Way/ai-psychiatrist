@@ -452,9 +452,7 @@ Examples:
     print("Extracting transcripts...")
     stats = extract_transcripts(args.downloads_dir, args.output_dir, args.include_audio)
     summary = (
-        f"  Extracted: {stats['extracted']}, "
-        f"Skipped: {stats['skipped']}, "
-        f"Errors: {stats['errors']}"
+        f"  Extracted: {stats['extracted']}, Skipped: {stats['skipped']}, Errors: {stats['errors']}"
     )
     print(summary)
 

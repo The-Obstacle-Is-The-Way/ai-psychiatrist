@@ -33,19 +33,19 @@ test-parallel: ## Run tests in parallel
 
 # ============== Code Quality ==============
 lint: ## Run linter (ruff)
-	uv run ruff check src tests
+	uv run ruff check src tests scripts server.py
 
 lint-fix: ## Fix linting issues automatically
-	uv run ruff check --fix src tests
+	uv run ruff check --fix src tests scripts server.py
 
 format: ## Format code (ruff)
-	uv run ruff format src tests
+	uv run ruff format src tests scripts server.py
 
 format-check: ## Check formatting without changes
-	uv run ruff format --check src tests
+	uv run ruff format --check src tests scripts server.py
 
 typecheck: ## Run type checker (mypy)
-	uv run mypy src
+	uv run mypy src tests scripts server.py
 
 # ============== All Quality Checks ==============
 check: lint typecheck test ## Run all checks (lint, typecheck, test)

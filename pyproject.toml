@@ -72,17 +72,11 @@ packages = ["src/ai_psychiatrist"]
 target-version = "py311"
 line-length = 100
 src = ["src", "tests"]
-# Exclude legacy code pending cleanup (BUG-013, BUG-015)
+# Exclude legacy code archived per Spec 12.5 (BUG-013, BUG-015 resolved)
 exclude = [
-    "agents",                  # Legacy root-level agents (use src/ai_psychiatrist/agents/)
-    "services",                # Legacy root-level services (use src/ai_psychiatrist/services/)
-    "models",                  # Legacy models
-    "visualization",           # Jupyter notebooks with whitespace issues
-    "scripts",                 # Ad-hoc scripts
-    "assets",                  # Example scripts
-    "meta_review",             # Legacy meta-review scripts
-    "qualitative_assessment",  # Legacy qualitative assessment
-    "quantitative_assessment", # Legacy quantitative assessment
+    "_legacy",      # Archived legacy code (agents, scripts, notebooks)
+    "_literature",  # Reference papers (not code)
+    "_reference",   # Reference implementations (not active code)
     ".git",
     "__pycache__",
     ".venv",
@@ -136,6 +130,7 @@ markers = [
     "unit: Unit tests (fast, no I/O)",
     "integration: Integration tests (may use mocks)",
     "e2e: End-to-end tests (full system)",
+    "ollama: Requires live Ollama server (opt-in)",
     "slow: Slow tests (skip with -m 'not slow')",
 ]
 
