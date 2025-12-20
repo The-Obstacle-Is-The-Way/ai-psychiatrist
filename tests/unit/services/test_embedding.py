@@ -603,7 +603,8 @@ class TestEmbeddingDimensionMismatch:
         embeddings = store.get_all_embeddings()
 
         # Check truncation happened
-        text, emb = embeddings[100][0]
+        chunk_text, emb = embeddings[100][0]
+        assert chunk_text == "chunk1"
         assert len(emb) == 4
 
         # Check L2 normalization (should be unit length)

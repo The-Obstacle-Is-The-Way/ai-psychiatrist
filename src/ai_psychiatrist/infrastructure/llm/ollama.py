@@ -107,6 +107,35 @@ class OllamaClient:
             logger.error("Ollama ping failed", error=str(e))
             raise LLMError(f"Failed to ping Ollama: {e}") from e
 
+    async def list_models(self) -> list[dict[str, Any]]:
+        """List models available on the Ollama server.
+
+        Returns:
+            A list of model metadata dictionaries as returned by `/api/tags`.
+
+        Raises:
+            LLMError: If the request fails.
+            LLMResponseParseError: If the response cannot be parsed.
+        """
+        try:
+            response = await self._client.get(f"{self._base_url}/api/tags")
+            response.raise_for_status()
+        except (httpx.RequestError, httpx.HTTPStatusError) as e:
+            logger.error("Failed to list Ollama models", error=str(e))
+            raise LLMError(f"Failed to list models: {e}") from e
+
+        try:
+            data = response.json()
+            models = data.get("models", [])
+            if not isinstance(models, list):
+                raise TypeError("models must be a list")
+        except (ValueError, TypeError) as e:
+            logger.error("Failed to parse models response", raw_length=len(response.text))
+            raise LLMResponseParseError(response.text, str(e)) from e
+
+        # Filter to dictionaries (Ollama returns a list of objects with at least a `name` field)
+        return [m for m in models if isinstance(m, dict)]
+
     async def chat(self, request: ChatRequest) -> ChatResponse:
         """Execute chat completion via Ollama API.
 

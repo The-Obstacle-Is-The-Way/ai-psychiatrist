@@ -223,63 +223,64 @@ async def main_async(args: argparse.Namespace) -> int:  # noqa: PLR0915
         print("Please ensure DAIC-WOZ dataset is prepared.")
         return 1
 
-    # Initialize services
-    client = OllamaClient(ollama_settings)
     transcript_service = TranscriptService(data_settings)
 
-    # Check Ollama connectivity
-    print("\nChecking Ollama connectivity...")
-    try:
-        models = await client.list_models()
-        if model not in [m["name"] for m in models]:
+    async with OllamaClient(ollama_settings) as client:
+        # Check Ollama connectivity and model availability
+        print("\nChecking Ollama connectivity...")
+        try:
+            models = await client.list_models()
+        except Exception as e:
+            print(f"ERROR: Cannot connect to Ollama: {e}")
+            print(f"Ensure Ollama is running at {ollama_settings.base_url}")
+            return 1
+
+        model_names = [m.get("name") for m in models if isinstance(m.get("name"), str)]
+        if model not in model_names:
             print(f"WARNING: Model '{model}' not found in Ollama.")
-            print(f"Available models: {[m['name'] for m in models]}")
-            print("You may need to: ollama pull {model}")
-    except Exception as e:
-        print(f"ERROR: Cannot connect to Ollama: {e}")
-        print(f"Ensure Ollama is running at {ollama_settings.base_url}")
-        return 1
+            print(f"Available models: {model_names}")
+            print(f"You may need to: ollama pull {model}")
 
-    # Process participants
-    all_embeddings: dict[int, list[tuple[str, list[float]]]] = {}
-    total_chunks = 0
+        # Process participants
+        all_embeddings: dict[int, list[tuple[str, list[float]]]] = {}
+        total_chunks = 0
 
-    print(f"\nProcessing {len(train_ids)} participants...")
-    for idx, pid in enumerate(train_ids, 1):
-        if idx % 10 == 0 or idx == len(train_ids):
-            print(f"  Progress: {idx}/{len(train_ids)} participants...")
+        print(f"\nProcessing {len(train_ids)} participants...")
+        for idx, pid in enumerate(train_ids, 1):
+            if idx % 10 == 0 or idx == len(train_ids):
+                print(f"  Progress: {idx}/{len(train_ids)} participants...")
 
-        results = await process_participant(
-            client,
-            transcript_service,
-            pid,
-            model,
-            dimension,
-            chunk_size,
-            step_size,
-        )
+            results = await process_participant(
+                client,
+                transcript_service,
+                pid,
+                model,
+                dimension,
+                chunk_size,
+                step_size,
+            )
 
-        if results:
-            all_embeddings[pid] = results
-            total_chunks += len(results)
+            if results:
+                all_embeddings[pid] = results
+                total_chunks += len(results)
 
-    # Ensure output directory exists
-    output_path.parent.mkdir(parents=True, exist_ok=True)
+        # Ensure output directory exists
+        output_path.parent.mkdir(parents=True, exist_ok=True)
 
-    # Save embeddings
-    print(f"\nSaving embeddings to {output_path}...")
-    with output_path.open("wb") as f:
-        pickle.dump(all_embeddings, f)
+        # Save embeddings
+        print(f"\nSaving embeddings to {output_path}...")
+        with output_path.open("wb") as f:
+            pickle.dump(all_embeddings, f)
 
-    # Summary
-    print("\n" + "=" * 60)
-    print("GENERATION COMPLETE")
-    print("=" * 60)
-    print(f"  Participants: {len(all_embeddings)}")
-    print(f"  Total chunks: {total_chunks}")
-    print(f"  Output file: {output_path}")
-    print(f"  File size: {output_path.stat().st_size / (1024*1024):.2f} MB")
-    print("=" * 60)
+        # Summary
+        print("\n" + "=" * 60)
+        print("GENERATION COMPLETE")
+        print("=" * 60)
+        print(f"  Participants: {len(all_embeddings)}")
+        print(f"  Total chunks: {total_chunks}")
+        print(f"  Output file: {output_path}")
+        print(f"  File size: {output_path.stat().st_size / (1024 * 1024):.2f} MB")
+        print("=" * 60)
 
     return 0
 
