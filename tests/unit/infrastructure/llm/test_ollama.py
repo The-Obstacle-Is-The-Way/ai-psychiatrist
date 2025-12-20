@@ -103,6 +103,81 @@ class TestOllamaClientPing:
         await ollama_client.close()
 
 
+class TestOllamaClientListModels:
+    """Tests for model listing."""
+
+    @respx.mock
+    @pytest.mark.asyncio
+    async def test_list_models_success(self, ollama_client: OllamaClient) -> None:
+        """Should return models list from /api/tags."""
+        respx.get("http://localhost:11434/api/tags").mock(
+            return_value=httpx.Response(
+                200,
+                json={
+                    "models": [
+                        {"name": "qwen3-embedding:8b"},
+                        {"name": "gemma3:27b"},
+                    ]
+                },
+            )
+        )
+
+        models = await ollama_client.list_models()
+
+        assert [m.get("name") for m in models] == ["qwen3-embedding:8b", "gemma3:27b"]
+        await ollama_client.close()
+
+    @respx.mock
+    @pytest.mark.asyncio
+    async def test_list_models_invalid_payload_raises(self, ollama_client: OllamaClient) -> None:
+        """Should raise LLMResponseParseError when payload is invalid."""
+        respx.get("http://localhost:11434/api/tags").mock(
+            return_value=httpx.Response(200, json={"models": "not-a-list"})
+        )
+
+        with pytest.raises(LLMResponseParseError, match="models must be a list"):
+            await ollama_client.list_models()
+
+        await ollama_client.close()
+
+    @respx.mock
+    @pytest.mark.asyncio
+    async def test_list_models_missing_key(self, ollama_client: OllamaClient) -> None:
+        """Should return empty list when models key is missing."""
+        respx.get("http://localhost:11434/api/tags").mock(
+            return_value=httpx.Response(200, json={})
+        )
+
+        models = await ollama_client.list_models()
+
+        assert models == []
+        await ollama_client.close()
+
+    @respx.mock
+    @pytest.mark.asyncio
+    async def test_list_models_filters_non_dicts(self, ollama_client: OllamaClient) -> None:
+        """Should filter out non-dict entries from models list."""
+        respx.get("http://localhost:11434/api/tags").mock(
+            return_value=httpx.Response(
+                200,
+                json={
+                    "models": [
+                        {"name": "valid"},
+                        "invalid-string",
+                        None,
+                        {"name": "also-valid"},
+                    ]
+                },
+            )
+        )
+
+        models = await ollama_client.list_models()
+
+        assert len(models) == 2
+        assert [m.get("name") for m in models] == ["valid", "also-valid"]
+        await ollama_client.close()
+
+
 class TestOllamaClientChat:
     """Tests for chat completion."""
 

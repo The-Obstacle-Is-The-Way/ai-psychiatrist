@@ -11,6 +11,7 @@ import pytest
 
 from ai_psychiatrist.config import DataSettings
 from ai_psychiatrist.domain.enums import PHQ8Item
+from ai_psychiatrist.domain.exceptions import EmbeddingDimensionMismatchError
 from ai_psychiatrist.domain.value_objects import SimilarityMatch, TranscriptChunk
 from ai_psychiatrist.services.embedding import EmbeddingService, ReferenceBundle
 from ai_psychiatrist.services.reference_store import PHQ8_COLUMN_MAP, ReferenceStore
@@ -202,6 +203,24 @@ class TestEmbeddingService:
         # Should be sorted by similarity descending
         if len(matches) > 1:
             assert matches[0].similarity >= matches[1].similarity
+
+    @pytest.mark.asyncio
+    async def test_find_similar_chunks_dimension_mismatch_raises(
+        self,
+        mock_llm_client: MagicMock,
+        mock_reference_store: MagicMock,
+        mock_settings: MagicMock,
+    ) -> None:
+        """Should raise when query embedding dimension mismatches config."""
+        service = EmbeddingService(
+            mock_llm_client,
+            mock_reference_store,
+            mock_settings,
+        )
+
+        # Wrong dimensionality (expected 256 per mock_settings)
+        with pytest.raises(EmbeddingDimensionMismatchError):
+            await service.find_similar_chunks((0.1, 0.2))
 
     @pytest.mark.asyncio
     async def test_find_similar_chunks_empty_query(
@@ -502,3 +521,199 @@ class TestSimilarityMatchValidation:
                 chunk=TranscriptChunk(text="test", participant_id=1),
                 similarity=-0.1,
             )
+
+
+class TestEmbeddingDimensionMismatch:
+    """Tests for BUG-009: Dimension mismatch handling."""
+
+    def test_all_embeddings_mismatched_raises_error(self, tmp_path) -> None:
+        """Should raise EmbeddingDimensionMismatchError when ALL embeddings are too short."""
+        # Create embeddings with dimension 2 when we expect 256
+        raw_data = {
+            "100": [("chunk1", [1.0, 0.0])],  # Only 2 dims
+            "101": [("chunk2", [0.0, 1.0])],  # Only 2 dims
+        }
+
+        # Create temp files
+        transcripts_dir = tmp_path / "transcripts"
+        transcripts_dir.mkdir(parents=True, exist_ok=True)
+        embeddings_path = tmp_path / "embeddings.pkl"
+        with embeddings_path.open("wb") as f:
+            pickle.dump(raw_data, f)
+
+        data_settings = DataSettings(
+            base_dir=tmp_path,
+            transcripts_dir=transcripts_dir,
+            embeddings_path=embeddings_path,
+            train_csv=tmp_path / "train.csv",
+            dev_csv=tmp_path / "dev.csv",
+        )
+
+        mock_embed = MagicMock()
+        mock_embed.dimension = 256  # Expect 256, but embeddings only have 2
+
+        store = ReferenceStore(data_settings, mock_embed)
+
+        with pytest.raises(EmbeddingDimensionMismatchError) as excinfo:
+            store.get_all_embeddings()
+
+        assert excinfo.value.expected == 256
+        assert excinfo.value.actual == 2
+
+    def test_partial_mismatch_skips_bad_embeddings(self, tmp_path) -> None:
+        """Should skip embeddings that are too short and keep valid ones."""
+        # Mix of valid and invalid embeddings
+        raw_data = {
+            "100": [("chunk1", [1.0, 0.0])],  # Only 2 dims - will be skipped
+            "101": [("chunk2", [0.5] * 10)],  # 10 dims - valid for dim=4
+        }
+
+        transcripts_dir = tmp_path / "transcripts"
+        transcripts_dir.mkdir(parents=True, exist_ok=True)
+        embeddings_path = tmp_path / "embeddings.pkl"
+        with embeddings_path.open("wb") as f:
+            pickle.dump(raw_data, f)
+
+        data_settings = DataSettings(
+            base_dir=tmp_path,
+            transcripts_dir=transcripts_dir,
+            embeddings_path=embeddings_path,
+            train_csv=tmp_path / "train.csv",
+            dev_csv=tmp_path / "dev.csv",
+        )
+
+        mock_embed = MagicMock()
+        mock_embed.dimension = 4  # Need at least 4, so 2-dim is skipped, 10-dim is valid
+
+        store = ReferenceStore(data_settings, mock_embed)
+        embeddings = store.get_all_embeddings()
+
+        # Only participant 101 should remain (100 was skipped)
+        assert 101 in embeddings
+        assert 100 not in embeddings  # Participant 100 had no valid embeddings
+        assert len(embeddings[101]) == 1
+
+    def test_embedding_truncation(self, tmp_path) -> None:
+        """Should truncate embeddings to configured dimension."""
+        # Embedding with 10 dimensions
+        raw_data = {
+            "100": [("chunk1", [1.0, 2.0, 3.0, 4.0, 5.0, 6.0, 7.0, 8.0, 9.0, 10.0])],
+        }
+
+        transcripts_dir = tmp_path / "transcripts"
+        transcripts_dir.mkdir(parents=True, exist_ok=True)
+        embeddings_path = tmp_path / "embeddings.pkl"
+        with embeddings_path.open("wb") as f:
+            pickle.dump(raw_data, f)
+
+        data_settings = DataSettings(
+            base_dir=tmp_path,
+            transcripts_dir=transcripts_dir,
+            embeddings_path=embeddings_path,
+            train_csv=tmp_path / "train.csv",
+            dev_csv=tmp_path / "dev.csv",
+        )
+
+        mock_embed = MagicMock()
+        mock_embed.dimension = 4  # Truncate to 4
+
+        store = ReferenceStore(data_settings, mock_embed)
+        embeddings = store.get_all_embeddings()
+
+        # Check truncation happened
+        chunk_text, emb = embeddings[100][0]
+        assert chunk_text == "chunk1"
+        assert len(emb) == 4
+
+        # Check L2 normalization (should be unit length)
+        length = np.linalg.norm(emb)
+        np.testing.assert_almost_equal(length, 1.0)
+
+
+class TestSimilarityTransformation:
+    """Tests for BUG-010: Cosine similarity transformation."""
+
+    @pytest.fixture
+    def mock_llm_client(self) -> MockLLMClient:
+        """Create mock LLM client."""
+        return MockLLMClient()
+
+    @pytest.fixture
+    def mock_settings(self) -> MagicMock:
+        """Create mock embedding settings."""
+        settings = MagicMock()
+        settings.dimension = 256
+        settings.top_k_references = 2
+        settings.min_evidence_chars = 8
+        return settings
+
+    @pytest.fixture
+    def mock_reference_store(self) -> MagicMock:
+        """Create mock reference store with known embeddings."""
+        store = MagicMock(spec=ReferenceStore)
+        # Create embeddings that will produce known cosine similarities
+        # Unit vector [1, 0, 0, ...] - identical to query
+        identical = [1.0] + [0.0] * 255
+        # Orthogonal vector [0, 1, 0, ...] - cosine = 0
+        orthogonal = [0.0, 1.0] + [0.0] * 254
+        # Opposite vector [-1, 0, 0, ...] - cosine = -1
+        opposite = [-1.0] + [0.0] * 255
+
+        store.get_all_embeddings.return_value = {
+            100: [("identical match", identical)],
+            101: [("orthogonal match", orthogonal)],
+            102: [("opposite match", opposite)],
+        }
+        store.get_score.return_value = 2
+        return store
+
+    @pytest.mark.asyncio
+    async def test_similarity_transformation_range(
+        self,
+        mock_llm_client: MagicMock,
+        mock_reference_store: MagicMock,
+        mock_settings: MagicMock,
+    ) -> None:
+        """Similarity values should be transformed to [0, 1] range."""
+        service = EmbeddingService(
+            mock_llm_client,
+            mock_reference_store,
+            mock_settings,
+        )
+
+        # Query with unit vector [1, 0, 0, ...]
+        query_emb = tuple([1.0] + [0.0] * 255)
+        matches = await service.find_similar_chunks(query_emb, top_k=10)
+
+        # All similarities should be in [0, 1]
+        assert all(0.0 <= m.similarity <= 1.0 for m in matches)
+
+    @pytest.mark.asyncio
+    async def test_similarity_transformation_values(
+        self,
+        mock_llm_client: MagicMock,
+        mock_reference_store: MagicMock,
+        mock_settings: MagicMock,
+    ) -> None:
+        """Transformed similarity should follow (1 + cos) / 2 formula."""
+        service = EmbeddingService(
+            mock_llm_client,
+            mock_reference_store,
+            mock_settings,
+        )
+
+        # Query with unit vector [1, 0, 0, ...]
+        query_emb = tuple([1.0] + [0.0] * 255)
+        matches = await service.find_similar_chunks(query_emb, top_k=10)
+
+        # Create a map for easier lookup
+        similarity_map = {m.chunk.participant_id: m.similarity for m in matches}
+
+        # Identical (cos=1): (1+1)/2 = 1.0
+        np.testing.assert_almost_equal(similarity_map[100], 1.0, decimal=5)
+
+        # Orthogonal (cos=0): (1+0)/2 = 0.5
+        np.testing.assert_almost_equal(similarity_map[101], 0.5, decimal=5)
+
+        # Opposite (cos=-1): (1-1)/2 = 0.0
+        np.testing.assert_almost_equal(similarity_map[102], 0.0, decimal=5)

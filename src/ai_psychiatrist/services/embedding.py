@@ -14,6 +14,7 @@ import numpy as np
 from sklearn.metrics.pairwise import cosine_similarity
 
 from ai_psychiatrist.domain.enums import PHQ8Item
+from ai_psychiatrist.domain.exceptions import EmbeddingDimensionMismatchError
 from ai_psychiatrist.domain.value_objects import EmbeddedChunk, SimilarityMatch, TranscriptChunk
 from ai_psychiatrist.infrastructure.logging import get_logger
 
@@ -158,6 +159,12 @@ class EmbeddingService:
             logger.warning("No reference embeddings available")
             return []
 
+        if len(query_embedding) != self._dimension:
+            raise EmbeddingDimensionMismatchError(
+                expected=self._dimension,
+                actual=len(query_embedding),
+            )
+
         query_array = np.array([query_embedding])
         matches: list[SimilarityMatch] = []
         lookup_item = item or PHQ8Item.NO_INTEREST
@@ -165,12 +172,23 @@ class EmbeddingService:
         for participant_id, chunks in all_refs.items():
             for chunk_text, embedding in chunks:
                 if len(embedding) != len(query_embedding):
+                    # Skip embeddings with dimension mismatch
+                    # (can occur if reference data has mixed dimensions)
+                    logger.warning(
+                        "Dimension mismatch between query and reference",
+                        query_dim=len(query_embedding),
+                        ref_dim=len(embedding),
+                        participant_id=participant_id,
+                    )
                     continue
 
                 ref_array = np.array([embedding])
-                sim = float(cosine_similarity(query_array, ref_array)[0][0])
+                raw_cos = float(cosine_similarity(query_array, ref_array)[0][0])
 
-                # Clamp similarity to valid range [0, 1] for SimilarityMatch validation
+                # Transform cosine similarity from [-1, 1] to [0, 1] (BUG-010 fix)
+                # This gives: -1 (opposite) -> 0, 0 (orthogonal) -> 0.5, 1 (identical) -> 1
+                sim = (1.0 + raw_cos) / 2.0
+                # Numeric guard: float error can slightly exceed bounds (e.g., 1.00000002).
                 sim = max(0.0, min(1.0, sim))
 
                 # Get item-specific score

@@ -245,7 +245,8 @@ class SimilarityMatch:
     """The matched transcript chunk."""
 
     similarity: float
-    """Cosine similarity score (0-1, higher is more similar)."""
+    """Normalized similarity score (0-1). Transformed from raw cosine similarity
+    via (1 + cos) / 2: 0 = opposite, 0.5 = orthogonal, 1 = identical."""
 
     reference_score: int | None = None
     """The PHQ-8 score from the reference transcript, if available."""

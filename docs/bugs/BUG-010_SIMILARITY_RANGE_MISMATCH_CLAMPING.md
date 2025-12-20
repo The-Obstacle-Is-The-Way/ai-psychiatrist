@@ -1,8 +1,9 @@
 # BUG-010: Cosine Similarity Range Mismatch (Clamping)
 
 **Severity**: MEDIUM (P2)
-**Status**: OPEN
+**Status**: RESOLVED
 **Date Identified**: 2025-12-19
+**Date Resolved**: 2025-12-20
 **Spec Reference**: `docs/specs/08_EMBEDDING_SERVICE.md`, `docs/specs/02_CORE_DOMAIN.md`
 
 ---
@@ -52,3 +53,39 @@ Option B: Convert cosine similarity to [0, 1] using `(1 + cos) / 2` and update s
 - `src/ai_psychiatrist/domain/value_objects.py`
 - `docs/specs/08_EMBEDDING_SERVICE.md`
 - `docs/specs/02_CORE_DOMAIN.md`
+
+---
+
+## Resolution
+
+Chose **Option B**: Transform cosine similarity to [0, 1] using `(1 + cos) / 2`.
+
+Changes:
+1. **EmbeddingService._compute_similarities()**: Replaced clamping with proper transformation:
+   ```python
+   raw_cos = float(cosine_similarity(query_array, ref_array)[0][0])
+   sim = (1.0 + raw_cos) / 2.0
+   ```
+
+2. **SimilarityMatch docstring**: Updated to document the transformation semantics:
+   - 0 = opposite vectors (raw cos = -1)
+   - 0.5 = orthogonal vectors (raw cos = 0)
+   - 1.0 = identical vectors (raw cos = 1)
+
+Tests added:
+- `TestSimilarityTransformation.test_similarity_transformation_range`
+- `TestSimilarityTransformation.test_similarity_transformation_values`
+
+This approach:
+- Preserves the [0, 1] domain constraint (no breaking change)
+- Eliminates semantic distortion from clamping negative values
+- Provides meaningful similarity values for ranking
+
+---
+
+## Verification
+
+```bash
+pytest tests/unit/services/test_embedding.py -v --no-cov -k "transformation"
+# 2 passed
+```

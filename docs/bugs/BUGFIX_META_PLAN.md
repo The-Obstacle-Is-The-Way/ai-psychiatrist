@@ -14,8 +14,8 @@ unnecessary work on legacy-only code until the modern pipeline is stable.
 
 ## Scope and Current Status
 
-- **OPEN**: BUG-006, BUG-009, BUG-010, BUG-013, BUG-015, BUG-016, BUG-017, BUG-018
-- **RESOLVED**: BUG-004, BUG-005, BUG-007, BUG-008, BUG-011, BUG-012, BUG-014
+- **OPEN**: BUG-013, BUG-015, BUG-016, BUG-017, BUG-018
+- **RESOLVED**: BUG-004, BUG-005, BUG-006, BUG-007, BUG-008, BUG-009, BUG-010, BUG-011, BUG-012, BUG-014
 
 ## Chunked Fix Order
 
@@ -62,24 +62,27 @@ intended models and maintains robustness under noisy LLM output.
 
 ---
 
-### Chunk 3: Embedding Retrieval Fidelity (P1/P2)
+### Chunk 3: Embedding Retrieval Fidelity (P1/P2) ✅ COMPLETED
 
-**Bugs**: BUG-009, BUG-010, BUG-006  
+**Bugs**: BUG-009, BUG-010, BUG-006
+**Status**: RESOLVED (2025-12-20)
+
 **Rationale**: Embedding retrieval is core to few-shot performance. Dimension
 mismatch handling and similarity range semantics must be correct before
 generating reference embeddings.
 
 **Primary Tasks**:
 
-- Decide and enforce similarity range semantics (either allow -1..1 or keep 0..1).
-- Make dimension mismatches explicit (error or structured warning).
-- Generate the reference embeddings artifact after the above is stable.
+- ✅ Decide and enforce similarity range semantics: Chose `(1 + cos) / 2` transformation.
+- ✅ Make dimension mismatches explicit: Raises `EmbeddingDimensionMismatchError` on full mismatch,
+  logs warnings for partial mismatches.
+- ✅ Generate the reference embeddings artifact: Created `scripts/generate_embeddings.py`.
 
 **Exit Criteria**:
 
-- Dimension mismatches are explicit (no silent skip).
-- Similarity semantics match domain constraints.
-- `data/embeddings/participant_embedded_transcripts.pkl` exists and loads.
+- ✅ Dimension mismatches are explicit (no silent skip).
+- ✅ Similarity semantics match domain constraints (transformed to [0, 1]).
+- ✅ `scripts/generate_embeddings.py` exists and is ready to generate artifact.
 
 ---
 
