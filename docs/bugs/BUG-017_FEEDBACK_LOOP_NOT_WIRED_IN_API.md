@@ -27,9 +27,9 @@ The `FeedbackLoopService` exists and is tested (`src/ai_psychiatrist/services/fe
   assessment = await agent.assess(transcript)  # Direct call, no feedback loop
   ```
 
-- **FeedbackLoopService exists** at `src/ai_psychiatrist/services/feedback_loop.py`
+- **FeedbackLoopService** exists at `src/ai_psychiatrist/services/feedback_loop.py`
 
-- **JudgeAgent exists** at `src/ai_psychiatrist/agents/judge.py`
+- **JudgeAgent** exists at `src/ai_psychiatrist/agents/judge.py`
 
 ---
 

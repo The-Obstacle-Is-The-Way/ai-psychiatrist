@@ -29,10 +29,12 @@ transcript path. This is a production correctness issue and blocks all
 meaningful end-to-end validation.
 
 **Primary Tasks**:
+
 - ✅ Rewire `server.py` to the modern `src/ai_psychiatrist` agents/services.
 - ✅ Replace the legacy transcript file dependency with `TranscriptService`.
 
 **Exit Criteria**:
+
 - ✅ API uses modern agents and config settings.
 - ✅ All 583 tests pass.
 
@@ -46,10 +48,12 @@ evidence parsing silently degrades. Fixing these ensures the pipeline uses the
 intended models and maintains robustness under noisy LLM output.
 
 **Primary Tasks**:
+
 - Thread `ModelSettings` into all LLM/embedding calls (model, temperature, top_k, top_p).
 - Apply tolerant parsing for evidence extraction (or add repair path).
 
 **Exit Criteria**:
+
 - Configuration overrides demonstrably control models and sampling.
 - Evidence extraction survives common JSON formatting noise.
 
@@ -63,11 +67,13 @@ mismatch handling and similarity range semantics must be correct before
 generating reference embeddings.
 
 **Primary Tasks**:
+
 - Decide and enforce similarity range semantics (either allow -1..1 or keep 0..1).
 - Make dimension mismatches explicit (error or structured warning).
 - Generate the reference embeddings artifact after the above is stable.
 
 **Exit Criteria**:
+
 - Dimension mismatches are explicit (no silent skip).
 - Similarity semantics match domain constraints.
 - `data/embeddings/participant_embedded_transcripts.pkl` exists and loads.
@@ -82,12 +88,14 @@ FeedbackLoopService integration. These were spec'd but never implemented or wire
 Without these, paper replication (Section 2.3.3, 78% accuracy) is not achievable.
 
 **Primary Tasks**:
+
 - Implement `MetaReviewAgent` from Spec 10 into `src/ai_psychiatrist/agents/meta_review.py`.
 - Wire `FeedbackLoopService` into `server.py` for qualitative assessment iteration.
 - Update `server.py` `/full_pipeline` to include meta-review step.
 - Export `MetaReviewAgent` from agents `__init__.py`.
 
 **Exit Criteria**:
+
 - `MetaReviewAgent` exists and is exported.
 - `/full_pipeline` runs: qualitative (with feedback loop) → quantitative → meta-review.
 - Response includes severity prediction and explanation from meta-review.
@@ -101,10 +109,12 @@ Without these, paper replication (Section 2.3.3, 78% accuracy) is not achievable
 pipeline is stable avoids losing reference behavior before parity is achieved.
 
 **Primary Tasks**:
+
 - Archive or remove legacy directories once parity is confirmed.
 - Replace hardcoded absolute paths in retained scripts with `DataSettings`.
 
 **Exit Criteria**:
+
 - Legacy directories are archived or removed with no runtime references.
 - Any retained scripts are portable and path-configurable.
 

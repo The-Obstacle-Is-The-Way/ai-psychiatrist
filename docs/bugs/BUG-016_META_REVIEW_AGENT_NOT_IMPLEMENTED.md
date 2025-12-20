@@ -18,7 +18,7 @@ This is the same pattern as BUG-012: spec exists, domain models expect it, but t
 ## Evidence
 
 - **Spec 10 Deliverables** state:
-  ```
+  ```text
   1. `src/ai_psychiatrist/agents/meta_review.py` - Meta-review agent
   2. `tests/unit/agents/test_meta_review.py` - Tests
   ```
@@ -28,7 +28,7 @@ This is the same pattern as BUG-012: spec exists, domain models expect it, but t
   # -> No such file or directory
   ```
 - **Domain model expects it**: `FullAssessment` in `domain/entities.py:383` requires a `MetaReview`
-- **Agents __init__.py references it** in docstring (Section 2.3.4) but doesn't export it
+- **Agents `__init__.py`** references it in docstring (Section 2.3.4) but doesn't export it
 - **Spec 11 pipeline expects it**: `dependencies.py` snippet shows `get_meta_review_agent()`
 - **server.py /full_pipeline** only runs quantitative + qualitative, skips meta-review entirely
 
