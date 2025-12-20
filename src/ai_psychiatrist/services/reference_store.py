@@ -121,9 +121,15 @@ class ReferenceStore:
 
         # Fail loudly if ALL embeddings are mismatched (BUG-009 fix)
         if total_chunks > 0 and skipped_chunks == total_chunks:
+            # Find actual dimension from any embedding (safely handle empty pairs)
+            actual_dim = 0
+            for pairs in raw_data.values():
+                if pairs:
+                    actual_dim = len(pairs[0][1])
+                    break
             raise EmbeddingDimensionMismatchError(
                 expected=self._dimension,
-                actual=len(next(iter(raw_data.values()))[0][1]) if raw_data else 0,
+                actual=actual_dim,
             )
 
         if skipped_chunks > 0:

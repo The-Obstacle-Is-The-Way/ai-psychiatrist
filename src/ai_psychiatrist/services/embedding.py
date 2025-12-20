@@ -172,7 +172,8 @@ class EmbeddingService:
         for participant_id, chunks in all_refs.items():
             for chunk_text, embedding in chunks:
                 if len(embedding) != len(query_embedding):
-                    # Log mismatch - this shouldn't happen if ReferenceStore loads correctly
+                    # Skip embeddings with dimension mismatch
+                    # (can occur if reference data has mixed dimensions)
                     logger.warning(
                         "Dimension mismatch between query and reference",
                         query_dim=len(query_embedding),

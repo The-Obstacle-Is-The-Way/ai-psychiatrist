@@ -61,6 +61,10 @@ def create_sliding_chunks(
     while lines and not lines[-1].strip():
         lines.pop()
 
+    # Handle empty or whitespace-only transcripts
+    if not lines:
+        return []
+
     if len(lines) <= chunk_size:
         return ["\n".join(lines)]
 
@@ -133,6 +137,7 @@ async def process_participant(
     dimension: int,
     chunk_size: int,
     step_size: int,
+    min_chars: int,
 ) -> list[tuple[str, list[float]]]:
     """Generate embeddings for all chunks of a participant's transcript.
 
@@ -144,6 +149,7 @@ async def process_participant(
         dimension: Target embedding dimension.
         chunk_size: Lines per chunk.
         step_size: Sliding window step.
+        min_chars: Minimum characters for a chunk to be embedded.
 
     Returns:
         List of (chunk_text, embedding) pairs.
@@ -162,7 +168,7 @@ async def process_participant(
     results: list[tuple[str, list[float]]] = []
 
     for chunk in chunks:
-        if len(chunk.strip()) < 10:  # Skip very short chunks
+        if len(chunk.strip()) < min_chars:
             continue
 
         try:
@@ -194,6 +200,7 @@ async def main_async(args: argparse.Namespace) -> int:  # noqa: PLR0915
     chunk_size = embedding_settings.chunk_size
     step_size = embedding_settings.chunk_step
     dimension = embedding_settings.dimension
+    min_chars = embedding_settings.min_evidence_chars
     model = model_settings.embedding_model
 
     output_path = data_settings.embeddings_path
@@ -206,6 +213,7 @@ async def main_async(args: argparse.Namespace) -> int:  # noqa: PLR0915
     print(f"  Dimension: {dimension}")
     print(f"  Chunk size: {chunk_size} lines")
     print(f"  Step size: {step_size} lines")
+    print(f"  Min chars: {min_chars}")
     print(f"  Output: {output_path}")
     print("=" * 60)
 
@@ -258,6 +266,7 @@ async def main_async(args: argparse.Namespace) -> int:  # noqa: PLR0915
                 dimension,
                 chunk_size,
                 step_size,
+                min_chars,
             )
 
             if results:

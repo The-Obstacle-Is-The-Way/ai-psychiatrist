@@ -502,11 +502,11 @@ class ReferenceStore:
 
         self._embeddings = normalized
 
-        total_chunks = sum(len(v) for v in normalized.values())
+        loaded_chunks = sum(len(v) for v in normalized.values())
         logger.info(
             "Embeddings loaded",
             participants=len(normalized),
-            total_chunks=total_chunks,
+            total_chunks=loaded_chunks,
             dimension=self._dimension,
         )
 

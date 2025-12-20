@@ -140,6 +140,43 @@ class TestOllamaClientListModels:
 
         await ollama_client.close()
 
+    @respx.mock
+    @pytest.mark.asyncio
+    async def test_list_models_missing_key(self, ollama_client: OllamaClient) -> None:
+        """Should return empty list when models key is missing."""
+        respx.get("http://localhost:11434/api/tags").mock(
+            return_value=httpx.Response(200, json={})
+        )
+
+        models = await ollama_client.list_models()
+
+        assert models == []
+        await ollama_client.close()
+
+    @respx.mock
+    @pytest.mark.asyncio
+    async def test_list_models_filters_non_dicts(self, ollama_client: OllamaClient) -> None:
+        """Should filter out non-dict entries from models list."""
+        respx.get("http://localhost:11434/api/tags").mock(
+            return_value=httpx.Response(
+                200,
+                json={
+                    "models": [
+                        {"name": "valid"},
+                        "invalid-string",
+                        None,
+                        {"name": "also-valid"},
+                    ]
+                },
+            )
+        )
+
+        models = await ollama_client.list_models()
+
+        assert len(models) == 2
+        assert [m.get("name") for m in models] == ["valid", "also-valid"]
+        await ollama_client.close()
+
 
 class TestOllamaClientChat:
     """Tests for chat completion."""
