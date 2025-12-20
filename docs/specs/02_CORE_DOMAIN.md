@@ -243,7 +243,12 @@ class EvaluationScore:
 
 @dataclass(frozen=True, slots=True)
 class SimilarityMatch:
-    """A similarity match from embedding search."""
+    """A similarity match from embedding search.
+
+    Note: The domain constrains similarity to [0, 1]. When cosine similarity is used
+    for retrieval, implementations should transform raw cosine similarity in [-1, 1]
+    to this range via: (1 + cos) / 2.
+    """
 
     chunk: TranscriptChunk
     similarity: float

@@ -228,10 +228,18 @@ class EmbeddingService:
         for participant_id, chunks in all_refs.items():
             for chunk, embedding in chunks:
                 if len(embedding) != len(query_embedding):
+                    logger.warning(
+                        "Dimension mismatch between query and reference",
+                        query_dim=len(query_embedding),
+                        ref_dim=len(embedding),
+                        participant_id=participant_id,
+                    )
                     continue
 
                 ref_array = np.array([embedding])
-                sim = cosine_similarity(query_array, ref_array)[0][0]
+                raw_cos = float(cosine_similarity(query_array, ref_array)[0][0])
+                # Transform cosine similarity from [-1, 1] to [0, 1] to match SimilarityMatch validation.
+                sim = (1.0 + raw_cos) / 2.0
 
                 similarities.append(
                     SimilarityMatch(
@@ -239,7 +247,7 @@ class EmbeddingService:
                             text=chunk,
                             participant_id=participant_id,
                         ),
-                        similarity=float(sim),
+                        similarity=sim,
                         reference_score=self._reference_store.get_score(
                             participant_id, PHQ8Item.NO_INTEREST  # placeholder
                         ),
@@ -323,10 +331,18 @@ class EmbeddingService:
         for participant_id, chunks in all_refs.items():
             for chunk_text, embedding in chunks:
                 if len(embedding) != len(query_embedding):
+                    logger.warning(
+                        "Dimension mismatch between query and reference",
+                        query_dim=len(query_embedding),
+                        ref_dim=len(embedding),
+                        participant_id=participant_id,
+                    )
                     continue
 
                 ref_array = np.array([embedding])
-                sim = cosine_similarity(query_array, ref_array)[0][0]
+                raw_cos = float(cosine_similarity(query_array, ref_array)[0][0])
+                # Transform cosine similarity from [-1, 1] to [0, 1] to match SimilarityMatch validation.
+                sim = (1.0 + raw_cos) / 2.0
 
                 # Get item-specific score for this participant
                 score = self._reference_store.get_score(participant_id, item)
@@ -337,7 +353,7 @@ class EmbeddingService:
                             text=chunk_text,
                             participant_id=participant_id,
                         ),
-                        similarity=float(sim),
+                        similarity=sim,
                         reference_score=score,
                     )
                 )
@@ -361,6 +377,7 @@ import numpy as np
 import pandas as pd
 
 from ai_psychiatrist.domain.enums import PHQ8Item
+from ai_psychiatrist.domain.exceptions import EmbeddingDimensionMismatchError
 from ai_psychiatrist.infrastructure.logging import get_logger
 
 if TYPE_CHECKING:
@@ -429,17 +446,46 @@ class ReferenceStore:
 
         # Normalize embeddings and convert participant IDs to int
         normalized: dict[int, list[tuple[str, list[float]]]] = {}
+        skipped_chunks = 0
+        total_chunks = 0
 
         for pid, pairs in raw_data.items():
             pid_int = int(pid)
-            norm_pairs = []
+            norm_pairs: list[tuple[str, list[float]]] = []
             for text, embedding in pairs:
+                total_chunks += 1
+                # Validate dimension - embeddings must be at least as long as configured
+                if len(embedding) < self._dimension:
+                    skipped_chunks += 1
+                    logger.warning(
+                        "Skipping embedding with insufficient dimension",
+                        participant_id=pid_int,
+                        expected=self._dimension,
+                        actual=len(embedding),
+                    )
+                    continue
                 # Truncate to configured dimension
                 emb = embedding[: self._dimension]
                 # L2 normalize
                 emb = self._l2_normalize(emb)
                 norm_pairs.append((text, emb))
-            normalized[pid_int] = norm_pairs
+            if norm_pairs:
+                normalized[pid_int] = norm_pairs
+
+        # Fail loudly if ALL embeddings are mismatched (BUG-009 fix)
+        if total_chunks > 0 and skipped_chunks == total_chunks:
+            raise EmbeddingDimensionMismatchError(
+                expected=self._dimension,
+                actual=len(next(iter(raw_data.values()))[0][1]) if raw_data else 0,
+            )
+
+        if skipped_chunks > 0:
+            logger.error(
+                "Some reference embeddings had dimension mismatch",
+                skipped=skipped_chunks,
+                total=total_chunks,
+                expected_dimension=self._dimension,
+            )
 
         self._embeddings = normalized
 
