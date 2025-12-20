@@ -54,7 +54,7 @@ class TestFeedbackLoopService:
             assessment_id=Mock(),
             iteration=0,
         )
-        agent.get_feedback_for_low_scores.return_value = {}
+        agent.get_feedback_for_low_scores = Mock(return_value={})
         return agent
 
     @pytest.fixture
