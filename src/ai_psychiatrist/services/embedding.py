@@ -165,13 +165,21 @@ class EmbeddingService:
         for participant_id, chunks in all_refs.items():
             for chunk_text, embedding in chunks:
                 if len(embedding) != len(query_embedding):
+                    # Log mismatch - this shouldn't happen if ReferenceStore loads correctly
+                    logger.warning(
+                        "Dimension mismatch between query and reference",
+                        query_dim=len(query_embedding),
+                        ref_dim=len(embedding),
+                        participant_id=participant_id,
+                    )
                     continue
 
                 ref_array = np.array([embedding])
-                sim = float(cosine_similarity(query_array, ref_array)[0][0])
+                raw_cos = float(cosine_similarity(query_array, ref_array)[0][0])
 
-                # Clamp similarity to valid range [0, 1] for SimilarityMatch validation
-                sim = max(0.0, min(1.0, sim))
+                # Transform cosine similarity from [-1, 1] to [0, 1] (BUG-010 fix)
+                # This gives: -1 (opposite) -> 0, 0 (orthogonal) -> 0.5, 1 (identical) -> 1
+                sim = (1.0 + raw_cos) / 2.0
 
                 # Get item-specific score
                 score = self._reference_store.get_score(participant_id, lookup_item)

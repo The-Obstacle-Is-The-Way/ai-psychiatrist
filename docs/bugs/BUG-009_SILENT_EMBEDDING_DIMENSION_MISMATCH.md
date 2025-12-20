@@ -1,8 +1,9 @@
 # BUG-009: Silent Embedding Dimension Mismatch
 
 **Severity**: HIGH (P1)
-**Status**: OPEN
+**Status**: RESOLVED
 **Date Identified**: 2025-12-19
+**Date Resolved**: 2025-12-20
 **Spec Reference**: `docs/specs/08_EMBEDDING_SERVICE.md`, `docs/specs/09_QUANTITATIVE_AGENT.md`
 
 ---
@@ -50,3 +51,35 @@ Embedding dimension mismatches are silently ignored during similarity search. Wh
 - `src/ai_psychiatrist/services/embedding.py`
 - `src/ai_psychiatrist/services/reference_store.py`
 - `src/ai_psychiatrist/domain/exceptions.py`
+
+---
+
+## Resolution
+
+Fixed dimension mismatch handling in `ReferenceStore._load_embeddings()`:
+
+1. **Explicit validation at load time**: Embeddings shorter than configured dimension are
+   logged with a warning and skipped.
+
+2. **Fail-fast on total mismatch**: If ALL embeddings have insufficient dimension,
+   raises `EmbeddingDimensionMismatchError` with expected and actual dimensions.
+
+3. **Logging for partial mismatch**: When some embeddings are skipped, logs an error
+   with the count of skipped vs total chunks.
+
+4. **Warning in EmbeddingService**: Added logging when query/reference dimensions mismatch
+   during similarity computation.
+
+Tests added:
+- `TestEmbeddingDimensionMismatch.test_all_embeddings_mismatched_raises_error`
+- `TestEmbeddingDimensionMismatch.test_partial_mismatch_skips_bad_embeddings`
+- `TestEmbeddingDimensionMismatch.test_embedding_truncation`
+
+---
+
+## Verification
+
+```bash
+pytest tests/unit/services/test_embedding.py -v --no-cov -k "dimension"
+# 3 passed
+```
