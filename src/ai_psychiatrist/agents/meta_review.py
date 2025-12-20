@@ -23,12 +23,14 @@ from ai_psychiatrist.domain.entities import (
     Transcript,
 )
 from ai_psychiatrist.domain.enums import PHQ8Item, SeverityLevel
-from ai_psychiatrist.infrastructure.llm.responses import extract_xml_tags
+from ai_psychiatrist.infrastructure.llm.responses import (
+    SimpleChatClient,
+    extract_xml_tags,
+)
 from ai_psychiatrist.infrastructure.logging import get_logger
 
 if TYPE_CHECKING:
     from ai_psychiatrist.config import ModelSettings
-    from ai_psychiatrist.infrastructure.llm.ollama import OllamaClient
 
 logger = get_logger(__name__)
 
@@ -46,7 +48,7 @@ class MetaReviewAgent:
 
     def __init__(
         self,
-        llm_client: OllamaClient,
+        llm_client: SimpleChatClient,
         model_settings: ModelSettings | None = None,
     ) -> None:
         """Initialize meta-review agent.
@@ -94,7 +96,7 @@ class MetaReviewAgent:
         )
 
         # Get model and sampling params from settings
-        model = self._model_settings.chat_model if self._model_settings else None
+        model = self._model_settings.meta_review_model if self._model_settings else None
         temperature = self._model_settings.temperature if self._model_settings else 0.2
         top_k = self._model_settings.top_k if self._model_settings else 20
         top_p = self._model_settings.top_p if self._model_settings else 0.8

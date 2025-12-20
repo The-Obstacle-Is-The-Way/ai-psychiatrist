@@ -5,6 +5,7 @@ from __future__ import annotations
 import pytest
 
 from ai_psychiatrist.agents.meta_review import MetaReviewAgent
+from ai_psychiatrist.config import ModelSettings
 from ai_psychiatrist.domain.entities import (
     PHQ8Assessment,
     QualitativeAssessment,
@@ -177,9 +178,7 @@ qualitative assessment reveals social stressors and biological predisposition.</
         """Should extract explanation from response."""
         explanation_text = "This is the detailed clinical explanation."
         mock_client = MockLLMClient(
-            chat_responses=[
-                f"<severity>2</severity><explanation>{explanation_text}</explanation>"
-            ]
+            chat_responses=[f"<severity>2</severity><explanation>{explanation_text}</explanation>"]
         )
         agent = MetaReviewAgent(llm_client=mock_client)
 
@@ -262,6 +261,38 @@ qualitative assessment reveals social stressors and biological predisposition.</
         user_message = next(m for m in request.messages if m.role == "user")
 
         assert sample_transcript.text in user_message.content
+
+    @pytest.mark.asyncio
+    async def test_review_uses_meta_review_model_settings(
+        self,
+        sample_transcript: Transcript,
+        sample_qualitative: QualitativeAssessment,
+        sample_quantitative: PHQ8Assessment,
+    ) -> None:
+        """Should use ModelSettings meta-review parameters in LLM call."""
+        model_settings = ModelSettings(
+            meta_review_model="meta-review-model",
+            temperature=0.7,
+            top_k=33,
+            top_p=0.9,
+        )
+        mock_client = MockLLMClient(
+            chat_responses=["<severity>1</severity><explanation>Test</explanation>"]
+        )
+        agent = MetaReviewAgent(llm_client=mock_client, model_settings=model_settings)
+
+        await agent.review(
+            transcript=sample_transcript,
+            qualitative=sample_qualitative,
+            quantitative=sample_quantitative,
+        )
+
+        assert mock_client.chat_call_count == 1
+        request = mock_client.chat_requests[0]
+        assert request.model == "meta-review-model"
+        assert request.temperature == 0.7
+        assert request.top_k == 33
+        assert request.top_p == 0.9
 
     @pytest.mark.asyncio
     async def test_review_is_mdd_property(

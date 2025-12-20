@@ -11,7 +11,7 @@
 Implemented MetaReviewAgent as specified in Spec 10:
 - Created `src/ai_psychiatrist/agents/meta_review.py` with full implementation
 - Created `src/ai_psychiatrist/agents/prompts/meta_review.py` for prompt templates
-- Created `tests/unit/agents/test_meta_review.py` with 9 comprehensive tests
+- Created `tests/unit/agents/test_meta_review.py` with 10 comprehensive tests
 - Exported `MetaReviewAgent` from `src/ai_psychiatrist/agents/__init__.py`
 - Wired into `server.py` `/full_pipeline` endpoint
 
