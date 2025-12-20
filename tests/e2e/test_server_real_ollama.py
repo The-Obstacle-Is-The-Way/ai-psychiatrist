@@ -15,7 +15,9 @@ class TestServerRealOllama:
     ) -> None:
         import server  # noqa: PLC0415
 
-        assert ollama_client is not None
+        # ollama_client fixture provides skip logic; server creates its own client
+        _ = ollama_client
+
         async with server.lifespan(server.app):
             transport = httpx.ASGITransport(app=server.app)
             async with httpx.AsyncClient(transport=transport, base_url="http://test") as client:

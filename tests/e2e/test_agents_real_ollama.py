@@ -83,3 +83,8 @@ class TestAgentsRealOllama:
 
         numeric_scores = [item.score for item in result.items.values() if item.score is not None]
         assert len(numeric_scores) >= 1
+
+        # Validate score ranges for non-N/A items (PHQ-8 valid range: 0-3)
+        for item in result.items.values():
+            if item.score is not None:
+                assert 0 <= item.score <= 3, f"Score {item.score} out of valid PHQ-8 range [0,3]"

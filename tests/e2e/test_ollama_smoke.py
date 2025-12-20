@@ -24,7 +24,7 @@ class TestOllamaSmoke:
         )
 
         tags = extract_xml_tags(response, ["answer"])
-        assert tags["answer"].startswith("OK")
+        assert tags["answer"].strip() == "OK"
 
     async def test_simple_embed_dimension_and_l2_norm(self, ollama_client, app_settings) -> None:
         embedding = await ollama_client.simple_embed(

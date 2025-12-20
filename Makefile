@@ -45,7 +45,7 @@ format-check: ## Check formatting without changes
 	uv run ruff format --check src tests scripts server.py
 
 typecheck: ## Run type checker (mypy)
-	uv run mypy src
+	uv run mypy src tests scripts server.py
 
 # ============== All Quality Checks ==============
 check: lint typecheck test ## Run all checks (lint, typecheck, test)
