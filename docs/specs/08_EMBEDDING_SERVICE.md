@@ -86,6 +86,7 @@ import numpy as np
 from sklearn.metrics.pairwise import cosine_similarity
 
 from ai_psychiatrist.domain.enums import PHQ8Item
+from ai_psychiatrist.domain.exceptions import EmbeddingDimensionMismatchError
 from ai_psychiatrist.domain.value_objects import EmbeddedChunk, SimilarityMatch, TranscriptChunk
 from ai_psychiatrist.infrastructure.logging import get_logger
 
@@ -221,6 +222,12 @@ class EmbeddingService:
             logger.warning("No reference embeddings available")
             return []
 
+        if len(query_embedding) != self._dimension:
+            raise EmbeddingDimensionMismatchError(
+                expected=self._dimension,
+                actual=len(query_embedding),
+            )
+
         # Compute similarities
         query_array = np.array([query_embedding])
         similarities = []
@@ -325,6 +332,12 @@ class EmbeddingService:
 
         all_refs = self._reference_store.get_all_embeddings()
         matches = []
+
+        if len(query_embedding) != self._dimension:
+            raise EmbeddingDimensionMismatchError(
+                expected=self._dimension,
+                actual=len(query_embedding),
+            )
 
         query_array = np.array([query_embedding])
 
