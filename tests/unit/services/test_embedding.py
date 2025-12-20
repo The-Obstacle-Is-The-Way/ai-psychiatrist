@@ -205,6 +205,24 @@ class TestEmbeddingService:
             assert matches[0].similarity >= matches[1].similarity
 
     @pytest.mark.asyncio
+    async def test_find_similar_chunks_dimension_mismatch_raises(
+        self,
+        mock_llm_client: MagicMock,
+        mock_reference_store: MagicMock,
+        mock_settings: MagicMock,
+    ) -> None:
+        """Should raise when query embedding dimension mismatches config."""
+        service = EmbeddingService(
+            mock_llm_client,
+            mock_reference_store,
+            mock_settings,
+        )
+
+        # Wrong dimensionality (expected 256 per mock_settings)
+        with pytest.raises(EmbeddingDimensionMismatchError):
+            await service.find_similar_chunks((0.1, 0.2))
+
+    @pytest.mark.asyncio
     async def test_find_similar_chunks_empty_query(
         self,
         mock_llm_client: MagicMock,
