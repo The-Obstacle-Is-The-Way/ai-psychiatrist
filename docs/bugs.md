@@ -4,6 +4,7 @@ This document logs issues, anti-patterns, security risks, and technical debt ide
 
 **Date:** 2025-02-24
 **Scope:** `src/ai_psychiatrist` and `tests/`
+**Auditors:** Jules (Self), Claude (PR #23)
 
 ## Executive Summary
 
@@ -13,6 +14,7 @@ The codebase has transitioned from a research script to a more structured Python
 *   **Security (P0):** Use of `pickle` for loading reference embeddings.
 *   **Reliability (P1):** Brittle, regex-based JSON parsing for LLM outputs.
 *   **Maintainability (P2):** Hardcoded "magic" values (prompts, keywords, model parameters) scattered throughout the code.
+*   **Concurrency (P3):** Global mutable state in `server.py` creates race conditions in async contexts.
 *   **Testing (P2):** Low coverage (~30-50%) and reliance on "over-mocking" in integration tests.
 
 ---
@@ -29,6 +31,7 @@ with self._embeddings_path.open("rb") as f:
 ```
 **Risk:** Arbitrary code execution. If an attacker replaces the embeddings file (even if it's "internal"), they can execute malicious code when the application starts.
 **Recommendation:** Replace `pickle` with a safe format like `SafeTensors`, `Parquet`, or standard `JSON` (if size permits).
+**Note:** Other audits labeled this P4 ("documented"), but this audit strictly classifies RCE vectors as P0.
 
 ---
 
@@ -86,6 +89,39 @@ DOMAIN_KEYWORDS = {
 *   Score normalization
 **Impact:** High coupling and low cohesion. Hard to unit test specific logic (like the parsing) without mocking the entire LLM.
 **Recommendation:** Extract `ResponseParser` into a separate service/utility. Move retrieval logic entirely to `EmbeddingService`.
+
+---
+
+## P3: Concurrency & Best Practices
+
+### BUG-010: Module-level Global State
+**Location:** `server.py`
+**Description:**
+```python
+_ollama_client: OllamaClient | None = None
+# ... (6 global variables)
+```
+**Impact:** Prevents running multiple instances of the app in the same process (e.g., for testing). Creates race conditions during startup/shutdown in async environments.
+**Recommendation:** Attach state to `app.state` (FastAPI standard) or use a proper Dependency Injection container instead of module-level `global` keywords.
+
+---
+
+## P4: Packaging & Minor Issues
+
+### BUG-011: Missing Type Marker
+**Location:** `src/ai_psychiatrist/`
+**Description:** No `py.typed` file exists in the package root.
+**Impact:** Consumers of this package (if installed as a library) will not benefit from the type hints provided in the source code; tools like `mypy` will treat it as untyped.
+**Recommendation:** Add an empty `src/ai_psychiatrist/py.typed` file.
+
+### BUG-012: Ad-Hoc Magic Numbers (Participant ID)
+**Location:** `server.py`
+**Description:**
+```python
+participant_id=999_999,
+```
+**Impact:** Arbitrary magic number used to bypass validation checks for ad-hoc transcripts.
+**Recommendation:** Use a dedicated constant (e.g., `AD_HOC_PARTICIPANT_ID`) or refactor the domain entity to allow optional IDs for ephemeral sessions.
 
 ---
 
