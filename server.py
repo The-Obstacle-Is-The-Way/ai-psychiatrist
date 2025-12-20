@@ -7,6 +7,7 @@ Now uses the paper-aligned implementations from src/ai_psychiatrist/agents/.
 BUG-012, BUG-014: Fixes split-brain architecture and missing transcript issues.
 BUG-016, BUG-017: Adds MetaReviewAgent and wires FeedbackLoopService.
 """
+
 from contextlib import asynccontextmanager
 from typing import Annotated
 
@@ -429,10 +430,11 @@ def _resolve_transcript(
 
     if request.transcript_text:
         try:
-            # Use synthetic participant ID (-1) for ad-hoc transcripts
-            # to avoid collision with real DAIC-WOZ participants (300-492)
+            # Use a reserved, positive participant ID for ad-hoc transcripts to satisfy
+            # domain constraints (Transcript requires participant_id > 0) while avoiding
+            # collision with real DAIC-WOZ participants (300-492).
             return transcript_service.load_transcript_from_text(
-                participant_id=-1,
+                participant_id=999_999,
                 text=request.transcript_text,
             )
         except Exception as e:

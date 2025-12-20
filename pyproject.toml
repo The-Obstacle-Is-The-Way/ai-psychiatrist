@@ -130,6 +130,7 @@ markers = [
     "unit: Unit tests (fast, no I/O)",
     "integration: Integration tests (may use mocks)",
     "e2e: End-to-end tests (full system)",
+    "ollama: Requires live Ollama server (opt-in)",
     "slow: Slow tests (skip with -m 'not slow')",
 ]
 

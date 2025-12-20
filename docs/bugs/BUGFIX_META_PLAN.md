@@ -14,8 +14,8 @@ unnecessary work on legacy-only code until the modern pipeline is stable.
 
 ## Scope and Current Status
 
-- **OPEN**: BUG-018
-- **RESOLVED**: BUG-004, BUG-005, BUG-006, BUG-007, BUG-008, BUG-009, BUG-010, BUG-011, BUG-012, BUG-013, BUG-014, BUG-015, BUG-016, BUG-017
+- **OPEN**: None
+- **RESOLVED**: BUG-004 through BUG-018
 
 ## Chunked Fix Order
 
@@ -144,10 +144,10 @@ but we cannot claim the pipeline works without real integration tests.
 
 **Primary Tasks**:
 
-- Create `tests/integration/` directory with real Ollama tests.
-- Add pytest markers (`@pytest.mark.slow`, `@pytest.mark.integration`).
+- Create `tests/e2e/` real Ollama tests (opt-in, CI-safe).
+- Add pytest markers (`@pytest.mark.ollama`, `@pytest.mark.e2e`, `@pytest.mark.slow`).
 - Write vertical slice tests for each agent hitting real Ollama.
-- Write E2E test for `/full_pipeline` with real DAIC-WOZ transcript.
+- Write E2E test for `/full_pipeline` using `transcript_text` (no licensed data required).
 - Verify embeddings generate with correct dimensions.
 - Verify JSON parsing handles real LLM output (not just mock responses).
 
@@ -157,6 +157,8 @@ but we cannot claim the pipeline works without real integration tests.
 - `/full_pipeline` E2E test returns valid response structure.
 - Any parsing/prompt issues discovered are documented as new bugs.
 - Confidence that the pipeline actually works, not just appears to work.
+  
+**Status**: ✅ COMPLETED (2025-12-20)
 
 ---
 
