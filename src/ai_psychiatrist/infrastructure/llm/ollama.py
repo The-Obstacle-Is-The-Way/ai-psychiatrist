@@ -136,11 +136,14 @@ class OllamaClient:
         # Filter to dictionaries (Ollama returns a list of objects with at least a `name` field)
         return [m for m in models if isinstance(m, dict)]
 
-    async def chat(self, request: ChatRequest) -> ChatResponse:
+    async def chat(
+        self, request: ChatRequest, response_format: str | None = None
+    ) -> ChatResponse:
         """Execute chat completion via Ollama API.
 
         Args:
             request: Chat request with messages and parameters.
+            response_format: Optional format (e.g. "json").
 
         Returns:
             Chat response with generated content.
@@ -159,6 +162,9 @@ class OllamaClient:
                 "top_p": request.top_p,
             },
         }
+
+        if response_format:
+            payload["format"] = response_format
 
         logger.debug(
             "Sending chat request",
@@ -292,6 +298,7 @@ class OllamaClient:
         temperature: float = 0.2,
         top_k: int = 20,
         top_p: float = 0.8,
+        response_format: str | None = None,
     ) -> str:
         """Simple chat completion with just user/system prompts.
 
@@ -302,6 +309,7 @@ class OllamaClient:
             temperature: Sampling temperature (e.g., 0.0 for Judge agent).
             top_k: Top-k sampling parameter.
             top_p: Nucleus sampling parameter.
+            response_format: Output format (e.g., "json").
 
         Returns:
             Generated response content.
@@ -311,6 +319,11 @@ class OllamaClient:
             messages.append(ChatMessage(role="system", content=system_prompt))
         messages.append(ChatMessage(role="user", content=user_prompt))
 
+        # Pass format via generic extra fields if protocol allowed,
+        # but ChatRequest protocol might not have it.
+        # We need to extend ChatRequest or handle it in chat() method.
+        # For now, let's check ChatRequest definition in protocols.py.
+        # Assuming we can modify chat() to accept kwargs or modify payload construction.
         request = ChatRequest(
             messages=messages,
             model=model or "gemma3:27b",
@@ -318,7 +331,12 @@ class OllamaClient:
             top_k=top_k,
             top_p=top_p,
         )
-        response = await self.chat(request)
+        # Hack: attach format to request object dynamically if protocol doesn't support it,
+        # or better, update the protocol.
+        # Given we are refactoring, let's update the protocol first?
+        # Or just pass it to a modified chat method.
+        # Ideally we update ChatRequest.
+        response = await self.chat(request, response_format=response_format)
         return response.content
 
     async def simple_embed(

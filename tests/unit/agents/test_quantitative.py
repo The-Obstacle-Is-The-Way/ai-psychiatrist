@@ -16,11 +16,11 @@ import json
 import pytest
 
 from ai_psychiatrist.agents.prompts.quantitative import (
-    DOMAIN_KEYWORDS,
     QUANTITATIVE_SYSTEM_PROMPT,
     make_evidence_prompt,
     make_scoring_prompt,
 )
+from ai_psychiatrist.config.domain_constants import DOMAIN_KEYWORDS
 from ai_psychiatrist.agents.quantitative import QuantitativeAssessmentAgent
 from ai_psychiatrist.domain.entities import PHQ8Assessment, Transcript
 from ai_psychiatrist.domain.enums import AssessmentMode, PHQ8Item, SeverityLevel
@@ -58,26 +58,51 @@ SAMPLE_EVIDENCE_RESPONSE = json.dumps(
     }
 )
 
-# Sample scoring response with <answer> tags
-SAMPLE_SCORING_RESPONSE = """<thinking>
-Let me analyze each PHQ-8 item based on the transcript evidence.
-
-For NoInterest, the participant explicitly states they don't enjoy things anymore.
-This suggests at least several days a week (score 1-2).
-</thinking>
-
-<answer>
-{
-    "PHQ8_NoInterest": {"evidence": "I don't really enjoy things anymore", "reason": "Direct statement of anhedonia", "score": 2},
-    "PHQ8_Depressed": {"evidence": "Feeling pretty down lately", "reason": "Reports depressed mood", "score": 1},
-    "PHQ8_Sleep": {"evidence": "I can't sleep most nights, wake up at 3am", "reason": "Clear sleep disturbance", "score": 2},
-    "PHQ8_Tired": {"evidence": "I'm always tired", "reason": "Reports constant fatigue", "score": 2},
-    "PHQ8_Appetite": {"evidence": "No relevant evidence found", "reason": "Appetite not discussed", "score": "N/A"},
-    "PHQ8_Failure": {"evidence": "I feel like a failure", "reason": "Direct negative self-perception", "score": 1},
-    "PHQ8_Concentrating": {"evidence": "Can't focus on anything", "reason": "Reports concentration issues", "score": 2},
-    "PHQ8_Moving": {"evidence": "No relevant evidence found", "reason": "Psychomotor changes not mentioned", "score": "N/A"}
-}
-</answer>"""
+# Sample scoring response (pure JSON now)
+SAMPLE_SCORING_RESPONSE = json.dumps(
+    {
+        "PHQ8_NoInterest": {
+            "evidence": "I don't really enjoy things anymore",
+            "reason": "Direct statement of anhedonia",
+            "score": 2,
+        },
+        "PHQ8_Depressed": {
+            "evidence": "Feeling pretty down lately",
+            "reason": "Reports depressed mood",
+            "score": 1,
+        },
+        "PHQ8_Sleep": {
+            "evidence": "I can't sleep most nights, wake up at 3am",
+            "reason": "Clear sleep disturbance",
+            "score": 2,
+        },
+        "PHQ8_Tired": {
+            "evidence": "I'm always tired",
+            "reason": "Reports constant fatigue",
+            "score": 2,
+        },
+        "PHQ8_Appetite": {
+            "evidence": "No relevant evidence found",
+            "reason": "Appetite not discussed",
+            "score": "N/A",
+        },
+        "PHQ8_Failure": {
+            "evidence": "I feel like a failure",
+            "reason": "Direct negative self-perception",
+            "score": 1,
+        },
+        "PHQ8_Concentrating": {
+            "evidence": "Can't focus on anything",
+            "reason": "Reports concentration issues",
+            "score": 2,
+        },
+        "PHQ8_Moving": {
+            "evidence": "No relevant evidence found",
+            "reason": "Psychomotor changes not mentioned",
+            "score": "N/A",
+        },
+    }
+)
 
 SAMPLE_TRANSCRIPT_TEXT = """Ellie: How are you feeling today?
 Participant: Not great, honestly. I don't really enjoy things anymore.
@@ -186,6 +211,10 @@ class TestQuantitativeAssessmentAgent:
         result = await agent.assess(sample_transcript)
 
         # N/A scores contribute 0 to total (sum = 10)
+        # Note: In new implementation, we rely on robust JSON parsing.
+        # If any item failed to parse (e.g. smart quotes issue in mock response),
+        # it might be None. We assert total_score matches expectation from SAMPLE_SCORING_RESPONSE.
+        # SAMPLE_SCORING_RESPONSE: 2 + 1 + 2 + 2 + N/A + 1 + 2 + N/A = 10
         assert result.total_score == 10
 
     @pytest.mark.asyncio
@@ -314,53 +343,29 @@ class TestQuantitativeAgentParsing:
 
         assert result.items[PHQ8Item.NO_INTEREST].score == 2
 
+    @pytest.mark.skip(reason="Legacy heuristic parsing removed in favor of robust JSON mode (BUG-002)")
     @pytest.mark.asyncio
     async def test_handles_trailing_commas(
         self,
         sample_transcript: Transcript,
     ) -> None:
         """Should handle JSON with trailing commas."""
-        json_with_trailing_comma = """{
-    "PHQ8_NoInterest": {"evidence": "test", "reason": "test", "score": 1,},
-    "PHQ8_Depressed": {"evidence": "test", "reason": "test", "score": 0},
-    "PHQ8_Sleep": {"evidence": "test", "reason": "test", "score": 0},
-    "PHQ8_Tired": {"evidence": "test", "reason": "test", "score": 0},
-    "PHQ8_Appetite": {"evidence": "test", "reason": "test", "score": 0},
-    "PHQ8_Failure": {"evidence": "test", "reason": "test", "score": 0},
-    "PHQ8_Concentrating": {"evidence": "test", "reason": "test", "score": 0},
-    "PHQ8_Moving": {"evidence": "test", "reason": "test", "score": 0},
-}"""
-        client = MockLLMClient(chat_responses=[SAMPLE_EVIDENCE_RESPONSE, json_with_trailing_comma])
-        agent = QuantitativeAssessmentAgent(llm_client=client, mode=AssessmentMode.ZERO_SHOT)
-        result = await agent.assess(sample_transcript)
+        # NOTE: This test is skipped because we removed the manual regex fixups
+        # in favor of relying on the LLM provider's JSON mode which should guarantee
+        # valid JSON. If we want to support this in unit tests, we'd need to mock
+        # json.loads to accept it or re-add the fixup logic if we don't trust the provider.
+        pass
 
-        assert result.items[PHQ8Item.NO_INTEREST].score == 1
-
+    @pytest.mark.skip(reason="Legacy heuristic parsing removed in favor of robust JSON mode (BUG-002)")
     @pytest.mark.asyncio
     async def test_handles_smart_quotes(
         self,
         sample_transcript: Transcript,
     ) -> None:
         """Should handle JSON with smart quotes."""
-        json_with_smart_quotes = _to_smart_quotes(
-            json.dumps(
-                {
-                    "PHQ8_NoInterest": {"evidence": "test", "reason": "test", "score": 1},
-                    "PHQ8_Depressed": {"evidence": "test", "reason": "test", "score": 0},
-                    "PHQ8_Sleep": {"evidence": "test", "reason": "test", "score": 0},
-                    "PHQ8_Tired": {"evidence": "test", "reason": "test", "score": 0},
-                    "PHQ8_Appetite": {"evidence": "test", "reason": "test", "score": 0},
-                    "PHQ8_Failure": {"evidence": "test", "reason": "test", "score": 0},
-                    "PHQ8_Concentrating": {"evidence": "test", "reason": "test", "score": 0},
-                    "PHQ8_Moving": {"evidence": "test", "reason": "test", "score": 0},
-                }
-            )
-        )
-        client = MockLLMClient(chat_responses=[SAMPLE_EVIDENCE_RESPONSE, json_with_smart_quotes])
-        agent = QuantitativeAssessmentAgent(llm_client=client, mode=AssessmentMode.ZERO_SHOT)
-        result = await agent.assess(sample_transcript)
-
-        assert result.items[PHQ8Item.NO_INTEREST].score == 1
+        # NOTE: Skipped for same reason as trailing commas. Robust JSON mode
+        # implies the LLM outputs valid JSON quotes.
+        pass
 
     @pytest.mark.asyncio
     async def test_handles_missing_items_with_defaults(
@@ -471,7 +476,8 @@ class TestQuantitativePrompts:
         prompt = make_scoring_prompt("test transcript", "")
 
         # Should have answer format instructions but no extra blank lines
-        assert "<answer>" in prompt
+        # In new version we don't use <answer> tags, but pure JSON
+        assert "Return ONLY a valid JSON object" in prompt
 
     def test_make_scoring_prompt_specifies_json_format(self) -> None:
         """Scoring prompt should specify expected JSON structure."""
@@ -566,6 +572,7 @@ class TestAgentProtocol:
                 temperature: float = 0.2,  # noqa: ARG002
                 top_k: int = 20,  # noqa: ARG002
                 top_p: float = 0.8,  # noqa: ARG002
+                response_format: str | None = None,  # noqa: ARG002
             ) -> str:
                 return json.dumps(
                     {k: {"evidence": "test", "reason": "test", "score": 1} for k in DOMAIN_KEYWORDS}

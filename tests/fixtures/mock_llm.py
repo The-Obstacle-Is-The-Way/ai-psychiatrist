@@ -158,6 +158,7 @@ class MockLLMClient:
         temperature: float = 0.2,
         top_k: int = 20,
         top_p: float = 0.8,
+        response_format: str | None = None,
     ) -> str:
         """Simple chat interface matching OllamaClient.
 
@@ -168,6 +169,7 @@ class MockLLMClient:
             temperature: Sampling temperature.
             top_k: Top-k sampling parameter.
             top_p: Nucleus sampling parameter.
+            response_format: Output format (e.g., "json").
 
         Returns:
             Generated response content.

@@ -11,73 +11,6 @@ predicting PHQ-8 scores from interview transcripts.
 
 from __future__ import annotations
 
-# Domain keywords for keyword backfill (from original implementation)
-# Used to catch evidence when LLM extraction misses relevant sentences
-DOMAIN_KEYWORDS: dict[str, list[str]] = {
-    "PHQ8_NoInterest": [
-        "can't be bothered",
-        "no interest",
-        "nothing really",
-        "not enjoy",
-        "no pleasure",
-        "what's the point",
-        "cant be bothered",
-    ],
-    "PHQ8_Depressed": [
-        "fed up",
-        "miserable",
-        "depressed",
-        "very black",
-        "hopeless",
-        "low",
-    ],
-    "PHQ8_Sleep": [
-        "sleep",
-        "fall asleep",
-        "wake up",
-        "insomnia",
-        "clock",
-        "tired in the morning",
-    ],
-    "PHQ8_Tired": [
-        "exhausted",
-        "tired",
-        "little energy",
-        "fatigue",
-        "no energy",
-    ],
-    "PHQ8_Appetite": [
-        "appetite",
-        "weight",
-        "lost weight",
-        "eat",
-        "eating",
-        "don't bother",
-        "dont bother",
-        "looser",
-    ],
-    "PHQ8_Failure": [
-        "useless",
-        "failure",
-        "bad about myself",
-        "burden",
-    ],
-    "PHQ8_Concentrating": [
-        "concentrat",
-        "memory",
-        "forgot",
-        "thinking of something else",
-        "focus",
-    ],
-    "PHQ8_Moving": [
-        "moving slowly",
-        "restless",
-        "fidget",
-        "speaking slowly",
-        "psychomotor",
-    ],
-}
-
 QUANTITATIVE_SYSTEM_PROMPT = """You are an AI psychiatrist assessment tool specialized in analyzing \
 interview transcripts to evaluate PHQ-8 (Patient Health Questionnaire-8) scores. The PHQ-8 is a \
 validated depression screening instrument that assesses eight of the nine DSM-IV criteria for \
@@ -171,14 +104,14 @@ Analyze each symptom using the following approach in <thinking> tags:
 5. If no relevant evidence exists, mark as "N/A" rather than assuming absence
 6. Only assign numeric scores (0-3) when evidence clearly indicates frequency
 
-After your analysis, provide your final assessment in <answer> tags as a JSON object.
+After your analysis, provide your final assessment as a pure JSON object.
 
 For each symptom, provide:
 1. "evidence": exact quotes from transcript (use "No relevant evidence found" if not discussed)
 2. "reason": explanation of scoring decision, including cross-reference analysis when applicable and why N/A if applicable
 3. "score": integer 0-3 based on evidence, or "N/A" if no relevant evidence
 
-Return ONLY a JSON object in <answer> tags with these exact keys:
+Return ONLY a valid JSON object with these exact keys:
 - "PHQ8_NoInterest": {{"evidence": "...", "reason": "...", "score": ...}}
 - "PHQ8_Depressed": {{"evidence": "...", "reason": "...", "score": ...}}
 - "PHQ8_Sleep": {{"evidence": "...", "reason": "...", "score": ...}}

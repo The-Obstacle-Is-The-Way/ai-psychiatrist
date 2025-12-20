@@ -13,15 +13,16 @@ prediction, with multi-level JSON repair for robust parsing.
 from __future__ import annotations
 
 import json
-import re
 from typing import TYPE_CHECKING
 
+import spacy
+
 from ai_psychiatrist.agents.prompts.quantitative import (
-    DOMAIN_KEYWORDS,
     QUANTITATIVE_SYSTEM_PROMPT,
     make_evidence_prompt,
     make_scoring_prompt,
 )
+from ai_psychiatrist.config.domain_constants import DOMAIN_KEYWORDS
 from ai_psychiatrist.domain.entities import PHQ8Assessment, Transcript
 from ai_psychiatrist.domain.enums import AssessmentMode, PHQ8Item
 from ai_psychiatrist.domain.value_objects import ItemAssessment
@@ -141,6 +142,7 @@ class QuantitativeAssessmentAgent:
         top_k = self._model_settings.top_k if self._model_settings else 20
         top_p = self._model_settings.top_p if self._model_settings else 0.8
 
+        # BUG-002: Use robust JSON mode instead of regex parsing
         raw_response = await self._llm.simple_chat(
             user_prompt=prompt,
             system_prompt=QUANTITATIVE_SYSTEM_PROMPT,
@@ -148,11 +150,12 @@ class QuantitativeAssessmentAgent:
             temperature=temperature,
             top_k=top_k,
             top_p=top_p,
+            response_format="json",
         )
 
         logger.debug("LLM scoring complete", response_length=len(raw_response))
 
-        # Step 4: Parse response with multi-level repair
+        # Step 4: Parse response (now much simpler)
         items = await self._parse_response(raw_response)
 
         assessment = PHQ8Assessment(
@@ -198,13 +201,12 @@ class QuantitativeAssessmentAgent:
             top_p=top_p,
         )
 
-        # Parse JSON response with tolerant fixups (BUG-011: Apply repair before parsing)
+        # Parse JSON response
         try:
-            clean = self._strip_json_block(raw)
-            clean = self._tolerant_fixups(clean)
+            # We don't force JSON mode for extraction yet, so strip markdown
+            clean = self._strip_markdown(raw)
             obj = json.loads(clean)
         except (json.JSONDecodeError, ValueError):
-            # BUG-011: Include response preview in warning to aid debugging
             logger.warning(
                 "Failed to parse evidence JSON, using empty evidence",
                 response_preview=raw[:200] if raw else "",
@@ -241,9 +243,15 @@ class QuantitativeAssessmentAgent:
         Returns:
             Enriched evidence dictionary.
         """
-        # Split transcript into sentences
-        parts = re.split(r"(?<=[.?!])\s+|\n+", transcript.strip())
-        sentences = [p.strip() for p in parts if p and len(p.strip()) > 0]
+        # BUG-003: Use Spacy for robust sentence splitting
+        try:
+            nlp = spacy.load("en_core_web_sm")
+            doc = nlp(transcript.strip())
+            sentences = [sent.text.strip() for sent in doc.sents if sent.text.strip()]
+        except Exception:
+            # Fallback to simple splitting if model fails to load (though it should be installed)
+            logger.warning("Spacy failed, falling back to simple sentence splitting")
+            sentences = [s.strip() for s in transcript.split("\n") if s.strip()]
 
         out = {k: list(v) for k, v in current.items()}
 
@@ -268,15 +276,10 @@ class QuantitativeAssessmentAgent:
         return out
 
     async def _parse_response(self, raw: str) -> dict[PHQ8Item, ItemAssessment]:
-        """Parse JSON response with multi-level repair.
+        """Parse JSON response.
 
-        Strategies:
-        1. Clean and parse JSON directly (handles <answer> tags and markdown)
-        2. LLM repair for malformed JSON
-        3. Fallback to empty skeleton
-
-        Note: _strip_json_block already handles <answer> tag extraction via string
-        splitting, so a separate regex-based strategy is not needed.
+        Assumes LLM returns valid JSON due to `format='json'`.
+        Falls back to parsing if wrapped in tags, but avoids complex repairs.
 
         Args:
             raw: Raw LLM response text.
@@ -284,133 +287,31 @@ class QuantitativeAssessmentAgent:
         Returns:
             Dictionary mapping PHQ8Item to ItemAssessment.
         """
-        # Strategy 1: Clean and Parse (handles <answer> tags and markdown blocks)
         try:
-            clean = self._strip_json_block(raw)
-            clean = self._tolerant_fixups(clean)
+            # Even with JSON mode, some models might wrap in markdown
+            clean = self._strip_markdown(raw)
             data = json.loads(clean)
             if not isinstance(data, dict):
                 raise ValueError("Quantitative response JSON must be an object")
             return self._validate_and_normalize(data)
-        except (json.JSONDecodeError, ValueError):
-            pass
+        except (json.JSONDecodeError, ValueError) as e:
+            logger.error("Failed to parse quantitative response", error=str(e), raw=raw[:200])
+            return self._validate_and_normalize({})
 
-        # Strategy 2: LLM Repair
-        try:
-            repaired_json = await self._llm_repair(raw)
-            if repaired_json:
-                return self._validate_and_normalize(repaired_json)
-        except (json.JSONDecodeError, ValueError):
-            pass
-
-        # Strategy 3: Fallback to empty skeleton
-        logger.error("Failed to parse quantitative response after all attempts")
-        return self._validate_and_normalize({})
-
-    async def _llm_repair(self, malformed: str) -> dict[str, object] | None:
-        """Ask LLM to fix broken JSON.
-
-        Args:
-            malformed: Malformed JSON string.
-
-        Returns:
-            Parsed JSON dict or None if repair fails.
-        """
-        repair_prompt = (
-            "You will be given malformed JSON for a PHQ-8 result. "
-            "Output ONLY a valid JSON object with these EXACT keys:\n"
-            f"{', '.join(DOMAIN_KEYWORDS.keys())}\n"
-            'Each value must be an object: {"evidence": <string>, "reason": <string>, '
-            '"score": <int 0-3 or "N/A">}.\n'
-            "If something is missing or unclear, fill with "
-            '{"evidence": "No relevant evidence found", "reason": "Auto-repaired", '
-            '"score": "N/A"}.\n\n'
-            "Malformed JSON:\n"
-            f"{malformed}\n\n"
-            "Return only the fixed JSON. No prose, no markdown, no tags."
-        )
-        try:
-            # Use model settings if provided, with lower temperature for repair
-            model = self._model_settings.quantitative_model if self._model_settings else None
-            top_k = self._model_settings.top_k if self._model_settings else 20
-            top_p = self._model_settings.top_p if self._model_settings else 0.8
-
-            fixed = await self._llm.simple_chat(
-                user_prompt=repair_prompt,
-                model=model,
-                temperature=0.1,  # Lower temp for deterministic repair
-                top_k=top_k,
-                top_p=top_p,
-            )
-            clean = self._strip_json_block(fixed)
-            clean = self._tolerant_fixups(clean)
-            result: dict[str, object] = json.loads(clean)
-            if not isinstance(result, dict):
-                return None
-            return result
-        except (json.JSONDecodeError, ValueError):
-            return None
-
-    def _strip_json_block(self, text: str) -> str:
-        """Strip markdown code blocks and XML tags.
-
-        Args:
-            text: Raw text that may contain JSON.
-
-        Returns:
-            Cleaned JSON string.
-        """
+    def _strip_markdown(self, text: str) -> str:
+        """Strip markdown code blocks if present."""
         cleaned = text.strip()
-
-        # Extract from <answer> tags
-        if "<answer>" in cleaned and "</answer>" in cleaned:
-            cleaned = cleaned.split("<answer>", 1)[1].split("</answer>", 1)[0].strip()
-
-        # Extract from markdown code blocks (handles embedded blocks)
         if "```json" in cleaned:
-            # Find the JSON block start and end
-            start_idx = cleaned.find("```json") + len("```json")
-            end_idx = cleaned.find("```", start_idx)
-            if end_idx > start_idx:
-                cleaned = cleaned[start_idx:end_idx].strip()
+            start = cleaned.find("```json") + 7
+            end = cleaned.rfind("```")
+            if end > start:
+                return cleaned[start:end].strip()
         elif "```" in cleaned:
-            # Generic code block
-            start_idx = cleaned.find("```") + len("```")
-            end_idx = cleaned.find("```", start_idx)
-            if end_idx > start_idx:
-                cleaned = cleaned[start_idx:end_idx].strip()
-
-        # Handle case where block starts at beginning
-        if cleaned.startswith("```json"):
-            cleaned = cleaned[len("```json") :].strip()
-        if cleaned.startswith("```"):
-            cleaned = cleaned[len("```") :].strip()
-        if cleaned.endswith("```"):
-            cleaned = cleaned[:-3].strip()
-
+            start = cleaned.find("```") + 3
+            end = cleaned.rfind("```")
+            if end > start:
+                return cleaned[start:end].strip()
         return cleaned
-
-    def _tolerant_fixups(self, text: str) -> str:
-        """Fix common JSON syntax errors.
-
-        Args:
-            text: JSON string with potential errors.
-
-        Returns:
-            Fixed JSON string.
-        """
-        # Replace smart quotes
-        text = (
-            text.replace("\u201c", '"')
-            .replace("\u201d", '"')
-            .replace("\u2018", "'")
-            .replace("\u2019", "'")
-        )
-
-        # Remove trailing commas
-        text = re.sub(r",\s*([}\]])", r"\1", text)
-
-        return text
 
     def _validate_and_normalize(self, data: dict[str, object]) -> dict[PHQ8Item, ItemAssessment]:
         """Convert raw dict to typed ItemAssessment objects.

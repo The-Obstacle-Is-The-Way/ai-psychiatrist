@@ -31,6 +31,7 @@ dependencies = [
     "pandas>=2.3.0",
     "numpy>=2.3.0",
     "scikit-learn>=1.8.0",
+    "spacy>=3.8.11",
 ]
 
 [project.optional-dependencies]

@@ -28,6 +28,7 @@ class SimpleChatClient(Protocol):
         temperature: float = 0.2,
         top_k: int = 20,
         top_p: float = 0.8,
+        response_format: str | None = None,
     ) -> str:
         """Send a simple chat prompt and return response."""
         ...
