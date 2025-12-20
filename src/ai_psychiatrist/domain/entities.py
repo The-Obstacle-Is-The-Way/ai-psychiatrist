@@ -280,6 +280,17 @@ class QualitativeEvaluation:
         """
         return [m for m, s in self.scores.items() if s.is_low]
 
+    def low_scores_for_threshold(self, threshold: int) -> list[EvaluationMetric]:
+        """Get list of metrics with scores at or below a threshold.
+
+        Args:
+            threshold: Score threshold (1-5).
+
+        Returns:
+            List of metrics that need improvement for the given threshold.
+        """
+        return [m for m, s in self.scores.items() if s.score <= threshold]
+
     @property
     def needs_improvement(self) -> bool:
         """Check if any metric needs improvement.

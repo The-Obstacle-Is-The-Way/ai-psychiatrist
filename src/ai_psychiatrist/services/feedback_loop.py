@@ -108,15 +108,18 @@ class FeedbackLoopService:
         while self._needs_improvement(evaluation) and iteration < self._max_iterations:
             iteration += 1
 
+            low_scores = evaluation.low_scores_for_threshold(self._score_threshold)
             logger.info(
                 "Refinement iteration",
                 iteration=iteration,
-                low_scores=[m.value for m in evaluation.low_scores],
+                low_scores=[m.value for m in low_scores],
                 participant_id=transcript.participant_id,
             )
 
             # Get feedback for low-scoring metrics
-            feedback = self._judge_agent.get_feedback_for_low_scores(evaluation)
+            feedback = self._judge_agent.get_feedback_for_low_scores(
+                evaluation, threshold=self._score_threshold
+            )
 
             # Refine assessment
             assessment = await self._qualitative_agent.refine(
@@ -141,11 +144,12 @@ class FeedbackLoopService:
 
         # Log final result
         if self._needs_improvement(evaluation):
+            remaining_low = evaluation.low_scores_for_threshold(self._score_threshold)
             logger.warning(
                 "Max iterations reached without full improvement",
                 participant_id=transcript.participant_id,
                 iterations=iteration,
-                remaining_low=[m.value for m in evaluation.low_scores],
+                remaining_low=[m.value for m in remaining_low],
             )
         else:
             logger.info(

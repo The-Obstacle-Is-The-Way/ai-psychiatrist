@@ -150,17 +150,24 @@ class JudgeAgent:
     def get_feedback_for_low_scores(
         self,
         evaluation: QualitativeEvaluation,
+        threshold: int | None = None,
     ) -> dict[str, str]:
         """Extract feedback text for low-scoring metrics.
 
         Args:
             evaluation: Evaluation with scores.
+            threshold: Optional score threshold override.
 
         Returns:
             Dictionary of metric name -> feedback explanation.
         """
         feedback = {}
-        for metric in evaluation.low_scores:
+        low_scores = (
+            evaluation.low_scores
+            if threshold is None
+            else evaluation.low_scores_for_threshold(threshold)
+        )
+        for metric in low_scores:
             score = evaluation.get_score(metric)
             feedback[metric.value] = f"Scored {score.score}/5. {score.explanation}"
         return feedback

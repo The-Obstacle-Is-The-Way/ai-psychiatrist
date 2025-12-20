@@ -437,6 +437,30 @@ class TestQualitativeEvaluation:
         assert EvaluationMetric.COHERENCE not in low
         assert EvaluationMetric.SPECIFICITY in low
 
+    def test_low_scores_for_threshold(self, assessment_id: UUID) -> None:
+        """low_scores_for_threshold should respect provided cutoff."""
+        scores = {
+            EvaluationMetric.COHERENCE: EvaluationScore(
+                metric=EvaluationMetric.COHERENCE, score=4, explanation=""
+            ),
+            EvaluationMetric.COMPLETENESS: EvaluationScore(
+                metric=EvaluationMetric.COMPLETENESS, score=3, explanation=""
+            ),
+            EvaluationMetric.SPECIFICITY: EvaluationScore(
+                metric=EvaluationMetric.SPECIFICITY, score=2, explanation=""
+            ),
+            EvaluationMetric.ACCURACY: EvaluationScore(
+                metric=EvaluationMetric.ACCURACY, score=5, explanation=""
+            ),
+        }
+        evaluation = QualitativeEvaluation(scores=scores, assessment_id=assessment_id)
+
+        assert evaluation.low_scores_for_threshold(2) == [EvaluationMetric.SPECIFICITY]
+        assert set(evaluation.low_scores_for_threshold(3)) == {
+            EvaluationMetric.COMPLETENESS,
+            EvaluationMetric.SPECIFICITY,
+        }
+
     def test_needs_improvement(self, assessment_id: UUID) -> None:
         """needs_improvement should be True when any score is low."""
         scores = {

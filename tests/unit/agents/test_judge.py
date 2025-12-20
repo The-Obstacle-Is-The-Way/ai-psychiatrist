@@ -138,6 +138,30 @@ Score: 2
         assert "Bad" in feedback[low_metric.value]
 
     @pytest.mark.asyncio
+    async def test_get_feedback_respects_threshold(
+        self,
+        sample_assessment: QualitativeAssessment,
+        sample_transcript: Transcript,
+    ) -> None:
+        """Should honor custom threshold for low scores."""
+        responses = [
+            "Explanation: OK\nScore: 4",  # Coherence
+            "Explanation: Low\nScore: 3",  # Completeness
+            "Explanation: Low\nScore: 2",  # Specificity
+            "Explanation: Good\nScore: 5",  # Accuracy
+        ]
+        mock_client = MockLLMClient(chat_responses=responses)
+        agent = JudgeAgent(llm_client=mock_client)
+
+        evaluation = await agent.evaluate(sample_assessment, sample_transcript)
+
+        feedback = agent.get_feedback_for_low_scores(evaluation, threshold=2)
+
+        assert len(feedback) == 1
+        low_metric = evaluation.low_scores_for_threshold(2)[0]
+        assert low_metric.value in feedback
+
+    @pytest.mark.asyncio
     async def test_default_score_on_failure(
         self,
         sample_assessment: QualitativeAssessment,
