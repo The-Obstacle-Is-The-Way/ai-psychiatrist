@@ -1,9 +1,29 @@
 # BUG-013: Legacy Codebase Pollution
 
 **Severity**: MEDIUM (P2)
-**Status**: OPEN
+**Status**: RESOLVED
 **Date Identified**: 2025-12-19
+**Date Resolved**: 2025-12-20
 **Spec Reference**: `docs/specs/12.5_FINAL_CLEANUP_LEGACY_REMOVAL.md`, `docs/specs/00_OVERVIEW.md`
+
+---
+
+## Resolution
+
+All legacy directories have been archived to `_legacy/`:
+
+- `agents/` → `_legacy/agents/`
+- `meta_review/` → `_legacy/meta_review/`
+- `qualitative_assessment/` → `_legacy/qualitative_assessment/`
+- `quantitative_assessment/` → `_legacy/quantitative_assessment/`
+- `slurm/` → `_legacy/slurm/`
+- `assets/` → `_legacy/assets/`
+- `visualization/` → `_legacy/visualization/`
+- `analysis_output/` → `_legacy/analysis_output/`
+
+**Import audit confirmed**: No active code imports from legacy directories.
+**pyproject.toml updated**: Ruff exclude simplified to `_legacy/` directory.
+**Tests verified**: 603 tests pass at 96.52% coverage.
 
 ---
 

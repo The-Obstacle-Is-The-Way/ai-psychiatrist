@@ -1,9 +1,22 @@
 # BUG-015: Legacy Scripts Hardcode Absolute HPC Paths
 
-**Severity**: MEDIUM (P2)  
-**Status**: OPEN  
-**Date Identified**: 2025-12-19  
+**Severity**: MEDIUM (P2)
+**Status**: RESOLVED
+**Date Identified**: 2025-12-19
+**Date Resolved**: 2025-12-20
 **Spec Reference**: `docs/specs/04A_DATA_ORGANIZATION.md`, `docs/specs/12.5_FINAL_CLEANUP_LEGACY_REMOVAL.md`
+
+---
+
+## Resolution
+
+Per Spec 12.5 recommendation, legacy scripts with hardcoded paths have been **archived** rather than patched:
+
+- All affected files moved to `_legacy/` directory
+- No patching of hardcoded paths (legacy code is preserved for reference only)
+- Modern embedding generation uses `scripts/generate_embeddings.py` with `DataSettings`
+
+**Decision rationale**: Patching legacy scripts would require significant effort with no value, since the modern pipeline (`src/ai_psychiatrist/`) is the source of truth. Legacy scripts are retained for historical reference only.
 
 ---
 
