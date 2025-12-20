@@ -145,6 +145,20 @@ qualitative assessment reveals social stressors and biological predisposition.</
 
         assert meta_review.severity == SeverityLevel.SEVERE  # Clamped to 4
 
+        # Test negative value
+        mock_client = MockLLMClient(
+            chat_responses=["<severity>-1</severity><explanation>Test</explanation>"]
+        )
+        agent = MetaReviewAgent(llm_client=mock_client)
+
+        meta_review = await agent.review(
+            transcript=sample_transcript,
+            qualitative=sample_qualitative,
+            quantitative=sample_quantitative,
+        )
+
+        assert meta_review.severity == SeverityLevel.MINIMAL  # Clamped to 0
+
     @pytest.mark.asyncio
     async def test_review_falls_back_on_parse_failure(
         self,

@@ -72,6 +72,22 @@ packages = ["src/ai_psychiatrist"]
 target-version = "py311"
 line-length = 100
 src = ["src", "tests"]
+# Exclude legacy code pending cleanup (BUG-013, BUG-015)
+exclude = [
+    "agents",                  # Legacy root-level agents (use src/ai_psychiatrist/agents/)
+    "services",                # Legacy root-level services (use src/ai_psychiatrist/services/)
+    "models",                  # Legacy models
+    "visualization",           # Jupyter notebooks with whitespace issues
+    "scripts",                 # Ad-hoc scripts
+    "assets",                  # Example scripts
+    "meta_review",             # Legacy meta-review scripts
+    "qualitative_assessment",  # Legacy qualitative assessment
+    "quantitative_assessment", # Legacy quantitative assessment
+    ".git",
+    "__pycache__",
+    ".venv",
+    "htmlcov",
+]
 
 [tool.ruff.lint]
 select = [

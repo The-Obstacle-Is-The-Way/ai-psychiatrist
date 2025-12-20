@@ -282,7 +282,12 @@ async def assess_qualitative(
     transcript_service: Annotated[TranscriptService, Depends(get_transcript_service)],
     model_settings: Annotated[ModelSettings, Depends(get_model_settings)],
 ):
-    """Run qualitative assessment."""
+    """Run qualitative assessment (single-pass, no feedback loop).
+
+    Note: This endpoint intentionally bypasses the FeedbackLoopService to provide
+    a quick single-pass assessment. For iterative refinement with judge feedback
+    per Paper Section 2.3.1-2.3.2, use the /full_pipeline endpoint instead.
+    """
     transcript = _resolve_transcript(request, transcript_service)
 
     agent = QualitativeAssessmentAgent(llm_client=ollama, model_settings=model_settings)
