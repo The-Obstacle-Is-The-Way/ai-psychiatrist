@@ -1,9 +1,19 @@
 # BUG-017: FeedbackLoop Not Wired in API
 
 **Severity**: MEDIUM (P2)
-**Status**: OPEN
+**Status**: RESOLVED
 **Date Identified**: 2025-12-19
+**Date Resolved**: 2025-12-20
 **Spec Reference**: `docs/specs/11_FULL_PIPELINE.md`, `docs/specs/07_JUDGE_AGENT.md`
+
+## Resolution
+
+Wired FeedbackLoopService into server.py as specified:
+- Added `FeedbackLoopService` initialization in lifespan
+- Added `get_feedback_loop_service()` dependency getter
+- Updated `/full_pipeline` to use `feedback_loop.run(transcript)` instead of direct agent call
+- Response now includes `EvaluationResult` with all 4 quality metrics
+- Pipeline follows Paper Section 2.3 order: qualitative (with loop) → quantitative → meta-review
 
 ---
 

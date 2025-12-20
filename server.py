@@ -5,25 +5,32 @@ This replaces the legacy server that used deprecated agents from the root agents
 Now uses the paper-aligned implementations from src/ai_psychiatrist/agents/.
 
 BUG-012, BUG-014: Fixes split-brain architecture and missing transcript issues.
+BUG-016, BUG-017: Adds MetaReviewAgent and wires FeedbackLoopService.
 """
-import asyncio
 from contextlib import asynccontextmanager
 from typing import Annotated
 
 from fastapi import Depends, FastAPI, HTTPException
 from pydantic import BaseModel, Field
 
-from ai_psychiatrist.agents import QualitativeAssessmentAgent, QuantitativeAssessmentAgent
+from ai_psychiatrist.agents import (
+    JudgeAgent,
+    MetaReviewAgent,
+    QualitativeAssessmentAgent,
+    QuantitativeAssessmentAgent,
+)
 from ai_psychiatrist.config import ModelSettings, Settings, get_settings
 from ai_psychiatrist.domain.entities import Transcript
-from ai_psychiatrist.domain.enums import AssessmentMode
+from ai_psychiatrist.domain.enums import AssessmentMode, EvaluationMetric
 from ai_psychiatrist.infrastructure.llm import OllamaClient
 from ai_psychiatrist.services import EmbeddingService, ReferenceStore, TranscriptService
+from ai_psychiatrist.services.feedback_loop import FeedbackLoopService
 
 # --- Shared State (initialized at startup) ---
 _ollama_client: OllamaClient | None = None
 _transcript_service: TranscriptService | None = None
 _embedding_service: EmbeddingService | None = None
+_feedback_loop_service: FeedbackLoopService | None = None
 _model_settings: ModelSettings | None = None
 _settings: Settings | None = None
 
@@ -31,7 +38,8 @@ _settings: Settings | None = None
 @asynccontextmanager
 async def lifespan(_app: FastAPI):
     """Manage application lifecycle resources."""
-    global _ollama_client, _transcript_service, _embedding_service, _model_settings, _settings  # noqa: PLW0603
+    global _ollama_client, _transcript_service, _embedding_service  # noqa: PLW0603
+    global _feedback_loop_service, _model_settings, _settings  # noqa: PLW0603
 
     settings = get_settings()
     _settings = settings
@@ -52,6 +60,21 @@ async def lifespan(_app: FastAPI):
         reference_store=reference_store,
         settings=settings.embedding,
         model_settings=_model_settings,
+    )
+
+    # Initialize FeedbackLoopService (BUG-017 fix)
+    qual_agent = QualitativeAssessmentAgent(
+        llm_client=_ollama_client,
+        model_settings=_model_settings,
+    )
+    judge_agent = JudgeAgent(
+        llm_client=_ollama_client,
+        model_settings=_model_settings,
+    )
+    _feedback_loop_service = FeedbackLoopService(
+        qualitative_agent=qual_agent,
+        judge_agent=judge_agent,
+        settings=settings.feedback,
     )
 
     yield
@@ -103,6 +126,13 @@ def get_app_settings() -> Settings:
     if _settings is None:
         raise HTTPException(status_code=503, detail="Settings not initialized")
     return _settings
+
+
+def get_feedback_loop_service() -> FeedbackLoopService:
+    """Get initialized FeedbackLoopService."""
+    if _feedback_loop_service is None:
+        raise HTTPException(status_code=503, detail="Feedback loop service not initialized")
+    return _feedback_loop_service
 
 
 # --- Request/Response Models ---
@@ -158,13 +188,38 @@ class QualitativeResult(BaseModel):
     supporting_quotes: list[str]
 
 
+class EvaluationResult(BaseModel):
+    """Qualitative evaluation result from judge agent."""
+
+    coherence: int
+    completeness: int
+    specificity: int
+    accuracy: int
+    average_score: float
+    iteration: int
+
+
+class MetaReviewResult(BaseModel):
+    """Meta-review result integrating all assessments."""
+
+    severity: int
+    severity_label: str
+    explanation: str
+    is_mdd: bool
+
+
 class FullPipelineResponse(BaseModel):
-    """Full pipeline response with both assessments."""
+    """Full pipeline response with all assessments.
+
+    BUG-016, BUG-017: Now includes evaluation and meta-review.
+    """
 
     participant_id: int
     mode: str
     quantitative: QuantitativeResult
     qualitative: QualitativeResult
+    evaluation: EvaluationResult
+    meta_review: MetaReviewResult
 
 
 # --- Endpoints ---
@@ -227,7 +282,12 @@ async def assess_qualitative(
     transcript_service: Annotated[TranscriptService, Depends(get_transcript_service)],
     model_settings: Annotated[ModelSettings, Depends(get_model_settings)],
 ):
-    """Run qualitative assessment."""
+    """Run qualitative assessment (single-pass, no feedback loop).
+
+    Note: This endpoint intentionally bypasses the FeedbackLoopService to provide
+    a quick single-pass assessment. For iterative refinement with judge feedback
+    per Paper Section 2.3.1-2.3.2, use the /full_pipeline endpoint instead.
+    """
     transcript = _resolve_transcript(request, transcript_service)
 
     agent = QualitativeAssessmentAgent(llm_client=ollama, model_settings=model_settings)
@@ -255,32 +315,48 @@ async def run_full_pipeline(
     embedding_service: Annotated[EmbeddingService, Depends(get_embedding_service)],
     model_settings: Annotated[ModelSettings, Depends(get_model_settings)],
     app_settings: Annotated[Settings, Depends(get_app_settings)],
+    feedback_loop: Annotated[FeedbackLoopService, Depends(get_feedback_loop_service)],
 ):
-    """Run full assessment pipeline (quantitative + qualitative).
+    """Run full assessment pipeline.
 
-    This is the main endpoint replacing the legacy /full_pipeline.
-    Now uses modern agents from src/ai_psychiatrist/agents/.
+    Pipeline order (Paper Section 2.3):
+    1. Qualitative assessment with feedback loop (Section 2.3.1-2.3.2)
+    2. Quantitative PHQ-8 assessment (Section 2.3.3)
+    3. Meta-review integration (Section 2.3.4)
+
+    BUG-016, BUG-017: Now includes FeedbackLoopService and MetaReviewAgent.
     """
     transcript = _resolve_transcript(request, transcript_service)
 
     # Mode from request, falling back to settings.enable_few_shot
     mode = request.get_mode(app_settings.enable_few_shot)
 
-    # Create agents with model settings
-    quant_agent = QuantitativeAssessmentAgent(
-        llm_client=ollama,
-        embedding_service=embedding_service if mode == AssessmentMode.FEW_SHOT else None,
-        mode=mode,
-        model_settings=model_settings,
-    )
-    qual_agent = QualitativeAssessmentAgent(llm_client=ollama, model_settings=model_settings)
-
     try:
-        # Run assessments in parallel for better performance
-        quant_result, qual_result = await asyncio.gather(
-            quant_agent.assess(transcript),
-            qual_agent.assess(transcript),
+        # Step 1: Qualitative assessment with feedback loop (BUG-017 fix)
+        loop_result = await feedback_loop.run(transcript)
+        qual_result = loop_result.final_assessment
+        eval_result = loop_result.final_evaluation
+
+        # Step 2: Quantitative PHQ-8 assessment
+        quant_agent = QuantitativeAssessmentAgent(
+            llm_client=ollama,
+            embedding_service=embedding_service if mode == AssessmentMode.FEW_SHOT else None,
+            mode=mode,
+            model_settings=model_settings,
         )
+        quant_result = await quant_agent.assess(transcript)
+
+        # Step 3: Meta-review integration (BUG-016 fix)
+        meta_review_agent = MetaReviewAgent(
+            llm_client=ollama,
+            model_settings=model_settings,
+        )
+        meta_review = await meta_review_agent.review(
+            transcript=transcript,
+            qualitative=qual_result,
+            quantitative=quant_result,
+        )
+
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Pipeline failed: {e}") from e
 
@@ -307,6 +383,20 @@ async def run_full_pipeline(
             biological_factors=qual_result.biological_factors,
             risk_factors=qual_result.risk_factors,
             supporting_quotes=qual_result.supporting_quotes,
+        ),
+        evaluation=EvaluationResult(
+            coherence=eval_result.scores[EvaluationMetric.COHERENCE].score,
+            completeness=eval_result.scores[EvaluationMetric.COMPLETENESS].score,
+            specificity=eval_result.scores[EvaluationMetric.SPECIFICITY].score,
+            accuracy=eval_result.scores[EvaluationMetric.ACCURACY].score,
+            average_score=eval_result.average_score,
+            iteration=eval_result.iteration,
+        ),
+        meta_review=MetaReviewResult(
+            severity=meta_review.severity.value,
+            severity_label=meta_review.severity.name,
+            explanation=meta_review.explanation,
+            is_mdd=meta_review.is_mdd,
         ),
     )
 

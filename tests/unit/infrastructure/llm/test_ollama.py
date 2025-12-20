@@ -144,9 +144,7 @@ class TestOllamaClientListModels:
     @pytest.mark.asyncio
     async def test_list_models_missing_key(self, ollama_client: OllamaClient) -> None:
         """Should return empty list when models key is missing."""
-        respx.get("http://localhost:11434/api/tags").mock(
-            return_value=httpx.Response(200, json={})
-        )
+        respx.get("http://localhost:11434/api/tags").mock(return_value=httpx.Response(200, json={}))
 
         models = await ollama_client.list_models()
 
