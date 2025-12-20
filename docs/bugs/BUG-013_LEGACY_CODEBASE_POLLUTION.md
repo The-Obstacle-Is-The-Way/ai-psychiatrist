@@ -33,6 +33,14 @@ The project root contains a legacy `agents/` directory and other deprecated file
 
 ---
 
+## Scope & Disposition
+
+- **Code Path**: Legacy-only directories outside `src/`.
+- **Fix Category**: Cleanup / source-of-truth clarity.
+- **Recommended Action**: Fix via archiving/removal per Spec 12.5; if preserving functionality, port into `src/` or `scripts/` first (do not patch legacy code).
+
+---
+
 ## Recommended Fix
 
 1.  **Archive Legacy Code**: Move `agents/`, `quantitative_assessment/`, `qualitative_assessment/`, and `meta_review/` into a `_archive/` or `_legacy/` directory.

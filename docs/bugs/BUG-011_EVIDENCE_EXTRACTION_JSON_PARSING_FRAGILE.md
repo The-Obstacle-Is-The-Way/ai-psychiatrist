@@ -28,6 +28,14 @@ Evidence extraction in the QuantitativeAssessmentAgent uses `json.loads` on the 
 
 ---
 
+## Scope & Disposition
+
+- **Code Path**: Current implementation (`src/ai_psychiatrist/agents/quantitative.py`).
+- **Fix Category**: Robustness / error handling.
+- **Recommended Action**: Fix soon (prefer now); reuse tolerant parsing to avoid silent degradation.
+
+---
+
 ## Recommended Fix
 
 - Reuse `_tolerant_fixups` for evidence parsing.

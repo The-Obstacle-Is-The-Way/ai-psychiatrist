@@ -35,6 +35,14 @@ Examples of hardcoded paths:
 
 ---
 
+## Scope & Disposition
+
+- **Code Path**: Legacy scripts outside `src/`.
+- **Fix Category**: Reproducibility / legacy tooling.
+- **Recommended Action**: Prefer porting into a modern `scripts/` path using `DataSettings`; otherwise archive/remove per Spec 12.5 (avoid patching legacy scripts in place).
+
+---
+
 ## Recommended Fix
 
 1. Replace hardcoded paths with `DataSettings`-driven paths or CLI arguments.

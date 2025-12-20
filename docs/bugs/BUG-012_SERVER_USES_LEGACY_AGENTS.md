@@ -33,6 +33,14 @@ The main entry point `server.py` imports and instantiates **legacy/deprecated ag
 
 ---
 
+## Scope & Disposition
+
+- **Code Path**: Legacy entrypoint (`server.py` + root `agents/`), but **currently active runtime path**.
+- **Fix Category**: Production correctness (P0).
+- **Recommended Action**: Fix now by wiring the API to `src/ai_psychiatrist/agents`; do not patch legacy logic.
+
+---
+
 ## Recommended Fix
 
 1.  Refactor `server.py` to import from `src.ai_psychiatrist.agents`.

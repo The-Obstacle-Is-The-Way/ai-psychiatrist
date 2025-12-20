@@ -28,6 +28,14 @@
 
 ---
 
+## Scope & Disposition
+
+- **Code Path**: Tests only (`tests/unit/...`).
+- **Fix Category**: Test hygiene (non-production).
+- **Recommended Action**: Resolved; no further work unless tests change.
+
+---
+
 ## Resolution
 
 - Replaced `get_feedback_for_low_scores` with a **synchronous** `Mock` in the judge fixture.

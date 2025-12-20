@@ -29,6 +29,14 @@ Cosine similarity values are **clamped to [0, 1]** before creating `SimilarityMa
 
 ---
 
+## Scope & Disposition
+
+- **Code Path**: Current implementation + domain constraints (`src/ai_psychiatrist/...`).
+- **Fix Category**: Domain/model alignment.
+- **Recommended Action**: Fix now; choose one semantic and update domain + spec + implementation together.
+
+---
+
 ## Recommended Fix
 
 Choose one consistent approach and update both domain + implementation:

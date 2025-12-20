@@ -29,6 +29,14 @@ Embedding dimension mismatches are silently ignored during similarity search. Wh
 
 ---
 
+## Scope & Disposition
+
+- **Code Path**: Current implementation (`src/ai_psychiatrist/services/...`).
+- **Fix Category**: Data integrity and error signaling.
+- **Recommended Action**: Fix now; fail loudly or explicitly disable few-shot when dimensions mismatch.
+
+---
+
 ## Recommended Fix
 
 - Validate embedding dimensionality at load time and **raise `EmbeddingDimensionMismatchError`** if mismatched.

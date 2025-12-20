@@ -30,6 +30,14 @@ The reference embeddings file expected by the few-shot pipeline is missing:
 
 ---
 
+## Scope & Disposition
+
+- **Code Path**: Data artifact (`data/embeddings/participant_embedded_transcripts.pkl`), not code.
+- **Fix Category**: Required for end-to-end validation (Spec 09.5).
+- **Recommended Action**: Generate the artifact using the current Python pipeline; avoid patching legacy scripts unless used as a temporary bridge.
+
+---
+
 ## Resolution Plan
 
 1. Generate reference embeddings from **training** transcripts only (avoid data leakage).

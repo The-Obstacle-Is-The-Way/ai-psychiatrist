@@ -31,6 +31,14 @@ Result: With `score_threshold=2`, the loop might **not** run (correct), but logs
 
 ---
 
+## Scope & Disposition
+
+- **Code Path**: Current implementation (`src/ai_psychiatrist/...`).
+- **Fix Category**: Production logic correctness.
+- **Recommended Action**: Resolved; keep behavior aligned with configured threshold.
+
+---
+
 ## Resolution
 
 1. Added `QualitativeEvaluation.low_scores_for_threshold(threshold)`.

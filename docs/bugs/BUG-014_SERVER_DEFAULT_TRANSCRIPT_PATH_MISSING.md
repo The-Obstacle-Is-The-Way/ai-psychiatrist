@@ -30,6 +30,14 @@
 
 ---
 
+## Scope & Disposition
+
+- **Code Path**: Legacy server path (`server.py` + `agents/interview_simulator.py`) but currently active runtime path.
+- **Fix Category**: Production stability.
+- **Recommended Action**: Fix now if `server.py` remains in use; otherwise remove/replace it with the new API during Spec 11.
+
+---
+
 ## Recommended Fix
 
 1. Replace `InterviewSimulator` with the new `TranscriptService` or accept transcript input in the API request.

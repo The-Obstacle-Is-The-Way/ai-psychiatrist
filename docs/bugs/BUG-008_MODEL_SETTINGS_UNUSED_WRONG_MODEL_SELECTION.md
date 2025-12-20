@@ -32,6 +32,14 @@
 
 ---
 
+## Scope & Disposition
+
+- **Code Path**: Current implementation (`src/ai_psychiatrist/...`).
+- **Fix Category**: Configuration correctness and paper fidelity.
+- **Recommended Action**: Fix now; treat `ModelSettings` as SSOT and wire through to all LLM/embedding calls.
+
+---
+
 ## Recommended Fix
 
 - Thread `ModelSettings` into agent construction and **pass explicit `model=`** to `simple_chat` and `simple_embed` calls.

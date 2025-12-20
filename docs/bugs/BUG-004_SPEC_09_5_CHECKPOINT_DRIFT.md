@@ -32,6 +32,14 @@ Spec 09.5 documented **incorrect paper hyperparameters** (chunk size 5, N exampl
 
 ---
 
+## Scope & Disposition
+
+- **Code Path**: Documentation only (`docs/specs`).
+- **Fix Category**: Spec drift (no runtime impact).
+- **Recommended Action**: Resolved; treat Spec 09.5 as SSOT and keep aligned going forward.
+
+---
+
 ## Resolution
 
 Updated Spec 09.5 to align with the paper and repo:
