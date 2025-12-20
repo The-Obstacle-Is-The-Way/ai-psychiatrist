@@ -81,6 +81,12 @@ Threaded `ModelSettings` through the entire agent/service layer:
 5. **server.py**: Initializes `ModelSettings` at startup and passes it to all agents/services
    via FastAPI dependency injection.
 
+6. **Feature flags**:
+   - `enable_few_shot`: Now wired into server.py. Request mode defaults to `settings.enable_few_shot`
+     when not explicitly specified. Request can still override.
+   - `enable_medgemma`: Removed as redundant. `ModelSettings.quantitative_model` already defaults
+     to `alibayram/medgemma:27b` (Paper Appendix F). Users can override via `MODEL__QUANTITATIVE_MODEL`.
+
 All configuration values now flow from `ModelSettings` to LLM calls, making configuration
 changes effective.
 
