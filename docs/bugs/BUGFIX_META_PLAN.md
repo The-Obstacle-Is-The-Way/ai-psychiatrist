@@ -14,8 +14,8 @@ unnecessary work on legacy-only code until the modern pipeline is stable.
 
 ## Scope and Current Status
 
-- **OPEN**: BUG-013, BUG-015, BUG-016, BUG-017, BUG-018
-- **RESOLVED**: BUG-004, BUG-005, BUG-006, BUG-007, BUG-008, BUG-009, BUG-010, BUG-011, BUG-012, BUG-014
+- **OPEN**: BUG-013, BUG-015, BUG-018
+- **RESOLVED**: BUG-004, BUG-005, BUG-006, BUG-007, BUG-008, BUG-009, BUG-010, BUG-011, BUG-012, BUG-014, BUG-016, BUG-017
 
 ## Chunked Fix Order
 
@@ -86,25 +86,27 @@ generating reference embeddings.
 
 ---
 
-### Chunk 4: Pipeline Completion (P1/P2)
+### Chunk 4: Pipeline Completion (P1/P2) ✅ COMPLETED
 
 **Bugs**: BUG-016, BUG-017
+**Status**: RESOLVED (2025-12-20)
+
 **Rationale**: The full paper pipeline requires MetaReviewAgent (Spec 10) and
 FeedbackLoopService integration. These were spec'd but never implemented or wired.
 Without these, paper replication (Section 2.3.3, 78% accuracy) is not achievable.
 
 **Primary Tasks**:
 
-- Implement `MetaReviewAgent` from Spec 10 into `src/ai_psychiatrist/agents/meta_review.py`.
-- Wire `FeedbackLoopService` into `server.py` for qualitative assessment iteration.
-- Update `server.py` `/full_pipeline` to include meta-review step.
-- Export `MetaReviewAgent` from agents `__init__.py`.
+- ✅ Implement `MetaReviewAgent` from Spec 10 into `src/ai_psychiatrist/agents/meta_review.py`.
+- ✅ Wire `FeedbackLoopService` into `server.py` for qualitative assessment iteration.
+- ✅ Update `server.py` `/full_pipeline` to include meta-review step.
+- ✅ Export `MetaReviewAgent` from agents `__init__.py`.
 
 **Exit Criteria**:
 
-- `MetaReviewAgent` exists and is exported.
-- `/full_pipeline` runs: qualitative (with feedback loop) → quantitative → meta-review.
-- Response includes severity prediction and explanation from meta-review.
+- ✅ `MetaReviewAgent` exists and is exported.
+- ✅ `/full_pipeline` runs: qualitative (with feedback loop) → quantitative → meta-review.
+- ✅ Response includes severity prediction and explanation from meta-review.
 
 ---
 
