@@ -9,15 +9,15 @@
 
 ## Executive Summary
 
-Evidence extraction in the QuantitativeAssessmentAgent uses `json.loads` on the raw response with **no tolerant fixups or repair**. When the LLM output contains minor formatting issues (trailing commas, smart quotes, extra text), parsing fails and the agent silently proceeds with **empty evidence**, reducing few-shot quality without clear failure signals.
+Evidence extraction in the QuantitativeAssessmentAgent parses JSON using `_strip_json_block` (handles `<answer>` tags and markdown fences) but **does not apply `_tolerant_fixups` or any repair path**. When the LLM output contains minor formatting issues (trailing commas, smart quotes, extra text), parsing fails and the agent proceeds with **empty evidence**, reducing few-shot quality without clear failure signals.
 
 ---
 
 ## Evidence
 
-- Evidence extraction parses JSON directly with no tolerant fixups or repair. (`src/ai_psychiatrist/agents/quantitative.py:173-180`)
-- On parse failure, it logs a warning and uses `{}` (empty evidence) with no recovery. (`src/ai_psychiatrist/agents/quantitative.py:179-181`)
-- Robust JSON repair utilities exist for scoring but are not reused here. (`src/ai_psychiatrist/agents/quantitative.py:252-276` and `_tolerant_fixups` at `src/ai_psychiatrist/agents/quantitative.py:314-335`)
+- Evidence extraction uses `_strip_json_block` then `json.loads` without `_tolerant_fixups` or repair. (`src/ai_psychiatrist/agents/quantitative.py` in `_extract_evidence`)
+- On parse failure, it logs a warning and uses `{}` (empty evidence) with no recovery. (`src/ai_psychiatrist/agents/quantitative.py` in `_extract_evidence`)
+- Robust JSON repair utilities exist for scoring but are not reused here. (`src/ai_psychiatrist/agents/quantitative.py` in `_parse_response` and `_tolerant_fixups`)
 
 ---
 
