@@ -12,7 +12,7 @@ iterative refinement.
 from __future__ import annotations
 
 import re
-from typing import ClassVar
+from typing import TYPE_CHECKING, ClassVar
 
 from ai_psychiatrist.agents.prompts.qualitative import (
     QUALITATIVE_SYSTEM_PROMPT,
@@ -25,6 +25,9 @@ from ai_psychiatrist.infrastructure.llm.responses import (
     extract_xml_tags,
 )
 from ai_psychiatrist.infrastructure.logging import get_logger
+
+if TYPE_CHECKING:
+    from ai_psychiatrist.config import ModelSettings
 
 logger = get_logger(__name__)
 
@@ -56,13 +59,19 @@ class QualitativeAssessmentAgent:
         "risk_factors",
     ]
 
-    def __init__(self, llm_client: SimpleChatClient) -> None:
+    def __init__(
+        self,
+        llm_client: SimpleChatClient,
+        model_settings: ModelSettings | None = None,
+    ) -> None:
         """Initialize qualitative assessment agent.
 
         Args:
             llm_client: LLM client for chat completions.
+            model_settings: Model configuration. If None, uses OllamaClient defaults.
         """
         self._llm_client = llm_client
+        self._model_settings = model_settings
 
     async def assess(self, transcript: Transcript) -> QualitativeAssessment:
         """Generate qualitative assessment for a transcript.
@@ -82,10 +91,20 @@ class QualitativeAssessmentAgent:
         # Generate assessment prompt
         user_prompt = make_qualitative_prompt(transcript.text)
 
+        # Use model settings if provided (Paper Section 2.2: Gemma 3 27B)
+        model = self._model_settings.qualitative_model if self._model_settings else None
+        temperature = self._model_settings.temperature if self._model_settings else 0.2
+        top_k = self._model_settings.top_k if self._model_settings else 20
+        top_p = self._model_settings.top_p if self._model_settings else 0.8
+
         # Call LLM
         raw_response = await self._llm_client.simple_chat(
             user_prompt=user_prompt,
             system_prompt=QUALITATIVE_SYSTEM_PROMPT,
+            model=model,
+            temperature=temperature,
+            top_k=top_k,
+            top_p=top_p,
         )
 
         # Parse response
@@ -127,9 +146,19 @@ class QualitativeAssessmentAgent:
             transcript=transcript.text,
         )
 
+        # Use model settings if provided
+        model = self._model_settings.qualitative_model if self._model_settings else None
+        temperature = self._model_settings.temperature if self._model_settings else 0.2
+        top_k = self._model_settings.top_k if self._model_settings else 20
+        top_p = self._model_settings.top_p if self._model_settings else 0.8
+
         raw_response = await self._llm_client.simple_chat(
             user_prompt=user_prompt,
             system_prompt=QUALITATIVE_SYSTEM_PROMPT,
+            model=model,
+            temperature=temperature,
+            top_k=top_k,
+            top_p=top_p,
         )
 
         assessment = self._parse_response(raw_response, transcript.participant_id)

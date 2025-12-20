@@ -18,7 +18,7 @@ from ai_psychiatrist.domain.value_objects import EmbeddedChunk, SimilarityMatch,
 from ai_psychiatrist.infrastructure.logging import get_logger
 
 if TYPE_CHECKING:
-    from ai_psychiatrist.config import EmbeddingSettings
+    from ai_psychiatrist.config import EmbeddingSettings, ModelSettings
     from ai_psychiatrist.infrastructure.llm.ollama import OllamaClient
     from ai_psychiatrist.services.reference_store import ReferenceStore
 
@@ -79,6 +79,7 @@ class EmbeddingService:
         llm_client: OllamaClient,
         reference_store: ReferenceStore,
         settings: EmbeddingSettings,
+        model_settings: ModelSettings | None = None,
     ) -> None:
         """Initialize embedding service.
 
@@ -86,12 +87,14 @@ class EmbeddingService:
             llm_client: LLM client for generating embeddings.
             reference_store: Pre-computed reference embeddings.
             settings: Embedding configuration.
+            model_settings: Model configuration. If None, uses OllamaClient defaults.
         """
         self._llm_client = llm_client
         self._reference_store = reference_store
         self._dimension = settings.dimension
         self._top_k = settings.top_k_references
         self._min_chars = settings.min_evidence_chars
+        self._model_settings = model_settings
 
     async def embed_text(self, text: str) -> tuple[float, ...]:
         """Generate embedding for text.
@@ -106,8 +109,12 @@ class EmbeddingService:
             logger.debug("Text too short for embedding", length=len(text))
             return ()
 
+        # Use model settings if provided (Paper Section 2.2: Qwen 3 8B Embedding)
+        model = self._model_settings.embedding_model if self._model_settings else None
+
         embedding = await self._llm_client.simple_embed(
             text=text,
+            model=model,
             dimension=self._dimension,
         )
 

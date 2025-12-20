@@ -28,6 +28,7 @@ from ai_psychiatrist.domain.value_objects import ItemAssessment
 from ai_psychiatrist.infrastructure.logging import get_logger
 
 if TYPE_CHECKING:
+    from ai_psychiatrist.config import ModelSettings
     from ai_psychiatrist.infrastructure.llm.responses import SimpleChatClient
     from ai_psychiatrist.services.embedding import EmbeddingService
 
@@ -69,6 +70,7 @@ class QuantitativeAssessmentAgent:
         llm_client: SimpleChatClient,
         embedding_service: EmbeddingService | None = None,
         mode: AssessmentMode = AssessmentMode.FEW_SHOT,
+        model_settings: ModelSettings | None = None,
     ) -> None:
         """Initialize quantitative assessment agent.
 
@@ -76,10 +78,12 @@ class QuantitativeAssessmentAgent:
             llm_client: LLM client for chat completions.
             embedding_service: Service for few-shot retrieval (required for FEW_SHOT mode).
             mode: Assessment mode (ZERO_SHOT or FEW_SHOT).
+            model_settings: Model configuration. If None, uses OllamaClient defaults.
         """
         self._llm = llm_client
         self._embedding = embedding_service
         self._mode = mode
+        self._model_settings = model_settings
 
         # Warn if FEW_SHOT mode is used without embedding service
         if mode == AssessmentMode.FEW_SHOT and embedding_service is None:
@@ -130,10 +134,20 @@ class QuantitativeAssessmentAgent:
 
         # Step 3: Score with LLM
         prompt = make_scoring_prompt(transcript.text, reference_text)
+
+        # Use model settings if provided (Paper Appendix F: MedGemma achieves 18% better MAE)
+        model = self._model_settings.quantitative_model if self._model_settings else None
+        temperature = self._model_settings.temperature if self._model_settings else 0.2
+        top_k = self._model_settings.top_k if self._model_settings else 20
+        top_p = self._model_settings.top_p if self._model_settings else 0.8
+
         raw_response = await self._llm.simple_chat(
             user_prompt=prompt,
             system_prompt=QUANTITATIVE_SYSTEM_PROMPT,
-            temperature=0.2,
+            model=model,
+            temperature=temperature,
+            top_k=top_k,
+            top_p=top_p,
         )
 
         logger.debug("LLM scoring complete", response_length=len(raw_response))
@@ -170,14 +184,31 @@ class QuantitativeAssessmentAgent:
         """
         user_prompt = make_evidence_prompt(transcript_text)
 
-        raw = await self._llm.simple_chat(user_prompt=user_prompt, temperature=0.2)
+        # Use model settings if provided
+        model = self._model_settings.quantitative_model if self._model_settings else None
+        temperature = self._model_settings.temperature if self._model_settings else 0.2
+        top_k = self._model_settings.top_k if self._model_settings else 20
+        top_p = self._model_settings.top_p if self._model_settings else 0.8
 
-        # Parse JSON response
+        raw = await self._llm.simple_chat(
+            user_prompt=user_prompt,
+            model=model,
+            temperature=temperature,
+            top_k=top_k,
+            top_p=top_p,
+        )
+
+        # Parse JSON response with tolerant fixups (BUG-011: Apply repair before parsing)
         try:
             clean = self._strip_json_block(raw)
+            clean = self._tolerant_fixups(clean)
             obj = json.loads(clean)
         except (json.JSONDecodeError, ValueError):
-            logger.warning("Failed to parse evidence JSON, using empty evidence")
+            # BUG-011: Include response preview in warning to aid debugging
+            logger.warning(
+                "Failed to parse evidence JSON, using empty evidence",
+                response_preview=raw[:200] if raw else "",
+            )
             obj = {}
 
         # Clean up extraction, ensure all keys present
@@ -299,7 +330,18 @@ class QuantitativeAssessmentAgent:
             "Return only the fixed JSON. No prose, no markdown, no tags."
         )
         try:
-            fixed = await self._llm.simple_chat(user_prompt=repair_prompt, temperature=0.1)
+            # Use model settings if provided, with lower temperature for repair
+            model = self._model_settings.quantitative_model if self._model_settings else None
+            top_k = self._model_settings.top_k if self._model_settings else 20
+            top_p = self._model_settings.top_p if self._model_settings else 0.8
+
+            fixed = await self._llm.simple_chat(
+                user_prompt=repair_prompt,
+                model=model,
+                temperature=0.1,  # Lower temp for deterministic repair
+                top_k=top_k,
+                top_p=top_p,
+            )
             clean = self._strip_json_block(fixed)
             clean = self._tolerant_fixups(clean)
             result: dict[str, object] = json.loads(clean)

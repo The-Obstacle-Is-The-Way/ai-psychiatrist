@@ -14,8 +14,8 @@ unnecessary work on legacy-only code until the modern pipeline is stable.
 
 ## Scope and Current Status
 
-- **OPEN**: BUG-006, BUG-008, BUG-009, BUG-010, BUG-011, BUG-013, BUG-015, BUG-016, BUG-017
-- **RESOLVED**: BUG-004, BUG-005, BUG-007, BUG-012, BUG-014
+- **OPEN**: BUG-006, BUG-009, BUG-010, BUG-013, BUG-015, BUG-016, BUG-017
+- **RESOLVED**: BUG-004, BUG-005, BUG-007, BUG-008, BUG-011, BUG-012, BUG-014
 
 ## Chunked Fix Order
 
@@ -40,22 +40,25 @@ meaningful end-to-end validation.
 
 ---
 
-### Chunk 2: Model and Parsing Correctness (P1/P3)
+### Chunk 2: Model and Parsing Correctness (P1/P3) ✅ COMPLETED
 
-**Bugs**: BUG-008, BUG-011  
+**Bugs**: BUG-008, BUG-011
+**Status**: RESOLVED (2025-12-19)
+
 **Rationale**: Configuration is currently ignored for model selection, and
 evidence parsing silently degrades. Fixing these ensures the pipeline uses the
 intended models and maintains robustness under noisy LLM output.
 
 **Primary Tasks**:
 
-- Thread `ModelSettings` into all LLM/embedding calls (model, temperature, top_k, top_p).
-- Apply tolerant parsing for evidence extraction (or add repair path).
+- ✅ Thread `ModelSettings` into all LLM/embedding calls (model, temperature, top_k, top_p).
+- ✅ Apply tolerant parsing for evidence extraction (or add repair path).
 
 **Exit Criteria**:
 
-- Configuration overrides demonstrably control models and sampling.
-- Evidence extraction survives common JSON formatting noise.
+- ✅ Configuration overrides demonstrably control models and sampling.
+- ✅ Evidence extraction survives common JSON formatting noise.
+- ✅ All 583 tests pass.
 
 ---
 

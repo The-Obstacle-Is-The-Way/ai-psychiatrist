@@ -17,6 +17,7 @@ from ai_psychiatrist.infrastructure.llm.responses import extract_score_from_text
 from ai_psychiatrist.infrastructure.logging import get_logger
 
 if TYPE_CHECKING:
+    from ai_psychiatrist.config import ModelSettings
     from ai_psychiatrist.infrastructure.llm.responses import SimpleChatClient
 
 logger = get_logger(__name__)
@@ -29,13 +30,19 @@ class JudgeAgent:
     Evaluates assessments on 4 metrics using a 5-point Likert scale.
     """
 
-    def __init__(self, llm_client: SimpleChatClient) -> None:
+    def __init__(
+        self,
+        llm_client: SimpleChatClient,
+        model_settings: ModelSettings | None = None,
+    ) -> None:
         """Initialize judge agent.
 
         Args:
             llm_client: LLM client for evaluations.
+            model_settings: Model configuration. If None, uses OllamaClient defaults.
         """
         self._llm_client = llm_client
+        self._model_settings = model_settings
 
     async def evaluate(
         self,
@@ -109,12 +116,20 @@ class JudgeAgent:
         """
         prompt = make_evaluation_prompt(metric, transcript, assessment)
 
-        # Note: The original implementation used temperature=0, top_k=20, top_p=0.9
-        # Spec 07 mandates temperature=0.0
+        # Use model settings if provided (Spec 07 mandates temperature=0.0 for Judge)
+        model = self._model_settings.judge_model if self._model_settings else None
+        # Judge always uses temperature=0.0 for deterministic evaluation
+        temperature = self._model_settings.temperature_judge if self._model_settings else 0.0
+        top_k = self._model_settings.top_k if self._model_settings else 20
+        top_p = self._model_settings.top_p if self._model_settings else 0.8
+
         try:
             response = await self._llm_client.simple_chat(
                 user_prompt=prompt,
-                temperature=0.0,
+                model=model,
+                temperature=temperature,
+                top_k=top_k,
+                top_p=top_p,
             )
         except LLMError as e:
             logger.error(

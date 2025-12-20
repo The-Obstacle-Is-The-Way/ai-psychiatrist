@@ -1,8 +1,9 @@
 # BUG-008: Model Settings Unused and Wrong Model Selection
 
 **Severity**: HIGH (P1)
-**Status**: OPEN
+**Status**: RESOLVED
 **Date Identified**: 2025-12-19
+**Date Resolved**: 2025-12-19
 **Spec Reference**: `docs/specs/03_CONFIG_LOGGING.md`, `docs/specs/09_QUANTITATIVE_AGENT.md`, `docs/specs/04_LLM_INFRASTRUCTURE.md`
 
 ---
@@ -53,4 +54,42 @@
 
 - `src/ai_psychiatrist/config.py`
 - `src/ai_psychiatrist/agents/quantitative.py`
+- `src/ai_psychiatrist/agents/qualitative.py`
+- `src/ai_psychiatrist/agents/judge.py`
+- `src/ai_psychiatrist/services/embedding.py`
 - `src/ai_psychiatrist/infrastructure/llm/ollama.py`
+- `server.py`
+
+---
+
+## Resolution
+
+Threaded `ModelSettings` through the entire agent/service layer:
+
+1. **QuantitativeAssessmentAgent**: Added `model_settings` parameter and uses it for all LLM calls
+   (evidence extraction, scoring, and repair). Uses `quantitative_model` (MedGemma per Appendix F).
+
+2. **QualitativeAssessmentAgent**: Added `model_settings` parameter and uses it for `assess()` and
+   `refine()` calls. Uses `qualitative_model`.
+
+3. **JudgeAgent**: Added `model_settings` parameter and uses it for metric evaluation. Uses
+   `judge_model` and `temperature_judge` (0.0 for deterministic evaluation per Spec 07).
+
+4. **EmbeddingService**: Added `model_settings` parameter and uses `embedding_model` for all
+   embedding generation.
+
+5. **server.py**: Initializes `ModelSettings` at startup and passes it to all agents/services
+   via FastAPI dependency injection.
+
+All configuration values now flow from `ModelSettings` to LLM calls, making configuration
+changes effective.
+
+---
+
+## Verification
+
+```bash
+ruff check src/ai_psychiatrist/agents/ src/ai_psychiatrist/services/ server.py
+pytest tests/ -v --no-cov
+# 583 passed, 1 skipped
+```

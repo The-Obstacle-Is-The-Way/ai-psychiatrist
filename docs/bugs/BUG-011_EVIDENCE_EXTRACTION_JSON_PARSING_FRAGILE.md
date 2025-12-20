@@ -1,8 +1,9 @@
 # BUG-011: Evidence Extraction JSON Parsing is Fragile
 
 **Severity**: LOW (P3)
-**Status**: OPEN
+**Status**: RESOLVED
 **Date Identified**: 2025-12-19
+**Date Resolved**: 2025-12-19
 **Spec Reference**: `docs/specs/09_QUANTITATIVE_AGENT.md`
 
 ---
@@ -47,3 +48,39 @@ Evidence extraction in the QuantitativeAssessmentAgent parses JSON using `_strip
 ## Files Involved
 
 - `src/ai_psychiatrist/agents/quantitative.py`
+
+---
+
+## Resolution
+
+Applied the existing `_tolerant_fixups()` method to evidence extraction parsing:
+
+1. **Applied tolerant parsing**: Evidence extraction now calls `_tolerant_fixups()` after
+   `_strip_json_block()` but before `json.loads()`. This fixes:
+   - Trailing commas
+   - Smart quotes (curly quotes → straight quotes)
+
+2. **Added response preview to warning**: When evidence parsing fails, the log warning now
+   includes a 200-character preview of the raw response to aid debugging.
+
+Before:
+```python
+clean = self._strip_json_block(raw)
+obj = json.loads(clean)
+```
+
+After:
+```python
+clean = self._strip_json_block(raw)
+clean = self._tolerant_fixups(clean)
+obj = json.loads(clean)
+```
+
+---
+
+## Verification
+
+```bash
+pytest tests/unit/agents/test_quantitative.py -v --no-cov
+# All tests pass
+```
