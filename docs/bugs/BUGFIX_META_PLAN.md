@@ -14,25 +14,27 @@ unnecessary work on legacy-only code until the modern pipeline is stable.
 
 ## Scope and Current Status
 
-- **OPEN**: BUG-006, BUG-008, BUG-009, BUG-010, BUG-011, BUG-012, BUG-013, BUG-014, BUG-015
-- **RESOLVED**: BUG-004, BUG-005, BUG-007
+- **OPEN**: BUG-006, BUG-008, BUG-009, BUG-010, BUG-011, BUG-013, BUG-015
+- **RESOLVED**: BUG-004, BUG-005, BUG-007, BUG-012, BUG-014
 
 ## Chunked Fix Order
 
-### Chunk 1: Runtime Entry Point Correctness (P0/P1)
+### Chunk 1: Runtime Entry Point Correctness (P0/P1) ✅ COMPLETED
 
-**Bugs**: BUG-012, BUG-014  
+**Bugs**: BUG-012, BUG-014
+**Status**: RESOLVED (2025-12-19)
+
 **Rationale**: The API currently routes through legacy agents and a missing
 transcript path. This is a production correctness issue and blocks all
 meaningful end-to-end validation.
 
 **Primary Tasks**:
-- Rewire `server.py` to the modern `src/ai_psychiatrist` agents/services.
-- Replace the legacy transcript file dependency with `TranscriptService`.
+- ✅ Rewire `server.py` to the modern `src/ai_psychiatrist` agents/services.
+- ✅ Replace the legacy transcript file dependency with `TranscriptService`.
 
 **Exit Criteria**:
-- API uses modern agents and config settings.
-- Integration test or smoke test runs against the new pipeline.
+- ✅ API uses modern agents and config settings.
+- ✅ All 583 tests pass.
 
 ---
 

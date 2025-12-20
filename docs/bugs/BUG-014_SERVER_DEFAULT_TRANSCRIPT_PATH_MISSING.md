@@ -1,8 +1,9 @@
 # BUG-014: Server Default Transcript Path Missing
 
-**Severity**: HIGH (P1)  
-**Status**: OPEN  
-**Date Identified**: 2025-12-19  
+**Severity**: HIGH (P1)
+**Status**: RESOLVED
+**Date Identified**: 2025-12-19
+**Date Resolved**: 2025-12-19
 **Spec Reference**: `docs/specs/11_FULL_PIPELINE.md`, `docs/specs/12.5_FINAL_CLEANUP_LEGACY_REMOVAL.md`
 
 ---
@@ -13,7 +14,7 @@
 
 ---
 
-## Evidence
+## Evidence (Pre-Fix)
 
 - `InterviewSimulator` defaults to `agents/transcript.txt` if `TRANSCRIPT_PATH` is not set. (`agents/interview_simulator.py:11-19`)
 - The file does not exist in the repository:
@@ -34,19 +35,30 @@
 
 - **Code Path**: Legacy server path (`server.py` + `agents/interview_simulator.py`) but currently active runtime path.
 - **Fix Category**: Production stability.
-- **Recommended Action**: Fix now if `server.py` remains in use; otherwise remove/replace it with the new API during Spec 11.
+- **Recommended Action**: Resolved; server.py now uses TranscriptService from modern codebase.
 
 ---
 
-## Recommended Fix
+## Resolution
 
-1. Replace `InterviewSimulator` with the new `TranscriptService` or accept transcript input in the API request.
-2. If the legacy server must remain temporarily, include a default transcript file or validate `TRANSCRIPT_PATH` at startup and fail fast.
-3. Remove legacy server usage once Spec 11 API is implemented.
+1. Replaced `InterviewSimulator` with `TranscriptService` from `ai_psychiatrist.services`.
+2. API now accepts either:
+   - `participant_id`: Loads transcript from DAIC-WOZ dataset via `TranscriptService.load_transcript()`
+   - `transcript_text`: Uses raw text input via `TranscriptService.load_transcript_from_text()`
+3. Removed dependency on hardcoded file paths.
+4. Clear error messages when transcript cannot be resolved.
 
 ---
 
-## Files Involved
+## Verification
+
+```bash
+ruff check server.py
+pytest tests/ -v --no-cov
+```
+
+---
+
+## Files Changed
 
 - `server.py`
-- `agents/interview_simulator.py`
