@@ -92,20 +92,20 @@ class TestPHQ8Score:
 
     def test_not_at_all_is_zero(self) -> None:
         """NOT_AT_ALL (0-1 days) equals 0."""
-        assert PHQ8Score.NOT_AT_ALL == 0
+        assert PHQ8Score.NOT_AT_ALL.value == 0
         assert int(PHQ8Score.NOT_AT_ALL) == 0
 
     def test_several_days_is_one(self) -> None:
         """SEVERAL_DAYS (2-6 days) equals 1."""
-        assert PHQ8Score.SEVERAL_DAYS == 1
+        assert PHQ8Score.SEVERAL_DAYS.value == 1
 
     def test_more_than_half_is_two(self) -> None:
         """MORE_THAN_HALF (7-11 days) equals 2."""
-        assert PHQ8Score.MORE_THAN_HALF == 2
+        assert PHQ8Score.MORE_THAN_HALF.value == 2
 
     def test_nearly_every_day_is_three(self) -> None:
         """NEARLY_EVERY_DAY (12-14 days) equals 3."""
-        assert PHQ8Score.NEARLY_EVERY_DAY == 3
+        assert PHQ8Score.NEARLY_EVERY_DAY.value == 3
 
     @pytest.mark.parametrize(
         ("value", "expected"),
@@ -152,23 +152,23 @@ class TestSeverityLevel:
 
     def test_minimal_is_zero(self) -> None:
         """MINIMAL (no significant symptoms) equals 0."""
-        assert SeverityLevel.MINIMAL == 0
+        assert SeverityLevel.MINIMAL.value == 0
 
     def test_mild_is_one(self) -> None:
         """MILD equals 1."""
-        assert SeverityLevel.MILD == 1
+        assert SeverityLevel.MILD.value == 1
 
     def test_moderate_is_two(self) -> None:
         """MODERATE equals 2."""
-        assert SeverityLevel.MODERATE == 2
+        assert SeverityLevel.MODERATE.value == 2
 
     def test_mod_severe_is_three(self) -> None:
         """MOD_SEVERE equals 3."""
-        assert SeverityLevel.MOD_SEVERE == 3
+        assert SeverityLevel.MOD_SEVERE.value == 3
 
     def test_severe_is_four(self) -> None:
         """SEVERE equals 4."""
-        assert SeverityLevel.SEVERE == 4
+        assert SeverityLevel.SEVERE.value == 4
 
     @pytest.mark.parametrize(
         ("total", "expected"),

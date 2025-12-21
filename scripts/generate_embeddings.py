@@ -32,7 +32,7 @@ from pathlib import Path
 # Add src to path for imports
 sys.path.insert(0, str(Path(__file__).parent.parent / "src"))
 
-from ai_psychiatrist.config import get_settings
+from ai_psychiatrist.config import DataSettings, LoggingSettings, get_settings
 from ai_psychiatrist.infrastructure.llm.ollama import OllamaClient
 from ai_psychiatrist.infrastructure.logging import get_logger, setup_logging
 from ai_psychiatrist.services.transcript import TranscriptService
@@ -108,7 +108,7 @@ async def generate_embedding(
     return list(embedding)
 
 
-def get_training_participant_ids(data_settings) -> list[int]:  # type: ignore[type-arg]
+def get_training_participant_ids(data_settings: DataSettings) -> list[int]:
     """Get participant IDs from training split only.
 
     Uses ONLY training data to avoid data leakage in few-shot retrieval.
@@ -187,7 +187,7 @@ async def process_participant(
 
 async def main_async(args: argparse.Namespace) -> int:  # noqa: PLR0915
     """Async main entry point."""
-    setup_logging(level="INFO", format="console")
+    setup_logging(LoggingSettings(level="INFO", format="console"))
 
     # Load settings
     settings = get_settings()

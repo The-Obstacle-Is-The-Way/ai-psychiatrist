@@ -7,21 +7,23 @@ from pathlib import Path
 import pandas as pd
 import pytest
 
+from ai_psychiatrist.config import DataSettings
 from ai_psychiatrist.domain.enums import PHQ8Item
 from ai_psychiatrist.services.ground_truth import GroundTruthService
 
 
-class MockDataSettings:
-    """Mock data settings for testing."""
-
-    def __init__(
-        self,
-        train_csv: Path | None = None,
-        dev_csv: Path | None = None,
-    ) -> None:
-        self.transcripts_dir = Path("/tmp/nonexistent")
-        self.train_csv = train_csv or Path("/tmp/nonexistent.csv")
-        self.dev_csv = dev_csv or Path("/tmp/nonexistent.csv")
+def _make_data_settings(train_csv: Path, dev_csv: Path | None = None) -> DataSettings:
+    """Create DataSettings for GroundTruthService tests."""
+    base_dir = train_csv.parent
+    transcripts_dir = base_dir / "transcripts"
+    transcripts_dir.mkdir(parents=True, exist_ok=True)
+    return DataSettings(
+        base_dir=base_dir,
+        transcripts_dir=transcripts_dir,
+        embeddings_path=base_dir / "embeddings.pkl",
+        train_csv=train_csv,
+        dev_csv=dev_csv or base_dir / "dev.csv",
+    )
 
 
 class TestGroundTruthService:
@@ -71,7 +73,7 @@ class TestGroundTruthService:
 
     def test_get_scores_valid_participant(self, sample_train_csv: Path) -> None:
         """Should return correct scores for valid participant."""
-        settings = MockDataSettings(train_csv=sample_train_csv)
+        settings = _make_data_settings(train_csv=sample_train_csv)
         service = GroundTruthService(data_settings=settings)
         scores = service.get_scores(300)
 
@@ -86,7 +88,7 @@ class TestGroundTruthService:
 
     def test_get_scores_unknown_participant(self, sample_train_csv: Path) -> None:
         """Should return None for all items for unknown participant."""
-        settings = MockDataSettings(train_csv=sample_train_csv)
+        settings = _make_data_settings(train_csv=sample_train_csv)
         service = GroundTruthService(data_settings=settings)
         scores = service.get_scores(999)
 
@@ -95,7 +97,7 @@ class TestGroundTruthService:
 
     def test_get_total_score(self, sample_train_csv: Path) -> None:
         """Should return correct total score."""
-        settings = MockDataSettings(train_csv=sample_train_csv)
+        settings = _make_data_settings(train_csv=sample_train_csv)
         service = GroundTruthService(data_settings=settings)
 
         assert service.get_total_score(300) == 8
@@ -104,14 +106,14 @@ class TestGroundTruthService:
 
     def test_get_total_score_unknown_participant(self, sample_train_csv: Path) -> None:
         """Should return None for unknown participant."""
-        settings = MockDataSettings(train_csv=sample_train_csv)
+        settings = _make_data_settings(train_csv=sample_train_csv)
         service = GroundTruthService(data_settings=settings)
 
         assert service.get_total_score(999) is None
 
     def test_list_participants(self, sample_train_csv: Path) -> None:
         """Should list all participant IDs."""
-        settings = MockDataSettings(train_csv=sample_train_csv)
+        settings = _make_data_settings(train_csv=sample_train_csv)
         service = GroundTruthService(data_settings=settings)
         participants = service.list_participants()
 
@@ -122,10 +124,7 @@ class TestGroundTruthService:
 
     def test_combines_train_and_dev(self, sample_train_csv: Path, sample_dev_csv: Path) -> None:
         """Should combine train and dev CSV files."""
-        settings = MockDataSettings(
-            train_csv=sample_train_csv,
-            dev_csv=sample_dev_csv,
-        )
+        settings = _make_data_settings(train_csv=sample_train_csv, dev_csv=sample_dev_csv)
         service = GroundTruthService(data_settings=settings)
         participants = service.list_participants()
 
@@ -136,7 +135,7 @@ class TestGroundTruthService:
 
     def test_has_participant(self, sample_train_csv: Path) -> None:
         """Should correctly check if participant exists."""
-        settings = MockDataSettings(train_csv=sample_train_csv)
+        settings = _make_data_settings(train_csv=sample_train_csv)
         service = GroundTruthService(data_settings=settings)
 
         assert service.has_participant(300) is True
@@ -145,7 +144,7 @@ class TestGroundTruthService:
 
     def test_caches_data(self, sample_train_csv: Path) -> None:
         """Should cache loaded data for subsequent calls."""
-        settings = MockDataSettings(train_csv=sample_train_csv)
+        settings = _make_data_settings(train_csv=sample_train_csv)
         service = GroundTruthService(data_settings=settings)
 
         # First call loads data
@@ -158,7 +157,13 @@ class TestGroundTruthService:
 
     def test_handles_missing_csv(self) -> None:
         """Should handle missing CSV files gracefully."""
-        settings = MockDataSettings()
+        settings = DataSettings(
+            base_dir=Path("/tmp"),
+            transcripts_dir=Path("/tmp/nonexistent"),
+            embeddings_path=Path("/tmp/embeddings.pkl"),
+            train_csv=Path("/tmp/nonexistent.csv"),
+            dev_csv=Path("/tmp/nonexistent.csv"),
+        )
         service = GroundTruthService(data_settings=settings)
 
         # Should return empty list, not raise
@@ -185,7 +190,7 @@ class TestGroundTruthService:
         )
         df.to_csv(csv_path, index=False)
 
-        settings = MockDataSettings(train_csv=csv_path)
+        settings = _make_data_settings(train_csv=csv_path)
         service = GroundTruthService(data_settings=settings)
         scores = service.get_scores(500)
 
@@ -213,7 +218,7 @@ class TestGroundTruthService:
         )
         df.to_csv(csv_path, index=False)
 
-        settings = MockDataSettings(train_csv=csv_path)
+        settings = _make_data_settings(train_csv=csv_path)
         service = GroundTruthService(data_settings=settings)
 
         # Should calculate as sum of items
@@ -228,7 +233,7 @@ class TestGroundTruthService:
 
     def test_participant_ids_are_integers(self, sample_train_csv: Path) -> None:
         """Participant IDs should be integers, not floats."""
-        settings = MockDataSettings(train_csv=sample_train_csv)
+        settings = _make_data_settings(train_csv=sample_train_csv)
         service = GroundTruthService(data_settings=settings)
         participants = service.list_participants()
 
@@ -252,7 +257,7 @@ class TestGroundTruthService:
         )
         df.to_csv(csv_path, index=False)
 
-        settings = MockDataSettings(train_csv=csv_path)
+        settings = _make_data_settings(train_csv=csv_path)
         service = GroundTruthService(data_settings=settings)
         scores = service.get_scores(700)
 

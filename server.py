@@ -168,7 +168,7 @@ class QuantitativeResult(BaseModel):
     total_score: int
     severity: str
     na_count: int
-    items: dict[str, dict[str, Any]]
+    items: dict[str, dict[str, str | int | None]]
 
 
 class QualitativeResult(BaseModel):

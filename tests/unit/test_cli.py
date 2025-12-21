@@ -1,5 +1,7 @@
 """Tests for CLI entry point."""
 
+import pytest
+
 import ai_psychiatrist
 from ai_psychiatrist.cli import main
 
@@ -7,7 +9,7 @@ from ai_psychiatrist.cli import main
 class TestCLI:
     """Test CLI entry point."""
 
-    def test_main_returns_zero(self, capsys: object) -> None:
+    def test_main_returns_zero(self, capsys: pytest.CaptureFixture[str]) -> None:
         """main() should return 0 on success."""
         result = main()
         assert result == 0
