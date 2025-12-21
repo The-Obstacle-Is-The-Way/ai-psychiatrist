@@ -22,27 +22,13 @@ This document captures issues identified during a comprehensive code quality aud
 
 ### CI Configuration Analysis
 
-The CI pipeline (`ci.yml`) is intentionally configured to:
-- **Type check only `src/`**: `uv run mypy src` (passes with 0 errors)
+The CI pipeline (`ci.yml`) is configured to:
+- **Type check `src tests scripts server.py`**: `uv run mypy src tests scripts server.py` (strict, 0 errors)
 - **Lint `src tests scripts server.py`**: Passes with 0 errors
 - **Test with coverage**: 96%+ coverage threshold met
 
-This is a deliberate architectural choice per **Spec 01** which states:
-> `typecheck: ## Run type checker (mypy)`
-> `uv run mypy src`
-
-### Why Tests Aren't Type-Checked
-
-When running `mypy tests/`, errors appear because:
-1. **No `py.typed` marker file** - See BUG-019.1 below
-2. **Duck-typed test doubles** - Tests use lightweight mocks that don't implement full protocol contracts
-
-This is a common Python pattern. Many projects only type-check production code due to:
-- Test fixtures often use duck typing for flexibility
-- External libraries may lack type stubs
-- Speed of type checking matters more in CI
-
-Per [mypy best practices](https://mypy.readthedocs.io/en/stable/existing_code.html), gradual adoption is recommended.
+This was intentionally broadened from a `src/`-only scope to prevent hidden
+type errors in tests and scripts.
 
 ---
 
@@ -197,16 +183,16 @@ From [The Importance of py.typed](https://safjan.com/the-importance-of-adding-py
 
 **Status**: ✅ RESOLVED
 **Severity**: P4
-**Location**: `data/keywords/phq8_keywords.yaml`
+**Location**: `src/ai_psychiatrist/resources/phq8_keywords.yaml`
 
 **Fix Applied**:
-- Moved keywords from Python dict to YAML file at `data/keywords/phq8_keywords.yaml`
+- Moved keywords from Python dict to packaged YAML at `src/ai_psychiatrist/resources/phq8_keywords.yaml`
 - Added PyYAML dependency
 - Keywords now loaded via `_load_domain_keywords()` with LRU cache
 - Domain experts can now review/update keywords without code changes
 
 ```yaml
-# data/keywords/phq8_keywords.yaml
+# src/ai_psychiatrist/resources/phq8_keywords.yaml
 PHQ8_NoInterest:
   - "can't be bothered"
   - "no interest"
@@ -263,9 +249,9 @@ data/embeddings/reference_embeddings.json  # Text chunks
 | P0 | 0 | - |
 | P1 | 0 | - |
 | P2 | 0 | - |
-| P3 | 0 | - |
-| P4 | 2 | ✅ All resolved |
-| **Total** | **0** | **No remaining issues** |
+| P3 | 2 | ✅ All resolved |
+| P4 | 3 | ✅ All resolved |
+| **Total** | **5** | **All resolved (0 open)** |
 
 **Initially Reported**: 15 issues
 **After Investigation**: 5 genuine issues (10 were design decisions or expected behavior)

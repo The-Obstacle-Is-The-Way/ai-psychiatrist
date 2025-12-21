@@ -7,6 +7,10 @@
 #
 # Format: Each PHQ-8 item maps to a list of keywords/phrases that
 # indicate potential symptom evidence in the transcript.
+#
+# Notes:
+# - All keywords are matched case-insensitively.
+# - Keywords are loaded as a packaged resource so they work in installed wheels.
 
 PHQ8_NoInterest:
   - "can't be bothered"

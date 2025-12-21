@@ -115,11 +115,11 @@ class ReferenceStore:
         )
 
         # Load text chunks from JSON (safe, no code execution)
-        with json_path.open("r") as f:
+        with json_path.open("r", encoding="utf-8") as f:
             texts_data: dict[str, Any] = json.load(f)
 
         # Load embeddings from NPZ (safe, numpy arrays only)
-        npz_data = np.load(npz_path)
+        npz_data = np.load(npz_path, allow_pickle=False)
 
         # Normalize embeddings and combine with texts
         normalized: dict[int, list[tuple[str, list[float]]]] = {}

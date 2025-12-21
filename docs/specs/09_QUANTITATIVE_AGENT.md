@@ -72,17 +72,9 @@ if TYPE_CHECKING:
 
 logger = get_logger(__name__)
 
-# Constants from original implementation
-DOMAIN_KEYWORDS = {
-    "PHQ8_NoInterest": ["can't be bothered", "no interest", "nothing really", "not enjoy", "no pleasure", "what's the point", "can’t be bothered", "cant be bothered"],
-    "PHQ8_Depressed": ["fed up", "miserable", "depressed", "very black", "hopeless", "low"],
-    "PHQ8_Sleep": ["sleep", "fall asleep", "wake up", "insomnia", "clock", "tired in the morning"],
-    "PHQ8_Tired": ["exhausted", "tired", "little energy", "fatigue", "no energy"],
-    "PHQ8_Appetite": ["appetite", "weight", "lost weight", "eat", "eating", "don’t bother", "dont bother", "looser"],
-    "PHQ8_Failure": ["useless", "failure", "bad about myself", "burden"],
-    "PHQ8_Concentrating": ["concentrat", "memory", "forgot", "thinking of something else", "focus"],
-    "PHQ8_Moving": ["moving slowly", "restless", "fidget", "speaking slowly", "psychomotor"]
-}
+# Domain keywords for keyword backfill (externalized for clinical review)
+# Loaded from: src/ai_psychiatrist/resources/phq8_keywords.yaml
+from ai_psychiatrist.agents.prompts.quantitative import DOMAIN_KEYWORDS
 
 
 class QuantitativeAssessmentAgent:

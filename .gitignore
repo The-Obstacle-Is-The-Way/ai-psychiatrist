@@ -223,9 +223,6 @@ __marimo__/
 # See: docs/specs/04A_DATA_ORGANIZATION.md
 # Run `python scripts/prepare_dataset.py` to regenerate from downloads/
 data/*
-# But track clinical keywords (code-review-friendly YAML)
-!data/keywords/
-!data/keywords/**
 
 # External reference repos (local only)
 _reference/

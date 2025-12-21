@@ -134,7 +134,7 @@ AD_HOC_PARTICIPANT_ID = 999_999
 **Validated Status**: ✅ FIXED - Externalized to YAML
 
 **Fix Applied**:
-- Moved keywords from Python dict to `data/keywords/phq8_keywords.yaml`
+- Moved keywords from Python dict to packaged YAML at `src/ai_psychiatrist/resources/phq8_keywords.yaml`
 - Added PyYAML dependency to pyproject.toml
 - Keywords loaded via `_load_domain_keywords()` with LRU cache
 - Domain experts can now review/update keywords without code changes
