@@ -8,7 +8,7 @@
 
 1. Clone the repository:
 ```bash
-git clone https://github.com/trendscenter/ai-psychiatrist.git
+git clone https://github.com/The-Obstacle-Is-The-Way/ai-psychiatrist.git
 ```
 
 2. Navigate to the cloned directory and create a new conda environment using the provided [`env_reqs.yml`](assets/env_reqs.yml) file:

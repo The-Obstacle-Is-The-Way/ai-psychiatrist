@@ -140,10 +140,10 @@ docs = [
 ai-psychiatrist = "ai_psychiatrist.cli:main"
 
 [project.urls]
-Homepage = "https://github.com/trendscenter/ai-psychiatrist"
-Documentation = "https://trendscenter.github.io/ai-psychiatrist"
-Repository = "https://github.com/trendscenter/ai-psychiatrist"
-Issues = "https://github.com/trendscenter/ai-psychiatrist/issues"
+Homepage = "https://github.com/The-Obstacle-Is-The-Way/ai-psychiatrist"
+Documentation = "https://github.com/The-Obstacle-Is-The-Way/ai-psychiatrist"
+Repository = "https://github.com/The-Obstacle-Is-The-Way/ai-psychiatrist"
+Issues = "https://github.com/The-Obstacle-Is-The-Way/ai-psychiatrist/issues"
 
 [build-system]
 requires = ["hatchling"]

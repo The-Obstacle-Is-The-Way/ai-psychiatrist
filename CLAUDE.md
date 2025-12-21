@@ -7,7 +7,6 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 **IMPORTANT**: This is a FORK. Always use the fork for issues and PRs.
 
 - **Fork (use this)**: https://github.com/The-Obstacle-Is-The-Way/ai-psychiatrist
-- **Upstream (do NOT create issues here)**: https://github.com/trendscenter/ai-psychiatrist
 
 When creating GitHub issues or PRs, ALWAYS specify the fork:
 ```bash
