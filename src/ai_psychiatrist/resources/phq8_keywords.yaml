@@ -1,6 +1,6 @@
 # PHQ-8 Domain Keywords for Evidence Extraction
 #
-# CLINICALLY VALIDATED VERSION (2025-12-21)
+# CLINICALLY VALIDATED & SUBSTRING-SAFE VERSION (2025-12-21)
 # Review: Kroenke et al., 2009 (PHQ-8 Definitions)
 #
 # These keywords are used for keyword backfill when LLM extraction
@@ -8,24 +8,42 @@
 #
 # Paper Reference: Section 2.3.2 (Quantitative Assessment)
 #
-# Format: Each PHQ-8 item maps to a list of keywords/phrases that
-# indicate potential symptom evidence in the transcript.
+# SAFETY PROTOCOLS APPLIED:
+# 1. Collision Proofing: Removed single-word tokens that exist inside common words.
+#    - "tired" removed (matches "reTIRED", "atTIRED")
+#    - "numb" removed (matches "NUMBer")
+#    - "nap" removed (matches "sNAP", "kidNAP")
+#    - "napping" removed (matches "sNAPPING")
+#    - "reading" removed (matches "dREADING", "spREADING")
+#    - "blue" removed (matches "BLUEprint", "BLUEjeans")
+#    - "sad" removed (matches "SADly")
+#    - "bored" removed (matches "laBORED", "harBORED")
+#    - "loser" removed (matches "cLOSER")
+#    - "failure" removed (matches "heart FAILURE" - semantic)
+#    - "burden" removed (matches "burdensome" without self-reference)
+#    - "fault" removed (matches "deFAULT")
+#    - "stuck" removed (matches "STUCK in traffic")
+#    - "binge" removed (matches "BINGE watch")
+#    - "starving" removed (hyperbolic: "I'm STARVING")
 #
-# Notes:
-# - All keywords are matched case-insensitively (substring match).
-# - Include both apostrophe and no-apostrophe variants where common.
-# - High-risk generic words (e.g., "eat", "low", "sleep") have been REMOVED
-#   to prevent substring collisions (e.g., "grEAT", "sLOW", "aSLEEP").
+# 2. Domain Specificity: Keywords require symptom context, not bare nouns.
+#
+# FORMAT:
+# - All keywords are matched case-insensitively via substring matching.
+# - Apostrophe and no-apostrophe variants included for robustness.
 # - Keywords are loaded as a packaged resource so they work in installed wheels.
+#
+# FUTURE IMPROVEMENT (see GitHub issue):
+# - Word-boundary regex matching would allow safe use of single tokens.
+# - Negation window detection would filter "I'm NOT depressed".
 
 PHQ8_NoInterest:
   # PHQ-8 Item #1: "Little interest or pleasure in doing things"
-  # Target: anhedonia / loss of interest/pleasure (not primarily hopelessness)
+  # Target: Anhedonia / loss of interest/pleasure (not primarily hopelessness)
   - "no interest"
   - "little interest"
   - "lost interest"
   - "no pleasure"
-  - "no pleasure in"
   - "nothing is fun"
   - "nothing's fun"
   - "nothing seems fun"
@@ -44,42 +62,68 @@ PHQ8_NoInterest:
   - "don't care about anything"
   - "dont care about anything"
   - "nothing interests me"
-  - "not interested"
+  - "not interested in anything"
+  - "not interested in doing"
   - "no motivation"
-  - "bored"
+  - "feeling bored"
+  - "feel bored"
+  - "boredom"
+  - "bored all the time"
+  - "bored with everything"
+  - "feeling flat"
+  - "apathy"
+  - "apathetic"
 
 PHQ8_Depressed:
   # PHQ-8 Item #2: "Feeling down, depressed, or hopeless"
-  # Target: depressed mood / hopelessness (separate from anhedonia & self-worth)
-  # Note: "low" removed due to false positive matches with "slow", "below".
+  # Target: Dysphoria / depressed mood / hopelessness (separate from anhedonia)
+  # Note: "sad", "numb", "blue" removed due to substring collisions.
   - "depressed"
   - "depression"
   - "feeling down"
   - "feel down"
-  - "sad"
+  - "feeling low"
+  - "feel low"
+  - "feeling sad"
+  - "feel sad"
+  - "am sad"
+  - "im sad"
+  - "was sad"
+  - "so sad"
+  - "very sad"
+  - "really sad"
+  - "sadness"
   - "miserable"
   - "hopeless"
   - "no hope"
   - "helpless"
   - "down in the dumps"
+  - "downhearted"
   - "tearful"
   - "crying"
+  - "cry a lot"
   - "can't stop crying"
   - "cant stop crying"
-  - "empty"
-  - "numb"
+  - "feel empty"
+  - "feeling empty"
+  - "feel numb"
+  - "feeling numb"
+  - "numbness"
+  - "emotional numbness"
   - "fed up"
   - "what's the point"
   - "whats the point"
-  - "feeling low"
   - "unhappy"
-  - "blue"
+  - "feeling blue"
+  - "feel blue"
   - "dark place"
+  - "in a dark place"
+  - "dark cloud"
 
 PHQ8_Sleep:
   # PHQ-8 Item #3: "Trouble falling or staying asleep, or sleeping too much"
-  # Target: insomnia OR hypersomnia; avoid generic "sleep" without disturbance
-  # Note: "sleep", "wake up", "clock" removed (too generic, high false positive).
+  # Target: Insomnia OR hypersomnia; avoid generic "sleep" without disturbance
+  # Note: "nap"/"napping" removed (matches "snap"/"snapping").
   - "insomnia"
   - "can't sleep"
   - "cant sleep"
@@ -111,16 +155,30 @@ PHQ8_Sleep:
   - "sleep all day"
   - "oversleep"
   - "over sleep"
-  - "nap"
-  - "napping"
+  - "take a nap"
+  - "taking a nap"
+  - "taking naps"
+  - "took a nap"
+  - "napping a lot"
 
 PHQ8_Tired:
   # PHQ-8 Item #4: "Feeling tired or having little energy"
-  # Target: fatigue / low energy (separate from sleep disturbance)
-  - "tired"
-  - "tired all the time"
+  # Target: Fatigue / low energy (separate from sleep disturbance)
+  # Note: Bare "tired" removed (matches "reTIRED" - common in DAIC-WOZ veterans).
+  - "feeling tired"
+  - "feel tired"
+  - "am tired"
+  - "im tired"
+  - "so tired"
+  - "very tired"
+  - "really tired"
+  - "too tired"
   - "always tired"
+  - "tired all the time"
+  - "get tired"
+  - "dead tired"
   - "exhausted"
+  - "exhaustion"
   - "worn out"
   - "drained"
   - "fatigue"
@@ -129,6 +187,7 @@ PHQ8_Tired:
   - "no energy"
   - "low energy"
   - "lethargic"
+  - "lethargy"
   - "run down"
   - "no stamina"
   - "can't get going"
@@ -136,20 +195,24 @@ PHQ8_Tired:
   - "hard to get going"
   - "wiped out"
   - "sluggish"
+  - "heavy limbs"
+  - "body feels heavy"
 
 PHQ8_Appetite:
   # PHQ-8 Item #5: "Poor appetite or overeating"
-  # Target: appetite change in either direction; avoid generic "eat/weight"
-  # Note: "eat/eating" removed due to substring collision ("grEAT", "crEATE").
+  # Target: Appetite change in either direction; avoid generic "eat/weight"
+  # Note: "binge" removed (matches "binge watch"), "starving" removed (hyperbolic).
   - "no appetite"
   - "lost my appetite"
   - "lost appetite"
   - "poor appetite"
   - "appetite is down"
+  - "appetite decreased"
   - "not hungry"
   - "can't eat"
   - "cant eat"
   - "barely eating"
+  - "not eating"
   - "eating less"
   - "eat less"
   - "skipping meals"
@@ -167,6 +230,13 @@ PHQ8_Appetite:
   - "snacking a lot"
   - "comfort eating"
   - "comfort eat"
+  - "comfort food"
+  - "appetite increased"
+  - "hungry all the time"
+  - "always hungry"
+  - "binge eat"
+  - "binge eating"
+  - "binging on food"
   - "weight loss"
   - "lost weight"
   - "losing weight"
@@ -175,24 +245,27 @@ PHQ8_Appetite:
   - "gaining weight"
   - "put on weight"
   - "clothes are loose"
-  - "clothes are looser"
-  - "binge"
-  - "starving"
+  - "clothes are tighter"
+  - "clothes don't fit"
+  - "clothes dont fit"
 
 PHQ8_Failure:
   # PHQ-8 Item #6: "Feeling bad about yourself ... failure ... let yourself or your family down"
-  # Target: low self-worth / guilt / self-criticism (separate from depressed mood)
+  # Target: Low self-worth / guilt / self-criticism (separate from depressed mood)
+  # Note: Bare "failure", "burden", "loser", "fault" removed (collision risks).
   - "bad about myself"
   - "feel bad about myself"
   - "worthless"
   - "useless"
   - "feel like a failure"
-  - "i'm a failure"
+  - "am a failure"
   - "im a failure"
+  - "i'm a failure"
   - "i am a failure"
-  - "failure"
+  - "total failure"
   - "let myself down"
   - "let my family down"
+  - "let everyone down"
   - "not good enough"
   - "hate myself"
   - "ashamed"
@@ -203,31 +276,38 @@ PHQ8_Failure:
   - "self blame"
   - "self-blame"
   - "feel like a burden"
-  - "i'm a burden"
+  - "am a burden"
   - "im a burden"
+  - "i'm a burden"
   - "i am a burden"
-  - "i'm a disappointment"
+  - "am a disappointment"
   - "im a disappointment"
+  - "i'm a disappointment"
   - "i am a disappointment"
-  - "burden"
-  - "loser"
-  - "let down"
-  - "fault"
+  - "disappointment to"
+  - "a loser"
+  - "such a loser"
+  - "total loser"
+  - "real loser"
+  - "my fault"
+  - "all my fault"
+  - "it's my fault"
+  - "its my fault"
 
 PHQ8_Concentrating:
   # PHQ-8 Item #7: "Trouble concentrating on things, such as reading or watching TV"
-  # Target: sustained attention/concentration deficits, NOT memory recall
-  # Note: Added "reading" and "watching tv" per PHQ-8 question wording.
+  # Target: Sustained attention/concentration deficits, NOT memory recall
+  # Note: Bare "reading", "watch tv" removed - use difficulty phrases instead.
   - "can't concentrate"
   - "cant concentrate"
   - "trouble concentrating"
   - "difficulty concentrating"
+  - "hard to concentrate"
   - "poor concentration"
-  - "concentrat"
   - "can't focus"
   - "cant focus"
   - "hard to focus"
-  - "trouble focus"
+  - "trouble focusing"
   - "losing focus"
   - "mind wanders"
   - "mind keeps wandering"
@@ -236,30 +316,37 @@ PHQ8_Concentrating:
   - "cant pay attention"
   - "hard to pay attention"
   - "short attention span"
-  - "attention span"
   - "zone out"
+  - "zoning out"
   - "spacing out"
+  - "spaced out"
   - "lose my train of thought"
   - "lost my train of thought"
   - "brain fog"
+  - "foggy"
   - "can't think straight"
   - "cant think straight"
   - "can't follow a conversation"
   - "cant follow a conversation"
-  - "reading"
-  - "watch tv"
-  - "watching tv"
-  - "television"
+  - "trouble reading"
+  - "hard to read"
+  - "can't read"
+  - "cant read"
+  - "can't follow tv"
+  - "cant follow tv"
+  - "can't follow a show"
+  - "cant follow a show"
   - "scattered"
 
 PHQ8_Moving:
   # PHQ-8 Item #8: "Moving or speaking slowly ... Or ... fidgety/restless"
-  # Target: psychomotor retardation OR agitation (observable slowing / can't sit still)
-  # Note: "psychomotor" removed (clinical jargon patients don't use).
+  # Target: Psychomotor retardation OR agitation (observable slowing / can't sit still)
+  # Note: "stuck" removed (matches "stuck in traffic").
   - "moving slowly"
   - "move slowly"
   - "moving slow"
   - "slowed down"
+  - "slowing down"
   - "slow motion"
   - "sluggish"
   - "everything feels slow"
@@ -274,4 +361,6 @@ PHQ8_Moving:
   - "jittery"
   - "restless"
   - "jumpy"
-  - "stuck"
+  - "feel stuck"
+  - "feeling stuck"
+  - "on edge"

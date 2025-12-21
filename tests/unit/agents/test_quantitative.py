@@ -420,7 +420,7 @@ Participant: I can't fall asleep at night. I'm exhausted all the time.
 Ellie: And your appetite?
 Participant: I've lost weight recently. Don't bother eating much.
 Ellie: How is your concentration?
-Participant: I forgot what I was doing multiple times today.""",
+Participant: I have trouble focusing on anything. Can't think straight.""",
         )
 
     @pytest.mark.asyncio
