@@ -61,11 +61,20 @@ PHQ8_Failure:
   - "burden"
 
 PHQ8_Concentrating:
+  # PHQ-8 Item #7: "Trouble concentrating on things, such as reading or watching TV"
+  # Keywords target sustained attention deficits, NOT memory (different cognitive domain)
   - "concentrat"
-  - "memory"
-  - "forgot"
-  - "thinking of something else"
-  - "focus"
+  - "can't focus"
+  - "hard to focus"
+  - "trouble focus"
+  - "losing focus"
+  - "mind wanders"
+  - "distracted"
+  - "can't pay attention"
+  - "paying attention"
+  - "attention span"
+  - "zone out"
+  - "spacing out"
 
 PHQ8_Moving:
   - "moving slowly"
