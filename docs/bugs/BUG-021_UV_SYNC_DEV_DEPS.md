@@ -63,5 +63,5 @@ All commands now pass.
 
 ## References
 
-- uv documentation on extras: https://docs.astral.sh/uv/concepts/dependencies/#optional-dependencies
+- [uv optional dependencies](https://docs.astral.sh/uv/concepts/dependencies/#optional-dependencies)
 - Makefile `dev` target (line 11-13)

@@ -176,6 +176,7 @@ Each spec represents a **vertical slice** - a complete feature from API to stora
 | **12** | Observability | Metrics, tracing, health checks |
 | **12.5** | Final Cleanup | Legacy removal, cruft cleanup |
 | **13** | Structured Outputs (Pydantic AI) | Post-replication refactor for validated outputs |
+| **14** | Keyword Matching Improvements | Word-boundary regex, negation detection |
 
 ## Integration Checkpoints
 
@@ -324,7 +325,8 @@ The specs are ordered for **maximum early value** with **mandatory checkpoints**
 8. **CHECKPOINT 11.5**: Verify paper metrics reproduced
 9. **Spec 12**: Polish (observability)
 10. **CHECKPOINT 12.5**: Remove legacy code, clean codebase
-11. **Spec 13 (Optional)**: Structured outputs via Pydantic AI (post-replication enhancement)
+11. **Spec 13 (Deferred)**: Structured outputs via Pydantic AI (post-replication enhancement)
+12. **Spec 14 (Deferred)**: Word-boundary regex + negation detection (precision refinement)
 
 Each spec produces a **working increment** that can be demoed and tested.
 Each checkpoint produces a **quality gate** that must pass before proceeding.
