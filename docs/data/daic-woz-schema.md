@@ -392,12 +392,23 @@ class PHQ8Item(StrEnum):
 
 ---
 
+## Known Data Issues
+
+| Participant | Issue | Status | Reference |
+|-------------|-------|--------|-----------|
+| **487** | Corrupted transcript (AppleDouble file, not CSV) | Resolved ✓ | [BUG-022](../bugs/bug-022-corrupted-transcript-487.md) |
+
+> **Note**: Issue was caused by macOS AppleDouble extraction, not source data. Re-download and careful extraction fixed it.
+
+---
+
 ## Validation Checklist
 
 When working with data, verify:
 
 - [ ] Participant ID exists (not all 300-492 are present)
 - [ ] Transcript file is tab-separated, not comma-separated
+- [ ] Transcript is valid UTF-8 (not AppleDouble metadata)
 - [ ] Speaker column contains "Ellie" or "Participant"
 - [ ] Ground truth CSV uses `Participant_ID` (uppercase P)
 - [ ] Test split uses `participant_ID` (lowercase p)
