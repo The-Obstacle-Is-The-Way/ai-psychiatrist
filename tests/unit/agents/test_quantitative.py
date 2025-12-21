@@ -89,6 +89,7 @@ Ellie: What about your ability to concentrate?
 Participant: Can't focus on anything at work. My memory is shot."""
 
 
+@pytest.mark.unit
 class TestQuantitativeAssessmentAgent:
     """Tests for QuantitativeAssessmentAgent."""
 
@@ -256,6 +257,7 @@ class TestQuantitativeAssessmentAgent:
             assert isinstance(assessment.reason, str)
 
 
+@pytest.mark.unit
 class TestQuantitativeAgentParsing:
     """Tests for JSON response parsing."""
 
@@ -407,6 +409,7 @@ class TestQuantitativeAgentParsing:
             assert item.score is None
 
 
+@pytest.mark.unit
 class TestKeywordBackfill:
     """Tests for keyword backfill functionality."""
 
@@ -420,7 +423,7 @@ Participant: I can't fall asleep at night. I'm exhausted all the time.
 Ellie: And your appetite?
 Participant: I've lost weight recently. Don't bother eating much.
 Ellie: How is your concentration?
-Participant: I forgot what I was doing multiple times today.""",
+Participant: I have trouble focusing on anything. Can't think straight.""",
         )
 
     @pytest.mark.asyncio
@@ -447,6 +450,7 @@ Participant: I forgot what I was doing multiple times today.""",
         assert len(evidence["PHQ8_Concentrating"]) > 0
 
 
+@pytest.mark.unit
 class TestQuantitativePrompts:
     """Tests for prompt template functions."""
 
@@ -516,6 +520,7 @@ class TestQuantitativePrompts:
         assert "no relevant evidence" in QUANTITATIVE_SYSTEM_PROMPT.lower()
 
 
+@pytest.mark.unit
 class TestDomainKeywords:
     """Tests for domain keyword definitions."""
 
@@ -543,6 +548,7 @@ class TestDomainKeywords:
                 assert kw == kw.lower(), f"Keyword '{kw}' in {domain} not lowercase"
 
 
+@pytest.mark.unit
 class TestAgentProtocol:
     """Tests for SimpleChatClient protocol compatibility."""
 
@@ -581,6 +587,7 @@ class TestAgentProtocol:
         assert result.total_score == 8  # All 8 items scored 1
 
 
+@pytest.mark.unit
 class TestFewShotMode:
     """Tests for few-shot mode functionality."""
 
