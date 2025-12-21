@@ -457,6 +457,9 @@ class TestOllamaClientSimpleMethods:
 
         assert result == "response"
         assert route.called
+        timeout = route.calls[0].request.extensions.get("timeout")
+        assert isinstance(timeout, dict)
+        assert timeout.get("read") == 30
 
         await ollama_client.close()
 
@@ -481,7 +484,7 @@ class TestOllamaClientSimpleMethods:
     @pytest.mark.asyncio
     async def test_simple_embed(self, ollama_client: OllamaClient) -> None:
         """simple_embed should return normalized embedding."""
-        respx.post("http://localhost:11434/api/embeddings").mock(
+        route = respx.post("http://localhost:11434/api/embeddings").mock(
             return_value=httpx.Response(
                 200,
                 json={"embedding": [3.0, 4.0]},
@@ -491,6 +494,10 @@ class TestOllamaClientSimpleMethods:
         result = await ollama_client.simple_embed("test text")
 
         assert result == pytest.approx((0.6, 0.8))
+        assert route.called
+        timeout = route.calls[0].request.extensions.get("timeout")
+        assert isinstance(timeout, dict)
+        assert timeout.get("read") == 30
 
         await ollama_client.close()
 

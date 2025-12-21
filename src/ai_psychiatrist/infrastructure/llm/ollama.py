@@ -317,6 +317,7 @@ class OllamaClient:
             temperature=temperature,
             top_k=top_k,
             top_p=top_p,
+            timeout_seconds=self._default_timeout,
         )
         response = await self.chat(request)
         return response.content
@@ -341,6 +342,7 @@ class OllamaClient:
             text=text,
             model=model or "qwen3-embedding:8b",
             dimension=dimension,
+            timeout_seconds=self._default_timeout,
         )
         response = await self.embed(request)
         return response.embedding
