@@ -43,7 +43,7 @@ with self._embeddings_path.open("rb") as f:
 - Not exposed to untrusted data in normal operation
 - Would require attacker to have filesystem write access
 
-**Recommendation**: Consider migrating to SafeTensors/NPZ for embeddings in future.
+**Recommendation**: Consider migrating to SafeTensors/NPZ for embeddings in the future.
 **Priority**: P2 (technical debt, not security emergency)
 
 ---
