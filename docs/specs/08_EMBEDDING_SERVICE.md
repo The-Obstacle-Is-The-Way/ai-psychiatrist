@@ -494,7 +494,7 @@ class ReferenceStore:
 
         # Fail loudly if ALL embeddings are mismatched (BUG-009 fix)
         if total_chunks > 0 and skipped_chunks == total_chunks:
-            raise EmbeddingDimensionMismatchError(expected=self._dimension, actual=0)
+            raise EmbeddingDimensionMismatchError(expected=self._dimension, actual=actual_dim_sample)
 
         if skipped_chunks > 0:
             logger.error(

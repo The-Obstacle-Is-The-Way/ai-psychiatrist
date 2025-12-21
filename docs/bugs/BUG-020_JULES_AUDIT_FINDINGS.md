@@ -41,7 +41,7 @@ The original audit contained some false/outdated claims which have been correcte
 - Updated `ReferenceStore` to load new format
 
 **New Format**:
-```
+```text
 data/embeddings/reference_embeddings.npz   # Embeddings as numpy arrays
 data/embeddings/reference_embeddings.json  # Text chunks
 ```

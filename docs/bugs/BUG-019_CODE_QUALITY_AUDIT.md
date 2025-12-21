@@ -234,7 +234,7 @@ is needed outside the API layer in the future, consider promoting it to `config.
 - Updated `scripts/generate_embeddings.py` to produce new format
 - Updated `ReferenceStore` to load new format
 
-```
+```text
 # New format:
 data/embeddings/reference_embeddings.npz   # Embeddings as numpy arrays
 data/embeddings/reference_embeddings.json  # Text chunks
