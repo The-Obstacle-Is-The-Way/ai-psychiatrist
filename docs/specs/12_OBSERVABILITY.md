@@ -1,5 +1,19 @@
 # Spec 12: Observability
 
+> **STATUS: DEFERRED**
+>
+> This spec is deferred until real E2E testing with actual models is complete.
+> The core pipeline (Specs 01-11.5) is fully implemented and working. Basic
+> structured logging via `structlog` is already in place. Full observability
+> (Prometheus metrics, OpenTelemetry tracing, health endpoints) will be added
+> when preparing for production deployment.
+>
+> **Tracked by**: [GitHub Issue #18](https://github.com/trendscenter/ai-psychiatrist/issues/18)
+>
+> **Last Updated**: 2025-12-21
+
+---
+
 ## Objective
 
 Implement comprehensive observability infrastructure including metrics, distributed tracing, and health checks for production deployment.

@@ -1,5 +1,18 @@
 # Spec 13: Structured Output Migration (Pydantic AI)
 
+> **STATUS: DEFERRED**
+>
+> This spec is deferred until paper replication is fully validated with real
+> E2E testing. The current XML-based parsing pipeline is complete and working.
+> Pydantic AI migration will provide cleaner, validated outputs but is not
+> required for core functionality.
+>
+> **Tracked by**: [GitHub Issue #19](https://github.com/trendscenter/ai-psychiatrist/issues/19)
+>
+> **Last Updated**: 2025-12-21
+
+---
+
 ## Objective
 
 Introduce an **optional, post-replication** path that uses Pydantic AI to obtain
