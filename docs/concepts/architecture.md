@@ -137,7 +137,7 @@ Type-safe constants for domain concepts.
 
 | Enum | Values |
 |------|--------|
-| `PHQ8Item` | `NO_INTEREST`, `DEPRESSED`, `SLEEP`, `TIRED`, `APPETITE`, `FAILURE`, `CONCENTRATING`, `MOVING` |
+| `PHQ8Item` | `NO_INTEREST ("NoInterest")`, `DEPRESSED ("Depressed")`, `SLEEP ("Sleep")`, `TIRED ("Tired")`, `APPETITE ("Appetite")`, `FAILURE ("Failure")`, `CONCENTRATING ("Concentrating")`, `MOVING ("Moving")` |
 | `PHQ8Score` | `NOT_AT_ALL (0)`, `SEVERAL_DAYS (1)`, `MORE_THAN_HALF (2)`, `NEARLY_EVERY_DAY (3)` |
 | `SeverityLevel` | `MINIMAL`, `MILD`, `MODERATE`, `MOD_SEVERE`, `SEVERE` |
 | `EvaluationMetric` | `COHERENCE`, `COMPLETENESS`, `SPECIFICITY`, `ACCURACY` |
@@ -258,8 +258,8 @@ External system integrations.
 HTTP client for Ollama LLM API.
 
 **Implements:**
-- `SimpleChatClient` protocol (chat completions)
-- `SimpleEmbeddingClient` protocol (embedding generation)
+- `ChatClient` / `EmbeddingClient` / `LLMClient` protocols in `llm/protocols.py`
+- Convenience helpers `simple_chat()` / `simple_embed()` used by agents/services
 
 **Features:**
 - Configurable timeout (default: 180s)
@@ -271,25 +271,20 @@ HTTP client for Ollama LLM API.
 Type-safe abstractions for LLM clients.
 
 ```python
-class SimpleChatClient(Protocol):
-    async def simple_chat(
-        self,
-        user_prompt: str,
-        system_prompt: str | None = None,
-        model: str | None = None,
-        temperature: float = 0.2,
-        top_k: int = 20,
-        top_p: float = 0.8,
-    ) -> str: ...
+class ChatClient(Protocol):
+    async def chat(self, request: ChatRequest) -> ChatResponse: ...
 
-class SimpleEmbeddingClient(Protocol):
-    async def simple_embed(
-        self,
-        text: str,
-        model: str | None = None,
-        dimension: int | None = None,
-    ) -> tuple[float, ...]: ...
+class EmbeddingClient(Protocol):
+    async def embed(self, request: EmbeddingRequest) -> EmbeddingResponse: ...
+
+class LLMClient(ChatClient, EmbeddingClient, Protocol):
+    pass
 ```
+
+For the common “single prompt → text response” path, we also define a lightweight
+`SimpleChatClient` protocol in `llm/responses.py` (used by several agents). The
+concrete `OllamaClient` supports both the full request/response APIs and these
+convenience helpers.
 
 ---
 
@@ -397,4 +392,4 @@ mock_agent.assess.return_value = ...  # Don't do this
 
 - [Pipeline](pipeline.md) - How agents collaborate
 - [Configuration](../reference/configuration.md) - All settings
-- [Specs Overview](../specs/00_OVERVIEW.md) - Implementation details
+- [Specs Overview](../specs/00-overview.md) - Implementation details

@@ -259,6 +259,11 @@ The paper creates a custom 58/43/41 split from the 142 labeled participants:
 
 **Implementation**: See `scripts/generate_embeddings.py` for split logic.
 
+**Current implementation note**: `scripts/generate_embeddings.py` currently uses the
+official **AVEC2017 train split only** (107 participants) for the reference store to
+avoid data leakage. The paper’s custom 58/43/41 re-split is not yet implemented in
+the modern code path.
+
 ---
 
 ## Embeddings Format
@@ -273,38 +278,29 @@ data/embeddings/
 
 ### NPZ Format
 
-Contains numpy arrays:
+The NPZ stores one array per participant:
 
-| Key | Shape | Description |
-|-----|-------|-------------|
-| `embeddings` | (N, 4096) | Embedding vectors |
-| `participant_ids` | (N,) | Source participant IDs |
-| `item_indices` | (N,) | PHQ-8 item index (0-7) |
-| `scores` | (N,) | Ground truth scores (0-3) |
+- Key: `emb_{participant_id}` (example: `emb_300`)
+- Value: `float32` array of shape `(num_chunks, EMBEDDING_DIMENSION)`
+
+This matches `ReferenceStore._load_embeddings()` in `src/ai_psychiatrist/services/reference_store.py`.
 
 ### JSON Sidecar
 
 ```json
 {
-  "model": "qwen3-embedding:8b",
-  "dimension": 4096,
-  "chunk_size": 8,
-  "chunk_step": 2,
-  "created_at": "2025-12-21T10:00:00Z",
-  "participant_count": 58,
-  "total_embeddings": 1856,
-  "chunks": [
-    {
-      "participant_id": 300,
-      "item": "NO_INTEREST",
-      "score": 0,
-      "text": "Ellie: how are you doing...",
-      "embedding_index": 0
-    },
-    ...
-  ]
+  "300": [
+    "Ellie: ...\nParticipant: ...",
+    "Ellie: ...\nParticipant: ...",
+    "... (chunk text strings in the same order as the NPZ rows)"
+  ],
+  "301": ["..."],
+  "...": ["..."]
 }
 ```
+
+The JSON maps participant ID (string) → list of chunk texts. The list order must match
+the corresponding NPZ array row order for that participant.
 
 ### Configuration
 
@@ -384,14 +380,14 @@ class PHQ8Assessment:
 
 ```python
 class PHQ8Item(StrEnum):
-    NO_INTEREST = "NO_INTEREST"      # Item 1
-    DEPRESSED = "DEPRESSED"          # Item 2
-    SLEEP = "SLEEP"                  # Item 3
-    TIRED = "TIRED"                  # Item 4
-    APPETITE = "APPETITE"            # Item 5
-    FAILURE = "FAILURE"              # Item 6
-    CONCENTRATING = "CONCENTRATING"  # Item 7
-    MOVING = "MOVING"                # Item 8
+    NO_INTEREST = "NoInterest"      # Item 1
+    DEPRESSED = "Depressed"         # Item 2
+    SLEEP = "Sleep"                 # Item 3
+    TIRED = "Tired"                 # Item 4
+    APPETITE = "Appetite"           # Item 5
+    FAILURE = "Failure"             # Item 6
+    CONCENTRATING = "Concentrating" # Item 7
+    MOVING = "Moving"               # Item 8
 ```
 
 ---
@@ -412,7 +408,7 @@ When working with data, verify:
 
 ## See Also
 
-- [Spec 04A: Data Organization](../specs/04A_DATA_ORGANIZATION.md) - Implementation details
-- [Spec 05: Transcript Service](../specs/05_TRANSCRIPT_SERVICE.md) - Loading logic
-- [Spec 08: Embedding Service](../specs/08_EMBEDDING_SERVICE.md) - Few-shot retrieval
-- [Model Registry](../models/MODEL_REGISTRY.md) - Embedding model options
+- [Legacy Spec 04A: Data Organization](../archive/specs/04A_DATA_ORGANIZATION.md) - Data preparation details
+- [Legacy Spec 05: Transcript Service](../archive/specs/05_TRANSCRIPT_SERVICE.md) - Loading logic
+- [Legacy Spec 08: Embedding Service](../archive/specs/08_EMBEDDING_SERVICE.md) - Few-shot retrieval
+- [Model Registry](../models/model-registry.md) - Embedding model options

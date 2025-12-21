@@ -127,7 +127,14 @@ curl -X POST http://localhost:8000/full_pipeline \
   },
   "qualitative": {
     "overall": "The participant shows clear signs of depression including anhedonia and fatigue...",
-    "phq8_symptoms": "Reports loss of interest, low mood, and severe fatigue..."
+    "phq8_symptoms": "Reports loss of interest, low mood, and severe fatigue...",
+    "social_factors": "Social context and support factors...",
+    "biological_factors": "Biological/medical factors...",
+    "risk_factors": "Risk factors and stressors...",
+    "supporting_quotes": [
+      "I have been feeling really down lately.",
+      "I just do not have energy for anything."
+    ]
   },
   "evaluation": {
     "coherence": 4,
@@ -147,6 +154,7 @@ curl -X POST http://localhost:8000/full_pipeline \
 ```
 
 > **Note:** When using `transcript_text`, the system assigns a placeholder `participant_id` of 999999.
+> Internally this is represented as `999_999` (`server.py` constant `AD_HOC_PARTICIPANT_ID`).
 
 ---
 
@@ -157,7 +165,7 @@ If you have access to the DAIC-WOZ dataset:
 ### 1. Prepare the Data
 
 ```bash
-python scripts/prepare_dataset.py --input /path/to/daic-woz --output data/
+uv run python scripts/prepare_dataset.py --downloads-dir /path/to/downloads --output-dir data
 ```
 
 This extracts transcripts and ground truth files.
@@ -165,10 +173,10 @@ This extracts transcripts and ground truth files.
 ### 2. Generate Embeddings (Optional, for Few-Shot Mode)
 
 ```bash
-python scripts/generate_embeddings.py
+uv run python scripts/generate_embeddings.py
 ```
 
-Creates `data/embeddings/reference_embeddings.npz`.
+Creates `data/embeddings/reference_embeddings.npz` and `data/embeddings/reference_embeddings.json`.
 
 ### 3. Assess a Participant
 

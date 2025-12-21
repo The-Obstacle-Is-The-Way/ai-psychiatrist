@@ -56,7 +56,7 @@ AI Psychiatrist is a production-ready implementation of a research paper that us
 
 | Document | Description |
 |----------|-------------|
-| [Future Architecture](architecture/future-architecture.md) | Pydantic AI + LangGraph integration roadmap |
+| [Future Architecture](concepts/future-architecture.md) | Pydantic AI + LangGraph integration roadmap |
 
 ---
 
@@ -133,7 +133,7 @@ This codebase is a **production-ready refactor** of the original research implem
 - Clean architecture with dependency injection
 - Structured logging for observability
 - Comprehensive configuration management
-- Docker-ready deployment
+- Local-first deployment (Ollama + FastAPI); containerization TBD
 
 ---
 

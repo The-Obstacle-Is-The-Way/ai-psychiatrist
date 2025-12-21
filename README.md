@@ -86,7 +86,7 @@ curl -X POST http://localhost:8000/full_pipeline \
 | Document | Description |
 |----------|-------------|
 | [**CLAUDE.md**](CLAUDE.md) | Development guidelines |
-| [**Specs**](docs/specs/00_OVERVIEW.md) | Implementation specifications |
+| [**Specs**](docs/specs/00-overview.md) | Implementation specifications |
 | [**Data Schema**](docs/data/daic-woz-schema.md) | Dataset format documentation |
 
 ---
