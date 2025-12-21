@@ -52,6 +52,12 @@ AI Psychiatrist is a production-ready implementation of a research paper that us
 |----------|-------------|
 | [DAIC-WOZ Schema](data/daic-woz-schema.md) | Dataset schema for development without data access |
 
+### Architecture Evolution
+
+| Document | Description |
+|----------|-------------|
+| [Future Architecture](architecture/future-architecture.md) | Pydantic AI + LangGraph integration roadmap |
+
 ---
 
 ## System Overview
