@@ -5,11 +5,35 @@ from __future__ import annotations
 import importlib.util
 import zipfile
 from pathlib import Path
+from typing import TYPE_CHECKING, Any, Protocol, cast
 
 import pytest
 
+if TYPE_CHECKING:
+    from collections.abc import Callable
 
-def _load_prepare_dataset_module() -> object:
+
+class ExtractTranscriptsFn(Protocol):
+    """Callable type for extract_transcripts (supports keyword args)."""
+
+    def __call__(
+        self,
+        downloads_dir: Path,
+        output_dir: Path,
+        include_audio: bool = False,
+    ) -> dict[str, int]: ...
+
+
+class PrepareDatasetModule(Protocol):
+    """Type contract for scripts/prepare_dataset.py loaded dynamically."""
+
+    HAS_PANDAS: bool
+    extract_transcripts: ExtractTranscriptsFn
+    copy_split_csvs: Callable[[Path, Path], int]
+    validate_dataset: Callable[[Path], dict[str, Any]]
+
+
+def _load_prepare_dataset_module() -> PrepareDatasetModule:
     """Load scripts/prepare_dataset.py as a module for testing."""
     script_path = Path(__file__).resolve().parents[3] / "scripts" / "prepare_dataset.py"
     spec = importlib.util.spec_from_file_location("prepare_dataset", script_path)
@@ -17,7 +41,7 @@ def _load_prepare_dataset_module() -> object:
         raise RuntimeError("Unable to load prepare_dataset.py")
     module = importlib.util.module_from_spec(spec)
     spec.loader.exec_module(module)
-    return module
+    return cast("PrepareDatasetModule", module)
 
 
 class TestDatasetPreparation:

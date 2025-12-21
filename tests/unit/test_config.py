@@ -8,6 +8,7 @@ from __future__ import annotations
 
 import os
 from pathlib import Path
+from typing import Literal
 
 import pytest
 
@@ -196,7 +197,12 @@ class TestLoggingSettings:
 
     def test_level_validation(self) -> None:
         """Level must be valid log level."""
-        for level in ["DEBUG", "INFO", "WARNING", "ERROR", "CRITICAL"]:
+        valid_levels: tuple[
+            Literal["DEBUG", "INFO", "WARNING", "ERROR", "CRITICAL"],
+            ...,
+        ] = ("DEBUG", "INFO", "WARNING", "ERROR", "CRITICAL")
+
+        for level in valid_levels:
             settings = LoggingSettings(level=level)
             assert settings.level == level
 

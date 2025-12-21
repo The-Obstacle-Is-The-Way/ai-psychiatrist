@@ -96,7 +96,7 @@ def sample_phq8_scores() -> dict[str, int]:
 
 
 @pytest.fixture
-def sample_ollama_response() -> dict:
+def sample_ollama_response() -> dict[str, object]:
     """Return sample Ollama API response structure for testing.
 
     NOTE: This is TEST DATA, not a mock. We use real data structures to test

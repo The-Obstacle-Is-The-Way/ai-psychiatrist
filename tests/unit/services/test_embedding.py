@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import pickle
+from typing import TYPE_CHECKING
 from unittest.mock import MagicMock
 
 import numpy as np
@@ -16,6 +17,9 @@ from ai_psychiatrist.domain.value_objects import SimilarityMatch, TranscriptChun
 from ai_psychiatrist.services.embedding import EmbeddingService, ReferenceBundle
 from ai_psychiatrist.services.reference_store import PHQ8_COLUMN_MAP, ReferenceStore
 from tests.fixtures.mock_llm import MockLLMClient
+
+if TYPE_CHECKING:
+    from pathlib import Path
 
 
 class TestReferenceBundle:
@@ -316,7 +320,7 @@ class TestReferenceStore:
     """Tests for ReferenceStore."""
 
     @pytest.fixture
-    def mock_data_settings(self, tmp_path) -> DataSettings:
+    def mock_data_settings(self, tmp_path: Path) -> DataSettings:
         """Create data settings with temporary paths."""
         transcripts_dir = tmp_path / "transcripts"
         transcripts_dir.mkdir(parents=True, exist_ok=True)
@@ -526,7 +530,7 @@ class TestSimilarityMatchValidation:
 class TestEmbeddingDimensionMismatch:
     """Tests for BUG-009: Dimension mismatch handling."""
 
-    def test_all_embeddings_mismatched_raises_error(self, tmp_path) -> None:
+    def test_all_embeddings_mismatched_raises_error(self, tmp_path: Path) -> None:
         """Should raise EmbeddingDimensionMismatchError when ALL embeddings are too short."""
         # Create embeddings with dimension 2 when we expect 256
         raw_data = {
@@ -560,7 +564,7 @@ class TestEmbeddingDimensionMismatch:
         assert excinfo.value.expected == 256
         assert excinfo.value.actual == 2
 
-    def test_partial_mismatch_skips_bad_embeddings(self, tmp_path) -> None:
+    def test_partial_mismatch_skips_bad_embeddings(self, tmp_path: Path) -> None:
         """Should skip embeddings that are too short and keep valid ones."""
         # Mix of valid and invalid embeddings
         raw_data = {
@@ -593,7 +597,7 @@ class TestEmbeddingDimensionMismatch:
         assert 100 not in embeddings  # Participant 100 had no valid embeddings
         assert len(embeddings[101]) == 1
 
-    def test_embedding_truncation(self, tmp_path) -> None:
+    def test_embedding_truncation(self, tmp_path: Path) -> None:
         """Should truncate embeddings to configured dimension."""
         # Embedding with 10 dimensions
         raw_data = {

@@ -7,6 +7,7 @@ from __future__ import annotations
 
 import json
 import logging
+from typing import cast
 
 import pytest
 
@@ -29,7 +30,9 @@ pytestmark = [
 def _read_json_log(capsys: pytest.CaptureFixture[str]) -> dict[str, object]:
     output = capsys.readouterr().out.strip().splitlines()
     assert output, "No log output captured"
-    return json.loads(output[-1])
+    payload = json.loads(output[-1])
+    assert isinstance(payload, dict)
+    return cast("dict[str, object]", payload)
 
 
 class TestLoggingSetup:
