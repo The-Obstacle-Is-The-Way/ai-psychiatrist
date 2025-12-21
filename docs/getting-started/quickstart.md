@@ -102,11 +102,10 @@ The API will be available at `http://localhost:8000`.
 ### Using the API
 
 ```bash
-curl -X POST http://localhost:8000/assess \
+curl -X POST http://localhost:8000/full_pipeline \
   -H "Content-Type: application/json" \
   -d '{
-    "participant_id": 300,
-    "transcript": "Ellie: How are you doing today?\nParticipant: I have been feeling really down lately.\nEllie: Can you tell me more about that?\nParticipant: I just do not have energy for anything. I used to love hiking but now I cannot even get out of bed some days."
+    "transcript_text": "Ellie: How are you doing today?\nParticipant: I have been feeling really down lately.\nEllie: Can you tell me more about that?\nParticipant: I just do not have energy for anything. I used to love hiking but now I cannot even get out of bed some days."
   }'
 ```
 
@@ -114,22 +113,40 @@ curl -X POST http://localhost:8000/assess \
 
 ```json
 {
-  "participant_id": 300,
-  "severity": "MODERATE",
-  "phq8_total": 12,
-  "phq8_items": {
-    "NO_INTEREST": 2,
-    "DEPRESSED": 2,
-    "SLEEP": null,
-    "TIRED": 3,
-    "APPETITE": null,
-    "FAILURE": null,
-    "CONCENTRATING": null,
-    "MOVING": null
+  "participant_id": 999999,
+  "mode": "few_shot",
+  "quantitative": {
+    "total_score": 12,
+    "severity": "MODERATE",
+    "na_count": 4,
+    "items": {
+      "NoInterest": {"score": 2, "evidence": "I used to love hiking but now I cannot even get out of bed", "reason": "Clear anhedonia"},
+      "Depressed": {"score": 2, "evidence": "I have been feeling really down lately", "reason": "Direct statement"},
+      "Tired": {"score": 3, "evidence": "I just do not have energy for anything", "reason": "Severe fatigue"}
+    }
   },
-  "explanation": "The participant shows clear signs of anhedonia and fatigue..."
+  "qualitative": {
+    "overall": "The participant shows clear signs of depression including anhedonia and fatigue...",
+    "phq8_symptoms": "Reports loss of interest, low mood, and severe fatigue..."
+  },
+  "evaluation": {
+    "coherence": 4,
+    "completeness": 4,
+    "specificity": 4,
+    "accuracy": 4,
+    "average_score": 4.0,
+    "iteration": 0
+  },
+  "meta_review": {
+    "severity": 2,
+    "severity_label": "MODERATE",
+    "explanation": "Based on PHQ-8 scores and qualitative assessment...",
+    "is_mdd": true
+  }
 }
 ```
+
+> **Note:** When using `transcript_text`, the system assigns a placeholder `participant_id` of 999999.
 
 ---
 
@@ -156,7 +173,9 @@ Creates `data/embeddings/reference_embeddings.npz`.
 ### 3. Assess a Participant
 
 ```bash
-curl -X POST http://localhost:8000/assess/300
+curl -X POST http://localhost:8000/full_pipeline \
+  -H "Content-Type: application/json" \
+  -d '{"participant_id": 300}'
 ```
 
 Uses the transcript from `data/transcripts/300_P/300_TRANSCRIPT.csv`.

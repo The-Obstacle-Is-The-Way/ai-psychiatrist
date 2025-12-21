@@ -6,7 +6,7 @@ REST API endpoints for AI Psychiatrist.
 
 ## Overview
 
-The API is built with FastAPI and provides endpoints for depression assessment from interview transcripts.
+The API is built with FastAPI and provides endpoints for depression assessment from interview transcripts. The main server is implemented in `server.py` at the project root.
 
 **Base URL:** `http://localhost:8000` (default)
 
@@ -29,82 +29,91 @@ Check API and Ollama connectivity.
 ```json
 {
   "status": "healthy",
-  "ollama": "connected",
-  "models": ["gemma3:27b", "alibayram/medgemma:27b", "qwen3-embedding:8b"]
+  "ollama": true
 }
 ```
 
 **Status Codes:**
 - `200 OK`: System healthy
-- `503 Service Unavailable`: Ollama not reachable
+- `200 OK` with `"status": "degraded"`: Ollama not reachable
 
 ---
 
-### Full Assessment
+### Full Pipeline Assessment
 
-#### `POST /assess`
+#### `POST /full_pipeline`
 
-Run complete 4-agent pipeline on a transcript.
+Run complete 4-agent pipeline on a transcript. This is the recommended endpoint for full assessments as it includes:
+1. Qualitative assessment with feedback loop (Section 2.3.1-2.3.2)
+2. Quantitative PHQ-8 assessment (Section 2.3.3)
+3. Meta-review integration (Section 2.3.4)
 
 **Request Body:**
 ```json
 {
   "participant_id": 300,
-  "transcript": "Ellie: How are you doing today?\nParticipant: I have been feeling really down lately..."
+  "transcript_text": null,
+  "mode": null
 }
 ```
 
 | Field | Type | Required | Description |
 |-------|------|----------|-------------|
-| `participant_id` | int | Yes | Unique participant identifier |
-| `transcript` | string | Yes | Interview transcript text |
+| `participant_id` | int \| null | No* | DAIC-WOZ participant ID (loads transcript from file) |
+| `transcript_text` | string \| null | No* | Raw transcript text (alternative to participant_id) |
+| `mode` | int \| null | No | 0=zero-shot, 1=few-shot. If null, uses `settings.enable_few_shot` |
+
+*One of `participant_id` or `transcript_text` must be provided.
 
 **Response:**
 ```json
 {
   "participant_id": 300,
-  "severity": "MODERATE",
-  "severity_level": 2,
-  "is_mdd": true,
-  "phq8": {
+  "mode": "few_shot",
+  "quantitative": {
     "total_score": 12,
+    "severity": "MODERATE",
+    "na_count": 3,
     "items": {
-      "NO_INTEREST": {
+      "NoInterest": {
         "score": 2,
         "evidence": "i don't enjoy anything anymore",
         "reason": "Clear anhedonia expressed"
       },
-      "DEPRESSED": {
+      "Depressed": {
         "score": 2,
         "evidence": "feeling really down",
         "reason": "Direct statement of depressed mood"
       },
-      "SLEEP": {
+      "Sleep": {
         "score": null,
         "evidence": "No relevant evidence found",
         "reason": "Not discussed in transcript"
       }
-    },
-    "available_count": 5,
-    "na_count": 3
+    }
   },
   "qualitative": {
     "overall": "Participant shows moderate depressive symptoms...",
     "phq8_symptoms": "Reports anhedonia and low mood...",
     "social_factors": "Limited social support network...",
     "biological_factors": "No family history mentioned...",
-    "risk_factors": "Recent job loss identified..."
+    "risk_factors": "Recent job loss identified...",
+    "supporting_quotes": ["i don't enjoy anything anymore", "feeling really down"]
   },
   "evaluation": {
     "coherence": 4,
     "completeness": 4,
     "specificity": 4,
     "accuracy": 4,
-    "average": 4.0,
-    "iterations_used": 1
+    "average_score": 4.0,
+    "iteration": 1
   },
-  "explanation": "Based on the qualitative assessment and PHQ-8 scores...",
-  "processing_time_seconds": 45.2
+  "meta_review": {
+    "severity": 2,
+    "severity_label": "MODERATE",
+    "explanation": "Based on the qualitative assessment and PHQ-8 scores...",
+    "is_mdd": true
+  }
 }
 ```
 
@@ -112,44 +121,60 @@ Run complete 4-agent pipeline on a transcript.
 
 | Field | Type | Description |
 |-------|------|-------------|
-| `severity` | string | `MINIMAL`, `MILD`, `MODERATE`, `MOD_SEVERE`, `SEVERE` |
-| `severity_level` | int | 0-4 numeric level |
-| `is_mdd` | bool | Major Depressive Disorder indicator (score ≥ 10) |
-| `phq8.total_score` | int | Sum of item scores (0-24) |
-| `phq8.items` | object | Per-item assessment details |
+| `mode` | string | `zero_shot` or `few_shot` |
+| `quantitative.severity` | string | `MINIMAL`, `MILD`, `MODERATE`, `MOD_SEVERE`, `SEVERE` |
+| `quantitative.total_score` | int | Sum of item scores (0-24) |
+| `quantitative.na_count` | int | Number of items without scores |
 | `qualitative` | object | Narrative assessment sections |
-| `evaluation` | object | Judge agent scores |
-| `explanation` | string | Meta-review reasoning |
+| `evaluation` | object | Judge agent scores (1-5 Likert scale) |
+| `meta_review.severity` | int | Final severity level (0-4) |
+| `meta_review.is_mdd` | bool | Major Depressive Disorder indicator (severity >= 2) |
 
 **Status Codes:**
 - `200 OK`: Assessment complete
-- `400 Bad Request`: Invalid transcript format
+- `400 Bad Request`: Invalid request (missing transcript)
 - `500 Internal Server Error`: LLM or processing error
-- `504 Gateway Timeout`: Ollama timeout
 
 ---
 
-### Assess by Participant ID
+### Quantitative Assessment Only
 
-#### `POST /assess/{participant_id}`
+#### `POST /assess/quantitative`
 
-Assess transcript from data directory.
+Run only the quantitative assessment agent (PHQ-8 scoring).
 
-**Path Parameters:**
-- `participant_id` (int): DAIC-WOZ participant ID (e.g., 300, 402)
+**Request Body:**
+```json
+{
+  "participant_id": 300,
+  "transcript_text": null,
+  "mode": 1
+}
+```
 
-**Request Body:** None (uses transcript from `data/transcripts/{id}_P/{id}_TRANSCRIPT.csv`)
+| Field | Type | Required | Description |
+|-------|------|----------|-------------|
+| `participant_id` | int \| null | No* | DAIC-WOZ participant ID |
+| `transcript_text` | string \| null | No* | Raw transcript text |
+| `mode` | int \| null | No | 0=zero-shot, 1=few-shot |
 
-**Response:** Same as `POST /assess`
-
-**Status Codes:**
-- `200 OK`: Assessment complete
-- `404 Not Found`: Participant transcript not found
-- `500 Internal Server Error`: Processing error
-
-**Example:**
-```bash
-curl -X POST http://localhost:8000/assess/300
+**Response:**
+```json
+{
+  "total_score": 12,
+  "severity": "MODERATE",
+  "na_count": 3,
+  "items": {
+    "NoInterest": {"score": 2, "evidence": "...", "reason": "..."},
+    "Depressed": {"score": 2, "evidence": "...", "reason": "..."},
+    "Sleep": {"score": null, "evidence": "No relevant evidence found", "reason": "..."},
+    "Tired": {"score": 2, "evidence": "...", "reason": "..."},
+    "Appetite": {"score": null, "evidence": "...", "reason": "..."},
+    "Failure": {"score": 1, "evidence": "...", "reason": "..."},
+    "Concentrating": {"score": 1, "evidence": "...", "reason": "..."},
+    "Moving": {"score": null, "evidence": "...", "reason": "..."}
+  }
+}
 ```
 
 ---
@@ -158,105 +183,54 @@ curl -X POST http://localhost:8000/assess/300
 
 #### `POST /assess/qualitative`
 
-Run only the qualitative assessment agent (with optional feedback loop).
+Run only the qualitative assessment agent (single-pass, no feedback loop).
+
+> **Note:** This endpoint bypasses the FeedbackLoopService for speed. For full iterative refinement per Paper Section 2.3.1-2.3.2, use `/full_pipeline` instead.
 
 **Request Body:**
 ```json
 {
   "participant_id": 300,
-  "transcript": "...",
-  "enable_feedback_loop": true
+  "transcript_text": null
 }
 ```
 
 **Response:**
 ```json
 {
-  "participant_id": 300,
-  "assessment": {
-    "overall": "...",
-    "phq8_symptoms": "...",
-    "social_factors": "...",
-    "biological_factors": "...",
-    "risk_factors": "..."
-  },
-  "evaluation": {
-    "coherence": 4,
-    "completeness": 4,
-    "specificity": 5,
-    "accuracy": 4,
-    "iterations_used": 2
-  }
+  "overall": "The participant shows signs of moderate depression...",
+  "phq8_symptoms": "Anhedonia (several days), low mood (most days)...",
+  "social_factors": "Limited support network, lives alone...",
+  "biological_factors": "No family history mentioned...",
+  "risk_factors": "Recent stressors including job loss...",
+  "supporting_quotes": ["i don't enjoy anything anymore", "feeling really down"]
 }
 ```
 
 ---
 
-### Quantitative Assessment Only
+## Request Models
 
-#### `POST /assess/quantitative`
+### AssessmentRequest
 
-Run only the quantitative assessment agent.
+All assessment endpoints accept the same request model:
 
-**Request Body:**
-```json
-{
-  "participant_id": 300,
-  "transcript": "...",
-  "mode": "few_shot"
-}
+```python
+class AssessmentRequest(BaseModel):
+    participant_id: int | None = None  # DAIC-WOZ participant ID
+    transcript_text: str | None = None  # Raw transcript text
+    mode: int | None = None  # 0=zero-shot, 1=few-shot
 ```
 
-| Field | Type | Default | Options |
-|-------|------|---------|---------|
-| `mode` | string | `few_shot` | `few_shot`, `zero_shot` |
+**Transcript Resolution:**
+1. If `participant_id` is provided: Loads transcript from `data/transcripts/{id}_P/{id}_TRANSCRIPT.csv`
+2. If `transcript_text` is provided: Uses the raw text directly
+3. If neither: Returns 400 error
 
-**Response:**
-```json
-{
-  "participant_id": 300,
-  "mode": "few_shot",
-  "total_score": 12,
-  "severity": "MODERATE",
-  "items": {
-    "NO_INTEREST": {"score": 2, "evidence": "...", "reason": "..."},
-    "DEPRESSED": {"score": 2, "evidence": "...", "reason": "..."}
-  }
-}
-```
-
----
-
-### Batch Assessment
-
-#### `POST /assess/batch`
-
-Assess multiple participants in sequence.
-
-**Request Body:**
-```json
-{
-  "participant_ids": [300, 301, 302],
-  "mode": "few_shot"
-}
-```
-
-**Response:**
-```json
-{
-  "results": [
-    {"participant_id": 300, "severity": "MODERATE", "total_score": 12},
-    {"participant_id": 301, "severity": "MILD", "total_score": 7},
-    {"participant_id": 302, "severity": "SEVERE", "total_score": 21}
-  ],
-  "summary": {
-    "total": 3,
-    "completed": 3,
-    "failed": 0,
-    "processing_time_seconds": 135.6
-  }
-}
-```
+**Mode Resolution:**
+1. If `mode=0`: Zero-shot assessment
+2. If `mode=1`: Few-shot assessment with embeddings
+3. If `mode=null`: Uses `settings.enable_few_shot` (default: true)
 
 ---
 
@@ -266,59 +240,81 @@ All errors follow a consistent format:
 
 ```json
 {
-  "detail": "Error description",
-  "error_code": "ERROR_CODE",
-  "timestamp": "2025-12-21T10:00:00Z"
+  "detail": "Error description"
 }
 ```
 
-### Error Codes
+### Common Error Codes
 
-| Code | HTTP Status | Description |
-|------|-------------|-------------|
-| `TRANSCRIPT_NOT_FOUND` | 404 | Participant transcript file not found |
-| `TRANSCRIPT_EMPTY` | 400 | Transcript text is empty |
-| `INVALID_PARTICIPANT_ID` | 400 | Participant ID must be positive integer |
-| `OLLAMA_CONNECTION_ERROR` | 503 | Cannot connect to Ollama server |
-| `OLLAMA_TIMEOUT` | 504 | Ollama request timed out |
-| `LLM_ERROR` | 500 | LLM returned error or unparseable response |
-| `EMBEDDING_DIMENSION_MISMATCH` | 500 | Query/reference embedding dimensions differ |
-| `INTERNAL_ERROR` | 500 | Unexpected server error |
+| HTTP Status | Cause |
+|-------------|-------|
+| `400 Bad Request` | Missing both `participant_id` and `transcript_text` |
+| `400 Bad Request` | Failed to load transcript for participant ID |
+| `400 Bad Request` | Invalid transcript text |
+| `500 Internal Server Error` | LLM or pipeline processing error |
+| `503 Service Unavailable` | Ollama client not initialized |
 
 ---
 
-## Request/Response Models
+## Examples
 
-### TranscriptRequest
+### cURL
 
-```python
-class TranscriptRequest(BaseModel):
-    participant_id: int = Field(..., gt=0)
-    transcript: str = Field(..., min_length=10)
+```bash
+# Full pipeline assessment with participant ID
+curl -X POST http://localhost:8000/full_pipeline \
+  -H "Content-Type: application/json" \
+  -d '{"participant_id": 300}'
+
+# Full pipeline with raw transcript text
+curl -X POST http://localhost:8000/full_pipeline \
+  -H "Content-Type: application/json" \
+  -d '{
+    "transcript_text": "Ellie: How are you doing today?\nParticipant: I have been feeling really down lately."
+  }'
+
+# Quantitative-only assessment
+curl -X POST http://localhost:8000/assess/quantitative \
+  -H "Content-Type: application/json" \
+  -d '{"participant_id": 300, "mode": 1}'
+
+# Qualitative-only assessment
+curl -X POST http://localhost:8000/assess/qualitative \
+  -H "Content-Type: application/json" \
+  -d '{"participant_id": 300}'
+
+# Health check
+curl http://localhost:8000/health
 ```
 
-### AssessmentResponse
+### Python (httpx)
 
 ```python
-class AssessmentResponse(BaseModel):
-    participant_id: int
-    severity: str  # MINIMAL, MILD, MODERATE, MOD_SEVERE, SEVERE
-    severity_level: int  # 0-4
-    is_mdd: bool
-    phq8: PHQ8Response
-    qualitative: QualitativeResponse
-    evaluation: EvaluationResponse
-    explanation: str
-    processing_time_seconds: float
+import httpx
+
+async with httpx.AsyncClient(timeout=300) as client:
+    # Full pipeline
+    response = await client.post(
+        "http://localhost:8000/full_pipeline",
+        json={"participant_id": 300}
+    )
+    result = response.json()
+    print(f"Severity: {result['meta_review']['severity_label']}")
+    print(f"PHQ-8 Total: {result['quantitative']['total_score']}")
+    print(f"Is MDD: {result['meta_review']['is_mdd']}")
 ```
 
-### PHQ8ItemResponse
+### Python (requests)
 
 ```python
-class PHQ8ItemResponse(BaseModel):
-    score: int | None  # 0-3 or null for N/A
-    evidence: str
-    reason: str
+import requests
+
+response = requests.post(
+    "http://localhost:8000/full_pipeline",
+    json={"participant_id": 300},
+    timeout=300
+)
+result = response.json()
 ```
 
 ---
@@ -347,85 +343,18 @@ API_CORS_ORIGINS=["https://myapp.com", "https://admin.myapp.com"]
 
 ---
 
-## Rate Limiting
+## Timeout Considerations
 
-Not currently implemented. Consider adding for production:
-- Per-client rate limits
-- Request queuing for batch operations
-- Backpressure handling
+LLM inference can be slow, especially on first request when models are loading:
 
----
-
-## WebSocket (Future)
-
-Planned for streaming responses during long assessments:
-
-```
-WS /ws/assess/{participant_id}
-```
-
-Would stream progress updates during pipeline execution.
-
----
-
-## Examples
-
-### cURL
-
-```bash
-# Full assessment
-curl -X POST http://localhost:8000/assess \
-  -H "Content-Type: application/json" \
-  -d '{
-    "participant_id": 300,
-    "transcript": "Ellie: How are you?\nParticipant: Not great..."
-  }'
-
-# Assess by ID (transcript from data directory)
-curl -X POST http://localhost:8000/assess/300
-
-# Health check
-curl http://localhost:8000/health
-```
-
-### Python (httpx)
-
-```python
-import httpx
-
-async with httpx.AsyncClient(timeout=300) as client:
-    response = await client.post(
-        "http://localhost:8000/assess",
-        json={
-            "participant_id": 300,
-            "transcript": "Ellie: How are you?..."
-        }
-    )
-    result = response.json()
-    print(f"Severity: {result['severity']}")
-    print(f"PHQ-8 Total: {result['phq8']['total_score']}")
-```
-
-### Python (requests)
-
-```python
-import requests
-
-response = requests.post(
-    "http://localhost:8000/assess",
-    json={
-        "participant_id": 300,
-        "transcript": "Ellie: How are you?..."
-    },
-    timeout=300
-)
-result = response.json()
-```
+- **First request**: 30-60 seconds (model loading)
+- **Subsequent requests**: 45-100 seconds depending on feedback loop iterations
+- **Recommended client timeout**: 300 seconds (5 minutes)
 
 ---
 
 ## See Also
 
 - [Quickstart](../../getting-started/quickstart.md) - Getting started
-- [Configuration](../configuration.md) - API settings
+- [Configuration](../configuration.md) - API and model settings
 - [Pipeline](../../concepts/pipeline.md) - Processing flow

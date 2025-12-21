@@ -60,11 +60,10 @@ make serve
 ### Run Your First Assessment
 
 ```bash
-curl -X POST http://localhost:8000/assess \
+curl -X POST http://localhost:8000/full_pipeline \
   -H "Content-Type: application/json" \
   -d '{
-    "participant_id": 300,
-    "transcript": "Ellie: How are you doing today?\nParticipant: I have been feeling really down lately."
+    "transcript_text": "Ellie: How are you doing today?\nParticipant: I have been feeling really down lately."
   }'
 ```
 

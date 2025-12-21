@@ -76,7 +76,7 @@ src/ai_psychiatrist/
 │       ├── ollama.py      # OllamaClient implementation
 │       └── responses.py   # Response parsing utilities
 │
-└── api/                   # HTTP API (future)
+└── api/                   # HTTP API module
     └── __init__.py
 ```
 
