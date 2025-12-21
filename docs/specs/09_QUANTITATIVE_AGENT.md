@@ -148,9 +148,14 @@ class QuantitativeAssessmentAgent:
         raw = await self._llm.simple_chat(user_prompt)
         
         try:
-            # Basic JSON parsing
-            obj = json.loads(self._strip_json_block(raw))
-        except Exception:
+            clean = self._strip_json_block(raw)
+            clean = self._tolerant_fixups(clean)
+            obj = json.loads(clean)
+        except (json.JSONDecodeError, ValueError):
+            logger.warning(
+                "Failed to parse evidence JSON, using empty evidence",
+                response_preview=raw[:200] if raw else "",
+            )
             obj = {}
             
         # Clean up extraction
@@ -204,19 +209,7 @@ class QuantitativeAssessmentAgent:
         except Exception:
             pass
             
-        # Strategy 2: Extract <answer> block
-        try:
-            import re
-            m = re.search(r"<answer>\s*(\{.*?\})\s*</answer>", raw, flags=re.S)
-            if m:
-                block = m.group(1)
-                clean = self._tolerant_fixups(block)
-                data = json.loads(clean)
-                return self._validate_and_normalize(data)
-        except Exception:
-            pass
-
-        # Strategy 3: LLM Repair
+        # Strategy 2: LLM Repair
         try:
             repaired_json = await self._llm_repair(raw)
             if repaired_json:
@@ -224,7 +217,7 @@ class QuantitativeAssessmentAgent:
         except Exception:
             pass
             
-        # Fallback: Return empty skeleton
+        # Strategy 3: Fallback to empty skeleton
         logger.error("Failed to parse quantitative response after all attempts")
         return self._validate_and_normalize({})
 
@@ -381,7 +374,7 @@ Return ONLY a JSON object in <answer> tags with these exact keys:
 - [ ] Supports zero-shot and few-shot modes
 - [ ] Extracts evidence with keyword backfill (using DOMAIN_KEYWORDS)
 - [ ] Builds reference bundle for few-shot using EmbeddingService
-- [ ] Implements multi-level JSON repair (fixups -> regex -> LLM repair)
+- [ ] Implements multi-level JSON repair (strip -> fixups -> LLM repair)
 - [ ] Calculates total score and severity
 - [ ] Handles N/A scores correctly
 - [ ] Paper metrics reproducible (MAE 0.619 few-shot vs 0.796 zero-shot)

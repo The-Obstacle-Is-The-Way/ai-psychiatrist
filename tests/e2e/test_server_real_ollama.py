@@ -1,7 +1,12 @@
 from __future__ import annotations
 
+from typing import TYPE_CHECKING
+
 import httpx
 import pytest
+
+if TYPE_CHECKING:
+    from ai_psychiatrist.infrastructure.llm import OllamaClient
 
 
 @pytest.mark.e2e
@@ -10,7 +15,7 @@ import pytest
 class TestServerRealOllama:
     async def test_server_full_pipeline_transcript_text_zero_shot_real_ollama(
         self,
-        ollama_client,
+        ollama_client: OllamaClient,
         sample_transcript: str,
     ) -> None:
         import server  # noqa: PLC0415

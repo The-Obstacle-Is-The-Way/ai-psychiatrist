@@ -8,10 +8,11 @@ BUG-012, BUG-014: Fixes split-brain architecture and missing transcript issues.
 BUG-016, BUG-017: Adds MetaReviewAgent and wires FeedbackLoopService.
 """
 
+from collections.abc import AsyncIterator
 from contextlib import asynccontextmanager
-from typing import Annotated
+from typing import Annotated, Any, cast
 
-from fastapi import Depends, FastAPI, HTTPException
+from fastapi import Depends, FastAPI, HTTPException, Request
 from pydantic import BaseModel, Field
 
 from ai_psychiatrist.agents import (
@@ -27,62 +28,48 @@ from ai_psychiatrist.infrastructure.llm import OllamaClient
 from ai_psychiatrist.services import EmbeddingService, ReferenceStore, TranscriptService
 from ai_psychiatrist.services.feedback_loop import FeedbackLoopService
 
-# --- Shared State (initialized at startup) ---
-_ollama_client: OllamaClient | None = None
-_transcript_service: TranscriptService | None = None
-_embedding_service: EmbeddingService | None = None
-_feedback_loop_service: FeedbackLoopService | None = None
-_model_settings: ModelSettings | None = None
-_settings: Settings | None = None
+# Reserved participant ID for ad-hoc transcripts sent as raw text.
+# Must be positive to satisfy domain constraints (Transcript.participant_id > 0).
+AD_HOC_PARTICIPANT_ID = 999_999
 
 
 @asynccontextmanager
-async def lifespan(_app: FastAPI):
+async def lifespan(app: FastAPI) -> AsyncIterator[None]:
     """Manage application lifecycle resources."""
-    global _ollama_client, _transcript_service, _embedding_service  # noqa: PLW0603
-    global _feedback_loop_service, _model_settings, _settings  # noqa: PLW0603
-
     settings = get_settings()
-    _settings = settings
+    ollama_client = OllamaClient(settings.ollama)
+    try:
+        app.state.settings = settings
+        app.state.model_settings = settings.model
+        app.state.ollama_client = ollama_client
 
-    # Store model settings for agents
-    _model_settings = settings.model
+        app.state.transcript_service = TranscriptService(settings.data)
 
-    # Initialize OllamaClient
-    _ollama_client = OllamaClient(settings.ollama)
+        reference_store = ReferenceStore(settings.data, settings.embedding)
+        app.state.embedding_service = EmbeddingService(
+            llm_client=ollama_client,
+            reference_store=reference_store,
+            settings=settings.embedding,
+            model_settings=app.state.model_settings,
+        )
 
-    # Initialize TranscriptService
-    _transcript_service = TranscriptService(settings.data)
+        qual_agent = QualitativeAssessmentAgent(
+            llm_client=ollama_client,
+            model_settings=app.state.model_settings,
+        )
+        judge_agent = JudgeAgent(
+            llm_client=ollama_client,
+            model_settings=app.state.model_settings,
+        )
+        app.state.feedback_loop_service = FeedbackLoopService(
+            qualitative_agent=qual_agent,
+            judge_agent=judge_agent,
+            settings=settings.feedback,
+        )
 
-    # Initialize EmbeddingService (for few-shot mode)
-    reference_store = ReferenceStore(settings.data, settings.embedding)
-    _embedding_service = EmbeddingService(
-        llm_client=_ollama_client,
-        reference_store=reference_store,
-        settings=settings.embedding,
-        model_settings=_model_settings,
-    )
-
-    # Initialize FeedbackLoopService (BUG-017 fix)
-    qual_agent = QualitativeAssessmentAgent(
-        llm_client=_ollama_client,
-        model_settings=_model_settings,
-    )
-    judge_agent = JudgeAgent(
-        llm_client=_ollama_client,
-        model_settings=_model_settings,
-    )
-    _feedback_loop_service = FeedbackLoopService(
-        qualitative_agent=qual_agent,
-        judge_agent=judge_agent,
-        settings=settings.feedback,
-    )
-
-    yield
-
-    # Cleanup
-    if _ollama_client:
-        await _ollama_client.close()
+        yield
+    finally:
+        await ollama_client.close()
 
 
 app = FastAPI(
@@ -94,46 +81,52 @@ app = FastAPI(
 
 
 # --- Dependency Injection ---
-def get_ollama_client() -> OllamaClient:
+def get_ollama_client(request: Request) -> OllamaClient:
     """Get initialized OllamaClient."""
-    if _ollama_client is None:
+    client = getattr(request.app.state, "ollama_client", None)
+    if client is None:
         raise HTTPException(status_code=503, detail="Ollama client not initialized")
-    return _ollama_client
+    return cast("OllamaClient", client)
 
 
-def get_transcript_service() -> TranscriptService:
+def get_transcript_service(request: Request) -> TranscriptService:
     """Get initialized TranscriptService."""
-    if _transcript_service is None:
+    service = getattr(request.app.state, "transcript_service", None)
+    if service is None:
         raise HTTPException(status_code=503, detail="Transcript service not initialized")
-    return _transcript_service
+    return cast("TranscriptService", service)
 
 
-def get_embedding_service() -> EmbeddingService:
+def get_embedding_service(request: Request) -> EmbeddingService:
     """Get initialized EmbeddingService."""
-    if _embedding_service is None:
+    service = getattr(request.app.state, "embedding_service", None)
+    if service is None:
         raise HTTPException(status_code=503, detail="Embedding service not initialized")
-    return _embedding_service
+    return cast("EmbeddingService", service)
 
 
-def get_model_settings() -> ModelSettings:
+def get_model_settings(request: Request) -> ModelSettings:
     """Get initialized ModelSettings."""
-    if _model_settings is None:
+    settings = getattr(request.app.state, "model_settings", None)
+    if settings is None:
         raise HTTPException(status_code=503, detail="Model settings not initialized")
-    return _model_settings
+    return cast("ModelSettings", settings)
 
 
-def get_app_settings() -> Settings:
+def get_app_settings(request: Request) -> Settings:
     """Get initialized Settings."""
-    if _settings is None:
+    settings = getattr(request.app.state, "settings", None)
+    if settings is None:
         raise HTTPException(status_code=503, detail="Settings not initialized")
-    return _settings
+    return cast("Settings", settings)
 
 
-def get_feedback_loop_service() -> FeedbackLoopService:
+def get_feedback_loop_service(request: Request) -> FeedbackLoopService:
     """Get initialized FeedbackLoopService."""
-    if _feedback_loop_service is None:
+    service = getattr(request.app.state, "feedback_loop_service", None)
+    if service is None:
         raise HTTPException(status_code=503, detail="Feedback loop service not initialized")
-    return _feedback_loop_service
+    return cast("FeedbackLoopService", service)
 
 
 # --- Request/Response Models ---
@@ -175,7 +168,7 @@ class QuantitativeResult(BaseModel):
     total_score: int
     severity: str
     na_count: int
-    items: dict[str, dict]
+    items: dict[str, dict[str, str | int | None]]
 
 
 class QualitativeResult(BaseModel):
@@ -225,7 +218,9 @@ class FullPipelineResponse(BaseModel):
 
 # --- Endpoints ---
 @app.get("/health")
-async def health_check(ollama: Annotated[OllamaClient, Depends(get_ollama_client)]):
+async def health_check(
+    ollama: Annotated[OllamaClient, Depends(get_ollama_client)],
+) -> dict[str, Any]:
     """Health check endpoint."""
     try:
         is_healthy = await ollama.ping()
@@ -242,7 +237,7 @@ async def assess_quantitative(
     embedding_service: Annotated[EmbeddingService, Depends(get_embedding_service)],
     model_settings: Annotated[ModelSettings, Depends(get_model_settings)],
     app_settings: Annotated[Settings, Depends(get_app_settings)],
-):
+) -> QuantitativeResult:
     """Run quantitative (PHQ-8) assessment."""
     # Load or create transcript
     transcript = _resolve_transcript(request, transcript_service)
@@ -282,7 +277,7 @@ async def assess_qualitative(
     ollama: Annotated[OllamaClient, Depends(get_ollama_client)],
     transcript_service: Annotated[TranscriptService, Depends(get_transcript_service)],
     model_settings: Annotated[ModelSettings, Depends(get_model_settings)],
-):
+) -> QualitativeResult:
     """Run qualitative assessment (single-pass, no feedback loop).
 
     Note: This endpoint intentionally bypasses the FeedbackLoopService to provide
@@ -317,7 +312,7 @@ async def run_full_pipeline(
     model_settings: Annotated[ModelSettings, Depends(get_model_settings)],
     app_settings: Annotated[Settings, Depends(get_app_settings)],
     feedback_loop: Annotated[FeedbackLoopService, Depends(get_feedback_loop_service)],
-):
+) -> FullPipelineResponse:
     """Run full assessment pipeline.
 
     Pipeline order (Paper Section 2.3):
@@ -434,7 +429,7 @@ def _resolve_transcript(
             # domain constraints (Transcript requires participant_id > 0) while avoiding
             # collision with real DAIC-WOZ participants (300-492).
             return transcript_service.load_transcript_from_text(
-                participant_id=999_999,
+                participant_id=AD_HOC_PARTICIPANT_ID,
                 text=request.transcript_text,
             )
         except Exception as e:

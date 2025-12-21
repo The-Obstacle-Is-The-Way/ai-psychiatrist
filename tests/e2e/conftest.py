@@ -3,8 +3,15 @@
 from __future__ import annotations
 
 import os
+from typing import TYPE_CHECKING
 
 import pytest
+
+if TYPE_CHECKING:
+    from collections.abc import AsyncIterator
+
+    from ai_psychiatrist.config import Settings
+    from ai_psychiatrist.infrastructure.llm import OllamaClient
 
 
 def _require_ollama_opt_in() -> None:
@@ -13,7 +20,7 @@ def _require_ollama_opt_in() -> None:
 
 
 @pytest.fixture(scope="session")
-def app_settings():
+def app_settings() -> Settings:
     """Return application settings loaded from env / .env (real mode only)."""
     _require_ollama_opt_in()
     from ai_psychiatrist.config import get_settings  # noqa: PLC0415
@@ -22,7 +29,7 @@ def app_settings():
 
 
 @pytest.fixture
-async def ollama_client(app_settings):
+async def ollama_client(app_settings: Settings) -> AsyncIterator[OllamaClient]:
     """Return a live OllamaClient connected to a reachable Ollama server.
 
     Fails with actionable guidance if Ollama is unreachable or required models are missing.

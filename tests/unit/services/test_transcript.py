@@ -7,18 +7,22 @@ from pathlib import Path
 import pandas as pd
 import pytest
 
+from ai_psychiatrist.config import DataSettings
 from ai_psychiatrist.domain.entities import Transcript
 from ai_psychiatrist.domain.exceptions import EmptyTranscriptError, TranscriptError
 from ai_psychiatrist.services.transcript import TranscriptService
 
 
-class MockDataSettings:
-    """Mock data settings for testing."""
-
-    def __init__(self, transcripts_dir: Path | None = None) -> None:
-        self.transcripts_dir = transcripts_dir or Path("/tmp/nonexistent")
-        self.train_csv = Path("/tmp/nonexistent.csv")
-        self.dev_csv = Path("/tmp/nonexistent.csv")
+def _make_data_settings(transcripts_dir: Path, base_dir: Path | None = None) -> DataSettings:
+    """Create DataSettings for tests (avoid relying on local filesystem layout)."""
+    base = base_dir or Path("/tmp")
+    return DataSettings(
+        base_dir=base,
+        transcripts_dir=transcripts_dir,
+        embeddings_path=base / "embeddings.pkl",
+        train_csv=base / "train.csv",
+        dev_csv=base / "dev.csv",
+    )
 
 
 class TestTranscriptService:
@@ -26,7 +30,7 @@ class TestTranscriptService:
 
     def test_load_from_text_valid(self) -> None:
         """Should create transcript from raw text."""
-        service = TranscriptService(data_settings=MockDataSettings())
+        service = TranscriptService(data_settings=_make_data_settings(Path("/tmp/nonexistent")))
         transcript = service.load_transcript_from_text(123, "Hello world")
 
         assert transcript.participant_id == 123
@@ -35,7 +39,7 @@ class TestTranscriptService:
 
     def test_load_from_text_multiline(self) -> None:
         """Should handle multiline transcript text."""
-        service = TranscriptService(data_settings=MockDataSettings())
+        service = TranscriptService(data_settings=_make_data_settings(Path("/tmp/nonexistent")))
         text = "Ellie: How are you?\nParticipant: I'm fine."
         transcript = service.load_transcript_from_text(456, text)
 
@@ -46,21 +50,21 @@ class TestTranscriptService:
 
     def test_reject_empty_text(self) -> None:
         """Should reject empty transcript text."""
-        service = TranscriptService(data_settings=MockDataSettings())
+        service = TranscriptService(data_settings=_make_data_settings(Path("/tmp/nonexistent")))
 
         with pytest.raises(EmptyTranscriptError):
             service.load_transcript_from_text(123, "")
 
     def test_reject_whitespace_only_text(self) -> None:
         """Should reject whitespace-only transcript text."""
-        service = TranscriptService(data_settings=MockDataSettings())
+        service = TranscriptService(data_settings=_make_data_settings(Path("/tmp/nonexistent")))
 
         with pytest.raises(EmptyTranscriptError):
             service.load_transcript_from_text(123, "   \n\t  ")
 
     def test_load_transcript_not_found(self, tmp_path: Path) -> None:
         """Should raise TranscriptError when transcript file not found."""
-        settings = MockDataSettings(transcripts_dir=tmp_path)
+        settings = _make_data_settings(transcripts_dir=tmp_path, base_dir=tmp_path)
         service = TranscriptService(data_settings=settings)
 
         with pytest.raises(TranscriptError, match="not found"):
@@ -82,7 +86,7 @@ class TestTranscriptService:
         )
         df.to_csv(transcript_path, sep="\t", index=False)
 
-        settings = MockDataSettings(transcripts_dir=tmp_path)
+        settings = _make_data_settings(transcripts_dir=tmp_path, base_dir=tmp_path)
         service = TranscriptService(data_settings=settings)
         transcript = service.load_transcript(300)
 
@@ -105,7 +109,7 @@ class TestTranscriptService:
         )
         df.to_csv(transcript_path, sep="\t", index=False)
 
-        settings = MockDataSettings(transcripts_dir=tmp_path)
+        settings = _make_data_settings(transcripts_dir=tmp_path, base_dir=tmp_path)
         service = TranscriptService(data_settings=settings)
         transcript = service.load_transcript(301)
 
@@ -121,7 +125,7 @@ class TestTranscriptService:
         (tmp_path / "302_P").mkdir()
         (tmp_path / "invalid_dir").mkdir()  # Should be ignored
 
-        settings = MockDataSettings(transcripts_dir=tmp_path)
+        settings = _make_data_settings(transcripts_dir=tmp_path, base_dir=tmp_path)
         service = TranscriptService(data_settings=settings)
         participants = service.list_available_participants()
 
@@ -129,7 +133,7 @@ class TestTranscriptService:
 
     def test_list_participants_empty_directory(self, tmp_path: Path) -> None:
         """Should return empty list for empty directory."""
-        settings = MockDataSettings(transcripts_dir=tmp_path)
+        settings = _make_data_settings(transcripts_dir=tmp_path, base_dir=tmp_path)
         service = TranscriptService(data_settings=settings)
         participants = service.list_available_participants()
 
@@ -137,7 +141,7 @@ class TestTranscriptService:
 
     def test_list_participants_nonexistent_directory(self) -> None:
         """Should return empty list for nonexistent directory."""
-        settings = MockDataSettings(transcripts_dir=Path("/nonexistent"))
+        settings = _make_data_settings(transcripts_dir=Path("/nonexistent"))
         service = TranscriptService(data_settings=settings)
         participants = service.list_available_participants()
 
@@ -145,7 +149,7 @@ class TestTranscriptService:
 
     def test_get_transcript_path(self, tmp_path: Path) -> None:
         """Should construct correct path for participant."""
-        settings = MockDataSettings(transcripts_dir=tmp_path)
+        settings = _make_data_settings(transcripts_dir=tmp_path, base_dir=tmp_path)
         service = TranscriptService(data_settings=settings)
 
         path = service._get_transcript_path(300)
@@ -162,7 +166,7 @@ class TestTranscriptService:
         df = pd.DataFrame({"speaker": [], "value": []})
         df.to_csv(transcript_path, sep="\t", index=False)
 
-        settings = MockDataSettings(transcripts_dir=tmp_path)
+        settings = _make_data_settings(transcripts_dir=tmp_path, base_dir=tmp_path)
         service = TranscriptService(data_settings=settings)
 
         with pytest.raises(EmptyTranscriptError):
@@ -177,7 +181,7 @@ class TestTranscriptService:
         # Write invalid content
         transcript_path.write_text("not,a,valid,csv\nno\ttabs\there")
 
-        settings = MockDataSettings(transcripts_dir=tmp_path)
+        settings = _make_data_settings(transcripts_dir=tmp_path, base_dir=tmp_path)
         service = TranscriptService(data_settings=settings)
 
         with pytest.raises(TranscriptError, match="Failed to parse"):

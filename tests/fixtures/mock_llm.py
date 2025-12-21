@@ -19,7 +19,7 @@ import math
 from typing import TYPE_CHECKING, Any
 
 if TYPE_CHECKING:
-    from collections.abc import Callable
+    from collections.abc import Callable, Sequence
 
 from ai_psychiatrist.infrastructure.llm.protocols import (
     ChatMessage,
@@ -53,8 +53,8 @@ class MockLLMClient:
 
     def __init__(
         self,
-        chat_responses: list[str | ChatResponse] | None = None,
-        embedding_responses: list[tuple[float, ...] | EmbeddingResponse] | None = None,
+        chat_responses: Sequence[str | ChatResponse] | None = None,
+        embedding_responses: Sequence[tuple[float, ...] | EmbeddingResponse] | None = None,
         chat_function: Callable[[ChatRequest], str] | None = None,
         embedding_function: Callable[[EmbeddingRequest], tuple[float, ...]] | None = None,
     ) -> None:
