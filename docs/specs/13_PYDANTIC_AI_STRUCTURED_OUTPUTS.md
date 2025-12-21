@@ -7,7 +7,7 @@
 > Pydantic AI migration will provide cleaner, validated outputs but is not
 > required for core functionality.
 >
-> **Tracked by**: [GitHub Issue #19](https://github.com/trendscenter/ai-psychiatrist/issues/19)
+> **Tracked by**: [GitHub Issue #28](https://github.com/The-Obstacle-Is-The-Way/ai-psychiatrist/issues/28)
 >
 > **Last Updated**: 2025-12-21
 

@@ -8,7 +8,7 @@
 > (Prometheus metrics, OpenTelemetry tracing, health endpoints) will be added
 > when preparing for production deployment.
 >
-> **Tracked by**: [GitHub Issue #18](https://github.com/trendscenter/ai-psychiatrist/issues/18)
+> **Tracked by**: [GitHub Issue #27](https://github.com/The-Obstacle-Is-The-Way/ai-psychiatrist/issues/27)
 >
 > **Last Updated**: 2025-12-21
 

@@ -2,6 +2,19 @@
 
 This file provides guidance to Claude Code (claude.ai/code) when working with code in this repository.
 
+## GitHub Repository
+
+**IMPORTANT**: This is a FORK. Always use the fork for issues and PRs.
+
+- **Fork (use this)**: https://github.com/The-Obstacle-Is-The-Way/ai-psychiatrist
+- **Upstream (do NOT create issues here)**: https://github.com/trendscenter/ai-psychiatrist
+
+When creating GitHub issues or PRs, ALWAYS specify the fork:
+```bash
+gh issue create --repo The-Obstacle-Is-The-Way/ai-psychiatrist ...
+gh pr create --repo The-Obstacle-Is-The-Way/ai-psychiatrist ...
+```
+
 ## Project Overview
 
 LLM-based Multi-Agent System for Depression Assessment from Clinical Interviews. Implements a research paper's methodology using four specialized agents to analyze transcripts and predict PHQ-8 depression scores.
