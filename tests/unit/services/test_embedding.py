@@ -2,8 +2,8 @@
 
 from __future__ import annotations
 
-import pickle
-from typing import TYPE_CHECKING
+import json
+from typing import TYPE_CHECKING, Any
 from unittest.mock import MagicMock
 
 import numpy as np
@@ -20,6 +20,33 @@ from tests.fixtures.mock_llm import MockLLMClient
 
 if TYPE_CHECKING:
     from pathlib import Path
+
+
+def _create_npz_embeddings(
+    npz_path: Path,
+    data: dict[str, list[tuple[str, list[float]]]],
+) -> None:
+    """Helper to create NPZ + JSON sidecar files for tests.
+
+    Args:
+        npz_path: Path to the NPZ file (JSON sidecar is created alongside).
+        data: Dict mapping participant_id (str) to list of (text, embedding) pairs.
+    """
+    json_path = npz_path.with_suffix(".json")
+    npz_arrays: dict[str, Any] = {}
+    json_texts: dict[str, list[str]] = {}
+
+    for pid_str, pairs in data.items():
+        pid_int = int(pid_str)
+        texts = [text for text, _ in pairs]
+        embeddings = [emb for _, emb in pairs]
+
+        json_texts[pid_str] = texts
+        npz_arrays[f"emb_{pid_int}"] = np.array(embeddings, dtype=np.float32)
+
+    np.savez_compressed(str(npz_path), **npz_arrays)
+    with json_path.open("w") as f:
+        json.dump(json_texts, f)
 
 
 class TestReferenceBundle:
@@ -327,7 +354,7 @@ class TestReferenceStore:
         return DataSettings(
             base_dir=tmp_path,
             transcripts_dir=transcripts_dir,
-            embeddings_path=tmp_path / "embeddings.pkl",
+            embeddings_path=tmp_path / "embeddings.npz",
             train_csv=tmp_path / "train.csv",
             dev_csv=tmp_path / "dev.csv",
         )
@@ -366,13 +393,12 @@ class TestReferenceStore:
 
     def test_load_embeddings_success(self, mock_data_settings: DataSettings) -> None:
         """Should successfully load and normalize embeddings from file."""
-        # Create dummy embeddings file
+        # Create dummy embeddings file (NPZ + JSON format)
         raw_data = {
             "100": [("chunk1", [3.0, 4.0])],  # Norm = 5.0 -> [0.6, 0.8]
             "101": [("chunk2", [1.0, 0.0])],
         }
-        with mock_data_settings.embeddings_path.open("wb") as f:
-            pickle.dump(raw_data, f)
+        _create_npz_embeddings(mock_data_settings.embeddings_path, raw_data)
 
         mock_embed = MagicMock()
         mock_embed.dimension = 2  # Match dummy data dimension
@@ -434,8 +460,7 @@ class TestReferenceStore:
             "100": [("text1", [1.0, 0.0])],
             "101": [("text2", [0.0, 1.0])],
         }
-        with mock_data_settings.embeddings_path.open("wb") as f:
-            pickle.dump(raw_data, f)
+        _create_npz_embeddings(mock_data_settings.embeddings_path, raw_data)
 
         mock_embed = MagicMock()
         mock_embed.dimension = 2
@@ -541,9 +566,8 @@ class TestEmbeddingDimensionMismatch:
         # Create temp files
         transcripts_dir = tmp_path / "transcripts"
         transcripts_dir.mkdir(parents=True, exist_ok=True)
-        embeddings_path = tmp_path / "embeddings.pkl"
-        with embeddings_path.open("wb") as f:
-            pickle.dump(raw_data, f)
+        embeddings_path = tmp_path / "embeddings.npz"
+        _create_npz_embeddings(embeddings_path, raw_data)
 
         data_settings = DataSettings(
             base_dir=tmp_path,
@@ -574,9 +598,8 @@ class TestEmbeddingDimensionMismatch:
 
         transcripts_dir = tmp_path / "transcripts"
         transcripts_dir.mkdir(parents=True, exist_ok=True)
-        embeddings_path = tmp_path / "embeddings.pkl"
-        with embeddings_path.open("wb") as f:
-            pickle.dump(raw_data, f)
+        embeddings_path = tmp_path / "embeddings.npz"
+        _create_npz_embeddings(embeddings_path, raw_data)
 
         data_settings = DataSettings(
             base_dir=tmp_path,
@@ -606,9 +629,8 @@ class TestEmbeddingDimensionMismatch:
 
         transcripts_dir = tmp_path / "transcripts"
         transcripts_dir.mkdir(parents=True, exist_ok=True)
-        embeddings_path = tmp_path / "embeddings.pkl"
-        with embeddings_path.open("wb") as f:
-            pickle.dump(raw_data, f)
+        embeddings_path = tmp_path / "embeddings.npz"
+        _create_npz_embeddings(embeddings_path, raw_data)
 
         data_settings = DataSettings(
             base_dir=tmp_path,

@@ -25,8 +25,8 @@ Implement the embedding-based similarity search service for few-shot reference r
 The current repo’s few-shot retrieval is implemented inside the quantitative agent (not as a standalone service):
 
 - File: `agents/quantitative_assessor_f.py`
-- Reference store: a pickle of `{participant_id: [(raw_text, embedding_vec), ...]}` loaded from
-  `pickle_path="agents/chunk_8_step_2_participant_embedded_transcripts.pkl"` (note: this file is not checked into the repo)
+- Reference store: NPZ + JSON sidecar loaded from `data/embeddings/reference_embeddings.npz` and
+  `data/embeddings/reference_embeddings.json` (generated via `scripts/generate_embeddings.py`; the artifact is not checked into the repo)
 - Embedding endpoint: `POST /api/embeddings`
 - Similarity: cosine similarity (`sklearn.metrics.pairwise.cosine_similarity`)
 - Default demo `top_k`: **3** (paper optimal: **2**)
@@ -382,7 +382,7 @@ class EmbeddingService:
 
 from __future__ import annotations
 
-import pickle
+import json
 from pathlib import Path
 from typing import TYPE_CHECKING
 
@@ -440,7 +440,7 @@ class ReferenceStore:
         self._scores_df: pd.DataFrame | None = None
 
     def _load_embeddings(self) -> dict[int, list[tuple[str, list[float]]]]:
-        """Load pre-computed embeddings from pickle file."""
+        """Load pre-computed embeddings from NPZ + JSON sidecar files."""
         if self._embeddings is not None:
             return self._embeddings
 
@@ -454,18 +454,25 @@ class ReferenceStore:
 
         logger.info("Loading reference embeddings", path=str(self._embeddings_path))
 
-        with open(self._embeddings_path, "rb") as f:
-            raw_data = pickle.load(f)
+        json_path = self._embeddings_path.with_suffix(".json")
+        with json_path.open("r", encoding="utf-8") as f:
+            texts_data = json.load(f)
+
+        npz_data = np.load(self._embeddings_path, allow_pickle=False)
 
         # Normalize embeddings and convert participant IDs to int
         normalized: dict[int, list[tuple[str, list[float]]]] = {}
         skipped_chunks = 0
         total_chunks = 0
 
-        for pid, pairs in raw_data.items():
+        for pid, texts in texts_data.items():
             pid_int = int(pid)
+            emb_key = f"emb_{pid_int}"
+            if emb_key not in npz_data:
+                continue
+            embeddings = npz_data[emb_key]
             norm_pairs: list[tuple[str, list[float]]] = []
-            for text, embedding in pairs:
+            for text, embedding in zip(texts, embeddings, strict=True):
                 total_chunks += 1
                 # Validate dimension - embeddings must be at least as long as configured
                 if len(embedding) < self._dimension:
@@ -487,10 +494,7 @@ class ReferenceStore:
 
         # Fail loudly if ALL embeddings are mismatched (BUG-009 fix)
         if total_chunks > 0 and skipped_chunks == total_chunks:
-            raise EmbeddingDimensionMismatchError(
-                expected=self._dimension,
-                actual=len(next(iter(raw_data.values()))[0][1]) if raw_data else 0,
-            )
+            raise EmbeddingDimensionMismatchError(expected=self._dimension, actual=actual_dim_sample)
 
         if skipped_chunks > 0:
             logger.error(
@@ -826,7 +830,7 @@ class TestReferenceStore:
 - [ ] Dimension truncation works (paper optimal: 4096)
 - [ ] Cosine similarity search finds top-k matches
 - [ ] Reference bundle formats correctly for prompts
-- [ ] Loads pre-computed embeddings from pickle
+- [ ] Loads pre-computed embeddings from NPZ + JSON sidecar files
 - [ ] Handles missing embeddings gracefully
 - [ ] Comprehensive test coverage
 

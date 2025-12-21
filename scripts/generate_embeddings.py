@@ -4,6 +4,12 @@
 This script generates the pre-computed embeddings artifact required for
 few-shot PHQ-8 assessment. It uses ONLY training data to avoid data leakage.
 
+Output Format (NPZ + JSON sidecar):
+    - {output_path}.npz: Embeddings as numpy arrays (key: "emb_{pid}")
+    - {output_path}.json: Text chunks (key: str(pid) -> list[str])
+
+This format replaces pickle for security (no arbitrary code execution).
+
 Usage:
     # Generate embeddings (requires Ollama running)
     python scripts/generate_embeddings.py
@@ -25,9 +31,12 @@ from __future__ import annotations
 
 import argparse
 import asyncio
-import pickle
+import json
 import sys
 from pathlib import Path
+from typing import Any
+
+import numpy as np
 
 # Add src to path for imports
 sys.path.insert(0, str(Path(__file__).parent.parent / "src"))
@@ -276,19 +285,38 @@ async def main_async(args: argparse.Namespace) -> int:  # noqa: PLR0915
         # Ensure output directory exists
         output_path.parent.mkdir(parents=True, exist_ok=True)
 
-        # Save embeddings
+        # Prepare NPZ and JSON data
+        npz_arrays: dict[str, Any] = {}
+        json_texts: dict[str, list[str]] = {}
+
+        for pid, pairs in all_embeddings.items():
+            texts = [text for text, _ in pairs]
+            embeddings = [emb for _, emb in pairs]
+
+            json_texts[str(pid)] = texts
+            npz_arrays[f"emb_{pid}"] = np.array(embeddings, dtype=np.float32)
+
+        # Save as NPZ + JSON sidecar (replaces pickle for security)
+        json_path = output_path.with_suffix(".json")
+
         print(f"\nSaving embeddings to {output_path}...")
-        with output_path.open("wb") as f:
-            pickle.dump(all_embeddings, f)
+        print(f"Saving text chunks to {json_path}...")
+
+        np.savez_compressed(str(output_path), **npz_arrays)
+        with json_path.open("w") as f:
+            json.dump(json_texts, f, indent=2)
 
         # Summary
+        npz_size = output_path.stat().st_size / (1024 * 1024)
+        json_size = json_path.stat().st_size / (1024 * 1024)
+
         print("\n" + "=" * 60)
         print("GENERATION COMPLETE")
         print("=" * 60)
         print(f"  Participants: {len(all_embeddings)}")
         print(f"  Total chunks: {total_chunks}")
-        print(f"  Output file: {output_path}")
-        print(f"  File size: {output_path.stat().st_size / (1024 * 1024):.2f} MB")
+        print(f"  NPZ file: {output_path} ({npz_size:.2f} MB)")
+        print(f"  JSON file: {json_path} ({json_size:.2f} MB)")
         print("=" * 60)
 
     return 0

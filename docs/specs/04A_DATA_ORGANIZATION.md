@@ -118,7 +118,8 @@ data/
 │   ├── 300_AUDIO.wav
 │   └── ...
 ├── embeddings/                     # Pre-computed embeddings
-│   └── participant_embedded_transcripts.pkl
+│   ├── reference_embeddings.npz
+│   └── reference_embeddings.json
 ├── train_split_Depression_AVEC2017.csv
 ├── dev_split_Depression_AVEC2017.csv
 ├── test_split_Depression_AVEC2017.csv
@@ -131,7 +132,7 @@ data/
 class DataSettings(BaseSettings):
     base_dir: Path = Path("data")
     transcripts_dir: Path = Path("data/transcripts")
-    embeddings_path: Path = Path("data/embeddings/participant_embedded_transcripts.pkl")
+    embeddings_path: Path = Path("data/embeddings/reference_embeddings.npz")
     train_csv: Path = Path("data/train_split_Depression_AVEC2017.csv")
     dev_csv: Path = Path("data/dev_split_Depression_AVEC2017.csv")
 ```

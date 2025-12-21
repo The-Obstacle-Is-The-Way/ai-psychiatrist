@@ -3,7 +3,7 @@
 **Severity**: HIGH (P1)
 **Status**: RESOLVED
 **Date Identified**: 2025-12-19
-**Date Resolved**: 2025-12-20
+**Date Resolved**: 2025-12-21
 **Spec Reference**: `docs/specs/09.5_INTEGRATION_CHECKPOINT_QUANTITATIVE.md`
 
 ---
@@ -196,6 +196,18 @@ Implemented an opt-in real-Ollama E2E test suite that runs locally without CI fl
   - `alibayram/medgemma:27b`
   - `qwen3-embedding:8b`
 
+### Additional Fix (Discovered During Real Runs)
+
+Real Ollama tests surfaced a configuration gap: `OLLAMA_TIMEOUT_SECONDS` was not
+being applied to the per-request timeout on `OllamaClient.simple_chat()` and
+`OllamaClient.simple_embed()` because those helpers were constructing
+`ChatRequest` / `EmbeddingRequest` without passing the configured timeout,
+falling back to protocol defaults (180s chat / 120s embeddings).
+
+Fix: `OllamaClient.simple_chat()` and `OllamaClient.simple_embed()` now pass
+`timeout_seconds=self._default_timeout`, ensuring `OLLAMA_TIMEOUT_SECONDS`
+controls real request timeouts end-to-end (agents and server included).
+
 ### Verification (Local)
 
 ```bash
@@ -207,4 +219,12 @@ AI_PSYCHIATRIST_OLLAMA_TESTS=1 uv run pytest tests/e2e/test_agents_real_ollama.p
 
 # Full pipeline E2E (FastAPI app via ASGI transport)
 AI_PSYCHIATRIST_OLLAMA_TESTS=1 uv run pytest tests/e2e/test_server_real_ollama.py -v --no-cov
+```
+
+Note: Paper-optimal 27B models can be slow on local hardware. If you see timeouts
+(especially in the quantitative agent with MedGemma), run with a larger timeout:
+
+```bash
+AI_PSYCHIATRIST_OLLAMA_TESTS=1 OLLAMA_TIMEOUT_SECONDS=600 \
+  uv run pytest -m "e2e and ollama" --no-cov
 ```
