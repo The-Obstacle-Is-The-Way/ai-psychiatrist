@@ -11,72 +11,54 @@ predicting PHQ-8 scores from interview transcripts.
 
 from __future__ import annotations
 
-# Domain keywords for keyword backfill (from original implementation)
+from functools import lru_cache
+from pathlib import Path
+from typing import Any
+
+import yaml
+
+
+def _get_keywords_path() -> Path:
+    """Get path to PHQ-8 keywords YAML file.
+
+    Returns:
+        Path to data/keywords/phq8_keywords.yaml relative to project root.
+    """
+    # Navigate from this file to project root
+    # This file: src/ai_psychiatrist/agents/prompts/quantitative.py
+    # Project root: 4 levels up
+    project_root = Path(__file__).parent.parent.parent.parent.parent
+    return project_root / "data" / "keywords" / "phq8_keywords.yaml"
+
+
+@lru_cache(maxsize=1)
+def _load_domain_keywords() -> dict[str, list[str]]:
+    """Load PHQ-8 domain keywords from YAML file.
+
+    Keywords are cached after first load for performance.
+
+    Returns:
+        Dictionary mapping PHQ-8 item keys to keyword lists.
+
+    Raises:
+        FileNotFoundError: If keywords file is missing.
+        yaml.YAMLError: If YAML is malformed.
+    """
+    keywords_path = _get_keywords_path()
+    with keywords_path.open("r") as f:
+        data: dict[str, Any] = yaml.safe_load(f)
+    # Validate structure
+    result: dict[str, list[str]] = {}
+    for key, value in data.items():
+        if isinstance(value, list):
+            result[key] = [str(v) for v in value]
+    return result
+
+
+# Domain keywords for keyword backfill
+# Loaded from data/keywords/phq8_keywords.yaml for easier clinical review
 # Used to catch evidence when LLM extraction misses relevant sentences
-DOMAIN_KEYWORDS: dict[str, list[str]] = {
-    "PHQ8_NoInterest": [
-        "can't be bothered",
-        "no interest",
-        "nothing really",
-        "not enjoy",
-        "no pleasure",
-        "what's the point",
-        "cant be bothered",
-    ],
-    "PHQ8_Depressed": [
-        "fed up",
-        "miserable",
-        "depressed",
-        "very black",
-        "hopeless",
-        "low",
-    ],
-    "PHQ8_Sleep": [
-        "sleep",
-        "fall asleep",
-        "wake up",
-        "insomnia",
-        "clock",
-        "tired in the morning",
-    ],
-    "PHQ8_Tired": [
-        "exhausted",
-        "tired",
-        "little energy",
-        "fatigue",
-        "no energy",
-    ],
-    "PHQ8_Appetite": [
-        "appetite",
-        "weight",
-        "lost weight",
-        "eat",
-        "eating",
-        "don't bother",
-        "dont bother",
-        "looser",
-    ],
-    "PHQ8_Failure": [
-        "useless",
-        "failure",
-        "bad about myself",
-        "burden",
-    ],
-    "PHQ8_Concentrating": [
-        "concentrat",
-        "memory",
-        "forgot",
-        "thinking of something else",
-        "focus",
-    ],
-    "PHQ8_Moving": [
-        "moving slowly",
-        "restless",
-        "fidget",
-        "speaking slowly",
-        "psychomotor",
-    ],
-}
+DOMAIN_KEYWORDS: dict[str, list[str]] = _load_domain_keywords()
 
 QUANTITATIVE_SYSTEM_PROMPT = """You are an AI psychiatrist assessment tool specialized in analyzing \
 interview transcripts to evaluate PHQ-8 (Patient Health Questionnaire-8) scores. The PHQ-8 is a \

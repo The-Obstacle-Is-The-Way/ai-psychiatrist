@@ -1,9 +1,10 @@
 # BUG-020: Jules Audit Findings (Validated)
 
 **Severity**: MIXED (P2-P4)
-**Status**: RESOLVED (audit closed; remaining items deferred)
+**Status**: RESOLVED (all items complete; JSON mode deferred as marginal benefit)
 **Date Identified**: 2025-12-20
 **Date Resolved**: 2025-12-21
+**Last Updated**: 2025-12-21 (Pickle→NPZ, DOMAIN_KEYWORDS→YAML complete)
 **Source**: Jules async agent audit, validated by Claude
 **Original Branch**: `origin/dev_jules_audit-3010918533045583642`
 
@@ -28,23 +29,24 @@ The original audit contained some false/outdated claims which have been correcte
 
 **Original Claim**: "P0 RCE vulnerability via pickle"
 
-**Validated Status**: ⚠️ P2 - Technical debt, not critical vulnerability
+**Validated Status**: ✅ FIXED - Migrated to NPZ + JSON sidecar format
 
-**Location**: `src/ai_psychiatrist/services/reference_store.py:93`
+**Location**: `src/ai_psychiatrist/services/reference_store.py`
 
-```python
-with self._embeddings_path.open("rb") as f:
-    raw_data = pickle.load(f)
+**Fix Applied**:
+- Replaced pickle with NPZ (numpy arrays) + JSON sidecar (text chunks)
+- NPZ format stores embeddings safely (no code execution risk)
+- JSON stores text chunks (standard, safe format)
+- Updated `scripts/generate_embeddings.py` to produce new format
+- Updated `ReferenceStore` to load new format
+
+**New Format**:
+```
+data/embeddings/reference_embeddings.npz   # Embeddings as numpy arrays
+data/embeddings/reference_embeddings.json  # Text chunks
 ```
 
-**Reality Check**:
-- File is generated internally by `scripts/generate_embeddings.py`
-- Path comes from config, not user input
-- Not exposed to untrusted data in normal operation
-- Would require attacker to have filesystem write access
-
-**Recommendation**: Consider migrating to SafeTensors/NPZ for embeddings in the future.
-**Priority**: P2 (technical debt, not security emergency)
+**Priority**: RESOLVED
 
 ---
 
@@ -129,10 +131,15 @@ AD_HOC_PARTICIPANT_ID = 999_999
 
 **Location**: `src/ai_psychiatrist/agents/prompts/quantitative.py`
 
-**Validated**: ✅ TRUE - Keyword lists are hardcoded in source (small, spec-aligned)
+**Validated Status**: ✅ FIXED - Externalized to YAML
 
-**Recommendation**: Keep for paper fidelity; consider externalizing only if clinical review requires non-code editing
-**Priority**: P4 (low impact)
+**Fix Applied**:
+- Moved keywords from Python dict to `data/keywords/phq8_keywords.yaml`
+- Added PyYAML dependency to pyproject.toml
+- Keywords loaded via `_load_domain_keywords()` with LRU cache
+- Domain experts can now review/update keywords without code changes
+
+**Priority**: RESOLVED
 
 ---
 
@@ -168,8 +175,9 @@ Actual coverage: **96.52%** (603 tests passing)
 | Add `py.typed` marker | P4 | 1 min | DONE |
 | Replace ad-hoc participant magic number | P4 | 1 min | DONE |
 | Migrate `server.py` to `app.state` | P3 | 30 min | DONE |
-| Evaluate JSON mode for Ollama | P3 | Research | Deferred |
-| Replace pickle embeddings format | P2 | 2 hrs | Deferred |
+| Externalize DOMAIN_KEYWORDS to YAML | P4 | 30 min | DONE |
+| Replace pickle embeddings with NPZ + JSON | P2 | 2 hrs | DONE |
+| Evaluate JSON mode for Ollama | P3 | Research | Deferred (marginal benefit) |
 
 ---
 

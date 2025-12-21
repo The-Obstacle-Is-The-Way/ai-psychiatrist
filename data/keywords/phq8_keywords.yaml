@@ -1,0 +1,71 @@
+# PHQ-8 Domain Keywords for Evidence Extraction
+#
+# These keywords are used for keyword backfill when LLM extraction
+# misses relevant sentences in interview transcripts.
+#
+# Paper Reference: Section 2.3.2 (Quantitative Assessment)
+#
+# Format: Each PHQ-8 item maps to a list of keywords/phrases that
+# indicate potential symptom evidence in the transcript.
+
+PHQ8_NoInterest:
+  - "can't be bothered"
+  - "no interest"
+  - "nothing really"
+  - "not enjoy"
+  - "no pleasure"
+  - "what's the point"
+  - "cant be bothered"
+
+PHQ8_Depressed:
+  - "fed up"
+  - "miserable"
+  - "depressed"
+  - "very black"
+  - "hopeless"
+  - "low"
+
+PHQ8_Sleep:
+  - "sleep"
+  - "fall asleep"
+  - "wake up"
+  - "insomnia"
+  - "clock"
+  - "tired in the morning"
+
+PHQ8_Tired:
+  - "exhausted"
+  - "tired"
+  - "little energy"
+  - "fatigue"
+  - "no energy"
+
+PHQ8_Appetite:
+  - "appetite"
+  - "weight"
+  - "lost weight"
+  - "eat"
+  - "eating"
+  - "don't bother"
+  - "dont bother"
+  - "looser"
+
+PHQ8_Failure:
+  - "useless"
+  - "failure"
+  - "bad about myself"
+  - "burden"
+
+PHQ8_Concentrating:
+  - "concentrat"
+  - "memory"
+  - "forgot"
+  - "thinking of something else"
+  - "focus"
+
+PHQ8_Moving:
+  - "moving slowly"
+  - "restless"
+  - "fidget"
+  - "speaking slowly"
+  - "psychomotor"

@@ -31,6 +31,7 @@ dependencies = [
     "pandas>=2.3.0",
     "numpy>=2.3.0",
     "scikit-learn>=1.8.0",
+    "pyyaml>=6.0.0",
 ]
 
 [project.optional-dependencies]
@@ -41,6 +42,7 @@ dev = [
     "pytest-xdist>=3.8.0",
     "hypothesis>=6.148.0",
     "mypy>=1.19.0",
+    "types-pyyaml>=6.0.0",  # Type stubs for PyYAML
     "ruff>=0.14.0",
     "pre-commit>=4.5.0",
     "respx>=0.22.0",  # httpx mocking
