@@ -1,8 +1,9 @@
 # BUG-020: Jules Audit Findings (Validated)
 
 **Severity**: MIXED (P2-P4)
-**Status**: OPEN (for review)
+**Status**: RESOLVED (audit closed; remaining items deferred)
 **Date Identified**: 2025-12-20
+**Date Resolved**: 2025-12-21
 **Source**: Jules async agent audit, validated by Claude
 **Original Branch**: `origin/dev_jules_audit-3010918533045583642`
 
@@ -29,7 +30,7 @@ The original audit contained some false/outdated claims which have been correcte
 
 **Validated Status**: ⚠️ P2 - Technical debt, not critical vulnerability
 
-**Location**: `src/ai_psychiatrist/services/reference_store.py:100`
+**Location**: `src/ai_psychiatrist/services/reference_store.py:93`
 
 ```python
 with self._embeddings_path.open("rb") as f:
@@ -52,14 +53,14 @@ with self._embeddings_path.open("rb") as f:
 **Location**: `src/ai_psychiatrist/agents/quantitative.py`
 
 **Validated**: ✅ TRUE - Multi-level repair chain exists:
-- `_strip_json_block()` - Regex extraction
+- `_strip_json_block()` - Tag/code-fence stripping (string-based)
 - `_tolerant_fixups()` - Syntax repair
 - `_llm_repair()` - Recursive LLM call
 
 **Impact**: Adds latency, masks prompt issues, non-deterministic
 
-**Recommendation**: Consider Ollama's native JSON mode (`format: json`)
-**Priority**: P2
+**Recommendation**: Keep (Spec 09 requires robust parsing); optionally evaluate Ollama JSON mode later (`format: json`)
+**Priority**: P3 (acceptable by-spec defensive coding)
 
 ---
 
@@ -75,25 +76,22 @@ parts = re.split(r"(?<=[.?!])\s+|\n+", transcript.strip())
 
 **Impact**: Incorrectly splits "Dr. Smith" or "e.g. example"
 
-**Recommendation**: Consider nltk.sent_tokenize or spacy (lighter than full spacy model)
-**Priority**: P3 (minor impact on evidence extraction)
+**Recommendation**: Keep for paper fidelity (used only for keyword backfill); consider improving later if it measurably impacts MAE
+**Priority**: P4 (low impact)
 
 ---
 
 ### P3: Global State in server.py
 
-**Location**: `server.py:31-36`
+**Location**: `server.py` (lifespan + dependency injection)
 
-**Validated**: ✅ TRUE - 6 module-level globals
+**Validated Status**: ✅ FIXED - migrated to `app.state` (FastAPI best practice)
 
-```python
-_ollama_client: OllamaClient | None = None
-_transcript_service: TranscriptService | None = None
-# ... 4 more
-```
+**Evidence**:
+- Resources are initialized on `app.state` in `lifespan()` (e.g., `server.py:41`)
+- Dependencies read from `request.app.state` (e.g., `server.py:83`)
 
-**Recommendation**: Migrate to `app.state` (FastAPI standard)
-**Priority**: P3 (works fine, but not idiomatic)
+**Priority**: RESOLVED
 
 ---
 
@@ -101,27 +99,29 @@ _transcript_service: TranscriptService | None = None
 
 **Location**: `src/ai_psychiatrist/`
 
-**Validated**: ✅ TRUE - File does not exist on main
+**Validated Status**: ✅ FIXED - marker added and included in wheel builds
 
 **Impact**: Package consumers can't verify types with mypy
 
-**Recommendation**: Add empty `src/ai_psychiatrist/py.typed`
-**Priority**: P4 (easy fix)
+**Evidence**:
+- `src/ai_psychiatrist/py.typed` (added)
+- `pyproject.toml:71` force-includes marker for hatchling builds
+
+**Priority**: RESOLVED
 
 ---
 
 ### P4: Magic Number 999_999
 
-**Location**: `server.py:437`
+**Location**: `server.py:32`
 
-**Validated**: ✅ TRUE
+**Validated Status**: ✅ FIXED - named constant introduced
 
 ```python
-participant_id=999_999,  # Ad-hoc transcript
+AD_HOC_PARTICIPANT_ID = 999_999
 ```
 
-**Recommendation**: Define `AD_HOC_PARTICIPANT_ID = 999_999` constant
-**Priority**: P4 (cosmetic)
+**Priority**: RESOLVED
 
 ---
 
@@ -129,10 +129,10 @@ participant_id=999_999,  # Ad-hoc transcript
 
 **Location**: `src/ai_psychiatrist/agents/prompts/quantitative.py`
 
-**Validated**: ✅ TRUE - Large dict hardcoded in source
+**Validated**: ✅ TRUE - Keyword lists are hardcoded in source (small, spec-aligned)
 
-**Recommendation**: Consider externalizing to YAML/JSON config
-**Priority**: P3 (works fine, but harder to update without code change)
+**Recommendation**: Keep for paper fidelity; consider externalizing only if clinical review requires non-code editing
+**Priority**: P4 (low impact)
 
 ---
 
@@ -165,11 +165,11 @@ Actual coverage: **96.52%** (603 tests passing)
 
 | Item | Priority | Effort | Status |
 |------|----------|--------|--------|
-| Add py.typed marker | P4 | 1 min | TODO |
-| Define AD_HOC_PARTICIPANT_ID constant | P4 | 1 min | TODO |
-| Migrate server.py to app.state | P3 | 30 min | TODO |
-| Evaluate JSON mode for Ollama | P2 | Research | TODO |
-| Consider SafeTensors for embeddings | P2 | 2 hrs | Future |
+| Add `py.typed` marker | P4 | 1 min | DONE |
+| Replace ad-hoc participant magic number | P4 | 1 min | DONE |
+| Migrate `server.py` to `app.state` | P3 | 30 min | DONE |
+| Evaluate JSON mode for Ollama | P3 | Research | Deferred |
+| Replace pickle embeddings format | P2 | 2 hrs | Deferred |
 
 ---
 
