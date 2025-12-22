@@ -21,6 +21,30 @@ cp .env.example .env
 
 ## Configuration Groups
 
+### LLM Backend Settings
+
+Selects which runtime implementation is used for chat and embeddings.
+
+| Variable | Type | Default | Description |
+|----------|------|---------|-------------|
+| `LLM_BACKEND` | string | `ollama` | Backend: `ollama` (local HTTP) or `huggingface` (Transformers) |
+| `LLM_HF_DEVICE` | string | `auto` | HuggingFace device: `auto`, `cpu`, `cuda`, `mps` |
+| `LLM_HF_QUANTIZATION` | string | *(unset)* | Optional HuggingFace quantization: `int4` or `int8` |
+| `LLM_HF_CACHE_DIR` | path | *(unset)* | Optional HuggingFace cache directory |
+| `LLM_HF_TOKEN` | string | *(unset)* | Optional HuggingFace token (prefer `huggingface-cli login`) |
+
+**Notes:**
+- HuggingFace dependencies are optional; install with `make dev-hf` (or `pip install 'ai-psychiatrist[hf]'`).
+- Canonical model names like `gemma3:27b` are resolved to backend-specific IDs when possible.
+- Official MedGemma weights are HuggingFace-only; there is no official MedGemma in the Ollama library.
+
+**Example:**
+```bash
+LLM_BACKEND=huggingface
+LLM_HF_DEVICE=mps
+MODEL_QUANTITATIVE_MODEL=medgemma:27b
+```
+
 ### Ollama Settings
 
 Connection settings for the Ollama LLM server.
@@ -55,7 +79,7 @@ LLM model selection and sampling parameters.
 | `MODEL_QUALITATIVE_MODEL` | string | `gemma3:27b` | Section 2.2 |
 | `MODEL_JUDGE_MODEL` | string | `gemma3:27b` | Section 2.2 |
 | `MODEL_META_REVIEW_MODEL` | string | `gemma3:27b` | Section 2.2 |
-| `MODEL_QUANTITATIVE_MODEL` | string | `alibayram/medgemma:27b` | Appendix F (18% better MAE) |
+| `MODEL_QUANTITATIVE_MODEL` | string | `gemma3:27b` | Section 2.2 (MedGemma in Appendix F) |
 | `MODEL_EMBEDDING_MODEL` | string | `qwen3-embedding:8b` | Section 2.2 |
 | `MODEL_TEMPERATURE` | float | `0.2` | Sampling temperature (0.0-2.0) |
 | `MODEL_TEMPERATURE_JUDGE` | float | `0.0` | Judge uses deterministic output |
@@ -66,10 +90,13 @@ LLM model selection and sampling parameters.
 
 | Model | Size | Use Case | Performance |
 |-------|------|----------|-------------|
-| `gemma3:27b` | ~16GB | Baseline for all agents | Paper reference |
-| `alibayram/medgemma:27b` | ~16GB | Quantitative agent | 18% better MAE |
+| `gemma3:27b` | ~16GB | All agents (default) | Paper Section 2.2 |
+| `medgemma:27b` | ~16GB | Quantitative (HuggingFace only) | Appendix F, 18% better MAE but more N/A |
 | `gemma3:27b-q4_K_M` | ~8GB | Memory-constrained | Slightly lower quality |
 | `qwen3-embedding:8b` | ~4GB | Embeddings | Paper standard |
+
+> **Note**: MedGemma is not available in Ollama officially. Use HuggingFace backend for official weights.
+> See [Model Registry](../models/model-registry.md) for HuggingFace setup.
 
 **Example:**
 ```bash
@@ -265,16 +292,17 @@ EMBEDDING__TOP_K_REFERENCES=3
 OLLAMA_HOST=127.0.0.1
 OLLAMA_PORT=11434
 
-# ============== LLM Models (Paper-Optimal) ==============
-# Paper Appendix F: MedGemma improves quantitative MAE (0.505 vs 0.619)
-MODEL_EMBEDDING_MODEL=qwen3-embedding:8b
+# ============== LLM Models (Paper Section 2.2) ==============
+# All agents use Gemma 3 27B by default
+MODEL_QUALITATIVE_MODEL=gemma3:27b
 MODEL_JUDGE_MODEL=gemma3:27b
 MODEL_META_REVIEW_MODEL=gemma3:27b
-MODEL_QUALITATIVE_MODEL=gemma3:27b
-MODEL_QUANTITATIVE_MODEL=alibayram/medgemma:27b
+MODEL_QUANTITATIVE_MODEL=gemma3:27b
+MODEL_EMBEDDING_MODEL=qwen3-embedding:8b
 
-# Alternative (paper baseline quantitative model):
-# MODEL_QUANTITATIVE_MODEL=gemma3:27b
+# MedGemma alternative (Appendix F - requires HuggingFace backend):
+# MODEL_QUANTITATIVE_MODEL=medgemma:27b
+# Note: Better MAE (0.505 vs 0.619) but produces more N/A predictions
 
 # ============== Embedding/Few-Shot (Paper Appendix D) ==============
 EMBEDDING_CHUNK_SIZE=8

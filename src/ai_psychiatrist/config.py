@@ -14,6 +14,7 @@ from __future__ import annotations
 
 import os
 import warnings
+from enum import Enum
 from functools import lru_cache
 from pathlib import Path
 from typing import Literal
@@ -24,6 +25,55 @@ from pydantic_settings import BaseSettings, SettingsConfigDict
 # Skip reading .env file during testing to use code defaults
 ENV_FILE = None if os.environ.get("TESTING") else ".env"
 ENV_FILE_ENCODING = "utf-8"
+
+
+class LLMBackend(str, Enum):
+    """Supported LLM backends.
+
+    The default backend is Ollama (local HTTP server). A HuggingFace backend
+    is supported for accessing official model weights (e.g., MedGemma).
+    """
+
+    OLLAMA = "ollama"
+    HUGGINGFACE = "huggingface"
+
+
+class BackendSettings(BaseSettings):
+    """LLM backend configuration.
+
+    This selects which runtime implementation to use for chat and embedding.
+    """
+
+    model_config = SettingsConfigDict(
+        env_prefix="LLM_",
+        env_file=ENV_FILE,
+        env_file_encoding=ENV_FILE_ENCODING,
+        extra="ignore",
+    )
+
+    backend: LLMBackend = Field(
+        default=LLMBackend.OLLAMA,
+        description="LLM backend implementation",
+    )
+
+    # HuggingFace-specific settings (only used when backend=huggingface)
+    hf_device: str = Field(
+        default="auto",
+        description="HuggingFace device selection: auto, cpu, cuda, mps",
+    )
+    hf_quantization: Literal["int4", "int8"] | None = Field(
+        default=None,
+        description="Optional HuggingFace quantization: int4 or int8",
+    )
+    hf_cache_dir: Path | None = Field(
+        default=None,
+        description="Optional HuggingFace cache directory",
+    )
+    hf_token: str | None = Field(
+        default=None,
+        repr=False,
+        description="Optional HuggingFace token (prefer huggingface-cli login)",
+    )
 
 
 class OllamaSettings(BaseSettings):
@@ -60,8 +110,10 @@ class ModelSettings(BaseSettings):
     """LLM model configuration.
 
     Paper baseline (Section 2.2): Gemma 3 27B for the multi-agent system.
-    Paper-validated quantitative improvement (Appendix F): MedGemma 27B achieves
-    MAE 0.505 (vs 0.619) but makes fewer predictions.
+
+    NOTE: MedGemma 27B (Appendix F) achieves better item-level MAE (0.505 vs 0.619)
+    but produces excessive N/A scores in practice, leading to worse total-score MAE.
+    Use gemma3:27b for better overall performance.
 
     Embeddings (Section 2.2): Qwen 3 8B Embedding. The paper does not specify
     quantization; the default tag below uses Q8_0 to match the research scripts.
@@ -84,8 +136,8 @@ class ModelSettings(BaseSettings):
         default="gemma3:27b", description="Meta-review agent model (Paper Section 2.2)"
     )
     quantitative_model: str = Field(
-        default="alibayram/medgemma:27b",
-        description="Quantitative agent model (Paper Appendix F: MAE 0.505)",
+        default="gemma3:27b",
+        description="Quantitative agent model (Paper Section 2.2: Gemma 3 27B)",
     )
     embedding_model: str = Field(
         default="qwen3-embedding:8b",
@@ -270,6 +322,7 @@ class Settings(BaseSettings):
     )
 
     # Nested settings groups
+    backend: BackendSettings = Field(default_factory=BackendSettings)
     ollama: OllamaSettings = Field(default_factory=OllamaSettings)
     model: ModelSettings = Field(default_factory=ModelSettings)
     embedding: EmbeddingSettings = Field(default_factory=EmbeddingSettings)
@@ -280,8 +333,8 @@ class Settings(BaseSettings):
 
     # Feature flags
     enable_few_shot: bool = Field(default=True, description="Enable few-shot mode")
-    # NOTE: enable_medgemma removed - use MODEL__QUANTITATIVE_MODEL directly.
-    # Default quantitative_model is already alibayram/medgemma:27b (Paper Appendix F).
+    # NOTE: Default quantitative_model is gemma3:27b (Paper Section 2.2).
+    # MedGemma was only evaluated as ALTERNATIVE in Appendix F (produces more N/A).
 
     @model_validator(mode="after")
     def validate_consistency(self) -> Settings:
@@ -308,3 +361,8 @@ def get_ollama_settings() -> OllamaSettings:
 def get_model_settings() -> ModelSettings:
     """Get model settings (for FastAPI Depends)."""
     return get_settings().model
+
+
+def get_backend_settings() -> BackendSettings:
+    """Get backend settings (for FastAPI Depends)."""
+    return get_settings().backend

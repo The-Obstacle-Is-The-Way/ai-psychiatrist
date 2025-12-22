@@ -52,6 +52,12 @@ docs = [
     "mkdocs-material>=9.5.0",
     "mkdocstrings[python]>=0.27.0",
 ]
+hf = [
+    # Optional heavyweight dependencies for running official model weights via Transformers.
+    "torch>=2.4.0",
+    "transformers>=4.51.0",
+    "sentence-transformers>=2.7.0",
+]
 
 [project.scripts]
 ai-psychiatrist = "ai_psychiatrist.cli:main"

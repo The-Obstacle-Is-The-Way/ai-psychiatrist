@@ -1,7 +1,7 @@
 """Embedding generation and similarity search service.
 
 Implements the embedding-based few-shot prompting approach from
-Paper Section 2.4.2. Generates embeddings via Ollama and performs
+Paper Section 2.4.2. Generates embeddings via the configured LLM backend and performs
 cosine similarity search against pre-computed reference embeddings.
 """
 
@@ -16,11 +16,12 @@ from sklearn.metrics.pairwise import cosine_similarity
 from ai_psychiatrist.domain.enums import PHQ8Item
 from ai_psychiatrist.domain.exceptions import EmbeddingDimensionMismatchError
 from ai_psychiatrist.domain.value_objects import EmbeddedChunk, SimilarityMatch, TranscriptChunk
+from ai_psychiatrist.infrastructure.llm.protocols import EmbeddingRequest
 from ai_psychiatrist.infrastructure.logging import get_logger
 
 if TYPE_CHECKING:
     from ai_psychiatrist.config import EmbeddingSettings, ModelSettings
-    from ai_psychiatrist.infrastructure.llm.ollama import OllamaClient
+    from ai_psychiatrist.infrastructure.llm.protocols import EmbeddingClient
     from ai_psychiatrist.services.reference_store import ReferenceStore
 
 logger = get_logger(__name__)
@@ -72,12 +73,12 @@ class EmbeddingService:
     """Service for generating embeddings and finding similar chunks.
 
     Implements the embedding-based few-shot prompting approach from Section 2.4.2.
-    Uses Ollama for embedding generation and cosine similarity for retrieval.
+    Uses the configured LLM backend for embedding generation and cosine similarity for retrieval.
     """
 
     def __init__(
         self,
-        llm_client: OllamaClient,
+        llm_client: EmbeddingClient,
         reference_store: ReferenceStore,
         settings: EmbeddingSettings,
         model_settings: ModelSettings | None = None,
@@ -111,13 +112,19 @@ class EmbeddingService:
             return ()
 
         # Use model settings if provided (Paper Section 2.2: Qwen 3 8B Embedding)
-        model = self._model_settings.embedding_model if self._model_settings else None
-
-        embedding = await self._llm_client.simple_embed(
-            text=text,
-            model=model,
-            dimension=self._dimension,
+        model = (
+            self._model_settings.embedding_model
+            if self._model_settings is not None
+            else "qwen3-embedding:8b"
         )
+        response = await self._llm_client.embed(
+            EmbeddingRequest(
+                text=text,
+                model=model,
+                dimension=self._dimension,
+            )
+        )
+        embedding = response.embedding
 
         logger.debug(
             "Generated embedding",
