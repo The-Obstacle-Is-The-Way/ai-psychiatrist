@@ -17,7 +17,7 @@ PHQ-8 is derived from the PHQ-9, which includes a 9th question about suicide ide
 
 ## The 8 Items
 
-Each item corresponds to a DSM-IV criterion for Major Depressive Episode (the mapping is equivalent in DSM-5):
+Each item corresponds to a DSM-5 criterion for Major Depressive Episode:
 
 | # | Item | Clinical Domain | Code |
 |---|------|-----------------|------|

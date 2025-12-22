@@ -73,7 +73,7 @@ DOMAIN_KEYWORDS: dict[str, list[str]] = _load_domain_keywords()
 
 QUANTITATIVE_SYSTEM_PROMPT = """You are an AI psychiatrist assessment tool specialized in analyzing \
 interview transcripts to evaluate PHQ-8 (Patient Health Questionnaire-8) scores. The PHQ-8 is a \
-validated depression screening instrument that assesses eight of the nine DSM-IV criteria for \
+validated depression screening instrument that assesses eight of the nine DSM-5 criteria for \
 depressive disorders over the past 2 weeks.
 
 PHQ-8 Scoring System:

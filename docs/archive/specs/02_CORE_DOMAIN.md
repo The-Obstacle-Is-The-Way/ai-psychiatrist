@@ -44,7 +44,7 @@ from enum import IntEnum, StrEnum
 
 
 class PHQ8Item(StrEnum):
-    """PHQ-8 assessment items (DSM-IV criteria)."""
+    """PHQ-8 assessment items (DSM-5 criteria)."""
 
     NO_INTEREST = "NoInterest"      # Little interest or pleasure (anhedonia)
     DEPRESSED = "Depressed"         # Feeling down, depressed, hopeless
