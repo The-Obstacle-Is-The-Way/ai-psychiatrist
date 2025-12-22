@@ -1,7 +1,7 @@
 """Domain enumerations for AI Psychiatrist.
 
 This module defines core enumerations used throughout the domain layer:
-- PHQ8Item: The 8 depression symptom items (DSM-IV criteria)
+- PHQ8Item: The 8 depression symptom items (DSM-5 criteria)
 - PHQ8Score: Frequency scores (0-3) for PHQ-8 items
 - SeverityLevel: Depression severity categories (paper Section 2.1)
 - EvaluationMetric: Qualitative assessment metrics (paper Appendix B)
@@ -14,7 +14,7 @@ from enum import IntEnum, StrEnum
 
 
 class PHQ8Item(StrEnum):
-    """PHQ-8 assessment items (DSM-IV criteria).
+    """PHQ-8 assessment items (DSM-5 criteria).
 
     The PHQ-8 assesses eight depression symptoms over the past two weeks.
     Values match the legacy as-is repo format for parity audits.

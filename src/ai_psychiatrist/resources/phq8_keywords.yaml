@@ -14,6 +14,7 @@
 #    - "numb" removed (matches "NUMBer")
 #    - "nap" removed (matches "sNAP", "kidNAP")
 #    - "napping" removed (matches "sNAPPING")
+#    - "napping a lot" removed (matches "sNAPPING a lot")
 #    - "reading" removed (matches "dREADING", "spREADING")
 #    - "blue" removed (matches "BLUEprint", "BLUEjeans")
 #    - "sad" removed (matches "SADly")
@@ -25,8 +26,37 @@
 #    - "stuck" removed (matches "STUCK in traffic")
 #    - "binge" removed (matches "BINGE watch")
 #    - "starving" removed (hyperbolic: "I'm STARVING")
+#    - "fatigue" removed (matches "FATIGUES" - Veteran uniform context)
+#    - "foggy" removed (matches "FOGGY morning")
+#    - "comfort food" removed (ambiguous, not necessarily overeating)
 #
-# 2. Domain Specificity: Keywords require symptom context, not bare nouns.
+# 2. Cross-Domain Collision Protections:
+#    - "pacing" removed (matches inside "sPACING out" -> would flag Agitation for Concentration)
+#    - "restless" removed (matches inside "RESTLESS sleep" -> would flag Agitation for Sleep)
+#    - "scattered" removed (matches "SCATTERED papers" -> Environmental vs Cognitive)
+#    - "wake up early" removed (matches healthy "I wake up early for work")
+#    - "sluggish" removed from Item 8 (kept in Item 4 only to avoid domain bleed)
+#
+# 3. "eating X" Substring Collisions (crEATING less/too much):
+#    - "eating less" removed (matches "crEATING less stress")
+#    - "eating too much" removed (matches "crEATING too much work")
+#    - "eating more than usual" removed (matches "crEATING more than usual")
+#    - "eating less than usual" removed (matches "crEATING less than usual")
+#    - Replaced with first-person anchored variants: "i'm eating less", "been eating less", etc.
+#
+# 4. Clinical Domain Purity (PHQ-8 Item 8 Psychomotor):
+#    - "jumpy" removed (PTSD/hyperarousal, not psychomotor retardation/agitation)
+#    - "feel stuck" removed (life circumstances, not observable psychomotor change)
+#    - "on edge" removed (anxiety/hyperarousal, not psychomotor)
+#
+# 5. Domain Specificity: Keywords require symptom context, not bare nouns.
+#
+# 6. Additional Substring Anchor Safety (swEAT/reTIRED fixes):
+#    - "eat less" removed (matches "swEAT LESS")
+#    - "eat too much" removed (matches "swEAT TOO MUCH")
+#    - "tired easily" removed (matches "reTIRED EASILY" - Veteran dataset)
+#    - "over eat" (with space) removed (matches "lOVER EATer")
+#    - Retained safe forms: "get tired easily", "overeat" (no space), anchored variants.
 #
 # FORMAT:
 # - All keywords are matched case-insensitively via substring matching.
@@ -63,7 +93,8 @@ PHQ8_NoInterest:
   - "dont care about anything"
   - "nothing interests me"
   - "not interested in anything"
-  - "not interested in doing"
+  - "not interested in doing anything"
+  - "not interested in doing things"
   - "no motivation"
   - "feeling bored"
   - "feel bored"
@@ -88,6 +119,7 @@ PHQ8_Depressed:
   - "feel sad"
   - "am sad"
   - "im sad"
+  - "i'm sad"
   - "was sad"
   - "so sad"
   - "very sad"
@@ -139,7 +171,8 @@ PHQ8_Sleep:
   - "wake up a lot"
   - "waking up a lot"
   - "wake up often"
-  - "wake up early"
+  - "wake up too early"
+  - "waking up too early"
   - "early morning awakening"
   - "can't get back to sleep"
   - "cant get back to sleep"
@@ -159,30 +192,33 @@ PHQ8_Sleep:
   - "taking a nap"
   - "taking naps"
   - "took a nap"
-  - "napping a lot"
 
 PHQ8_Tired:
   # PHQ-8 Item #4: "Feeling tired or having little energy"
   # Target: Fatigue / low energy (separate from sleep disturbance)
-  # Note: Bare "tired" removed (matches "reTIRED" - common in DAIC-WOZ veterans).
+  # Note: Bare "tired" removed (matches "reTIRED"), bare "fatigue" removed (matches "FATIGUES" uniform).
   - "feeling tired"
   - "feel tired"
   - "am tired"
   - "im tired"
+  - "i'm tired"
   - "so tired"
   - "very tired"
   - "really tired"
   - "too tired"
   - "always tired"
   - "tired all the time"
-  - "get tired"
+  - "get tired easily"
+  # Note: "tired easily" removed (matches "reTIRED EASILY" - Veteran dataset)
   - "dead tired"
   - "exhausted"
   - "exhaustion"
   - "worn out"
   - "drained"
-  - "fatigue"
   - "fatigued"
+  - "mental fatigue"
+  - "physical fatigue"
+  - "chronic fatigue"
   - "little energy"
   - "no energy"
   - "low energy"
@@ -202,7 +238,10 @@ PHQ8_Appetite:
   # PHQ-8 Item #5: "Poor appetite or overeating"
   # Target: Appetite change in either direction; avoid generic "eat/weight"
   # Note: "binge" removed (matches "binge watch"), "starving" removed (hyperbolic).
+  # Note: Bare "eating less/too much/more" removed (matches "crEATING less/too much/more").
+  #       Replaced with first-person anchored variants to avoid false positives.
   - "no appetite"
+  - "loss of appetite"
   - "lost my appetite"
   - "lost appetite"
   - "poor appetite"
@@ -212,9 +251,16 @@ PHQ8_Appetite:
   - "can't eat"
   - "cant eat"
   - "barely eating"
-  - "not eating"
-  - "eating less"
-  - "eat less"
+  - "not eating much"
+  - "not eating as much"
+  # Anchored "eating less" variants (avoids "crEATING less" collision)
+  - "i'm eating less"
+  - "im eating less"
+  - "i've been eating less"
+  - "ive been eating less"
+  - "been eating less"
+  - "started eating less"
+  # Note: "eat less" removed (matches "swEAT LESS")
   - "skipping meals"
   - "skip meals"
   - "force myself to eat"
@@ -222,16 +268,28 @@ PHQ8_Appetite:
   - "food doesnt taste"
   - "overeating"
   - "overeat"
-  - "over eat"
-  - "eating too much"
-  - "eat too much"
+  # Note: "over eat" (with space) removed (matches "lOVER EATer")
+  # Anchored "eating too much" variants (avoids "crEATING too much" collision)
+  - "i'm eating too much"
+  - "im eating too much"
+  - "i've been eating too much"
+  - "ive been eating too much"
+  - "been eating too much"
+  - "started eating too much"
+  # Note: "eat too much" removed (matches "swEAT TOO MUCH")
   - "can't stop eating"
   - "cant stop eating"
   - "snacking a lot"
   - "comfort eating"
   - "comfort eat"
-  - "comfort food"
   - "appetite increased"
+  # Anchored "eating more" variants (avoids "crEATING more" collision)
+  - "i'm eating more"
+  - "im eating more"
+  - "i've been eating more"
+  - "ive been eating more"
+  - "been eating more"
+  - "started eating more"
   - "hungry all the time"
   - "always hungry"
   - "binge eat"
@@ -266,6 +324,7 @@ PHQ8_Failure:
   - "let myself down"
   - "let my family down"
   - "let everyone down"
+  - "disappointed in myself"
   - "not good enough"
   - "hate myself"
   - "ashamed"
@@ -323,7 +382,10 @@ PHQ8_Concentrating:
   - "lose my train of thought"
   - "lost my train of thought"
   - "brain fog"
-  - "foggy"
+  - "feel foggy"
+  - "feeling foggy"
+  - "mind feels foggy"
+  - "head feels foggy"
   - "can't think straight"
   - "cant think straight"
   - "can't follow a conversation"
@@ -336,19 +398,23 @@ PHQ8_Concentrating:
   - "cant follow tv"
   - "can't follow a show"
   - "cant follow a show"
-  - "scattered"
+  - "feeling scattered"
+  - "feel scattered"
+  - "mind is scattered"
+  - "brain feels scattered"
 
 PHQ8_Moving:
   # PHQ-8 Item #8: "Moving or speaking slowly ... Or ... fidgety/restless"
   # Target: Psychomotor retardation OR agitation (observable slowing / can't sit still)
-  # Note: "stuck" removed (matches "stuck in traffic").
+  # Note: Bare "pacing" removed (matches "sPACING out"), bare "restless" removed (matches "RESTLESS sleep").
+  # Note: "jumpy", "feel stuck", "on edge" removed (anxiety/hyperarousal, not psychomotor).
+  # Note: "sluggish" removed (kept in Item 4 Tired only to avoid domain bleed).
   - "moving slowly"
   - "move slowly"
   - "moving slow"
   - "slowed down"
   - "slowing down"
   - "slow motion"
-  - "sluggish"
   - "everything feels slow"
   - "speaking slowly"
   - "talking slowly"
@@ -356,11 +422,17 @@ PHQ8_Moving:
   - "fidgety"
   - "can't sit still"
   - "cant sit still"
-  - "pacing"
+  - "pacing around"
+  - "pacing the floor"
+  - "pacing the room"
+  - "pacing back and forth"
+  - "walking back and forth"
   - "agitated"
   - "jittery"
-  - "restless"
-  - "jumpy"
-  - "feel stuck"
-  - "feeling stuck"
-  - "on edge"
+  - "feel restless"
+  - "feeling restless"
+  - "am restless"
+  - "im restless"
+  - "so restless"
+  - "very restless"
+  - "restlessness"

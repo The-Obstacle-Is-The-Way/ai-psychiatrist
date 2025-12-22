@@ -266,7 +266,7 @@ class QuantitativeAssessmentAgent:
 ### Prompt Templates (prompts/quantitative.py)
 
 ```python
-QUANTITATIVE_SYSTEM_PROMPT = """You are a AI psychiatrist assessment tool specialized in analyzing interview transcripts to evaluate PHQ-8 (Patient Health Questionnaire-8) scores. The PHQ-8 is a validated depression screening instrument that assesses eight of the nine DSM-IV criteria for depressive disorders over the past 2 weeks.
+QUANTITATIVE_SYSTEM_PROMPT = """You are a AI psychiatrist assessment tool specialized in analyzing interview transcripts to evaluate PHQ-8 (Patient Health Questionnaire-8) scores. The PHQ-8 is a validated depression screening instrument that assesses eight of the nine DSM-5 criteria for depressive disorders over the past 2 weeks.
 
 PHQ-8 Scoring System:
 - 0 = Not at all (0-1 days in the past 2 weeks)

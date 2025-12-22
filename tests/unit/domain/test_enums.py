@@ -18,10 +18,10 @@ from ai_psychiatrist.domain.enums import (
 
 
 class TestPHQ8Item:
-    """Tests for PHQ8Item enum (DSM-IV criteria, 8 items)."""
+    """Tests for PHQ8Item enum (DSM-5 criteria, 8 items)."""
 
     def test_has_exactly_eight_items(self) -> None:
-        """PHQ-8 must have exactly 8 items per DSM-IV criteria."""
+        """PHQ-8 must have exactly 8 items per DSM-5 criteria."""
         assert len(PHQ8Item) == 8
 
     def test_all_items_returns_list_of_eight(self) -> None:

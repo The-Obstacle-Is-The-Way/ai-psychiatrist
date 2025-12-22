@@ -17,7 +17,7 @@ PHQ-8 is derived from the PHQ-9, which includes a 9th question about suicide ide
 
 ## The 8 Items
 
-Each item corresponds to a DSM-IV criterion for Major Depressive Episode (the mapping is equivalent in DSM-5):
+Each item corresponds to a DSM-5 criterion for Major Depressive Episode:
 
 | # | Item | Clinical Domain | Code |
 |---|------|-----------------|------|
@@ -260,7 +260,7 @@ The paper notes that some items are harder to predict:
 
 ## Code Reference
 
-### Enum Definition (`domain/enums.py`)
+### Enum Definition (`src/ai_psychiatrist/domain/enums.py`)
 
 ```python
 class PHQ8Item(StrEnum):
@@ -274,7 +274,7 @@ class PHQ8Item(StrEnum):
     MOVING = "Moving"
 ```
 
-### Assessment Entity (`domain/entities.py`)
+### Assessment Entity (`src/ai_psychiatrist/domain/entities.py`)
 
 ```python
 @dataclass

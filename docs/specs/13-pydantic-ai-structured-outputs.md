@@ -47,7 +47,7 @@ path for replication.
 3. `src/ai_psychiatrist/config.py`
    - New setting: `LLM_OUTPUT_MODE = "xml" | "structured"`
    - New setting: `OLLAMA_BASE_URL` (OpenAI-compatible `/v1`)
-4. Agent updates (e.g., `agents/qualitative.py`)
+4. Agent updates (e.g., `src/ai_psychiatrist/agents/qualitative.py`)
    - Use structured output path when `LLM_OUTPUT_MODE == "structured"`
    - Map Pydantic output models to existing domain entities
 5. Tests
