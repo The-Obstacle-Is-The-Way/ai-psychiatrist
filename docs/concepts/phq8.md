@@ -260,7 +260,7 @@ The paper notes that some items are harder to predict:
 
 ## Code Reference
 
-### Enum Definition (`domain/enums.py`)
+### Enum Definition (`src/ai_psychiatrist/domain/enums.py`)
 
 ```python
 class PHQ8Item(StrEnum):
@@ -274,7 +274,7 @@ class PHQ8Item(StrEnum):
     MOVING = "Moving"
 ```
 
-### Assessment Entity (`domain/entities.py`)
+### Assessment Entity (`src/ai_psychiatrist/domain/entities.py`)
 
 ```python
 @dataclass

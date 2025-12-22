@@ -27,7 +27,7 @@ Implement comprehensive observability infrastructure including metrics, distribu
 
 - No structured logging (most scripts use `print`)
 - No metrics/tracing/health endpoints beyond what FastAPI provides by default
-- One notable exception: `agents/quantitative_assessor_f.py` has a `VERBOSE` flag and prints timestamped `[STEP]`, `[CHAT]`, and `[EMB]` logs, including the “exact” user prompt for chat calls.
+- One notable exception: `_legacy/agents/quantitative_assessor_f.py` has a `VERBOSE` flag and prints timestamped `[STEP]`, `[CHAT]`, and `[EMB]` logs, including the "exact" user prompt for chat calls.
 - The repo contains evaluation artifacts in `analysis_output/` and plotting code in notebooks, but those are offline—not runtime observability.
 
 ## As-Is Validation Artifacts (`analysis_output/`)
