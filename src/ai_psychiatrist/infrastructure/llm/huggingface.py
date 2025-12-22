@@ -9,7 +9,6 @@ from __future__ import annotations
 
 import asyncio
 import importlib
-import math
 from dataclasses import dataclass
 from typing import TYPE_CHECKING, Any
 
@@ -29,13 +28,6 @@ if TYPE_CHECKING:
     from collections.abc import Sequence
 
 logger = get_logger(__name__)
-
-
-def _l2_normalize(vec: Sequence[float]) -> tuple[float, ...]:
-    norm = math.sqrt(sum(x * x for x in vec))
-    if norm > 0:
-        return tuple(x / norm for x in vec)
-    return tuple(vec)
 
 
 class MissingHuggingFaceDependenciesError(ImportError):
@@ -367,7 +359,11 @@ class HuggingFaceClient:
 
     @staticmethod
     def _encode_embedding(*, model: Any, text: str) -> tuple[float, ...]:
-        # SentenceTransformer returns numpy arrays. Normalize at source when available.
+        """Encode text to L2-normalized embedding vector.
+
+        SentenceTransformer.encode() with normalize_embeddings=True already returns
+        L2-normalized vectors, so no additional normalization is needed.
+        """
         encoded = model.encode([text], normalize_embeddings=True)
         vec = encoded[0].tolist()
-        return _l2_normalize(vec)
+        return tuple(vec)
