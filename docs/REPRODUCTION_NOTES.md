@@ -1,111 +1,112 @@
 # Reproduction Notes: PHQ-8 Assessment Evaluation
 
-## Summary
+**Status**: ⚠️ **PENDING RE-RUN** - Previous results used wrong methodology
+**Last Updated**: 2025-12-22
 
-This document captures findings from the paper reproduction attempt on 2025-12-22.
+---
 
-## Final Results
+## ⚠️ CRITICAL: Previous Results Are Invalid
 
-Note: The results below are based on the **test split total score** (`PHQ_Score`, 0-24). The paper’s headline MAE is **item-level** (0-3 per item) excluding "N/A". See `scripts/reproduce_results.py` for paper-style item-level evaluation on train/dev splits.
+The reproduction run on 2025-12-22 04:01 AM used **wrong methodology**:
+- Computed **total-score MAE** (0-24 scale) instead of **item-level MAE** (0-3 scale)
+- Used test split which has NO per-item ground truth labels
+- Did NOT exclude N/A items from MAE calculation
 
-### Zero-Shot Evaluation (gemma3:27b)
+The file `data/outputs/reproduction_results_20251222_040100.json` should be **ignored**.
 
-| Metric | Value |
-|--------|-------|
-| Total Participants | 47 |
-| Successful | 41 (87%) |
-| Failed (timeouts) | 6 |
-| **MAE** | **4.02** |
-| RMSE | 5.38 |
-| Median AE | 3.0 |
-| Total Time | 2.96 hours |
+### Corrected Script (Merged to Main)
 
-### Perfect Predictions (error = 0)
+Commit `1c414e4` rewrote `scripts/reproduce_results.py` to match paper methodology:
+- Item-level MAE (0-3 scale)
+- N/A exclusion
+- Uses train/dev splits (have per-item labels)
+- Reports coverage metrics
 
-| Participant | Ground Truth | Predicted |
-|-------------|--------------|-----------|
-| 359 | 13 | 13 |
-| 387 | 2 | 2 |
-| 408 | 0 | 0 |
-| 462 | 9 | 9 |
-| 465 | 2 | 2 |
-| 470 | 3 | 3 |
+**The corrected script has NOT been run yet.**
 
-### Observations
+---
 
-1. **Underestimation of severe depression**: The model tends to predict lower scores for participants with high ground truth (≥15). Examples:
-   - P308: predicted 10, actual 22 (error 12)
-   - P354: predicted 7, actual 18 (error 11)
-   - P453: predicted 5, actual 17 (error 12)
+## Paper's Reported Results (Target)
 
-2. **Good performance on mild cases**: Many predictions within 1-3 points for lower severity cases.
+From Section 3.2 and Appendix F:
 
-3. **Timeouts**: 6 participants timed out (180s limit), suggesting some transcripts require longer processing.
+| Model | Mode | Item-Level MAE | Coverage | Notes |
+|-------|------|---------------|----------|-------|
+| Gemma 3 27B | Few-shot | 0.619 | ~50% | Paper's primary result |
+| Gemma 3 27B | Zero-shot | 0.796 | - | Baseline |
+| MedGemma 27B | Few-shot | 0.505 | Lower | "Fewer predictions overall" |
+
+---
+
+## To Run Reproduction (REQUIRED NEXT STEP)
+
+```bash
+# Ensure on main or dev branch with latest code
+git checkout main
+
+# Run with corrected script (uses train/dev splits with per-item labels)
+python scripts/reproduce_results.py --split dev
+
+# Or full train+dev (142 participants, matches paper's qualitative figures)
+python scripts/reproduce_results.py --split train+dev
+```
+
+---
+
+## Previous (Invalid) Results for Reference
+
+**Note**: These numbers are on a different scale and methodology. Do NOT compare to paper.
+
+| Metric | Value | Issue |
+|--------|-------|-------|
+| Total Participants | 47 | Test split (no per-item labels) |
+| MAE | 4.02 | **Wrong scale** (0-24 not 0-3) |
+| Failed (timeouts) | 6 | 13% timeout rate |
+
+---
+
+## Bug Summary (Fixed in Code)
+
+### BUG-018a: MedGemma Excessive N/A
+- **Problem**: `alibayram/medgemma:27b` produces 8/8 N/A for most participants
+- **Fix**: Default changed to `gemma3:27b`
+- **Status**: ✅ Fixed in config
+
+### BUG-018i: Wrong MAE Methodology
+- **Problem**: Computed total-score MAE instead of item-level MAE
+- **Fix**: Complete rewrite of `scripts/reproduce_results.py`
+- **Status**: ✅ Fixed in code, ⚠️ NOT re-run
+
+---
 
 ## Environment
 
 - **Hardware**: M1 Pro Max (Apple Silicon)
 - **Models**:
-  - gemma3:27b (17GB, quantized)
-  - qwen3-embedding:8b (4.7GB)
-  - alibayram/medgemma:27b (16GB)
-- **Ollama**: Running locally
+  - `gemma3:27b` (17GB) - All agents
+  - `qwen3-embedding:8b` (4.7GB) - Few-shot embeddings
+- **Timeout**: 180s per LLM call (consider 300s for large transcripts)
 
-## Bug Discovered: MedGemma Excessive N/A Predictions
+---
 
-### Problem
+## Configuration (.env)
 
-The default `quantitative_model` was set to `alibayram/medgemma:27b` based on Paper Appendix F claiming better MAE (0.505 vs 0.619). However, in practice:
+Current paper-optimal settings:
+```bash
+MODEL_QUALITATIVE_MODEL=gemma3:27b
+MODEL_JUDGE_MODEL=gemma3:27b
+MODEL_META_REVIEW_MODEL=gemma3:27b
+MODEL_QUANTITATIVE_MODEL=gemma3:27b
+MODEL_EMBEDDING_MODEL=qwen3-embedding:8b
+EMBEDDING_DIMENSION=4096
+OLLAMA_TIMEOUT_SECONDS=180  # Increase to 300 for large transcripts
+```
 
-- MedGemma returns **8/8 N/A scores** for most participants
-- This results in predicted total score = 0 for all participants
-- Total-score MAE: **6.75** (much worse than expected)
+---
 
-### Root Cause
+## Next Steps
 
-Paper Appendix F states:
-> "The few-shot approach with MedGemma 27B achieved an improved average MAE of 0.505 **but detected fewer relevant chunks, making fewer predictions overall**"
-
-The "fewer predictions" caveat is critical: MedGemma is too conservative and marks items as N/A when evidence is ambiguous. While this produces better MAE *when it does score*, it makes fewer predictions overall.
-
-### Example
-
-Participant 308 (ground truth PHQ-8 = 22, severe depression):
-- MedGemma: predicted 0, na_count = 8
-- gemma3:27b: predicted 10, na_count = 4
-- Transcript clearly shows: "yeah it's pretty depressing", sleep problems, job stress
-
-### Fix Applied
-
-Changed default `quantitative_model` from `alibayram/medgemma:27b` to `gemma3:27b`:
-- `src/ai_psychiatrist/config.py`: Updated ModelSettings default
-- `tests/unit/test_config.py`: Updated test with explanatory docstring
-- `.env.example`: Updated default with note
-- `.env`: Updated user's local config
-
-## MAE Interpretation
-
-**Important**: The paper's reported MAE values (0.619 few-shot, 0.796 zero-shot; 0.505 for MedGemma) are **item-level MAE** (each item ranges 0-3) and **exclude** items marked "N/A" (insufficient evidence).
-
-The 4.02 MAE reported above is **total-score MAE** on a 0-24 scale and is **not comparable** to the paper's item-level MAE. Do **not** divide by 8 as a conversion; the paper excludes N/A at the item level, so the metrics are fundamentally different.
-
-To compute paper-style metrics in this repo, use `scripts/reproduce_results.py` against `--split train` or `--split dev` (these splits include per-item PHQ-8 labels). The provided test split CSVs only include total PHQ score, so paper-style item-level MAE on test cannot be computed from checked-in files.
-
-## Performance Notes
-
-- Each assessment takes ~3-4 minutes on M1 Pro Max
-- Two LLM calls per assessment: evidence extraction + scoring
-- 47 test participants = ~3 hours for full evaluation
-- 180s timeout per LLM call (6 timeouts occurred)
-
-## Files Created
-
-- `scripts/reproduce_results.py`: Batch evaluation script
-- `data/outputs/reproduction_results_20251222_040100.json`: Full results
-
-## Remaining Work
-
-1. ~~Complete full zero-shot evaluation~~ ✅
-2. Run few-shot evaluation with embedding references (optional)
-3. Investigate timeout issues for longer transcripts
-4. Consider increasing timeout or optimizing prompts
+1. **Re-run reproduction** with corrected script
+2. **Compare results** to paper's item-level MAE values
+3. **Investigate** if results differ significantly from paper
+4. **Document** final validated results

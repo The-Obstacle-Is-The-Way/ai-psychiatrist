@@ -88,7 +88,7 @@ class OllamaSettings(BaseSettings):
 
     host: str = Field(default="127.0.0.1", description="Ollama server host")
     port: int = Field(default=11434, ge=1, le=65535, description="Ollama server port")
-    timeout_seconds: int = Field(default=180, ge=10, le=600, description="Request timeout")
+    timeout_seconds: int = Field(default=300, ge=10, le=600, description="Request timeout")
 
     @property
     def base_url(self) -> str:
