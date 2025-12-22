@@ -51,6 +51,13 @@
 #
 # 5. Domain Specificity: Keywords require symptom context, not bare nouns.
 #
+# 6. Additional Substring Anchor Safety (swEAT/reTIRED fixes):
+#    - "eat less" removed (matches "swEAT LESS")
+#    - "eat too much" removed (matches "swEAT TOO MUCH")
+#    - "tired easily" removed (matches "reTIRED EASILY" - Veteran dataset)
+#    - "over eat" (with space) removed (matches "lOVER EATer")
+#    - Retained safe forms: "get tired easily", "overeat" (no space), anchored variants.
+#
 # FORMAT:
 # - All keywords are matched case-insensitively via substring matching.
 # - Apostrophe and no-apostrophe variants included for robustness.
@@ -202,7 +209,7 @@ PHQ8_Tired:
   - "always tired"
   - "tired all the time"
   - "get tired easily"
-  - "tired easily"
+  # Note: "tired easily" removed (matches "reTIRED EASILY" - Veteran dataset)
   - "dead tired"
   - "exhausted"
   - "exhaustion"
@@ -253,7 +260,7 @@ PHQ8_Appetite:
   - "ive been eating less"
   - "been eating less"
   - "started eating less"
-  - "eat less"
+  # Note: "eat less" removed (matches "swEAT LESS")
   - "skipping meals"
   - "skip meals"
   - "force myself to eat"
@@ -261,7 +268,7 @@ PHQ8_Appetite:
   - "food doesnt taste"
   - "overeating"
   - "overeat"
-  - "over eat"
+  # Note: "over eat" (with space) removed (matches "lOVER EATer")
   # Anchored "eating too much" variants (avoids "crEATING too much" collision)
   - "i'm eating too much"
   - "im eating too much"
@@ -269,7 +276,7 @@ PHQ8_Appetite:
   - "ive been eating too much"
   - "been eating too much"
   - "started eating too much"
-  - "eat too much"
+  # Note: "eat too much" removed (matches "swEAT TOO MUCH")
   - "can't stop eating"
   - "cant stop eating"
   - "snacking a lot"
