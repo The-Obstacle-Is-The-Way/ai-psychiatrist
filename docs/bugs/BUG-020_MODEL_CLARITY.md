@@ -1,9 +1,9 @@
 # BUG-020: Complete Model Clarity and HuggingFace Options
 
 **Date**: 2025-12-22
-**Status**: PARTIAL FIX COMPLETE - HuggingFace backend pending
-**Author**: Read-only analysis with web search verification
-**Updated**: 2025-12-22 - Config, MAE calculation, and comments fixed
+**Status**: IMPLEMENTED - HuggingFace backend available (optional deps)
+**Author**: Root-cause analysis + implementation follow-through
+**Updated**: 2025-12-22 - Model clarity + HuggingFace backend implemented
 
 ---
 
@@ -187,11 +187,11 @@ outputs = llm.generate(["Your prompt"], SamplingParams(temperature=0.7))
 Use **Gemma 3 27B** for ALL agents (matches Section 2.2):
 
 ```env
-MODEL__QUALITATIVE_MODEL=gemma3:27b
-MODEL__JUDGE_MODEL=gemma3:27b
-MODEL__META_REVIEW_MODEL=gemma3:27b
-MODEL__QUANTITATIVE_MODEL=gemma3:27b
-MODEL__EMBEDDING_MODEL=qwen3-embedding:8b
+MODEL_QUALITATIVE_MODEL=gemma3:27b
+MODEL_JUDGE_MODEL=gemma3:27b
+MODEL_META_REVIEW_MODEL=gemma3:27b
+MODEL_QUANTITATIVE_MODEL=gemma3:27b
+MODEL_EMBEDDING_MODEL=qwen3-embedding:8b
 ```
 
 ### For Reproducing Appendix F Results (Optional)
@@ -199,11 +199,12 @@ MODEL__EMBEDDING_MODEL=qwen3-embedding:8b
 Use MedGemma 27B ONLY for quantitative agent:
 
 ```env
-MODEL__QUALITATIVE_MODEL=gemma3:27b
-MODEL__JUDGE_MODEL=gemma3:27b
-MODEL__META_REVIEW_MODEL=gemma3:27b
-MODEL__QUANTITATIVE_MODEL=<official-medgemma>  # See options above
-MODEL__EMBEDDING_MODEL=qwen3-embedding:8b
+LLM_BACKEND=huggingface
+MODEL_QUALITATIVE_MODEL=gemma3:27b
+MODEL_JUDGE_MODEL=gemma3:27b
+MODEL_META_REVIEW_MODEL=gemma3:27b
+MODEL_QUANTITATIVE_MODEL=medgemma:27b
+MODEL_EMBEDDING_MODEL=qwen3-embedding:8b
 ```
 
 **Note**: MedGemma produces FEWER predictions (more N/A). Paper states: "the number of subjects detected as having available evidence from the transcripts was smaller with MedGemma."
@@ -218,7 +219,7 @@ MODEL__EMBEDDING_MODEL=qwen3-embedding:8b
 
 **Current** (STALE):
 ```python
-# NOTE: enable_medgemma removed - use MODEL__QUANTITATIVE_MODEL directly.
+# NOTE: enable_medgemma removed - use MODEL_QUANTITATIVE_MODEL directly.
 # Default quantitative_model is already alibayram/medgemma:27b (Paper Appendix F).
 ```
 
@@ -286,7 +287,7 @@ def total_score(self) -> int:
 | Issue | Root Cause | Severity | Status |
 |-------|------------|----------|--------|
 | MedGemma all N/A | Used community model + ignored "fewer predictions" caveat | CRITICAL | ✅ FIXED - default changed to gemma3:27b |
-| alibayram model | No official Ollama MedGemma exists | HIGH | ⚠️ PARTIAL - needs HuggingFace backend for official MedGemma |
+| alibayram model | No official Ollama MedGemma exists | HIGH | ✅ MITIGATED - HuggingFace backend supports official weights |
 | Scoring mismatch | Total-score vs item-level MAE | CRITICAL | ✅ FIXED - reproduce_results.py now uses item-level MAE |
 | Stale comments | config.py still mentions alibayram | LOW | ✅ FIXED - comment updated |
 
@@ -308,11 +309,14 @@ src/ai_psychiatrist/infrastructure/llm/
 
 **Key Insight**: The Strategy pattern is ALREADY implemented. Agents depend on `SimpleChatClient` protocol, not concrete `OllamaClient`. Adding a `HuggingFaceClient` is architecturally supported.
 
-### What's Missing
+### What Was Implemented
 
-1. **No `HuggingFaceClient` implementation**
-2. **No backend selection mechanism** (hardcoded to Ollama)
-3. **Model names are Ollama-specific** (`gemma3:27b` vs `google/gemma-3-27b-it`)
+The following components are now implemented in `src/ai_psychiatrist/infrastructure/llm/`:
+
+1. **`HuggingFaceClient`** (`huggingface.py`): optional backend using Transformers + SentenceTransformers
+2. **Backend selection** (`LLM_BACKEND`): choose `ollama` (default) or `huggingface`
+3. **Canonical model aliases** (`model_aliases.py`): canonical names resolved to backend-specific IDs
+4. **Factory** (`factory.py`): `create_llm_client(settings)` returns a backend-appropriate client
 
 ### Proposed Architecture
 
@@ -440,7 +444,7 @@ LLM_BACKEND=huggingface
 
 # HuggingFace-specific (only used if LLM_BACKEND=huggingface)
 LLM_HF_DEVICE=auto
-LLM_HF_QUANTIZATION=int4
+LLM_HF_QUANTIZATION=int4  # optional; None/int4/int8
 
 # ============== Model Selection ==============
 # Use canonical names - automatically resolved per backend
@@ -462,11 +466,11 @@ MODEL_QUANTITATIVE_MODEL=gemma3:27b      # -> google/gemma-3-27b-it on HF
 
 ### Migration Path
 
-1. **Phase 1**: Add `HuggingFaceClient` as alternative backend (keep Ollama working)
-2. **Phase 2**: Add model alias mapping
-3. **Phase 3**: Add backend selection via `.env`
-4. **Phase 4**: Test with official MedGemma from HuggingFace
-5. **Phase 5**: Consider deprecating Ollama if HuggingFace works better
+1. **Implemented**: Add `HuggingFaceClient` as alternative backend (keep Ollama working)
+2. **Implemented**: Add model alias mapping
+3. **Implemented**: Add backend selection via `.env`
+4. **Pending (manual, local)**: Validate official MedGemma weights load on your machine (requires huge download)
+5. **Future**: Consider deprecating Ollama if HuggingFace proves more reliable
 
 ### Files to Create/Modify
 
@@ -477,7 +481,7 @@ MODEL_QUANTITATIVE_MODEL=gemma3:27b      # -> google/gemma-3-27b-it on HF
 | `src/ai_psychiatrist/infrastructure/llm/model_aliases.py` | Create | Model name mapping |
 | `src/ai_psychiatrist/infrastructure/llm/factory.py` | Create | Client factory |
 | `src/ai_psychiatrist/infrastructure/llm/__init__.py` | Modify | Export new classes |
-| `pyproject.toml` | Modify | Add `transformers`, `torch` dependencies |
+| `pyproject.toml` | Modify | Add optional `hf` extra (`torch`, `transformers`, `sentence-transformers`) |
 | `.env.example` | Modify | Add backend configuration |
 | `tests/unit/infrastructure/test_huggingface.py` | Create | Unit tests |
 

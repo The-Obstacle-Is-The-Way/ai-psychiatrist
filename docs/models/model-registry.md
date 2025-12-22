@@ -77,9 +77,14 @@ For accessing official Google models (including MedGemma), use HuggingFace Trans
 ### HuggingFace Installation
 
 ```bash
-pip install "torch>=2.4.0" "transformers>=4.51.0" "sentence-transformers>=2.7.0"
-pip install accelerate bitsandbytes sentencepiece protobuf
+# Install the optional HuggingFace backend dependencies:
+make dev-hf
+# Or, if installing via pip:
+pip install "ai-psychiatrist[hf]"
 ```
+
+**Optional (quantization):**
+- `int8` quantization requires `bitsandbytes` support on your platform.
 
 ### MedGemma Access (Gated Model)
 
@@ -131,7 +136,8 @@ EMBEDDING_DIMENSION=4096
 ### With MedGemma (Appendix F - HuggingFace backend required)
 
 ```bash
-# Requires LLM_BACKEND=huggingface (not yet implemented)
+# Use the HuggingFace backend to access official MedGemma weights.
+LLM_BACKEND=huggingface
 MODEL_QUANTITATIVE_MODEL=medgemma:27b
 ```
 

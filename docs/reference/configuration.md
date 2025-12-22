@@ -21,6 +21,30 @@ cp .env.example .env
 
 ## Configuration Groups
 
+### LLM Backend Settings
+
+Selects which runtime implementation is used for chat and embeddings.
+
+| Variable | Type | Default | Description |
+|----------|------|---------|-------------|
+| `LLM_BACKEND` | string | `ollama` | Backend: `ollama` (local HTTP) or `huggingface` (Transformers) |
+| `LLM_HF_DEVICE` | string | `auto` | HuggingFace device: `auto`, `cpu`, `cuda`, `mps` |
+| `LLM_HF_QUANTIZATION` | string | *(unset)* | Optional HuggingFace quantization: `int4` or `int8` |
+| `LLM_HF_CACHE_DIR` | path | *(unset)* | Optional HuggingFace cache directory |
+| `LLM_HF_TOKEN` | string | *(unset)* | Optional HuggingFace token (prefer `huggingface-cli login`) |
+
+**Notes:**
+- HuggingFace dependencies are optional; install with `make dev-hf` (or `pip install 'ai-psychiatrist[hf]'`).
+- Canonical model names like `gemma3:27b` are resolved to backend-specific IDs when possible.
+- Official MedGemma weights are HuggingFace-only; there is no official MedGemma in the Ollama library.
+
+**Example:**
+```bash
+LLM_BACKEND=huggingface
+LLM_HF_DEVICE=mps
+MODEL_QUANTITATIVE_MODEL=medgemma:27b
+```
+
 ### Ollama Settings
 
 Connection settings for the Ollama LLM server.

@@ -15,6 +15,9 @@ Test Double Location Policy (BUG-001):
     See: docs/bugs/BUG-001_MOCK_IN_PRODUCTION_PATH.md
 """
 
+from ai_psychiatrist.infrastructure.llm.factory import create_llm_client
+from ai_psychiatrist.infrastructure.llm.huggingface import HuggingFaceClient
+from ai_psychiatrist.infrastructure.llm.model_aliases import MODEL_ALIASES, resolve_model_name
 from ai_psychiatrist.infrastructure.llm.ollama import OllamaClient
 from ai_psychiatrist.infrastructure.llm.protocols import (
     ChatClient,
@@ -34,6 +37,7 @@ from ai_psychiatrist.infrastructure.llm.responses import (
 )
 
 __all__ = [
+    "MODEL_ALIASES",
     "ChatClient",
     "ChatMessage",
     "ChatRequest",
@@ -41,10 +45,13 @@ __all__ = [
     "EmbeddingClient",
     "EmbeddingRequest",
     "EmbeddingResponse",
+    "HuggingFaceClient",
     "LLMClient",
     "OllamaClient",
     "SimpleChatClient",
+    "create_llm_client",
     "extract_json_from_response",
     "extract_score_from_text",
     "extract_xml_tags",
+    "resolve_model_name",
 ]

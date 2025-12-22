@@ -1,4 +1,4 @@
-.PHONY: help install dev test test-unit test-integration test-e2e test-fast test-parallel lint lint-fix format format-check typecheck check ci serve repl docs docs-serve clean
+.PHONY: help install dev dev-hf test test-unit test-integration test-e2e test-fast test-parallel lint lint-fix format format-check typecheck check ci serve repl docs docs-serve clean
 
 # Self-documenting help
 help: ## Show this help message
@@ -9,7 +9,11 @@ install: ## Install production dependencies
 	uv sync --no-dev
 
 dev: ## Install all dependencies (including dev)
-	uv sync --all-extras
+	uv sync --extra dev --extra docs
+	uv run pre-commit install
+
+dev-hf: ## Install dev deps + HuggingFace backend extras
+	uv sync --extra dev --extra docs --extra hf
 	uv run pre-commit install
 
 # ============== Testing ==============
