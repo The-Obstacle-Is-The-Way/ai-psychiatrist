@@ -34,7 +34,7 @@ The existing documentation is **implementation-focused** (specs for building the
 
 [Diátaxis](https://diataxis.fr/) organizes documentation into four modes based on user needs:
 
-```
+```text
                     PRACTICAL                     THEORETICAL
                     (doing)                       (understanding)
                         │                              │
@@ -64,7 +64,7 @@ Used by: Django, Stripe, GitLab, Cloudflare, NumPy, Gatsby, BBC, and hundreds of
 
 ## Proposed Structure
 
-```
+```text
 docs/
 ├── index.md                          # Landing page
 │

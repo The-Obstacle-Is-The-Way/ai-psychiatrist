@@ -152,7 +152,7 @@ File path configuration.
 | `DATA_DEV_CSV` | path | `data/dev_split_Depression_AVEC2017.csv` | Development ground truth |
 
 **Directory structure expected:**
-```
+```text
 data/
 ├── transcripts/
 │   ├── 300_P/

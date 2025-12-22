@@ -8,7 +8,7 @@ This document explains the software architecture of AI Psychiatrist, including l
 
 AI Psychiatrist follows **Clean Architecture** principles with a **vertical slice** implementation approach. The codebase is organized into distinct layers with explicit dependency rules.
 
-```
+```text
 ┌─────────────────────────────────────────────────────────────────┐
 │                          API Layer                               │
 │                    (FastAPI routes, CLI)                         │
@@ -33,7 +33,7 @@ AI Psychiatrist follows **Clean Architecture** principles with a **vertical slic
 
 ## Directory Structure
 
-```
+```text
 src/ai_psychiatrist/
 ├── __init__.py
 ├── config.py              # Pydantic settings (all configuration)

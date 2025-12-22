@@ -2,7 +2,7 @@
 
 **Purpose**: Enable development without direct data access
 **Dataset**: Distress Analysis Interview Corpus - Wizard of Oz (DAIC-WOZ)
-**Access**: Requires EULA agreement from USC ICT
+**Access**: Requires EULA from USC ICT
 **Reference**: [AVEC 2017 Challenge](https://dl.acm.org/doi/10.1145/3133944.3133953)
 
 ---

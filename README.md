@@ -93,7 +93,7 @@ curl -X POST http://localhost:8000/full_pipeline \
 
 ## Project Structure
 
-```
+```text
 ai-psychiatrist/
 ├── src/ai_psychiatrist/
 │   ├── agents/           # Four assessment agents

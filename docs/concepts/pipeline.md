@@ -8,7 +8,7 @@ This document explains how the four-agent pipeline works to assess depression fr
 
 The AI Psychiatrist pipeline processes a transcript through four specialized agents, with an iterative refinement loop to ensure quality:
 
-```
+```text
 Transcript → Qualitative → [Judge ↔ Refinement] → Quantitative → Meta-Review → Severity
 ```
 
@@ -36,7 +36,7 @@ The qualitative agent analyzes the transcript to identify clinical factors acros
 **Output:** `QualitativeAssessment` entity with structured sections and supporting quotes.
 
 **Prompt Structure:**
-```
+```text
 System: You are a clinical psychologist analyzing interview transcripts...
 User: <transcript>
 {transcript_text}
@@ -82,7 +82,7 @@ The judge agent evaluates the qualitative assessment on four quality metrics:
 
 When judge scores are below threshold, the feedback loop refines the assessment:
 
-```
+```text
 ┌─────────────────────────────────────────────────────────────┐
 │                     FEEDBACK LOOP                            │
 ├─────────────────────────────────────────────────────────────┤
@@ -116,7 +116,7 @@ When judge scores are below threshold, the feedback loop refines the assessment:
 - `score_threshold`: 3 (scores ≤ 3 trigger refinement)
 
 **Refinement Prompt:**
-```
+```text
 The judge evaluated your assessment and found issues:
 
 Coherence: Scored 2/5. "The assessment contradicts itself..."
@@ -167,7 +167,7 @@ For each item with evidence:
 2. **Search** the reference store for similar chunks
 3. **Retrieve** top-k (default: 2) most similar references with known scores
 
-```
+```text
 Query: "i don't enjoy anything anymore, nothing seems fun"
               │
               ▼ Embedding + Similarity Search
@@ -232,7 +232,7 @@ The meta-review agent integrates all previous outputs to determine final severit
 - MDD indicator (true if severity ≥ MODERATE)
 
 **Prompt Structure:**
-```
+```text
 You are integrating multiple assessments to determine depression severity.
 
 <transcript>
@@ -258,7 +258,7 @@ Provide:
 
 ## Complete Pipeline Flow
 
-```
+```text
 ┌────────────────────────────────────────────────────────────────────────┐
 │                        COMPLETE PIPELINE                                │
 ├────────────────────────────────────────────────────────────────────────┤
