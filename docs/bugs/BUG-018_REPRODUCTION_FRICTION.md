@@ -1,10 +1,27 @@
 # BUG-018: Reproduction Friction Log
 
 **Date**: 2025-12-22
-**Status**: DOCUMENTING
+**Status**: MOSTLY FIXED
 **Severity**: Multiple issues ranging from CRITICAL to MINOR
+**Updated**: 2025-12-22 - Core issues fixed, HuggingFace backend pending
 
 This document captures ALL friction points encountered when attempting to reproduce the paper's PHQ-8 assessment results.
+
+## Fix Summary
+
+| Sub-bug | Issue | Status |
+|---------|-------|--------|
+| BUG-018a | MedGemma produces all N/A | ✅ FIXED - default changed to gemma3:27b |
+| BUG-018b | .env overrides config | ✅ FIXED - .env updated |
+| BUG-018c | DataSettings attribute | ✅ FIXED - script updated |
+| BUG-018d | Inline imports | ✅ FIXED - imports at top |
+| BUG-018e | 180s timeout | ⚠️ DOCUMENTED - may need increase |
+| BUG-018f | JSON parsing failures | ⚠️ NEEDS INVESTIGATION |
+| BUG-018g | Model underestimates severe | ⚠️ RESEARCH ITEM |
+| BUG-018h | Empty keywords/ dir | ⚠️ UNKNOWN PURPOSE |
+| BUG-018i | Item-level MAE confusion | ✅ FIXED - script now uses item-level |
+
+---
 
 ---
 

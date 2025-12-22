@@ -282,8 +282,8 @@ class Settings(BaseSettings):
 
     # Feature flags
     enable_few_shot: bool = Field(default=True, description="Enable few-shot mode")
-    # NOTE: enable_medgemma removed - use MODEL__QUANTITATIVE_MODEL directly.
-    # Default quantitative_model is already alibayram/medgemma:27b (Paper Appendix F).
+    # NOTE: Default quantitative_model is gemma3:27b (Paper Section 2.2).
+    # MedGemma was only evaluated as ALTERNATIVE in Appendix F (produces more N/A).
 
     @model_validator(mode="after")
     def validate_consistency(self) -> Settings:

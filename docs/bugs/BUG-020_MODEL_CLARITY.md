@@ -1,8 +1,9 @@
 # BUG-020: Complete Model Clarity and HuggingFace Options
 
 **Date**: 2025-12-22
-**Status**: ROOT CAUSE ANALYSIS COMPLETE - READY FOR SENIOR REVIEW
+**Status**: PARTIAL FIX COMPLETE - HuggingFace backend pending
 **Author**: Read-only analysis with web search verification
+**Updated**: 2025-12-22 - Config, MAE calculation, and comments fixed
 
 ---
 
@@ -98,32 +99,46 @@ ollama pull gemma3:27b  # Official in Ollama library
 # Option B: Keep using gemma3:27b (paper's primary results)
 ```
 
-### Option 2: HuggingFace Transformers (Native Python)
+### Option 2: HuggingFace Transformers (Native Python) — VERIFIED 2025
 
-**Installation**:
+**Installation** (verified 2025-12-22):
 ```bash
-pip install "torch>=2.4.0" "transformers>=4.51.3"
+pip install "torch>=2.4.0" "transformers>=4.51.0" "sentence-transformers>=2.7.0"
+pip install accelerate bitsandbytes sentencepiece protobuf
 ```
 
-**Basic Usage**:
+**Chat Models** (Gemma 3 / MedGemma):
 ```python
 from transformers import AutoModelForCausalLM, AutoTokenizer
 import torch
 
-# For Gemma 3 27B
-model = AutoModelForCausalLM.from_pretrained(
-    "google/gemma-3-27b-it",
-    torch_dtype=torch.bfloat16,
-    device_map="auto",
-)
-tokenizer = AutoTokenizer.from_pretrained("google/gemma-3-27b-it")
-
-# For MedGemma 27B (if needed)
+# For MedGemma 27B text-only (GATED - requires HF access approval)
+# See: https://huggingface.co/google/medgemma-27b-text-it
 model = AutoModelForCausalLM.from_pretrained(
     "google/medgemma-27b-text-it",
     torch_dtype=torch.bfloat16,
     device_map="auto",
 )
+tokenizer = AutoTokenizer.from_pretrained("google/medgemma-27b-text-it")
+
+# For Gemma 3 27B (multimodal - use different class)
+from transformers import Gemma3ForConditionalGeneration, AutoProcessor
+model = Gemma3ForConditionalGeneration.from_pretrained(
+    "google/gemma-3-27b-it",
+    torch_dtype=torch.bfloat16,
+    device_map="auto",
+).eval()
+processor = AutoProcessor.from_pretrained("google/gemma-3-27b-it")
+```
+
+**Embedding Model** (Qwen3-Embedding-8B):
+```python
+from sentence_transformers import SentenceTransformer
+
+# Official Qwen3 Embedding 8B - #1 on MTEB (score 70.58)
+# See: https://huggingface.co/Qwen/Qwen3-Embedding-8B
+model = SentenceTransformer("Qwen/Qwen3-Embedding-8B")
+embeddings = model.encode(["Your text here"])  # Returns numpy array
 ```
 
 **With Quantization** (for lower VRAM):
@@ -213,14 +228,17 @@ MODEL__EMBEDDING_MODEL=qwen3-embedding:8b
 # MedGemma was only evaluated as ALTERNATIVE in Appendix F with fewer predictions.
 ```
 
-### 2. reproduce_results.py - Add Item-Level MAE
+### 2. reproduce_results.py - Item-Level MAE ✅ FIXED
 
 **Location**: `scripts/reproduce_results.py`
 
-**Current**: Calculates total-score MAE (0-24 scale)
-**Paper**: Uses item-level MAE (0-3 scale), excludes N/A
+**Status**: FIXED in commit 1c414e4
 
-**Needed**: Add item-level MAE calculation for direct paper comparison.
+The script now correctly computes:
+- Item-level MAE (0-3 scale per item)
+- Excludes N/A from MAE calculation
+- Reports coverage (% non-N/A predictions)
+- Per-item MAE breakdown
 
 ### 3. .env.example - Documentation Update
 
@@ -265,12 +283,12 @@ def total_score(self) -> int:
 
 ## Summary of Root Causes
 
-| Issue | Root Cause | Severity | Fix |
-|-------|------------|----------|-----|
-| MedGemma all N/A | Used community model + ignored "fewer predictions" caveat | CRITICAL | Use gemma3:27b |
-| alibayram model | No official Ollama MedGemma exists | HIGH | Use official HuggingFace or Unsloth GGUF |
-| Scoring mismatch | Total-score vs item-level MAE | CRITICAL | Add item-level MAE calculation |
-| Stale comments | config.py still mentions alibayram | LOW | Update comment |
+| Issue | Root Cause | Severity | Status |
+|-------|------------|----------|--------|
+| MedGemma all N/A | Used community model + ignored "fewer predictions" caveat | CRITICAL | ✅ FIXED - default changed to gemma3:27b |
+| alibayram model | No official Ollama MedGemma exists | HIGH | ⚠️ PARTIAL - needs HuggingFace backend for official MedGemma |
+| Scoring mismatch | Total-score vs item-level MAE | CRITICAL | ✅ FIXED - reproduce_results.py now uses item-level MAE |
+| Stale comments | config.py still mentions alibayram | LOW | ✅ FIXED - comment updated |
 
 ---
 
@@ -340,17 +358,19 @@ class BackendSettings(BaseSettings):
 
 MODEL_ALIASES: dict[str, dict[str, str | None]] = {
     # Canonical name -> backend-specific name
+    # Verified 2025-12-22 from official HuggingFace pages
     "gemma3:27b": {
         "ollama": "gemma3:27b",
-        "huggingface": "google/gemma-3-27b-it",
+        "huggingface": "google/gemma-3-27b-it",  # Multimodal, use Gemma3ForConditionalGeneration
     },
     "medgemma:27b": {
-        "ollama": None,  # NOT AVAILABLE OFFICIALLY
-        "huggingface": "google/medgemma-27b-text-it",
+        "ollama": None,  # NOT AVAILABLE OFFICIALLY in Ollama
+        "huggingface": "google/medgemma-27b-text-it",  # Text-only, use AutoModelForCausalLM
+        # NOTE: GATED model - requires HF access approval
     },
     "qwen3-embedding:8b": {
         "ollama": "qwen3-embedding:8b",
-        "huggingface": "Alibaba-NLP/gte-Qwen2-1.5B-instruct",  # Need to verify
+        "huggingface": "Qwen/Qwen3-Embedding-8B",  # Use SentenceTransformer, #1 MTEB
     },
 }
 
