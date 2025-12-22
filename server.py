@@ -8,8 +8,10 @@ BUG-012, BUG-014: Fixes split-brain architecture and missing transcript issues.
 BUG-016, BUG-017: Adds MetaReviewAgent and wires FeedbackLoopService.
 """
 
-from collections.abc import AsyncIterator
+import inspect
+from collections.abc import AsyncIterator, Awaitable
 from contextlib import asynccontextmanager
+from importlib.util import find_spec
 from typing import Annotated, Any, cast
 
 from fastapi import Depends, FastAPI, HTTPException, Request
@@ -24,7 +26,8 @@ from ai_psychiatrist.agents import (
 from ai_psychiatrist.config import ModelSettings, Settings, get_settings
 from ai_psychiatrist.domain.entities import Transcript
 from ai_psychiatrist.domain.enums import AssessmentMode, EvaluationMetric
-from ai_psychiatrist.infrastructure.llm import OllamaClient
+from ai_psychiatrist.infrastructure.llm import create_llm_client
+from ai_psychiatrist.infrastructure.llm.responses import SimpleChatClient
 from ai_psychiatrist.services import EmbeddingService, ReferenceStore, TranscriptService
 from ai_psychiatrist.services.feedback_loop import FeedbackLoopService
 
@@ -37,28 +40,29 @@ AD_HOC_PARTICIPANT_ID = 999_999
 async def lifespan(app: FastAPI) -> AsyncIterator[None]:
     """Manage application lifecycle resources."""
     settings = get_settings()
-    ollama_client = OllamaClient(settings.ollama)
+    llm_client = create_llm_client(settings)
+    chat_client = cast("SimpleChatClient", llm_client)
     try:
         app.state.settings = settings
         app.state.model_settings = settings.model
-        app.state.ollama_client = ollama_client
+        app.state.llm_client = llm_client
 
         app.state.transcript_service = TranscriptService(settings.data)
 
         reference_store = ReferenceStore(settings.data, settings.embedding)
         app.state.embedding_service = EmbeddingService(
-            llm_client=ollama_client,
+            llm_client=llm_client,
             reference_store=reference_store,
             settings=settings.embedding,
             model_settings=app.state.model_settings,
         )
 
         qual_agent = QualitativeAssessmentAgent(
-            llm_client=ollama_client,
+            llm_client=chat_client,
             model_settings=app.state.model_settings,
         )
         judge_agent = JudgeAgent(
-            llm_client=ollama_client,
+            llm_client=chat_client,
             model_settings=app.state.model_settings,
         )
         app.state.feedback_loop_service = FeedbackLoopService(
@@ -69,7 +73,11 @@ async def lifespan(app: FastAPI) -> AsyncIterator[None]:
 
         yield
     finally:
-        await ollama_client.close()
+        close_fn = getattr(llm_client, "close", None)
+        if callable(close_fn):
+            maybe_awaitable = close_fn()
+            if inspect.isawaitable(maybe_awaitable):
+                await cast("Awaitable[object]", maybe_awaitable)
 
 
 app = FastAPI(
@@ -81,12 +89,12 @@ app = FastAPI(
 
 
 # --- Dependency Injection ---
-def get_ollama_client(request: Request) -> OllamaClient:
-    """Get initialized OllamaClient."""
-    client = getattr(request.app.state, "ollama_client", None)
+def get_llm_client(request: Request) -> SimpleChatClient:
+    """Get initialized LLM client (SimpleChatClient)."""
+    client = getattr(request.app.state, "llm_client", None)
     if client is None:
-        raise HTTPException(status_code=503, detail="Ollama client not initialized")
-    return cast("OllamaClient", client)
+        raise HTTPException(status_code=503, detail="LLM client not initialized")
+    return cast("SimpleChatClient", client)
 
 
 def get_transcript_service(request: Request) -> TranscriptService:
@@ -219,20 +227,41 @@ class FullPipelineResponse(BaseModel):
 # --- Endpoints ---
 @app.get("/health")
 async def health_check(
-    ollama: Annotated[OllamaClient, Depends(get_ollama_client)],
+    request: Request,
+    app_settings: Annotated[Settings, Depends(get_app_settings)],
 ) -> dict[str, Any]:
     """Health check endpoint."""
-    try:
-        is_healthy = await ollama.ping()
-        return {"status": "healthy" if is_healthy else "degraded", "ollama": is_healthy}
-    except Exception as e:
-        return {"status": "degraded", "error": str(e)}
+    backend = app_settings.backend.backend.value
+    if backend == "ollama":
+        client = getattr(request.app.state, "llm_client", None)
+        ping_fn = getattr(client, "ping", None)
+        if not callable(ping_fn):
+            return {"status": "degraded", "backend": backend, "error": "ping not available"}
+        try:
+            is_healthy = await ping_fn()
+        except Exception as e:
+            return {"status": "degraded", "backend": backend, "error": str(e)}
+        return {
+            "status": "healthy" if is_healthy else "degraded",
+            "backend": backend,
+            "ollama": is_healthy,
+        }
+
+    # HuggingFace backend: verify required deps are installed.
+    deps_ok = all(
+        find_spec(name) is not None for name in ("torch", "transformers", "sentence_transformers")
+    )
+    return {
+        "status": "healthy" if deps_ok else "degraded",
+        "backend": backend,
+        "deps_installed": deps_ok,
+    }
 
 
 @app.post("/assess/quantitative", response_model=QuantitativeResult)
 async def assess_quantitative(
     request: AssessmentRequest,
-    ollama: Annotated[OllamaClient, Depends(get_ollama_client)],
+    llm: Annotated[SimpleChatClient, Depends(get_llm_client)],
     transcript_service: Annotated[TranscriptService, Depends(get_transcript_service)],
     embedding_service: Annotated[EmbeddingService, Depends(get_embedding_service)],
     model_settings: Annotated[ModelSettings, Depends(get_model_settings)],
@@ -245,7 +274,7 @@ async def assess_quantitative(
     # Create agent with appropriate mode (request overrides settings.enable_few_shot)
     mode = request.get_mode(app_settings.enable_few_shot)
     agent = QuantitativeAssessmentAgent(
-        llm_client=ollama,
+        llm_client=llm,
         embedding_service=embedding_service if mode == AssessmentMode.FEW_SHOT else None,
         mode=mode,
         model_settings=model_settings,
@@ -274,7 +303,7 @@ async def assess_quantitative(
 @app.post("/assess/qualitative", response_model=QualitativeResult)
 async def assess_qualitative(
     request: AssessmentRequest,
-    ollama: Annotated[OllamaClient, Depends(get_ollama_client)],
+    llm: Annotated[SimpleChatClient, Depends(get_llm_client)],
     transcript_service: Annotated[TranscriptService, Depends(get_transcript_service)],
     model_settings: Annotated[ModelSettings, Depends(get_model_settings)],
 ) -> QualitativeResult:
@@ -286,7 +315,7 @@ async def assess_qualitative(
     """
     transcript = _resolve_transcript(request, transcript_service)
 
-    agent = QualitativeAssessmentAgent(llm_client=ollama, model_settings=model_settings)
+    agent = QualitativeAssessmentAgent(llm_client=llm, model_settings=model_settings)
 
     try:
         assessment = await agent.assess(transcript)
@@ -306,7 +335,7 @@ async def assess_qualitative(
 @app.post("/full_pipeline", response_model=FullPipelineResponse)
 async def run_full_pipeline(
     request: AssessmentRequest,
-    ollama: Annotated[OllamaClient, Depends(get_ollama_client)],
+    llm: Annotated[SimpleChatClient, Depends(get_llm_client)],
     transcript_service: Annotated[TranscriptService, Depends(get_transcript_service)],
     embedding_service: Annotated[EmbeddingService, Depends(get_embedding_service)],
     model_settings: Annotated[ModelSettings, Depends(get_model_settings)],
@@ -335,7 +364,7 @@ async def run_full_pipeline(
 
         # Step 2: Quantitative PHQ-8 assessment
         quant_agent = QuantitativeAssessmentAgent(
-            llm_client=ollama,
+            llm_client=llm,
             embedding_service=embedding_service if mode == AssessmentMode.FEW_SHOT else None,
             mode=mode,
             model_settings=model_settings,
@@ -344,7 +373,7 @@ async def run_full_pipeline(
 
         # Step 3: Meta-review integration (BUG-016 fix)
         meta_review_agent = MetaReviewAgent(
-            llm_client=ollama,
+            llm_client=llm,
             model_settings=model_settings,
         )
         meta_review = await meta_review_agent.review(
