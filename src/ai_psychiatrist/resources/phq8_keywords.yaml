@@ -14,6 +14,7 @@
 #    - "numb" removed (matches "NUMBer")
 #    - "nap" removed (matches "sNAP", "kidNAP")
 #    - "napping" removed (matches "sNAPPING")
+#    - "napping a lot" removed (matches "sNAPPING a lot")
 #    - "reading" removed (matches "dREADING", "spREADING")
 #    - "blue" removed (matches "BLUEprint", "BLUEjeans")
 #    - "sad" removed (matches "SADly")
@@ -25,8 +26,22 @@
 #    - "stuck" removed (matches "STUCK in traffic")
 #    - "binge" removed (matches "BINGE watch")
 #    - "starving" removed (hyperbolic: "I'm STARVING")
+#    - "fatigue" removed (matches "FATIGUES" - Veteran uniform context)
+#    - "foggy" removed (matches "FOGGY morning")
+#    - "comfort food" removed (ambiguous, not necessarily overeating)
 #
-# 2. Domain Specificity: Keywords require symptom context, not bare nouns.
+# 2. Cross-Domain Collision Protections:
+#    - "pacing" removed (matches inside "sPACING out" -> would flag Agitation for Concentration)
+#    - "restless" removed (matches inside "RESTLESS sleep" -> would flag Agitation for Sleep)
+#    - "scattered" removed (matches "SCATTERED papers" -> Environmental vs Cognitive)
+#    - "wake up early" removed (matches healthy "I wake up early for work")
+#
+# 3. Clinical Domain Purity (PHQ-8 Item 8 Psychomotor):
+#    - "jumpy" removed (PTSD/hyperarousal, not psychomotor retardation/agitation)
+#    - "feel stuck" removed (life circumstances, not observable psychomotor change)
+#    - "on edge" removed (anxiety/hyperarousal, not psychomotor)
+#
+# 4. Domain Specificity: Keywords require symptom context, not bare nouns.
 #
 # FORMAT:
 # - All keywords are matched case-insensitively via substring matching.
@@ -63,7 +78,8 @@ PHQ8_NoInterest:
   - "dont care about anything"
   - "nothing interests me"
   - "not interested in anything"
-  - "not interested in doing"
+  - "not interested in doing anything"
+  - "not interested in doing things"
   - "no motivation"
   - "feeling bored"
   - "feel bored"
@@ -88,6 +104,7 @@ PHQ8_Depressed:
   - "feel sad"
   - "am sad"
   - "im sad"
+  - "i'm sad"
   - "was sad"
   - "so sad"
   - "very sad"
@@ -139,7 +156,8 @@ PHQ8_Sleep:
   - "wake up a lot"
   - "waking up a lot"
   - "wake up often"
-  - "wake up early"
+  - "wake up too early"
+  - "waking up too early"
   - "early morning awakening"
   - "can't get back to sleep"
   - "cant get back to sleep"
@@ -159,30 +177,33 @@ PHQ8_Sleep:
   - "taking a nap"
   - "taking naps"
   - "took a nap"
-  - "napping a lot"
 
 PHQ8_Tired:
   # PHQ-8 Item #4: "Feeling tired or having little energy"
   # Target: Fatigue / low energy (separate from sleep disturbance)
-  # Note: Bare "tired" removed (matches "reTIRED" - common in DAIC-WOZ veterans).
+  # Note: Bare "tired" removed (matches "reTIRED"), bare "fatigue" removed (matches "FATIGUES" uniform).
   - "feeling tired"
   - "feel tired"
   - "am tired"
   - "im tired"
+  - "i'm tired"
   - "so tired"
   - "very tired"
   - "really tired"
   - "too tired"
   - "always tired"
   - "tired all the time"
-  - "get tired"
+  - "get tired easily"
+  - "tired easily"
   - "dead tired"
   - "exhausted"
   - "exhaustion"
   - "worn out"
   - "drained"
-  - "fatigue"
   - "fatigued"
+  - "mental fatigue"
+  - "physical fatigue"
+  - "chronic fatigue"
   - "little energy"
   - "no energy"
   - "low energy"
@@ -203,6 +224,7 @@ PHQ8_Appetite:
   # Target: Appetite change in either direction; avoid generic "eat/weight"
   # Note: "binge" removed (matches "binge watch"), "starving" removed (hyperbolic).
   - "no appetite"
+  - "loss of appetite"
   - "lost my appetite"
   - "lost appetite"
   - "poor appetite"
@@ -212,8 +234,10 @@ PHQ8_Appetite:
   - "can't eat"
   - "cant eat"
   - "barely eating"
-  - "not eating"
+  - "not eating much"
+  - "not eating as much"
   - "eating less"
+  - "eating less than usual"
   - "eat less"
   - "skipping meals"
   - "skip meals"
@@ -230,8 +254,8 @@ PHQ8_Appetite:
   - "snacking a lot"
   - "comfort eating"
   - "comfort eat"
-  - "comfort food"
   - "appetite increased"
+  - "eating more than usual"
   - "hungry all the time"
   - "always hungry"
   - "binge eat"
@@ -266,6 +290,7 @@ PHQ8_Failure:
   - "let myself down"
   - "let my family down"
   - "let everyone down"
+  - "disappointed in myself"
   - "not good enough"
   - "hate myself"
   - "ashamed"
@@ -323,7 +348,10 @@ PHQ8_Concentrating:
   - "lose my train of thought"
   - "lost my train of thought"
   - "brain fog"
-  - "foggy"
+  - "feel foggy"
+  - "feeling foggy"
+  - "mind feels foggy"
+  - "head feels foggy"
   - "can't think straight"
   - "cant think straight"
   - "can't follow a conversation"
@@ -336,12 +364,16 @@ PHQ8_Concentrating:
   - "cant follow tv"
   - "can't follow a show"
   - "cant follow a show"
-  - "scattered"
+  - "feeling scattered"
+  - "feel scattered"
+  - "mind is scattered"
+  - "brain feels scattered"
 
 PHQ8_Moving:
   # PHQ-8 Item #8: "Moving or speaking slowly ... Or ... fidgety/restless"
   # Target: Psychomotor retardation OR agitation (observable slowing / can't sit still)
-  # Note: "stuck" removed (matches "stuck in traffic").
+  # Note: Bare "pacing" removed (matches "sPACING out"), bare "restless" removed (matches "RESTLESS sleep").
+  # Note: "jumpy", "feel stuck", "on edge" removed (anxiety/hyperarousal, not psychomotor).
   - "moving slowly"
   - "move slowly"
   - "moving slow"
@@ -356,11 +388,17 @@ PHQ8_Moving:
   - "fidgety"
   - "can't sit still"
   - "cant sit still"
-  - "pacing"
+  - "pacing around"
+  - "pacing the floor"
+  - "pacing the room"
+  - "pacing back and forth"
+  - "walking back and forth"
   - "agitated"
   - "jittery"
-  - "restless"
-  - "jumpy"
-  - "feel stuck"
-  - "feeling stuck"
-  - "on edge"
+  - "feel restless"
+  - "feeling restless"
+  - "am restless"
+  - "im restless"
+  - "so restless"
+  - "very restless"
+  - "restlessness"
