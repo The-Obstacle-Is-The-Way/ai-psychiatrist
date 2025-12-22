@@ -60,8 +60,10 @@ class ModelSettings(BaseSettings):
     """LLM model configuration.
 
     Paper baseline (Section 2.2): Gemma 3 27B for the multi-agent system.
-    Paper-validated quantitative improvement (Appendix F): MedGemma 27B achieves
-    MAE 0.505 (vs 0.619) but makes fewer predictions.
+
+    NOTE: MedGemma 27B (Appendix F) achieves better item-level MAE (0.505 vs 0.619)
+    but produces excessive N/A scores in practice, leading to worse total-score MAE.
+    Use gemma3:27b for better overall performance.
 
     Embeddings (Section 2.2): Qwen 3 8B Embedding. The paper does not specify
     quantization; the default tag below uses Q8_0 to match the research scripts.
@@ -84,8 +86,8 @@ class ModelSettings(BaseSettings):
         default="gemma3:27b", description="Meta-review agent model (Paper Section 2.2)"
     )
     quantitative_model: str = Field(
-        default="alibayram/medgemma:27b",
-        description="Quantitative agent model (Paper Appendix F: MAE 0.505)",
+        default="gemma3:27b",
+        description="Quantitative agent model (Paper Section 2.2: Gemma 3 27B)",
     )
     embedding_model: str = Field(
         default="qwen3-embedding:8b",

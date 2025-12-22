@@ -82,12 +82,17 @@ class TestModelSettings:
     """Tests for model configuration."""
 
     def test_paper_optimal_defaults(self) -> None:
-        """Defaults should match paper Section 2.2."""
+        """Defaults should match paper Section 2.2.
+
+        NOTE: quantitative_model uses gemma3:27b (not MedGemma) because
+        MedGemma produces excessive N/A scores in practice, leading to
+        worse total-score MAE despite better item-level MAE in Appendix F.
+        """
         settings = ModelSettings()
         assert settings.qualitative_model == "gemma3:27b"
         assert settings.judge_model == "gemma3:27b"
         assert settings.meta_review_model == "gemma3:27b"
-        assert settings.quantitative_model == "alibayram/medgemma:27b"
+        assert settings.quantitative_model == "gemma3:27b"  # Not MedGemma - see docstring
         assert settings.embedding_model == "qwen3-embedding:8b"
 
     def test_temperature_defaults(self) -> None:
