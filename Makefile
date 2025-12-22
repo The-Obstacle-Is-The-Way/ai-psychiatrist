@@ -54,7 +54,7 @@ ci: format-check lint typecheck test ## CI pipeline checks
 
 # ============== Development ==============
 serve: ## Run development server
-	uv run uvicorn ai_psychiatrist.api.main:app --reload --host 0.0.0.0 --port 8000
+	uv run uvicorn server:app --reload --host 0.0.0.0 --port 8000
 
 repl: ## Start Python REPL with project loaded
 	uv run python -i -c "from ai_psychiatrist import *"

@@ -1,68 +1,205 @@
-# AI Psychiatrist Assistant: An LLM-based Multi-Agent System for Depression Assessment from Clinical Interviews
+# AI Psychiatrist
 
-<p align="center">
-<img src=assets/overview.png />
-</p>
+**LLM-based Multi-Agent System for Depression Assessment from Clinical Interviews**
 
-## Environment Setup
+[![Python 3.11+](https://img.shields.io/badge/python-3.11+-blue.svg)](https://www.python.org/downloads/)
+[![License](https://img.shields.io/badge/license-Research-green.svg)](LICENSE)
+[![Code style: ruff](https://img.shields.io/badge/code%20style-ruff-000000.svg)](https://github.com/astral-sh/ruff)
+[![Type checked: mypy](https://img.shields.io/badge/type%20checked-mypy-blue.svg)](https://mypy-lang.org/)
 
-1. Clone the repository:
+---
+
+## Overview
+
+AI Psychiatrist implements a research paper's methodology for automated depression assessment using a four-agent LLM pipeline. The system analyzes clinical interview transcripts to predict PHQ-8 depression scores and severity levels.
+
+### Key Features
+
+- **Four-Agent Pipeline**: Qualitative, Judge, Quantitative, and Meta-Review agents collaborate for comprehensive assessment
+- **Embedding-Based Few-Shot Learning**: 22% improvement in accuracy over zero-shot approaches
+- **Iterative Self-Refinement**: Judge agent feedback loop improves assessment quality
+- **Production-Ready**: Clean architecture, type safety, structured logging, 80%+ test coverage
+
+### Paper Reference
+
+> Greene et al. "AI Psychiatrist Assistant: An LLM-based Multi-Agent System for Depression Assessment from Clinical Interviews"
+> [OpenReview](https://openreview.net/forum?id=mV0xJpO7A0)
+
+---
+
+## Quick Start
+
+### Prerequisites
+
+- Python 3.11+
+- [Ollama](https://ollama.ai/) installed and running
+- 16GB+ RAM (for 27B models)
+
+### Installation
+
 ```bash
+# Clone repository
 git clone https://github.com/The-Obstacle-Is-The-Way/ai-psychiatrist.git
-```
-
-2. Navigate to the cloned directory and create a new conda environment using the provided [`env_reqs.yml`](assets/env_reqs.yml) file:
-```bash
 cd ai-psychiatrist
-conda env create --name aipsy --file ./env_reqs.yml
+
+# Install dependencies (uses uv)
+make dev
+
+# Pull required models
+ollama pull gemma3:27b
+ollama pull alibayram/medgemma:27b
+ollama pull qwen3-embedding:8b
+
+# Configure (uses paper-optimal defaults)
+cp .env.example .env
+
+# Start server
+make serve
 ```
 
-3. Activate the conda environment:
+### Run Your First Assessment
+
 ```bash
-conda activate aipsy
+curl -X POST http://localhost:8000/full_pipeline \
+  -H "Content-Type: application/json" \
+  -d '{
+    "transcript_text": "Ellie: How are you doing today?\nParticipant: I have been feeling really down lately."
+  }'
 ```
 
-4. Create a new git branch for your changes:
+---
+
+## Documentation
+
+| Document | Description |
+|----------|-------------|
+| [**Quickstart**](docs/getting-started/quickstart.md) | Get running in 5 minutes |
+| [**Architecture**](docs/concepts/architecture.md) | System design and layers |
+| [**Pipeline**](docs/concepts/pipeline.md) | How the 4-agent pipeline works |
+| [**PHQ-8**](docs/concepts/phq8.md) | Understanding depression assessment |
+| [**Configuration**](docs/reference/configuration.md) | All configuration options |
+| [**API Reference**](docs/reference/api/endpoints.md) | REST API documentation |
+| [**Glossary**](docs/reference/glossary.md) | Terms and definitions |
+
+### For Developers
+
+| Document | Description |
+|----------|-------------|
+| [**CLAUDE.md**](CLAUDE.md) | Development guidelines |
+| [**Specs**](docs/specs/00-overview.md) | Implementation specifications |
+| [**Data Schema**](docs/data/daic-woz-schema.md) | Dataset format documentation |
+
+---
+
+## Project Structure
+
+```text
+ai-psychiatrist/
+├── src/ai_psychiatrist/
+│   ├── agents/           # Four assessment agents
+│   ├── domain/           # Entities, enums, value objects
+│   ├── services/         # Business logic (feedback loop, embeddings)
+│   ├── infrastructure/   # Ollama client, logging
+│   └── config.py         # Pydantic settings
+├── tests/
+│   ├── unit/             # Unit tests
+│   ├── integration/      # Integration tests
+│   └── e2e/              # End-to-end tests
+├── docs/
+│   ├── getting-started/  # Tutorials
+│   ├── concepts/         # Explanations
+│   ├── reference/        # API and config reference
+│   ├── data/             # Dataset documentation
+│   └── specs/            # Implementation specs
+└── data/                 # DAIC-WOZ dataset (gitignored)
+```
+
+---
+
+## Development
+
 ```bash
-git checkout -b dev_<your_last_name>
+# Full CI pipeline
+make ci
+
+# Individual commands
+make test           # Run all tests with coverage
+make test-unit      # Fast unit tests only
+make lint-fix       # Auto-fix linting issues
+make typecheck      # mypy strict mode
+make format         # Format code with ruff
+
+# Development server with hot reload
+make serve
 ```
-Replace `<your_last_name>` with your last name.
 
-## Ollama on TReNDS Cluster
+### Testing with Real Ollama
 
-1. Start Ollama by submitting the SLURM job script [`job_ollama.sh`](slurm/job_ollama.sh):
 ```bash
-cd slurm
-sbatch job_ollama.sh
+# Enable Ollama integration tests
+AI_PSYCHIATRIST_OLLAMA_TESTS=1 make test-e2e
 ```
 
-2. Check the status of the job using the command `squeue -u <username>`, where `<username>` is your username. Check the node that Ollama is running on in the output of the command. The node name is in the format `arctrdagnXXX`, where `XXX` is a number.
+---
 
-3. Once the job is running, you can access Ollama on the node. See the Python script [`ollama_example.py`](assets/ollama_example.py) for an example of how to use Ollama. Update `OLLAMA_NODE` to the node where Ollama is running. Submit the SLURM job script [`job_assess.sh`](slurm/job_assess.sh) to run the Python code:
+## Configuration
+
+All settings via environment variables or `.env` file:
+
 ```bash
-sbatch job_assess.sh
+# Models (paper-optimal defaults)
+MODEL_QUALITATIVE_MODEL=gemma3:27b
+MODEL_QUANTITATIVE_MODEL=alibayram/medgemma:27b    # 18% better MAE
+MODEL_EMBEDDING_MODEL=qwen3-embedding:8b
+
+# Few-shot retrieval (Appendix D optimal)
+EMBEDDING_DIMENSION=4096
+EMBEDDING_CHUNK_SIZE=8
+EMBEDDING_TOP_K_REFERENCES=2
+
+# Feedback loop (Section 2.3.1)
+FEEDBACK_MAX_ITERATIONS=10
+FEEDBACK_SCORE_THRESHOLD=3
 ```
 
-4. If you stop using Ollama, you can stop the job using the command `scancel <job_id>`, where `<job_id>` is the job ID of the Ollama job. You can find the job ID in the output of the command `squeue -u <username>`.
+See [Configuration Reference](docs/reference/configuration.md) for all options.
 
-## Code
+---
 
-- [qualitative_assessment](qualitative_assessment) contains the scripts for identifying social and biological risk factors.
+## Paper Results
 
-- [quantitative_assessment](quantitative_assessment) contains the scripts for predicting PHQ-8 scores.
+| Metric | Zero-Shot | Few-Shot | MedGemma Few-Shot |
+|--------|-----------|----------|-------------------|
+| PHQ-8 MAE | 0.796 | 0.619 | **0.505** |
+| Severity Accuracy | - | - | **78%** |
 
-- [meta_review](meta_review) contains the code for integrating information and predicting severity.
+---
 
-- [agents](agents) contains the code for the multi-agent system.
+## Technology Stack
 
-- [analysis_output](analysis_output) contains the outputs from the quantitative assessment.
+| Tool | Purpose |
+|------|---------|
+| [uv](https://docs.astral.sh/uv/) | Package management |
+| [Ollama](https://ollama.ai/) | Local LLM inference |
+| [FastAPI](https://fastapi.tiangolo.com/) | REST API |
+| [Pydantic v2](https://docs.pydantic.dev/) | Configuration & validation |
+| [structlog](https://www.structlog.org/) | Structured logging |
+| [pytest](https://docs.pytest.org/) | Testing |
+| [Ruff](https://docs.astral.sh/ruff/) | Linting & formatting |
+| [mypy](https://mypy-lang.org/) | Type checking |
 
-- [visualization](visualization) contains the scripts for generating the figures.
+---
 
-## References
+## License
 
-- [OpenReview paper](https://openreview.net/forum?id=mV0xJpO7A0)
+This project implements research from Georgia State University. See the [paper](https://openreview.net/forum?id=mV0xJpO7A0) for academic citation.
 
-- [Ollama documentation](https://github.com/ollama/ollama)
+---
 
-- [TReNDS cluster documentation](https://trendscenter.github.io/wiki)
+## Contributing
+
+1. Fork the repository
+2. Create a feature branch
+3. Make changes following [CLAUDE.md](CLAUDE.md) guidelines
+4. Run `make ci` to verify
+5. Submit a pull request

@@ -18,13 +18,13 @@ This document series outlines a comprehensive plan to transform the AI-Psychiatr
 
 ### What Exists (Research Code)
 - 15 Python files (~4,045 LOC; excluding `_literature/.venv`)
-- FastAPI demo server with a single endpoint (`server.py`)
-- Agent implementations under `agents/` (qualitative, quantitative, judge, meta-review)
-- Research/cluster scripts under `qualitative_assessment/`, `quantitative_assessment/`, `meta_review/`
-- Notebooks under `quantitative_assessment/` and `visualization/` containing key evaluation/plotting logic
+- FastAPI server (`server.py`) exposing `/health`, `/assess/*`, and `/full_pipeline`
+- Archived legacy agent implementations under `_legacy/agents/`
+- Archived research/cluster scripts under `_legacy/qualitative_assessment/`, `_legacy/quantitative_assessment/`, `_legacy/meta_review/`
+- Notebooks under `_legacy/quantitative_assessment/` and `_legacy/visualization/` containing key evaluation/plotting logic
 - Embedding-based few-shot retrieval system (pickle-based reference store)
-- SLURM job scripts for HPC execution (`slurm/`)
-- Conda environment configuration (`assets/env_reqs.yml`)
+- SLURM job scripts for HPC execution (`_legacy/slurm/`)
+- Conda environment configuration (`_legacy/assets/env_reqs.yml`)
 
 ### Codebase → Spec Coverage Map (No Orphaned Files)
 
@@ -35,24 +35,24 @@ This spec series covers both:
 | Codebase file | Purpose | Covered by spec |
 |---|---|---|
 | `server.py` | FastAPI orchestration endpoint | Spec 11 |
-| `agents/interview_simulator.py` | Fixed transcript loader (`TRANSCRIPT_PATH`) | Spec 05 |
-| `agents/qualitative_assessor_f.py` / `agents/qualitative_assessor_z.py` | Qualitative assessor prompts (F/Z variants) | Spec 06 |
-| `agents/qualitive_evaluator.py` | Judge/evaluator (4 metrics) | Spec 07 |
-| `agents/quantitative_assessor_f.py` / `agents/quantitative_assessor_z.py` | Quantitative scoring (few/zero-shot) | Spec 09 |
-| `agents/meta_reviewer.py` | Meta-review prompt + severity output | Spec 10 |
-| `agents/interview_evaluator.py` | Conversation quality evaluator (non-paper) | Spec 11 (as-is extras) |
-| `qualitative_assessment/qual_assessment.py` | Cluster script for qualitative runs (Gemma 3 27B) | Spec 06 (as-is research) |
-| `qualitative_assessment/feedback_loop.py` | Cluster script feedback loop (<=2 threshold, 10 iters) | Spec 07 (as-is research) |
-| `quantitative_assessment/quantitative_analysis.py` | Cluster script zero-shot quantitative analysis | Spec 09 (as-is research) |
-| `quantitative_assessment/embedding_batch_script.py` | Cluster script + sweeps for embeddings few-shot runs | Spec 08/09 (as-is research) |
-| `quantitative_assessment/basic_quantitative_analysis.ipynb` | Zero-shot notebook analysis | Spec 09 (as-is research) |
-| `quantitative_assessment/embedding_quantitative_analysis.ipynb` | Few-shot notebook (splits, t-SNE, retrieval stats) | Spec 08/09 (as-is research) |
-| `visualization/qual_boxplot.ipynb` | Qual judge boxplots + mean/SD | Spec 07 (as-is research) |
-| `visualization/quan_visualization.ipynb` | Quant MAE/confusion + N/A rates + t-SNE | Spec 08/09 (as-is research) |
-| `visualization/meta_review_heatmap.ipynb` | Severity/diagnosis confusion matrices + metrics | Spec 10 (as-is research) |
-| `analysis_output/*` | Example outputs (CSV/JSONL) | Spec 11/12 (as-is validation artifacts) |
-| `slurm/job_ollama.sh` / `slurm/job_assess.sh` | HPC deployment scripts | Spec 01/04 |
-| `assets/env_reqs.yml` / `assets/ollama_example.py` | Conda env + Ollama usage example | Spec 01/04 |
+| `_legacy/agents/interview_simulator.py` | Fixed transcript loader (`TRANSCRIPT_PATH`) | Spec 05 |
+| `_legacy/agents/qualitative_assessor_f.py` / `_legacy/agents/qualitative_assessor_z.py` | Qualitative assessor prompts (F/Z variants) | Spec 06 |
+| `_legacy/agents/qualitive_evaluator.py` | Judge/evaluator (4 metrics) | Spec 07 |
+| `_legacy/agents/quantitative_assessor_f.py` / `_legacy/agents/quantitative_assessor_z.py` | Quantitative scoring (few/zero-shot) | Spec 09 |
+| `_legacy/agents/meta_reviewer.py` | Meta-review prompt + severity output | Spec 10 |
+| `_legacy/agents/interview_evaluator.py` | Conversation quality evaluator (non-paper) | Spec 11 (as-is extras) |
+| `_legacy/qualitative_assessment/qual_assessment.py` | Cluster script for qualitative runs (Gemma 3 27B) | Spec 06 (as-is research) |
+| `_legacy/qualitative_assessment/feedback_loop.py` | Cluster script feedback loop (<=2 threshold, 10 iters) | Spec 07 (as-is research) |
+| `_legacy/quantitative_assessment/quantitative_analysis.py` | Cluster script zero-shot quantitative analysis | Spec 09 (as-is research) |
+| `_legacy/quantitative_assessment/embedding_batch_script.py` | Cluster script + sweeps for embeddings few-shot runs | Spec 08/09 (as-is research) |
+| `_legacy/quantitative_assessment/basic_quantitative_analysis.ipynb` | Zero-shot notebook analysis | Spec 09 (as-is research) |
+| `_legacy/quantitative_assessment/embedding_quantitative_analysis.ipynb` | Few-shot notebook (splits, t-SNE, retrieval stats) | Spec 08/09 (as-is research) |
+| `_legacy/visualization/qual_boxplot.ipynb` | Qual judge boxplots + mean/SD | Spec 07 (as-is research) |
+| `_legacy/visualization/quan_visualization.ipynb` | Quant MAE/confusion + N/A rates + t-SNE | Spec 08/09 (as-is research) |
+| `_legacy/visualization/meta_review_heatmap.ipynb` | Severity/diagnosis confusion matrices + metrics | Spec 10 (as-is research) |
+| `_legacy/analysis_output/*` | Example outputs (CSV/JSONL) | Spec 11/12 (as-is validation artifacts) |
+| `_legacy/slurm/job_ollama.sh` / `_legacy/slurm/job_assess.sh` | HPC deployment scripts | Spec 01/04 |
+| `_legacy/assets/env_reqs.yml` / `_legacy/assets/ollama_example.py` | Conda env + Ollama usage example | Spec 01/04 |
 | `assets/overview.png` | System overview image (non-code artifact) | Spec 00 |
 
 ### Paper → Spec Traceability Map (All Figures + Appendices)

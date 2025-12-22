@@ -95,7 +95,7 @@ Nested delimiter: `OLLAMA__HOST=custom` sets `OllamaSettings.host`
 ## Important Notes
 
 - **Legacy code is archived**: `_legacy/`, `_literature/`, `_reference/` are not production code
-- **Entry point**: `server.py` (root) or `ai_psychiatrist.api.main:app`
+- **Entry point**: `server.py` (root). Run with `make serve` or `uv run uvicorn server:app`
 - **All hyperparameters are paper-justified**: Check docstrings for section references
 - **Strict typing enforced**: mypy strict mode, full annotations required
 - **Pre-commit hooks**: ruff lint/format, mypy, trailing whitespace cleanup

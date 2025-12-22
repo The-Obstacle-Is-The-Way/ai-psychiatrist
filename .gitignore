@@ -220,8 +220,8 @@ __marimo__/
 .DS_Store
 
 # DAIC-WOZ Dataset (requires license agreement from USC ICT)
-# See: docs/specs/04A_DATA_ORGANIZATION.md
-# Run `python scripts/prepare_dataset.py` to regenerate from downloads/
+# See: docs/data/daic-woz-schema.md
+# Run `uv run python scripts/prepare_dataset.py` to regenerate from downloads/
 data/*
 
 # External reference repos (local only)
