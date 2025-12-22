@@ -6,6 +6,8 @@ This document captures findings from the paper reproduction attempt on 2025-12-2
 
 ## Final Results
 
+Note: The results below are based on the **test split total score** (`PHQ_Score`, 0-24). The paper’s headline MAE is **item-level** (0-3 per item) excluding "N/A". See `scripts/reproduce_results.py` for paper-style item-level evaluation on train/dev splits.
+
 ### Zero-Shot Evaluation (gemma3:27b)
 
 | Metric | Value |
@@ -83,9 +85,11 @@ Changed default `quantitative_model` from `alibayram/medgemma:27b` to `gemma3:27
 
 ## MAE Interpretation
 
-**Important**: The paper's reported MAE values (0.619 zero-shot, 0.505 few-shot) are **item-level MAE** (each item ranges 0-3), NOT total-score MAE (which ranges 0-24).
+**Important**: The paper's reported MAE values (0.619 few-shot, 0.796 zero-shot; 0.505 for MedGemma) are **item-level MAE** (each item ranges 0-3) and **exclude** items marked "N/A" (insufficient evidence).
 
-Our total-score MAE of 4.02 translates to roughly **0.50 item-level MAE** if errors were evenly distributed across 8 items, which is actually better than the paper's reported 0.619 for zero-shot.
+The 4.02 MAE reported above is **total-score MAE** on a 0-24 scale and is **not comparable** to the paper's item-level MAE. Do **not** divide by 8 as a conversion; the paper excludes N/A at the item level, so the metrics are fundamentally different.
+
+To compute paper-style metrics in this repo, use `scripts/reproduce_results.py` against `--split train` or `--split dev` (these splits include per-item PHQ-8 labels). The provided test split CSVs only include total PHQ score, so paper-style item-level MAE on test cannot be computed from checked-in files.
 
 ## Performance Notes
 

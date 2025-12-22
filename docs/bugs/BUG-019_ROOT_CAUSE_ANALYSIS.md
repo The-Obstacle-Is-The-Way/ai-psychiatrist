@@ -13,7 +13,7 @@ Multiple systemic issues were identified during reproduction attempt:
 1. **Wrong understanding of paper**: Paper uses Gemma 3 27B for ALL agents. MedGemma was ONLY evaluated as an alternative for quantitative agent in Appendix F.
 2. **No official MedGemma in Ollama**: There is NO official `ollama.com/library/medgemma`. All MedGemma models are community uploads.
 3. **Legacy code uses llama3**: The original researchers' legacy code defaults to `llama3`, NOT Gemma or MedGemma!
-4. **Scoring methodology mismatch**: Paper uses item-level MAE; our code uses total-score MAE
+4. **Scoring methodology mismatch (initial reproduction run)**: The paper uses item-level MAE excluding "N/A". Our first reproduction run computed **total-score MAE** on the test split because the checked-in test labels contain only total scores. The reproduction script has since been updated to compute paper-style item-level MAE on splits with per-item labels (train/dev).
 5. **Config wiring issue**: `.env` silently overrides code defaults
 
 ---
@@ -161,10 +161,16 @@ def total_score(self) -> int:
     return sum(item.score_value for item in self.items.values())
 ```
 
-From `scripts/reproduce_results.py`:
-- Calculates **total-score MAE** (0-24 scale)
-- N/A contributes 0 to total
-- Compares predicted_total vs ground_truth_total
+From `scripts/reproduce_results.py` (current):
+- Computes **item-level MAE** on predicted PHQ-8 item scores (0-3)
+- **Excludes** items marked "N/A" from MAE (paper-style)
+- Reports multiple aggregation views:
+  - MAE weighted by number of predicted items
+  - Mean of per-item MAEs
+  - Mean of per-subject MAEs on available items
+- Tracks coverage (% non-N/A predictions)
+
+Important limitation: the checked-in AVEC2017 test split files do not include per-item PHQ-8 labels, so paper-style item-level MAE cannot be computed for test from the repo data alone.
 
 ### Legacy Code's Methodology (Correct!)
 
@@ -194,7 +200,7 @@ if n_available > 0:
 |-------|------------|----------|
 | MedGemma default | Misread paper - Appendix F ≠ main results | CRITICAL |
 | Community model | No official Ollama MedGemma; used untested alibayram | HIGH |
-| Scoring methodology | Total-score vs item-level MAE | CRITICAL |
+| Scoring methodology | Initial evaluation used total-score MAE due to missing per-item test labels | CRITICAL |
 | Legacy uses llama3 | Paper may have used different configs than shipped | HIGH |
 | .env override | Pydantic loads .env which overrides code defaults | MEDIUM |
 | Stale docs | Comments don't match code | LOW |
@@ -230,8 +236,8 @@ The legacy code defaults to `llama3` everywhere, suggesting:
 ## Files That Need Fixing (NOT CHANGED)
 
 1. `src/ai_psychiatrist/config.py:285-286` - Stale comment
-2. `scripts/reproduce_results.py` - Should use item-level MAE like legacy code
-3. Verify model - use official Google MedGemma if needed, not alibayram
+2. Ensure we have (or can derive) per-item PHQ-8 labels for the AVEC2017 test split if we want a strict, end-to-end reproduction of the paper's reported MAE.
+3. Verify model - use official Google MedGemma weights if needed (Ollama has only community uploads)
 
 ---
 
