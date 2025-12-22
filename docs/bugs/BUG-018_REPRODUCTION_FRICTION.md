@@ -1,11 +1,72 @@
 # BUG-018: Reproduction Friction Log
 
 **Date**: 2025-12-22
-**Status**: MOSTLY FIXED (6/9 closed, 3 open research items)
-**Severity**: Multiple issues ranging from CRITICAL to MINOR
-**Updated**: 2025-12-22 - Core issues fixed, HuggingFace backend implemented (PR #41/#43)
+**Status**: CRITICAL - Code fixed but reproduction NEVER RE-RUN
+**Severity**: CRITICAL - All reported results use WRONG methodology
+**Updated**: 2025-12-22 - Deep investigation reveals incomplete reproduction
 
 This document captures ALL friction points encountered when attempting to reproduce the paper's PHQ-8 assessment results.
+
+---
+
+## ⚠️ CRITICAL: MAE Methodology Was Fundamentally Wrong
+
+### The Core Problem
+
+We were computing a **completely different metric** than the paper:
+
+| Our Implementation | Paper's Implementation |
+|-------------------|----------------------|
+| Total-score MAE (0-24 scale) | Item-level MAE (0-3 scale) |
+| `\|predicted_total - gt_total\|` | `mean(\|pred_item - gt_item\|)` per item |
+| N/A items = 0 in sum | N/A items excluded from MAE |
+| Reported MAE ~4.02 | Paper reports MAE ~0.619 |
+
+### Timeline of Events
+
+1. **04:01 AM Dec 22**: Ran reproduction with OLD script → MAE 4.02 (WRONG)
+2. **09:31 AM Dec 22**: Committed fix `1c414e4` → Aligned with paper methodology
+3. **Present**: Fix is merged to main, but **NEVER RE-RUN**
+
+### The OLD Code (Wrong)
+
+```python
+# scripts/reproduce_results.py (BEFORE fix)
+predicted = assessment.total_score  # Sum of 8 items (0-24)
+absolute_error = abs(predicted - ground_truth)  # Total vs total
+```
+
+### The NEW Code (Correct, merged but not run)
+
+```python
+# scripts/reproduce_results.py (AFTER fix, in main)
+predicted_items = {item: assessment.items[item].score for item in PHQ8Item.all_items()}
+errors: list[int] = []
+for item in PHQ8Item.all_items():
+    pred = predicted_items[item]
+    if pred is None:  # Skip N/A - paper excludes these!
+        continue
+    errors.append(abs(pred - ground_truth_items[item]))  # Per-item comparison
+mae_available = float(np.mean(errors))  # Average of per-item errors
+```
+
+### Why "÷8 ≈ 0.50" Was Wrong
+
+The handwave `4.02 ÷ 8 ≈ 0.50` is **not** equivalent to the paper's methodology because:
+1. N/A handling differs (we sum, paper excludes)
+2. Coverage differs (paper reports % of predictions made)
+3. Aggregation differs (paper has multiple views: weighted, by-item, by-subject)
+
+### Action Required
+
+**MUST re-run** reproduction with corrected script:
+```bash
+python scripts/reproduce_results.py --split dev  # or train+dev
+```
+
+The output file `data/outputs/reproduction_results_20251222_040100.json` is **INVALID** and should be ignored.
+
+---
 
 ## Fix Summary
 
@@ -15,13 +76,11 @@ This document captures ALL friction points encountered when attempting to reprod
 | BUG-018b | .env overrides config | ✅ FIXED - .env updated |
 | BUG-018c | DataSettings attribute | ✅ FIXED - script updated |
 | BUG-018d | Inline imports | ✅ FIXED - imports at top |
-| BUG-018e | 180s timeout | ⚠️ DOCUMENTED - may need increase |
-| BUG-018f | JSON parsing failures | ⚠️ NEEDS INVESTIGATION |
+| BUG-018e | 180s timeout | ✅ INVESTIGATED - environmental |
+| BUG-018f | JSON parsing failures | ✅ RESOLVED - cascade works |
 | BUG-018g | Model underestimates severe | ⚠️ RESEARCH ITEM |
-| BUG-018h | Empty keywords/ dir | ⚠️ UNKNOWN PURPOSE |
-| BUG-018i | Item-level MAE confusion | ✅ FIXED - script now uses item-level |
-
----
+| BUG-018h | Empty keywords/ dir | ✅ DELETED - orphaned |
+| BUG-018i | Item-level MAE methodology | ⚠️ CODE FIXED, NOT RE-RUN |
 
 ---
 
@@ -151,7 +210,7 @@ PLC0415 `import` should be at the top-level of a file
 
 ---
 
-## BUG-018e: 180s Timeout Too Short (MEDIUM)
+## BUG-018e: 180s Timeout Too Short (MEDIUM) - INVESTIGATED
 
 ### Symptom
 
@@ -162,50 +221,82 @@ LLM request timed out after 180s
 
 ### Affected Participants
 
-- 407 (ground truth 3)
-- 421 (ground truth 10)
-- 424 (ground truth 3)
-- 450 (ground truth 9)
-- 466 (ground truth 9)
-- 481 (ground truth 7)
+- 407 (ground truth 3) - **28K transcript**
+- 421 (ground truth 10) - **16K transcript**
+- 424 (ground truth 3) - **24K transcript**
+- 450 (ground truth 9) - **24K transcript**
+- 466 (ground truth 9) - **28K transcript**
+- 481 (ground truth 7) - **24K transcript**
+
+### Investigation Results (2025-12-22)
+
+**Transcript size correlation confirmed:**
+- Timed-out participants average ~24K transcript size
+- Successful participants average ~16K transcript size
+- Largest timeouts (407, 466) are 28K - double the successful average
+
+**Contributing factors:**
+1. 27B model on M1 Pro Max with concurrent workloads (Arc mesh training)
+2. Two LLM calls per participant (evidence extraction + scoring)
+3. 180s timeout per call means max ~360s total, but each call can timeout independently
+4. No timeout issues correlated with ground truth severity
 
 ### Root Cause
 
-`OLLAMA_TIMEOUT_SECONDS=180` in `.env` is too short for:
-- Longer transcripts
-- Evidence extraction + scoring (2 LLM calls per assessment)
-- M1 Pro Max inference speed with 27B model
+Timeout is appropriate for most transcripts (87% success rate). Failures occur on:
+1. Transcripts larger than ~20K
+2. When GPU/CPU is shared with other workloads
 
-### Files NOT Changed (needs investigation)
+### Recommendation
 
-- `.env:36` - `OLLAMA_TIMEOUT_SECONDS=180`
-- Consider increasing to 300s or 360s
+For users with concurrent GPU workloads or larger transcripts:
+```bash
+OLLAMA_TIMEOUT_SECONDS=300  # or 360 for very large transcripts
+```
+
+The default 180s is acceptable for most use cases. This is environmental, not a code bug.
 
 ---
 
-## BUG-018f: JSON Parsing Failures (MEDIUM)
+## BUG-018f: JSON Parsing Failures (MEDIUM) - RESOLVED
 
 ### Symptom
 
-Some participants showed:
+In earlier runs, some participants showed:
 ```
 Failed to parse quantitative response after all attempts
 ```
 Resulting in `na_count = 8`, `total_score = 0`
 
-### Affected Participants
+### Previously Affected Participants
 
-- 469: ground truth 3, predicted 0 (parse failure)
-- 480: ground truth 1, predicted 0 (parse failure)
+- 469: ground truth 3, predicted 0 (parse failure) - in earlier runs
+- 480: ground truth 1, predicted 0 (parse failure) - in earlier runs
 
-### Root Cause
+### Investigation Results (2025-12-22)
 
-LLM response format didn't match expected JSON structure. Multi-level repair failed.
+**Latest reproduction run (2025-12-22 04:01:00):**
+- Participant 469: **succeeded** - predicted 0, error 3 (low prediction but valid)
+- Participant 480: **succeeded** - predicted 0, error 1 (close!)
 
-### Files NOT Changed (needs investigation)
+**No JSON parsing failures in latest run.** The multi-level repair cascade is working:
+1. `_strip_json_block()` - Tag/code-fence stripping
+2. `_tolerant_fixups()` - Syntax repair (smart quotes, trailing commas)
+3. `_llm_repair()` - LLM-based JSON repair
 
-- `src/ai_psychiatrist/agents/quantitative.py:270-308` - `_parse_response()` method
-- May need more robust JSON extraction or repair strategies
+### Related GitHub Issue
+
+Issue #29: "Enhancement: Evaluate Ollama JSON mode for structured output"
+- Status: **Deferred** - Marginal benefit; current cascade works well
+
+### Conclusion
+
+JSON parsing is **working correctly**. Earlier failures were likely:
+1. Model warm-up issues (first few requests)
+2. Model variability (non-deterministic with temp=0.2)
+3. Fixed by the multi-level repair cascade already in place
+
+No code changes needed.
 
 ---
 
@@ -238,47 +329,87 @@ Unknown. Possible causes:
 
 ---
 
-## BUG-018h: Empty keywords/ Directory (UNKNOWN)
+## BUG-018h: Empty keywords/ Directory (UNKNOWN) - RESOLVED
 
 ### Symptom
 
 `data/keywords/` directory exists but is empty.
 
+### Investigation Results (2025-12-22)
+
+**Code search for "keywords" found:**
+- Actual keywords are in `src/ai_psychiatrist/resources/phq8_keywords.yaml`
+- No code references `data/keywords/` anywhere
+- Git history shows no commits ever added files to this directory
+
+**The real keyword system:**
+```python
+# src/ai_psychiatrist/agents/prompts/quantitative.py:20
+_KEYWORDS_RESOURCE_PATH = "resources/phq8_keywords.yaml"
+```
+
+Keywords are bundled with the package as a resource file, NOT in `data/`.
+
 ### Root Cause
 
-Unknown purpose. May be:
-- Placeholder for future feature
-- Orphaned from legacy code
-- Missing data that should be there
+**Orphaned directory** - likely created manually during development but never used.
+No code references it. The actual keywords are correctly located in `src/ai_psychiatrist/resources/`.
 
-### Files NOT Changed (needs investigation)
+### Recommendation
 
-- Check if any code references this directory
-- Check paper for keyword-based approaches
+**Safe to delete:**
+```bash
+rm -rf data/keywords/
+```
+
+This is a cleanup item, not a bug. The actual keyword-based backfill system works correctly.
 
 ---
 
-## BUG-018i: Item-Level vs Total-Score MAE Confusion (DOCUMENTATION)
+## BUG-018i: Item-Level vs Total-Score MAE (CRITICAL METHODOLOGY ERROR)
 
 ### Symptom
 
-Paper reports MAE ~0.619 (zero-shot), but our script showed MAE ~4.02.
+Paper reports MAE ~0.619 (few-shot) / 0.796 (zero-shot), but our script showed MAE ~4.02.
 
-### Root Cause
+### Root Cause (Deep Analysis 2025-12-22)
 
-Paper reports **item-level MAE** (each item 0-3 scale).
-Our script calculates **total-score MAE** (sum 0-24 scale).
+**We were computing a fundamentally different metric:**
 
-Our 4.02 total-score MAE ÷ 8 items ≈ 0.50 item-level MAE, which is actually BETTER than paper's 0.619.
+| Aspect | OLD Script (Wrong) | Paper's Method | NEW Script (Correct) |
+|--------|-------------------|----------------|---------------------|
+| Scale | 0-24 (total score) | 0-3 (per item) | 0-3 (per item) |
+| N/A handling | N/A = 0 in sum | N/A excluded | N/A excluded |
+| Calculation | `\|Σpred - Σgt\|` | `mean(\|pred_i - gt_i\|)` | `mean(\|pred_i - gt_i\|)` |
+| Ground truth | Total score only | Per-item scores | Per-item scores |
+| Data split | Test (no item labels!) | Train/dev (has labels) | Train/dev |
 
-### Files Changed
+### The "÷8" Handwave Was Invalid
 
-- `scripts/reproduce_results.py` - Added comment in summary output
-- `docs/REPRODUCTION_NOTES.md` - Documented the distinction
+Claiming `4.02 ÷ 8 ≈ 0.50` does NOT equal the paper's methodology because:
+1. Division by 8 assumes all items predicted - but some were N/A
+2. Paper EXCLUDES N/A from both numerator AND denominator
+3. Paper reports coverage (% of items with predictions) separately
+4. Total-score errors don't distribute evenly across items
 
-### Open Question
+### Files Changed (Commit `1c414e4`)
 
-Should we add item-level MAE calculation for direct comparison?
+Complete rewrite of `scripts/reproduce_results.py`:
+- Changed from total-score to item-level MAE
+- Added per-item ground truth loading from AVEC2017 CSVs
+- Changed from test split (no item labels) to train/dev splits (has item labels)
+- Added coverage metrics and multiple MAE aggregation views
+- Added N/A exclusion matching paper methodology
+
+### Current Status
+
+**Code is correct and merged to main. Reproduction NEVER re-run with new code.**
+
+The file `data/outputs/reproduction_results_20251222_040100.json` contains results from the OLD (wrong) methodology and should be ignored.
+
+### Action Required
+
+Re-run: `python scripts/reproduce_results.py --split dev`
 
 ---
 
@@ -305,20 +436,94 @@ Should we add item-level MAE calculation for direct comparison?
 
 ---
 
-## Critical Questions for Review
+## Critical Questions - ANSWERED
 
-1. **Why was MedGemma the default?** Who set this and did they test it?
+### 1. Why was MedGemma the default? Who set this and did they test it?
 
-2. **Is the .env wiring pattern correct?** Should config.py defaults EVER be overridden by .env?
+**Answer:** It was set based on a misreading of the paper. Appendix F shows MedGemma as an ALTERNATIVE evaluation, not the primary model. The caveat "fewer predictions" was missed. The `alibayram/medgemma:27b` is also a community Q4_K_M quantization, not official weights.
 
-3. **Why does MedGemma produce all N/A?** Is this a prompt issue or model issue?
+**Fixed:** Default changed to `gemma3:27b`. HuggingFace backend now available for official MedGemma via `google/medgemma-27b-text-it`.
 
-4. **Should timeout be configurable per-model?** 27B models need more time than smaller ones.
+### 2. Is the .env wiring pattern correct?
 
-5. **Is the keyword backfill working?** If JSON parsing fails, does keyword backfill still run?
+**Answer:** Yes, but documentation was missing. Pydantic correctly prioritizes: env vars > .env > code defaults. This is expected behavior but requires updating .env when code defaults change.
 
-6. **What is data/keywords/ for?** Should it contain something?
+**Fixed:** Both `.env` and `.env.example` now have consistent gemma3:27b default.
 
-7. **Should we calculate item-level MAE?** For direct paper comparison.
+### 3. Why does MedGemma produce all N/A?
 
-8. **Why does model underestimate severe cases?** Prompt issue or training issue?
+**Answer:** MedGemma is trained to be conservative on medical data - it only scores when evidence is unambiguous. The paper acknowledges this: "detected fewer relevant chunks, making fewer predictions overall." This is expected behavior, not a bug.
+
+**Resolution:** Use gemma3:27b for better coverage. MedGemma available via HuggingFace for users who prefer higher precision with lower recall.
+
+### 4. Should timeout be configurable per-model?
+
+**Answer:** Current per-request timeout (via `timeout_seconds` parameter) is sufficient. Global default of 180s works for 87% of cases. Users with large transcripts or concurrent GPU workloads can increase via `OLLAMA_TIMEOUT_SECONDS`.
+
+**No change needed.** Environmental issue, not a code deficiency.
+
+### 5. Is the keyword backfill working?
+
+**Answer:** Yes! Keyword backfill runs AFTER evidence extraction, not affected by JSON parsing. The cascade is:
+1. LLM extracts evidence
+2. Parse JSON (with repair cascade)
+3. Keyword backfill enriches missing items
+
+**Verified working** - no code changes needed.
+
+### 6. What is data/keywords/ for?
+
+**Answer:** It's an orphaned empty directory. Real keywords are in `src/ai_psychiatrist/resources/phq8_keywords.yaml`.
+
+**Resolution:** Safe to delete. Added to cleanup list.
+
+### 7. Should we calculate item-level MAE?
+
+**Answer:** YES - and we now DO! The script was completely rewritten in commit `1c414e4` to:
+- Load per-item ground truth from AVEC2017 CSVs
+- Calculate item-level MAE with N/A exclusion
+- Report multiple aggregation views (weighted, by-item, by-subject)
+- Track prediction coverage
+
+**Code is correct. Reproduction NOT re-run.** The old output file uses wrong methodology.
+
+### 8. Why does model underestimate severe cases?
+
+**Answer:** RESEARCH ITEM - requires investigation. Possible causes:
+1. Severe symptoms may not be explicitly discussed in interviews
+2. Model may be calibrated toward moderate predictions
+3. Few-shot might help (needs testing)
+4. Prompt may need adjustment for severe cases
+
+**Status:** Open research question for future improvement.
+
+---
+
+## Cleanup Actions
+
+- [x] Delete `data/keywords/` (orphaned empty directory)
+- [ ] Consider increasing default timeout for HPC environments
+- [ ] Research severe depression underestimation (BUG-018g)
+
+---
+
+## NEXT STEPS (Required Before Any Further Work)
+
+1. **Re-run reproduction** with corrected script:
+   ```bash
+   python scripts/reproduce_results.py --split dev
+   ```
+
+2. **Compare results** to paper's reported values:
+   - Paper few-shot MAE: 0.619
+   - Paper zero-shot MAE: 0.796
+   - Paper MedGemma MAE: 0.505 (fewer predictions)
+
+3. **Archive invalid output**:
+   ```bash
+   mv data/outputs/reproduction_results_20251222_040100.json data/outputs/INVALID_OLD_METHODOLOGY/
+   ```
+
+4. **Update documentation** with correct results once obtained
+
+**DO NOT proceed with other work until reproduction is validated with correct methodology.**

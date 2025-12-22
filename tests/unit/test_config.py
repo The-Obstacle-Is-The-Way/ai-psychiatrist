@@ -40,7 +40,7 @@ class TestOllamaSettings:
         settings = OllamaSettings()
         assert settings.host == "127.0.0.1"
         assert settings.port == 11434
-        assert settings.timeout_seconds == 180
+        assert settings.timeout_seconds == 300
 
     def test_base_url_property(self) -> None:
         """Should construct correct base URL."""
