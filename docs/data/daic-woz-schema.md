@@ -111,7 +111,7 @@ start_time	stop_time	speaker	value
 
 ### How It's Loaded
 
-`TranscriptService._parse_daic_woz_transcript()` in `services/transcript.py`:
+`TranscriptService._parse_daic_woz_transcript()` in `src/ai_psychiatrist/services/transcript.py`:
 
 ```python
 df = pd.read_csv(path, sep="\t")
@@ -192,7 +192,7 @@ Participant_ID,PHQ8_Binary,PHQ8_Score,Gender,PHQ8_NoInterest,PHQ8_Depressed,PHQ8
 
 ### Column Mapping in Code
 
-`GroundTruthService.COLUMN_MAPPING` in `services/ground_truth.py`:
+`GroundTruthService.COLUMN_MAPPING` in `src/ai_psychiatrist/services/ground_truth.py`:
 
 ```python
 COLUMN_MAPPING = {
@@ -304,7 +304,7 @@ the corresponding NPZ array row order for that participant.
 
 ### Configuration
 
-From `EmbeddingSettings` in `config.py`:
+From `EmbeddingSettings` in `src/ai_psychiatrist/config.py`:
 
 | Setting | Default | Paper Reference |
 |---------|---------|-----------------|
@@ -353,7 +353,7 @@ downloads/
 
 ### Transcript → Entity
 
-`domain/entities.py`:
+`src/ai_psychiatrist/domain/entities.py`:
 
 ```python
 @dataclass
@@ -376,7 +376,7 @@ class PHQ8Assessment:
 
 ### PHQ8Item Enum
 
-`domain/enums.py`:
+`src/ai_psychiatrist/domain/enums.py`:
 
 ```python
 class PHQ8Item(StrEnum):
