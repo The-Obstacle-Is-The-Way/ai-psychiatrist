@@ -1,9 +1,9 @@
 # BUG-018: Reproduction Friction Log
 
 **Date**: 2025-12-22
-**Status**: MOSTLY FIXED
+**Status**: MOSTLY FIXED (6/9 closed, 3 open research items)
 **Severity**: Multiple issues ranging from CRITICAL to MINOR
-**Updated**: 2025-12-22 - Core issues fixed, HuggingFace backend pending
+**Updated**: 2025-12-22 - Core issues fixed, HuggingFace backend implemented (PR #41/#43)
 
 This document captures ALL friction points encountered when attempting to reproduce the paper's PHQ-8 assessment results.
 
