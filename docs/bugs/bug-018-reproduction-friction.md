@@ -121,14 +121,14 @@ Participant 308 (ground truth = 22, severe depression):
 
 ### Files Changed
 
-1. `src/ai_psychiatrist/config.py:86-91`
-   - OLD: `default="alibayram/medgemma:27b"`
+1. `src/ai_psychiatrist/config.py` (`ModelSettings.quantitative_model`)
+   - OLD: `default="alibayram/medgemma:27b"` (historical)
    - NEW: `default="gemma3:27b"`
 
-2. `tests/unit/test_config.py:84-96`
+2. `tests/unit/test_config.py` (`TestModelSettings.test_paper_optimal_defaults`)
    - Updated test assertion and added docstring explaining why
 
-3. `.env.example:15`
+3. `.env.example`
    - OLD: `MODEL_QUANTITATIVE_MODEL=alibayram/medgemma:27b`
    - NEW: `MODEL_QUANTITATIVE_MODEL=gemma3:27b`
 
@@ -145,7 +145,7 @@ Why does MedGemma behave this way? Is it:
 
 ### Symptom
 
-After fixing the default in `config.py`, the script STILL used MedGemma.
+After fixing the default in `src/ai_psychiatrist/config.py`, the script STILL used MedGemma.
 
 ### Root Cause
 
@@ -158,13 +158,13 @@ Pydantic settings load `.env` which OVERRIDES code defaults.
 
 ### Files Changed
 
-1. `.env:15` (local, gitignored)
+1. `.env` (local, gitignored)
    - OLD: `MODEL_QUANTITATIVE_MODEL=alibayram/medgemma:27b`
    - NEW: `MODEL_QUANTITATIVE_MODEL=gemma3:27b`
 
 ### Lesson
 
-When changing defaults in config.py, MUST also:
+When changing defaults in `src/ai_psychiatrist/config.py`, MUST also:
 1. Update `.env.example`
 2. Update user's `.env` if it exists
 3. Check for environment variable overrides
@@ -351,7 +351,7 @@ Some earlier local runs referenced an orphan `data/keywords/` directory. The cur
 
 **The real keyword system:**
 ```python
-# src/ai_psychiatrist/agents/prompts/quantitative.py:20
+# src/ai_psychiatrist/agents/prompts/quantitative.py (_KEYWORDS_RESOURCE_PATH)
 _KEYWORDS_RESOURCE_PATH = "resources/phq8_keywords.yaml"
 ```
 
@@ -597,7 +597,7 @@ keywords are in `src/ai_psychiatrist/resources/phq8_keywords.yaml`.
 Failed to parse evidence JSON, using empty evidence
 ```
 
-**Location**: `src/ai_psychiatrist/agents/quantitative.py:208` (`_extract_evidence` function)
+**Location**: `src/ai_psychiatrist/agents/quantitative.py` (`QuantitativeAssessmentAgent._extract_evidence`)
 
 **Root Cause Analysis** (2025-12-23):
 

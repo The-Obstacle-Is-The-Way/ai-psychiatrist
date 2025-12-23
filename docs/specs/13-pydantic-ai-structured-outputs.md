@@ -40,6 +40,9 @@ path for replication.
 
 ## Deliverables
 
+Note: The deliverables below are **planned** (not implemented in `src/` yet). This is a post-replication
+refactor that must preserve the paper-aligned XML parsing path by default.
+
 1. `src/ai_psychiatrist/agents/output_models.py`
    - Pydantic models describing LLM output schemas (qualitative, judge, etc.)
 2. `src/ai_psychiatrist/infrastructure/llm/pydantic_ai_client.py`

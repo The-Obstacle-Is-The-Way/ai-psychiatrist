@@ -2,7 +2,7 @@
 
 ## Executive Summary
 
-This document series outlines a plan to transform the AI-Psychiatrist research codebase into a maintainable, testable Python system. The specs follow **vertical slice architecture**, enabling incremental delivery of working features while maintaining paper parity where the paper is explicit (and tracking gaps where it is not).
+This document series describes the plan used to transform the AI-Psychiatrist research codebase into a maintainable, testable Python system. The specs follow **vertical slice architecture**, enabling incremental delivery of working features while maintaining paper parity where the paper is explicit (and tracking gaps where it is not).
 
 ## Paper Reference
 
@@ -16,15 +16,11 @@ This document series outlines a plan to transform the AI-Psychiatrist research c
 
 ## Current State Analysis
 
-### What Exists (Research Code)
-- 15 Python files (~4,045 LOC; excluding `_literature/.venv`)
-- FastAPI server (`server.py`) exposing `/health`, `/assess/*`, and `/full_pipeline`
-- Archived legacy agent implementations under `_legacy/agents/`
-- Archived research/cluster scripts under `_legacy/qualitative_assessment/`, `_legacy/quantitative_assessment/`, `_legacy/meta_review/`
-- Notebooks under `_legacy/quantitative_assessment/` and `_legacy/visualization/` containing key evaluation/plotting logic
-- Embedding-based few-shot retrieval system (legacy: pickle artifacts; modern refactor: NPZ + JSON sidecar artifacts)
-- SLURM job scripts for HPC execution (`_legacy/slurm/`)
-- Conda environment configuration (`_legacy/assets/env_reqs.yml`)
+### What Exists (Current Repo)
+- Modern, testable implementation under `src/ai_psychiatrist/` (agents, services, domain, infrastructure)
+- FastAPI server entrypoint (`server.py`) exposing `/health`, `/assess/*`, and `/full_pipeline`
+- Archived original research/prototype code under `_legacy/` (scripts, notebooks, SLURM jobs, example outputs)
+- Local-only data artifacts under `data/` (DAIC-WOZ transcripts, generated embeddings); `data/` is gitignored due to licensing
 
 ### Codebase → Spec Coverage Map (No Orphaned Files)
 
@@ -166,6 +162,9 @@ Each spec represents a **vertical slice** - a complete feature from API to stora
 
 ## Spec Index
 
+Note: Specs **01–11.5** and **12.5** are archived under `docs/archive/specs/` (historical record).
+Active specs live under `docs/specs/`.
+
 | Spec | Title | Deliverable |
 |------|-------|-------------|
 | **01** | Project Bootstrap | pyproject.toml, uv, Makefile, CI/CD |
@@ -281,7 +280,9 @@ Each checkpoint includes:
 **CRITICAL**: This codebase explicitly forbids the "mock everything" anti-pattern.
 
 **Acceptable Mocking** (I/O boundaries only):
-- HTTP calls to Ollama API (mock `httpx`, not the client class)
+- LLM boundary:
+  - For `OllamaClient` tests: mock HTTP with `respx` (httpx)
+  - For agent/service tests: use `tests/fixtures/mock_llm.py` (protocol-compatible fake), not ad-hoc mocks
 - File system operations for tests that shouldn't touch disk
 - Time-dependent operations (sparingly)
 
@@ -296,7 +297,7 @@ Each checkpoint includes:
 - `sample_ollama_response`: GOOD (real API response for parsing tests)
 - `Mock()` objects replacing real behavior: BAD unless at I/O boundary
 
-See **Spec 01: Testing Philosophy** for detailed examples and rationale.
+See **Spec 01** (`docs/archive/specs/01_PROJECT_BOOTSTRAP.md`) for detailed examples and rationale.
 
 ## Success Criteria
 

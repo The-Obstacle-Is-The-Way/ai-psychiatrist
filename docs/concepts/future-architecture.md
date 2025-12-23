@@ -253,7 +253,7 @@ result = await pipeline.ainvoke({"transcript": transcript_text, "iteration": 0})
 
 - [x] Document current architecture
 - [x] Document future options (this file)
-- [ ] Add to `docs/index.md` navigation
+- [x] Add to `docs/index.md` navigation
 
 ### Phase 2: Pydantic AI Integration
 
@@ -261,8 +261,9 @@ result = await pipeline.ainvoke({"transcript": transcript_text, "iteration": 0})
 
 **Changes:**
 1. Refactor `src/ai_psychiatrist/agents/*.py` to use Pydantic AI `Agent` class
-2. Define output schemas using existing `src/ai_psychiatrist/domain/entities.py`
-3. Keep orchestration in `server.py` initially
+2. Define dedicated Pydantic output schemas (separate from domain dataclasses)
+3. Map validated outputs into domain dataclasses (domain remains SSOT)
+4. Keep orchestration in `server.py` initially
 
 **Example:**
 ```python
@@ -273,9 +274,16 @@ class QualitativeAssessmentAgent:
         return self._parse_response(response)
 
 # After: Pydantic AI agent
+class QualitativeAssessmentOutput(BaseModel):
+    overall: str
+    phq8_symptoms: str
+    social_factors: str
+    biological_factors: str
+    risk_factors: str
+
 qualitative_agent = Agent(
     model="ollama:gemma3:27b",
-    result_type=QualitativeAssessment,
+    result_type=QualitativeAssessmentOutput,
     system_prompt=QUALITATIVE_SYSTEM_PROMPT,
 )
 ```
@@ -285,7 +293,7 @@ qualitative_agent = Agent(
 **Goal:** Explicit graph-based workflow with built-in state
 
 **Changes:**
-1. Create `src/ai_psychiatrist/orchestration/pipeline.py`
+1. Create `src/ai_psychiatrist/orchestration/pipeline.py` (proposed; does not exist yet)
 2. Define `StateGraph` with nodes for each agent
 3. Replace `FeedbackLoopService` with conditional edges
 4. `server.py` becomes thin API layer
@@ -302,6 +310,7 @@ src/ai_psychiatrist/
 ├── services/            # Reduced (embedding, transcript only)
 └── infrastructure/      # Unchanged
 ```
+Note: The `orchestration/` package is a future-state proposal. The current repo performs orchestration in `server.py`.
 
 ### Phase 4: Production Hardening (Future)
 
@@ -337,7 +346,7 @@ class FeedbackLoopService:
 #### Feedback Loop: LangGraph
 
 ```python
-# orchestration/pipeline.py
+# Proposed: src/ai_psychiatrist/orchestration/pipeline.py (not implemented yet)
 def should_refine(state: PipelineState) -> str:
     """Conditional edge: decide whether to refine or proceed."""
     if state["iteration"] >= MAX_ITERATIONS:

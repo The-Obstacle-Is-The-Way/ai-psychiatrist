@@ -179,7 +179,7 @@ If you use participant X's transcript to build the few-shot knowledge base, then
 | Our current | Train only (107) | Dev (35) | ✅ No leakage |
 | Dangerous | Train+Dev | Train+Dev | ❌ **LEAKAGE** |
 
-### Our `generate_embeddings.py` Uses Train Only
+### Our `scripts/generate_embeddings.py` Uses Train Only
 
 From `scripts/generate_embeddings.py`:
 ```python

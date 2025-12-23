@@ -132,8 +132,8 @@ if split.startswith("paper"):
 
 ### 2. Documentation Gaps
 
-- [ ] Add inline comments to `config.py` referencing this registry
-- [ ] Update `reproduce_results.py` help text with artifact mapping
+- [ ] Add inline comments to `src/ai_psychiatrist/config.py` referencing this registry
+- [ ] Update `scripts/reproduce_results.py` help text with artifact mapping
 
 ### 3. Potential Improvements
 

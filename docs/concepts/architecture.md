@@ -91,7 +91,7 @@ src/ai_psychiatrist/
 
 The innermost layer containing pure business logic with no external dependencies.
 
-#### Entities (`entities.py`)
+#### Entities (`src/ai_psychiatrist/domain/entities.py`)
 
 Mutable objects with identity (UUID). Represent core business concepts.
 
@@ -113,7 +113,7 @@ class Transcript:
     id: UUID = field(default_factory=uuid4)
 ```
 
-#### Value Objects (`value_objects.py`)
+#### Value Objects (`src/ai_psychiatrist/domain/value_objects.py`)
 
 Immutable objects without identity. Equal if all attributes equal.
 
@@ -134,7 +134,7 @@ class ItemAssessment:
     score: int | None  # None = N/A
 ```
 
-#### Enums (`enums.py`)
+#### Enums (`src/ai_psychiatrist/domain/enums.py`)
 
 Type-safe constants for domain concepts.
 
@@ -152,7 +152,7 @@ Type-safe constants for domain concepts.
 
 Each agent encapsulates a specific LLM interaction pattern.
 
-#### QualitativeAssessmentAgent (`qualitative.py`)
+#### QualitativeAssessmentAgent (`src/ai_psychiatrist/agents/qualitative.py`)
 
 Generates narrative assessments from transcripts.
 
@@ -167,7 +167,7 @@ async def assess(transcript: Transcript) -> QualitativeAssessment
 async def refine(assessment: QualitativeAssessment, feedback: dict, transcript: Transcript) -> QualitativeAssessment
 ```
 
-#### JudgeAgent (`judge.py`)
+#### JudgeAgent (`src/ai_psychiatrist/agents/judge.py`)
 
 Evaluates qualitative assessment quality using LLM-as-judge pattern.
 
@@ -182,7 +182,7 @@ async def evaluate(assessment: QualitativeAssessment, transcript: Transcript, it
 def get_feedback_for_low_scores(evaluation: QualitativeEvaluation, threshold: int) -> dict[str, str]
 ```
 
-#### QuantitativeAssessmentAgent (`quantitative.py`)
+#### QuantitativeAssessmentAgent (`src/ai_psychiatrist/agents/quantitative.py`)
 
 Predicts PHQ-8 item scores (0-3) using evidence extraction and few-shot retrieval.
 
@@ -196,7 +196,7 @@ Predicts PHQ-8 item scores (0-3) using evidence extraction and few-shot retrieva
 async def assess(transcript: Transcript) -> PHQ8Assessment
 ```
 
-#### MetaReviewAgent (`meta_review.py`)
+#### MetaReviewAgent (`src/ai_psychiatrist/agents/meta_review.py`)
 
 Integrates qualitative and quantitative assessments into final severity.
 
@@ -216,7 +216,7 @@ async def review(transcript: Transcript, qualitative: QualitativeAssessment, qua
 
 Application-level orchestration and external data management.
 
-#### FeedbackLoopService (`feedback_loop.py`)
+#### FeedbackLoopService (`src/ai_psychiatrist/services/feedback_loop.py`)
 
 Orchestrates iterative refinement between Qualitative and Judge agents.
 
@@ -230,7 +230,7 @@ Orchestrates iterative refinement between Qualitative and Judge agents.
 - `max_iterations`: 10 (paper default)
 - `score_threshold`: 3 (scores ≤ 3 trigger refinement)
 
-#### EmbeddingService (`embedding.py`)
+#### EmbeddingService (`src/ai_psychiatrist/services/embedding.py`)
 
 Manages embedding generation and similarity search for few-shot retrieval.
 
@@ -240,28 +240,28 @@ Manages embedding generation and similarity search for few-shot retrieval.
 - Builds reference bundles per PHQ-8 item
 - Handles dimension validation
 
-#### TranscriptService (`transcript.py`)
+#### TranscriptService (`src/ai_psychiatrist/services/transcript.py`)
 
 Loads and parses DAIC-WOZ format transcripts.
 
 **Format:** Tab-separated CSV with columns: `start_time`, `stop_time`, `speaker`, `value`
 
-#### ReferenceStore (`reference_store.py`)
+#### ReferenceStore (`src/ai_psychiatrist/services/reference_store.py`)
 
 Manages pre-computed reference embeddings (NPZ format with JSON sidecar).
 
 ---
 
-### Infrastructure Layer (`infrastructure/`)
+### Infrastructure Layer (`src/ai_psychiatrist/infrastructure/`)
 
 External system integrations.
 
-#### OllamaClient (`llm/ollama.py`)
+#### OllamaClient (`src/ai_psychiatrist/infrastructure/llm/ollama.py`)
 
 HTTP client for Ollama LLM API.
 
 **Implements:**
-- `ChatClient` / `EmbeddingClient` / `LLMClient` protocols in `llm/protocols.py`
+- `ChatClient` / `EmbeddingClient` / `LLMClient` protocols in `src/ai_psychiatrist/infrastructure/llm/protocols.py`
 - Convenience helpers `simple_chat()` / `simple_embed()` used by agents/services
 
 **Features:**
@@ -269,7 +269,7 @@ HTTP client for Ollama LLM API.
 - Model-specific temperature and sampling parameters
 - L2 normalization for embeddings
 
-#### Protocols (`llm/protocols.py`)
+#### Protocols (`src/ai_psychiatrist/infrastructure/llm/protocols.py`)
 
 Type-safe abstractions for LLM clients.
 
@@ -285,7 +285,7 @@ class LLMClient(ChatClient, EmbeddingClient, Protocol):
 ```
 
 For the common “single prompt → text response” path, we also define a lightweight
-`SimpleChatClient` protocol in `llm/responses.py` (used by several agents). The
+`SimpleChatClient` protocol in `src/ai_psychiatrist/infrastructure/llm/responses.py` (used by several agents). The
 concrete `OllamaClient` supports both the full request/response APIs and these
 convenience helpers.
 
@@ -338,7 +338,7 @@ Agents follow a common structure:
 
 ## Configuration
 
-All settings centralized in `config.py` using Pydantic Settings.
+All settings centralized in `src/ai_psychiatrist/config.py` using Pydantic Settings.
 
 **Setting Groups:**
 - `OllamaSettings`: Host, port, timeout

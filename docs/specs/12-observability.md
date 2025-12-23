@@ -47,6 +47,9 @@ These files are used by notebooks and are useful for validating spec parity:
 
 ## Deliverables
 
+Note: The deliverables below are **planned** (not implemented in `src/` yet). They are listed here
+to make the intended production hardening explicit and reviewable.
+
 1. `src/ai_psychiatrist/infrastructure/metrics.py` - Prometheus metrics
 2. `src/ai_psychiatrist/infrastructure/tracing.py` - OpenTelemetry integration
 3. `src/ai_psychiatrist/api/routes/health.py` - Health check endpoints

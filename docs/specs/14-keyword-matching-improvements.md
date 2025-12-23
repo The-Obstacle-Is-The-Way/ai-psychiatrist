@@ -47,6 +47,9 @@ is effective but sacrifices some recall for precision.
 
 ## Deliverables
 
+Note: The deliverables below are **planned** (not implemented in `src/` yet). The current production
+implementation uses substring matching with a collision-proofed keyword YAML.
+
 1. `src/ai_psychiatrist/services/keyword_matching.py`
    - `word_boundary_match(keyword: str, text: str) -> bool`
    - `is_negated(text: str, match_start: int, window: int = 4) -> bool`
@@ -121,7 +124,7 @@ Default remains `substring` for backward compatibility.
 
 ## Testing
 
-- Unit tests for `keyword_matching.py`
+- Unit tests for `src/ai_psychiatrist/services/keyword_matching.py`
 - Integration tests with `QuantitativeAssessmentAgent`
 - Benchmark: measure precision/recall before/after on sample transcripts
 
