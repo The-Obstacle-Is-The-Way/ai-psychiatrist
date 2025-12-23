@@ -1,7 +1,8 @@
 # Coverage Investigation: Why 74% vs Paper's 50%
 
 **Date**: 2025-12-23
-**Status**: INVESTIGATED - Hypothesis (needs ablation to confirm)
+**Status**: SPEC'D - Resolution in [SPEC-003](../specs/SPEC-003-backfill-toggle.md)
+**GitHub Issue**: [#49](https://github.com/The-Obstacle-Is-The-Way/ai-psychiatrist/issues/49)
 **Severity**: LOW - Coverage tradeoff, not necessarily a bug
 
 ---
@@ -168,8 +169,26 @@ Add an ablation mode to disable keyword backfill and rerun:
 
 ---
 
+## Resolution
+
+This investigation led to [SPEC-003: Make Keyword Backfill Optional](../specs/SPEC-003-backfill-toggle.md), which:
+
+1. **Adds config flag**: `QUANTITATIVE_ENABLE_KEYWORD_BACKFILL` to disable backfill for paper parity
+2. **Tracks N/A reasons**: Understand why items return N/A
+3. **Maintains backwards compatibility**: Default behavior unchanged
+
+After implementation, users can:
+- Run `QUANTITATIVE_ENABLE_KEYWORD_BACKFILL=false` to match paper methodology
+- Run ablation studies comparing backfill ON vs OFF
+- Track which items benefit most from backfill
+
+---
+
 ## Related Documentation
 
-- `docs/concepts/coverage-explained.md` - Plain-language explanation
-- `docs/results/reproduction-notes.md` - Results and methodology
+- [SPEC-003: Backfill Toggle](../specs/SPEC-003-backfill-toggle.md) - Implementation specification
+- [Backfill Explained](../concepts/backfill-explained.md) - How backfill works
+- [Paper Parity Guide](../guides/paper-parity-guide.md) - How to reproduce paper results
+- [Coverage Explained](../concepts/coverage-explained.md) - Plain-language explanation
+- [Reproduction Notes](../results/reproduction-notes.md) - Results and methodology
 - `src/ai_psychiatrist/resources/phq8_keywords.yaml` - Keyword list
