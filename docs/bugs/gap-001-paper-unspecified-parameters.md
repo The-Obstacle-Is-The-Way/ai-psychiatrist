@@ -95,7 +95,7 @@ Exact split membership will still differ from the paper because:
 | `temperature` | 0.2 | Low but not zero; allows slight variation |
 | `temperature_judge` | 0.0 | Judge should be deterministic for consistency |
 
-**Location**: `src/ai_psychiatrist/config.py:149-160`
+**Location**: `src/ai_psychiatrist/config.py` (`ModelSettings.temperature`, `ModelSettings.temperature_judge`)
 
 ### Justification
 
@@ -119,7 +119,7 @@ Nothing. These parameters are not mentioned.
 | `top_k` | 20 | Moderate restriction; Ollama common default |
 | `top_p` | 0.8 | Standard nucleus sampling threshold |
 
-**Location**: `src/ai_psychiatrist/config.py:161-163`
+**Location**: `src/ai_psychiatrist/config.py` (`ModelSettings.top_k`, `ModelSettings.top_p`)
 
 ### Justification
 
