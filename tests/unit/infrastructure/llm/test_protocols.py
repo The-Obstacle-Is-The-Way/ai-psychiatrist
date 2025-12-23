@@ -79,7 +79,7 @@ class TestChatRequest:
         assert req.temperature == 0.2
         assert req.top_k == 20
         assert req.top_p == 0.8
-        assert req.timeout_seconds == 180
+        assert req.timeout_seconds == 300
 
     def test_valid_request_custom_params(self) -> None:
         """Should create request with custom params."""

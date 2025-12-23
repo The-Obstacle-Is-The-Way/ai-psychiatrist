@@ -13,7 +13,7 @@ This document explains how evidence extraction works, why it succeeds or fails, 
 
 ## The Pipeline (High Level)
 
-```
+```text
 ┌─────────────────────────────────────────────────────────────┐
 │                     INTERVIEW TRANSCRIPT                    │
 │  "I've been feeling really down lately. Can't sleep at all. │
@@ -77,7 +77,7 @@ The LLM receives a prompt containing:
 
 From `src/ai_psychiatrist/agents/prompts/quantitative.py`:
 
-```
+```text
 Analyze the following therapy transcript and extract specific text chunks
 that provide evidence for each PHQ-8 domain.
 
@@ -212,11 +212,13 @@ For items WITHOUT evidence:
 | 3 | Nearly every day | 12-14 days |
 | N/A | Cannot assess | No evidence found |
 
+> **Note**: The "N/A" response is specific to this evidence-based extraction method. In standard clinical PHQ-8 administration, all items receive a score from 0 to 3 based on patient self-report. Our system returns N/A when insufficient evidence exists in the transcript to make an informed prediction.
+
 ### What Determines Score vs N/A
 
 The decision tree:
 
-```
+```text
 Has evidence for this item?
 ├── YES → Attempt scoring (0-3)
 │         └── Does evidence indicate frequency?
@@ -233,7 +235,7 @@ Has evidence for this item?
 
 For each PHQ-8 item, across all participants:
 
-```
+```text
 Item Coverage = (Number of participants with a score) / (Total participants)
 ```
 
@@ -246,7 +248,7 @@ Item Coverage = (Number of participants with a score) / (Total participants)
 
 For each participant, across all 8 items:
 
-```
+```text
 Participant Coverage = (Items with scores) / 8
 ```
 
@@ -259,13 +261,13 @@ Participant Coverage = (Items with scores) / 8
 
 Total scored items across all participants:
 
-```
+```text
 Overall Coverage = (Total items with scores) / (Total participants × 8)
 ```
 
 For a concrete example run (including per-item counts and coverage), see
-`docs/results/reproduction-notes.md` and the corresponding JSON artifact under
-`data/outputs/`.
+`docs/results/reproduction-notes.md`. Output artifacts are stored locally under
+`data/outputs/` (gitignored due to DAIC-WOZ licensing; not committed to repo).
 
 ---
 

@@ -593,7 +593,7 @@ keywords are in `src/ai_psychiatrist/resources/phq8_keywords.yaml`.
 #### F-002: JSON Parsing Warning in Evidence Extraction
 
 **Symptom**:
-```
+```text
 Failed to parse evidence JSON, using empty evidence
 ```
 

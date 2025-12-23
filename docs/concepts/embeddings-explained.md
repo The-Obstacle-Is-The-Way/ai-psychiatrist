@@ -47,7 +47,7 @@ Instead of 2D coordinates (latitude, longitude), embeddings use 4096 dimensions.
 
 ### Why 4096 Dimensions?
 
-More dimensions = more nuance captured. The paper found 4096 is optimal for this task.
+More dimensions = more nuance captured. The paper's Appendix D confirms 4096 dimensions is optimal for this task among the tested values (64, 256, 1024, 4096).
 
 Think of it like describing a patient:
 - 2 dimensions: "depressed" and "anxious"
