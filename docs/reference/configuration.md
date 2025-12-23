@@ -410,4 +410,4 @@ OLLAMA_TIMEOUT_SECONDS=300
 
 - [Quickstart](../getting-started/quickstart.md) - Initial setup
 - [Architecture](../concepts/architecture.md) - How settings are used
-- [`.env.example`](../../.env.example) - Template file
+- `.env.example` (repository root) - Environment template

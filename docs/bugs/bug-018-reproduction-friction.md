@@ -89,7 +89,7 @@ See `docs/results/reproduction-notes.md` for the current example run metrics and
 | BUG-018e | Timeouts on long transcripts | ✅ INVESTIGATED - configurable via `OLLAMA_TIMEOUT_SECONDS` |
 | BUG-018f | Evidence-extraction JSON malformation | ⚠️ MITIGATED - tolerant fixups + keyword backfill; still observed intermittently |
 | BUG-018g | Model underestimates severe | ⚠️ RESEARCH ITEM |
-| BUG-018h | Orphaned `data/keywords/` directory | ✅ DOCUMENTED - not used by code |
+| BUG-018h | Orphaned `data/keywords/` directory | ✅ DOCUMENTED - historical/local-only; not used by code |
 | BUG-018i | Item-level MAE methodology | ✅ FIXED + RE-RUN (paper-style workflow executed) |
 
 ---
@@ -269,45 +269,40 @@ long transcripts may still require a higher value.
 
 ---
 
-## BUG-018f: JSON Parsing Failures (MEDIUM) - RESOLVED
+## BUG-018f: JSON Parsing Failures (MEDIUM) - MITIGATED
 
 ### Symptom
 
-In earlier runs, some participants showed:
+In some runs, the quantitative scoring step can fail to parse the LLM's JSON output, e.g.:
 ```
 Failed to parse quantitative response after all attempts
 ```
 Resulting in `na_count = 8`, `total_score = 0`
 
-### Previously Affected Participants
+### Root Cause
 
-- 469: ground truth 3, predicted 0 (parse failure) - in earlier runs
-- 480: ground truth 1, predicted 0 (parse failure) - in earlier runs
+LLM output is not guaranteed to be strict JSON. Common failure modes include:
+- Markdown fences around JSON
+- Smart quotes / non-ASCII punctuation
+- Trailing commas
+- Partial / truncated objects
 
-### Investigation Results (2025-12-22)
+### Current Mitigation (in production code)
 
-**Latest reproduction run (2025-12-22 04:01:00):**
-- Participant 469: **succeeded** - predicted 0, error 3 (low prediction but valid)
-- Participant 480: **succeeded** - predicted 0, error 1 (close!)
-
-**No JSON parsing failures in latest run.** The multi-level repair cascade is working:
+The quantitative agent uses a multi-level repair cascade:
 1. `_strip_json_block()` - Tag/code-fence stripping
 2. `_tolerant_fixups()` - Syntax repair (smart quotes, trailing commas)
-3. `_llm_repair()` - LLM-based JSON repair
-
-### Related GitHub Issue
-
-Issue #29: "Enhancement: Evaluate Ollama JSON mode for structured output"
-- Status: **Deferred** - Marginal benefit; current cascade works well
+3. `json.loads(...)` - Parse attempt
+4. `_llm_repair()` - LLM-based JSON repair (best-effort)
+5. Fallback skeleton - Ensures an assessment object is still returned
 
 ### Conclusion
 
-JSON parsing is **working correctly**. Earlier failures were likely:
-1. Model warm-up issues (first few requests)
-2. Model variability (non-deterministic with temp=0.2)
-3. Fixed by the multi-level repair cascade already in place
+In the current paper-parity workflow, JSON parsing is generally reliable; we did not observe JSON
+parse failures in the example run documented in `docs/results/reproduction-notes.md`.
 
-No code changes needed.
+However, because malformed JSON can reappear due to model variability and long generations, treat
+this as **mitigated**, not permanently “resolved”.
 
 ---
 
@@ -340,11 +335,12 @@ Unknown. Possible causes:
 
 ---
 
-## BUG-018h: Empty keywords/ Directory (UNKNOWN) - RESOLVED
+## BUG-018h: Orphaned `data/keywords/` Directory (LOW) - DOCUMENTED
 
 ### Symptom
 
-`data/keywords/` directory exists but is empty.
+Some earlier local runs referenced an orphan `data/keywords/` directory. The current repo tree does
+**not** include `data/keywords/` and no production code depends on it.
 
 ### Investigation Results (2025-12-22)
 
@@ -368,7 +364,9 @@ No code references it. The actual keywords are correctly located in `src/ai_psyc
 
 ### Recommendation
 
-**Safe to delete:**
+This is a local cleanup item (the repo gitignores `data/`).
+
+**If present in your local environment, safe to delete:**
 ```bash
 rm -rf data/keywords/
 ```
@@ -496,7 +494,8 @@ with large transcripts or concurrent GPU workloads can increase via `OLLAMA_TIME
 
 ### 6. What is data/keywords/ for?
 
-**Answer:** It's an orphaned empty directory. Real keywords are in `src/ai_psychiatrist/resources/phq8_keywords.yaml`.
+**Answer:** It's a historical/local-only orphan directory (not present in this repo tree). Real
+keywords are in `src/ai_psychiatrist/resources/phq8_keywords.yaml`.
 
 **Resolution:** Safe to delete. Added to cleanup list.
 
@@ -524,7 +523,7 @@ with large transcripts or concurrent GPU workloads can increase via `OLLAMA_TIME
 
 ## Cleanup Actions
 
-- [x] Delete `data/keywords/` (orphaned empty directory)
+- [x] Delete `data/keywords/` if present locally (historical orphan)
 - [ ] Consider increasing default timeout for HPC environments
 - [ ] Research severe depression underestimation (BUG-018g)
 

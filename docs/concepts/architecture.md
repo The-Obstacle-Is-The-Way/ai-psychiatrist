@@ -235,7 +235,7 @@ Orchestrates iterative refinement between Qualitative and Judge agents.
 Manages embedding generation and similarity search for few-shot retrieval.
 
 **Features:**
-- Generates embeddings via Ollama
+- Generates embeddings via the configured LLM backend (Ollama or HuggingFace)
 - Computes cosine similarity with reference store
 - Builds reference bundles per PHQ-8 item
 - Handles dimension validation
