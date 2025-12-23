@@ -66,46 +66,46 @@ AI Psychiatrist is an engineering-focused, reproducible implementation of a rese
 
 ```
 ┌─────────────────────────────────────────────────────────────────────────┐
-│                         AI PSYCHIATRIST PIPELINE                         │
+│                         AI PSYCHIATRIST PIPELINE                        │
 ├─────────────────────────────────────────────────────────────────────────┤
-│                                                                          │
+│                                                                         │
 │   ┌──────────────┐    ┌─────────────────────────────────────────────┐   │
 │   │  TRANSCRIPT  │───►│              QUALITATIVE AGENT              │   │
 │   │   (Input)    │    │  Analyzes social, biological, risk factors  │   │
 │   └──────────────┘    └──────────────────────┬──────────────────────┘   │
-│                                              │                           │
-│                                              ▼                           │
+│                                              │                          │
+│                                              ▼                          │
 │                       ┌─────────────────────────────────────────────┐   │
-│                       │                JUDGE AGENT                   │   │
+│                       │                JUDGE AGENT                  │   │
 │                       │  Evaluates coherence, completeness,         │   │
-│           ┌──────────►│  specificity, accuracy (1-5 scale)         │   │
+│           ┌──────────►│  specificity, accuracy (1-5 scale)          │   │
 │           │           └──────────────────────┬──────────────────────┘   │
-│           │                                  │                           │
+│           │                                  │                          │
 │           │           ┌──────────────────────▼──────────────────────┐   │
-│           │           │            FEEDBACK LOOP SERVICE             │   │
+│           │           │            FEEDBACK LOOP SERVICE            │   │
 │           └───────────┤  If score < 4: refine and re-evaluate       │   │
 │                       │  Max 10 iterations per paper                │   │
 │                       └──────────────────────┬──────────────────────┘   │
-│                                              │                           │
+│                                              │                          │
 │   ┌──────────────┐    ┌──────────────────────▼──────────────────────┐   │
-│   │  EMBEDDINGS  │───►│            QUANTITATIVE AGENT                │   │
+│   │  EMBEDDINGS  │───►│            QUANTITATIVE AGENT               │   │
 │   │ (Few-Shot)   │    │  Predicts PHQ-8 item scores (0-3 each)      │   │
 │   └──────────────┘    └──────────────────────┬──────────────────────┘   │
-│                                              │                           │
-│                                              ▼                           │
+│                                              │                          │
+│                                              ▼                          │
 │                       ┌─────────────────────────────────────────────┐   │
-│                       │             META-REVIEW AGENT                │   │
+│                       │             META-REVIEW AGENT               │   │
 │                       │  Integrates all assessments                 │   │
 │                       │  Outputs final severity (0-4)               │   │
 │                       └──────────────────────┬──────────────────────┘   │
-│                                              │                           │
-│                                              ▼                           │
+│                                              │                          │
+│                                              ▼                          │
 │                       ┌─────────────────────────────────────────────┐   │
-│                       │              FINAL ASSESSMENT                │   │
+│                       │              FINAL ASSESSMENT               │   │
 │                       │  Severity: MINIMAL|MILD|MODERATE|           │   │
 │                       │            MOD_SEVERE|SEVERE                │   │
 │                       └─────────────────────────────────────────────┘   │
-│                                                                          │
+│                                                                         │
 └─────────────────────────────────────────────────────────────────────────┘
 ```
 

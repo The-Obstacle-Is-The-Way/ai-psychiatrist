@@ -116,13 +116,13 @@ count depends on the chosen split and chunking parameters, but the contents are 
 REFERENCE STORE
 ┌──────────────────────────────────────────────────────────────┐
 │ Patient 101, Chunk 3                                         │
-│ Text: "I haven't been able to sleep... I'm so exhausted"    │
-│ Embedding: [0.45, 0.82, 0.31, ... 4096 numbers ...]         │
+│ Text: "I haven't been able to sleep... I'm so exhausted"     │
+│ Embedding: [0.45, 0.82, 0.31, ... 4096 numbers ...]          │
 │ PHQ8_Sleep score: 2                                          │
 ├──────────────────────────────────────────────────────────────┤
 │ Patient 142, Chunk 7                                         │
-│ Text: "Nothing brings me joy anymore, I don't care"         │
-│ Embedding: [0.71, 0.23, 0.88, ... 4096 numbers ...]         │
+│ Text: "Nothing brings me joy anymore, I don't care"          │
+│ Embedding: [0.71, 0.23, 0.88, ... 4096 numbers ...]          │
 │ PHQ8_NoInterest score: 3                                     │
 ├──────────────────────────────────────────────────────────────┤
 │ ... ~7,000 more chunks ...                                   │

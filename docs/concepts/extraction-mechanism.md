@@ -15,25 +15,25 @@ This document explains how evidence extraction works, why it succeeds or fails, 
 
 ```
 ┌─────────────────────────────────────────────────────────────┐
-│                     INTERVIEW TRANSCRIPT                     │
+│                     INTERVIEW TRANSCRIPT                    │
 │  "I've been feeling really down lately. Can't sleep at all. │
 │   Work is stressful but I still enjoy my hobbies..."        │
 └─────────────────────────────────────────────────────────────┘
                               │
                               ▼
 ┌─────────────────────────────────────────────────────────────┐
-│              STEP 1: EVIDENCE EXTRACTION (LLM)               │
-│                                                              │
+│              STEP 1: EVIDENCE EXTRACTION (LLM)              │
+│                                                             │
 │  LLM reads entire transcript and extracts quotes for each   │
 │  of the 8 PHQ-8 items.                                      │
-│                                                              │
+│                                                             │
 │  Output: JSON with arrays of evidence per item              │
 └─────────────────────────────────────────────────────────────┘
                               │
                               ▼
 ┌─────────────────────────────────────────────────────────────┐
-│              STEP 2: KEYWORD BACKFILL (Rule-Based)           │
-│                                                              │
+│              STEP 2: KEYWORD BACKFILL (Rule-Based)          │
+│                                                             │
 │  For any item with insufficient evidence:                   │
 │  Search transcript for keywords like "can't sleep",         │
 │  "exhausted", "hopeless" and add matching sentences.        │
@@ -41,23 +41,23 @@ This document explains how evidence extraction works, why it succeeds or fails, 
                               │
                               ▼
 ┌─────────────────────────────────────────────────────────────┐
-│              STEP 3: SCORING (LLM)                           │
-│                                                              │
+│              STEP 3: SCORING (LLM)                          │
+│                                                             │
 │  For each item WITH evidence:                               │
 │    → Score 0-3 based on frequency/severity                  │
-│                                                              │
+│                                                             │
 │  For each item WITHOUT evidence:                            │
 │    → Return "N/A" (cannot assess)                           │
 └─────────────────────────────────────────────────────────────┘
                               │
                               ▼
 ┌─────────────────────────────────────────────────────────────┐
-│                    FINAL PHQ-8 ASSESSMENT                    │
-│                                                              │
+│                    FINAL PHQ-8 ASSESSMENT                   │
+│                                                             │
 │  NoInterest: 2    Depressed: 1    Sleep: 2    Tired: N/A    │
 │  Appetite: N/A    Failure: 1      Concentrating: 0          │
-│  Moving: N/A                                                 │
-│                                                              │
+│  Moving: N/A                                                │
+│                                                             │
 │  Coverage: 5/8 = 62.5%                                      │
 └─────────────────────────────────────────────────────────────┘
 ```
