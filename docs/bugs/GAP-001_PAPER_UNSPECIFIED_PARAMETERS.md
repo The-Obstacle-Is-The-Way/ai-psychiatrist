@@ -57,7 +57,7 @@ We implement the algorithm described in Appendix C:
 
 ### Actual Results (seed=42)
 
-```
+```text
 Paper Target:  58 train (41%) / 43 val (30%) / 41 test (29%)
 Our Result:    58 train (41%) / 43 val (30%) / 41 test (29%)
 ```
