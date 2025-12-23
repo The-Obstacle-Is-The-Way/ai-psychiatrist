@@ -112,8 +112,8 @@ class ModelSettings(BaseSettings):
     Paper baseline (Section 2.2): Gemma 3 27B for the multi-agent system.
 
     NOTE: MedGemma 27B (Appendix F) achieves better item-level MAE (0.505 vs 0.619)
-    but produces excessive N/A scores in practice, leading to worse total-score MAE.
-    Use gemma3:27b for better overall performance.
+    but makes fewer predictions overall (lower coverage / more N/A). Use `gemma3:27b`
+    for paper-parity defaults; override `quantitative_model` to evaluate Appendix F.
 
     Embeddings (Section 2.2): Qwen 3 8B Embedding. The paper does not specify
     quantization; the default tag below uses Q8_0 to match the research scripts.
@@ -143,12 +143,24 @@ class ModelSettings(BaseSettings):
         default="qwen3-embedding:8b",
         description="Embedding model (Paper Section 2.2: Qwen 3 8B Embedding)",
     )
-    temperature: float = Field(default=0.2, ge=0.0, le=2.0, description="Default temperature")
-    temperature_judge: float = Field(
-        default=0.0, ge=0.0, le=2.0, description="Judge agent temperature (deterministic)"
+    # NOTE: Temperature NOT specified in paper. Paper Section 4 says only
+    # "fairly deterministic parameters". We use 0.2 as a conservative low value.
+    # See docs/bugs/GAP-001_PAPER_UNSPECIFIED_PARAMETERS.md for details.
+    temperature: float = Field(
+        default=0.2,
+        ge=0.0,
+        le=2.0,
+        description="Default temperature (paper: 'fairly deterministic' → low)",
     )
-    top_k: int = Field(default=20, ge=1, le=100)
-    top_p: float = Field(default=0.8, ge=0.0, le=1.0)
+    temperature_judge: float = Field(
+        default=0.0,
+        ge=0.0,
+        le=2.0,
+        description="Judge agent temperature (0.0 for deterministic scoring)",
+    )
+    # NOTE: top_k and top_p NOT specified in paper. Using common Gemma defaults.
+    top_k: int = Field(default=20, ge=1, le=100, description="Top-k sampling (not in paper)")
+    top_p: float = Field(default=0.8, ge=0.0, le=1.0, description="Nucleus sampling (not in paper)")
 
 
 class EmbeddingSettings(BaseSettings):
@@ -334,7 +346,7 @@ class Settings(BaseSettings):
     # Feature flags
     enable_few_shot: bool = Field(default=True, description="Enable few-shot mode")
     # NOTE: Default quantitative_model is gemma3:27b (Paper Section 2.2).
-    # MedGemma was only evaluated as ALTERNATIVE in Appendix F (produces more N/A).
+    # MedGemma was only evaluated as an ALTERNATIVE in Appendix F (fewer predictions overall).
 
     @model_validator(mode="after")
     def validate_consistency(self) -> Settings:

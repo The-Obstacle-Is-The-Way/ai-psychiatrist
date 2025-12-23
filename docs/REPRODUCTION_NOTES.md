@@ -14,15 +14,19 @@ The reproduction run on 2025-12-22 04:01 AM used **wrong methodology**:
 
 The file `data/outputs/reproduction_results_20251222_040100.json` should be **ignored**.
 
-### Corrected Script (Merged to Main)
+### Corrected Script
 
-Commit `1c414e4` rewrote `scripts/reproduce_results.py` to match paper methodology:
+The `scripts/reproduce_results.py` implements paper methodology:
 - Item-level MAE (0-3 scale)
 - N/A exclusion
 - Uses train/dev splits (have per-item labels)
 - Reports coverage metrics
 
-**The corrected script has NOT been run yet.**
+**Note**: Paper uses a custom 58/43/41 stratified split, not the original AVEC2017 splits.
+See `scripts/create_paper_split.py` to generate paper-style splits.
+
+**Status**: The corrected script has been smoke-tested (`--limit 1`), but full
+paper-parity runs (41 participants, few-shot) have not been completed yet.
 
 ---
 
@@ -41,14 +45,13 @@ From Section 3.2 and Appendix F:
 ## To Run Reproduction (REQUIRED NEXT STEP)
 
 ```bash
-# Ensure on main or dev branch with latest code
-git checkout main
+# Quick sanity check (AVEC dev split; has per-item labels)
+uv run python scripts/reproduce_results.py --split dev
 
-# Run with corrected script (uses train/dev splits with per-item labels)
-python scripts/reproduce_results.py --split dev
-
-# Or full train+dev (142 participants, matches paper's qualitative figures)
-python scripts/reproduce_results.py --split train+dev
+# Paper-parity workflow (paper split + paper embeddings + evaluation on paper test)
+uv run python scripts/create_paper_split.py --seed 42
+uv run python scripts/generate_embeddings.py --split paper-train
+uv run python scripts/reproduce_results.py --split paper --few-shot-only
 ```
 
 ---
@@ -85,7 +88,7 @@ python scripts/reproduce_results.py --split train+dev
 - **Models**:
   - `gemma3:27b` (17GB) - All agents
   - `qwen3-embedding:8b` (4.7GB) - Few-shot embeddings
-- **Timeout**: 180s per LLM call (consider 300s for large transcripts)
+- **Timeout**: 300s per LLM call (default in config; adjust via OLLAMA_TIMEOUT_SECONDS)
 
 ---
 
@@ -99,14 +102,28 @@ MODEL_META_REVIEW_MODEL=gemma3:27b
 MODEL_QUANTITATIVE_MODEL=gemma3:27b
 MODEL_EMBEDDING_MODEL=qwen3-embedding:8b
 EMBEDDING_DIMENSION=4096
-OLLAMA_TIMEOUT_SECONDS=180  # Increase to 300 for large transcripts
+OLLAMA_TIMEOUT_SECONDS=300
 ```
+
+---
+
+## Paper Unspecified Parameters
+
+Some parameters are NOT explicitly specified in the paper. See `docs/bugs/GAP-001_PAPER_UNSPECIFIED_PARAMETERS.md` for:
+
+- **GAP-001a**: Exact split membership (paper uses custom 58/43/41, not AVEC2017 splits)
+- **GAP-001b**: Temperature (paper says "fairly deterministic", we use 0.2)
+- **GAP-001c**: top_k / top_p (not specified, we use defaults)
+- **GAP-001d**: Model quantization (not specified, we use Ollama defaults)
+
+**Implication**: MAE may differ ±0.1 from paper due to split differences and model variance.
 
 ---
 
 ## Next Steps
 
-1. **Re-run reproduction** with corrected script
-2. **Compare results** to paper's item-level MAE values
-3. **Investigate** if results differ significantly from paper
-4. **Document** final validated results
+1. **Generate paper-style splits**: `uv run python scripts/create_paper_split.py --seed 42`
+2. **Generate paper-style embeddings**: `uv run python scripts/generate_embeddings.py --split paper-train`
+3. **Run paper-parity evaluation**: `uv run python scripts/reproduce_results.py --split paper --few-shot-only`
+4. **Compare** to paper MAE (Gemma few-shot 0.619; zero-shot 0.796) and coverage notes
+5. **Document** final validated results and provenance (seed + artifact paths)

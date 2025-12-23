@@ -48,6 +48,8 @@ from ai_psychiatrist.services.transcript import TranscriptService
 
 logger = get_logger(__name__)
 
+PAPER_SPLITS_DIRNAME = "paper_splits"
+
 
 def create_sliding_chunks(
     transcript_text: str,
@@ -117,24 +119,36 @@ async def generate_embedding(
     return list(embedding)
 
 
-def get_training_participant_ids(data_settings: DataSettings) -> list[int]:
-    """Get participant IDs from training split only.
+def _paper_train_split_path(data_settings: DataSettings) -> Path:
+    """Resolve paper-style train split CSV path."""
+    return data_settings.base_dir / PAPER_SPLITS_DIRNAME / "paper_split_train.csv"
+
+
+def get_participant_ids(data_settings: DataSettings, *, split: str) -> list[int]:
+    """Get participant IDs for embedding generation.
 
     Uses ONLY training data to avoid data leakage in few-shot retrieval.
 
     Args:
         data_settings: Data path configuration.
+        split: "avec-train" or "paper-train".
 
     Returns:
         List of training participant IDs.
     """
     import pandas as pd  # noqa: PLC0415
 
-    train_path = data_settings.train_csv
-    if not train_path.exists():
-        raise FileNotFoundError(f"Training CSV not found: {train_path}")
+    if split == "avec-train":
+        csv_path = data_settings.train_csv
+    elif split == "paper-train":
+        csv_path = _paper_train_split_path(data_settings)
+    else:
+        raise ValueError(f"Unsupported split: {split}")
 
-    df = pd.read_csv(train_path)
+    if not csv_path.exists():
+        raise FileNotFoundError(f"Split CSV not found: {csv_path}")
+
+    df = pd.read_csv(csv_path)
     return sorted(df["Participant_ID"].astype(int).tolist())
 
 
@@ -212,7 +226,10 @@ async def main_async(args: argparse.Namespace) -> int:  # noqa: PLR0915
     min_chars = embedding_settings.min_evidence_chars
     model = model_settings.embedding_model
 
-    output_path = data_settings.embeddings_path
+    default_output = data_settings.embeddings_path
+    if args.split == "paper-train":
+        default_output = data_settings.base_dir / "embeddings" / "paper_reference_embeddings.npz"
+    output_path = args.output or default_output
 
     print("=" * 60)
     print("REFERENCE EMBEDDINGS GENERATOR")
@@ -223,6 +240,7 @@ async def main_async(args: argparse.Namespace) -> int:  # noqa: PLR0915
     print(f"  Chunk size: {chunk_size} lines")
     print(f"  Step size: {step_size} lines")
     print(f"  Min chars: {min_chars}")
+    print(f"  Split: {args.split}")
     print(f"  Output: {output_path}")
     print("=" * 60)
 
@@ -233,8 +251,8 @@ async def main_async(args: argparse.Namespace) -> int:  # noqa: PLR0915
 
     # Get training participants only (avoid data leakage)
     try:
-        train_ids = get_training_participant_ids(data_settings)
-        print(f"\nFound {len(train_ids)} training participants")
+        participant_ids = get_participant_ids(data_settings, split=args.split)
+        print(f"\nFound {len(participant_ids)} participants")
     except FileNotFoundError as e:
         print(f"\nERROR: {e}")
         print("Please ensure DAIC-WOZ dataset is prepared.")
@@ -262,10 +280,10 @@ async def main_async(args: argparse.Namespace) -> int:  # noqa: PLR0915
         all_embeddings: dict[int, list[tuple[str, list[float]]]] = {}
         total_chunks = 0
 
-        print(f"\nProcessing {len(train_ids)} participants...")
-        for idx, pid in enumerate(train_ids, 1):
-            if idx % 10 == 0 or idx == len(train_ids):
-                print(f"  Progress: {idx}/{len(train_ids)} participants...")
+        print(f"\nProcessing {len(participant_ids)} participants...")
+        for idx, pid in enumerate(participant_ids, 1):
+            if idx % 10 == 0 or idx == len(participant_ids):
+                print(f"  Progress: {idx}/{len(participant_ids)} participants...")
 
             results = await process_participant(
                 client,
@@ -343,6 +361,18 @@ Environment Variables:
     EMBEDDING_CHUNK_SIZE: Lines per chunk (default: 8)
     EMBEDDING_CHUNK_STEP: Sliding window step (default: 2)
         """,
+    )
+    parser.add_argument(
+        "--split",
+        choices=["avec-train", "paper-train"],
+        default="avec-train",
+        help="Which training population to embed (paper-train requires create_paper_split.py)",
+    )
+    parser.add_argument(
+        "--output",
+        type=Path,
+        default=None,
+        help="Override output NPZ path (JSON sidecar is written alongside)",
     )
     parser.add_argument(
         "--dry-run",

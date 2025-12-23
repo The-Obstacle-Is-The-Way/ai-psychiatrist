@@ -78,12 +78,13 @@ Environment-driven via `.env` (copy from `.env.example`). Key settings:
 
 | Setting | Default | Paper Reference |
 |---------|---------|-----------------|
-| `MODEL_QUANTITATIVE_MODEL` | `alibayram/medgemma:27b` | Appendix F (18% better MAE) |
+| `MODEL_QUANTITATIVE_MODEL` | `gemma3:27b` | Section 2.2 (MedGemma in Appendix F produces more N/A) |
 | `EMBEDDING_DIMENSION` | 4096 | Appendix D (optimal) |
 | `EMBEDDING_TOP_K_REFERENCES` | 2 | Appendix D |
 | `FEEDBACK_SCORE_THRESHOLD` | 3 | Section 2.3.1 (score <4 triggers refinement) |
+| `OLLAMA_TIMEOUT_SECONDS` | 300 | Large transcripts need extended time |
 
-Nested delimiter: `OLLAMA__HOST=custom` sets `OllamaSettings.host`
+Environment variable prefix: `OLLAMA_HOST=custom` sets `OllamaSettings.host`
 
 ## Testing
 

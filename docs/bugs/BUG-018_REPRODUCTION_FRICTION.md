@@ -25,8 +25,8 @@ We were computing a **completely different metric** than the paper:
 ### Timeline of Events
 
 1. **04:01 AM Dec 22**: Ran reproduction with OLD script → MAE 4.02 (WRONG)
-2. **09:31 AM Dec 22**: Committed fix `1c414e4` → Aligned with paper methodology
-3. **Present**: Fix is merged to main, but **NEVER RE-RUN**
+2. **Later Dec 22**: Rewrote `scripts/reproduce_results.py` to match paper methodology
+3. **Present**: Paper-parity workflow exists, but **FULL reproduction has not been completed**
 
 ### The OLD Code (Wrong)
 
@@ -61,7 +61,13 @@ The handwave `4.02 ÷ 8 ≈ 0.50` is **not** equivalent to the paper's methodolo
 
 **MUST re-run** reproduction with corrected script:
 ```bash
-python scripts/reproduce_results.py --split dev  # or train+dev
+# Paper-parity workflow (paper split + paper embeddings + evaluation on paper test)
+uv run python scripts/create_paper_split.py --seed 42
+uv run python scripts/generate_embeddings.py --split paper-train
+uv run python scripts/reproduce_results.py --split paper --few-shot-only
+
+# Quick sanity check (AVEC dev split; has per-item labels)
+uv run python scripts/reproduce_results.py --split dev
 ```
 
 The output file `data/outputs/reproduction_results_20251222_040100.json` is **INVALID** and should be ignored.
@@ -76,10 +82,10 @@ The output file `data/outputs/reproduction_results_20251222_040100.json` is **IN
 | BUG-018b | .env overrides config | ✅ FIXED - .env updated |
 | BUG-018c | DataSettings attribute | ✅ FIXED - script updated |
 | BUG-018d | Inline imports | ✅ FIXED - imports at top |
-| BUG-018e | 180s timeout | ✅ INVESTIGATED - environmental |
+| BUG-018e | Timeout too short for long transcripts | ✅ INVESTIGATED - environmental/configurable |
 | BUG-018f | JSON parsing failures | ✅ RESOLVED - cascade works |
 | BUG-018g | Model underestimates severe | ⚠️ RESEARCH ITEM |
-| BUG-018h | Empty keywords/ dir | ✅ DELETED - orphaned |
+| BUG-018h | Orphaned `data/keywords/` directory | ✅ DOCUMENTED - not used by code |
 | BUG-018i | Item-level MAE methodology | ⚠️ CODE FIXED, NOT RE-RUN |
 
 ---
@@ -210,13 +216,13 @@ PLC0415 `import` should be at the top-level of a file
 
 ---
 
-## BUG-018e: 180s Timeout Too Short (MEDIUM) - INVESTIGATED
+## BUG-018e: Timeout Too Short for Long Transcripts (MEDIUM) - INVESTIGATED
 
 ### Symptom
 
 6 out of 47 participants (13%) failed with:
 ```
-LLM request timed out after 180s
+LLM request timed out (configured timeout reached)
 ```
 
 ### Affected Participants
@@ -238,7 +244,7 @@ LLM request timed out after 180s
 **Contributing factors:**
 1. 27B model on M1 Pro Max with concurrent workloads (Arc mesh training)
 2. Two LLM calls per participant (evidence extraction + scoring)
-3. 180s timeout per call means max ~360s total, but each call can timeout independently
+3. Timeout applies per call (evidence extraction + scoring), so each call can timeout independently
 4. No timeout issues correlated with ground truth severity
 
 ### Root Cause
@@ -254,7 +260,8 @@ For users with concurrent GPU workloads or larger transcripts:
 OLLAMA_TIMEOUT_SECONDS=300  # or 360 for very large transcripts
 ```
 
-The default 180s is acceptable for most use cases. This is environmental, not a code bug.
+Timeout behavior is environmental and workload-dependent. The current default is 300s, but very
+long transcripts may still require a higher value.
 
 ---
 
@@ -392,7 +399,7 @@ Claiming `4.02 ÷ 8 ≈ 0.50` does NOT equal the paper's methodology because:
 3. Paper reports coverage (% of items with predictions) separately
 4. Total-score errors don't distribute evenly across items
 
-### Files Changed (Commit `1c414e4`)
+### Files Changed (Paper-Parity Fix)
 
 Complete rewrite of `scripts/reproduce_results.py`:
 - Changed from total-score to item-level MAE
@@ -403,13 +410,19 @@ Complete rewrite of `scripts/reproduce_results.py`:
 
 ### Current Status
 
-**Code is correct and merged to main. Reproduction NEVER re-run with new code.**
+The paper-parity evaluation workflow exists (item-level MAE + paper split support), but a full
+run reproducing the paper’s reported MAE values has not been completed yet.
 
 The file `data/outputs/reproduction_results_20251222_040100.json` contains results from the OLD (wrong) methodology and should be ignored.
 
 ### Action Required
 
-Re-run: `python scripts/reproduce_results.py --split dev`
+Run paper-parity evaluation:
+```bash
+uv run python scripts/create_paper_split.py --seed 42
+uv run python scripts/generate_embeddings.py --split paper-train
+uv run python scripts/reproduce_results.py --split paper --few-shot-only
+```
 
 ---
 
@@ -423,7 +436,7 @@ Re-run: `python scripts/reproduce_results.py --split dev`
 | `src/ai_psychiatrist/config.py` | 86-91 | `alibayram/medgemma:27b` | `gemma3:27b` |
 | `tests/unit/test_config.py` | 84-96 | MedGemma assertion | gemma3:27b with docstring |
 | `.env.example` | 9-18 | MedGemma default | gemma3:27b with note |
-| `.env` | 9-16 | MedGemma | gemma3:27b |
+| `.env` | (local) | MedGemma override | gemma3:27b (recommended for parity) |
 
 ### New Files Created
 
@@ -440,9 +453,11 @@ Re-run: `python scripts/reproduce_results.py --split dev`
 
 ### 1. Why was MedGemma the default? Who set this and did they test it?
 
-**Answer:** It was set based on a misreading of the paper. Appendix F shows MedGemma as an ALTERNATIVE evaluation, not the primary model. The caveat "fewer predictions" was missed. The `alibayram/medgemma:27b` is also a community Q4_K_M quantization, not official weights.
+**Answer:** Appendix F shows MedGemma as an ALTERNATIVE evaluation, not the primary model. The caveat
+"fewer predictions overall" is easy to miss. Also, Ollama does not publish an official MedGemma
+library model; any MedGemma tag in Ollama is a community conversion.
 
-**Fixed:** Default changed to `gemma3:27b`. HuggingFace backend now available for official MedGemma via `google/medgemma-27b-text-it`.
+**Fixed:** Default changed to `gemma3:27b` to match Section 2.2 paper baseline.
 
 ### 2. Is the .env wiring pattern correct?
 
@@ -452,13 +467,17 @@ Re-run: `python scripts/reproduce_results.py --split dev`
 
 ### 3. Why does MedGemma produce all N/A?
 
-**Answer:** MedGemma is trained to be conservative on medical data - it only scores when evidence is unambiguous. The paper acknowledges this: "detected fewer relevant chunks, making fewer predictions overall." This is expected behavior, not a bug.
+**Answer:** The paper acknowledges this behavior in Appendix F: MedGemma produces fewer predictions
+overall (more N/A / lower coverage). Additionally, different community conversions/quantizations may
+vary in behavior. This needs controlled evaluation using the paper’s MAE + coverage definitions.
 
-**Resolution:** Use gemma3:27b for better coverage. MedGemma available via HuggingFace for users who prefer higher precision with lower recall.
+**Resolution:** Use `gemma3:27b` for paper-parity baseline; treat MedGemma as an optional alternative
+for the quantitative agent only.
 
 ### 4. Should timeout be configurable per-model?
 
-**Answer:** Current per-request timeout (via `timeout_seconds` parameter) is sufficient. Global default of 180s works for 87% of cases. Users with large transcripts or concurrent GPU workloads can increase via `OLLAMA_TIMEOUT_SECONDS`.
+**Answer:** Current per-request timeout (via `timeout_seconds` parameter) is configurable. Users
+with large transcripts or concurrent GPU workloads can increase via `OLLAMA_TIMEOUT_SECONDS`.
 
 **No change needed.** Environmental issue, not a code deficiency.
 
@@ -479,7 +498,7 @@ Re-run: `python scripts/reproduce_results.py --split dev`
 
 ### 7. Should we calculate item-level MAE?
 
-**Answer:** YES - and we now DO! The script was completely rewritten in commit `1c414e4` to:
+**Answer:** YES - and the current `scripts/reproduce_results.py` computes:
 - Load per-item ground truth from AVEC2017 CSVs
 - Calculate item-level MAE with N/A exclusion
 - Report multiple aggregation views (weighted, by-item, by-subject)
@@ -509,9 +528,11 @@ Re-run: `python scripts/reproduce_results.py --split dev`
 
 ## NEXT STEPS (Required Before Any Further Work)
 
-1. **Re-run reproduction** with corrected script:
+1. **Run paper-parity reproduction**:
    ```bash
-   python scripts/reproduce_results.py --split dev
+   uv run python scripts/create_paper_split.py --seed 42
+   uv run python scripts/generate_embeddings.py --split paper-train
+   uv run python scripts/reproduce_results.py --split paper --few-shot-only
    ```
 
 2. **Compare results** to paper's reported values:
@@ -519,11 +540,6 @@ Re-run: `python scripts/reproduce_results.py --split dev`
    - Paper zero-shot MAE: 0.796
    - Paper MedGemma MAE: 0.505 (fewer predictions)
 
-3. **Archive invalid output**:
-   ```bash
-   mv data/outputs/reproduction_results_20251222_040100.json data/outputs/INVALID_OLD_METHODOLOGY/
-   ```
-
-4. **Update documentation** with correct results once obtained
+3. **Update documentation** with correct results once obtained
 
 **DO NOT proceed with other work until reproduction is validated with correct methodology.**

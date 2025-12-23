@@ -151,28 +151,28 @@ class ExperimentResults:
 
 
 def _split_csv_path(data_dir: Path, split: str) -> Path:
-    """Resolve AVEC2017 split CSV path."""
-    mapping = {
-        "train": data_dir / "train_split_Depression_AVEC2017.csv",
-        "dev": data_dir / "dev_split_Depression_AVEC2017.csv",
-    }
-    try:
-        return mapping[split]
-    except KeyError as e:
-        raise ValueError(f"Unsupported split: {split}") from e
+    """Resolve split CSV path.
 
-
-def load_item_ground_truth(data_dir: Path, split: str) -> dict[int, dict[PHQ8Item, int]]:
-    """Load per-item PHQ-8 ground truth for a split.
-
-    Args:
-        data_dir: Path to data directory.
-        split: "train" or "dev".
-
-    Returns:
-        Mapping from participant_id to per-item ground truth scores (0-3).
+    Supported split families:
+    - AVEC2017 official: train/dev
+    - Paper custom: paper-train/paper-val/paper-test (and paper alias for paper-test)
     """
-    csv_path = _split_csv_path(data_dir, split)
+    if split in {"train", "dev"}:
+        mapping = {
+            "train": data_dir / "train_split_Depression_AVEC2017.csv",
+            "dev": data_dir / "dev_split_Depression_AVEC2017.csv",
+        }
+        return mapping[split]
+
+    if split in {"paper", "paper-train", "paper-val", "paper-test"}:
+        name = "test" if split == "paper" else split.removeprefix("paper-")
+        return data_dir / "paper_splits" / f"paper_split_{name}.csv"
+
+    raise ValueError(f"Unsupported split: {split}")
+
+
+def load_item_ground_truth_csv(csv_path: Path) -> dict[int, dict[PHQ8Item, int]]:
+    """Load per-item PHQ-8 ground truth from a CSV file."""
     if not csv_path.exists():
         raise FileNotFoundError(f"Split not found: {csv_path}")
 
@@ -189,6 +189,20 @@ def load_item_ground_truth(data_dir: Path, split: str) -> dict[int, dict[PHQ8Ite
         result[participant_id] = scores
 
     return result
+
+
+def load_item_ground_truth(data_dir: Path, split: str) -> dict[int, dict[PHQ8Item, int]]:
+    """Load per-item PHQ-8 ground truth for a split.
+
+    Args:
+        data_dir: Path to data directory.
+        split: "train" or "dev".
+
+    Returns:
+        Mapping from participant_id to per-item ground truth scores (0-3).
+    """
+    csv_path = _split_csv_path(data_dir, split)
+    return load_item_ground_truth_csv(csv_path)
 
 
 def load_total_ground_truth_test(data_dir: Path) -> dict[int, int]:
@@ -506,12 +520,17 @@ def print_run_configuration(*, settings: Settings, split: str) -> None:
     model_settings = settings.model
     ollama_settings = settings.ollama
 
+    embeddings_path = data_settings.embeddings_path
+    if split.startswith("paper"):
+        embeddings_path = data_settings.base_dir / "embeddings" / "paper_reference_embeddings.npz"
+
     print("=" * 60)
     print("PAPER REPRODUCTION: Quantitative PHQ-8 Evaluation (Item-level MAE)")
     print("=" * 60)
     print(f"  Ollama: {ollama_settings.base_url}")
     print(f"  Quantitative Model: {model_settings.quantitative_model}")
     print(f"  Embedding Model: {model_settings.embedding_model}")
+    print(f"  Embeddings Artifact: {embeddings_path}")
     print(f"  Data Directory: {data_settings.base_dir}")
     print(f"  Split: {split}")
     print("=" * 60)
@@ -554,7 +573,25 @@ def init_embedding_service(
     """Initialize embedding service for few-shot mode (or return None)."""
     if args.zero_shot_only:
         return None
-    reference_store = ReferenceStore(data_settings, embedding_settings)
+    effective_data_settings = data_settings
+    if args.split.startswith("paper"):
+        paper_path = data_settings.base_dir / "embeddings" / "paper_reference_embeddings.npz"
+        effective_data_settings = DataSettings(
+            base_dir=data_settings.base_dir,
+            transcripts_dir=data_settings.transcripts_dir,
+            embeddings_path=paper_path,
+            train_csv=data_settings.train_csv,
+            dev_csv=data_settings.dev_csv,
+        )
+    npz_path = effective_data_settings.embeddings_path
+    json_path = npz_path.with_suffix(".json")
+    if not npz_path.exists() or not json_path.exists():
+        raise FileNotFoundError(
+            "Few-shot evaluation requires a precomputed embeddings artifact. "
+            f"Missing: {npz_path} and/or {json_path}. "
+            "Run: uv run python scripts/generate_embeddings.py"
+        )
+    reference_store = ReferenceStore(effective_data_settings, embedding_settings)
     return EmbeddingService(
         llm_client=ollama_client,
         reference_store=reference_store,
@@ -633,13 +670,17 @@ async def main_async(args: argparse.Namespace) -> int:
             return 1
 
         transcript_service = TranscriptService(data_settings)
-        embedding_service = init_embedding_service(
-            args=args,
-            data_settings=data_settings,
-            embedding_settings=embedding_settings,
-            model_settings=model_settings,
-            ollama_client=ollama_client,
-        )
+        try:
+            embedding_service = init_embedding_service(
+                args=args,
+                data_settings=data_settings,
+                embedding_settings=embedding_settings,
+                model_settings=model_settings,
+                ollama_client=ollama_client,
+            )
+        except FileNotFoundError as e:
+            print(f"\nERROR: {e}")
+            return 1
         experiments = await run_requested_experiments(
             args=args,
             ground_truth=ground_truth,
@@ -679,9 +720,12 @@ Examples:
     )
     parser.add_argument(
         "--split",
-        choices=["train", "dev", "train+dev"],
+        choices=["train", "dev", "train+dev", "paper", "paper-train", "paper-val", "paper-test"],
         default="dev",
-        help="Which split to evaluate (train/dev have per-item labels in this repo)",
+        help=(
+            "Which split to evaluate. Paper split requires running "
+            "scripts/create_paper_split.py first."
+        ),
     )
     parser.add_argument(
         "--dry-run",
