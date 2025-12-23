@@ -1,8 +1,8 @@
-# AI-Psychiatrist: Production-Ready Conversion Spec Overview
+# AI-Psychiatrist: Engineering Refactor Spec Overview
 
 ## Executive Summary
 
-This document series outlines a comprehensive plan to transform the AI-Psychiatrist research codebase into a production-ready, maintainable Python system. The specs follow **vertical slice architecture**, enabling incremental delivery of fully-functional features while maintaining 100% parity with the research paper.
+This document series describes the plan used to transform the AI-Psychiatrist research codebase into a maintainable, testable Python system. The specs follow **vertical slice architecture**, enabling incremental delivery of working features while maintaining paper parity where the paper is explicit (and tracking gaps where it is not).
 
 ## Paper Reference
 
@@ -16,15 +16,11 @@ This document series outlines a comprehensive plan to transform the AI-Psychiatr
 
 ## Current State Analysis
 
-### What Exists (Research Code)
-- 15 Python files (~4,045 LOC; excluding `_literature/.venv`)
-- FastAPI server (`server.py`) exposing `/health`, `/assess/*`, and `/full_pipeline`
-- Archived legacy agent implementations under `_legacy/agents/`
-- Archived research/cluster scripts under `_legacy/qualitative_assessment/`, `_legacy/quantitative_assessment/`, `_legacy/meta_review/`
-- Notebooks under `_legacy/quantitative_assessment/` and `_legacy/visualization/` containing key evaluation/plotting logic
-- Embedding-based few-shot retrieval system (pickle-based reference store)
-- SLURM job scripts for HPC execution (`_legacy/slurm/`)
-- Conda environment configuration (`_legacy/assets/env_reqs.yml`)
+### What Exists (Current Repo)
+- Modern, testable implementation under `src/ai_psychiatrist/` (agents, services, domain, infrastructure)
+- FastAPI server entrypoint (`server.py`) exposing `/health`, `/assess/*`, and `/full_pipeline`
+- Archived original research/prototype code under `_legacy/` (scripts, notebooks, SLURM jobs, example outputs)
+- Local-only data artifacts under `data/` (DAIC-WOZ transcripts, generated embeddings); `data/` is gitignored due to licensing
 
 ### Codebase → Spec Coverage Map (No Orphaned Files)
 
@@ -53,7 +49,7 @@ This spec series covers both:
 | `_legacy/analysis_output/*` | Example outputs (CSV/JSONL) | Spec 11/12 (as-is validation artifacts) |
 | `_legacy/slurm/job_ollama.sh` / `_legacy/slurm/job_assess.sh` | HPC deployment scripts | Spec 01/04 |
 | `_legacy/assets/env_reqs.yml` / `_legacy/assets/ollama_example.py` | Conda env + Ollama usage example | Spec 01/04 |
-| `assets/overview.png` | System overview image (non-code artifact) | Spec 00 |
+| `_legacy/assets/overview.png` | System overview image (non-code artifact) | Spec 00 |
 
 ### Paper → Spec Traceability Map (All Figures + Appendices)
 
@@ -84,19 +80,30 @@ This table ensures every paper figure/image extracted under `_literature/markdow
 | Appendix F | `_literature/markdown/ai_psychiatrist/ai_psychiatrist.md` | MedGemma quantitative improvement + tradeoffs | Spec 09 |
 | Appendix G | `_literature/markdown/ai_psychiatrist/ai_psychiatrist.md` | Single-prompt experiment failure mode | Spec 11 |
 
-### Critical Gaps
+### Critical Gaps (Legacy Research Code)
 
-| Gap | Impact | Priority |
+These gaps describe the original research implementation archived under `_legacy/`. The modern
+refactor under `src/ai_psychiatrist/` addresses most of them; remaining paper-reproduction gaps are
+tracked in `docs/results/reproduction-notes.md` and `docs/bugs/`.
+
+| Gap (legacy) | Impact | Status in refactor |
 |-----|--------|----------|
-| No tests | Cannot verify correctness | P0 |
-| Inconsistent error handling | Some paths crash; others silently degrade | P0 |
-| No structured logging/observability | Difficult to debug and measure | P0 |
-| Hardcoded paths/configs | Cannot deploy | P0 |
-| No type safety | Runtime errors | P1 |
-| No dependency injection | Untestable | P1 |
-| No API documentation | Unusable by others | P1 |
-| Naming inconsistencies | Confusing codebase | P2 |
-| No CI/CD pipeline | Manual deployment | P2 |
+| No tests | Cannot verify correctness | ✅ Addressed (extensive unit/integration/e2e tests) |
+| Inconsistent error handling | Some paths crash; others silently degrade | ✅ Improved (typed exceptions + defensive parsing) |
+| No structured logging/observability | Difficult to debug and measure | ✅ Addressed (structlog; deeper observability deferred) |
+| Hardcoded paths/configs | Cannot deploy | ✅ Addressed (Pydantic settings; `.env.example`) |
+| No type safety | Runtime errors | ✅ Addressed (mypy strict across `src/`, `tests/`, `scripts/`, `server.py`) |
+| No dependency injection | Untestable | ✅ Addressed (protocols + DI in `server.py`) |
+| No API documentation | Unusable by others | ✅ Addressed (FastAPI OpenAPI + docs) |
+| Naming inconsistencies | Confusing codebase | ✅ Improved (consistent module and doc paths) |
+| No CI/CD pipeline | Manual deployment | ✅ Addressed (Make targets + CI workflow) |
+
+### Remaining Gaps (Current)
+
+| Gap | Impact | Tracking |
+|-----|--------|----------|
+| Paper MAE parity not yet achieved | Cannot claim reproduction within tolerance | `docs/results/reproduction-notes.md` |
+| Paper sampling/quantization parameters unspecified | Can affect MAE/coverage and runtime | `docs/bugs/gap-001-paper-unspecified-parameters.md` |
 
 ## Modern Python Tooling Stack (2025)
 
@@ -154,6 +161,9 @@ Each spec represents a **vertical slice** - a complete feature from API to stora
 ```
 
 ## Spec Index
+
+Note: Specs **01–11.5** and **12.5** are archived under `docs/archive/specs/` (historical record).
+Active specs live under `docs/specs/`.
 
 | Spec | Title | Deliverable |
 |------|-------|-------------|
@@ -270,7 +280,9 @@ Each checkpoint includes:
 **CRITICAL**: This codebase explicitly forbids the "mock everything" anti-pattern.
 
 **Acceptable Mocking** (I/O boundaries only):
-- HTTP calls to Ollama API (mock `httpx`, not the client class)
+- LLM boundary:
+  - For `OllamaClient` tests: mock HTTP with `respx` (httpx)
+  - For agent/service tests: use `tests/fixtures/mock_llm.py` (protocol-compatible fake), not ad-hoc mocks
 - File system operations for tests that shouldn't touch disk
 - Time-dependent operations (sparingly)
 
@@ -285,7 +297,7 @@ Each checkpoint includes:
 - `sample_ollama_response`: GOOD (real API response for parsing tests)
 - `Mock()` objects replacing real behavior: BAD unless at I/O boundary
 
-See **Spec 01: Testing Philosophy** for detailed examples and rationale.
+See **Spec 01** (`docs/archive/specs/01_PROJECT_BOOTSTRAP.md`) for detailed examples and rationale.
 
 ## Success Criteria
 

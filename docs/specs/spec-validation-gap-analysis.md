@@ -9,7 +9,7 @@ This report audits the research paper (`_literature/markdown/ai_psychiatrist/ai_
 | Target | Value | Paper Reference |
 |--------|-------|-----------------|
 | Qualitative/Judge/Meta chat | `gemma3:27b` | Section 2.2 (paper baseline) |
-| Quantitative chat | MedGemma 27B (example Ollama tag: `alibayram/medgemma:27b`) | Appendix F (MAE 0.505; fewer predictions) |
+| Quantitative chat | `gemma3:27b` (Appendix F: MedGemma as optional alternative via HuggingFace) | Section 2.2; Appendix F |
 | Embedding model family | Qwen 3 8B Embedding (example Ollama tag: `qwen3-embedding:8b`; quantization not specified in paper) | Section 2.2 |
 | Feedback threshold | 3 (scores < 4 trigger) | Section 2.3.1 |
 | Max iterations | 10 | Section 2.3.1 |
@@ -62,13 +62,13 @@ Remaining “coverage gaps” are primarily depth gaps (e.g., not every notebook
 |----------|---------------|----------|-------------|
 | `TRANSCRIPT_PATH` | env var | `_legacy/agents/interview_simulator.py` | Legacy-only (archived) |
 | `VERBOSE` | `True` (CLI `--quiet` disables) | `_legacy/agents/quantitative_assessor_f.py` | Legacy-only (archived) |
-| `DOMAIN_KEYWORDS` | PHQ8 keyword lists | `_legacy/agents/quantitative_assessor_f.py` | Legacy-only (archived) |
+| `DOMAIN_KEYWORDS` | PHQ-8 keyword lists | `src/ai_psychiatrist/agents/prompts/quantitative.py` | Production (configurable via YAML) |
 
 ### Paper vs Spec vs Code Matrix
 
 | Parameter | Paper Value | Production Default | Legacy Prototype (archived) | Status |
 |-----------|------------|--------------------|-----------------------------|--------|
-| Chat models | Gemma 3 27B (Section 2.2); MedGemma 27B for quantitative (Appendix F) | `MODEL_*` defaults in `src/ai_psychiatrist/config.py` match paper (Gemma 3 27B + MedGemma 27B) | Varies across `_legacy/*`; not used in production | **Aligned** |
+| Chat models | Gemma 3 27B (Section 2.2); MedGemma 27B evaluated as optional quantitative alternative (Appendix F) | Production defaults use `gemma3:27b` for all agents; optional `MODEL_QUANTITATIVE_MODEL=medgemma:27b` when using the HuggingFace backend | Varies across `_legacy/*`; not used in production | **Aligned** |
 | Embedding model | Qwen 3 8B Embedding | `qwen3-embedding:8b` + `EMBEDDING_DIMENSION=4096` | Varies across `_legacy/*`; not used in production | **Aligned** |
 | `chunk_size` | 8 (optimal) | `EMBEDDING_CHUNK_SIZE=8` | Varies; see `_legacy/quantitative_assessment/*` | **Aligned** |
 | `step_size` | 2 | `EMBEDDING_CHUNK_STEP=2` | Varies; see `_legacy/quantitative_assessment/*` | **Aligned** |
@@ -101,7 +101,7 @@ Remaining “coverage gaps” are primarily depth gaps (e.g., not every notebook
 7. **Are `analysis_output` CSV/JSONL structures documented?**  
    - Legacy artifacts (if present) are archived under `_legacy/analysis_output/`.
 
-8. **Does `interview_simulator.py` serve a purpose worth preserving?**  
+8. **Does `_legacy/agents/interview_simulator.py` serve a purpose worth preserving?**  
    - It remains useful for reproducing the legacy prototype behavior, but production uses `TranscriptService` and request-driven transcript resolution.
 
 ## 2025 Tooling Verification (Quick Check)
@@ -122,7 +122,7 @@ Scores reflect **accuracy + completeness** for paper-optimal targeting with as-i
 | Spec | Score | Notes |
 |------|-------|-------|
 | 00 | 98% | Explicit code→spec coverage map; distinguishes as-is vs paper-optimal target |
-| 01 | 98% | Paper-optimal .env.example (Gemma baseline + MedGemma quantitative); documents SLURM/conda for migration |
+| 01 | 98% | Paper-optimal `.env.example` (Gemma baseline; MedGemma documented as optional Appendix F alternative); documents SLURM/conda for migration |
 | 02 | 96% | Domain entities aligned with paper; as-is conventions documented |
 | 03 | 98% | **Paper-optimal defaults**: per-agent models, threshold=3, top_k=2, dim=4096 |
 | 04 | 98% | Paper-optimal target table added; documents Ollama endpoints |
@@ -130,7 +130,7 @@ Scores reflect **accuracy + completeness** for paper-optimal targeting with as-i
 | 06 | 95% | Includes as-is qualitative prompt (malformed tags documented for migration) |
 | 07 | 98% | Paper-optimal feedback threshold (< 4); as-is prompts documented |
 | 08 | 98% | **Paper-optimal target table**: top_k=2, dim=4096, chunk_size=8 |
-| 09 | 98% | **Paper-optimal target**: MedGemma, few-shot, top_k=2; expected MAE 0.505 |
+| 09 | 98% | **Paper-optimal baseline**: Gemma3 few-shot, top_k=2; Appendix F optional MedGemma evaluation (lower MAE but lower coverage) |
 | 10 | 95% | As-is prompt documented; target uses paper models via config |
 | 11 | 95% | Documents as-is `server.py` endpoint + known runtime blockers |
 | 12 | 95% | As-is observability documented; target uses structlog |

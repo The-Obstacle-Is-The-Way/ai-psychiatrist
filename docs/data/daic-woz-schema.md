@@ -406,7 +406,7 @@ class PHQ8Item(StrEnum):
 
 | Participant | Issue | Status | Reference |
 |-------------|-------|--------|-----------|
-| **487** | Corrupted transcript (AppleDouble file, not CSV) | Resolved ✓ | [BUG-022](../bugs/bug-022-corrupted-transcript-487.md) |
+| **487** | Corrupted transcript (AppleDouble file, not CSV) | Resolved ✓ | [BUG-022](../archive/bugs/bug-022-corrupted-transcript-487.md) |
 
 > **Note**: Issue was caused by macOS AppleDouble extraction, not source data. Re-download and careful extraction fixed it.
 

@@ -4,6 +4,9 @@
 **Status**: DOCUMENTED - Implementations proposed with explicit rationales
 **Severity**: MEDIUM - Affects exact reproducibility but not system validity
 **Updated**: 2025-12-22 - Comprehensive first-principles audit
+**Tracked by**:
+- [GitHub Issue #46](https://github.com/The-Obstacle-Is-The-Way/ai-psychiatrist/issues/46) (sampling parameters)
+- [GitHub Issue #47](https://github.com/The-Obstacle-Is-The-Way/ai-psychiatrist/issues/47) (model quantization)
 
 This document captures ALL parameters NOT explicitly specified in the paper, along with our implementation decisions and rationales.
 
@@ -95,7 +98,7 @@ Exact split membership will still differ from the paper because:
 | `temperature` | 0.2 | Low but not zero; allows slight variation |
 | `temperature_judge` | 0.0 | Judge should be deterministic for consistency |
 
-**Location**: `src/ai_psychiatrist/config.py:146-149`
+**Location**: `src/ai_psychiatrist/config.py` (`ModelSettings.temperature`, `ModelSettings.temperature_judge`)
 
 ### Justification
 
@@ -119,7 +122,7 @@ Nothing. These parameters are not mentioned.
 | `top_k` | 20 | Moderate restriction; Ollama common default |
 | `top_p` | 0.8 | Standard nucleus sampling threshold |
 
-**Location**: `src/ai_psychiatrist/config.py:150-151`
+**Location**: `src/ai_psychiatrist/config.py` (`ModelSettings.top_k`, `ModelSettings.top_p`)
 
 ### Justification
 
@@ -222,8 +225,8 @@ top_p: float = 0.8           # Standard nucleus sampling
 
 ## Related Issues
 
-- BUG-018: Reproduction Friction Log
-- docs/REPRODUCTION_NOTES.md
+- [bug-018-reproduction-friction.md](./bug-018-reproduction-friction.md) - Reproduction Friction Log
+- [reproduction-notes.md](../results/reproduction-notes.md) - Reproduction results
 
 ---
 

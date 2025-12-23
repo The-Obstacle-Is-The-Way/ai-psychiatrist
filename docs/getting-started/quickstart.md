@@ -40,17 +40,18 @@ uv run pre-commit install
 ### 3. Pull Required Models
 
 ```bash
-# Primary LLM (Gemma 3 27B) - used by Qualitative, Judge, and Meta-Review agents
+# Primary LLM (Gemma 3 27B) - used by ALL agents (paper baseline)
 ollama pull gemma3:27b
-
-# Quantitative LLM (MedGemma 27B) - 18% better PHQ-8 prediction accuracy
-ollama pull alibayram/medgemma:27b
 
 # Embedding model (Qwen 3 8B) - for few-shot retrieval
 ollama pull qwen3-embedding:8b
 ```
 
-> **Note**: These are large models. Ensure you have sufficient disk space (~50GB total).
+> **Note**: These are large models. Ensure you have sufficient disk space (~35GB total).
+
+> **Optional**: MedGemma (Appendix F alternative for the quantitative agent) is **HuggingFace-only**.
+> To use official weights, set `LLM_BACKEND=huggingface` and `MODEL_QUANTITATIVE_MODEL=medgemma:27b`.
+> There is no official MedGemma in the Ollama library. See [Model Registry](../models/model-registry.md).
 
 ### 4. Configure Environment
 
@@ -209,11 +210,25 @@ ollama serve
 Error: CUDA out of memory
 ```
 
-**Solution**: Use smaller quantized models:
+**Solution**: Use smaller models for local development and/or disable few-shot.
+
+Smaller models won’t match paper reproduction metrics, but they are useful to verify end-to-end wiring.
+
 ```bash
-# In .env
-MODEL_QUALITATIVE_MODEL=gemma3:27b-q4_K_M
-MODEL_QUANTITATIVE_MODEL=gemma3:27b-q4_K_M
+# In .env (example dev config)
+MODEL_QUALITATIVE_MODEL=gemma2:9b
+MODEL_JUDGE_MODEL=gemma2:9b
+MODEL_META_REVIEW_MODEL=gemma2:9b
+MODEL_QUANTITATIVE_MODEL=gemma2:9b
+
+# Optional: skip embeddings + few-shot retrieval to reduce compute
+ENABLE_FEW_SHOT=false
+```
+
+Then pull the smaller model:
+
+```bash
+ollama pull gemma2:9b
 ```
 
 ### Slow Inference

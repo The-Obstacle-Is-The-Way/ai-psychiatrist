@@ -53,7 +53,7 @@ Connection settings for the Ollama LLM server.
 |----------|------|---------|-------------|
 | `OLLAMA_HOST` | string | `127.0.0.1` | Ollama server hostname |
 | `OLLAMA_PORT` | int | `11434` | Ollama server port |
-| `OLLAMA_TIMEOUT_SECONDS` | int | `180` | Request timeout (10-600s) |
+| `OLLAMA_TIMEOUT_SECONDS` | int | `300` | Request timeout (10-600s) |
 
 **Derived properties:**
 - `base_url`: `http://{host}:{port}`
@@ -92,7 +92,6 @@ LLM model selection and sampling parameters.
 |-------|------|----------|-------------|
 | `gemma3:27b` | ~16GB | All agents (default) | Paper Section 2.2 |
 | `medgemma:27b` | ~16GB | Quantitative (HuggingFace only) | Appendix F, 18% better MAE but more N/A |
-| `gemma3:27b-q4_K_M` | ~8GB | Memory-constrained | Slightly lower quality |
 | `qwen3-embedding:8b` | ~4GB | Embeddings | Paper standard |
 
 > **Note**: MedGemma is not available in Ollama officially. Use HuggingFace backend for official weights.
@@ -100,9 +99,13 @@ LLM model selection and sampling parameters.
 
 **Example:**
 ```bash
-# Use smaller quantized models for limited memory
-MODEL_QUALITATIVE_MODEL=gemma3:27b-q4_K_M
-MODEL_QUANTITATIVE_MODEL=gemma3:27b-q4_K_M
+# Canonical names (recommended): resolved per backend
+MODEL_QUALITATIVE_MODEL=gemma3:27b
+MODEL_QUANTITATIVE_MODEL=gemma3:27b
+
+# HuggingFace backend + MedGemma (Appendix F evaluation)
+LLM_BACKEND=huggingface
+MODEL_QUANTITATIVE_MODEL=medgemma:27b
 
 # Lower temperature for more deterministic outputs
 MODEL_TEMPERATURE=0.1
@@ -123,7 +126,7 @@ Few-shot retrieval configuration.
 | `EMBEDDING_MIN_EVIDENCE_CHARS` | int | `8` | Minimum text for embedding |
 
 **Paper optimization results (Appendix D):**
-- Dimension 4096 outperforms 1024, 2048, 8192
+- Embedding dimension 4096 performed best among the tested dimensions (64, 256, 1024, 4096)
 - Chunk size 8 optimal for clinical interviews
 - Top-k=2 references balances context and noise
 
@@ -242,6 +245,10 @@ HTTP server configuration.
 | `API_WORKERS` | int | `1` | Worker processes (1-16) |
 | `API_CORS_ORIGINS` | list | `["*"]` | Allowed CORS origins |
 
+`API_CORS_ORIGINS` exists in configuration, but `server.py` does not currently install
+FastAPI/Starlette `CORSMiddleware`. If you need CORS today, configure it at a reverse proxy
+(recommended) or add `CORSMiddleware` in `server.py`.
+
 **Example:**
 ```bash
 # Production settings
@@ -254,6 +261,29 @@ API_CORS_ORIGINS=["https://myapp.com"]
 API_RELOAD=true
 API_WORKERS=1
 ```
+
+---
+
+### Quantitative Assessment Settings
+
+> **⚠️ STATUS: PLANNED - NOT YET IMPLEMENTED**
+>
+> These settings are defined in [SPEC-003](../specs/SPEC-003-backfill-toggle.md) but **do not exist yet**.
+> Currently, keyword backfill **always runs** and cannot be disabled.
+
+After SPEC-003 implementation, these settings will be available:
+
+| Variable | Type | Default | Description |
+|----------|------|---------|-------------|
+| `QUANTITATIVE_ENABLE_KEYWORD_BACKFILL` | bool | `true` | Enable keyword backfill for evidence extraction |
+| `QUANTITATIVE_TRACK_NA_REASONS` | bool | `true` | Track why items return N/A |
+| `QUANTITATIVE_KEYWORD_BACKFILL_CAP` | int | `3` | Max keyword-matched sentences per domain |
+
+**Current Behavior:**
+
+Keyword backfill (`src/ai_psychiatrist/agents/quantitative.py:228-268`) **always runs**. When the LLM misses evidence, sentences matching symptom keywords are automatically added. This increases coverage (~74%) but diverges from paper methodology (~50% coverage).
+
+See [Backfill Explained](../concepts/backfill-explained.md) for how it works and [Paper Parity Guide](../guides/paper-parity-guide.md) for reproduction guidance.
 
 ---
 
@@ -271,11 +301,12 @@ System-wide toggles.
 
 ## Nested Delimiter
 
-Use double underscores to set nested settings:
+Most configuration uses the explicit group prefixes shown above (e.g., `MODEL_TEMPERATURE`,
+`OLLAMA_HOST`). For advanced settings management, Pydantic also supports nested environment
+variables using double underscores:
 
 ```bash
 # Set nested values
-OLLAMA__HOST=custom-host
 MODEL__TEMPERATURE=0.5
 EMBEDDING__TOP_K_REFERENCES=3
 ```
@@ -318,7 +349,7 @@ FEEDBACK_SCORE_THRESHOLD=3
 # ============== Server ==============
 API_HOST=0.0.0.0
 API_PORT=8000
-OLLAMA_TIMEOUT_SECONDS=180
+OLLAMA_TIMEOUT_SECONDS=300
 
 # ============== Logging ==============
 LOG_FORMAT=json
@@ -402,4 +433,4 @@ OLLAMA_TIMEOUT_SECONDS=300
 
 - [Quickstart](../getting-started/quickstart.md) - Initial setup
 - [Architecture](../concepts/architecture.md) - How settings are used
-- [`.env.example`](../../.env.example) - Template file
+- `.env.example` (repository root) - Environment template

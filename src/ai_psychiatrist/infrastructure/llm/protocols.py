@@ -63,7 +63,7 @@ class ChatRequest:
     temperature: float = 0.2
     top_k: int = 20
     top_p: float = 0.8
-    timeout_seconds: int = 180
+    timeout_seconds: int = 300
 
     def __post_init__(self) -> None:
         """Validate request after initialization."""

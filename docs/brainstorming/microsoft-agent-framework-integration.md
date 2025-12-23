@@ -27,7 +27,7 @@ Our codebase already implements:
 |-----------|-------------------|------------------------------|
 | LLM Client | `OllamaClient` (httpx-based) | `OllamaChatClient` (ollama SDK) |
 | Agent abstraction | `QualitativeAssessmentAgent` | `ChatAgent` |
-| Prompt templates | `prompts/qualitative.py` | `instructions` parameter |
+| Prompt templates | `src/ai_psychiatrist/agents/prompts/qualitative.py` | `instructions` parameter |
 | Response parsing | `extract_xml_tags()` | Response middleware |
 | Protocols | `ChatClient` protocol | `BaseChatClient` ABC |
 

@@ -20,7 +20,7 @@ meta_review = await meta_review_agent.review(...)        # Meta-Review
 ```
 
 This works, but:
-- No built-in observability or tracing
+- No workflow-level observability/tracing (beyond existing structured logging)
 - Manual retry/error handling
 - State management is implicit
 - The feedback loop is a while-loop, not explicit graph structure
@@ -71,12 +71,15 @@ In agent orchestration, a "graph" is a **workflow representation**:
 
 ### Overview
 
-| Framework | License | Data Privacy | Best For | Maturity |
-|-----------|---------|--------------|----------|----------|
-| **Pydantic AI** | MIT | 100% local | Type-safe agent definitions | GA (stable) |
-| **LangGraph** | MIT | 100% local | Graph-based orchestration | GA (1.0 Oct 2025) |
-| **MS Agent Framework** | MIT | Azure-native (optional) | Enterprise + Azure | Preview |
-| **CrewAI** | MIT | 100% local | Role-based teams | GA |
+Data privacy depends primarily on the **model backend** (local models via Ollama/HuggingFace vs.
+hosted APIs), not the orchestration framework.
+
+| Framework | License | Data Privacy | Best For | Maturity Note |
+|-----------|---------|--------------|----------|---------------|
+| **Pydantic AI** | MIT | Backend-dependent | Type-safe agent definitions | Stable (verify upstream) |
+| **LangGraph** | MIT | Backend-dependent | Graph-based orchestration | Active (verify upstream) |
+| **Microsoft Agent Framework** | MIT | Backend-dependent | Enterprise workflows | Check upstream (often preview) |
+| **CrewAI** | MIT | Backend-dependent | Role-based teams | Active (verify upstream) |
 
 ### Recommended: Pydantic AI + LangGraph
 
@@ -226,23 +229,21 @@ result = await pipeline.ainvoke({"transcript": transcript_text, "iteration": 0})
 
 ### What It Is
 
-[Microsoft Agent Framework](https://learn.microsoft.com/en-us/agent-framework/overview/agent-framework-overview) is the new unified framework (October 2025) merging AutoGen + Semantic Kernel.
+[Microsoft Agent Framework](https://learn.microsoft.com/en-us/agent-framework/overview/agent-framework-overview) is a Microsoft-maintained framework for orchestrating agents and multi-agent workflows.
 
 ### Status
 
 | Aspect | Status |
 |--------|--------|
-| Release | Public Preview (October 2025) |
-| GA Timeline | "Several months" |
+| Release | Check upstream documentation (status can change over time) |
 | Languages | Python + .NET |
 | License | MIT |
 
 ### Why Not Now
 
-- Still in **preview** (not production-ready)
-- AutoGen and Semantic Kernel in **maintenance mode**
+- Often in **preview** (treat as an adoption risk until you verify current status)
 - Azure-native (good for Azure shops, not required though)
-- Recommendation: Revisit post-GA if Azure integration needed
+- Recommendation: Revisit once maturity/stability is confirmed (and only if Azure-centric workflows are needed)
 
 ---
 
@@ -252,16 +253,17 @@ result = await pipeline.ainvoke({"transcript": transcript_text, "iteration": 0})
 
 - [x] Document current architecture
 - [x] Document future options (this file)
-- [ ] Add to `docs/index.md` navigation
+- [x] Add to `docs/index.md` navigation
 
 ### Phase 2: Pydantic AI Integration
 
 **Goal:** Type-safe agent definitions with validated outputs
 
 **Changes:**
-1. Refactor `agents/*.py` to use Pydantic AI `Agent` class
-2. Define output schemas using existing `domain/entities.py`
-3. Keep orchestration in `server.py` initially
+1. Refactor `src/ai_psychiatrist/agents/*.py` to use Pydantic AI `Agent` class
+2. Define dedicated Pydantic output schemas (separate from domain dataclasses)
+3. Map validated outputs into domain dataclasses (domain remains SSOT)
+4. Keep orchestration in `server.py` initially
 
 **Example:**
 ```python
@@ -272,9 +274,16 @@ class QualitativeAssessmentAgent:
         return self._parse_response(response)
 
 # After: Pydantic AI agent
+class QualitativeAssessmentOutput(BaseModel):
+    overall: str
+    phq8_symptoms: str
+    social_factors: str
+    biological_factors: str
+    risk_factors: str
+
 qualitative_agent = Agent(
     model="ollama:gemma3:27b",
-    result_type=QualitativeAssessment,
+    result_type=QualitativeAssessmentOutput,
     system_prompt=QUALITATIVE_SYSTEM_PROMPT,
 )
 ```
@@ -284,7 +293,7 @@ qualitative_agent = Agent(
 **Goal:** Explicit graph-based workflow with built-in state
 
 **Changes:**
-1. Create `src/ai_psychiatrist/orchestration/pipeline.py`
+1. Create `src/ai_psychiatrist/orchestration/pipeline.py` (proposed; does not exist yet)
 2. Define `StateGraph` with nodes for each agent
 3. Replace `FeedbackLoopService` with conditional edges
 4. `server.py` becomes thin API layer
@@ -301,6 +310,7 @@ src/ai_psychiatrist/
 ├── services/            # Reduced (embedding, transcript only)
 └── infrastructure/      # Unchanged
 ```
+Note: The `orchestration/` package is a future-state proposal. The current repo performs orchestration in `server.py`.
 
 ### Phase 4: Production Hardening (Future)
 
@@ -317,7 +327,7 @@ src/ai_psychiatrist/
 #### Feedback Loop: Current
 
 ```python
-# services/feedback_loop.py
+# src/ai_psychiatrist/services/feedback_loop.py
 class FeedbackLoopService:
     async def run(self, transcript: Transcript) -> FeedbackLoopResult:
         assessment = await self._qualitative_agent.assess(transcript)
@@ -336,7 +346,7 @@ class FeedbackLoopService:
 #### Feedback Loop: LangGraph
 
 ```python
-# orchestration/pipeline.py
+# Proposed: src/ai_psychiatrist/orchestration/pipeline.py (not implemented yet)
 def should_refine(state: PipelineState) -> str:
     """Conditional edge: decide whether to refine or proceed."""
     if state["iteration"] >= MAX_ITERATIONS:
@@ -405,7 +415,7 @@ uv add pydantic-ai langgraph
 |------|----------|-----------|
 | Dec 2025 | Document options before implementing | Avoid premature optimization |
 | Dec 2025 | Recommend Pydantic AI + LangGraph | MIT license, matches stack, proven integration |
-| Dec 2025 | Defer MS Agent Framework | Still in preview, wait for GA |
+| Dec 2025 | Defer MS Agent Framework | Maturity/status can change; revisit once stability is confirmed and value is clear |
 | Dec 2025 | Keep server.py for API | Still need HTTP endpoints regardless of orchestration |
 
 ---

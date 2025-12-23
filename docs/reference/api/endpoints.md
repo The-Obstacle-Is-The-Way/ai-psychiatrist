@@ -23,19 +23,29 @@ The API is built with FastAPI and provides endpoints for depression assessment f
 
 #### `GET /health`
 
-Check API and Ollama connectivity.
+Check API and backend availability.
 
 **Response:**
 ```json
 {
   "status": "healthy",
+  "backend": "ollama",
   "ollama": true
+}
+```
+
+If using the HuggingFace backend:
+```json
+{
+  "status": "healthy",
+  "backend": "huggingface",
+  "deps_installed": true
 }
 ```
 
 **Status Codes:**
 - `200 OK`: System healthy
-- `200 OK` with `"status": "degraded"`: Ollama not reachable
+- `200 OK` with `"status": "degraded"`: backend not reachable / deps missing
 
 ---
 
@@ -44,9 +54,9 @@ Check API and Ollama connectivity.
 #### `POST /full_pipeline`
 
 Run complete 4-agent pipeline on a transcript. This is the recommended endpoint for full assessments as it includes:
-1. Qualitative assessment with feedback loop (Section 2.3.1-2.3.2)
-2. Quantitative PHQ-8 assessment (Section 2.3.3)
-3. Meta-review integration (Section 2.3.4)
+1. Qualitative assessment with judge-driven refinement (Paper Section 2.3.1)
+2. Quantitative PHQ-8 assessment (Paper Section 2.3.2)
+3. Meta-review integration (Paper Section 2.3.3)
 
 **Request Body:**
 ```json
@@ -106,7 +116,7 @@ Run complete 4-agent pipeline on a transcript. This is the recommended endpoint 
     "specificity": 4,
     "accuracy": 4,
     "average_score": 4.0,
-    "iteration": 1
+    "iteration": 0
   },
   "meta_review": {
     "severity": 2,
@@ -127,6 +137,7 @@ Run complete 4-agent pipeline on a transcript. This is the recommended endpoint 
 | `quantitative.na_count` | int | Number of items without scores |
 | `qualitative` | object | Narrative assessment sections |
 | `evaluation` | object | Judge agent scores (1-5 Likert scale) |
+| `evaluation.iteration` | int | Refinement iteration for the returned qualitative assessment (`0` means first-pass evaluation) |
 | `meta_review.severity` | int | Final severity level (0-4) |
 | `meta_review.is_mdd` | bool | Major Depressive Disorder indicator (severity >= 2) |
 
@@ -185,7 +196,7 @@ Run only the quantitative assessment agent (PHQ-8 scoring).
 
 Run only the qualitative assessment agent (single-pass, no feedback loop).
 
-> **Note:** This endpoint bypasses the FeedbackLoopService for speed. For full iterative refinement per Paper Section 2.3.1-2.3.2, use `/full_pipeline` instead.
+> **Note:** This endpoint bypasses the FeedbackLoopService for speed. For iterative refinement per Paper Section 2.3.1, use `/full_pipeline` instead.
 
 **Request Body:**
 ```json
@@ -331,15 +342,9 @@ Currently, the API does not require authentication. For production deployment, c
 
 ## CORS
 
-CORS is configured via `API_CORS_ORIGINS` environment variable:
-
-```bash
-# Development (allow all)
-API_CORS_ORIGINS=["*"]
-
-# Production (restrict)
-API_CORS_ORIGINS=["https://myapp.com", "https://admin.myapp.com"]
-```
+`API_CORS_ORIGINS` exists in configuration, but `server.py` does not currently install
+FastAPI/Starlette `CORSMiddleware`. If you need CORS today, configure it at a reverse
+proxy (recommended) or add `CORSMiddleware` in `server.py`.
 
 ---
 

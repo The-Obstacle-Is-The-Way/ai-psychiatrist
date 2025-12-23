@@ -1,15 +1,18 @@
 # BUG-018: Reproduction Friction Log
 
 **Date**: 2025-12-22
-**Status**: CRITICAL - Code fixed but reproduction NEVER RE-RUN
-**Severity**: CRITICAL - All reported results use WRONG methodology
-**Updated**: 2025-12-22 - Deep investigation reveals incomplete reproduction
+**Status**: INVESTIGATED - paper-parity workflow runs end-to-end; MAE parity not yet achieved
+**Severity**: HIGH - initially blocked paper-parity evaluation
+**Updated**: 2025-12-23 - paper-style split + embeddings + evaluation executed; metrics still diverge (see results)
 
 This document captures ALL friction points encountered when attempting to reproduce the paper's PHQ-8 assessment results.
 
+Note: `.env` is gitignored; any `.env` references below describe **local developer configuration**
+changes made during reproduction attempts.
+
 ---
 
-## ⚠️ CRITICAL: MAE Methodology Was Fundamentally Wrong
+## ⚠️ CRITICAL (Fixed): MAE Methodology Was Fundamentally Wrong
 
 ### The Core Problem
 
@@ -22,11 +25,11 @@ We were computing a **completely different metric** than the paper:
 | N/A items = 0 in sum | N/A items excluded from MAE |
 | Reported MAE ~4.02 | Paper reports MAE ~0.619 |
 
-### Timeline of Events
+### Timeline of Events (Historical)
 
 1. **04:01 AM Dec 22**: Ran reproduction with OLD script → MAE 4.02 (WRONG)
 2. **Later Dec 22**: Rewrote `scripts/reproduce_results.py` to match paper methodology
-3. **Present**: Paper-parity workflow exists, but **FULL reproduction has not been completed**
+3. **2025-12-23**: Paper-parity workflow executed end-to-end; see `docs/results/reproduction-notes.md` (MAE still above paper)
 
 ### The OLD Code (Wrong)
 
@@ -36,7 +39,7 @@ predicted = assessment.total_score  # Sum of 8 items (0-24)
 absolute_error = abs(predicted - ground_truth)  # Total vs total
 ```
 
-### The NEW Code (Correct, merged but not run)
+### The NEW Code (Correct; used in paper-parity run)
 
 ```python
 # scripts/reproduce_results.py (AFTER fix, in main)
@@ -57,11 +60,11 @@ The handwave `4.02 ÷ 8 ≈ 0.50` is **not** equivalent to the paper's methodolo
 2. Coverage differs (paper reports % of predictions made)
 3. Aggregation differs (paper has multiple views: weighted, by-item, by-subject)
 
-### Action Required
+### Action (Completed: methodology parity; results still diverge)
 
-**MUST re-run** reproduction with corrected script:
+✅ Paper-parity reproduction was re-run end-to-end. Commands executed:
 ```bash
-# Paper-parity workflow (paper split + paper embeddings + evaluation on paper test)
+# Paper-parity workflow (paper-style split + paper embeddings + evaluation on paper test)
 uv run python scripts/create_paper_split.py --seed 42
 uv run python scripts/generate_embeddings.py --split paper-train
 uv run python scripts/reproduce_results.py --split paper --few-shot-only
@@ -71,6 +74,7 @@ uv run python scripts/reproduce_results.py --split dev
 ```
 
 The output file `data/outputs/reproduction_results_20251222_040100.json` is **INVALID** and should be ignored.
+See `docs/results/reproduction-notes.md` for the current example run metrics and divergence hypotheses.
 
 ---
 
@@ -78,15 +82,15 @@ The output file `data/outputs/reproduction_results_20251222_040100.json` is **IN
 
 | Sub-bug | Issue | Status |
 |---------|-------|--------|
-| BUG-018a | MedGemma produces all N/A | ✅ FIXED - default changed to gemma3:27b |
-| BUG-018b | .env overrides config | ✅ FIXED - .env updated |
+| BUG-018a | Misconfigured quantitative model default (MedGemma) | ✅ FIXED - paper-parity defaults use gemma3:27b |
+| BUG-018b | `.env` overrides code defaults | ✅ DOCUMENTED - expected Pydantic behavior; templates updated |
 | BUG-018c | DataSettings attribute | ✅ FIXED - script updated |
 | BUG-018d | Inline imports | ✅ FIXED - imports at top |
-| BUG-018e | Timeout too short for long transcripts | ✅ INVESTIGATED - environmental/configurable |
-| BUG-018f | JSON parsing failures | ✅ RESOLVED - cascade works |
+| BUG-018e | Timeouts on long transcripts | ✅ INVESTIGATED - configurable via `OLLAMA_TIMEOUT_SECONDS` |
+| BUG-018f | Evidence-extraction JSON malformation | ⚠️ MITIGATED - tolerant fixups + keyword backfill; still observed intermittently |
 | BUG-018g | Model underestimates severe | ⚠️ RESEARCH ITEM |
-| BUG-018h | Orphaned `data/keywords/` directory | ✅ DOCUMENTED - not used by code |
-| BUG-018i | Item-level MAE methodology | ⚠️ CODE FIXED, NOT RE-RUN |
+| BUG-018h | Orphaned `data/keywords/` directory | ✅ DOCUMENTED - historical/local-only; not used by code |
+| BUG-018i | Item-level MAE methodology | ✅ FIXED + RE-RUN (paper-style workflow executed) |
 
 ---
 
@@ -108,7 +112,7 @@ Default `quantitative_model` was set to `alibayram/medgemma:27b` based on Paper 
 
 The caveat "fewer predictions" means MedGemma is too conservative and marks items as N/A when evidence is ambiguous.
 
-### Evidence
+### Evidence (Historical; community Ollama conversion)
 
 Participant 308 (ground truth = 22, severe depression):
 - Transcript: "yeah it's pretty depressing", "i can't find a fucking job", sleep problems
@@ -117,14 +121,14 @@ Participant 308 (ground truth = 22, severe depression):
 
 ### Files Changed
 
-1. `src/ai_psychiatrist/config.py:86-91`
-   - OLD: `default="alibayram/medgemma:27b"`
+1. `src/ai_psychiatrist/config.py` (`ModelSettings.quantitative_model`)
+   - OLD: `default="alibayram/medgemma:27b"` (historical)
    - NEW: `default="gemma3:27b"`
 
-2. `tests/unit/test_config.py:84-96`
+2. `tests/unit/test_config.py` (`TestModelSettings.test_paper_optimal_defaults`)
    - Updated test assertion and added docstring explaining why
 
-3. `.env.example:15`
+3. `.env.example`
    - OLD: `MODEL_QUANTITATIVE_MODEL=alibayram/medgemma:27b`
    - NEW: `MODEL_QUANTITATIVE_MODEL=gemma3:27b`
 
@@ -141,7 +145,7 @@ Why does MedGemma behave this way? Is it:
 
 ### Symptom
 
-After fixing the default in `config.py`, the script STILL used MedGemma.
+After fixing the default in `src/ai_psychiatrist/config.py`, the script STILL used MedGemma.
 
 ### Root Cause
 
@@ -154,13 +158,13 @@ Pydantic settings load `.env` which OVERRIDES code defaults.
 
 ### Files Changed
 
-1. `.env:15`
+1. `.env` (local, gitignored)
    - OLD: `MODEL_QUANTITATIVE_MODEL=alibayram/medgemma:27b`
    - NEW: `MODEL_QUANTITATIVE_MODEL=gemma3:27b`
 
 ### Lesson
 
-When changing defaults in config.py, MUST also:
+When changing defaults in `src/ai_psychiatrist/config.py`, MUST also:
 1. Update `.env.example`
 2. Update user's `.env` if it exists
 3. Check for environment variable overrides
@@ -265,45 +269,40 @@ long transcripts may still require a higher value.
 
 ---
 
-## BUG-018f: JSON Parsing Failures (MEDIUM) - RESOLVED
+## BUG-018f: JSON Parsing Failures (MEDIUM) - MITIGATED
 
 ### Symptom
 
-In earlier runs, some participants showed:
+In some runs, the quantitative scoring step can fail to parse the LLM's JSON output, e.g.:
 ```
 Failed to parse quantitative response after all attempts
 ```
 Resulting in `na_count = 8`, `total_score = 0`
 
-### Previously Affected Participants
+### Root Cause
 
-- 469: ground truth 3, predicted 0 (parse failure) - in earlier runs
-- 480: ground truth 1, predicted 0 (parse failure) - in earlier runs
+LLM output is not guaranteed to be strict JSON. Common failure modes include:
+- Markdown fences around JSON
+- Smart quotes / non-ASCII punctuation
+- Trailing commas
+- Partial / truncated objects
 
-### Investigation Results (2025-12-22)
+### Current Mitigation (in production code)
 
-**Latest reproduction run (2025-12-22 04:01:00):**
-- Participant 469: **succeeded** - predicted 0, error 3 (low prediction but valid)
-- Participant 480: **succeeded** - predicted 0, error 1 (close!)
-
-**No JSON parsing failures in latest run.** The multi-level repair cascade is working:
+The quantitative agent uses a multi-level repair cascade:
 1. `_strip_json_block()` - Tag/code-fence stripping
 2. `_tolerant_fixups()` - Syntax repair (smart quotes, trailing commas)
-3. `_llm_repair()` - LLM-based JSON repair
-
-### Related GitHub Issue
-
-Issue #29: "Enhancement: Evaluate Ollama JSON mode for structured output"
-- Status: **Deferred** - Marginal benefit; current cascade works well
+3. `json.loads(...)` - Parse attempt
+4. `_llm_repair()` - LLM-based JSON repair (best-effort)
+5. Fallback skeleton - Ensures an assessment object is still returned
 
 ### Conclusion
 
-JSON parsing is **working correctly**. Earlier failures were likely:
-1. Model warm-up issues (first few requests)
-2. Model variability (non-deterministic with temp=0.2)
-3. Fixed by the multi-level repair cascade already in place
+In the current paper-parity workflow, JSON parsing is generally reliable; we did not observe JSON
+parse failures in the example run documented in `docs/results/reproduction-notes.md`.
 
-No code changes needed.
+However, because malformed JSON can reappear due to model variability and long generations, treat
+this as **mitigated**, not permanently “resolved”.
 
 ---
 
@@ -336,11 +335,12 @@ Unknown. Possible causes:
 
 ---
 
-## BUG-018h: Empty keywords/ Directory (UNKNOWN) - RESOLVED
+## BUG-018h: Orphaned `data/keywords/` Directory (LOW) - DOCUMENTED
 
 ### Symptom
 
-`data/keywords/` directory exists but is empty.
+Some earlier local runs referenced an orphan `data/keywords/` directory. This directory may exist
+locally (and is gitignored due to DAIC-WOZ licensing), but **no production code depends on it**.
 
 ### Investigation Results (2025-12-22)
 
@@ -351,7 +351,7 @@ Unknown. Possible causes:
 
 **The real keyword system:**
 ```python
-# src/ai_psychiatrist/agents/prompts/quantitative.py:20
+# src/ai_psychiatrist/agents/prompts/quantitative.py (_KEYWORDS_RESOURCE_PATH)
 _KEYWORDS_RESOURCE_PATH = "resources/phq8_keywords.yaml"
 ```
 
@@ -364,7 +364,9 @@ No code references it. The actual keywords are correctly located in `src/ai_psyc
 
 ### Recommendation
 
-**Safe to delete:**
+This is a local cleanup item (the repo gitignores `data/`).
+
+**If present in your local environment, safe to delete:**
 ```bash
 rm -rf data/keywords/
 ```
@@ -410,7 +412,7 @@ Complete rewrite of `scripts/reproduce_results.py`:
 
 ### Current Status
 
-The paper-parity evaluation workflow exists (item-level MAE + paper split support), but a full
+The paper-parity evaluation workflow exists (item-level MAE + paper-style split support), but a full
 run reproducing the paper’s reported MAE values has not been completed yet.
 
 The file `data/outputs/reproduction_results_20251222_040100.json` contains results from the OLD (wrong) methodology and should be ignored.
@@ -443,8 +445,8 @@ uv run python scripts/reproduce_results.py --split paper --few-shot-only
 | File | Purpose |
 |------|---------|
 | `scripts/reproduce_results.py` | Batch evaluation script |
-| `docs/REPRODUCTION_NOTES.md` | Results documentation |
-| `docs/bugs/BUG-018_REPRODUCTION_FRICTION.md` | This file |
+| `docs/results/reproduction-notes.md` | Results documentation |
+| `docs/bugs/bug-018-reproduction-friction.md` | This file |
 | `data/outputs/reproduction_results_*.json` | Raw results |
 
 ---
@@ -492,7 +494,8 @@ with large transcripts or concurrent GPU workloads can increase via `OLLAMA_TIME
 
 ### 6. What is data/keywords/ for?
 
-**Answer:** It's an orphaned empty directory. Real keywords are in `src/ai_psychiatrist/resources/phq8_keywords.yaml`.
+**Answer:** It's a historical/local-only orphan directory (not present in this repo tree). Real
+keywords are in `src/ai_psychiatrist/resources/phq8_keywords.yaml`.
 
 **Resolution:** Safe to delete. Added to cleanup list.
 
@@ -520,7 +523,7 @@ with large transcripts or concurrent GPU workloads can increase via `OLLAMA_TIME
 
 ## Cleanup Actions
 
-- [x] Delete `data/keywords/` (orphaned empty directory)
+- [x] Delete `data/keywords/` if present locally (historical orphan)
 - [ ] Consider increasing default timeout for HPC environments
 - [ ] Research severe depression underestimation (BUG-018g)
 
@@ -543,3 +546,108 @@ with large transcripts or concurrent GPU workloads can increase via `OLLAMA_TIME
 3. **Update documentation** with correct results once obtained
 
 **DO NOT proceed with other work until reproduction is validated with correct methodology.**
+
+---
+
+## Reproduction Run Log (2025-12-23)
+
+### Pre-flight Status
+
+| Item | Status | Notes |
+|------|--------|-------|
+| Paper splits | ✅ Exist | 58/43/41 counts match paper; membership not published (see `docs/bugs/gap-001-paper-unspecified-parameters.md`) |
+| AVEC embeddings | ✅ Exist | `reference_embeddings.npz` (107 participants) |
+| Paper embeddings | ⚠️ Missing | Had to generate with `--split paper-train` |
+| Transcripts | ✅ Exist | 189 participant folders (plus directory entries) |
+
+### Embedding Generation (paper-train)
+
+- **Duration**: ~65 minutes for 58 participants
+- **Output**: `paper_reference_embeddings.npz` (101.44 MB), 6998 total chunks
+- **Status**: ✅ Completed successfully
+
+### Test Run (3 participants)
+
+| Metric | Value | Note |
+|--------|-------|------|
+| MAE_item | 0.233 | Not statistically meaningful (n=3) |
+| Coverage | 50% | 4/8 items N/A per participant |
+| Time | 16 min | ~5 min per participant |
+
+### Full Run (41 participants)
+
+- **Start**: 2025-12-23 02:50 UTC
+- **Estimated Duration**: ~3.5 hours
+- **Status**: Completed (see `docs/results/reproduction-notes.md`)
+
+### Friction Points Encountered
+
+#### F-001: Paper Embeddings Required Separate Generation
+
+**Issue**: Paper embeddings (`paper_reference_embeddings.npz`) did not exist, requiring a 65-minute generation step before reproduction could begin.
+
+**Impact**: Adds significant time to first-time reproduction.
+
+**Recommendation**: Document this requirement prominently; consider adding pre-generated embeddings to releases.
+
+#### F-002: JSON Parsing Warning in Evidence Extraction
+
+**Symptom**:
+```text
+Failed to parse evidence JSON, using empty evidence
+```
+
+**Location**: `src/ai_psychiatrist/agents/quantitative.py` (`QuantitativeAssessmentAgent._extract_evidence`)
+
+**Root Cause Analysis** (2025-12-23):
+
+The LLM (e.g., `gemma3:27b`) can occasionally produce malformed JSON during evidence extraction
+(unescaped quotes, truncated arrays/objects, or other formatting errors). When this happens, the
+parser falls back to an empty evidence dict and relies on keyword backfill.
+
+Example shape (illustrative):
+
+```json
+{
+  "PHQ8_NoInterest": [],
+  "PHQ8_Depressed": ["i had been having a lot of deaths around me...
+```
+
+The exact malformed pattern varies by model/backend and is surfaced in logs via the
+`response_preview` field.
+
+**Parsing Pipeline**:
+1. `_strip_json_block()` - Handles markdown code fences ✅
+2. `_tolerant_fixups()` - Handles smart quotes, trailing commas (best effort)
+3. Falls through to empty evidence fallback on parse failure
+
+**Impact**:
+- Evidence extraction fails → empty evidence dict returned
+- `_keyword_backfill()` then adds keyword-matched sentences
+- Result: Only keyword-matched evidence (2 items in test case) instead of LLM-extracted evidence
+- May contribute to N/A predictions for items without keyword matches
+
+**Possible Fixes (for future consideration)**:
+1. Add `""` → `"` fixup in `_tolerant_fixups()`
+2. Add LLM repair for evidence extraction (currently only used for scoring response)
+3. Prompt engineering to prevent the malformed output
+
+**Status**: DOCUMENTED - keyword backfill provides partial mitigation; evidence JSON malformation still occurs intermittently.
+
+#### F-003: High N/A Rate (50% in test run)
+
+**Observation**: Test run showed 4/8 items as N/A per participant (50% coverage).
+
+**Paper Context**: Paper Section 3.2 mentions excluding N/A from MAE calculation but doesn't report overall coverage percentage.
+
+**Status**: Monitoring in full run - if consistent, may explain differences from paper results.
+
+---
+
+## Namespace/Artifact Registry Created
+
+During this run, created `docs/data/artifact-namespace-registry.md` to document:
+- Split naming conventions (AVEC vs paper)
+- Embedding file naming
+- Script input/output mapping
+- Configuration parameters

@@ -156,10 +156,15 @@ Open-source platform for running LLMs locally. Used as the LLM backend for AI Ps
 
 ### Model Tags
 
-Ollama model identifiers in format `name:variant`:
+Model identifiers depend on the backend.
+
+**Ollama backend** uses identifiers in format `name:variant`:
 - `gemma3:27b` - Gemma 3 27B (paper baseline)
-- `alibayram/medgemma:27b` - MedGemma 27B (18% better quantitative MAE)
 - `qwen3-embedding:8b` - Qwen 3 8B embedding model
+
+**HuggingFace backend** uses official model IDs (e.g. `google/medgemma-27b-text-it`). The codebase
+also supports a canonical alias `medgemma:27b`, but there is **no official MedGemma model in the
+Ollama library**; any Ollama “medgemma” is a community conversion and may behave differently.
 
 ### Pydantic Settings
 
@@ -178,8 +183,8 @@ Average absolute difference between predicted and actual PHQ-8 item scores. Lowe
 
 **Paper results:**
 - Zero-shot: 0.796 MAE
-- Few-shot: 0.619 MAE (22% improvement)
-- MedGemma few-shot: 0.505 MAE (18% improvement over Gemma)
+- Few-shot: 0.619 MAE (22% lower item-level MAE vs zero-shot)
+- MedGemma few-shot: 0.505 MAE (18% lower item-level MAE vs Gemma; Appendix F, with lower coverage)
 
 ### Accuracy
 

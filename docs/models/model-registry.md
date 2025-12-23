@@ -70,9 +70,9 @@ For accessing official Google models (including MedGemma), use HuggingFace Trans
 
 | Canonical Name | HuggingFace Model ID | Access | Notes |
 |----------------|---------------------|--------|-------|
-| `gemma3:27b` | `google/gemma-3-27b-it` | Open | Multimodal, use `Gemma3ForConditionalGeneration` |
+| `gemma3:27b` | `google/gemma-3-27b-it` | Open | Instruction-tuned; loaded via Transformers `AutoModelForCausalLM` in this repo |
 | `medgemma:27b` | `google/medgemma-27b-text-it` | **Gated** | Text-only, use `AutoModelForCausalLM` |
-| `qwen3-embedding:8b` | `Qwen/Qwen3-Embedding-8B` | Open | Use `SentenceTransformer`, #1 on MTEB |
+| `qwen3-embedding:8b` | `Qwen/Qwen3-Embedding-8B` | Open | Use `SentenceTransformer` (see model card for evaluation details) |
 
 ### HuggingFace Installation
 
@@ -157,4 +157,4 @@ MODEL_QUANTITATIVE_MODEL=medgemma:27b
 ### HuggingFace (Official)
 - https://huggingface.co/google/gemma-3-27b-it
 - https://huggingface.co/google/medgemma-27b-text-it (Gated)
-- https://huggingface.co/Qwen/Qwen3-Embedding-8B (#1 MTEB)
+- https://huggingface.co/Qwen/Qwen3-Embedding-8B
