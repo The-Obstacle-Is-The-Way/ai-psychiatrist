@@ -13,13 +13,24 @@
 
 Our implementation includes a **keyword backfill mechanism** (`quantitative.py:228-268`) that always runs after LLM evidence extraction. This causes our results to diverge from the paper:
 
-| Metric | Paper | Us (backfill ON) | Expected (backfill OFF) |
+| Metric | Paper | Us (backfill ON) | Hypothesis (backfill OFF) |
 |--------|-------|------------------|-------------------------|
 | Coverage | ~50% | 74.1% | ~50% |
 | Item MAE | 0.619 | 0.753 | ~0.62 |
 
-**Paper's approach (Section 2.3.2):**
+*Note*: The “backfill OFF” column is a **paper-parity hypothesis** and must be validated by an
+ablation run after this spec is implemented.
+
+### What the Paper Says (and Doesn’t Say)
+
+The paper describes an evidence-first scoring approach, and states that items without
+relevant evidence produce no output:
+
 > "If no relevant evidence was found for a given PHQ-8 item, the model produced no output."
+
+However, the paper does **not** explicitly describe any rule-based fallback (keyword
+matching) step. For **paper parity** experiments, the safest interpretation is to
+evaluate *pure LLM extraction + scoring*, without heuristic evidence injection.
 
 **Our approach:**
 When the LLM misses evidence, we scan the transcript for keyword matches and append them to the evidence dict. This increases coverage but measures something fundamentally different: "LLM + rule-based heuristics" vs "pure LLM capability."
@@ -47,14 +58,14 @@ This makes debugging and paper comparison difficult.
 
 ### N/A Reason Taxonomy
 
-Following the ChatGPT analysis, we define these **deterministic** N/A categories:
+We define **deterministic** N/A categories based on observable pipeline state (LLM
+evidence extraction output, keyword hits, and whether backfill is enabled).
 
 | Reason | Description | Computed From |
 |--------|-------------|---------------|
-| `NO_MENTION` | No evidence from LLM and no keyword matches | `llm_evidence=[], keyword_hits=[]` |
-| `LLM_ONLY_MISSED` | LLM found nothing, keywords found matches (backfill OFF) | `llm_evidence=[], keyword_hits=[...], backfill=false` |
-| `KEYWORDS_INSUFFICIENT` | Keywords matched but LLM still returned N/A | Evidence exists but `score=null` |
-| `SCORING_REFUSED` | Evidence exists but LLM declined to score | Evidence exists but `score=null` |
+| `NO_MENTION` | No evidence from LLM and no keyword matches found | `llm_count=0, keyword_hits=0` |
+| `LLM_ONLY_MISSED` | LLM found no evidence, but keyword hits exist (backfill was OFF) | `llm_count=0, keyword_hits>0, backfill=false` |
+| `SCORE_NA_WITH_EVIDENCE` | Evidence was provided to the scorer, but the LLM still returned N/A | `final_evidence_count>0, score=null` |
 
 Note: `LLM_ONLY_MISSED` only appears when backfill is OFF. When ON, keywords augment evidence so the LLM sees them.
 
@@ -100,13 +111,43 @@ Environment variables:
 - `QUANTITATIVE_ENABLE_KEYWORD_BACKFILL=false` → paper parity mode
 - `QUANTITATIVE_TRACK_NA_REASONS=true` → enable reason tracking
 
+Add the group to the root `Settings` model:
+
+```python
+# config.py
+class Settings(BaseSettings):
+    ...
+    quantitative: QuantitativeSettings = Field(default_factory=QuantitativeSettings)
+```
+
+### Wiring / Dependency Injection
+
+`QuantitativeAssessmentAgent` currently has no dependency on a quantitative-specific settings group.
+To make this spec implementable, add a `quantitative_settings` parameter and wire it through
+the API layer and scripts:
+
+1. **Agent constructor** (`src/ai_psychiatrist/agents/quantitative.py`)
+   - Add `quantitative_settings: QuantitativeSettings | None = None`
+   - Store `self._settings = quantitative_settings or QuantitativeSettings()`
+   - Use `self._settings.enable_keyword_backfill` and `self._settings.keyword_backfill_cap`
+
+2. **API server** (`server.py`)
+   - Load `Settings` once at startup as already done
+   - Pass `settings.quantitative` into `QuantitativeAssessmentAgent(...)`
+
+3. **Reproduction scripts** (`scripts/reproduce_results.py`, etc.)
+   - Prefer `get_settings().quantitative` and pass it into the agent constructor
+   - This avoids silent divergence between “script default” and “server default”
+
 ### Data Structures
 
 #### New Enum: `NAReason`
 
 ```python
 # domain/enums.py
-class NAReason(str, Enum):
+from enum import StrEnum
+
+class NAReason(StrEnum):
     """Reason for N/A (unable to assess) score."""
 
     NO_MENTION = "no_mention"
@@ -115,11 +156,8 @@ class NAReason(str, Enum):
     LLM_ONLY_MISSED = "llm_only_missed"
     """LLM found nothing but keywords matched (backfill was OFF)."""
 
-    KEYWORDS_INSUFFICIENT = "keywords_insufficient"
-    """Keywords matched but combined evidence still insufficient."""
-
-    SCORING_REFUSED = "scoring_refused"
-    """Evidence exists but LLM declined to assign a score."""
+    SCORE_NA_WITH_EVIDENCE = "score_na_with_evidence"
+    """Evidence exists, but the scorer returned N/A (abstained)."""
 ```
 
 #### Updated `ItemAssessment`
@@ -152,48 +190,69 @@ class ItemAssessment:
 #### `quantitative.py`
 
 ```python
+@dataclass(frozen=True, slots=True)
+class EvidenceResult:
+    """Evidence extraction output with observability metadata."""
+
+    evidence: dict[str, list[str]]
+    llm_counts: dict[str, int]
+    keyword_hit_counts: dict[str, int]
+    keyword_added_counts: dict[str, int]
+
 async def _extract_evidence(self, transcript_text: str) -> EvidenceResult:
-    """Extract evidence with tracking."""
+    """Extract evidence and compute LLM/keyword counts."""
 
     # Step 1: LLM extraction
-    llm_evidence = await self._llm_extract(transcript_text)
+    # NOTE: In the current codebase, LLM extraction happens inside _extract_evidence via
+    # make_evidence_prompt() + llm_client.simple_chat(). You may keep that inline, or
+    # extract it into a helper such as _extract_evidence_llm() for readability/testing.
+    llm_evidence = await self._extract_evidence_llm(transcript_text)
 
     # Track counts per domain
     llm_counts = {k: len(v) for k, v in llm_evidence.items()}
 
-    # Step 2: Keyword backfill (if enabled)
+    # Step 2: Keyword hits (always computed for observability)
+    # NOTE: _find_keyword_hits() is a NEW helper to implement. It should return up to `cap`
+    # matched sentences per PHQ-8 key, using the same sentence splitting and substring matching
+    # semantics as _keyword_backfill().
+    keyword_hits = self._find_keyword_hits(transcript_text, cap=self._settings.keyword_backfill_cap)
+    keyword_hit_counts = {k: len(v) for k, v in keyword_hits.items()}
+
+    # Step 3: Apply keyword backfill (optional)
     if self._settings.enable_keyword_backfill:
-        enriched = self._keyword_backfill(transcript_text, llm_evidence)
-        keyword_counts = {k: len(enriched[k]) - llm_counts.get(k, 0) for k in enriched}
+        enriched = self._keyword_backfill(transcript_text, llm_evidence, cap=self._settings.keyword_backfill_cap)
+        keyword_added_counts = {k: max(0, len(enriched.get(k, [])) - llm_counts.get(k, 0)) for k in enriched}
     else:
         enriched = llm_evidence
-        keyword_counts = {k: 0 for k in llm_evidence}
+        keyword_added_counts = {k: 0 for k in llm_evidence}
 
     return EvidenceResult(
         evidence=enriched,
         llm_counts=llm_counts,
-        keyword_counts=keyword_counts,
+        keyword_hit_counts=keyword_hit_counts,
+        keyword_added_counts=keyword_added_counts,
     )
 
 def _determine_na_reason(
     self,
     llm_count: int,
-    keyword_count: int,
-    has_final_evidence: bool,
+    keyword_hit_count: int,
+    final_evidence_count: int,
     backfill_enabled: bool,
 ) -> NAReason:
     """Determine N/A reason from pipeline state."""
 
-    if llm_count == 0 and keyword_count == 0:
+    if llm_count == 0 and keyword_hit_count == 0:
         return NAReason.NO_MENTION
 
-    if llm_count == 0 and keyword_count > 0 and not backfill_enabled:
+    if llm_count == 0 and keyword_hit_count > 0 and not backfill_enabled:
         return NAReason.LLM_ONLY_MISSED
 
-    if has_final_evidence:
-        return NAReason.SCORING_REFUSED
+    # Evidence existed (LLM and/or keyword-added) but scorer returned N/A.
+    if final_evidence_count > 0:
+        return NAReason.SCORE_NA_WITH_EVIDENCE
 
-    return NAReason.KEYWORDS_INSUFFICIENT
+    return NAReason.NO_MENTION
 ```
 
 ### Output Format Changes
@@ -228,9 +287,8 @@ def _determine_na_reason(
   "na_reason_breakdown": {
     "NoInterest": {
       "no_mention": 12,
-      "llm_only_missed": 0,
-      "keywords_insufficient": 3,
-      "scoring_refused": 0
+      "llm_only_missed": 3,
+      "score_na_with_evidence": 0
     }
   },
   "backfill_impact": {
@@ -284,8 +342,8 @@ def test_na_reason_no_mention():
 def test_na_reason_llm_only_missed():
     """Verify LLM_ONLY_MISSED when backfill OFF but keywords match."""
 
-def test_na_reason_scoring_refused():
-    """Verify SCORING_REFUSED when evidence exists but score is N/A."""
+def test_na_reason_score_na_with_evidence():
+    """Verify SCORE_NA_WITH_EVIDENCE when evidence exists but score is N/A."""
 ```
 
 ### Integration Tests
@@ -304,17 +362,12 @@ async def test_na_reason_tracking():
 
 ## Documentation Updates
 
-### New Documents
+### Documents (Already Present)
 
-1. **`docs/concepts/backfill-explained.md`**
-   - What backfill is and why it exists
-   - How it affects coverage vs accuracy tradeoff
-   - Decision tree: evidence → score/N/A
+These documents already exist, but must remain aligned with the implementation:
 
-2. **`docs/guides/paper-parity-guide.md`**
-   - How to run in pure LLM mode
-   - Expected results vs paper
-   - When to use each mode
+1. **`docs/concepts/backfill-explained.md`** (mechanism + tradeoffs)
+2. **`docs/guides/paper-parity-guide.md`** (paper-parity workflow; blocked until implemented)
 
 ### Updated Documents
 
@@ -333,12 +386,13 @@ async def test_na_reason_tracking():
 
 ## Acceptance Criteria
 
-- [ ] `QUANTITATIVE_ENABLE_KEYWORD_BACKFILL=false` produces ~50% coverage
-- [ ] N/A reasons are tracked and exported in results JSON
-- [ ] Default behavior unchanged (backfill ON, ~74% coverage)
+- [ ] Backfill can be disabled via `QUANTITATIVE_ENABLE_KEYWORD_BACKFILL=false`
+- [ ] With backfill disabled, no keyword evidence is injected into the scorer prompt
+- [ ] N/A reasons are deterministically assigned when `QUANTITATIVE_TRACK_NA_REASONS=true`
+- [ ] Default behavior unchanged (backfill enabled, reason tracking enabled)
 - [ ] All existing tests pass
 - [ ] New tests cover backfill toggle and N/A reason tracking
-- [ ] Documentation complete
+- [ ] Documentation updated to reflect “paper does not describe backfill” (no unsupported claims)
 
 ---
 

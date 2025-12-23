@@ -156,6 +156,8 @@ for key, keywords in DOMAIN_KEYWORDS.items():
         existing = set(out.get(key, []))
         merged = out.get(key, []) + [h for h in hits if h not in existing]
         out[key] = merged[:cap]
+
+return out
 ```
 
 The real implementation uses a simple sentence splitter and caps the number of

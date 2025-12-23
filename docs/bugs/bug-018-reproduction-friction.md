@@ -339,8 +339,8 @@ Unknown. Possible causes:
 
 ### Symptom
 
-Some earlier local runs referenced an orphan `data/keywords/` directory. The current repo tree does
-**not** include `data/keywords/` and no production code depends on it.
+Some earlier local runs referenced an orphan `data/keywords/` directory. This directory may exist
+locally (and is gitignored due to DAIC-WOZ licensing), but **no production code depends on it**.
 
 ### Investigation Results (2025-12-22)
 

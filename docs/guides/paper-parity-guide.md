@@ -28,7 +28,8 @@ Our implementation includes a keyword backfill mechanism that causes metrics to 
 | Coverage | ~50% | ~74% (backfill always ON) |
 | Item MAE | 0.619 | ~0.75 |
 
-The paper tests **pure LLM capability**. We currently test **LLM + rule-based heuristics**.
+The paper likely measures **pure LLM capability** (no heuristic backfill is described). We currently
+measure **LLM + rule-based heuristics**.
 
 ### What's Blocking Paper Parity?
 
@@ -104,8 +105,7 @@ QUANTITATIVE_ENABLE_KEYWORD_BACKFILL=false \
 After implementation, each N/A will include a reason:
 - `NO_MENTION` - No evidence from LLM and no keyword matches
 - `LLM_ONLY_MISSED` - LLM missed it but keywords matched (backfill OFF)
-- `KEYWORDS_INSUFFICIENT` - Keywords matched but still insufficient
-- `SCORING_REFUSED` - Evidence exists but LLM declined to score
+- `SCORE_NA_WITH_EVIDENCE` - Evidence exists (LLM and/or keyword) but scorer returned N/A
 
 ---
 

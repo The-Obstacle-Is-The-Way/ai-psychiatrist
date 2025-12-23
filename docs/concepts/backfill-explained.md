@@ -57,7 +57,7 @@ When the LLM returns empty evidence for a symptom, we search for known keywords:
 
 ### The Algorithm
 
-From `src/ai_psychiatrist/agents/quantitative.py`:
+From `src/ai_psychiatrist/agents/quantitative.py` (`QuantitativeAssessmentAgent._keyword_backfill`):
 
 ```python
 def _keyword_backfill(
@@ -69,29 +69,33 @@ def _keyword_backfill(
     """Add keyword-matched sentences when LLM misses evidence."""
 
     # 1. Split transcript into sentences
-    sentences = re.split(r"(?<=[.?!])\s+|\n+", transcript.strip())
+    parts = re.split(r"(?<=[.?!])\s+|\n+", transcript.strip())
+    sentences = [p.strip() for p in parts if p and len(p.strip()) > 0]
+
+    out = {k: list(v) for k, v in current.items()}
 
     # 2. For each PHQ-8 domain with insufficient evidence
     for key, keywords in DOMAIN_KEYWORDS.items():
-        need = max(0, cap - len(current.get(key, [])))
+        need = max(0, cap - len(out.get(key, [])))
         if need == 0:
             continue  # Already have enough evidence
 
         # 3. Find sentences containing keywords
-        hits = []
+        hits: list[str] = []
         for sent in sentences:
-            if any(kw in sent.lower() for kw in keywords):
+            sent_lower = sent.lower()
+            if any(kw in sent_lower for kw in keywords):
                 hits.append(sent)
             if len(hits) >= need:
                 break
 
         # 4. Merge with existing evidence (deduplicated)
         if hits:
-            existing = set(current.get(key, []))
-            merged = current.get(key, []) + [h for h in hits if h not in existing]
-            current[key] = merged[:cap]
+            existing = set(out.get(key, []))
+            merged = out.get(key, []) + [h for h in hits if h not in existing]
+            out[key] = merged[:cap]
 
-    return current
+    return out
 ```
 
 ### Key Properties
@@ -127,15 +131,21 @@ def _keyword_backfill(
 
 ## Paper's Approach
 
-The paper does **not** use keyword backfill. Section 2.3.2:
+**Unknown.** The paper does not explicitly describe a keyword backfill mechanism.
+
+What the paper *does* state is that when evidence is insufficient, the system produces no
+prediction for that item (resulting in substantial missingness / “no output” for many
+items):
 
 > "If no relevant evidence was found for a given PHQ-8 item, the model produced no output."
 
-Section 3.2 reports:
+And in Section 3.2:
 
 > "In ~50% of cases, the model was unable to provide a prediction due to insufficient evidence."
 
-This is by design - the paper tests **LLM capability**, not production utility.
+For paper-parity experiments, the safest assumption is that the evaluation intended to
+measure **pure LLM extraction/scoring behavior**, without additional heuristic evidence
+injection. This repository currently cannot disable backfill; see [SPEC-003](../specs/SPEC-003-backfill-toggle.md).
 
 ---
 
@@ -159,14 +169,14 @@ This is by design - the paper tests **LLM capability**, not production utility.
 
 > **⚠️ NOT YET IMPLEMENTED** - See [SPEC-003](../specs/SPEC-003-backfill-toggle.md)
 
-Currently, when an item returns N/A, we **do not** track why. After SPEC-003 is implemented, each N/A will include a reason:
+Currently, when an item returns N/A, we **do not** track why. After SPEC-003 is implemented, each
+N/A will include a deterministic reason:
 
 | Reason | Description |
 |--------|-------------|
-| `NO_MENTION` | No evidence from LLM and no keyword matches |
-| `LLM_ONLY_MISSED` | LLM missed it but keywords found it (backfill OFF) |
-| `KEYWORDS_INSUFFICIENT` | Keywords matched but still insufficient |
-| `SCORING_REFUSED` | Evidence exists but LLM declined to score |
+| `NO_MENTION` | No evidence from LLM and no keyword matches found |
+| `LLM_ONLY_MISSED` | LLM found no evidence, but keyword hits exist (backfill OFF) |
+| `SCORE_NA_WITH_EVIDENCE` | Evidence was provided to the scorer, but the LLM still returned N/A |
 
 This will enable:
 - Debugging extraction failures
@@ -251,6 +261,10 @@ Transcript → LLM Evidence Extraction
                              ▼
                       Score with
                       LLM (0-3 or N/A)
+                             │
+                             ▼
+                   If N/A with evidence:
+                 SCORE_NA_WITH_EVIDENCE
 ```
 
 ---

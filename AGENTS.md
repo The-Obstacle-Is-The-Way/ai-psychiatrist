@@ -8,6 +8,7 @@
 - `tests/`: `unit/`, `integration/`, and `e2e/` tests (e2e is opt-in).
 - `docs/`: MkDocs documentation; `docs/archive/` contains historical artifacts.
 - `data/`: Local-only DAIC-WOZ artifacts (gitignored due to licensing).
+- `_legacy/`: Archived original research code/scripts (reference only; not part of the production package).
 
 ## Build, Test, and Development Commands
 

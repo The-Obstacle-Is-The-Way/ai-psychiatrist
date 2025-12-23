@@ -116,7 +116,7 @@ Run complete 4-agent pipeline on a transcript. This is the recommended endpoint 
     "specificity": 4,
     "accuracy": 4,
     "average_score": 4.0,
-    "iteration": 1
+    "iteration": 0
   },
   "meta_review": {
     "severity": 2,
@@ -137,6 +137,7 @@ Run complete 4-agent pipeline on a transcript. This is the recommended endpoint 
 | `quantitative.na_count` | int | Number of items without scores |
 | `qualitative` | object | Narrative assessment sections |
 | `evaluation` | object | Judge agent scores (1-5 Likert scale) |
+| `evaluation.iteration` | int | Refinement iteration for the returned qualitative assessment (`0` means first-pass evaluation) |
 | `meta_review.severity` | int | Final severity level (0-4) |
 | `meta_review.is_mdd` | bool | Major Depressive Disorder indicator (severity >= 2) |
 

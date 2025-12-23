@@ -4,6 +4,9 @@
 **Status**: DOCUMENTED - Implementations proposed with explicit rationales
 **Severity**: MEDIUM - Affects exact reproducibility but not system validity
 **Updated**: 2025-12-22 - Comprehensive first-principles audit
+**Tracked by**:
+- [GitHub Issue #46](https://github.com/The-Obstacle-Is-The-Way/ai-psychiatrist/issues/46) (sampling parameters)
+- [GitHub Issue #47](https://github.com/The-Obstacle-Is-The-Way/ai-psychiatrist/issues/47) (model quantization)
 
 This document captures ALL parameters NOT explicitly specified in the paper, along with our implementation decisions and rationales.
 

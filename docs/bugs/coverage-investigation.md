@@ -56,6 +56,8 @@ def _keyword_backfill(
             existing = set(out.get(key, []))
             merged = out.get(key, []) + [h for h in hits if h not in existing]
             out[key] = merged[:cap]
+
+    return out
 ```
 
 ### Keyword List
