@@ -241,6 +241,35 @@ class FeedbackLoopSettings(BaseSettings):
     )
 
 
+class QuantitativeSettings(BaseSettings):
+    """Quantitative assessment configuration.
+
+    Reference: SPEC-003 for backfill toggle and NA reason tracking.
+    """
+
+    model_config = SettingsConfigDict(
+        env_prefix="QUANTITATIVE_",
+        env_file=ENV_FILE,
+        env_file_encoding=ENV_FILE_ENCODING,
+        extra="ignore",
+    )
+
+    enable_keyword_backfill: bool = Field(
+        default=True,
+        description="Enable keyword backfill when LLM misses evidence",
+    )
+    track_na_reasons: bool = Field(
+        default=True,
+        description="Track why items return N/A",
+    )
+    keyword_backfill_cap: int = Field(
+        default=3,
+        ge=1,
+        le=10,
+        description="Max keyword-matched sentences per domain",
+    )
+
+
 class DataSettings(BaseSettings):
     """Data path configuration."""
 
@@ -339,6 +368,7 @@ class Settings(BaseSettings):
     model: ModelSettings = Field(default_factory=ModelSettings)
     embedding: EmbeddingSettings = Field(default_factory=EmbeddingSettings)
     feedback: FeedbackLoopSettings = Field(default_factory=FeedbackLoopSettings)
+    quantitative: QuantitativeSettings = Field(default_factory=QuantitativeSettings)
     data: DataSettings = Field(default_factory=DataSettings)
     logging: LoggingSettings = Field(default_factory=LoggingSettings)
     api: APISettings = Field(default_factory=APISettings)

@@ -11,10 +11,26 @@ import pytest
 from ai_psychiatrist.domain.enums import (
     AssessmentMode,
     EvaluationMetric,
+    NAReason,
     PHQ8Item,
     PHQ8Score,
     SeverityLevel,
 )
+
+
+class TestNAReason:
+    """Tests for NAReason enum."""
+
+    def test_values_exist(self) -> None:
+        """All expected NA reasons should exist."""
+        assert NAReason.NO_MENTION.value == "no_mention"
+        assert NAReason.LLM_ONLY_MISSED.value == "llm_only_missed"
+        assert NAReason.KEYWORDS_INSUFFICIENT.value == "keywords_insufficient"
+        assert NAReason.SCORING_REFUSED.value == "scoring_refused"
+
+    def test_is_str_enum(self) -> None:
+        """NAReason should be a StrEnum for JSON serialization."""
+        assert isinstance(NAReason.NO_MENTION, str)
 
 
 class TestPHQ8Item:

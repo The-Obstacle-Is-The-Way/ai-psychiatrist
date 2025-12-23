@@ -22,8 +22,9 @@ from ai_psychiatrist.agents.prompts.quantitative import (
     make_evidence_prompt,
     make_scoring_prompt,
 )
+from ai_psychiatrist.config import QuantitativeSettings
 from ai_psychiatrist.domain.entities import PHQ8Assessment, Transcript
-from ai_psychiatrist.domain.enums import AssessmentMode, PHQ8Item
+from ai_psychiatrist.domain.enums import AssessmentMode, NAReason, PHQ8Item
 from ai_psychiatrist.domain.value_objects import ItemAssessment
 from ai_psychiatrist.infrastructure.logging import get_logger
 
@@ -45,6 +46,9 @@ PHQ8_KEY_MAP: dict[str, PHQ8Item] = {
     "PHQ8_Concentrating": PHQ8Item.CONCENTRATING,
     "PHQ8_Moving": PHQ8Item.MOVING,
 }
+
+# Reverse mapping for lookups
+ITEM_TO_LEGACY_KEY: dict[PHQ8Item, str] = {v: k for k, v in PHQ8_KEY_MAP.items()}
 
 
 class QuantitativeAssessmentAgent:
@@ -71,6 +75,7 @@ class QuantitativeAssessmentAgent:
         embedding_service: EmbeddingService | None = None,
         mode: AssessmentMode = AssessmentMode.FEW_SHOT,
         model_settings: ModelSettings | None = None,
+        quantitative_settings: QuantitativeSettings | None = None,
     ) -> None:
         """Initialize quantitative assessment agent.
 
@@ -79,11 +84,13 @@ class QuantitativeAssessmentAgent:
             embedding_service: Service for few-shot retrieval (required for FEW_SHOT mode).
             mode: Assessment mode (ZERO_SHOT or FEW_SHOT).
             model_settings: Model configuration. If None, uses OllamaClient defaults.
+            quantitative_settings: Quantitative settings. If None, uses defaults.
         """
         self._llm = llm_client
         self._embedding = embedding_service
         self._mode = mode
         self._model_settings = model_settings
+        self._settings = quantitative_settings or QuantitativeSettings()
 
         # Warn if FEW_SHOT mode is used without embedding service
         if mode == AssessmentMode.FEW_SHOT and embedding_service is None:
@@ -114,11 +121,33 @@ class QuantitativeAssessmentAgent:
         )
 
         # Step 1: Extract evidence
-        evidence_dict = await self._extract_evidence(transcript.text)
+        llm_evidence = await self._extract_evidence(transcript.text)
+        llm_counts = {k: len(v) for k, v in llm_evidence.items()}
+
+        # Step 2: Find keyword hits (always computed for observability/N/A reasons)
+        keyword_hits = self._find_keyword_hits(
+            transcript.text,
+            cap=self._settings.keyword_backfill_cap,
+        )
+        keyword_hit_counts = {k: len(v) for k, v in keyword_hits.items()}
+
+        # Step 3: Conditional backfill
+        if self._settings.enable_keyword_backfill:
+            # Merge LLM evidence with keyword hits
+            final_evidence = self._merge_evidence(
+                llm_evidence, keyword_hits, cap=self._settings.keyword_backfill_cap
+            )
+        else:
+            final_evidence = llm_evidence
+
+        # Calculate added evidence from backfill
+        keyword_added_counts = {
+            k: len(final_evidence.get(k, [])) - llm_counts.get(k, 0) for k in final_evidence
+        }
 
         logger.debug(
             "Evidence extracted",
-            items_with_evidence=sum(1 for v in evidence_dict.values() if v),
+            items_with_evidence=sum(1 for v in final_evidence.values() if v),
         )
 
         # Step 2: Build references (few-shot only)
@@ -126,7 +155,7 @@ class QuantitativeAssessmentAgent:
         if self._mode == AssessmentMode.FEW_SHOT and self._embedding:
             # Convert string keys to PHQ8Item for embedding service
             evidence_for_embedding = {
-                PHQ8_KEY_MAP[k]: v for k, v in evidence_dict.items() if k in PHQ8_KEY_MAP
+                PHQ8_KEY_MAP[k]: v for k, v in final_evidence.items() if k in PHQ8_KEY_MAP
             }
             bundle = await self._embedding.build_reference_bundle(evidence_for_embedding)
             reference_text = bundle.format_for_prompt()
@@ -153,10 +182,65 @@ class QuantitativeAssessmentAgent:
         logger.debug("LLM scoring complete", response_length=len(raw_response))
 
         # Step 4: Parse response with multi-level repair
-        items = await self._parse_response(raw_response)
+        parsed_items = await self._parse_response(raw_response)
+
+        # Step 5: Construct ItemAssessments with extended fields
+        final_items = {}
+        for phq_item in PHQ8Item:
+            legacy_key = ITEM_TO_LEGACY_KEY[phq_item]
+
+            # Get parsing result (or default empty)
+            parsed = parsed_items.get(phq_item)
+
+            # If parsed result exists and has a score, use it
+            # If parsed result exists but score is None (explicit N/A), check reasons
+
+            if parsed:
+                score = parsed.score
+                evidence = parsed.evidence
+                reason = parsed.reason
+            else:
+                score = None
+                evidence = "No relevant evidence found"
+                reason = "Unable to assess"
+
+            # Determine NA reason and Evidence Source
+            na_reason = None
+            evidence_source = self._determine_evidence_source(
+                llm_counts.get(legacy_key, 0), keyword_added_counts.get(legacy_key, 0)
+            )
+
+            if score is None:
+                # Explicit N/A or missing
+                if parsed and parsed.evidence and parsed.evidence != "No relevant evidence found":
+                    na_reason = NAReason.SCORING_REFUSED
+
+                # Check for insufficient/missed evidence
+                if not na_reason:
+                    na_reason = self._determine_na_reason(
+                        llm_count=llm_counts.get(legacy_key, 0),
+                        keyword_count=keyword_hit_counts.get(legacy_key, 0),
+                        backfill_enabled=self._settings.enable_keyword_backfill,
+                    )
+
+            # Fix evidence source "none" if we found nothing
+            if evidence_source == "none" and score is not None:
+                # This shouldn't happen usually unless LLM hallucinated evidence
+                evidence_source = "llm"
+
+            final_items[phq_item] = ItemAssessment(
+                item=phq_item,
+                evidence=evidence,
+                reason=reason,
+                score=score,
+                na_reason=na_reason,
+                evidence_source=evidence_source,
+                llm_evidence_count=llm_counts.get(legacy_key, 0),
+                keyword_evidence_count=keyword_added_counts.get(legacy_key, 0),
+            )
 
         assessment = PHQ8Assessment(
-            items=items,
+            items=final_items,
             mode=self._mode,
             participant_id=transcript.participant_id,
         )
@@ -221,49 +305,72 @@ class QuantitativeAssessmentAgent:
             cleaned = list({str(q).strip() for q in arr if str(q).strip()})
             evidence_dict[key] = cleaned
 
-        # Keyword backfill for missed evidence
-        enriched = self._keyword_backfill(transcript_text, evidence_dict)
-        return enriched
+        return evidence_dict
 
-    def _keyword_backfill(
+    def _find_keyword_hits(
         self,
         transcript: str,
-        current: dict[str, list[str]],
         cap: int = 3,
     ) -> dict[str, list[str]]:
-        """Add keyword-matched sentences when LLM misses evidence.
+        """Find keyword-matched sentences in transcript.
 
         Args:
             transcript: Original transcript text.
-            current: Current evidence dictionary.
-            cap: Maximum evidence items per PHQ-8 domain.
+            cap: Maximum evidence items per PHQ-8 domain to find.
 
         Returns:
-            Enriched evidence dictionary.
+            Dictionary of PHQ8 key -> list of matched sentences.
         """
         # Split transcript into sentences
         parts = re.split(r"(?<=[.?!])\s+|\n+", transcript.strip())
         sentences = [p.strip() for p in parts if p and len(p.strip()) > 0]
 
-        out = {k: list(v) for k, v in current.items()}
+        hits: dict[str, list[str]] = {}
 
         for key, keywords in DOMAIN_KEYWORDS.items():
-            need = max(0, cap - len(out.get(key, [])))
-            if need == 0:
-                continue
-
-            hits: list[str] = []
+            key_hits: list[str] = []
             for sent in sentences:
                 sent_lower = sent.lower()
                 if any(kw in sent_lower for kw in keywords):
-                    hits.append(sent)
-                if len(hits) >= need:
+                    key_hits.append(sent)
+                if len(key_hits) >= cap:
                     break
+            hits[key] = key_hits
 
-            if hits:
-                existing = set(out.get(key, []))
-                merged = out.get(key, []) + [h for h in hits if h not in existing]
-                out[key] = merged[:cap]
+        return hits
+
+    def _merge_evidence(
+        self,
+        current: dict[str, list[str]],
+        hits: dict[str, list[str]],
+        cap: int = 3,
+    ) -> dict[str, list[str]]:
+        """Merge keyword hits into current evidence, respecting cap.
+
+        Args:
+            current: Current evidence dictionary (from LLM).
+            hits: Keyword hits dictionary.
+            cap: Maximum total evidence items per PHQ-8 domain.
+
+        Returns:
+            Enriched evidence dictionary.
+        """
+        out = {k: list(v) for k, v in current.items()}
+
+        for key, key_hits in hits.items():
+            current_items = out.get(key, [])
+            if len(current_items) >= cap:
+                continue
+
+            need = cap - len(current_items)
+
+            # Filter hits that are already in current (exact string match)
+            existing = set(current_items)
+            new_hits = [h for h in key_hits if h not in existing]
+
+            # Take only what we need
+            merged = current_items + new_hits[:need]
+            out[key] = merged
 
         return out
 
@@ -461,3 +568,32 @@ class QuantitativeAssessmentAgent:
             )
 
         return result
+
+    def _determine_na_reason(
+        self,
+        llm_count: int,
+        keyword_count: int,
+        backfill_enabled: bool,
+    ) -> NAReason:
+        """Determine why an item has no score."""
+        if llm_count == 0 and keyword_count == 0:
+            return NAReason.NO_MENTION
+        if llm_count == 0 and keyword_count > 0 and not backfill_enabled:
+            return NAReason.LLM_ONLY_MISSED
+        if llm_count == 0 and keyword_count > 0 and backfill_enabled:
+            return NAReason.KEYWORDS_INSUFFICIENT
+        return NAReason.SCORING_REFUSED
+
+    def _determine_evidence_source(
+        self,
+        llm_count: int,
+        keyword_count: int,
+    ) -> str:
+        """Determine source of evidence."""
+        if llm_count > 0 and keyword_count > 0:
+            return "mixed"
+        if llm_count > 0:
+            return "llm"
+        if keyword_count > 0:
+            return "keyword"
+        return "none"

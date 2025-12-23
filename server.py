@@ -278,6 +278,7 @@ async def assess_quantitative(
         embedding_service=embedding_service if mode == AssessmentMode.FEW_SHOT else None,
         mode=mode,
         model_settings=model_settings,
+        quantitative_settings=app_settings.quantitative,
     )
 
     try:
@@ -368,6 +369,7 @@ async def run_full_pipeline(
             embedding_service=embedding_service if mode == AssessmentMode.FEW_SHOT else None,
             mode=mode,
             model_settings=model_settings,
+            quantitative_settings=app_settings.quantitative,
         )
         quant_result = await quant_agent.assess(transcript)
 

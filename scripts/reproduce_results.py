@@ -393,6 +393,7 @@ async def run_experiment(
         embedding_service=embedding_service if mode == AssessmentMode.FEW_SHOT else None,
         mode=mode,
         model_settings=settings.model,
+        quantitative_settings=settings.quantitative,
     )
 
     participant_ids = list(ground_truth.keys())

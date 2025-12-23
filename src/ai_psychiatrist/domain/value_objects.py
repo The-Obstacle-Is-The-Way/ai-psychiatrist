@@ -14,7 +14,7 @@ from dataclasses import dataclass, field
 from typing import TYPE_CHECKING
 
 if TYPE_CHECKING:
-    from ai_psychiatrist.domain.enums import EvaluationMetric, PHQ8Item
+    from ai_psychiatrist.domain.enums import EvaluationMetric, NAReason, PHQ8Item
 
 
 @dataclass(frozen=True, slots=True)
@@ -152,6 +152,19 @@ class ItemAssessment:
 
     score: int | None
     """Score (0-3) or None for N/A (insufficient evidence)."""
+
+    # SPEC-003 extensions
+    na_reason: NAReason | None = None
+    """Reason for N/A (only set when score is None)."""
+
+    evidence_source: str | None = None
+    """Source of evidence: 'llm', 'keyword', 'both', or 'none'."""
+
+    llm_evidence_count: int = 0
+    """Number of evidence items found by LLM."""
+
+    keyword_evidence_count: int = 0
+    """Number of evidence items found by keyword search."""
 
     def __post_init__(self) -> None:
         """Validate score is within PHQ-8 range.

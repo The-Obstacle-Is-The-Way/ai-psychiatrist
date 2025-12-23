@@ -440,14 +440,15 @@ Participant: I have trouble focusing on anything. Can't think straight.""",
         client = MockLLMClient(chat_responses=[empty_evidence, scoring_response])
         agent = QuantitativeAssessmentAgent(llm_client=client, mode=AssessmentMode.ZERO_SHOT)
 
-        # Access internal method to test backfill
-        evidence = await agent._extract_evidence(sample_transcript.text)
+        # Call assess to trigger full pipeline including backfill
+        assessment = await agent.assess(sample_transcript)
 
-        # Should have found evidence via keywords
-        assert len(evidence["PHQ8_Sleep"]) > 0
-        assert len(evidence["PHQ8_Tired"]) > 0
-        assert len(evidence["PHQ8_Appetite"]) > 0
-        assert len(evidence["PHQ8_Concentrating"]) > 0
+        # Should have found evidence via keywords (checked via keyword_evidence_count)
+        # Note: assess logic now populates keyword_evidence_count
+        assert assessment.items[PHQ8Item.SLEEP].keyword_evidence_count > 0
+        assert assessment.items[PHQ8Item.TIRED].keyword_evidence_count > 0
+        assert assessment.items[PHQ8Item.APPETITE].keyword_evidence_count > 0
+        assert assessment.items[PHQ8Item.CONCENTRATING].keyword_evidence_count > 0
 
 
 @pytest.mark.unit
