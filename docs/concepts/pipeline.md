@@ -132,14 +132,22 @@ Please revise your assessment addressing these concerns:
 </transcript>
 ```
 
-**Paper Results:** Feedback loop improves average judge scores from ~3.5 to ~4.2.
+**Paper Results (Figure 2, 142 participants)**: The paper reports mean ± SD improvements after
+the feedback loop:
+
+| Metric | Before | After |
+|--------|--------|-------|
+| Coherence | 4.96 ± 0.20 | 5.00 ± 0.00 |
+| Specificity | 4.37 ± 0.62 | 4.38 ± 0.58 |
+| Accuracy | 4.33 ± 0.53 | 4.36 ± 0.48 |
+| Completeness | 3.61 ± 0.85 | 3.72 ± 0.61 |
 
 ---
 
 ### Stage 4: Quantitative Assessment
 
 **Agent:** `QuantitativeAssessmentAgent`
-**Model:** MedGemma 27B (default, 18% better MAE than Gemma 3)
+**Model:** Gemma 3 27B (default)
 **Paper Reference:** Section 2.3.2, Section 2.4.2
 
 The quantitative agent predicts PHQ-8 item scores (0-3) for each symptom.
@@ -208,8 +216,8 @@ The agent generates scores with reasoning:
 
 **Paper Results:**
 - Zero-shot MAE: 0.796
-- Few-shot MAE: 0.619 (22% improvement)
-- MedGemma few-shot MAE: 0.505 (18% improvement over Gemma 3)
+- Few-shot MAE: 0.619 (22% lower item-level MAE vs zero-shot)
+- MedGemma few-shot MAE: 0.505 (Appendix F alternative; better MAE but fewer predictions overall)
 
 ---
 
@@ -293,7 +301,7 @@ Provide:
 │  └───────────────────────────────────────────────────────────────────┘ │
 │                              │                                          │
 │                              ▼                                          │
-│  QUANTITATIVE (MedGemma 27B)                                           │
+│  QUANTITATIVE (Gemma 3 27B)                                            │
 │  ┌───────────────────────────────────────────────────────────────────┐ │
 │  │ PHQ8_NoInterest: 2  |  PHQ8_Depressed: 2  |  PHQ8_Sleep: 1       │ │
 │  │ PHQ8_Tired: 2       |  PHQ8_Appetite: N/A |  PHQ8_Failure: 1     │ │
@@ -328,21 +336,14 @@ Provide:
 
 ## Timing
 
-Approximate timing on M3 Pro (16GB RAM) with models loaded:
+The paper reports the full pipeline runs in **~1 minute** on a MacBook Pro with an Apple
+M3 Pro chipset (Section 2.3.5 / Discussion). Real-world timing varies significantly with:
 
-| Stage | Duration |
-|-------|----------|
-| Qualitative Assessment | 10-15s |
-| Judge Evaluation (per metric) | 3-5s |
-| Feedback Refinement (per iteration) | 10-15s |
-| Evidence Extraction | 5-8s |
-| Embedding Generation | 1-2s |
-| Quantitative Scoring | 8-12s |
-| Meta-Review | 5-8s |
-| **Total (no refinement)** | **~45-60s** |
-| **Total (with 2 refinements)** | **~80-100s** |
+- backend (Ollama vs HuggingFace),
+- model quantization / device (CPU/GPU),
+- and whether the feedback loop triggers refinements.
 
-First request is slower due to model loading (~30-60s additional).
+For local reproduction runtime measurements, see `docs/results/reproduction-notes.md`.
 
 ---
 
@@ -353,7 +354,7 @@ First request is slower due to model loading (~30-60s additional).
 | `FEEDBACK_ENABLED=false` | Skip refinement loop entirely |
 | `FEEDBACK_MAX_ITERATIONS=5` | Cap refinement attempts |
 | `EMBEDDING_TOP_K_REFERENCES=4` | More reference examples per item |
-| `MODEL_QUANTITATIVE_MODEL=gemma3:27b` | Use baseline instead of MedGemma |
+| `MODEL_QUANTITATIVE_MODEL=medgemma:27b` | Use Appendix F alternative (HuggingFace backend; may reduce coverage) |
 
 ---
 

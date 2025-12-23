@@ -51,7 +51,9 @@ data/test_split_Depression_AVEC2017.csv   → 47 participants (matches)
 data/full_test_split.csv                  → 47 participants (total score only)
 ```
 
-Our checked-in split files match the official AVEC2017 participant counts.
+Note: `data/` is gitignored due to DAIC-WOZ licensing. These files exist locally after
+running the dataset preparation step (`scripts/prepare_dataset.py`), but are not
+committed to the repository.
 
 ### Test Set Schema Comparison
 
@@ -139,16 +141,16 @@ uv run python scripts/reproduce_results.py --split paper
 |--------|-------|
 | Evaluation set | Custom test split (41 participants) |
 | Knowledge base | Custom train split (58 participants) |
-| Comparable to paper? | ✅ Same methodology |
+| Comparable to paper? | ⚠️ Same methodology; exact split membership not published (see `docs/bugs/gap-001-paper-unspecified-parameters.md`) |
 | Valid methodology? | ✅ Yes |
 
-**Pros**: Matches paper methodology exactly
+**Pros**: Matches paper methodology (Appendix C algorithm) and produces 58/43/41 counts deterministically
 **Cons**: Requires generating paper split + paper embeddings artifact locally (not committed)
 
 ### Option C: Full Train+Dev Evaluation
 
 ```bash
-python scripts/reproduce_results.py --split train+dev
+uv run python scripts/reproduce_results.py --split train+dev
 ```
 
 | Aspect | Value |
@@ -172,9 +174,9 @@ If you use participant X's transcript to build the few-shot knowledge base, then
 
 | Scenario | Knowledge Base | Test Set | Leakage? |
 |----------|---------------|----------|----------|
-| AVEC2017 approach | Train only (106) | Dev only (34) | ✅ No leakage |
+| AVEC2017 approach | Train only (107) | Dev only (35) | ✅ No leakage |
 | Paper approach | Paper train (58) | Paper test (41) | ✅ No leakage |
-| Our current | Train only (106) | Dev (34) | ✅ No leakage |
+| Our current | Train only (107) | Dev (35) | ✅ No leakage |
 | Dangerous | Train+Dev | Train+Dev | ❌ **LEAKAGE** |
 
 ### Our `generate_embeddings.py` Uses Train Only
@@ -198,6 +200,8 @@ This is correct. We never include dev participants in the knowledge base.
    ```bash
    uv run python scripts/create_paper_split.py --seed 42
    ```
+   `--seed` is required for determinism. The paper does not publish the seed or the exact
+   participant ID lists, so this produces a *paper-style* split (see `docs/bugs/gap-001-paper-unspecified-parameters.md`).
 
 2. **Regenerate embeddings using paper train split only**:
    ```bash
@@ -245,5 +249,5 @@ uv run python scripts/reproduce_results.py --split dev
 ## See Also
 
 - [daic-woz-schema.md](./daic-woz-schema.md) - Full dataset schema
-- [GAP-001](../bugs/GAP-001_PAPER_UNSPECIFIED_PARAMETERS.md) - Paper-unspecified parameters
-- [REPRODUCTION_NOTES.md](../REPRODUCTION_NOTES.md) - Reproduction status
+- [GAP-001](../bugs/gap-001-paper-unspecified-parameters.md) - Paper-unspecified parameters
+- [reproduction-notes.md](../results/reproduction-notes.md) - Reproduction status

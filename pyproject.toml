@@ -3,16 +3,14 @@ name = "ai-psychiatrist"
 version = "2.0.0"
 description = "LLM-based Multi-Agent System for Depression Assessment"
 readme = "README.md"
-license = { text = "MIT" }
+license = { file = "LICENSE" }
 requires-python = ">=3.11"
-authors = [
-    { name = "TReNDS Center", email = "vcalhoun@gsu.edu" }
-]
+authors = [{ name = "The-Obstacle-Is-The-Way" }]
 classifiers = [
     "Development Status :: 4 - Beta",
     "Intended Audience :: Healthcare Industry",
     "Intended Audience :: Science/Research",
-    "License :: OSI Approved :: MIT License",
+    "License :: OSI Approved :: Apache Software License",
     "Programming Language :: Python :: 3.11",
     "Programming Language :: Python :: 3.12",
     "Topic :: Scientific/Engineering :: Artificial Intelligence",

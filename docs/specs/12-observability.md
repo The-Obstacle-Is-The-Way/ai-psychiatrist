@@ -25,8 +25,9 @@ Implement comprehensive observability infrastructure including metrics, distribu
 
 ## As-Is Observability (Repo)
 
-- No structured logging (most scripts use `print`)
-- No metrics/tracing/health endpoints beyond what FastAPI provides by default
+- **Modern implementation (`src/`)**: structured logging via `structlog` is in place (see `src/ai_psychiatrist/infrastructure/logging.py`) and is used by the API/server and services.
+- **Legacy implementation (`_legacy/`)**: most scripts use `print` (no structured logging).
+- No metrics/tracing beyond basic FastAPI behavior; `/health` exists in `server.py` but deeper runtime metrics/tracing are deferred.
 - One notable exception: `_legacy/agents/quantitative_assessor_f.py` has a `VERBOSE` flag and prints timestamped `[STEP]`, `[CHAT]`, and `[EMB]` logs, including the "exact" user prompt for chat calls.
 - The repo contains evaluation artifacts in `_legacy/analysis_output/` and plotting code in notebooks, but those are offline—not runtime observability.
 

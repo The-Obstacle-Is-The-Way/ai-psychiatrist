@@ -3,7 +3,7 @@
 **LLM-based Multi-Agent System for Depression Assessment from Clinical Interviews**
 
 [![Python 3.11+](https://img.shields.io/badge/python-3.11+-blue.svg)](https://www.python.org/downloads/)
-[![License](https://img.shields.io/badge/license-Research-green.svg)](LICENSE)
+[![License](https://img.shields.io/badge/license-Apache%202.0-blue.svg)](LICENSE)
 [![Code style: ruff](https://img.shields.io/badge/code%20style-ruff-000000.svg)](https://github.com/astral-sh/ruff)
 [![Type checked: mypy](https://img.shields.io/badge/type%20checked-mypy-blue.svg)](https://mypy-lang.org/)
 
@@ -16,14 +16,17 @@ AI Psychiatrist implements a research paper's methodology for automated depressi
 ### Key Features
 
 - **Four-Agent Pipeline**: Qualitative, Judge, Quantitative, and Meta-Review agents collaborate for comprehensive assessment
-- **Embedding-Based Few-Shot Learning**: 22% improvement in accuracy over zero-shot approaches
+- **Embedding-Based Few-Shot Learning**: 22% lower item-level MAE vs zero-shot (0.796 → 0.619, paper Section 3.2)
 - **Iterative Self-Refinement**: Judge agent feedback loop improves assessment quality
-- **Production-Ready**: Clean architecture, type safety, structured logging, 80%+ test coverage
+- **Engineering-Focused**: Clean architecture, strict type checking, structured logging, 80%+ test coverage
 
 ### Paper Reference
 
 > Greene et al. "AI Psychiatrist Assistant: An LLM-based Multi-Agent System for Depression Assessment from Clinical Interviews"
 > [OpenReview](https://openreview.net/forum?id=mV0xJpO7A0)
+
+> **Clinical disclaimer**: This repository is a research/engineering implementation intended for paper reproduction and experimentation.
+> It is not a medical device and should not be used for clinical diagnosis or treatment decisions.
 
 ---
 
@@ -47,7 +50,6 @@ make dev
 
 # Pull required models
 ollama pull gemma3:27b
-ollama pull alibayram/medgemma:27b
 ollama pull qwen3-embedding:8b
 
 # Configure (uses paper-optimal defaults)
@@ -56,6 +58,11 @@ cp .env.example .env
 # Start server
 make serve
 ```
+
+> **Optional (Appendix F)**: The paper evaluates MedGemma 27B as an alternative model for the
+> quantitative agent. There is no official MedGemma model in the Ollama library; use the HuggingFace
+> backend (`make dev-hf`, `LLM_BACKEND=huggingface`, `MODEL_QUANTITATIVE_MODEL=medgemma:27b`) to load
+> the official gated weights.
 
 ### Run Your First Assessment
 
@@ -149,7 +156,7 @@ All settings via environment variables or `.env` file:
 ```bash
 # Models (paper-optimal defaults)
 MODEL_QUALITATIVE_MODEL=gemma3:27b
-MODEL_QUANTITATIVE_MODEL=alibayram/medgemma:27b    # 18% better MAE
+MODEL_QUANTITATIVE_MODEL=gemma3:27b
 MODEL_EMBEDDING_MODEL=qwen3-embedding:8b
 
 # Few-shot retrieval (Appendix D optimal)
@@ -160,18 +167,24 @@ EMBEDDING_TOP_K_REFERENCES=2
 # Feedback loop (Section 2.3.1)
 FEEDBACK_MAX_ITERATIONS=10
 FEEDBACK_SCORE_THRESHOLD=3
+
+# Appendix F (optional): use official MedGemma via HuggingFace backend
+# LLM_BACKEND=huggingface
+# MODEL_QUANTITATIVE_MODEL=medgemma:27b
 ```
 
 See [Configuration Reference](docs/reference/configuration.md) for all options.
 
 ---
 
-## Paper Results
+## Paper Results (Reported)
 
-| Metric | Zero-Shot | Few-Shot | MedGemma Few-Shot |
-|--------|-----------|----------|-------------------|
-| PHQ-8 MAE | 0.796 | 0.619 | **0.505** |
-| Severity Accuracy | - | - | **78%** |
+From the paper:
+- **Quantitative (PHQ-8 item scoring, 0–3 per item)**: MAE 0.796 (zero-shot) vs 0.619 (few-shot)
+- **Appendix F (optional)**: MedGemma 27B MAE 0.505, with lower coverage (“fewer predictions overall”)
+- **Meta-review (binary classification)**: 78% accuracy (comparable to the human expert)
+
+Note: The MAE values are **item-level** (per PHQ-8 item) and exclude items marked “N/A”.
 
 ---
 
@@ -192,7 +205,11 @@ See [Configuration Reference](docs/reference/configuration.md) for all options.
 
 ## License
 
-This project implements research from Georgia State University. See the [paper](https://openreview.net/forum?id=mV0xJpO7A0) for academic citation.
+Licensed under **Apache 2.0**. See `LICENSE` and `NOTICE`.
+
+This repository is a clean-room, production-grade reimplementation of the paper’s method. It does
+not distribute the DAIC-WOZ dataset. The original research code is referenced in the paper under
+“Data and Code Availability”.
 
 ---
 

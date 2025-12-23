@@ -1,0 +1,23 @@
+AI Psychiatrist
+Copyright 2025 The-Obstacle-Is-The-Way
+
+This product includes software developed for the AI Psychiatrist project.
+
+Licensed under the Apache License, Version 2.0 (the "License"); you may not use this file except
+in compliance with the License. You may obtain a copy of the License at:
+  http://www.apache.org/licenses/LICENSE-2.0
+
+This repository contains:
+- src/ai_psychiatrist/: Production implementation (Apache 2.0).
+- _legacy/: Archived upstream reference implementation for provenance and comparison (MIT License;
+  see _legacy/LICENSE). _legacy/ is not part of the packaged ai-psychiatrist library.
+
+Research attribution:
+This implementation follows the methodology described in:
+  "AI Psychiatrist Assistant: An LLM-based Multi-Agent System for Depression Assessment from
+   Clinical Interviews"
+  TReNDS Center (Georgia State University / Georgia Institute of Technology / Emory University).
+
+Data attribution:
+The research paper evaluates on the DAIC-WOZ dataset (licensed separately). This repository does
+not distribute DAIC-WOZ data.

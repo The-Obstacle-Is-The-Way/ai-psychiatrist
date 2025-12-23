@@ -23,7 +23,7 @@ AI Psychiatrist follows **Clean Architecture** principles with a **vertical slic
 │            (Entities, Value Objects, Enums, Exceptions)          │
 ├─────────────────────────────────────────────────────────────────┤
 │                      Infrastructure Layer                        │
-│               (OllamaClient, Logging, Protocols)                 │
+│        (OllamaClient, HuggingFaceClient, Logging, Protocols)     │
 └─────────────────────────────────────────────────────────────────┘
 ```
 
@@ -72,6 +72,9 @@ src/ai_psychiatrist/
 │   ├── logging.py         # Structured logging setup
 │   └── llm/
 │       ├── __init__.py
+│       ├── factory.py      # Backend factory (Ollama vs HuggingFace)
+│       ├── huggingface.py  # HuggingFaceClient implementation (optional)
+│       ├── model_aliases.py # Canonical → backend-specific model IDs
 │       ├── protocols.py   # ChatClient, EmbeddingClient protocols
 │       ├── ollama.py      # OllamaClient implementation
 │       └── responses.py   # Response parsing utilities
@@ -84,7 +87,7 @@ src/ai_psychiatrist/
 
 ## Layer Details
 
-### Domain Layer (`domain/`)
+### Domain Layer (`src/ai_psychiatrist/domain/`)
 
 The innermost layer containing pure business logic with no external dependencies.
 
@@ -145,7 +148,7 @@ Type-safe constants for domain concepts.
 
 ---
 
-### Agents Layer (`agents/`)
+### Agents Layer (`src/ai_psychiatrist/agents/`)
 
 Each agent encapsulates a specific LLM interaction pattern.
 
@@ -209,7 +212,7 @@ async def review(transcript: Transcript, qualitative: QualitativeAssessment, qua
 
 ---
 
-### Services Layer (`services/`)
+### Services Layer (`src/ai_psychiatrist/services/`)
 
 Application-level orchestration and external data management.
 
@@ -262,7 +265,7 @@ HTTP client for Ollama LLM API.
 - Convenience helpers `simple_chat()` / `simple_embed()` used by agents/services
 
 **Features:**
-- Configurable timeout (default: 180s)
+- Configurable timeout (Ollama default: 300s via `OLLAMA_TIMEOUT_SECONDS`)
 - Model-specific temperature and sampling parameters
 - L2 normalization for embeddings
 

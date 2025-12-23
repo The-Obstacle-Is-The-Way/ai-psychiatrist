@@ -25,7 +25,7 @@ We're already using **Pydantic 2.12** for:
 
 | Current Usage | Location |
 |--------------|----------|
-| Settings validation | `config.py` (pydantic-settings) |
+| Settings validation | `src/ai_psychiatrist/config.py` (pydantic-settings) |
 | Domain entities | Dataclasses (not Pydantic models) |
 | API validation | FastAPI (uses Pydantic internally) |
 | LLM responses | Manual XML parsing → domain entities |
