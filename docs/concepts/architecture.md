@@ -10,20 +10,20 @@ AI Psychiatrist follows **Clean Architecture** principles with a **vertical slic
 
 ```text
 ┌─────────────────────────────────────────────────────────────────┐
-│                          API Layer                               │
-│                    (FastAPI routes, CLI)                         │
+│                          API Layer                              │
+│                    (FastAPI routes, CLI)                        │
 ├─────────────────────────────────────────────────────────────────┤
-│                         Agents Layer                             │
+│                         Agents Layer                            │
 │      (Qualitative, Judge, Quantitative, Meta-Review)            │
 ├─────────────────────────────────────────────────────────────────┤
-│                        Services Layer                            │
+│                        Services Layer                           │
 │   (FeedbackLoop, Embedding, Transcript, GroundTruth, Chunking)  │
 ├─────────────────────────────────────────────────────────────────┤
-│                         Domain Layer                             │
-│            (Entities, Value Objects, Enums, Exceptions)          │
+│                         Domain Layer                            │
+│            (Entities, Value Objects, Enums, Exceptions)         │
 ├─────────────────────────────────────────────────────────────────┤
-│                      Infrastructure Layer                        │
-│        (OllamaClient, HuggingFaceClient, Logging, Protocols)     │
+│                      Infrastructure Layer                       │
+│        (OllamaClient, HuggingFaceClient, Logging, Protocols)    │
 └─────────────────────────────────────────────────────────────────┘
 ```
 

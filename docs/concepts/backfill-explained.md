@@ -12,18 +12,18 @@ Keyword backfill is a **rule-based safety net** that runs after LLM evidence ext
 
 ```
 ┌─────────────────────────────────────────────────────────────────┐
-│                     EVIDENCE EXTRACTION                          │
+│                     EVIDENCE EXTRACTION                         │
 ├─────────────────────────────────────────────────────────────────┤
-│                                                                  │
+│                                                                 │
 │  1. LLM Extraction (semantic analysis)                          │
 │     └── LLM reads transcript, extracts quotes per PHQ-8 item    │
-│                                                                  │
+│                                                                 │
 │  2. Keyword Backfill (rule-based) ← THIS DOCUMENT               │
 │     └── If LLM missed evidence: scan for keyword matches        │
-│                                                                  │
-│  3. Scoring                                                      │
+│                                                                 │
+│  3. Scoring                                                     │
 │     └── Score items with evidence; N/A for items without        │
-│                                                                  │
+│                                                                 │
 └─────────────────────────────────────────────────────────────────┘
 ```
 

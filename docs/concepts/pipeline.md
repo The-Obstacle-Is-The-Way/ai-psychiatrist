@@ -84,30 +84,30 @@ When judge scores are below threshold, the feedback loop refines the assessment:
 
 ```text
 ┌─────────────────────────────────────────────────────────────┐
-│                     FEEDBACK LOOP                            │
+│                     FEEDBACK LOOP                           │
 ├─────────────────────────────────────────────────────────────┤
-│                                                              │
+│                                                             │
 │   ┌─────────────────┐                                       │
 │   │   Qualitative   │◄──────────────────────────────┐       │
 │   │     Agent       │                               │       │
 │   └────────┬────────┘                               │       │
-│            │                                         │       │
-│            ▼                                         │       │
-│   ┌─────────────────┐    Low scores?    ┌──────────┴──────┐│
-│   │   Judge Agent   │─────Yes──────────►│  Extract Feedback ││
-│   │  (Evaluate)     │                   │  for low metrics  ││
-│   └────────┬────────┘                   └─────────────────┘│
-│            │                                                 │
+│            │                                        │       │
+│            ▼                                        │       │
+│   ┌─────────────────┐    Low scores?    ┌────────-──┴──────┐│
+│   │   Judge Agent   │─────Yes──────────►│ Extract Feedback ││
+│   │  (Evaluate)     │                   │ for low metrics  ││
+│   └────────┬────────┘                   └──────────────────┘│
+│            │                                                │
 │            │ All scores ≥ 4?                                │
 │            │ OR max iterations?                             │
-│            │                                                 │
+│            │                                                │
 │            ▼ Yes                                            │
 │   ┌─────────────────┐                                       │
 │   │     EXIT        │                                       │
 │   │  (Proceed to    │                                       │
 │   │  Quantitative)  │                                       │
 │   └─────────────────┘                                       │
-│                                                              │
+│                                                             │
 └─────────────────────────────────────────────────────────────┘
 ```
 
@@ -268,48 +268,48 @@ Provide:
 
 ```text
 ┌────────────────────────────────────────────────────────────────────────┐
-│                        COMPLETE PIPELINE                                │
+│                        COMPLETE PIPELINE                               │
 ├────────────────────────────────────────────────────────────────────────┤
-│                                                                         │
-│  INPUT                                                                  │
+│                                                                        │
+│  INPUT                                                                 │
 │  ┌───────────────────────────────────────────────────────────────────┐ │
 │  │ Transcript: "Ellie: How are you? Participant: I feel down..."     │ │
 │  └───────────────────────────────────────────────────────────────────┘ │
-│                              │                                          │
-│                              ▼                                          │
+│                              │                                         │
+│                              ▼                                         │
 │  QUALITATIVE (Gemma 3 27B)                                             │
 │  ┌───────────────────────────────────────────────────────────────────┐ │
 │  │ Overall: Participant shows signs of depression...                 │ │
-│  │ PHQ-8: Anhedonia (several days), low mood (most days)...         │ │
+│  │ PHQ-8: Anhedonia (several days), low mood (most days)...          │ │
 │  │ Social: Limited support network...                                │ │
 │  │ Biological: No family history mentioned...                        │ │
 │  │ Risk: Recent stressors...                                         │ │
 │  └───────────────────────────────────────────────────────────────────┘ │
-│                              │                                          │
-│                              ▼                                          │
+│                              │                                         │
+│                              ▼                                         │
 │  JUDGE (Gemma 3 27B, temp=0)                                           │
 │  ┌───────────────────────────────────────────────────────────────────┐ │
-│  │ Coherence: 4/5  |  Completeness: 3/5  |  Specificity: 4/5  |     │ │
-│  │ Accuracy: 4/5   |  → Completeness low, trigger refinement        │ │
+│  │ Coherence: 4/5  |  Completeness: 3/5  |  Specificity: 4/5  |      │ │
+│  │ Accuracy: 4/5   |  → Completeness low, trigger refinement         │ │
 │  └───────────────────────────────────────────────────────────────────┘ │
-│                              │                                          │
-│                              ▼                                          │
+│                              │                                         │
+│                              ▼                                         │
 │  FEEDBACK LOOP (1 iteration)                                           │
 │  ┌───────────────────────────────────────────────────────────────────┐ │
 │  │ Refined assessment with better completeness...                    │ │
-│  │ Judge re-evaluation: All scores ≥ 4 ✓                            │ │
+│  │ Judge re-evaluation: All scores ≥ 4 ✓                             │ │
 │  └───────────────────────────────────────────────────────────────────┘ │
-│                              │                                          │
-│                              ▼                                          │
+│                              │                                         │
+│                              ▼                                         │
 │  QUANTITATIVE (Gemma 3 27B)                                            │
 │  ┌───────────────────────────────────────────────────────────────────┐ │
-│  │ PHQ8_NoInterest: 2  |  PHQ8_Depressed: 2  |  PHQ8_Sleep: 1       │ │
-│  │ PHQ8_Tired: 2       |  PHQ8_Appetite: N/A |  PHQ8_Failure: 1     │ │
-│  │ PHQ8_Concentrating: 1  |  PHQ8_Moving: N/A                       │ │
+│  │ PHQ8_NoInterest: 2  |  PHQ8_Depressed: 2  |  PHQ8_Sleep: 1        │ │
+│  │ PHQ8_Tired: 2       |  PHQ8_Appetite: N/A |  PHQ8_Failure: 1      │ │
+│  │ PHQ8_Concentrating: 1  |  PHQ8_Moving: N/A                        │ │
 │  │ Total: 9 → MILD severity                                          │ │
 │  └───────────────────────────────────────────────────────────────────┘ │
-│                              │                                          │
-│                              ▼                                          │
+│                              │                                         │
+│                              ▼                                         │
 │  META-REVIEW (Gemma 3 27B)                                             │
 │  ┌───────────────────────────────────────────────────────────────────┐ │
 │  │ Severity: 1 (MILD)                                                │ │
@@ -317,9 +317,9 @@ Provide:
 │  │ their frequency is mostly "several days" rather than daily.       │ │
 │  │ The qualitative assessment notes limited but present coping...    │ │
 │  └───────────────────────────────────────────────────────────────────┘ │
-│                              │                                          │
-│                              ▼                                          │
-│  OUTPUT                                                                 │
+│                              │                                         │
+│                              ▼                                         │
+│  OUTPUT                                                                │
 │  ┌───────────────────────────────────────────────────────────────────┐ │
 │  │ FullAssessment {                                                  │ │
 │  │   severity: MILD                                                  │ │
@@ -328,7 +328,7 @@ Provide:
 │  │   ...                                                             │ │
 │  │ }                                                                 │ │
 │  └───────────────────────────────────────────────────────────────────┘ │
-│                                                                         │
+│                                                                        │
 └────────────────────────────────────────────────────────────────────────┘
 ```
 
