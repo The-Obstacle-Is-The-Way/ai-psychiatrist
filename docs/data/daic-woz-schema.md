@@ -47,7 +47,14 @@ data/
 │   └── .../
 ├── embeddings/                          # Pre-computed (Spec 08)
 │   ├── reference_embeddings.npz
-│   └── reference_embeddings.json
+│   ├── reference_embeddings.json
+│   ├── paper_reference_embeddings.npz   # Optional: paper split knowledge base
+│   └── paper_reference_embeddings.json
+├── paper_splits/                        # Optional: paper-style 58/43/41 split
+│   ├── paper_split_train.csv
+│   ├── paper_split_val.csv
+│   ├── paper_split_test.csv
+│   └── paper_split_metadata.json
 ├── train_split_Depression_AVEC2017.csv  # Ground truth (train)
 ├── dev_split_Depression_AVEC2017.csv    # Ground truth (dev)
 ├── test_split_Depression_AVEC2017.csv   # Identifiers only
@@ -257,12 +264,13 @@ The paper creates a custom 58/43/41 split from the 142 labeled participants:
 | Dev | 43 | 30% | Hyperparameter tuning |
 | Test | 41 | 29% | Final evaluation |
 
-**Implementation**: See `scripts/generate_embeddings.py` for split logic.
-
-**Current implementation note**: `scripts/generate_embeddings.py` currently uses the
-official **AVEC2017 train split only** (107 participants) for the reference store to
-avoid data leakage. The paper’s custom 58/43/41 re-split is not yet implemented in
-the modern code path.
+**Implementation**:
+- `scripts/create_paper_split.py` generates `data/paper_splits/paper_split_{train,val,test}.csv`
+  deterministically (seeded) from the AVEC2017 train+dev labeled set.
+- `scripts/generate_embeddings.py --split paper-train` generates
+  `data/embeddings/paper_reference_embeddings.{npz,json}` from the 58-participant paper train set.
+- `scripts/reproduce_results.py --split paper` evaluates on the 41-participant paper test set and
+  computes **item-level MAE** excluding N/A, matching the paper’s metric definition.
 
 ---
 
@@ -273,7 +281,9 @@ the modern code path.
 ```
 data/embeddings/
 ├── reference_embeddings.npz   # NumPy compressed archive
-└── reference_embeddings.json  # Text sidecar (participant IDs, chunks)
+├── reference_embeddings.json  # Text sidecar (participant IDs, chunks)
+├── paper_reference_embeddings.npz   # Optional: paper train (58) knowledge base
+└── paper_reference_embeddings.json
 ```
 
 ### NPZ Format
