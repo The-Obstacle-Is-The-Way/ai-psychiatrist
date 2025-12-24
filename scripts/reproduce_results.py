@@ -724,6 +724,7 @@ async def main_async(args: argparse.Namespace) -> int:
             "embedding_model": model_settings.embedding_model,
             "embedding_dimension": embedding_settings.dimension,
             "embedding_chunk_size": embedding_settings.chunk_size,
+            "embedding_chunk_step": embedding_settings.chunk_step,
             "embedding_top_k": embedding_settings.top_k_references,
             "enable_keyword_backfill": settings.quantitative.enable_keyword_backfill,
             "participants_evaluated": list(ground_truth.keys()),

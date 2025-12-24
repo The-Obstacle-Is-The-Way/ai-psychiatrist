@@ -216,7 +216,7 @@ print(f'Embedding Dimension: {s.embedding.dimension}')
 ```
 
 Expected output:
-```
+```text
 === CRITICAL SETTINGS ===
 Quantitative Model: gemma3:27b
 Temperature: 0.2

@@ -22,6 +22,7 @@ This makes it **impossible to verify** whether past runs used correct embeddings
 
 ### 1. Config Default Points to Wrong Embeddings
 
+**Before fix** (this was the bug):
 ```python
 # src/ai_psychiatrist/config.py:291-292
 embeddings_path: Path = Field(

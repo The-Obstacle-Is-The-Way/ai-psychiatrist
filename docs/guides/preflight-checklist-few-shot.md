@@ -204,7 +204,7 @@ Few-shot mode uses reference embeddings to retrieve similar transcript chunks as
   ```
 
   Expected output for paper-train:
-  ```
+  ```text
   File: paper_reference_embeddings.npz
     Embeddings shape: (6998, 4096)
     Participants: 58
@@ -395,7 +395,7 @@ print(f'Top-K References: {s.embedding.top_k_references} (paper: 2)')
 ```
 
 Expected output:
-```
+```text
 === CRITICAL SETTINGS ===
 Quantitative Model: gemma3:27b
 Embedding Model: qwen3-embedding:8b
