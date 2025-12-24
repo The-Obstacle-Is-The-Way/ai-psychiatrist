@@ -6,7 +6,7 @@ under `src/ai_psychiatrist/`.
 
 It focuses on the quantitative PHQ‑8 pipeline because our reproduction diverges from the paper:
 - Our few-shot MAE: **0.778** vs paper: **0.619**
-- Our item-level coverage: **69.2%** vs paper: **~50%**
+- Our item-level coverage: **69.2%** (over evaluated subjects) vs paper: **~50% of cases unable to provide a prediction** (denominator unclear)
 
 See also: `docs/bugs/investigation-026-reproduction-mae-divergence.md`.
 
@@ -31,8 +31,10 @@ See also: `docs/bugs/investigation-026-reproduction-mae-divergence.md`.
    the paper text alone.
 
 4. **Backfill alone does not explain our higher coverage**: we observed **69.2% coverage with backfill OFF**
-   (from our provenance). Backfill ON increased coverage further in earlier runs (~74%), but the residual
-   gap vs the paper’s ~50% remains unexplained.
+   in `data/outputs/reproduction_results_20251224_003441.json` (216/(39×8); 65.9% if including all 41 subjects).
+   A historical backfill-ON run was recorded at ~74.1% overall item coverage (243/328) in
+   `docs/results/reproduction-notes.md`, but that run is not paper-text parity and its raw output is not stored
+   under `data/outputs/` in this repo snapshot.
 
 ---
 
@@ -42,6 +44,7 @@ See also: `docs/bugs/investigation-026-reproduction-mae-divergence.md`.
 |---|---|---|---|---|
 | Keyword backfill execution | Always executed in few-shot (`extract_evidence()` calls `_keyword_backfill`) | Optional via `QUANTITATIVE_ENABLE_KEYWORD_BACKFILL` (default `false`) | Changes evidence used for retrieval → can change reference chunks → can change MAE/coverage | High |
 | Keyword list content | Small inline dict (substring match; includes broad tokens like `"sleep"`, `"tired"`, `"eat"`) | Large curated YAML (`src/ai_psychiatrist/resources/phq8_keywords.yaml`) with collision-avoidance; still substring match | Even if backfill toggled ON, behavior won’t match paper repo unless lists match | High |
+| Embedding model + artifacts | Few-shot agent defaults `emb_model="dengcao/Qwen3-Embedding-8B:Q4_K_M"` and loads a pickle of embedded transcripts | Defaults to `qwen3-embedding:8b` (paper text) and uses NPZ+JSON reference artifacts | Retrieval differences change reference chunks → can change coverage/MAE | High |
 | System prompt wording | Mentions DSM‑IV; no line continuations | Mentions DSM‑5; uses `\\` line continuations in `QUANTITATIVE_SYSTEM_PROMPT` | Prompt tokenization/formatting can affect abstention (N/A vs score) | Medium |
 | Scoring user prompt output schema | Uses placeholder form: `{{evidence, reason, score}}` | Uses explicit JSON field example: `{"evidence": "...", "reason": "...", "score": ...}` | Could reduce formatting errors, but may also “pressure” model to fill fields (higher coverage) | Medium |
 | Evidence extraction prompt formatting | Multi-line prompt literal | Uses `\\` line continuations (collapses some newlines) | Tokenization difference may affect evidence recall | Low–Medium |
@@ -73,7 +76,7 @@ See also: `docs/bugs/investigation-026-reproduction-mae-divergence.md`.
 
 Backfill being OFF only removes one pathway to *improve retrieval queries*. It does **not** force the
 scoring model to abstain. Our higher coverage implies the model is producing numeric scores more often
-than the paper’s reported run.
+than the paper’s reported run, *or* that we are comparing different denominators (“cases” vs item coverage).
 
 Most plausible explanations (not mutually exclusive):
 1. **Model/weights/runtime mismatch**: the paper repo contains both (a) MacBook runtime claims in the paper

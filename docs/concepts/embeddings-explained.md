@@ -1,7 +1,7 @@
 # Embeddings and Few-Shot Learning: A Plain-Language Guide
 
 **Audience**: Clinicians and non-CS folks who want to understand the "magic"
-**Last Updated**: 2025-12-23
+**Last Updated**: 2025-12-24
 
 ---
 
@@ -231,14 +231,18 @@ A patient might have severe sleep problems but mild appetite issues. Using overa
 The paper (Appendix E) found:
 > "PHQ-8-Appetite had no successfully retrieved reference chunks"
 
-Why? Because:
-1. Few patients discuss eating in interviews
-2. Few training chunks mention appetite
-3. Nothing in the reference store to match against
+Important: this statement is about **few-shot reference retrieval** (“no retrieved reference chunks”),
+not prediction coverage directly.
 
-**Result**: Appetite has low coverage (34%) — not enough data to learn from.
-In our example reproduction run, appetite coverage was **34%** (see
-`docs/results/reproduction-notes.md`), but the exact value varies by run.
+The paper continues (Appendix E) that Gemma 3 27B *“did not identify any evidence related to appetite
+issues in the available transcripts, resulting in no reference for that symptom.”* In our pipeline,
+reference retrieval is driven by embedding the **extracted evidence** per item. If the evidence
+extraction step returns no appetite evidence, there’s nothing to embed/query, so reference retrieval
+returns no appetite examples.
+
+This often correlates with low appetite coverage (more N/A), but the two are not identical metrics.
+Appetite coverage varies by run/model; see `docs/bugs/investigation-026-reproduction-mae-divergence.md`
+for a concrete paper-text-parity example run.
 
 ---
 

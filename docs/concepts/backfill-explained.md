@@ -100,7 +100,7 @@ def _merge_evidence(
 ### Key Properties
 
 1. **Runs when evidence is insufficient**: If LLM found `cap` quotes, backfill skips that item
-2. **Caps at 3 evidence items per domain** (LLM + keyword): Prevents prompt bloat
+2. **Caps at `cap` evidence items per domain** (LLM + keyword; default cap=3): Prevents prompt bloat
 3. **Simple substring matching**: Fast, deterministic, no LLM calls
 4. **Deduplicates**: Won't add the same sentence twice
 
@@ -126,7 +126,7 @@ with line number references to `src/ai_psychiatrist/agents/quantitative.py`.
 │                              │                                          │
 │                              ▼                                          │
 │                                                                         │
-│  STEP 2: KEYWORD HIT DETECTION (Lines 127-135)                          │
+│  STEP 2: KEYWORD HIT DETECTION (Lines 127-136)                          │
 │  ─────────────────────────────────────────────────────────────────────  │
 │  IF enable_keyword_backfill=TRUE or track_na_reasons=TRUE:              │
 │    • _find_keyword_hits() scans transcript for YAML keywords            │
@@ -136,11 +136,11 @@ with line number references to `src/ai_psychiatrist/agents/quantitative.py`.
 │                              │                                          │
 │                              ▼                                          │
 │                                                                         │
-│  STEP 3: CONDITIONAL BACKFILL MERGE (Lines 137-144)                     │
+│  STEP 3: CONDITIONAL BACKFILL MERGE (Lines 137-145)                     │
 │  ─────────────────────────────────────────────────────────────────────  │
 │  IF enable_keyword_backfill=TRUE:                                       │
 │    • _merge_evidence() adds keyword hits to LLM evidence                │
-│    • Caps at 3 quotes per item (prevents prompt bloat)                  │
+│    • Caps at keyword_backfill_cap (default 3) (prevents prompt bloat)   │
 │    • Deduplicates (won't add same sentence twice)                       │
 │  ELSE:                                                                  │
 │    • final_evidence = llm_evidence (no backfill)                        │
@@ -196,9 +196,13 @@ if self._settings.enable_keyword_backfill or self._settings.track_na_reasons:
 
 # Step 3: Conditional merge (THE BACKFILL DECISION)
 if self._settings.enable_keyword_backfill:
-    final_evidence = self._merge_evidence(llm_evidence, keyword_hits, cap=3)
+    final_evidence = self._merge_evidence(
+        llm_evidence,
+        keyword_hits,
+        cap=self._settings.keyword_backfill_cap,
+    )
 else:
-    final_evidence = llm_evidence  # Pure LLM only - paper parity mode
+    final_evidence = llm_evidence  # Pure LLM only - paper-text parity mode
 ```
 
 ### File Reference Table
@@ -218,22 +222,22 @@ else:
 
 ## The Tradeoff: Coverage vs Purity
 
-### Without Backfill (Default - Paper Parity)
+### Without Backfill (Default - Paper-Text Parity)
 
 | Pros | Cons |
 |------|------|
-| Measures pure LLM capability | Lower coverage (~50%) |
-| Matches paper methodology | More N/A results |
+| Measures pure LLM capability | Coverage depends on model/runtime; paper reports “~50% of cases unable to provide a prediction” (denominator unclear), while our observed item-level coverage was 69.2% over evaluated subjects |
+| Matches paper-text methodology (as written) | More N/A results than enabling backfill (typical) |
 | Cleaner research comparison | Less clinical utility |
-| What the paper actually tested | Misses some obvious evidence |
+| What the paper text describes | Misses some obvious evidence |
 
 ### With Backfill (Higher Coverage)
 
 | Pros | Cons |
 |------|------|
-| Higher coverage (~74%) | Measures "LLM + heuristics" |
+| Often higher coverage (e.g., 74.1% in one historical run recorded in `docs/results/reproduction-notes.md`) | Measures "LLM + heuristics" |
 | Catches LLM blind spots | May include irrelevant matches |
-| More clinical utility | Diverges from paper methodology |
+| More clinical utility | Diverges from paper-text methodology; closer to paper-repo behavior |
 | More items get assessed | Harder to compare with paper |
 
 ---
@@ -284,7 +288,7 @@ To resolve this ambiguity, consider asking:
 ## When to Use Each Mode
 
 ### Use Backfill OFF (Default) When:
-- Reproducing paper results
+- Reproducing paper-text methodology (as written)
 - Evaluating LLM capability
 - Running ablation studies
 - Comparing different LLM models
@@ -318,10 +322,10 @@ This enables:
 
 ## Configuration
 
-Backfill is **OFF by default** (paper parity mode):
+Backfill is **OFF by default** (paper-text parity mode):
 
 ```bash
-# Default: paper parity mode (pure LLM)
+# Default: paper-text parity mode (pure LLM)
 # QUANTITATIVE_ENABLE_KEYWORD_BACKFILL=false  # (this is the default)
 
 # Enable backfill for higher coverage
@@ -332,24 +336,25 @@ QUANTITATIVE_ENABLE_KEYWORD_BACKFILL=true
 
 ## Impact on Results
 
-### Example Run (2025-12-23)
+### Concrete Runs (Local Output + Historical Notes)
 
-| Mode | Coverage | Item MAE | Items Assessed |
-|------|----------|----------|----------------|
-| Backfill ON | 74.1% | 0.753 | 243/328 |
-| Backfill OFF | ~50%* | ~0.62* | ~164/328* |
-
-*Estimated based on paper; ablation needed to confirm.
+| Run | Mode | Coverage | Item MAE | Notes |
+|-----|------|----------|---------|-------|
+| 2025-12-24 (paper split, backfill OFF) | Paper-text parity | 69.2% (216/312) | 0.778 | Local output: `data/outputs/reproduction_results_20251224_003441.json` |
+| 2025-12-23 (historical, backfill ON) | Heuristic-augmented | 74.1% (243/328) | 0.757 | Recorded in `docs/results/reproduction-notes.md` (no JSON artifact stored under `data/outputs/` in this repo snapshot) |
 
 ### Per-Item Impact
 
-Items most affected by backfill (highest keyword contribution):
+In the 2025-12-24 paper-text-parity run (backfill OFF), these items had the lowest coverage:
 
-| Item | With Backfill | Without (Est.) |
-|------|---------------|----------------|
-| Appetite | 34% coverage | <10%* |
-| Moving | 44% coverage | ~30%* |
-| Concentrating | 51% coverage | ~35%* |
+| Item | Coverage (backfill OFF) |
+|------|--------------------------|
+| Appetite | 25.6% |
+| Moving | 41.0% |
+| Concentrating | 43.6% |
+
+Backfill is expected to increase some of these, but that requires a controlled ablation (same split,
+same model/backend, backfill ON vs OFF) to attribute causality.
 
 ---
 

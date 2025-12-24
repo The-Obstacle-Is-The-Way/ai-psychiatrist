@@ -3,7 +3,7 @@
 **Date**: 2025-12-22
 **Status**: DOCUMENTED - Implementations proposed with explicit rationales
 **Severity**: MEDIUM - Affects exact reproducibility but not system validity
-**Updated**: 2025-12-22 - Comprehensive first-principles audit
+**Updated**: 2025-12-24 - Added paper-repo hardcoded sampling + hardware evidence
 **Tracked by**:
 - [GitHub Issue #46](https://github.com/The-Obstacle-Is-The-Way/ai-psychiatrist/issues/46) (sampling parameters)
 - [GitHub Issue #47](https://github.com/The-Obstacle-Is-The-Way/ai-psychiatrist/issues/47) (model quantization)
@@ -196,9 +196,12 @@ LLM_HF_QUANTIZATION=int4  # or int8 for higher precision
 
 ### Acceptable Variance
 
-Based on paper's own admission of stochasticity:
-- MAE within ±0.1 of reported values should be considered consistent
-- Coverage within ±10% should be considered consistent
+The paper acknowledges stochasticity (“responses can vary across runs”), but it does not define
+an explicit tolerance band for reproduction.
+
+For internal sanity-checking only (heuristic, not a paper claim):
+- Treat MAE deltas on the order of ~0.1 as “plausibly within run-to-run + implementation drift”
+- Treat coverage deltas on the order of ~10% as “plausibly within denominator/behavior drift”
 
 ---
 
@@ -219,11 +222,11 @@ dimension: int = 4096        # Paper: "Ndimension = 4096"
 max_iterations: int = 10     # Paper: "limited to a maximum of 10 iterations"
 score_threshold: int = 3     # Paper: "score was below four" → ≤3
 
-# NOT SPECIFIED - Using justified defaults
-temperature: float = 0.2     # Paper: "fairly deterministic" → low temp
-temperature_judge: float = 0.0  # Deterministic for consistency
-top_k: int = 20              # Standard Ollama default
-top_p: float = 0.8           # Standard nucleus sampling
+	# NOT SPECIFIED - Using justified defaults
+	temperature: float = 0.2     # Paper: "fairly deterministic" → low temp
+	temperature_judge: float = 0.0  # Deterministic for consistency
+	top_k: int = 20              # Matches paper repo few-shot defaults (paper text unspecified)
+	top_p: float = 0.8           # Matches paper repo few-shot defaults (paper text unspecified)
 ```
 
 ---

@@ -1,6 +1,6 @@
 # INVESTIGATION-026: Reproduction MAE Divergence Analysis
 
-**Status**: DOCUMENTED - Root causes identified (paper-text vs paper-repo divergence)
+**Status**: ACTIVE - Divergence characterized; root cause unresolved
 **Severity**: HIGH (core research question)
 **Found**: 2025-12-24 (few-shot reproduction run)
 **Related**: Paper Section 3.2, Appendix E, Appendix F
@@ -14,22 +14,26 @@ Our few-shot reproduction achieved **MAE 0.778** vs paper's **0.619** (Δ = +0.1
 
 ### What We Know For Certain
 
-1. **Model**: `gemma3:27b` (confirmed, same as paper Section 2.2)
+1. **Model (our run)**: `gemma3:27b` (confirmed). This is consistent with the paper’s stated model family (“Gemma 3 27B”), but the paper does not specify an exact tag/build/quantization for the reported metrics.
 2. **Keyword Backfill**: OFF (confirmed in provenance)
-3. **Coverage**: 69.2% (vs paper's ~50%)
-4. **MAE**: 0.778 (vs paper's 0.619)
+3. **Coverage (our metric)**:
+   - `prediction_coverage=0.6923` = **69.2%** = **216 / (39 × 8)**, where 39 is `evaluated_subjects` (subjects with ≥1 scored item)
+   - If you include all 41 subjects (including the 2 “all N/A”), item coverage is **65.9%** = **216 / (41 × 8)**
+4. **MAE (our metric)**: `item_mae_weighted=0.7778` (0.778) (vs paper's 0.619)
 
 ### The Unresolved Mystery
 
-**With keyword backfill OFF, why is our coverage (69.2%) so much HIGHER than paper's (~50%)?**
+The paper text reports **high abstention** (“in 50% of cases it was unable to provide a prediction due to insufficient evidence”), while our run only excluded **2/41** subjects as “all N/A”.
 
-The coverage investigation document expected backfill OFF to produce ~50% coverage matching paper.
-We got 69.2% with backfill OFF. This is unexplained.
+**Key ambiguity**: The paper does not fully specify what the denominator for “cases” is (subject-level exclusion vs item-level missingness). Our “coverage” is an **item-level** metric computed over **evaluated subjects**.
+
+The coverage investigation document expected backfill OFF to reduce item coverage closer to the paper’s reported high abstention.
+We observed 69.2% item coverage even with backfill OFF.
 
 ### Possible Explanations (UNVERIFIED)
 
-1. **Prompt differences** - Our prompts may differ from paper's original prompts
-2. **Model version** - Ollama's gemma3:27b may have been updated since paper
+1. **Prompt + formatting differences** - Our prompts and reference formatting differ from the paper repo prompts (see analysis-027)
+2. **Model build/runtime differences** - Ollama’s `gemma3:27b` may not match what produced the paper’s reported metrics
 3. **Quantization** - Q4_K_M behavior may differ from paper's runtime
 4. **Reference embeddings** - Different embedding model behavior
 5. **Stochastic variation** - Paper acknowledges LLMs have inherent randomness
@@ -40,7 +44,7 @@ We got 69.2% with backfill OFF. This is unexplained.
 
 We verified the run configuration from provenance metadata:
 
-```json
+```jsonc
 {
   "split": "paper",
   "embeddings_path": "data/embeddings/paper_reference_embeddings.npz",
@@ -61,9 +65,12 @@ QUANTITATIVE_ENABLE_KEYWORD_BACKFILL=false
 QUANTITATIVE_TRACK_NA_REASONS=true
 ```
 
-**All settings match paper-TEXT methodology.** However, the paper's public repo has keyword
-backfill ALWAYS ON (see analysis-027). Our run used backfill OFF (paper-text parity).
-Yet coverage is 69.2% vs paper's ~50%.
+**Recorded few-shot retrieval hyperparameters match the paper text** (Appendix D: `chunk_size=8`, `step=2`, `Nexample=2`, `dimension=4096`), and we ran with **keyword backfill OFF** (paper-text parity choice).
+
+Notes:
+- The paper text does not specify sampling parameters (`temperature`, `top_k`, `top_p`), and this run’s provenance does not record them.
+- The paper repo unconditionally applies keyword backfill in its few-shot agent (see `docs/bugs/analysis-027-paper-implementation-comparison.md`), which diverges from the paper text.
+- The paper’s “~50% of cases unable to provide a prediction” is not directly comparable to our item-level coverage metric without aligning denominators.
 
 ---
 
@@ -73,9 +80,9 @@ Yet coverage is 69.2% vs paper's ~50%.
 
 | Metric | Paper Text | Paper Repo | Our Run | Notes |
 |--------|-----------|------------|---------|-------|
-| Model | gemma3:27b | gemma3:27b | gemma3:27b | ✅ Same |
+| Model | “Gemma 3 27B” (no tag specified) | `gemma3` family (repo varies by script) | `gemma3:27b` | ⚠️ Same family; build may differ |
 | Backfill | Not mentioned | ON (always) | OFF | ⚠️ Paper-text parity |
-| Coverage | ~50% | Unknown | 69.2% | **+19.2%** ❓ |
+| Abstention / coverage | “50% of cases unable to provide prediction” (denominator unclear) | Unknown | Item coverage 69.2% over `evaluated_subjects` | ⚠️ Not directly comparable |
 | MAE | 0.619 | Unknown | 0.778 | +0.159 |
 
 ### Where Is The Extra Coverage Coming From?
@@ -85,16 +92,17 @@ With backfill OFF, our system should:
 2. Ask LLM to score based on evidence
 3. If no evidence → N/A
 
-But we're getting **~20% more predictions** than the paper. This means our LLM is:
-- Finding more evidence than paper's LLM, OR
-- Being less conservative about outputting N/A
+But the paper’s “~50%” number is not necessarily the complement of our item-coverage metric.
+The observed gap could be caused by:
+- A **definition/denominator mismatch** (paper “cases” vs our evaluated-subject item coverage), and/or
+- Different prompts / reference formatting that change when the model outputs N/A, and/or
+- Different model builds / quantization / runtime.
 
 ### Investigation TODO
 
-1. [ ] Fetch paper's original prompts from https://github.com/trendscenter/ai-psychiatrist
-2. [ ] Compare our prompts to paper's prompts
-3. [ ] Check if model versions/updates affected behavior
-4. [ ] Run with different temperature to test conservatism
+1. [ ] Compare `_reference/` (fresh clone) prompts to `src/` prompts (see analysis-027 for current deltas)
+2. [ ] Check if model versions/updates affected behavior
+3. [ ] Run with different temperature to test conservatism
 
 ---
 
@@ -104,29 +112,30 @@ But we're getting **~20% more predictions** than the paper. This means our LLM i
 
 > "With optimized hyperparameters, Gemma 3 27B achieved an average MAE of 0.619 when predicting PHQ-8 scores, but **in 50% of cases it was unable to provide a prediction due to insufficient evidence** (Figure 4). The distribution of available scores was not even: certain symptoms, such as appetite, had few available scores, while others, such as sleep quality, had available scores for nearly all subjects. This reflects the variability in the content of the interview, with some symptoms discussed more frequently than others."
 
-This is CRITICAL. The paper's 0.619 MAE is calculated ONLY on the 50% of items where the model had sufficient evidence.
+Key implication (paper text): a large fraction of predictions are withheld due to “insufficient evidence”.
+MAE is computed on the subset of predictions that were actually produced (exact denominator for “cases”
+is not explicitly defined in the paper text).
 
-### Our Run vs Paper
+### Our Run vs Paper (Coverage Definitions Differ)
 
-| Metric | Paper | Our Run | Delta |
-|--------|-------|---------|-------|
-| Coverage | ~50% | 69.2% | +19.2% |
-| MAE | 0.619 | 0.778 | +0.159 |
+| Metric | Paper (text) | Our Run | Notes |
+|--------|--------------|---------|-------|
+| Abstention / coverage | “50% of cases unable to provide a prediction” | Excluded (all items N/A): 2/41 (4.9%); item coverage: 69.2% over evaluated subjects (65.9% over all subjects) | Denominator mismatch; not directly comparable |
+| MAE | 0.619 | 0.778 (item-level; excludes N/A) | Paper also excludes abstained cases, but its exclusion rule is not fully specified |
 
 ### Interpretation
 
-Our **higher coverage is not better** - it likely means:
-1. We're making predictions on harder cases paper declined
-2. These harder cases have worse accuracy
-3. Our aggregate MAE is diluted by low-confidence predictions
+Plausible interpretation (hypothesis, not proven):
+- If the paper’s “50% of cases” corresponds to a stricter abstention policy than ours, then our system may be attempting more low-evidence items, which can increase MAE.
+- If the paper’s “50%” is a different denominator (e.g., subject-level exclusion), then our “69.2% item coverage over evaluated subjects” is not directly comparable.
 
 ### Verification Needed
 
-We should calculate MAE **only on high-confidence predictions** to compare apples-to-apples with paper.
+We should clarify the denominator and compute comparable metrics (e.g., subject-level exclusion rate and item-level coverage including excluded subjects). If we want to compare at “matched abstention”, we need an evidence/confidence proxy (requires rerunning or extending outputs).
 
 ---
 
-## Finding 2: Evidence Extraction Failures Are Normal
+## Finding 2: Appendix E Is About Retrieval (Not Coverage)
 
 ### Paper Appendix E (VERBATIM QUOTE)
 
@@ -140,8 +149,9 @@ These are different metrics:
 
 The paper does NOT provide per-symptom coverage percentages. The ~50% figure is aggregate.
 
-**Key Insight**: Evidence extraction failures are expected behavior in this pipeline.
-Our extraction failures (participants 303, 401) are consistent with paper methodology.
+**Key Insight**: The paper is describing a retrieval failure driven by *missing extracted evidence*, not a parsing failure.
+
+Separate issue (our run): we observed **evidence JSON parse warnings** for participants **303** and **401** in `data/outputs/reproduction_run_20251223_224516.log`. These are engineering/formatting failures (malformed JSON), not a behavior described in the paper methodology.
 
 ---
 
@@ -153,16 +163,16 @@ Our extraction failures (participants 303, 401) are consistent with paper method
 
 ### The Paper's Choice
 
-| Model | MAE | Coverage | Why Used |
-|-------|-----|----------|----------|
-| Gemma 3 27B | 0.619 | ~50% | Main results (balanced) |
-| MedGemma 27B | 0.505 | <50% | Appendix only (too conservative) |
+| Model | MAE | Prediction availability (paper description) | Why Used |
+|-------|-----|-------------------------------------------|----------|
+| Gemma 3 27B | 0.619 | ~50% “unable to provide a prediction” | Main results (balanced) |
+| MedGemma 27B | 0.505 | Lower than Gemma 3 (made fewer predictions) | Appendix only |
 
 The paper deliberately chose to report Gemma 3 27B in main results because **MedGemma was TOO conservative** - it got better accuracy but declined to score too many cases.
 
 ### Implication for Us
 
-Our 69.2% coverage is the OPPOSITE problem - we're scoring MORE cases than the paper, likely including lower-confidence predictions that hurt our MAE.
+Hypothesis: our 69.2% coverage means we’re producing scores in cases where the paper’s reported run abstained, and those additional (lower-evidence) predictions may raise aggregate MAE.
 
 ---
 
@@ -188,23 +198,17 @@ Source: Default Ollama download
 
 ### Available Quantizations
 
-| Quantization | Size | Quality | Can Run on M1 Max 64GB? |
-|--------------|------|---------|-------------------------|
-| Q4_K_M | ~17GB | Good | ✅ Yes (current) |
-| Q8_0 | ~27GB | Better | ✅ Yes (48GB GPU available) |
-| QAT | ~13-17GB | Official Google | ✅ Yes (if available) |
-| FP16/BF16 | ~54GB | Best | ❌ No (exceeds GPU memory) |
+What we can state from first principles in this repo:
+- `ollama show gemma3:27b` reports **Q4_K_M** for `gemma3:27b` on our machine.
+- This repo also supports a HuggingFace backend with `LLM_HF_QUANTIZATION=int4|int8` (higher precision experiments).
+
+Avoid assuming Ollama provides a Q8/QAT tag for Gemma 3 27B unless verified in your environment (some tags are not available in the public library).
 
 ### System Capabilities
 
-```
-System: Apple M1 Max
-RAM: 64GB unified memory
-GPU Available: ~48GB (75% of RAM for Metal)
-Current Model: 17GB (35% utilization)
-```
-
-**We have significant headroom** to upgrade to Q8_0 (~27GB).
+We can run `gemma3:27b` locally (Q4_K_M). For higher precision tests, use:
+- `LLM_BACKEND=huggingface` with `LLM_HF_QUANTIZATION=int8` (if your hardware supports it), or
+- a dedicated NVIDIA GPU box (BF16/FP16 where feasible).
 
 ### Paper's Hardware (CONFLICTING INFORMATION)
 
@@ -225,7 +229,7 @@ Lower quantization = more precision loss:
 - Q8 = 8-bit weights, less noise, better nuance
 - FP16 = full precision (but too large for our hardware)
 
-For clinical assessment requiring subtle language understanding, **Q8_0 could improve accuracy**.
+For clinical assessment requiring subtle language understanding, **higher precision (e.g., int8/bf16) may improve accuracy** and is worth testing.
 
 ---
 
@@ -233,13 +237,13 @@ For clinical assessment requiring subtle language understanding, **Q8_0 could im
 
 ### Our Run Log Analysis
 
-From `reproduction_run_20251223_224516.log`:
+From `data/outputs/reproduction_run_20251223_224516.log`:
 
 #### Evidence Extraction Failures (2 participants)
 
 ```
 Participant 303: Failed to parse evidence JSON, using empty evidence
-  - Cause: Unescaped quote in LLM response
+  - Cause: Malformed JSON in evidence extraction output (see `response_preview` in logs)
   - Impact: items_with_evidence=0
   - Final score: total_score=4, na_count=4, severity=MINIMAL
   - System: Graceful fallback worked
@@ -265,13 +269,14 @@ Participant 474:
 
 #### Success Rate
 
-- **Parsing success**: 39/41 (95.1%)
-- **Complete failure (all N/A)**: 2/41 (4.9%)
-- **Evidence extraction warnings**: 2/41 (4.9%)
+- **Subjects processed (no crashes)**: 41/41 (`successful_subjects`)
+- **Evaluated subjects (≥1 scored item)**: 39/41 (95.1%) (`evaluated_subjects`)
+- **Excluded subjects (all items N/A)**: 2/41 (4.9%) (`excluded_no_evidence`)
+- **Evidence extraction parse warnings**: 2/41 (4.9%) (participants 303, 401)
 
 ### Paper's Error Rate
 
-The paper acknowledges extraction/parsing issues but doesn't give exact failure rates. Our 95.1% success rate appears consistent with paper methodology.
+The paper discusses insufficient evidence / missing extraction and retrieval issues, but does not report parsing-failure rates, so we cannot directly compare.
 
 ---
 
@@ -279,10 +284,12 @@ The paper acknowledges extraction/parsing issues but doesn't give exact failure 
 
 ### Immediate Actions
 
-1. **Calculate coverage-matched MAE** (HIGHEST PRIORITY)
-   - Filter our results to ~50% coverage (high-confidence only)
-   - Compare MAE on matched subset
-   - This is the apples-to-apples comparison with paper
+1. **Clarify/align the “coverage” denominator + add a confidence/evidence proxy** (HIGHEST PRIORITY)
+   - The paper reports “~50% unable to provide a prediction”, but does not fully specify the denominator.
+   - Our current output JSON does not include a confidence score or per-item evidence-count summary, so we cannot
+     downselect to a paper-like abstention level from existing artifacts alone without rerunning.
+   - Next best: export an evidence/confidence proxy (e.g., per-item evidence counts) and then compute MAE on a
+     matched-abstention subset.
 
 2. **Profile per-symptom coverage**
    - Compare to paper's Figure 4 confusion matrices
@@ -294,18 +301,14 @@ The paper acknowledges extraction/parsing issues but doesn't give exact failure 
 
 ### Future Experiments
 
-1. **Try Q8_0 quantization**
-   ```bash
-   # Pull higher quality quantization (if available)
-   ollama pull gemma3:27b-instruct-q8_0
-
-   # Update .env
-   MODEL_QUANTITATIVE_MODEL=gemma3:27b-instruct-q8_0
-   ```
+1. **Try a higher-precision runtime** (if you can)
+   - Our Ollama `gemma3:27b` is Q4_K_M; higher-precision tests may require a different backend (e.g., HuggingFace int8/bf16) or a different model build.
+   - Start by verifying your local model: `ollama show gemma3:27b`
 
 2. **Test with MedGemma** (expect: lower coverage, better MAE)
    ```bash
-   MODEL_QUANTITATIVE_MODEL=medgemma:27b
+   # If using Ollama with a community MedGemma build (example in our environment):
+   MODEL_QUANTITATIVE_MODEL=alibayram/medgemma:27b
    ```
 
 3. **Log confidence scores** for future runs
@@ -318,18 +321,18 @@ The paper acknowledges extraction/parsing issues but doesn't give exact failure 
 
 | Factor | Impact | Evidence |
 |--------|--------|----------|
-| Higher coverage (69% vs 50%) | **HIGH** | Predicting harder cases |
-| Stochastic variation | MEDIUM | Paper explicitly acknowledges |
-| Q4 vs potentially higher quant | LOW-MEDIUM | Less model precision |
-| Different random seed | LOW | Affects sampling |
+| Coverage/abstention definition mismatch | **HIGH** | Paper denominator unclear; our coverage excludes “all N/A” subjects |
+| Prompt/reference formatting drift | **HIGH** | See `docs/bugs/analysis-027-paper-implementation-comparison.md` |
+| Model/runtime/quantization differences | MEDIUM | Paper text emphasizes M3 Pro; repo contains A100 SLURM scripts; our `gemma3:27b` is Q4_K_M |
+| JSON parsing/repair behavior | LOW–MEDIUM | 2 evidence parse warnings; 2 scoring parse failures (all N/A) |
+| Stochastic variation | LOW–MEDIUM | Paper explicitly acknowledges run-to-run variance |
 
 ### Primary Hypothesis (UNVERIFIED)
 
-**Hypothesis**: Our higher coverage may be the main contributor to our higher MAE. If we're
-making predictions on cases the paper declined, these harder cases would drag down our aggregate MAE.
+**Hypothesis**: If our pipeline produces predictions for lower-evidence cases than the paper’s reported run did, those additional predictions may increase aggregate MAE.
 
 The paper chose Gemma 3 over MedGemma precisely because MedGemma was TOO conservative
-(0.505 MAE but <50% coverage). We may have gone the opposite direction - being LESS
+(0.505 MAE but fewer predictions overall / more abstention per Appendix F). We may have gone the opposite direction - being LESS
 conservative than the paper's Gemma 3 baseline.
 
 **Caveat**: We cannot verify this without knowing what the paper actually ran (notebooks
@@ -340,9 +343,9 @@ vs agents/, what hardware, etc.). See analysis-027 for the paper-text vs paper-r
 ## The Coverage-MAE Trade-off
 
 ```
-MedGemma (Appendix F):  MAE 0.505, Coverage <50%  (too conservative)
-Paper Gemma 3:          MAE 0.619, Coverage ~50%  (balanced)
-Our Run:                MAE 0.778, Coverage 69.2% (too aggressive)
+MedGemma (Appendix F):  MAE 0.505, fewer predictions overall (more abstention)
+Paper Gemma 3:          MAE 0.619, ~50% “unable to provide a prediction” (paper text)
+Our Run:                MAE 0.778, item coverage 69.2% (more predictions)
 ```
 
 **Hypothesis**: Higher coverage correlates with worse MAE because you're making more
@@ -354,33 +357,33 @@ low-confidence predictions. This is consistent with the MedGemma trade-off but n
 
 | Step | Effort | Expected Insight |
 |------|--------|------------------|
-| Calculate MAE at 50% coverage | Low (from existing data) | True paper comparison |
+| Add evidence/confidence proxy; compute MAE at matched abstention | Medium (rerun or extend outputs) | True paper comparison |
 | Profile per-symptom coverage | Low (from existing data) | Identify over-predictions |
-| Run with Q8_0 quantization | High (~2 hours) | Quality improvement potential |
+| Run higher-precision backend/hardware | High | Precision sensitivity |
 | Run with MedGemma | High (~2 hours) | Coverage reduction effect |
 
 ---
 
 ## Conclusion
 
-The investigation reveals our reproduction is **more aggressive than the paper** (69% vs 50% coverage). This isn't necessarily better - the paper's 50% N/A rate is by design, allowing it to only score high-confidence cases.
+Our run produced **69.2% item-level coverage** over evaluated subjects (65.9% if including all subjects). The paper reports that **in ~50% of cases** the model was unable to provide a prediction due to insufficient evidence, but does not fully specify the denominator. These are not directly comparable without aligning definitions.
 
 ### Key Insight
 
 The paper explicitly evaluated the coverage-MAE trade-off:
 - MedGemma: Better MAE (0.505) but declined too many cases
-- Gemma 3: Balanced (0.619 MAE, ~50% coverage)
+- Gemma 3: 0.619 MAE, but ~50% “unable to provide a prediction” (paper text)
 
-We've inadvertently gone in the opposite direction - we're scoring cases even the balanced Gemma 3 declined.
+We may be going in the opposite direction — producing scores in cases where the paper’s reported run abstained.
 
 ### Next Steps
 
-1. **Calculate MAE at 50% coverage** to get true paper comparison
-2. Consider adding confidence threshold to match paper methodology
-3. Accept that stochastic variation is acknowledged by paper
+1. **Align definitions**: compute both subject-level exclusion rate and item-level coverage (including excluded subjects).
+2. Add an evidence/confidence proxy to support “matched abstention” comparisons (requires rerun or extended outputs).
+3. Accept that stochastic variation is acknowledged by the paper, but treat large deltas as signals to investigate.
 
-**Status**: Root causes documented (paper-text vs paper-repo divergence, unknown hardware).
-We are shifting focus to our own clean implementation rather than exact paper reproduction.
+**Current State**: Key discrepancies are documented (paper-text vs paper-repo divergence; unknown hardware/quantization).
+Our default target is paper-text parity (pure LLM capability); paper-repo parity remains a separate, opt-in goal.
 
 ---
 
@@ -390,8 +393,8 @@ We are shifting focus to our own clean implementation rather than exact paper re
 |------|-----------|------------------|---------------------|
 | Chip | Apple M1 Max | Apple M3 Pro | GSU TReNDS cluster (A100s) |
 | RAM | 64GB | 18-36GB | 100GB (SLURM script) |
-| GPU | ~48GB unified | ~13-27GB unified | 2x NVIDIA A100 |
-| Model Size | Q8_0 capable | Q4_K_M (assumed) | Unknown |
+| GPU | Unified memory (exact GPU share varies) | Unified memory (not specified) | 2x NVIDIA A100 |
+| Quantization / precision | Q4_K_M (verified via `ollama show gemma3:27b`) | Not specified | Not specified (SLURM present) |
 
 **Note**: We cannot determine what hardware the paper actually used. The text claims
 MacBook M3 Pro; the repo has SLURM scripts for A100 cluster. See analysis-027.
