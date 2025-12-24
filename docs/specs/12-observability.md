@@ -26,23 +26,23 @@ Implement comprehensive observability infrastructure including metrics, distribu
 ## As-Is Observability (Repo)
 
 - **Modern implementation (`src/`)**: structured logging via `structlog` is in place (see `src/ai_psychiatrist/infrastructure/logging.py`) and is used by the API/server and services.
-- **Legacy implementation (`_legacy/`)**: most scripts use `print` (no structured logging).
+- **Legacy implementation (`_reference/`)**: most scripts use `print` (no structured logging).
 - No metrics/tracing beyond basic FastAPI behavior; `/health` exists in `server.py` but deeper runtime metrics/tracing are deferred.
-- One notable exception: `_legacy/agents/quantitative_assessor_f.py` has a `VERBOSE` flag and prints timestamped `[STEP]`, `[CHAT]`, and `[EMB]` logs, including the "exact" user prompt for chat calls.
-- The repo contains evaluation artifacts in `_legacy/analysis_output/` and plotting code in notebooks, but those are offline—not runtime observability.
+- One notable exception: `_reference/agents/quantitative_assessor_f.py` has a `VERBOSE` flag and prints timestamped `[STEP]`, `[CHAT]`, and `[EMB]` logs, including the "exact" user prompt for chat calls.
+- The repo contains evaluation artifacts in `_reference/analysis_output/` and plotting code in notebooks, but those are offline—not runtime observability.
 
-## As-Is Validation Artifacts (`_legacy/analysis_output/`)
+## As-Is Validation Artifacts (`_reference/analysis_output/`)
 
 These files are used by notebooks and are useful for validating spec parity:
 
-- `_legacy/analysis_output/quan_gemma_zero_shot.jsonl`: JSONL of per-item predictions
+- `_reference/analysis_output/quan_gemma_zero_shot.jsonl`: JSONL of per-item predictions
   - Top-level: `participant_id`, `timestamp`, and `PHQ8_*` keys
   - Each `PHQ8_*` value: `{ "evidence": str, "reason": str, "score": int | "N/A" }`
-- `_legacy/analysis_output/quan_medgemma_few_shot.jsonl` (and similar few-shot runs): JSONL with additional retrieval metadata
+- `_reference/analysis_output/quan_medgemma_few_shot.jsonl` (and similar few-shot runs): JSONL with additional retrieval metadata
   - Some items include fields like `cosine_similarity` and lists like `reference_evidence_scores` / `reference_evidence_total_scores`
-- `_legacy/analysis_output/qual_gemma.csv`: qualitative outputs
+- `_reference/analysis_output/qual_gemma.csv`: qualitative outputs
   - Columns: `participant_id`, `dataset_type`, `qualitative_assessment` (often contains fenced ```xml blocks)
-- `_legacy/analysis_output/metareview_gemma_few_shot.csv`: meta-review outputs
+- `_reference/analysis_output/metareview_gemma_few_shot.csv`: meta-review outputs
   - Columns: `participant_id`, `response`, `severity`, `explanation`
 
 ## Deliverables

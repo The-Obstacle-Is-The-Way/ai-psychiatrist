@@ -14,12 +14,12 @@ This document captures ALL parameters NOT explicitly specified in the paper, alo
 
 ## Summary of Paper Gaps
 
-| Gap ID | Parameter | Paper Says | Our Implementation | Rationale |
-|--------|-----------|-----------|-------------------|-----------|
-| GAP-001a | Data Split Membership | "58/43/41 stratified" but no participant IDs | Implement algorithm from Appendix C | Reproducible algorithm |
-| GAP-001b | Temperature | "fairly deterministic" | 0.2 (default), 0.0 (judge) | Conservative interpretation |
-| GAP-001c | top_k / top_p | Not mentioned | top_k=20, top_p=0.8 | Matches public repo few-shot defaults |
-| GAP-001d | Hardware / Quantization | Not specified | Local Ollama defaults (quantized GGUF) | Hardware/precision materially affect abstention |
+| Gap ID | Parameter | Paper Says | Our Implementation | Status |
+|--------|-----------|-----------|-------------------|--------|
+| GAP-001a | Data Split Membership | "58/43/41 stratified" but no participant IDs | `scripts/create_paper_split.py` | ✅ Reproducible algorithm |
+| GAP-001b | Temperature | "fairly deterministic" | 0.2 (few-shot), 0.0 (judge/zero-shot) | ✅ Matches notebooks |
+| GAP-001c | top_k / top_p | Not in paper text | Few-shot: 20/0.8, Zero-shot: 1/1.0 | ✅ Matches notebooks |
+| GAP-001d | Hardware / Quantization | Not specified | Local Ollama defaults | ⚠️ May affect results |
 
 ---
 
@@ -118,29 +118,55 @@ Nothing. These parameters are not mentioned.
 ### What the Public Paper Repo Code Does
 
 Although the paper text does not specify `top_k`/`top_p`, the publicly available repository
-does hardcode sampling options:
+does hardcode sampling options. **SSOT: Notebooks take precedence over .py files** (the .py files
+have wrong model defaults like `llama3` but sampling params happen to match).
 
-- Few-shot agent uses:
-  - `temperature=0.2, top_k=20, top_p=0.8`
-  - Implemented in `ollama_chat()` options in `_reference/agents/quantitative_assessor_f.py`
-    (mirrored under `_legacy/agents/quantitative_assessor_f.py`).
-- Zero-shot script uses:
-  - `temperature=0, top_k=1, top_p=1.0`
-  - Implemented in `_reference/quantitative_assessment/quantitative_analysis.py`
-    (mirrored under `_legacy/quantitative_assessment/quantitative_analysis.py`).
+| Mode | Source (SSOT) | Temperature | top_k | top_p | Verified |
+|------|---------------|-------------|-------|-------|----------|
+| **Zero-shot** | `_reference/quantitative_assessment/basic_quantitative_analysis.ipynb` (line 207) | 0 | 1 | 1.0 | ✅ 2025-12-24 |
+| **Few-shot** | `_reference/quantitative_assessment/embedding_quantitative_analysis.ipynb` (line 1174) | 0.2 | 20 | 0.8 | ✅ 2025-12-24 |
+
+**Cross-verified with .py files** (which match for sampling params despite wrong model defaults):
+- `_reference/quantitative_assessment/quantitative_analysis.py`: `temp=0, top_k=1, top_p=1.0` ✅
+- `_reference/agents/quantitative_assessor_f.py`: `temp=0.2, top_k=20, top_p=0.8` ✅
+
+**Note**: `basic_quantitative_analysis.ipynb` line 599 shows `temp=0.1, top_k=10` which appears
+to be experimental, NOT the production setting. Line 207 is labeled "Most deterministic".
+
+### Why Different Settings for Zero-shot vs Few-shot?
+
+From first principles:
+- **Zero-shot** (`temp=0, top_k=1, top_p=1.0`): Fully deterministic because no grounding examples.
+  Must maximize consistency since the model has no reference points.
+- **Few-shot** (`temp=0.2, top_k=20, top_p=0.8`): Slight flexibility allowed because the model is
+  grounded by retrieved examples. Small temperature helps navigate edge cases.
 
 ### Our Implementation
 
 | Setting | Value | Rationale |
 |---------|-------|-----------|
-| `top_k` | 20 | Moderate restriction; Ollama common default |
-| `top_p` | 0.8 | Standard nucleus sampling threshold |
+| `top_k` | 20 | Matches few-shot notebook defaults |
+| `top_p` | 0.8 | Matches few-shot notebook defaults |
 
 **Location**: `src/ai_psychiatrist/config.py` (`ModelSettings.top_k`, `ModelSettings.top_p`)
 
+### Gap Status: ✅ ADDRESSED (2025-12-24)
+
+Zero-shot specific settings added to config:
+
+| Mode | Paper Repo | Our Implementation | Gap? |
+|------|------------|-------------------|------|
+| Zero-shot | `temp=0, top_k=1, top_p=1.0` | `MODEL_TEMPERATURE_ZERO_SHOT=0.0`, etc. | **FIXED** |
+| Few-shot | `temp=0.2, top_k=20, top_p=0.8` | `temp=0.2, top_k=20, top_p=0.8` | No |
+
+New settings in `config.py`:
+- `MODEL_TEMPERATURE_ZERO_SHOT` (default: 0.0)
+- `MODEL_TOP_K_ZERO_SHOT` (default: 1)
+- `MODEL_TOP_P_ZERO_SHOT` (default: 1.0)
+
 ### Justification
 
-- These match the public repo few-shot agent defaults
+- These match the public repo few-shot agent defaults (notebooks as SSOT)
 - With low temperature (0.2), these have limited effect but can still shift abstention behavior
 - Can be overridden via environment variables for ablations
 
