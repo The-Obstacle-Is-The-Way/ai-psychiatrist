@@ -1,6 +1,6 @@
 # INVESTIGATION-026: Reproduction MAE Divergence Analysis
 
-**Status**: ACTIVE - MYSTERY UNRESOLVED
+**Status**: DOCUMENTED - Root causes identified (paper-text vs paper-repo divergence)
 **Severity**: HIGH (core research question)
 **Found**: 2025-12-24 (few-shot reproduction run)
 **Related**: Paper Section 3.2, Appendix E, Appendix F
@@ -61,7 +61,9 @@ QUANTITATIVE_ENABLE_KEYWORD_BACKFILL=false
 QUANTITATIVE_TRACK_NA_REASONS=true
 ```
 
-**All settings match paper methodology.** Yet coverage is 69.2% vs paper's ~50%.
+**All settings match paper-TEXT methodology.** However, the paper's public repo has keyword
+backfill ALWAYS ON (see analysis-027). Our run used backfill OFF (paper-text parity).
+Yet coverage is 69.2% vs paper's ~50%.
 
 ---
 
@@ -69,12 +71,12 @@ QUANTITATIVE_TRACK_NA_REASONS=true
 
 ### Expected vs Actual
 
-| Metric | Expected (Paper) | Actual (Our Run) | Delta |
-|--------|-----------------|------------------|-------|
-| Model | gemma3:27b | gemma3:27b | ✅ Same |
-| Backfill | OFF (assumed) | OFF (verified) | ✅ Same |
-| Coverage | ~50% | 69.2% | **+19.2%** ❓ |
-| MAE | 0.619 | 0.778 | +0.159 |
+| Metric | Paper Text | Paper Repo | Our Run | Notes |
+|--------|-----------|------------|---------|-------|
+| Model | gemma3:27b | gemma3:27b | gemma3:27b | ✅ Same |
+| Backfill | Not mentioned | ON (always) | OFF | ⚠️ Paper-text parity |
+| Coverage | ~50% | Unknown | 69.2% | **+19.2%** ❓ |
+| MAE | 0.619 | Unknown | 0.778 | +0.159 |
 
 ### Where Is The Extra Coverage Coming From?
 
@@ -130,20 +132,16 @@ We should calculate MAE **only on high-confidence predictions** to compare apple
 
 > "Additionally, we noted that PHQ-8-Appetite had **no successfully retrieved reference chunks** during inference. Upon closer inspection, Gemma 3 27B did not identify any evidence related to appetite issues in the available transcripts, resulting in no reference for that symptom."
 
-The paper shows **per-symptom coverage varies dramatically**:
+**Important clarification**: "No successfully retrieved reference chunks" refers to the few-shot
+retrieval step (finding similar examples from the training set), NOT the final prediction coverage.
+These are different metrics:
+- **Reference retrieval**: Finding similar training examples to guide scoring
+- **Prediction coverage**: Whether the model outputs a score vs N/A
 
-| PHQ-8 Item | Paper Coverage |
-|------------|----------------|
-| PHQ-8-NoInterest | ~60% |
-| PHQ-8-Depressed | ~55% |
-| PHQ-8-Sleep | ~45% |
-| PHQ-8-Fatigue | ~50% |
-| PHQ-8-Appetite | **0%** (NO retrieved chunks!) |
-| PHQ-8-Worthless | ~40% |
-| PHQ-8-Concentration | ~35% |
-| PHQ-8-Movement | ~25% |
+The paper does NOT provide per-symptom coverage percentages. The ~50% figure is aggregate.
 
-**Key Insight**: Even the paper had items with ZERO successful retrievals! This validates that our evidence extraction failures (participants 303, 401) are expected behavior.
+**Key Insight**: Evidence extraction failures are expected behavior in this pipeline.
+Our extraction failures (participants 303, 401) are consistent with paper methodology.
 
 ---
 
@@ -208,11 +206,17 @@ Current Model: 17GB (35% utilization)
 
 **We have significant headroom** to upgrade to Q8_0 (~27GB).
 
-### Paper's Hardware (Section 2.3.5)
+### Paper's Hardware (CONFLICTING INFORMATION)
 
+**Paper text (Section 2.3.5)**:
 > "The full assessment pipeline executes in approximately one minute on a MacBook Pro with an Apple M3 Pro chipset."
 
-M3 Pro has 18-36GB RAM, so the paper likely used Q4_K_M or similar quantization. Our M1 Max 64GB can run higher quality.
+**Paper repo**: Contains SLURM scripts (`_reference/slurm/job_ollama.sh`) configured for
+`--gres=gpu:A100:2` (2x NVIDIA A100 GPUs on GSU TReNDS cluster).
+
+**Conclusion**: We do NOT know what hardware/quantization produced the reported MAE 0.619.
+The paper text claims MacBook M3 Pro; the repo shows A100 cluster infrastructure.
+This is documented in analysis-027.
 
 ### Why Quantization Matters
 
@@ -319,11 +323,17 @@ The paper acknowledges extraction/parsing issues but doesn't give exact failure 
 | Q4 vs potentially higher quant | LOW-MEDIUM | Less model precision |
 | Different random seed | LOW | Affects sampling |
 
-### Primary Hypothesis
+### Primary Hypothesis (UNVERIFIED)
 
-**Our higher coverage is the main culprit.** We're making predictions on cases the paper declined, and these harder cases drag down our aggregate MAE.
+**Hypothesis**: Our higher coverage may be the main contributor to our higher MAE. If we're
+making predictions on cases the paper declined, these harder cases would drag down our aggregate MAE.
 
-The paper chose Gemma 3 over MedGemma precisely because MedGemma was TOO conservative (0.505 MAE but <50% coverage). We've gone the opposite direction - we're LESS conservative than the paper's Gemma 3 baseline.
+The paper chose Gemma 3 over MedGemma precisely because MedGemma was TOO conservative
+(0.505 MAE but <50% coverage). We may have gone the opposite direction - being LESS
+conservative than the paper's Gemma 3 baseline.
+
+**Caveat**: We cannot verify this without knowing what the paper actually ran (notebooks
+vs agents/, what hardware, etc.). See analysis-027 for the paper-text vs paper-repo discrepancy.
 
 ---
 
@@ -335,7 +345,8 @@ Paper Gemma 3:          MAE 0.619, Coverage ~50%  (balanced)
 Our Run:                MAE 0.778, Coverage 69.2% (too aggressive)
 ```
 
-The relationship is clear: **higher coverage = worse MAE** because you're making more low-confidence predictions.
+**Hypothesis**: Higher coverage correlates with worse MAE because you're making more
+low-confidence predictions. This is consistent with the MedGemma trade-off but not conclusively proven.
 
 ---
 
@@ -368,20 +379,22 @@ We've inadvertently gone in the opposite direction - we're scoring cases even th
 2. Consider adding confidence threshold to match paper methodology
 3. Accept that stochastic variation is acknowledged by paper
 
-**Status**: Investigation complete. Awaiting coverage-matched MAE calculation.
+**Status**: Root causes documented (paper-text vs paper-repo divergence, unknown hardware).
+We are shifting focus to our own clean implementation rather than exact paper reproduction.
 
 ---
 
 ## Appendix A: Hardware Comparison
 
-| Spec | Our System | Paper System |
-|------|-----------|--------------|
-| Chip | Apple M1 Max | Apple M3 Pro |
-| RAM | 64GB | 18-36GB |
-| GPU Memory | ~48GB available | ~13-27GB available |
-| Max Model Size | Q8_0 (27GB) ✅ | Q4_K_M (17GB) |
+| Spec | Our System | Paper Text Claim | Paper Repo Evidence |
+|------|-----------|------------------|---------------------|
+| Chip | Apple M1 Max | Apple M3 Pro | GSU TReNDS cluster (A100s) |
+| RAM | 64GB | 18-36GB | 100GB (SLURM script) |
+| GPU | ~48GB unified | ~13-27GB unified | 2x NVIDIA A100 |
+| Model Size | Q8_0 capable | Q4_K_M (assumed) | Unknown |
 
-We have superior hardware and could potentially run higher-quality quantizations than the paper.
+**Note**: We cannot determine what hardware the paper actually used. The text claims
+MacBook M3 Pro; the repo has SLURM scripts for A100 cluster. See analysis-027.
 
 ---
 
@@ -393,8 +406,10 @@ We have superior hardware and could potentially run higher-quality quantizations
 ### Section 4 - Stochasticity
 > "The stochastic nature of LLMs renders a key limitation of the proposed approach. Even with fairly deterministic parameters, responses can vary across runs, making it challenging to obtain consistent performance metrics."
 
-### Appendix E - Appetite Had Zero Coverage
+### Appendix E - Appetite Had Zero Reference Retrieval (NOT coverage)
 > "Additionally, we noted that PHQ-8-Appetite had no successfully retrieved reference chunks during inference."
+
+**Note**: This refers to few-shot reference retrieval, not prediction coverage. See Finding 2.
 
 ### Appendix F - MedGemma Trade-off
 > "MedGemma 27B had an edge over Gemma 3 27B in most categories overall, achieving an average MAE of 0.505, 18% less than Gemma 3 27B, although the number of subjects detected as having available evidence from the transcripts was smaller with MedGemma."
