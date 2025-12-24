@@ -103,6 +103,15 @@ See [Agent Sampling Registry](./agent-sampling-registry.md) for full rationale w
 > **Note**: MedGemma is not available in Ollama officially. Use HuggingFace backend for official weights.
 > See [Model Registry](../models/model-registry.md) for HuggingFace setup.
 
+**Precision Comparison (Ollama vs HuggingFace):**
+
+| Model | Ollama Precision | HuggingFace Precision | Impact |
+|-------|------------------|----------------------|--------|
+| `gemma3:27b` | Q4_K_M (4-bit) | FP16/BF16 (16-bit) | Higher quality responses |
+| `qwen3-embedding:8b` | Q4_K_M (4-bit) | FP16/BF16 (16-bit) | More accurate similarity matching |
+
+For best quality, use `LLM_BACKEND=huggingface`. See [Issue #42](https://github.com/The-Obstacle-Is-The-Way/ai-psychiatrist/issues/42) for pending graceful fallback.
+
 **Example:**
 ```bash
 # Canonical names (recommended): resolved per backend
@@ -183,7 +192,7 @@ File path configuration.
 |----------|------|---------|-------------|
 | `DATA_BASE_DIR` | path | `data` | Base data directory |
 | `DATA_TRANSCRIPTS_DIR` | path | `data/transcripts` | Transcript files |
-| `DATA_EMBEDDINGS_PATH` | path | `data/embeddings/reference_embeddings.npz` | Pre-computed embeddings |
+| `DATA_EMBEDDINGS_PATH` | path | `data/embeddings/paper_reference_embeddings.npz` | Pre-computed embeddings |
 | `DATA_TRAIN_CSV` | path | `data/train_split_Depression_AVEC2017.csv` | Training ground truth |
 | `DATA_DEV_CSV` | path | `data/dev_split_Depression_AVEC2017.csv` | Development ground truth |
 
@@ -195,8 +204,8 @@ data/
 │   │   └── 300_TRANSCRIPT.csv
 │   └── .../
 ├── embeddings/
-│   ├── reference_embeddings.npz
-│   └── reference_embeddings.json
+│   ├── paper_reference_embeddings.npz
+│   └── paper_reference_embeddings.json
 ├── train_split_Depression_AVEC2017.csv
 └── dev_split_Depression_AVEC2017.csv
 ```

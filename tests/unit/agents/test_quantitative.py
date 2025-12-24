@@ -577,9 +577,7 @@ class TestAgentProtocol:
                 user_prompt: str,  # noqa: ARG002
                 system_prompt: str = "",  # noqa: ARG002
                 model: str | None = None,  # noqa: ARG002
-                temperature: float = 0.2,  # noqa: ARG002
-                top_k: int = 20,  # noqa: ARG002
-                top_p: float = 0.8,  # noqa: ARG002
+                temperature: float = 0.0,  # noqa: ARG002
             ) -> str:
                 return json.dumps(
                     {k: {"evidence": "test", "reason": "test", "score": 1} for k in DOMAIN_KEYWORDS}

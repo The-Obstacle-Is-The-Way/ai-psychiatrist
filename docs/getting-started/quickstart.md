@@ -49,9 +49,11 @@ ollama pull qwen3-embedding:8b
 
 > **Note**: These are large models. Ensure you have sufficient disk space (~35GB total).
 
-> **Optional**: MedGemma (Appendix F alternative for the quantitative agent) is **HuggingFace-only**.
-> To use official weights, set `LLM_BACKEND=huggingface` and `MODEL_QUANTITATIVE_MODEL=medgemma:27b`.
-> There is no official MedGemma in the Ollama library. See [Model Registry](../models/model-registry.md).
+> **High-Quality Setup (Optional)**: For best results on capable hardware (32GB+ RAM), use HuggingFace backend:
+> - **MedGemma** (`google/medgemma-27b-text-it`): 18% better MAE than Gemma3 (Appendix F)
+> - **Qwen3-Embedding FP16** (`Qwen/Qwen3-Embedding-8B`): Higher precision than Ollama's Q4_K_M
+>
+> Set `LLM_BACKEND=huggingface` and see [Model Registry - High-Quality Setup](../models/model-registry.md#high-quality-setup-recommended-for-production) for details.
 
 ### 4. Configure Environment
 

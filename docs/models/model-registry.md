@@ -1,7 +1,21 @@
 # AI Psychiatrist Model Registry
 
-Last Updated: 2025-12-22
+Last Updated: 2025-12-24
 Purpose: Paper-aligned, reproducible model configuration for this repo.
+
+---
+
+## Quick Reference: Which Setup Should I Use?
+
+| Setup | Backend | Quality | Hardware Needed | Use Case |
+|-------|---------|---------|-----------------|----------|
+| **Paper Parity** | Ollama | Good | Any Mac/Linux | Reproduce paper results |
+| **High Quality** | HuggingFace | Best | 32GB+ RAM, CUDA/MPS | Best possible MAE |
+| **Development** | Ollama | Fast | Any | Quick iteration |
+
+**Pending**: Graceful fallback from HuggingFace → Ollama ([Issue #42](https://github.com/The-Obstacle-Is-The-Way/ai-psychiatrist/issues/42))
+
+---
 
 ## Paper-Optimal Models (Reproduction)
 
@@ -140,6 +154,48 @@ EMBEDDING_DIMENSION=4096
 LLM_BACKEND=huggingface
 MODEL_QUANTITATIVE_MODEL=medgemma:27b
 ```
+
+---
+
+## High-Quality Setup (Recommended for Production)
+
+For users with capable hardware (32GB+ RAM, Apple Silicon or NVIDIA GPU), use HuggingFace for **best quality**:
+
+### Why HuggingFace is Better
+
+| Component | Ollama | HuggingFace | Improvement |
+|-----------|--------|-------------|-------------|
+| **Chat (Quantitative)** | `gemma3:27b` (Q4_K_M) | `google/medgemma-27b-text-it` (FP16) | 18% better MAE (Appendix F) |
+| **Embeddings** | `qwen3-embedding:8b` (Q4_K_M) | `Qwen/Qwen3-Embedding-8B` (FP16) | Higher precision similarity |
+
+**Key insight**: Both Ollama models use **Q4_K_M quantization** (4-bit). HuggingFace provides **FP16/BF16** (16-bit) - 4x more precision.
+
+### High-Quality Configuration
+
+```bash
+# .env for high-quality setup
+LLM_BACKEND=huggingface
+
+# Chat models (all use HuggingFace)
+MODEL_QUALITATIVE_MODEL=gemma3:27b      # → google/gemma-3-27b-it
+MODEL_JUDGE_MODEL=gemma3:27b            # → google/gemma-3-27b-it
+MODEL_META_REVIEW_MODEL=gemma3:27b      # → google/gemma-3-27b-it
+MODEL_QUANTITATIVE_MODEL=medgemma:27b   # → google/medgemma-27b-text-it (18% better MAE)
+
+# Embeddings (FP16 precision)
+MODEL_EMBEDDING_MODEL=qwen3-embedding:8b  # → Qwen/Qwen3-Embedding-8B
+EMBEDDING_DIMENSION=4096
+```
+
+### Requirements
+
+1. **Hardware**: 32GB+ unified memory (Apple Silicon) or 24GB+ VRAM (NVIDIA)
+2. **Dependencies**: `pip install 'ai-psychiatrist[hf]'`
+3. **MedGemma access**: Accept terms at [HuggingFace](https://huggingface.co/google/medgemma-27b-text-it)
+
+### Pending: Graceful Fallback
+
+[Issue #42](https://github.com/The-Obstacle-Is-The-Way/ai-psychiatrist/issues/42) will add automatic fallback to Ollama if HuggingFace fails (missing deps, OOM, etc.).
 
 ---
 

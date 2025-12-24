@@ -152,8 +152,15 @@ No mention of quantization.
 
 ### Our Implementation
 
-- Use local Ollama (quantized GGUF weights for `gemma3:27b`)
-- Use local Ollama embeddings (`qwen3-embedding:8b`) with requested dimension 4096
+**Default (Ollama):**
+- Chat: `gemma3:27b` (Q4_K_M quantization, ~16GB)
+- Embeddings: `qwen3-embedding:8b` (Q4_K_M quantization, ~4.7GB)
+
+**High-Quality (HuggingFace):**
+- Chat: `google/medgemma-27b-text-it` (FP16, 18% better MAE per Appendix F)
+- Embeddings: `Qwen/Qwen3-Embedding-8B` (FP16, higher precision similarity)
+
+See [Model Registry - High-Quality Setup](../models/model-registry.md#high-quality-setup-recommended-for-production) and [Issue #42](https://github.com/The-Obstacle-Is-The-Way/ai-psychiatrist/issues/42) for graceful fallback.
 
 ### Justification
 

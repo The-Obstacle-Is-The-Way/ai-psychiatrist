@@ -116,10 +116,9 @@ class JudgeAgent:
         """
         prompt = make_evaluation_prompt(metric, transcript, assessment)
 
-        # Use model settings if provided (Spec 07 mandates temperature=0.0 for Judge)
+        # Use model settings if provided
         model = self._model_settings.judge_model if self._model_settings else None
-        # Judge always uses temperature=0.0 for deterministic evaluation
-        temperature = 0.0
+        temperature = self._model_settings.temperature if self._model_settings else 0.0
 
         try:
             response = await self._llm_client.simple_chat(

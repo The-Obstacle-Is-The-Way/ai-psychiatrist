@@ -109,6 +109,15 @@ if split.startswith("paper"):
 
 See [Agent Sampling Registry](../reference/agent-sampling-registry.md) for citations.
 
+### Model Precision Options
+
+| Backend | Chat Model | Embedding Model | Precision |
+|---------|------------|-----------------|-----------|
+| **Ollama (default)** | `gemma3:27b` | `qwen3-embedding:8b` | Q4_K_M (4-bit) |
+| **HuggingFace (high-quality)** | `google/medgemma-27b-text-it` | `Qwen/Qwen3-Embedding-8B` | FP16 (16-bit) |
+
+See [Model Registry](../models/model-registry.md#high-quality-setup-recommended-for-production) and [Issue #42](https://github.com/The-Obstacle-Is-The-Way/ai-psychiatrist/issues/42) for details.
+
 ---
 
 ## Output Artifacts
