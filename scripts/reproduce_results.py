@@ -47,6 +47,7 @@ import time
 from dataclasses import dataclass, field
 from datetime import datetime
 from pathlib import Path
+from typing import Any
 
 import numpy as np
 import pandas as pd
@@ -488,12 +489,18 @@ def print_summary(experiments: list[ExperimentResults]) -> None:
     print()
 
 
-def save_results(experiments: list[ExperimentResults], output_dir: Path) -> Path:
-    """Save results to JSON file.
+def save_results(
+    experiments: list[ExperimentResults],
+    output_dir: Path,
+    *,
+    provenance: dict[str, Any] | None = None,
+) -> Path:
+    """Save results to JSON file with provenance tracking.
 
     Args:
         experiments: List of experiment results.
         output_dir: Directory to save results.
+        provenance: Optional provenance metadata (embeddings path, split, config).
 
     Returns:
         Path to saved results file.
@@ -503,10 +510,14 @@ def save_results(experiments: list[ExperimentResults], output_dir: Path) -> Path
     timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
     output_file = output_dir / f"reproduction_results_{timestamp}.json"
 
-    data = {
+    data: dict[str, Any] = {
         "timestamp": datetime.now().isoformat(),
         "experiments": [exp.to_dict() for exp in experiments],
     }
+
+    # Add provenance for reproducibility verification (BUG-023 fix)
+    if provenance:
+        data["provenance"] = provenance
 
     with output_file.open("w") as f:
         json.dump(data, f, indent=2)
@@ -563,6 +574,16 @@ async def check_ollama_connectivity(ollama_client: OllamaClient) -> bool:
     return True
 
 
+def get_effective_embeddings_path(data_settings: DataSettings, split: str) -> Path:
+    """Get the effective embeddings path for a given split.
+
+    Paper splits use paper_reference_embeddings.npz; others use config default.
+    """
+    if split.startswith("paper"):
+        return data_settings.base_dir / "embeddings" / "paper_reference_embeddings.npz"
+    return data_settings.embeddings_path
+
+
 def init_embedding_service(
     *,
     args: argparse.Namespace,
@@ -574,17 +595,16 @@ def init_embedding_service(
     """Initialize embedding service for few-shot mode (or return None)."""
     if args.zero_shot_only:
         return None
-    effective_data_settings = data_settings
-    if args.split.startswith("paper"):
-        paper_path = data_settings.base_dir / "embeddings" / "paper_reference_embeddings.npz"
-        effective_data_settings = DataSettings(
-            base_dir=data_settings.base_dir,
-            transcripts_dir=data_settings.transcripts_dir,
-            embeddings_path=paper_path,
-            train_csv=data_settings.train_csv,
-            dev_csv=data_settings.dev_csv,
-        )
-    npz_path = effective_data_settings.embeddings_path
+
+    npz_path = get_effective_embeddings_path(data_settings, args.split)
+    effective_data_settings = DataSettings(
+        base_dir=data_settings.base_dir,
+        transcripts_dir=data_settings.transcripts_dir,
+        embeddings_path=npz_path,
+        train_csv=data_settings.train_csv,
+        dev_csv=data_settings.dev_csv,
+    )
+
     json_path = npz_path.with_suffix(".json")
     if not npz_path.exists() or not json_path.exists():
         raise FileNotFoundError(
@@ -691,10 +711,25 @@ async def main_async(args: argparse.Namespace) -> int:
             model_name=model_settings.quantitative_model,
         )
 
-        # Print summary and save
+        # Print summary and save with provenance (BUG-023 fix)
         print_summary(experiments)
         output_dir = data_settings.base_dir / "outputs"
-        save_results(experiments, output_dir)
+
+        # Build provenance metadata for reproducibility verification
+        embeddings_path = get_effective_embeddings_path(data_settings, args.split)
+        provenance = {
+            "split": args.split,
+            "embeddings_path": str(embeddings_path),
+            "quantitative_model": model_settings.quantitative_model,
+            "embedding_model": model_settings.embedding_model,
+            "embedding_dimension": embedding_settings.dimension,
+            "embedding_chunk_size": embedding_settings.chunk_size,
+            "embedding_top_k": embedding_settings.top_k_references,
+            "enable_keyword_backfill": settings.quantitative.enable_keyword_backfill,
+            "participants_evaluated": list(ground_truth.keys()),
+        }
+
+        save_results(experiments, output_dir, provenance=provenance)
 
     return 0
 

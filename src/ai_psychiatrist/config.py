@@ -289,8 +289,8 @@ class DataSettings(BaseSettings):
         description="Transcript files directory",
     )
     embeddings_path: Path = Field(
-        default=Path("data/embeddings/reference_embeddings.npz"),
-        description="Pre-computed embeddings file (NPZ format, with .json sidecar for texts)",
+        default=Path("data/embeddings/paper_reference_embeddings.npz"),
+        description="Pre-computed embeddings for few-shot (NPZ + .json sidecar).",
     )
     train_csv: Path = Field(
         default=Path("data/train_split_Depression_AVEC2017.csv"),

@@ -271,11 +271,12 @@ The Dec 23 run is **HIGHLY LIKELY CORRECT** but **CANNOT BE PROVEN**. This is ex
 
 ## Action Items
 
-- [ ] **CRITICAL**: Add provenance to `reproduce_results.py` output (FIX-1)
-- [ ] **HIGH**: Add embeddings validation (FIX-2)
-- [ ] **MEDIUM**: Update preflight checklists with explicit embeddings verification
-- [ ] **LOW**: Consider updating config default (FIX-3)
-- [ ] **LOW**: Archive stale outputs (FIX-4)
+- [x] **CRITICAL**: Add provenance to `reproduce_results.py` output (FIX-1) ✅ DONE
+- [ ] **HIGH**: Add embeddings validation (FIX-2) - Future work
+- [x] **MEDIUM**: Update preflight checklists with explicit embeddings verification ✅ DONE
+- [x] **LOW**: Update config default to paper embeddings (FIX-3) ✅ DONE
+- [x] **LOW**: Delete stale outputs (FIX-4) ✅ DONE - Deleted pre-paper-embeddings outputs
+- [x] **CLEANUP**: Delete old AVEC embeddings (reference_embeddings.npz) ✅ DONE
 - [ ] **DOCUMENTATION**: Update reproduction-notes.md with caveat about provenance gap
 
 ---
