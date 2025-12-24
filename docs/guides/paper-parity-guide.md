@@ -100,9 +100,8 @@ EMBEDDING_CHUNK_SIZE=8
 EMBEDDING_CHUNK_STEP=2
 EMBEDDING_TOP_K_REFERENCES=2
 
-# Sampling (Paper says "fairly deterministic")
-MODEL_TEMPERATURE=0.2
-MODEL_TEMPERATURE_JUDGE=0.0
+# Sampling (Evidence-based clinical AI defaults)
+MODEL_TEMPERATURE=0.0
 
 # Feedback loop (Paper Section 2.3.1)
 FEEDBACK_ENABLED=true
@@ -137,12 +136,10 @@ Even with SPEC-003 implemented, some differences remain:
 
 ### GAP-001: Unspecified Parameters
 
-The paper says "fairly deterministic parameters" but doesn't specify:
-- Exact temperature value (we use 0.2)
-- top_k / top_p sampling (we use Ollama defaults)
-- Model quantization
+The paper says "fairly deterministic parameters" but doesn't specify exact values.
+We use evidence-based clinical AI defaults: `temperature=0.0` (no top_k/top_p).
 
-See `docs/bugs/gap-001-paper-unspecified-parameters.md`.
+See [Agent Sampling Registry](../reference/agent-sampling-registry.md) for citations.
 
 ### GAP-002: Model Quantization
 

@@ -2,7 +2,7 @@
 
 **Purpose**: Single Source of Truth (SSOT) for all agent sampling parameters.
 **Last Updated**: 2025-12-24
-**Related**: [Configuration Reference](./configuration.md) | [GAP-001](../bugs/gap-001-paper-unspecified-parameters.md)
+**Related**: [Configuration Reference](./configuration.md) | [GAP-001](../bugs/gap-001-paper-unspecified-parameters.md) | [GitHub Issue #46](https://github.com/The-Obstacle-Is-The-Way/ai-psychiatrist/issues/46)
 
 ---
 
@@ -34,55 +34,80 @@ Transcript
 
 ---
 
-## Sampling Parameters: Our Defaults
+## Our Implementation (Evidence-Based)
 
-### First-Principles Rationale
+### The Config
 
-| Agent | Needs Creativity? | Has Grounding? | Recommended temp |
-|-------|-------------------|----------------|------------------|
-| Qualitative | Some (narrative) | No (just transcript) | Low (0.2) |
-| Judge | None (scoring) | Yes (rubric) | Zero (0.0) |
-| Quantitative (zero-shot) | None | No | Zero (0.0) |
-| Quantitative (few-shot) | Slight | Yes (examples) | Low (0.2) |
-| Meta-Review | None (integration) | Yes (prior assessments) | Zero (0.0) |
+```python
+# All agents: temperature=0.0, nothing else
+temperature = 0.0
+```
 
-**Key insight**: Agents with grounding (examples, rubrics, prior context) can tolerate
-slight temperature. Agents without grounding need full determinism.
+That's it.
 
-### What We Settled On (Our Implementation)
+### Parameter Table
 
-| Agent | temp | top_k | top_p | Config Key | Rationale |
-|-------|------|-------|-------|------------|-----------|
-| **Qualitative** | 0.2 | 20 | 0.8 | `temperature` | Narrative needs some flexibility |
-| **Judge** | 0.0 | 20 | 0.8 | `temperature_judge` | Scoring must be deterministic |
-| **Quantitative (zero-shot)** | 0.0 | 1 | 1.0 | `*_zero_shot` | Matches notebook exactly |
-| **Quantitative (few-shot)** | 0.2 | 20 | 0.8 | `temperature` | Matches notebook exactly |
-| **Meta-Review** | 0.0 | 20 | 0.8 | `temperature_judge`* | Integration, not generation |
+| Agent | temp | top_k | top_p | Rationale |
+|-------|------|-------|-------|-----------|
+| **Qualitative** | 0.0 | — | — | Clinical extraction, not creative writing |
+| **Judge** | 0.0 | — | — | Classification (1-5 scoring) |
+| **Quantitative (zero-shot)** | 0.0 | — | — | Classification (0-3 scoring) |
+| **Quantitative (few-shot)** | 0.0 | — | — | Classification (0-3 scoring) |
+| **Meta-Review** | 0.0 | — | — | Classification (severity 0-4) |
 
-*Meta-Review currently uses judge temp (0.0). Could add dedicated setting if needed.
-
-### Decision Summary
-
-1. **Quantitative**: Match notebooks exactly (verified source)
-   - Zero-shot: `temp=0, top_k=1, top_p=1.0` (greedy)
-   - Few-shot: `temp=0.2, top_k=20, top_p=0.8` (slight flexibility)
-
-2. **Other agents**: Use first-principles defaults (no reliable source)
-   - Judge: `temp=0` (deterministic scoring)
-   - Qualitative: `temp=0.2` (narrative flexibility)
-   - Meta-Review: `temp=0` (integration task)
-   - All share `top_k=20, top_p=0.8`
+**Note on "—"**: Don't set these. At temp=0 they're irrelevant (greedy decoding), and best practice is "use temperature only."
 
 ---
 
-## What the Paper Specifies
+## Why These Settings (With Citations)
+
+| Source | What It Says | Link |
+|--------|--------------|------|
+| **Med-PaLM** | "sampled with temperature 0.0" for clinical answers | [Nature Medicine](https://pmc.ncbi.nlm.nih.gov/articles/PMC11922739/) |
+| **medRxiv 2025** | "Lower temperatures promote diagnostic accuracy and consistency" | [Study](https://www.medrxiv.org/content/10.1101/2025.06.04.25328288v1.full) |
+| **Anthropic** | "Use temperature closer to 0.0 for analytical / multiple choice" | [PromptHub](https://www.prompthub.us/blog/using-anthropic-best-practices-parameters-and-large-context-windows) |
+| **Anthropic** | "top_k is recommended for advanced use cases only. You usually only need to use temperature" | [PromptHub](https://www.prompthub.us/blog/using-anthropic-best-practices-parameters-and-large-context-windows) |
+| **Anthropic/AWS** | "You should alter either temperature or top_p, but not both" | [AWS Bedrock](https://docs.aws.amazon.com/bedrock/latest/userguide/model-parameters-anthropic-claude-text-completion.html) |
+| **Claude 4.x APIs** | Returns ERROR: "temperature and top_p cannot both be specified" | [GitHub](https://github.com/valentinfrlch/ha-llmvision/issues/562) |
+| **IBM** | "Low settings (0.0-0.3) dramatically reduce hallucinations... critical for agents associated with medical advice" | [IBM Think](https://www.ibm.com/think/topics/llm-temperature) |
+
+---
+
+## Best Practice: Use Temperature Only (2025)
+
+### Why Not Both top_k AND top_p?
+
+> "OpenAI and most AI companies recommend changing one or the other, not both."
+> — [OpenAI Community](https://community.openai.com/t/temperature-top-p-and-top-k-for-chatbot-responses/295542)
+
+> "Newer Claude models return an error: 'temperature and top_p cannot both be specified'"
+> — [GitHub Issue](https://github.com/valentinfrlch/ha-llmvision/issues/562)
+
+### Why Not top_k At All?
+
+> "Top K is not a terribly useful parameter... not as well-supported, notably missing from OpenAI's API."
+> — [Vellum](https://www.vellum.ai/llm-parameters/temperature)
+
+**2025 Reality:**
+- Use **temperature only** (preferred)
+- OR top_p only (alternative)
+- **Never both** — newer Claude models literally error
+- **top_k is obsolete** — not even in OpenAI's API
+
+### At temp=0, Do top_k/top_p Matter?
+
+**No.** At temperature=0, you get **greedy decoding** (argmax). There's no sampling, so sampling filters (top_k, top_p) have nothing to filter.
+
+---
+
+## What the Paper Says
 
 | Parameter | Paper Says | Section |
 |-----------|-----------|---------|
 | Model | Gemma 3 27B | Section 2.2 |
 | Temperature | "fairly deterministic" | Section 4 |
-| top_k / top_p | **NOT SPECIFIED** | - |
-| Per-agent sampling | **NOT SPECIFIED** | - |
+| top_k / top_p | **NOT SPECIFIED** | — |
+| Per-agent sampling | **NOT SPECIFIED** | — |
 
 **The paper only tuned embedding hyperparameters (Appendix D):**
 - chunk_size = 8
@@ -95,84 +120,41 @@ Sampling parameters were NOT tuned or specified.
 
 ## What Their Code Does (Reference Only)
 
-### Critical: Notebooks Only Exist for Quantitative Agent
+### Their Codebase is Internally Contradictory
 
-| Agent | Has Notebook? | Source Type |
-|-------|---------------|-------------|
-| Qualitative | NO | Python only (`qual_assessment.py`) |
-| Judge | NO | Python only (`qualitive_evaluator.py`) |
-| Quantitative | YES | Notebooks are authoritative |
-| Meta-Review | NO | Python only (`meta_review.py`) |
+| Source | temp | top_k | top_p | Notes |
+|--------|------|-------|-------|-------|
+| `basic_quantitative_analysis.ipynb:207` | 0 | 1 | 1.0 | Zero-shot |
+| `basic_quantitative_analysis.ipynb:599` | 0.1 | 10 | — | Experimental? |
+| `embedding_quantitative_analysis.ipynb:1174` | 0.2 | 20 | 0.8 | Few-shot |
+| `qual_assessment.py` | 0 | 20 | 0.9 | Wrong model default |
+| `meta_review.py` | 0 | 20 | 1.0 | Wrong model default |
 
-**This means**: We can only trust notebook values for Quantitative. Other agents'
-sampling params are from Python files (which have wrong model defaults like `llama3`).
+Python files also have wrong model defaults (`llama3` instead of `gemma3`). Cannot be trusted as SSOT.
 
-### Verified Notebook Values (Quantitative Only)
-
-| Mode | temp | top_k | top_p | Source | Line |
-|------|------|-------|-------|--------|------|
-| Zero-shot | 0 | 1 | 1.0 | `basic_quantitative_analysis.ipynb` | 207 |
-| Few-shot | 0.2 | 20 | 0.8 | `embedding_quantitative_analysis.ipynb` | 1174 |
-
-Comment in zero-shot notebook: `"# Most deterministic temp, top_k, and top_p"`
-
-### Python File Values (Less Trustworthy)
-
-| Agent | temp | top_k | top_p | Source |
-|-------|------|-------|-------|--------|
-| Qualitative | 0 | 20 | 0.9 | `qual_assessment.py:103-105` |
-| Judge | 0 | 20 | 0.9 | `qualitive_evaluator.py:146` |
-| Meta-Review | 0 | 20 | 1.0 | `meta_review.py:132-134` |
-
-**Note**: These Python files also have wrong model defaults (`llama3`), so their
-sampling params may also be arbitrary/experimental. The differences (top_p=0.9 vs 1.0)
-appear to be inconsistent copy-paste, not intentional design.
+**Our decision**: Use evidence-based clinical AI defaults, not reverse-engineered contradictory code.
 
 ---
 
 ## Environment Variables
 
 ```bash
-# Few-shot / default (used by Qualitative, Quantitative few-shot)
-MODEL_TEMPERATURE=0.2
-MODEL_TOP_K=20
-MODEL_TOP_P=0.8
+# Clinical AI default: temp=0 only
+MODEL_TEMPERATURE=0.0
 
-# Judge (deterministic scoring)
-MODEL_TEMPERATURE_JUDGE=0.0
-
-# Zero-shot Quantitative (fully greedy)
-MODEL_TEMPERATURE_ZERO_SHOT=0.0
-MODEL_TOP_K_ZERO_SHOT=1
-MODEL_TOP_P_ZERO_SHOT=1.0
+# top_k and top_p: DO NOT SET
+# - At temp=0 they're irrelevant (greedy decoding)
+# - Best practice: "use temperature only, not both"
+# - Claude 4.x APIs error if you set both temp and top_p
 ```
-
----
-
-## Future Considerations
-
-If per-agent control is needed, we could add:
-
-```bash
-MODEL_TEMPERATURE_QUALITATIVE=0.2
-MODEL_TEMPERATURE_META_REVIEW=0.0
-MODEL_TOP_K_JUDGE=20
-MODEL_TOP_P_JUDGE=0.9
-# etc.
-```
-
-Currently not implemented because:
-1. Paper doesn't specify per-agent params
-2. Their code's per-agent differences appear arbitrary
-3. Simpler config is easier to maintain
 
 ---
 
 ## References
 
+- [GitHub Issue #46](https://github.com/The-Obstacle-Is-The-Way/ai-psychiatrist/issues/46) - Full investigation
 - [GAP-001: Paper Unspecified Parameters](../bugs/gap-001-paper-unspecified-parameters.md)
 - [Configuration Reference](./configuration.md)
-- [Pipeline Concepts](../concepts/pipeline.md)
-- Paper Section 2.2: Model specification
-- Paper Section 4: "fairly deterministic" mention
-- Paper Appendix D: Hyperparameter optimization (embedding only)
+- [Med-PaLM - Nature Medicine](https://pmc.ncbi.nlm.nih.gov/articles/PMC11922739/)
+- [Temperature in Clinical AI - medRxiv 2025](https://www.medrxiv.org/content/10.1101/2025.06.04.25328288v1.full)
+- [Anthropic Best Practices - PromptHub](https://www.prompthub.us/blog/using-anthropic-best-practices-parameters-and-large-context-windows)

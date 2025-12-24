@@ -116,8 +116,7 @@ class TestModelSettings:
     def test_temperature_defaults(self) -> None:
         """Temperature defaults should be set correctly."""
         settings = ModelSettings()
-        assert settings.temperature == 0.2
-        assert settings.temperature_judge == 0.0  # Deterministic
+        assert settings.temperature == 0.0
 
     def test_temperature_validation(self) -> None:
         """Temperature must be 0-2."""
@@ -125,20 +124,6 @@ class TestModelSettings:
             ModelSettings(temperature=-0.1)
         with pytest.raises(ValueError):
             ModelSettings(temperature=2.1)
-
-    def test_top_k_validation(self) -> None:
-        """top_k must be 1-100."""
-        with pytest.raises(ValueError):
-            ModelSettings(top_k=0)
-        with pytest.raises(ValueError):
-            ModelSettings(top_k=101)
-
-    def test_top_p_validation(self) -> None:
-        """top_p must be 0-1."""
-        with pytest.raises(ValueError):
-            ModelSettings(top_p=-0.1)
-        with pytest.raises(ValueError):
-            ModelSettings(top_p=1.1)
 
 
 class TestEmbeddingSettings:

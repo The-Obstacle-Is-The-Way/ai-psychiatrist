@@ -143,41 +143,11 @@ class ModelSettings(BaseSettings):
         default="qwen3-embedding:8b",
         description="Embedding model (Paper Section 2.2: Qwen 3 8B Embedding)",
     )
-    # NOTE: Temperature NOT specified in paper. Paper Section 4 says only
-    # "fairly deterministic parameters". We use 0.2 as a conservative low value.
-    # See docs/bugs/GAP-001_PAPER_UNSPECIFIED_PARAMETERS.md for details.
     temperature: float = Field(
-        default=0.2,
-        ge=0.0,
-        le=2.0,
-        description="Default temperature (paper: 'fairly deterministic' → low)",
-    )
-    temperature_judge: float = Field(
         default=0.0,
         ge=0.0,
         le=2.0,
-        description="Judge agent temperature (0.0 for deterministic scoring)",
-    )
-    # NOTE: top_k and top_p NOT specified in paper text, but paper repo hardcodes them.
-    # Few-shot: temp=0.2, top_k=20, top_p=0.8 (from _reference/agents/*.py)
-    # Zero-shot: temp=0, top_k=1, top_p=1.0 (from _reference/*.ipynb)
-    # See docs/bugs/gap-001-paper-unspecified-parameters.md (GAP-001c) for verification.
-    top_k: int = Field(default=20, ge=1, le=100, description="Top-k sampling (few-shot)")
-    top_p: float = Field(default=0.8, ge=0.0, le=1.0, description="Nucleus sampling (few-shot)")
-
-    # Zero-shot specific sampling (fully deterministic since no grounding examples)
-    # Source: _reference/quantitative_assessment/basic_quantitative_analysis.ipynb line 207
-    temperature_zero_shot: float = Field(
-        default=0.0,
-        ge=0.0,
-        le=2.0,
-        description="Zero-shot temperature (deterministic; no grounding examples)",
-    )
-    top_k_zero_shot: int = Field(
-        default=1, ge=1, le=100, description="Zero-shot top_k (1 = greedy decoding)"
-    )
-    top_p_zero_shot: float = Field(
-        default=1.0, ge=0.0, le=1.0, description="Zero-shot top_p (1.0 = no nucleus sampling)"
+        description="Clinical AI: temp=0 for reproducibility (Med-PaLM, medRxiv 2025)",
     )
 
 

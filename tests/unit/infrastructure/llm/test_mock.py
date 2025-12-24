@@ -298,21 +298,17 @@ class TestMockLLMClientSimpleMethods:
         assert req.model == "mock"
 
     @pytest.mark.asyncio
-    async def test_simple_chat_custom_params(self) -> None:
-        """simple_chat should respect custom temperature/top_k/top_p."""
+    async def test_simple_chat_custom_temperature(self) -> None:
+        """simple_chat should respect custom temperature."""
         mock = MockLLMClient(chat_responses=["response"])
 
         await mock.simple_chat(
             "test",
-            temperature=0.0,
-            top_k=40,
-            top_p=0.95,
+            temperature=0.5,
         )
 
         req = mock.chat_requests[0]
-        assert req.temperature == 0.0
-        assert req.top_k == 40
-        assert req.top_p == 0.95
+        assert req.temperature == 0.5
 
 
 class TestMockLLMClientProtocolCompliance:

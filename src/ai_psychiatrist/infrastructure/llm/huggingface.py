@@ -101,8 +101,6 @@ class HuggingFaceClient:
                 tokenizer=tokenizer,
                 prompt=prompt,
                 temperature=request.temperature,
-                top_k=request.top_k,
-                top_p=request.top_p,
             )
 
         try:
@@ -151,9 +149,7 @@ class HuggingFaceClient:
         user_prompt: str,
         system_prompt: str = "",
         model: str | None = None,
-        temperature: float = 0.2,
-        top_k: int = 20,
-        top_p: float = 0.8,
+        temperature: float = 0.0,
     ) -> str:
         messages: list[ChatMessage] = []
         if system_prompt:
@@ -164,8 +160,6 @@ class HuggingFaceClient:
             messages=messages,
             model=model or self._model_settings.qualitative_model,
             temperature=temperature,
-            top_k=top_k,
-            top_p=top_p,
             timeout_seconds=180,
         )
         response = await self.chat(request)
@@ -311,8 +305,6 @@ class HuggingFaceClient:
         tokenizer: Any,
         prompt: str,
         temperature: float,
-        top_k: int,
-        top_p: float,
     ) -> str:
         inputs = tokenizer(prompt, return_tensors="pt")
         input_ids = inputs.get("input_ids")
@@ -341,8 +333,6 @@ class HuggingFaceClient:
                 {
                     "do_sample": True,
                     "temperature": float(temperature),
-                    "top_k": int(top_k),
-                    "top_p": float(top_p),
                 }
             )
 

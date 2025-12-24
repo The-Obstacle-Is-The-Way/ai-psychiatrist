@@ -97,17 +97,13 @@ class MetaReviewAgent:
 
         # Get model and sampling params from settings
         model = self._model_settings.meta_review_model if self._model_settings else None
-        temperature = self._model_settings.temperature if self._model_settings else 0.2
-        top_k = self._model_settings.top_k if self._model_settings else 20
-        top_p = self._model_settings.top_p if self._model_settings else 0.8
+        temperature = self._model_settings.temperature if self._model_settings else 0.0
 
         response = await self._llm.simple_chat(
             user_prompt=prompt,
             system_prompt=META_REVIEW_SYSTEM_PROMPT,
             model=model,
             temperature=temperature,
-            top_k=top_k,
-            top_p=top_p,
         )
 
         severity, explanation = self._parse_response(response, quantitative)

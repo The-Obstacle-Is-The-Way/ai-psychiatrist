@@ -103,10 +103,11 @@ if split.startswith("paper"):
 
 | Parameter | Value | Rationale |
 |-----------|-------|-----------|
-| `temperature` | 0.2 | "fairly deterministic" |
-| `temperature_judge` | 0.0 | Deterministic for scoring |
-| `top_k` | 20 | Ollama common default |
-| `top_p` | 0.8 | Standard nucleus sampling |
+| `temperature` | 0.0 | Clinical AI best practice (Med-PaLM, medRxiv 2025) |
+| `top_k` | — | Not set (irrelevant at temp=0) |
+| `top_p` | — | Not set (best practice: use temp only) |
+
+See [Agent Sampling Registry](../reference/agent-sampling-registry.md) for citations.
 
 ---
 

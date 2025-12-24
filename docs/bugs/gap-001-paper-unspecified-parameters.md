@@ -1,9 +1,9 @@
 # GAP-001: Paper Unspecified Parameters
 
 **Date**: 2025-12-22
-**Status**: DOCUMENTED - Implementations proposed with explicit rationales
+**Status**: DOCUMENTED - Implementations use evidence-based clinical AI defaults
 **Severity**: MEDIUM - Affects exact reproducibility but not system validity
-**Updated**: 2025-12-24 - Added paper-repo hardcoded sampling + hardware evidence
+**Updated**: 2025-12-24 - Switched to evidence-based temp=0.0, removed top_k/top_p
 **Tracked by**:
 - [GitHub Issue #46](https://github.com/The-Obstacle-Is-The-Way/ai-psychiatrist/issues/46) (sampling parameters)
 - [GitHub Issue #47](https://github.com/The-Obstacle-Is-The-Way/ai-psychiatrist/issues/47) (model quantization)
@@ -17,8 +17,8 @@ This document captures ALL parameters NOT explicitly specified in the paper, alo
 | Gap ID | Parameter | Paper Says | Our Implementation | Status |
 |--------|-----------|-----------|-------------------|--------|
 | GAP-001a | Data Split Membership | "58/43/41 stratified" but no participant IDs | `scripts/create_paper_split.py` | ✅ Reproducible algorithm |
-| GAP-001b | Temperature | "fairly deterministic" | 0.2 (few-shot), 0.0 (judge/zero-shot) | ✅ Matches notebooks |
-| GAP-001c | top_k / top_p | Not in paper text | Few-shot: 20/0.8, Zero-shot: 1/1.0 | ✅ Matches notebooks |
+| GAP-001b | Temperature | "fairly deterministic" | 0.0 (all agents) | ✅ Evidence-based |
+| GAP-001c | top_k / top_p | Not in paper text | Not set (irrelevant at temp=0) | ✅ Best practice |
 | GAP-001d | Hardware / Quantization | Not specified | Local Ollama defaults | ⚠️ May affect results |
 
 ---
@@ -91,21 +91,20 @@ Exact split membership will still differ from the paper because:
 - Whether different agents use different temperatures
 - Any temperature tuning methodology
 
-### Our Implementation
+### Our Implementation (Updated 2025-12-24)
 
 | Setting | Value | Rationale |
 |---------|-------|-----------|
-| `temperature` | 0.2 | Low but not zero; allows slight variation |
-| `temperature_judge` | 0.0 | Judge should be deterministic for consistency |
+| `temperature` | 0.0 | Clinical AI best practice |
 
-**Location**: `src/ai_psychiatrist/config.py` (`ModelSettings.temperature`, `ModelSettings.temperature_judge`)
+**Location**: `src/ai_psychiatrist/config.py` (`ModelSettings.temperature`)
 
-### Justification
+### Justification (Evidence-Based)
 
-- "Fairly deterministic" → temperature near 0
-- 0.2 is a common "low temperature" choice in clinical NLP
-- Judge uses 0.0 for maximum consistency in scoring
-- These values are explicit and can be tuned
+- Med-PaLM uses temp=0.0 for clinical answers ([Nature Medicine](https://pmc.ncbi.nlm.nih.gov/articles/PMC11922739/))
+- "Lower temperatures promote diagnostic accuracy" ([medRxiv 2025](https://www.medrxiv.org/content/10.1101/2025.06.04.25328288v1.full))
+- Anthropic: "temp 0.0 for analytical / multiple choice"
+- See [Agent Sampling Registry](../reference/agent-sampling-registry.md) for full citations
 
 ---
 
@@ -115,60 +114,30 @@ Exact split membership will still differ from the paper because:
 
 Nothing. These parameters are not mentioned.
 
-### What the Public Paper Repo Code Does
+### What Their Code Does (Reference Only)
 
-Although the paper text does not specify `top_k`/`top_p`, the publicly available repository
-does hardcode sampling options. **SSOT: Notebooks take precedence over .py files** (the .py files
-have wrong model defaults like `llama3` but sampling params happen to match).
+Their codebase has contradictory values:
 
-| Mode | Source (SSOT) | Temperature | top_k | top_p | Verified |
-|------|---------------|-------------|-------|-------|----------|
-| **Zero-shot** | `_reference/quantitative_assessment/basic_quantitative_analysis.ipynb` (line 207) | 0 | 1 | 1.0 | ✅ 2025-12-24 |
-| **Few-shot** | `_reference/quantitative_assessment/embedding_quantitative_analysis.ipynb` (line 1174) | 0.2 | 20 | 0.8 | ✅ 2025-12-24 |
+| Source | top_k | top_p | Notes |
+|--------|-------|-------|-------|
+| `basic_quantitative_analysis.ipynb:207` | 1 | 1.0 | Zero-shot |
+| `embedding_quantitative_analysis.ipynb:1174` | 20 | 0.8 | Few-shot |
+| `qual_assessment.py` | 20 | 0.9 | Wrong model default |
+| `meta_review.py` | 20 | 1.0 | Wrong model default |
 
-**Cross-verified with .py files** (which match for sampling params despite wrong model defaults):
-- `_reference/quantitative_assessment/quantitative_analysis.py`: `temp=0, top_k=1, top_p=1.0` ✅
-- `_reference/agents/quantitative_assessor_f.py`: `temp=0.2, top_k=20, top_p=0.8` ✅
+### Our Implementation (Updated 2025-12-24)
 
-**Note**: `basic_quantitative_analysis.ipynb` line 599 shows `temp=0.1, top_k=10` which appears
-to be experimental, NOT the production setting. Line 207 is labeled "Most deterministic".
+**We do NOT set top_k or top_p.**
 
-### Why Different Settings for Zero-shot vs Few-shot?
+### Justification (Evidence-Based)
 
-From first principles:
-- **Zero-shot** (`temp=0, top_k=1, top_p=1.0`): Fully deterministic because no grounding examples.
-  Must maximize consistency since the model has no reference points.
-- **Few-shot** (`temp=0.2, top_k=20, top_p=0.8`): Slight flexibility allowed because the model is
-  grounded by retrieved examples. Small temperature helps navigate edge cases.
+1. **At temp=0, they're irrelevant** — greedy decoding ignores sampling filters
+2. **Best practice: use temperature only** — "top_k is recommended for advanced use cases only. You usually only need to use temperature" ([Anthropic](https://www.prompthub.us/blog/using-anthropic-best-practices-parameters-and-large-context-windows))
+3. **Don't use both** — "You should alter either temperature or top_p, but not both" ([AWS Bedrock](https://docs.aws.amazon.com/bedrock/latest/userguide/model-parameters-anthropic-claude-text-completion.html))
+4. **Claude 4.x enforces this** — Returns error: "temperature and top_p cannot both be specified"
+5. **top_k is obsolete** — "not as well-supported, notably missing from OpenAI's API" ([Vellum](https://www.vellum.ai/llm-parameters/temperature))
 
-### Our Implementation
-
-| Setting | Value | Rationale |
-|---------|-------|-----------|
-| `top_k` | 20 | Matches few-shot notebook defaults |
-| `top_p` | 0.8 | Matches few-shot notebook defaults |
-
-**Location**: `src/ai_psychiatrist/config.py` (`ModelSettings.top_k`, `ModelSettings.top_p`)
-
-### Gap Status: ✅ ADDRESSED (2025-12-24)
-
-Zero-shot specific settings added to config:
-
-| Mode | Paper Repo | Our Implementation | Gap? |
-|------|------------|-------------------|------|
-| Zero-shot | `temp=0, top_k=1, top_p=1.0` | `MODEL_TEMPERATURE_ZERO_SHOT=0.0`, etc. | **FIXED** |
-| Few-shot | `temp=0.2, top_k=20, top_p=0.8` | `temp=0.2, top_k=20, top_p=0.8` | No |
-
-New settings in `config.py`:
-- `MODEL_TEMPERATURE_ZERO_SHOT` (default: 0.0)
-- `MODEL_TOP_K_ZERO_SHOT` (default: 1)
-- `MODEL_TOP_P_ZERO_SHOT` (default: 1.0)
-
-### Justification
-
-- These match the public repo few-shot agent defaults (notebooks as SSOT)
-- With low temperature (0.2), these have limited effect but can still shift abstention behavior
-- Can be overridden via environment variables for ablations
+See [Agent Sampling Registry](../reference/agent-sampling-registry.md) for full citations
 
 ---
 
@@ -248,12 +217,12 @@ dimension: int = 4096        # Paper: "Ndimension = 4096"
 max_iterations: int = 10     # Paper: "limited to a maximum of 10 iterations"
 score_threshold: int = 3     # Paper: "score was below four" → ≤3
 
-	# NOT SPECIFIED - Using justified defaults
-	temperature: float = 0.2     # Paper: "fairly deterministic" → low temp
-	temperature_judge: float = 0.0  # Deterministic for consistency
-	top_k: int = 20              # Matches paper repo few-shot defaults (paper text unspecified)
-	top_p: float = 0.8           # Matches paper repo few-shot defaults (paper text unspecified)
+# NOT SPECIFIED - Using evidence-based clinical AI defaults
+temperature: float = 0.0     # Med-PaLM, medRxiv 2025: temp=0 for clinical AI
+# top_k and top_p: NOT SET (irrelevant at temp=0, best practice is temp only)
 ```
+
+See [Agent Sampling Registry](../reference/agent-sampling-registry.md) for full citations.
 
 ---
 

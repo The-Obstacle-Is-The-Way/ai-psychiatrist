@@ -53,16 +53,12 @@ class ChatRequest:
         messages: Sequence of chat messages forming the conversation.
         model: Model identifier (e.g., "gemma3:27b").
         temperature: Sampling temperature (0.0 = deterministic, higher = more random).
-        top_k: Top-k sampling parameter.
-        top_p: Nucleus sampling parameter.
         timeout_seconds: Request timeout in seconds.
     """
 
     messages: Sequence[ChatMessage]
     model: str
-    temperature: float = 0.2
-    top_k: int = 20
-    top_p: float = 0.8
+    temperature: float = 0.0
     timeout_seconds: int = 300
 
     def __post_init__(self) -> None:
@@ -75,12 +71,6 @@ class ChatRequest:
             raise ValueError(msg)
         if not 0.0 <= self.temperature <= 2.0:
             msg = f"Temperature {self.temperature} must be between 0.0 and 2.0"
-            raise ValueError(msg)
-        if not 1 <= self.top_k <= 100:
-            msg = f"top_k {self.top_k} must be between 1 and 100"
-            raise ValueError(msg)
-        if not 0.0 <= self.top_p <= 1.0:
-            msg = f"top_p {self.top_p} must be between 0.0 and 1.0"
             raise ValueError(msg)
         if self.timeout_seconds < 1:
             msg = f"timeout_seconds {self.timeout_seconds} must be >= 1"

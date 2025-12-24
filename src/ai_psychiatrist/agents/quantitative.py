@@ -169,17 +169,13 @@ class QuantitativeAssessmentAgent:
 
         # Use model settings if provided (Paper Appendix F: MedGemma achieves 18% better MAE)
         model = self._model_settings.quantitative_model if self._model_settings else None
-        temperature = self._model_settings.temperature if self._model_settings else 0.2
-        top_k = self._model_settings.top_k if self._model_settings else 20
-        top_p = self._model_settings.top_p if self._model_settings else 0.8
+        temperature = self._model_settings.temperature if self._model_settings else 0.0
 
         raw_response = await self._llm.simple_chat(
             user_prompt=prompt,
             system_prompt=QUANTITATIVE_SYSTEM_PROMPT,
             model=model,
             temperature=temperature,
-            top_k=top_k,
-            top_p=top_p,
         )
 
         logger.debug("LLM scoring complete", response_length=len(raw_response))
@@ -269,16 +265,12 @@ class QuantitativeAssessmentAgent:
 
         # Use model settings if provided
         model = self._model_settings.quantitative_model if self._model_settings else None
-        temperature = self._model_settings.temperature if self._model_settings else 0.2
-        top_k = self._model_settings.top_k if self._model_settings else 20
-        top_p = self._model_settings.top_p if self._model_settings else 0.8
+        temperature = self._model_settings.temperature if self._model_settings else 0.0
 
         raw = await self._llm.simple_chat(
             user_prompt=user_prompt,
             model=model,
             temperature=temperature,
-            top_k=top_k,
-            top_p=top_p,
         )
 
         # Parse JSON response with tolerant fixups (BUG-011: Apply repair before parsing)
@@ -438,15 +430,11 @@ class QuantitativeAssessmentAgent:
         try:
             # Use model settings if provided, with lower temperature for repair
             model = self._model_settings.quantitative_model if self._model_settings else None
-            top_k = self._model_settings.top_k if self._model_settings else 20
-            top_p = self._model_settings.top_p if self._model_settings else 0.8
 
             fixed = await self._llm.simple_chat(
                 user_prompt=repair_prompt,
                 model=model,
-                temperature=0.1,  # Lower temp for deterministic repair
-                top_k=top_k,
-                top_p=top_p,
+                temperature=0.0,  # Deterministic repair
             )
             clean = self._strip_json_block(fixed)
             clean = self._tolerant_fixups(clean)
