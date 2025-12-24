@@ -9,13 +9,19 @@
 
 ## Summary
 
-An example reproduction run achieved **~74% coverage** vs the paper’s report that
-**in ~50% of cases** the model could not provide a prediction due to insufficient
-evidence (Section 3.2).
+Historical reproduction runs in this repo have shown higher item-level coverage than the
+paper’s reported abstention rate (Section 3.2: “in ~50% of cases it was unable to provide a
+prediction due to insufficient evidence”).
 
-Hypothesis: coverage is higher in this repository partly because it includes a
-rule-based keyword backfill step that can add evidence when the initial LLM extraction
-misses it.
+Initial hypothesis (still plausible, but incomplete): coverage can be higher here because we
+implemented an optional, rule-based **keyword backfill** step that can add evidence when the
+initial LLM evidence extraction misses it.
+
+**Update (SSOT, 2025-12-24):** backfill is **not the whole story**. We observed **69.2% coverage
+with backfill OFF** (paper-text parity), so other differences (prompt formatting, parsing,
+model/runtime/quantization, evaluation denominator) also contribute. See:
+- `docs/bugs/analysis-027-paper-implementation-comparison.md`
+- `docs/bugs/investigation-026-reproduction-mae-divergence.md`
 
 ---
 
@@ -33,7 +39,7 @@ When the LLM fails to extract evidence for a PHQ-8 item, we search the transcrip
 # - _merge_evidence(): inject matches into scorer evidence (up to cap)
 #
 # Backfill injection is controlled by:
-#   QUANTITATIVE_ENABLE_KEYWORD_BACKFILL (default: false / paper parity)
+#   QUANTITATIVE_ENABLE_KEYWORD_BACKFILL (default: false / paper-text parity)
 hits = self._find_keyword_hits(transcript, cap=cap)
 enriched = self._merge_evidence(current_evidence, hits, cap=cap)
 ```
@@ -76,22 +82,31 @@ Examples per domain:
 
 ## Does Paper Use Keyword Backfill?
 
-**Unknown.** The paper does not explicitly describe this mechanism.
+### What the Paper TEXT Says
 
-Paper Section 2.3.2 only says:
-> "extracts symptom-related evidence directly from the text"
+The paper text does **not** explicitly describe a keyword backfill mechanism. It describes
+LLM-based evidence extraction and records missing/insufficient evidence as “N/A”.
 
-No mention of fallback keyword matching.
+### What the Paper REPO Does (Verified)
+
+The public repo does include and execute keyword backfill in the few-shot agent:
+- `_reference/agents/quantitative_assessor_f.py:29-38` defines `DOMAIN_KEYWORDS`
+- `_reference/agents/quantitative_assessor_f.py:84-102` defines `_keyword_backfill(...)`
+- `_reference/agents/quantitative_assessor_f.py:478` calls `_keyword_backfill(...)` unconditionally
+
+This creates an ambiguity we now treat as **two parity targets**:
+- **Paper-text parity** (methodology as written): backfill not described → keep backfill OFF.
+- **Paper-repo parity** (match public implementation): backfill ON *and* match the repo’s keyword list/behavior.
 
 If paper used pure LLM extraction without backfill:
 - More extraction failures → more N/A → lower coverage
-- Explains the 50% vs 74% difference
+- Could explain part of the historical 74% (backfill ON) vs paper-text high abstention, but our observed 69.2% with backfill OFF indicates additional factors are at play (prompts, model/runtime, denominator).
 
 ---
 
 ## Item-by-Item Coverage Comparison
 
-| Item | Example Run Coverage | Paper Notes |
+| Item | Historical Run Coverage (backfill ON) | Paper Notes |
 |------|--------------|-------------|
 | Depressed | 100% | Always discussed |
 | Sleep | 98% | Common topic |
@@ -101,6 +116,9 @@ If paper used pure LLM extraction without backfill:
 | Concentrating | 51% | Less often discussed |
 | Moving | 44% | Hard to detect from text |
 | Appetite | 34% | Rarely discussed |
+
+These values come from a historical run recorded in `docs/results/reproduction-notes.md` (that run is
+explicitly **invalidated** for paper-text parity because it used backfill ON).
 
 **Paper confirms** (Appendix E):
 > "PHQ-8-Appetite had no successfully retrieved reference chunks during inference"
@@ -115,17 +133,17 @@ plausible but unproven without an ablation run.
 
 ### Option 1: Keep As-Is (Recommended)
 - Keep backfill as an opt-in feature
-- Default remains paper parity (backfill OFF)
+- Default remains **paper-text parity** (backfill OFF)
 - Enable for higher coverage when clinical utility is prioritized
 
 ### Option 2: Disable Keyword Backfill
 - Not applicable (already the default as of SPEC-003)
-- Run with `QUANTITATIVE_ENABLE_KEYWORD_BACKFILL=false` (explicit) to match paper parity
+- Run with `QUANTITATIVE_ENABLE_KEYWORD_BACKFILL=false` (explicit) to match paper-text parity
 
 ### Option 3: Make Configurable
 - ✅ Implemented in SPEC-003 via environment variable
 - Allow users to choose their coverage/accuracy tradeoff:
-  - `QUANTITATIVE_ENABLE_KEYWORD_BACKFILL=false` (default, paper parity)
+  - `QUANTITATIVE_ENABLE_KEYWORD_BACKFILL=false` (default, paper-text parity)
   - `QUANTITATIVE_ENABLE_KEYWORD_BACKFILL=true` (higher coverage)
 
 ---
@@ -156,10 +174,10 @@ This investigation led to [SPEC-003: Make Keyword Backfill Optional](../specs/SP
 
 1. **Adds config flag**: `QUANTITATIVE_ENABLE_KEYWORD_BACKFILL` to enable/disable keyword backfill
 2. **Tracks N/A reasons**: Understand why items return N/A
-3. **Defaults to paper parity**: Backfill is OFF by default
+3. **Defaults to paper-text parity**: Backfill is OFF by default
 
 After implementation, users can:
-- Run with defaults (or `QUANTITATIVE_ENABLE_KEYWORD_BACKFILL=false`) to match paper parity
+- Run with defaults (or `QUANTITATIVE_ENABLE_KEYWORD_BACKFILL=false`) to match paper-text parity
 - Run `QUANTITATIVE_ENABLE_KEYWORD_BACKFILL=true` for higher coverage
 - Run ablation studies comparing backfill ON vs OFF
 - Track which items benefit most from backfill

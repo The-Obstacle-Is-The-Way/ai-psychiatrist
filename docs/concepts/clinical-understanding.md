@@ -1,7 +1,7 @@
 # Clinical Understanding: How This System Works
 
 **Audience**: Clinicians, researchers, non-CS folks
-**Last Updated**: 2025-12-23
+**Last Updated**: 2025-12-24
 
 ---
 
@@ -68,7 +68,7 @@ The system makes **multiple LLM calls** per patient:
 #### Step 1: Evidence Extraction
 - LLM reads transcript
 - Outputs JSON with quotes for each PHQ-8 item
-- Sometimes this fails (malformed JSON) → falls back to keyword matching
+- Sometimes this fails (malformed JSON) → falls back to empty evidence; optional keyword backfill (if enabled) can still add evidence
 
 #### Step 2: Few-Shot Retrieval
 - Uses the extracted evidence to find **similar patients** from the training data
@@ -125,7 +125,9 @@ Interview Transcript
 ## Why We're Seeing What We're Seeing
 
 ### The JSON Parsing Warning
-When evidence extraction produces malformed output, the system falls back to **keyword matching** (searching for words like "sleep", "tired", "depressed"). This gives fewer evidence items, which may lead to more N/A predictions.
+When evidence extraction produces malformed output, the system falls back to an **empty evidence** dict for that participant.
+If keyword backfill is enabled, keyword matching can still add evidence; if backfill is disabled (paper-text parity default),
+more items may remain N/A.
 
 ### Variable Coverage (50-100%)
 Coverage varies across participants and items. This depends on:
@@ -147,7 +149,7 @@ The paper excludes N/A items from MAE calculation. This is valid because:
 
 1. **Better Evidence Extraction**
    - Reduce malformed JSON rates via prompt tightening and/or an explicit repair step for evidence extraction
-   - Could improve coverage by reducing fallback-to-keyword-only cases
+   - Could improve coverage by reducing empty-evidence cases (and reducing reliance on keyword backfill when enabled)
 
 2. **Prompt Engineering**
    - Adjust how we ask the LLM to extract evidence

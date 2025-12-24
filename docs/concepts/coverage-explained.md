@@ -1,7 +1,7 @@
 # Coverage Explained: What It Is and Why It Matters
 
 **Audience**: Anyone trying to understand what "coverage" means in PHQ-8 assessment
-**Last Updated**: 2025-12-23
+**Last Updated**: 2025-12-24
 
 ---
 
@@ -58,19 +58,22 @@ Lower coverage → Fewer predictions → Only "easy" items → Potentially lower
 
 ### Example Run vs. Paper
 
-The paper reports item-level MAE and notes that **in ~50% of cases** the model could
-not provide a prediction due to insufficient evidence.
+The paper reports item-level MAE and notes that **in ~50% of cases** the model could not
+provide a prediction due to insufficient evidence. The paper does not fully specify what
+the denominator for “cases” is (item-level vs subject-level), but it is clearly describing
+substantial abstention due to missing evidence.
 
 This repository also computes **item-level MAE excluding N/A**, but the exact
 coverage/MAE depends on model weights/quantization, backend, and prompt behavior.
 
-| Metric | Paper | Example Run (paper-style split, few-shot) |
-|--------|-------|--------------------------------------|
-| Coverage | ~50% cases had no prediction | 74.1% |
-| Item MAE | 0.619 | 0.757 (weighted across predicted items) |
+| Metric | Paper (reported) | Example Run (paper split, few-shot, backfill OFF) |
+|--------|------------------|----------------------------------------------|
+| Coverage | ~50% abstention (“unable to provide a prediction”) | 69.2% (item-level coverage over evaluated subjects) |
+| Item MAE | 0.619 | 0.778 (weighted across predicted items) |
 
-See `docs/results/reproduction-notes.md` for the concrete run details and the raw
-artifact under `data/outputs/`.
+Run details and a discussion of the remaining gap live in:
+- `docs/bugs/investigation-026-reproduction-mae-divergence.md`
+- `docs/bugs/analysis-027-paper-implementation-comparison.md`
 
 Interpretation: higher coverage often increases MAE because the model attempts more
 items (including harder-to-evidence symptoms). This is a general tradeoff; attributing
@@ -91,6 +94,9 @@ Not all PHQ-8 items are created equal. Some are discussed more often in intervie
 
 The paper confirms this:
 > "PHQ-8-Appetite had no successfully retrieved reference chunks"
+
+Note: this quote is about **few-shot reference retrieval** (no retrieved reference chunks),
+not “coverage” directly.
 
 And:
 > "For symptoms such as poor appetite and moving slowly, MAE performance was highly variable due to substantially fewer subjects with available scores"
@@ -113,10 +119,9 @@ And:
 
 ### Our Approach
 
-We lean toward **higher coverage** because:
-1. Clinically, a 74% assessment is more useful than 50%
-2. Even imperfect predictions provide signal
-3. Items marked N/A provide no information
+We support both goals, and make the choice explicit:
+- **Paper-text parity / pure LLM measurement**: backfill OFF by default.
+- **Clinical utility**: enable keyword backfill to increase coverage.
 
 ---
 
@@ -153,7 +158,9 @@ If the system skips hard items (where it would have made errors) and only predic
 The LLM reads the transcript and extracts quotes for each PHQ-8 item. If it finds quotes, it can make a prediction.
 
 ### 2. Keyword Backfill
-When LLM extraction fails, we search for keywords like "sleep", "tired", "appetite" to find relevant sentences. This INCREASES coverage.
+When enabled, keyword backfill searches for phrases like "can't sleep", "so tired", "no appetite" to find
+relevant sentences. This typically increases coverage, but it is optional and not always
+enabled (see `docs/concepts/backfill-explained.md`).
 
 ### 3. Model Confidence
 The LLM decides when to say "N/A". Some models are more conservative than others.
@@ -182,7 +189,7 @@ Other plausible contributors include:
 
 To turn this from a hypothesis into a conclusion, run an ablation with backfill
 disabled vs enabled using the same split and model backend:
-- Default (paper parity): `QUANTITATIVE_ENABLE_KEYWORD_BACKFILL=false`
+- Default (paper-text parity): `QUANTITATIVE_ENABLE_KEYWORD_BACKFILL=false`
 - Higher coverage: `QUANTITATIVE_ENABLE_KEYWORD_BACKFILL=true`
 
 ---
@@ -196,12 +203,13 @@ disabled vs enabled using the same split and model backend:
 | **Tradeoff** | Higher coverage → more items → may include harder predictions |
 | **MAE impact** | Only scored items count; N/A items are excluded |
 
-**Key takeaway**: Coverage and MAE must be interpreted together. A system with 0.6 MAE at 50% coverage is NOT directly comparable to 0.75 MAE at 74% coverage—they're making different tradeoffs.
+**Key takeaway**: Coverage and MAE must be interpreted together. A system with 0.619 MAE at ~50% abstention is not directly comparable to a system with ~0.78 MAE at ~69% coverage—they’re making different tradeoffs.
 
 ---
 
 ## Related Documentation
 
 - [clinical-understanding.md](./clinical-understanding.md) - How the system works
-- [reproduction-notes.md](../results/reproduction-notes.md) - Actual results and analysis
+- [investigation-026-reproduction-mae-divergence.md](../bugs/investigation-026-reproduction-mae-divergence.md) - Current paper-text-parity run analysis
+- [reproduction-notes.md](../results/reproduction-notes.md) - Historical run notes (includes invalidated backfill-ON run)
 - [gap-001-paper-unspecified-parameters.md](../bugs/gap-001-paper-unspecified-parameters.md) - Why results may differ

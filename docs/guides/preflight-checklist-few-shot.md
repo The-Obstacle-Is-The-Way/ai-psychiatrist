@@ -32,6 +32,7 @@ Few-shot mode uses reference embeddings to retrieve similar transcript chunks as
 
 - [ ] **Copy template**: `cp .env.example .env`
   - **Gotcha (BUG-018b)**: `.env` OVERRIDES code defaults! Always start fresh.
+  - **Gotcha (BUG-024)**: If `.env` predates SPEC-003, it may lack `QUANTITATIVE_ENABLE_KEYWORD_BACKFILL=false`. Re-copy from `.env.example` or add missing settings.
 
 - [ ] **Review .env file manually** - open it and verify:
   ```bash
@@ -148,10 +149,11 @@ Few-shot mode uses reference embeddings to retrieve similar transcript chunks as
   p = Path('data/embeddings/paper_reference_embeddings.npz')
   if p.exists():
       data = np.load(str(p))
-      emb = data['embeddings']
-      print(f'Embedding dimension: {emb.shape[1]}')
+      # NPZ uses per-participant keys: emb_302, emb_304, etc.
+      dim = next(iter(data.values())).shape[1]
+      print(f'Embedding dimension: {dim}')
       print(f'Config expects: 4096')
-      assert emb.shape[1] == 4096, 'DIMENSION MISMATCH!'
+      assert dim == 4096, 'DIMENSION MISMATCH!'
       print('OK - dimensions match')
   else:
       print('Embeddings not found - will need to generate')
@@ -189,13 +191,14 @@ Few-shot mode uses reference embeddings to retrieve similar transcript chunks as
       p = Path('data/embeddings') / name
       if p.exists():
           data = np.load(str(p))
-          emb = data['embeddings']
-          pids = data['participant_ids']
+          # NPZ uses per-participant keys: emb_302, emb_304, etc.
+          pids = [int(k.split('_')[1]) for k in data.keys()]
+          total_chunks = sum(data[k].shape[0] for k in data.keys())
+          dim = next(iter(data.values())).shape[1]
           print(f'File: {name}')
-          print(f'  Embeddings shape: {emb.shape}')
-          print(f'  Participants: {len(set(pids))}')
-          print(f'  Total chunks: {len(emb)}')
-          print(f'  Dimension: {emb.shape[1]}')
+          print(f'  Participants: {len(pids)}')
+          print(f'  Total chunks: {total_chunks}')
+          print(f'  Dimension: {dim}')
           break
   else:
       print('ERROR: No embedding file found!')
@@ -206,9 +209,8 @@ Few-shot mode uses reference embeddings to retrieve similar transcript chunks as
   Expected output for paper-train:
   ```text
   File: paper_reference_embeddings.npz
-    Embeddings shape: (6998, 4096)
     Participants: 58
-    Total chunks: 6998
+    Total chunks: ~7000
     Dimension: 4096
   ```
 
@@ -279,8 +281,8 @@ Few-shot mode uses reference embeddings to retrieve similar transcript chunks as
 
 - [ ] **AVEC2017 labels exist** (for item-level MAE):
   ```bash
-  ls data/labels/
-  # Should show: train_split.csv, dev_split.csv (minimum)
+  ls data/*_split_Depression_AVEC2017.csv
+  # Should show: dev_split, train_split, test_split files
   ```
 
 ---
@@ -337,19 +339,17 @@ Few-shot mode uses reference embeddings to retrieve similar transcript chunks as
 - [ ] **Verify embeddings are from paper-train**:
   ```bash
   uv run python -c "
-  import json
   import numpy as np
-  from pathlib import Path
+  import csv
 
-  # Load embedding participant IDs
+  # Load embedding participant IDs from NPZ keys (emb_302, emb_304, etc.)
   emb = np.load('data/embeddings/paper_reference_embeddings.npz')
-  emb_pids = set(emb['participant_ids'])
+  emb_pids = {int(k.split('_')[1]) for k in emb.keys()}
   print(f'Embedding participants: {len(emb_pids)}')
 
-  # Load paper train split
-  import csv
+  # Load paper train split (column is Participant_ID)
   with open('data/paper_splits/paper_split_train.csv') as f:
-      train_pids = {int(row['participant_id']) for row in csv.DictReader(f)}
+      train_pids = {int(row['Participant_ID']) for row in csv.DictReader(f)}
   print(f'Paper train participants: {len(train_pids)}')
 
   # Check alignment
@@ -357,8 +357,8 @@ Few-shot mode uses reference embeddings to retrieve similar transcript chunks as
       print('OK - embeddings match paper train split')
   else:
       print('WARNING: Embeddings do not match train split!')
-      print(f'  In emb but not train: {emb_pids - train_pids}')
-      print(f'  In train but not emb: {train_pids - emb_pids}')
+      print(f'  In emb but not train: {sorted(emb_pids - train_pids)}')
+      print(f'  In train but not emb: {sorted(train_pids - emb_pids)}')
   "
   ```
 
@@ -368,7 +368,7 @@ Few-shot mode uses reference embeddings to retrieve similar transcript chunks as
 
 ### 9.1 Quick Sanity Check
 
-- [ ] **Run linter**: `make lint-check`
+- [ ] **Run linter**: `make lint`
 - [ ] **Run type checker**: `make typecheck`
 - [ ] **Run unit tests**: `make test-unit`
 
@@ -420,7 +420,27 @@ Top-K References: 2 (paper: 2)
 
 ## Phase 10: Execute Few-Shot Run
 
-### 10.1 Run Command
+### 10.1 Use tmux for Long-Running Processes
+
+**CRITICAL**: Reproduction runs take ~5-6 min/participant. Use tmux to prevent losing progress if your terminal disconnects.
+
+- [ ] **Start or attach to tmux session**:
+  ```bash
+  # Start new session
+  tmux new -s reproduction
+
+  # Or attach to existing session
+  tmux attach -t reproduction
+  ```
+
+- [ ] **Verify you're inside tmux**: Look for green status bar at bottom, or run:
+  ```bash
+  echo $TMUX
+  # Should show something like: /private/tmp/tmux-501/default,12345,0
+  # If empty, you're NOT in tmux!
+  ```
+
+### 10.2 Run Command
 
 ```bash
 # Few-shot on paper test split (primary reproduction)
@@ -432,7 +452,7 @@ uv run python scripts/reproduce_results.py --split dev --few-shot-only
 
 **Note**: `--few-shot-only` ensures few-shot mode. Without it, uses config `ENABLE_FEW_SHOT` setting.
 
-### 10.2 Monitor for Issues
+### 10.3 Monitor for Issues
 
 Watch for these log patterns:
 

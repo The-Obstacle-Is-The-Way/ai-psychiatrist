@@ -1,7 +1,7 @@
 # Evidence Extraction Mechanism: How It Actually Works
 
 **Audience**: Anyone wanting to understand the core engineering behind PHQ-8 scoring
-**Last Updated**: 2025-12-23
+**Last Updated**: 2025-12-24
 
 ---
 
@@ -159,7 +159,7 @@ Without backfill:
 - LLM misses "I'm so tired" → Tired gets N/A
 
 With backfill:
-- LLM misses it, but "tired" is a keyword
+- LLM misses it, but "so tired" is a keyword (substring match)
 - Backfill finds "I'm so tired" → Tired gets evidence → Tired gets scored
 
 Keyword backfill can increase coverage relative to a pure LLM-only evidence
@@ -167,8 +167,12 @@ extraction approach. The paper reports that **in ~50% of cases** the model was
 unable to provide a prediction due to insufficient evidence (Section 3.2).
 
 As of [SPEC-003](../specs/SPEC-003-backfill-toggle.md), backfill is **OFF by default**
-for paper parity. Enable it to increase coverage:
-- Default (paper parity): `QUANTITATIVE_ENABLE_KEYWORD_BACKFILL=false`
+for **paper-text parity** (paper methodology as written; keyword backfill is not described).
+The paper’s public repo does include keyword backfill in its few-shot agent (see
+`docs/bugs/analysis-027-paper-implementation-comparison.md`).
+
+Enable backfill to increase coverage:
+- Default (paper-text parity): `QUANTITATIVE_ENABLE_KEYWORD_BACKFILL=false`
 - Higher coverage: `QUANTITATIVE_ENABLE_KEYWORD_BACKFILL=true`
 
 ---
@@ -247,7 +251,8 @@ Overall Coverage = (Total items with scores) / (Total participants × 8)
 ```
 
 For a concrete example run (including per-item counts and coverage), see
-`docs/results/reproduction-notes.md`. Output artifacts are stored locally under
+`docs/bugs/investigation-026-reproduction-mae-divergence.md` (current paper-text-parity run) and
+`docs/results/reproduction-notes.md` (historical notes). Output artifacts are stored locally under
 `data/outputs/` (gitignored due to DAIC-WOZ licensing; not committed to repo).
 
 ---
@@ -255,6 +260,8 @@ For a concrete example run (including per-item counts and coverage), see
 ## What Parameters Affect Extraction?
 
 ### Temperature
+
+Note: The paper text does not specify exact sampling settings; the effects below are heuristics and can vary by model/backend. See `docs/bugs/gap-001-paper-unspecified-parameters.md`.
 
 | Value | Effect on Extraction |
 |-------|---------------------|
@@ -266,9 +273,9 @@ For a concrete example run (including per-item counts and coverage), see
 
 | Model | Extraction Quality |
 |-------|-------------------|
-| gemma3:27b | Good balance of coverage and accuracy |
-| MedGemma 27B | Lower coverage (more N/A); Appendix F reports lower MAE on the subset with evidence |
-| Smaller models | May miss nuanced evidence |
+| gemma3:27b | Paper’s main baseline model family; exact behavior depends on build/quantization/backend |
+| MedGemma 27B | Appendix F: lower MAE on the subset with available evidence, but fewer predictions overall (more abstention) |
+| Smaller models | Often less robust on nuance (heuristic) |
 
 ### Keyword List Quality
 

@@ -136,9 +136,9 @@ class QuantitativeAssessmentAgent:
     async def _extract_evidence(self, transcript_text: str) -> dict[str, list[str]]:
         """Extract evidence quotes for each PHQ-8 item."""
         user_prompt = EVIDENCE_EXTRACT_PROMPT.replace("{transcript}", transcript_text)
-        
+
         raw = await self._llm.simple_chat(user_prompt)
-        
+
         try:
             clean = self._strip_json_block(raw)
             clean = self._tolerant_fixups(clean)
@@ -149,7 +149,7 @@ class QuantitativeAssessmentAgent:
                 response_preview=raw[:200] if raw else "",
             )
             obj = {}
-            
+
         # Clean up extraction
         evidence_dict = {}
         for k in DOMAIN_KEYWORDS.keys():
@@ -167,14 +167,14 @@ class QuantitativeAssessmentAgent:
         import re
         parts = re.split(r'(?<=[\.?!])\s+|\n+', transcript.strip())
         sents = [p.strip() for p in parts if p and len(p.strip()) > 0]
-        
+
         out = {k: list(v) for k, v in current.items()}
-        
+
         for key, kws in DOMAIN_KEYWORDS.items():
             need = max(0, cap - len(out.get(key, [])))
             if need == 0:
                 continue
-                
+
             hits = []
             for s in sents:
                 s_lower = s.lower()
@@ -182,12 +182,12 @@ class QuantitativeAssessmentAgent:
                     hits.append(s)
                 if len(hits) >= need:
                     break
-            
+
             if hits:
                 existing = set(out.get(key, []))
                 merged = out.get(key, []) + [h for h in hits if h not in existing]
                 out[key] = merged[:cap]
-                
+
         return out
 
     async def _parse_response(self, raw: str, original_prompt: str) -> dict[PHQ8Item, ItemAssessment]:
@@ -200,7 +200,7 @@ class QuantitativeAssessmentAgent:
             return self._validate_and_normalize(data)
         except Exception:
             pass
-            
+
         # Strategy 2: LLM Repair
         try:
             repaired_json = await self._llm_repair(raw)
@@ -208,7 +208,7 @@ class QuantitativeAssessmentAgent:
                 return self._validate_and_normalize(repaired_json)
         except Exception:
             pass
-            
+
         # Strategy 3: Fallback to empty skeleton
         logger.error("Failed to parse quantitative response after all attempts")
         return self._validate_and_normalize({})

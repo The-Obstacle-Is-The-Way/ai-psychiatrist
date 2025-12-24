@@ -11,13 +11,13 @@ The PHQ-8 (Patient Health Questionnaire-8) is a validated self-report depression
 PHQ-8 is derived from the PHQ-9, which includes a 9th question about suicide ideation. PHQ-8 is often preferred in research settings because:
 - It avoids mandatory suicide protocol triggers
 - Maintains strong psychometric properties
-- Correlates highly with PHQ-9 (r > 0.99 per research)
+- Correlates highly with PHQ-9 (as reported in PHQ-8 validation literature)
 
 ---
 
 ## The 8 Items
 
-Each item corresponds to a DSM-5 criterion for Major Depressive Episode:
+Each item corresponds to a DSM criterion for Major Depressive Episode:
 
 | # | Item | Clinical Domain | Code |
 |---|------|-----------------|------|
@@ -122,7 +122,7 @@ class SeverityLevel(IntEnum):
 
 The Quantitative Agent first extracts relevant transcript quotes for each item:
 
-```json
+```jsonc
 {
   "PHQ8_NoInterest": [
     "i used to love hiking but now i can't even get motivated",

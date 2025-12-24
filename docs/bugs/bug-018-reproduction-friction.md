@@ -1,11 +1,15 @@
 # BUG-018: Reproduction Friction Log
 
 **Date**: 2025-12-22
-**Status**: INVESTIGATED - paper-parity workflow runs end-to-end; MAE parity not yet achieved
-**Severity**: HIGH - initially blocked paper-parity evaluation
-**Updated**: 2025-12-23 - paper-style split + embeddings + evaluation executed; metrics still diverge (see results)
+**Status**: INVESTIGATED - paper-text parity workflow runs end-to-end; MAE/coverage parity not yet achieved
+**Severity**: HIGH - initially blocked paper-text parity evaluation
+**Updated**: 2025-12-24 - paper-style split + embeddings + evaluation executed; metrics still diverge (see investigation-026 / analysis-027)
 
 This document captures ALL friction points encountered when attempting to reproduce the paper's PHQ-8 assessment results.
+
+Terminology note (SSOT): “paper parity” has two plausible meanings because the paper text and the public repo diverge.
+This doc uses **paper-text parity** (methodology as written; keyword backfill not described). For the code-level mismatch,
+see `docs/bugs/analysis-027-paper-implementation-comparison.md`.
 
 Note: `.env` is gitignored; any `.env` references below describe **local developer configuration**
 changes made during reproduction attempts.
@@ -30,6 +34,7 @@ We were computing a **completely different metric** than the paper:
 1. **04:01 AM Dec 22**: Ran reproduction with OLD script → MAE 4.02 (WRONG)
 2. **Later Dec 22**: Rewrote `scripts/reproduce_results.py` to match paper methodology
 3. **2025-12-23**: Paper-parity workflow executed end-to-end; see `docs/results/reproduction-notes.md` (MAE still above paper)
+4. **2025-12-24**: Paper-text-parity run executed; see `docs/bugs/investigation-026-reproduction-mae-divergence.md`
 
 ### The OLD Code (Wrong)
 
@@ -39,7 +44,7 @@ predicted = assessment.total_score  # Sum of 8 items (0-24)
 absolute_error = abs(predicted - ground_truth)  # Total vs total
 ```
 
-### The NEW Code (Correct; used in paper-parity run)
+### The NEW Code (Correct; used in paper-text-parity run)
 
 ```python
 # scripts/reproduce_results.py (AFTER fix, in main)
@@ -62,9 +67,9 @@ The handwave `4.02 ÷ 8 ≈ 0.50` is **not** equivalent to the paper's methodolo
 
 ### Action (Completed: methodology parity; results still diverge)
 
-✅ Paper-parity reproduction was re-run end-to-end. Commands executed:
+✅ Paper-text-parity reproduction was re-run end-to-end. Commands executed:
 ```bash
-# Paper-parity workflow (paper-style split + paper embeddings + evaluation on paper test)
+# Paper-text-parity workflow (paper-style split + paper embeddings + evaluation on paper test)
 uv run python scripts/create_paper_split.py --seed 42
 uv run python scripts/generate_embeddings.py --split paper-train
 uv run python scripts/reproduce_results.py --split paper --few-shot-only
@@ -74,7 +79,8 @@ uv run python scripts/reproduce_results.py --split dev
 ```
 
 The output file `data/outputs/reproduction_results_20251222_040100.json` is **INVALID** and should be ignored.
-See `docs/results/reproduction-notes.md` for the current example run metrics and divergence hypotheses.
+See `docs/bugs/investigation-026-reproduction-mae-divergence.md` and
+`docs/bugs/analysis-027-paper-implementation-comparison.md` for current metrics and divergence hypotheses.
 
 ---
 
@@ -82,7 +88,7 @@ See `docs/results/reproduction-notes.md` for the current example run metrics and
 
 | Sub-bug | Issue | Status |
 |---------|-------|--------|
-| BUG-018a | Misconfigured quantitative model default (MedGemma) | ✅ FIXED - paper-parity defaults use gemma3:27b |
+| BUG-018a | Misconfigured quantitative model default (MedGemma) | ✅ FIXED - paper-text-parity defaults use gemma3:27b |
 | BUG-018b | `.env` overrides code defaults | ✅ DOCUMENTED - expected Pydantic behavior; templates updated |
 | BUG-018c | DataSettings attribute | ✅ FIXED - script updated |
 | BUG-018d | Inline imports | ✅ FIXED - imports at top |
@@ -298,8 +304,10 @@ The quantitative agent uses a multi-level repair cascade:
 
 ### Conclusion
 
-In the current paper-parity workflow, JSON parsing is generally reliable; we did not observe JSON
-parse failures in the example run documented in `docs/results/reproduction-notes.md`.
+JSON parsing failures are **mitigated**, not eliminated. In a paper-text-parity run (2025-12-24),
+we observed two participants where the quantitative scoring response could not be parsed after all
+attempts (all items N/A), and the run continued normally (see
+`docs/bugs/investigation-026-reproduction-mae-divergence.md`).
 
 However, because malformed JSON can reappear due to model variability and long generations, treat
 this as **mitigated**, not permanently “resolved”.
@@ -412,14 +420,14 @@ Complete rewrite of `scripts/reproduce_results.py`:
 
 ### Current Status
 
-The paper-parity evaluation workflow exists (item-level MAE + paper-style split support), but a full
+The paper-text-parity evaluation workflow exists (item-level MAE + paper-style split support), but a full
 run reproducing the paper’s reported MAE values has not been completed yet.
 
 The file `data/outputs/reproduction_results_20251222_040100.json` contains results from the OLD (wrong) methodology and should be ignored.
 
 ### Action Required
 
-Run paper-parity evaluation:
+Run paper-text-parity evaluation:
 ```bash
 uv run python scripts/create_paper_split.py --seed 42
 uv run python scripts/generate_embeddings.py --split paper-train
@@ -473,7 +481,7 @@ library model; any MedGemma tag in Ollama is a community conversion.
 overall (more N/A / lower coverage). Additionally, different community conversions/quantizations may
 vary in behavior. This needs controlled evaluation using the paper’s MAE + coverage definitions.
 
-**Resolution:** Use `gemma3:27b` for paper-parity baseline; treat MedGemma as an optional alternative
+**Resolution:** Use `gemma3:27b` for paper-text-parity baseline; treat MedGemma as an optional alternative
 for the quantitative agent only.
 
 ### 4. Should timeout be configurable per-model?
@@ -531,7 +539,7 @@ keywords are in `src/ai_psychiatrist/resources/phq8_keywords.yaml`.
 
 ## NEXT STEPS (Required Before Any Further Work)
 
-1. **Run paper-parity reproduction**:
+1. **Run paper-text-parity reproduction**:
    ```bash
    uv run python scripts/create_paper_split.py --seed 42
    uv run python scripts/generate_embeddings.py --split paper-train
@@ -603,7 +611,9 @@ Failed to parse evidence JSON, using empty evidence
 
 The LLM (e.g., `gemma3:27b`) can occasionally produce malformed JSON during evidence extraction
 (unescaped quotes, truncated arrays/objects, or other formatting errors). When this happens, the
-parser falls back to an empty evidence dict and relies on keyword backfill.
+parser falls back to an empty evidence dict. If `QUANTITATIVE_ENABLE_KEYWORD_BACKFILL=true`,
+keyword hits can still be injected later; if backfill is OFF (paper-text parity default), the
+empty evidence will typically propagate to more N/A items.
 
 Example shape (illustrative):
 
@@ -639,7 +649,7 @@ The exact malformed pattern varies by model/backend and is surfaced in logs via 
 
 **Observation**: Test run showed 4/8 items as N/A per participant (50% coverage).
 
-**Paper Context**: Paper Section 3.2 mentions excluding N/A from MAE calculation but doesn't report overall coverage percentage.
+**Paper Context**: Paper Section 3.2 reports that “in 50% of cases” the model was unable to provide a prediction due to insufficient evidence, but it does not fully specify the denominator (subject-level exclusion vs item-level missingness) or a coverage definition identical to ours.
 
 **Status**: Monitoring in full run - if consistent, may explain differences from paper results.
 

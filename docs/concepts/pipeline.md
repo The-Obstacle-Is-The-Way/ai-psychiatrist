@@ -165,7 +165,9 @@ First, the agent extracts evidence quotes for each PHQ-8 item:
 }
 ```
 
-**Keyword Backfill:** If LLM misses evidence, keyword matching supplements extraction.
+**Keyword Backfill (Optional):** If enabled, keyword matching can supplement extraction when the
+LLM misses evidence. By default (paper-text parity), backfill is OFF; see
+`docs/concepts/backfill-explained.md` and `docs/bugs/analysis-027-paper-implementation-comparison.md`.
 
 #### Few-Shot Reference Retrieval
 
@@ -343,6 +345,10 @@ M3 Pro chipset (Section 2.3.5 / Discussion). Real-world timing varies significan
 - model quantization / device (CPU/GPU),
 - and whether the feedback loop triggers refinements.
 
+Note: The paper text emphasizes consumer hardware (M3 Pro / no GPU requirement), but the public repo
+also includes SLURM scripts configured for A100 GPUs (`_reference/slurm/job_ollama.sh`). We cannot
+determine what hardware/precision produced the reported metrics from the paper text alone.
+
 For local reproduction runtime measurements, see `docs/results/reproduction-notes.md`.
 
 ---
@@ -354,7 +360,7 @@ For local reproduction runtime measurements, see `docs/results/reproduction-note
 | `FEEDBACK_ENABLED=false` | Skip refinement loop entirely |
 | `FEEDBACK_MAX_ITERATIONS=5` | Cap refinement attempts |
 | `EMBEDDING_TOP_K_REFERENCES=4` | More reference examples per item |
-| `MODEL_QUANTITATIVE_MODEL=medgemma:27b` | Use Appendix F alternative (HuggingFace backend; may reduce coverage) |
+| `LLM_BACKEND=huggingface` + `MODEL_QUANTITATIVE_MODEL=medgemma:27b` | Use Appendix F alternative (official weights via HuggingFace; may reduce prediction availability) |
 
 ---
 
