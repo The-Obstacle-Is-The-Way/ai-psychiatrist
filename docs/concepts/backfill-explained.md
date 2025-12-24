@@ -109,16 +109,7 @@ def _keyword_backfill(
 
 ## The Tradeoff: Coverage vs Purity
 
-### With Backfill (Default)
-
-| Pros | Cons |
-|------|------|
-| Higher coverage (~74%) | Measures "LLM + heuristics" |
-| Catches LLM blind spots | May include irrelevant matches |
-| More clinical utility | Diverges from paper methodology |
-| More items get assessed | Harder to compare with paper |
-
-### Without Backfill (Paper Parity)
+### Without Backfill (Default - Paper Parity)
 
 | Pros | Cons |
 |------|------|
@@ -126,6 +117,15 @@ def _keyword_backfill(
 | Matches paper methodology | More N/A results |
 | Cleaner research comparison | Less clinical utility |
 | What the paper actually tested | Misses some obvious evidence |
+
+### With Backfill (Higher Coverage)
+
+| Pros | Cons |
+|------|------|
+| Higher coverage (~74%) | Measures "LLM + heuristics" |
+| Catches LLM blind spots | May include irrelevant matches |
+| More clinical utility | Diverges from paper methodology |
+| More items get assessed | Harder to compare with paper |
 
 ---
 
@@ -145,32 +145,29 @@ And in Section 3.2:
 
 For paper-parity experiments, the safest assumption is that the evaluation intended to
 measure **pure LLM extraction/scoring behavior**, without additional heuristic evidence
-injection. This repository currently cannot disable backfill; see [SPEC-003](../specs/SPEC-003-backfill-toggle.md).
+injection. **Backfill is now OFF by default** per [SPEC-003](../specs/SPEC-003-backfill-toggle.md).
 
 ---
 
 ## When to Use Each Mode
 
-### Use Backfill ON (Default) When:
-- Building a clinical decision support tool
-- Want maximum coverage
-- Prefer "some assessment" over "N/A"
-- Not comparing directly with paper metrics
-
-### Use Backfill OFF When:
+### Use Backfill OFF (Default) When:
 - Reproducing paper results
 - Evaluating LLM capability
 - Running ablation studies
 - Comparing different LLM models
 
+### Use Backfill ON When:
+- Building a clinical decision support tool
+- Want maximum coverage
+- Prefer "some assessment" over "N/A"
+- Not comparing directly with paper metrics
+
 ---
 
-## N/A Reason Tracking (Planned)
+## N/A Reason Tracking
 
-> **⚠️ NOT YET IMPLEMENTED** - See [SPEC-003](../specs/SPEC-003-backfill-toggle.md)
-
-Currently, when an item returns N/A, we **do not** track why. After SPEC-003 is implemented, each
-N/A will include a deterministic reason:
+With [SPEC-003](../specs/SPEC-003-backfill-toggle.md) implemented, each N/A result now includes a deterministic reason:
 
 | Reason | Description |
 |--------|-------------|
@@ -178,7 +175,7 @@ N/A will include a deterministic reason:
 | `LLM_ONLY_MISSED` | LLM found no evidence, but keyword hits exist (backfill OFF) |
 | `SCORE_NA_WITH_EVIDENCE` | Evidence was provided to the scorer, but the LLM still returned N/A |
 
-This will enable:
+This enables:
 - Debugging extraction failures
 - Understanding model behavior
 - Comparing backfill ON vs OFF
@@ -188,13 +185,13 @@ This will enable:
 
 ## Configuration
 
-Currently backfill **always runs**. After SPEC-003 is implemented:
+Backfill is **OFF by default** (paper parity mode):
 
 ```bash
-# Paper parity mode (pure LLM)
-QUANTITATIVE_ENABLE_KEYWORD_BACKFILL=false
+# Default: paper parity mode (pure LLM)
+# QUANTITATIVE_ENABLE_KEYWORD_BACKFILL=false  # (this is the default)
 
-# Production mode (default)
+# Enable backfill for higher coverage
 QUANTITATIVE_ENABLE_KEYWORD_BACKFILL=true
 ```
 

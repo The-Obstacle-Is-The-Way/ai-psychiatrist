@@ -255,8 +255,8 @@ class QuantitativeSettings(BaseSettings):
     )
 
     enable_keyword_backfill: bool = Field(
-        default=True,
-        description="Enable keyword backfill when LLM misses evidence",
+        default=False,
+        description="Enable keyword backfill when LLM misses evidence (paper parity: OFF)",
     )
     track_na_reasons: bool = Field(
         default=True,

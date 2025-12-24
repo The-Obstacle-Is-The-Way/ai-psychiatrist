@@ -22,6 +22,7 @@ from ai_psychiatrist.agents.prompts.quantitative import (
     make_scoring_prompt,
 )
 from ai_psychiatrist.agents.quantitative import QuantitativeAssessmentAgent
+from ai_psychiatrist.config import QuantitativeSettings
 from ai_psychiatrist.domain.entities import PHQ8Assessment, Transcript
 from ai_psychiatrist.domain.enums import AssessmentMode, PHQ8Item, SeverityLevel
 from ai_psychiatrist.domain.value_objects import ItemAssessment
@@ -438,7 +439,13 @@ Participant: I have trouble focusing on anything. Can't think straight.""",
             {k: {"evidence": "test", "reason": "test", "score": 0} for k in DOMAIN_KEYWORDS}
         )
         client = MockLLMClient(chat_responses=[empty_evidence, scoring_response])
-        agent = QuantitativeAssessmentAgent(llm_client=client, mode=AssessmentMode.ZERO_SHOT)
+        # Explicitly enable backfill (default is OFF for paper parity)
+        settings = QuantitativeSettings(enable_keyword_backfill=True)
+        agent = QuantitativeAssessmentAgent(
+            llm_client=client,
+            mode=AssessmentMode.ZERO_SHOT,
+            quantitative_settings=settings,
+        )
 
         # Call assess to trigger full pipeline including backfill
         assessment = await agent.assess(sample_transcript)
