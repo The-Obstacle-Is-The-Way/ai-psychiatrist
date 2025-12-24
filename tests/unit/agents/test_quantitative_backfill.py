@@ -54,7 +54,7 @@ async def test_backfill_disabled_no_enrichment(
 async def test_backfill_enabled_adds_evidence(
     mock_llm_client: MockLLMClient,
 ) -> None:
-    """With backfill enabled, keyword evidence should be added."""
+    """With backfill explicitly enabled, keyword evidence should be added."""
     # Configure mock to return empty evidence from LLM
     mock_llm_client.add_chat_response(json.dumps({"PHQ8_Tired": []}))
     # Add scoring response (doesn't matter what, just valid JSON)
