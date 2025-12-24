@@ -167,7 +167,7 @@ class QuantitativeAssessmentAgent:
         # Step 3: Score with LLM
         prompt = make_scoring_prompt(transcript.text, reference_text)
 
-        # Use model settings if provided (Paper Appendix F: MedGemma achieves 18% better MAE)
+        # Model settings (Appendix F: MedGemma; GAP-001: temp=0.0 for reproducibility)
         model = self._model_settings.quantitative_model if self._model_settings else None
         temperature = self._model_settings.temperature if self._model_settings else 0.0
 
@@ -263,7 +263,7 @@ class QuantitativeAssessmentAgent:
         """
         user_prompt = make_evidence_prompt(transcript_text)
 
-        # Use model settings if provided
+        # Use model settings if provided (GAP-001: temp=0.0 for clinical reproducibility)
         model = self._model_settings.quantitative_model if self._model_settings else None
         temperature = self._model_settings.temperature if self._model_settings else 0.0
 

@@ -116,7 +116,7 @@ class JudgeAgent:
         """
         prompt = make_evaluation_prompt(metric, transcript, assessment)
 
-        # Use model settings if provided
+        # Use model settings if provided (GAP-001: temp=0.0 for clinical reproducibility)
         model = self._model_settings.judge_model if self._model_settings else None
         temperature = self._model_settings.temperature if self._model_settings else 0.0
 

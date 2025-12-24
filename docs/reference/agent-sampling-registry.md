@@ -69,7 +69,7 @@ That's it.
 | **Anthropic** | "top_k is recommended for advanced use cases only. You usually only need to use temperature" | [PromptHub](https://www.prompthub.us/blog/using-anthropic-best-practices-parameters-and-large-context-windows) |
 | **Anthropic/AWS** | "You should alter either temperature or top_p, but not both" | [AWS Bedrock](https://docs.aws.amazon.com/bedrock/latest/userguide/model-parameters-anthropic-claude-text-completion.html) |
 | **Claude 4.x APIs** | Returns ERROR: "temperature and top_p cannot both be specified" | [GitHub](https://github.com/valentinfrlch/ha-llmvision/issues/562) |
-| **IBM** | "Low settings (0.0-0.3) dramatically reduce hallucinations... critical for agents associated with medical advice" | [IBM Think](https://www.ibm.com/think/topics/llm-temperature) |
+| **IBM** | Low temperature reduces randomness but should be combined with RAG, calibration, and human oversight for clinical safety | [IBM Think](https://www.ibm.com/think/topics/llm-temperature) |
 
 ---
 
