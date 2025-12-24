@@ -143,24 +143,12 @@ class ModelSettings(BaseSettings):
         default="qwen3-embedding:8b",
         description="Embedding model (Paper Section 2.2: Qwen 3 8B Embedding)",
     )
-    # NOTE: Temperature NOT specified in paper. Paper Section 4 says only
-    # "fairly deterministic parameters". We use 0.2 as a conservative low value.
-    # See docs/bugs/GAP-001_PAPER_UNSPECIFIED_PARAMETERS.md for details.
     temperature: float = Field(
-        default=0.2,
-        ge=0.0,
-        le=2.0,
-        description="Default temperature (paper: 'fairly deterministic' → low)",
-    )
-    temperature_judge: float = Field(
         default=0.0,
         ge=0.0,
         le=2.0,
-        description="Judge agent temperature (0.0 for deterministic scoring)",
+        description="Clinical AI: temp=0 for reproducibility (Med-PaLM, medRxiv 2025)",
     )
-    # NOTE: top_k and top_p NOT specified in paper. Using common Gemma defaults.
-    top_k: int = Field(default=20, ge=1, le=100, description="Top-k sampling (not in paper)")
-    top_p: float = Field(default=0.8, ge=0.0, le=1.0, description="Nucleus sampling (not in paper)")
 
 
 class EmbeddingSettings(BaseSettings):

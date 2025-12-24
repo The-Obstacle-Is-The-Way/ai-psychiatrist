@@ -19,7 +19,7 @@ This document series describes the plan used to transform the AI-Psychiatrist re
 ### What Exists (Current Repo)
 - Modern, testable implementation under `src/ai_psychiatrist/` (agents, services, domain, infrastructure)
 - FastAPI server entrypoint (`server.py`) exposing `/health`, `/assess/*`, and `/full_pipeline`
-- Archived original research/prototype code under `_legacy/` (scripts, notebooks, SLURM jobs, example outputs)
+- Archived original research/prototype code under `_reference/` (scripts, notebooks, SLURM jobs, example outputs)
 - Local-only data artifacts under `data/` (DAIC-WOZ transcripts, generated embeddings); `data/` is gitignored due to licensing
 
 ### Codebase → Spec Coverage Map (No Orphaned Files)
@@ -31,25 +31,25 @@ This spec series covers both:
 | Codebase file | Purpose | Covered by spec |
 |---|---|---|
 | `server.py` | FastAPI orchestration endpoint | Spec 11 |
-| `_legacy/agents/interview_simulator.py` | Fixed transcript loader (`TRANSCRIPT_PATH`) | Spec 05 |
-| `_legacy/agents/qualitative_assessor_f.py` / `_legacy/agents/qualitative_assessor_z.py` | Qualitative assessor prompts (F/Z variants) | Spec 06 |
-| `_legacy/agents/qualitive_evaluator.py` | Judge/evaluator (4 metrics) | Spec 07 |
-| `_legacy/agents/quantitative_assessor_f.py` / `_legacy/agents/quantitative_assessor_z.py` | Quantitative scoring (few/zero-shot) | Spec 09 |
-| `_legacy/agents/meta_reviewer.py` | Meta-review prompt + severity output | Spec 10 |
-| `_legacy/agents/interview_evaluator.py` | Conversation quality evaluator (non-paper) | Spec 11 (as-is extras) |
-| `_legacy/qualitative_assessment/qual_assessment.py` | Cluster script for qualitative runs (Gemma 3 27B) | Spec 06 (as-is research) |
-| `_legacy/qualitative_assessment/feedback_loop.py` | Cluster script feedback loop (<=2 threshold, 10 iters) | Spec 07 (as-is research) |
-| `_legacy/quantitative_assessment/quantitative_analysis.py` | Cluster script zero-shot quantitative analysis | Spec 09 (as-is research) |
-| `_legacy/quantitative_assessment/embedding_batch_script.py` | Cluster script + sweeps for embeddings few-shot runs | Spec 08/09 (as-is research) |
-| `_legacy/quantitative_assessment/basic_quantitative_analysis.ipynb` | Zero-shot notebook analysis | Spec 09 (as-is research) |
-| `_legacy/quantitative_assessment/embedding_quantitative_analysis.ipynb` | Few-shot notebook (splits, t-SNE, retrieval stats) | Spec 08/09 (as-is research) |
-| `_legacy/visualization/qual_boxplot.ipynb` | Qual judge boxplots + mean/SD | Spec 07 (as-is research) |
-| `_legacy/visualization/quan_visualization.ipynb` | Quant MAE/confusion + N/A rates + t-SNE | Spec 08/09 (as-is research) |
-| `_legacy/visualization/meta_review_heatmap.ipynb` | Severity/diagnosis confusion matrices + metrics | Spec 10 (as-is research) |
-| `_legacy/analysis_output/*` | Example outputs (CSV/JSONL) | Spec 11/12 (as-is validation artifacts) |
-| `_legacy/slurm/job_ollama.sh` / `_legacy/slurm/job_assess.sh` | HPC deployment scripts | Spec 01/04 |
-| `_legacy/assets/env_reqs.yml` / `_legacy/assets/ollama_example.py` | Conda env + Ollama usage example | Spec 01/04 |
-| `_legacy/assets/overview.png` | System overview image (non-code artifact) | Spec 00 |
+| `_reference/agents/interview_simulator.py` | Fixed transcript loader (`TRANSCRIPT_PATH`) | Spec 05 |
+| `_reference/agents/qualitative_assessor_f.py` / `_reference/agents/qualitative_assessor_z.py` | Qualitative assessor prompts (F/Z variants) | Spec 06 |
+| `_reference/agents/qualitive_evaluator.py` | Judge/evaluator (4 metrics) | Spec 07 |
+| `_reference/agents/quantitative_assessor_f.py` / `_reference/agents/quantitative_assessor_z.py` | Quantitative scoring (few/zero-shot) | Spec 09 |
+| `_reference/agents/meta_reviewer.py` | Meta-review prompt + severity output | Spec 10 |
+| `_reference/agents/interview_evaluator.py` | Conversation quality evaluator (non-paper) | Spec 11 (as-is extras) |
+| `_reference/qualitative_assessment/qual_assessment.py` | Cluster script for qualitative runs (Gemma 3 27B) | Spec 06 (as-is research) |
+| `_reference/qualitative_assessment/feedback_loop.py` | Cluster script feedback loop (<=2 threshold, 10 iters) | Spec 07 (as-is research) |
+| `_reference/quantitative_assessment/quantitative_analysis.py` | Cluster script zero-shot quantitative analysis | Spec 09 (as-is research) |
+| `_reference/quantitative_assessment/embedding_batch_script.py` | Cluster script + sweeps for embeddings few-shot runs | Spec 08/09 (as-is research) |
+| `_reference/quantitative_assessment/basic_quantitative_analysis.ipynb` | Zero-shot notebook analysis | Spec 09 (as-is research) |
+| `_reference/quantitative_assessment/embedding_quantitative_analysis.ipynb` | Few-shot notebook (splits, t-SNE, retrieval stats) | Spec 08/09 (as-is research) |
+| `_reference/visualization/qual_boxplot.ipynb` | Qual judge boxplots + mean/SD | Spec 07 (as-is research) |
+| `_reference/visualization/quan_visualization.ipynb` | Quant MAE/confusion + N/A rates + t-SNE | Spec 08/09 (as-is research) |
+| `_reference/visualization/meta_review_heatmap.ipynb` | Severity/diagnosis confusion matrices + metrics | Spec 10 (as-is research) |
+| `_reference/analysis_output/*` | Example outputs (CSV/JSONL) | Spec 11/12 (as-is validation artifacts) |
+| `_reference/slurm/job_ollama.sh` / `_reference/slurm/job_assess.sh` | HPC deployment scripts | Spec 01/04 |
+| `_reference/assets/env_reqs.yml` / `_reference/assets/ollama_example.py` | Conda env + Ollama usage example | Spec 01/04 |
+| `_reference/assets/overview.png` | System overview image (non-code artifact) | Spec 00 |
 
 ### Paper → Spec Traceability Map (All Figures + Appendices)
 
@@ -82,7 +82,7 @@ This table ensures every paper figure/image extracted under `_literature/markdow
 
 ### Critical Gaps (Legacy Research Code)
 
-These gaps describe the original research implementation archived under `_legacy/`. The modern
+These gaps describe the original research implementation archived under `_reference/`. The modern
 refactor under `src/ai_psychiatrist/` addresses most of them; remaining paper-reproduction gaps are
 tracked in `docs/results/reproduction-notes.md` and `docs/bugs/`.
 

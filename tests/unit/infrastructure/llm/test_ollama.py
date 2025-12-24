@@ -234,8 +234,6 @@ class TestOllamaClientChat:
             ],
             model="gemma3:27b",
             temperature=0.5,
-            top_k=40,
-            top_p=0.9,
         )
         await ollama_client.chat(request)
 
@@ -245,8 +243,6 @@ class TestOllamaClientChat:
         assert '"model":"gemma3:27b"' in payload
         assert '"stream":false' in payload
         assert '"temperature":0.5' in payload
-        assert '"top_k":40' in payload
-        assert '"top_p":0.9' in payload
 
         await ollama_client.close()
 

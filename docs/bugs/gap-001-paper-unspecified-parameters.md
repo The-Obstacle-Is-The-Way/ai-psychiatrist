@@ -1,9 +1,9 @@
 # GAP-001: Paper Unspecified Parameters
 
 **Date**: 2025-12-22
-**Status**: DOCUMENTED - Implementations proposed with explicit rationales
+**Status**: DOCUMENTED - Implementations use evidence-based clinical AI defaults
 **Severity**: MEDIUM - Affects exact reproducibility but not system validity
-**Updated**: 2025-12-24 - Added paper-repo hardcoded sampling + hardware evidence
+**Updated**: 2025-12-24 - Switched to evidence-based temp=0.0, removed top_k/top_p
 **Tracked by**:
 - [GitHub Issue #46](https://github.com/The-Obstacle-Is-The-Way/ai-psychiatrist/issues/46) (sampling parameters)
 - [GitHub Issue #47](https://github.com/The-Obstacle-Is-The-Way/ai-psychiatrist/issues/47) (model quantization)
@@ -14,12 +14,12 @@ This document captures ALL parameters NOT explicitly specified in the paper, alo
 
 ## Summary of Paper Gaps
 
-| Gap ID | Parameter | Paper Says | Our Implementation | Rationale |
-|--------|-----------|-----------|-------------------|-----------|
-| GAP-001a | Data Split Membership | "58/43/41 stratified" but no participant IDs | Implement algorithm from Appendix C | Reproducible algorithm |
-| GAP-001b | Temperature | "fairly deterministic" | 0.2 (default), 0.0 (judge) | Conservative interpretation |
-| GAP-001c | top_k / top_p | Not mentioned | top_k=20, top_p=0.8 | Matches public repo few-shot defaults |
-| GAP-001d | Hardware / Quantization | Not specified | Local Ollama defaults (quantized GGUF) | Hardware/precision materially affect abstention |
+| Gap ID | Parameter | Paper Says | Our Implementation | Status |
+|--------|-----------|-----------|-------------------|--------|
+| GAP-001a | Data Split Membership | "58/43/41 stratified" but no participant IDs | `scripts/create_paper_split.py` | ✅ Reproducible algorithm |
+| GAP-001b | Temperature | "fairly deterministic" | 0.0 (all agents) | ✅ Evidence-based |
+| GAP-001c | top_k / top_p | Not in paper text | Not set (irrelevant at temp=0) | ✅ Best practice |
+| GAP-001d | Hardware / Quantization | Not specified | Local Ollama defaults | ⚠️ May affect results |
 
 ---
 
@@ -91,21 +91,20 @@ Exact split membership will still differ from the paper because:
 - Whether different agents use different temperatures
 - Any temperature tuning methodology
 
-### Our Implementation
+### Our Implementation (Updated 2025-12-24)
 
 | Setting | Value | Rationale |
 |---------|-------|-----------|
-| `temperature` | 0.2 | Low but not zero; allows slight variation |
-| `temperature_judge` | 0.0 | Judge should be deterministic for consistency |
+| `temperature` | 0.0 | Clinical AI best practice |
 
-**Location**: `src/ai_psychiatrist/config.py` (`ModelSettings.temperature`, `ModelSettings.temperature_judge`)
+**Location**: `src/ai_psychiatrist/config.py` (`ModelSettings.temperature`)
 
-### Justification
+### Justification (Evidence-Based)
 
-- "Fairly deterministic" → temperature near 0
-- 0.2 is a common "low temperature" choice in clinical NLP
-- Judge uses 0.0 for maximum consistency in scoring
-- These values are explicit and can be tuned
+- Med-PaLM uses temp=0.0 for clinical answers ([Nature Medicine](https://pmc.ncbi.nlm.nih.gov/articles/PMC11922739/))
+- "Lower temperatures promote diagnostic accuracy" ([medRxiv 2025](https://www.medrxiv.org/content/10.1101/2025.06.04.25328288v1.full))
+- Anthropic: "temp 0.0 for analytical / multiple choice"
+- See [Agent Sampling Registry](../reference/agent-sampling-registry.md) for full citations
 
 ---
 
@@ -115,34 +114,30 @@ Exact split membership will still differ from the paper because:
 
 Nothing. These parameters are not mentioned.
 
-### What the Public Paper Repo Code Does
+### What Their Code Does (Reference Only)
 
-Although the paper text does not specify `top_k`/`top_p`, the publicly available repository
-does hardcode sampling options:
+Their codebase has contradictory values:
 
-- Few-shot agent uses:
-  - `temperature=0.2, top_k=20, top_p=0.8`
-  - Implemented in `ollama_chat()` options in `_reference/agents/quantitative_assessor_f.py`
-    (mirrored under `_legacy/agents/quantitative_assessor_f.py`).
-- Zero-shot script uses:
-  - `temperature=0, top_k=1, top_p=1.0`
-  - Implemented in `_reference/quantitative_assessment/quantitative_analysis.py`
-    (mirrored under `_legacy/quantitative_assessment/quantitative_analysis.py`).
+| Source | top_k | top_p | Notes |
+|--------|-------|-------|-------|
+| `basic_quantitative_analysis.ipynb:207` | 1 | 1.0 | Zero-shot |
+| `embedding_quantitative_analysis.ipynb:1174` | 20 | 0.8 | Few-shot |
+| `qual_assessment.py` | 20 | 0.9 | Wrong model default |
+| `meta_review.py` | 20 | 1.0 | Wrong model default |
 
-### Our Implementation
+### Our Implementation (Updated 2025-12-24)
 
-| Setting | Value | Rationale |
-|---------|-------|-----------|
-| `top_k` | 20 | Moderate restriction; Ollama common default |
-| `top_p` | 0.8 | Standard nucleus sampling threshold |
+**We do NOT set top_k or top_p.**
 
-**Location**: `src/ai_psychiatrist/config.py` (`ModelSettings.top_k`, `ModelSettings.top_p`)
+### Justification (Evidence-Based)
 
-### Justification
+1. **At temp=0, they're irrelevant** — greedy decoding ignores sampling filters
+2. **Best practice: use temperature only** — "top_k is recommended for advanced use cases only. You usually only need to use temperature" ([Anthropic](https://www.prompthub.us/blog/using-anthropic-best-practices-parameters-and-large-context-windows))
+3. **Don't use both** — "You should alter either temperature or top_p, but not both" ([AWS Bedrock](https://docs.aws.amazon.com/bedrock/latest/userguide/model-parameters-anthropic-claude-text-completion.html))
+4. **Claude 4.x enforces this** — Returns error: "temperature and top_p cannot both be specified"
+5. **top_k is obsolete** — "not as well-supported, notably missing from OpenAI's API" ([Vellum](https://www.vellum.ai/llm-parameters/temperature))
 
-- These match the public repo few-shot agent defaults
-- With low temperature (0.2), these have limited effect but can still shift abstention behavior
-- Can be overridden via environment variables for ablations
+See [Agent Sampling Registry](../reference/agent-sampling-registry.md) for full citations
 
 ---
 
@@ -157,8 +152,15 @@ No mention of quantization.
 
 ### Our Implementation
 
-- Use local Ollama (quantized GGUF weights for `gemma3:27b`)
-- Use local Ollama embeddings (`qwen3-embedding:8b`) with requested dimension 4096
+**Default (Ollama):**
+- Chat: `gemma3:27b` (Q4_K_M quantization, ~16GB)
+- Embeddings: `qwen3-embedding:8b` (Q4_K_M quantization, ~4.7GB)
+
+**High-Quality (HuggingFace):**
+- Chat: `google/medgemma-27b-text-it` (FP16, 18% better MAE per Appendix F)
+- Embeddings: `Qwen/Qwen3-Embedding-8B` (FP16, higher precision similarity)
+
+See [Model Registry - High-Quality Setup](../models/model-registry.md#high-quality-setup-recommended-for-production) and [Issue #42](https://github.com/The-Obstacle-Is-The-Way/ai-psychiatrist/issues/42) for graceful fallback.
 
 ### Justification
 
@@ -222,12 +224,12 @@ dimension: int = 4096        # Paper: "Ndimension = 4096"
 max_iterations: int = 10     # Paper: "limited to a maximum of 10 iterations"
 score_threshold: int = 3     # Paper: "score was below four" → ≤3
 
-	# NOT SPECIFIED - Using justified defaults
-	temperature: float = 0.2     # Paper: "fairly deterministic" → low temp
-	temperature_judge: float = 0.0  # Deterministic for consistency
-	top_k: int = 20              # Matches paper repo few-shot defaults (paper text unspecified)
-	top_p: float = 0.8           # Matches paper repo few-shot defaults (paper text unspecified)
+# NOT SPECIFIED - Using evidence-based clinical AI defaults
+temperature: float = 0.0     # Med-PaLM, medRxiv 2025: temp=0 for clinical AI
+# top_k and top_p: NOT SET (irrelevant at temp=0, best practice is temp only)
 ```
+
+See [Agent Sampling Registry](../reference/agent-sampling-registry.md) for full citations.
 
 ---
 

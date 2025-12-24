@@ -113,12 +113,11 @@ EMBEDDING_TOP_K_REFERENCES=2
 EMBEDDING_CHUNK_SIZE=8
 EMBEDDING_CHUNK_STEP=2
 OLLAMA_TIMEOUT_SECONDS=300
-MODEL_TEMPERATURE=0.2
+MODEL_TEMPERATURE=0.0
 ```
 
 Embedding hyperparameters match paper Appendix D (optimal hyperparameters).
-Sampling parameters not specified in the paper (temperature/top-k/top-p) are tracked in
-`docs/bugs/gap-001-paper-unspecified-parameters.md`.
+Sampling parameters are documented in `docs/bugs/gap-001-paper-unspecified-parameters.md`.
 
 ---
 
@@ -126,8 +125,8 @@ Sampling parameters not specified in the paper (temperature/top-k/top-p) are tra
 
 ### GAP-001: Paper Unspecified Parameters
 See `docs/bugs/gap-001-paper-unspecified-parameters.md`:
-- Temperature: Paper says "fairly deterministic", we use 0.2
-- top_k/top_p: Not specified, we use Ollama defaults
+- Temperature: Paper says "fairly deterministic", we use 0.0 (evidence-based clinical AI default)
+- top_k/top_p: Not set (irrelevant at temp=0, best practice is temp only)
 - Model quantization: Not specified (see GAP-002)
 
 ### GAP-002: Model Quantization Unspecified

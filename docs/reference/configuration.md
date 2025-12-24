@@ -81,10 +81,16 @@ LLM model selection and sampling parameters.
 | `MODEL_META_REVIEW_MODEL` | string | `gemma3:27b` | Section 2.2 |
 | `MODEL_QUANTITATIVE_MODEL` | string | `gemma3:27b` | Section 2.2 (MedGemma in Appendix F) |
 | `MODEL_EMBEDDING_MODEL` | string | `qwen3-embedding:8b` | Section 2.2 |
-| `MODEL_TEMPERATURE` | float | `0.2` | Sampling temperature (0.0-2.0) |
-| `MODEL_TEMPERATURE_JUDGE` | float | `0.0` | Judge uses deterministic output |
-| `MODEL_TOP_K` | int | `20` | Top-k sampling (1-100) |
-| `MODEL_TOP_P` | float | `0.8` | Nucleus sampling (0.0-1.0) |
+| `MODEL_TEMPERATURE` | float | `0.0` | Clinical AI best practice ([Issue #46](https://github.com/The-Obstacle-Is-The-Way/ai-psychiatrist/issues/46)) |
+
+**Sampling Parameters (Evidence-Based)**:
+
+All agents use `temperature=0.0`. We do NOT set `top_k` or `top_p` because:
+1. At temp=0, they're irrelevant (greedy decoding)
+2. Best practice: "use temperature only, not both" ([Anthropic](https://www.prompthub.us/blog/using-anthropic-best-practices-parameters-and-large-context-windows))
+3. Claude APIs error if you set both temp and top_p
+
+See [Agent Sampling Registry](./agent-sampling-registry.md) for full rationale with citations
 
 **Model Options:**
 
@@ -97,6 +103,15 @@ LLM model selection and sampling parameters.
 > **Note**: MedGemma is not available in Ollama officially. Use HuggingFace backend for official weights.
 > See [Model Registry](../models/model-registry.md) for HuggingFace setup.
 
+**Precision Comparison (Ollama vs HuggingFace):**
+
+| Model | Ollama Precision | HuggingFace Precision | Impact |
+|-------|------------------|----------------------|--------|
+| `gemma3:27b` | Q4_K_M (4-bit) | FP16/BF16 (16-bit) | Higher quality responses |
+| `qwen3-embedding:8b` | Q4_K_M (4-bit) | FP16/BF16 (16-bit) | More accurate similarity matching |
+
+For best quality, use `LLM_BACKEND=huggingface`. See [Issue #42](https://github.com/The-Obstacle-Is-The-Way/ai-psychiatrist/issues/42) for pending graceful fallback.
+
 **Example:**
 ```bash
 # Canonical names (recommended): resolved per backend
@@ -107,8 +122,8 @@ MODEL_QUANTITATIVE_MODEL=gemma3:27b
 LLM_BACKEND=huggingface
 MODEL_QUANTITATIVE_MODEL=medgemma:27b
 
-# Lower temperature for more deterministic outputs
-MODEL_TEMPERATURE=0.1
+# Clinical AI: temp=0 for reproducibility
+MODEL_TEMPERATURE=0.0
 ```
 
 ---
@@ -177,7 +192,7 @@ File path configuration.
 |----------|------|---------|-------------|
 | `DATA_BASE_DIR` | path | `data` | Base data directory |
 | `DATA_TRANSCRIPTS_DIR` | path | `data/transcripts` | Transcript files |
-| `DATA_EMBEDDINGS_PATH` | path | `data/embeddings/reference_embeddings.npz` | Pre-computed embeddings |
+| `DATA_EMBEDDINGS_PATH` | path | `data/embeddings/paper_reference_embeddings.npz` | Pre-computed embeddings |
 | `DATA_TRAIN_CSV` | path | `data/train_split_Depression_AVEC2017.csv` | Training ground truth |
 | `DATA_DEV_CSV` | path | `data/dev_split_Depression_AVEC2017.csv` | Development ground truth |
 
@@ -189,8 +204,8 @@ data/
 │   │   └── 300_TRANSCRIPT.csv
 │   └── .../
 ├── embeddings/
-│   ├── reference_embeddings.npz
-│   └── reference_embeddings.json
+│   ├── paper_reference_embeddings.npz
+│   └── paper_reference_embeddings.json
 ├── train_split_Depression_AVEC2017.csv
 └── dev_split_Depression_AVEC2017.csv
 ```
@@ -370,7 +385,7 @@ print(settings.feedback.max_iterations)
 # Direct instantiation (for testing)
 custom = Settings(
     ollama=OllamaSettings(host="custom-host"),
-    model=ModelSettings(temperature=0.5),
+    model=ModelSettings(temperature=0.0),
 )
 ```
 

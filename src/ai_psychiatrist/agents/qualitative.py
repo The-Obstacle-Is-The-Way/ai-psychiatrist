@@ -73,20 +73,18 @@ class QualitativeAssessmentAgent:
         self._llm_client = llm_client
         self._model_settings = model_settings
 
-    def _get_llm_params(self) -> tuple[str | None, float, int, float]:
+    def _get_llm_params(self) -> tuple[str | None, float]:
         """Get LLM parameters from model settings or defaults.
 
         Returns:
-            Tuple of (model, temperature, top_k, top_p).
+            Tuple of (model, temperature).
         """
         if self._model_settings:
             return (
                 self._model_settings.qualitative_model,
                 self._model_settings.temperature,
-                self._model_settings.top_k,
-                self._model_settings.top_p,
             )
-        return None, 0.2, 20, 0.8
+        return None, 0.0
 
     async def assess(self, transcript: Transcript) -> QualitativeAssessment:
         """Generate qualitative assessment for a transcript.
@@ -107,7 +105,7 @@ class QualitativeAssessmentAgent:
         user_prompt = make_qualitative_prompt(transcript.text)
 
         # Get LLM params (Paper Section 2.2: Gemma 3 27B)
-        model, temperature, top_k, top_p = self._get_llm_params()
+        model, temperature = self._get_llm_params()
 
         # Call LLM
         raw_response = await self._llm_client.simple_chat(
@@ -115,8 +113,6 @@ class QualitativeAssessmentAgent:
             system_prompt=QUALITATIVE_SYSTEM_PROMPT,
             model=model,
             temperature=temperature,
-            top_k=top_k,
-            top_p=top_p,
         )
 
         # Parse response
@@ -159,15 +155,13 @@ class QualitativeAssessmentAgent:
         )
 
         # Get LLM params
-        model, temperature, top_k, top_p = self._get_llm_params()
+        model, temperature = self._get_llm_params()
 
         raw_response = await self._llm_client.simple_chat(
             user_prompt=user_prompt,
             system_prompt=QUALITATIVE_SYSTEM_PROMPT,
             model=model,
             temperature=temperature,
-            top_k=top_k,
-            top_p=top_p,
         )
 
         assessment = self._parse_response(raw_response, transcript.participant_id)

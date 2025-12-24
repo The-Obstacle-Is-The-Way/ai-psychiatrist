@@ -103,10 +103,20 @@ if split.startswith("paper"):
 
 | Parameter | Value | Rationale |
 |-----------|-------|-----------|
-| `temperature` | 0.2 | "fairly deterministic" |
-| `temperature_judge` | 0.0 | Deterministic for scoring |
-| `top_k` | 20 | Ollama common default |
-| `top_p` | 0.8 | Standard nucleus sampling |
+| `temperature` | 0.0 | Clinical AI best practice (Med-PaLM, medRxiv 2025) |
+| `top_k` | — | Not set (irrelevant at temp=0) |
+| `top_p` | — | Not set (best practice: use temp only) |
+
+See [Agent Sampling Registry](../reference/agent-sampling-registry.md) for citations.
+
+### Model Precision Options
+
+| Backend | Chat Model | Embedding Model | Precision |
+|---------|------------|-----------------|-----------|
+| **Ollama (default)** | `gemma3:27b` | `qwen3-embedding:8b` | Q4_K_M (4-bit) |
+| **HuggingFace (high-quality)** | `google/medgemma-27b-text-it` | `Qwen/Qwen3-Embedding-8B` | FP16 (16-bit) |
+
+See [Model Registry](../models/model-registry.md#high-quality-setup-recommended-for-production) and [Issue #42](https://github.com/The-Obstacle-Is-The-Way/ai-psychiatrist/issues/42) for details.
 
 ---
 

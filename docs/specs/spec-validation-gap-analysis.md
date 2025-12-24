@@ -2,6 +2,18 @@
 
 This report audits the research paper (`_literature/markdown/ai_psychiatrist/ai_psychiatrist.md`), the current repo implementation, and the spec series under `docs/specs/`.
 
+## Reference Code SSOT Hierarchy
+
+**IMPORTANT**: When referencing the paper's code, use the following hierarchy:
+
+| Priority | Source | Notes |
+|----------|--------|-------|
+| 1 (SSOT) | `_reference/quantitative_assessment/*.ipynb` | Notebooks are authoritative |
+| 2 | `_reference/quantitative_assessment/*.py` | .py files have wrong model defaults (e.g., `llama3`) but sampling params are correct |
+| 3 | `_reference/agents/*.py` | Agent files have wrong defaults; use notebooks for verification |
+
+**Note**: `_reference/` was our archived copy (now deleted). All references should use `_reference/`.
+
 ## Target Strategy: Paper-Optimal
 
 **All specs now target paper-optimal behavior**, not as-is code parity. As-is behavior is documented only for migration context.
@@ -22,7 +34,7 @@ This report audits the research paper (`_literature/markdown/ai_psychiatrist/ai_
 ### Current Status
 
 The production pipeline is implemented in `src/ai_psychiatrist/` and exposed via
-`server.py`. The original research prototype is archived under `_legacy/` and is
+`server.py`. The original research prototype is mirrored under `_reference/` and is
 kept only for historical comparison and paper-parity auditing.
 
 ### Critical Issues (Historical / Already Addressed)
@@ -32,11 +44,11 @@ blocking because the production pipeline has replaced the legacy runtime path.
 
 | Area | Legacy location | Historical issue | Status in production |
 |------|-----------------|------------------|----------------------|
-| Transcript loading | `_legacy/agents/interview_simulator.py` | Hardcoded transcript path expectations | Replaced by `TranscriptService` + request-driven transcript resolution |
-| Few-shot artifacts | `_legacy/agents/quantitative_assessor_f.py` | Missing reference artifact paths | Production uses `data/embeddings/reference_embeddings.{npz,json}` |
-| Prompt formatting | `_legacy/agents/qualitative_assessor_f.py` | Malformed tag templates | Production prompts live in `src/ai_psychiatrist/agents/prompts/` |
-| Feedback loop | `_legacy/qualitative_assessment/feedback_loop.py` | Not wired in demo API | Production wires `FeedbackLoopService` into `/full_pipeline` |
-| Environment | `_legacy/assets/env_reqs.yml` | Conda env drift vs imports | Production uses `pyproject.toml` + `uv` |
+| Transcript loading | `_reference/agents/interview_simulator.py` | Hardcoded transcript path expectations | Replaced by `TranscriptService` + request-driven transcript resolution |
+| Few-shot artifacts | `_reference/agents/quantitative_assessor_f.py` | Missing reference artifact paths | Production uses `data/embeddings/reference_embeddings.{npz,json}` |
+| Prompt formatting | `_reference/agents/qualitative_assessor_f.py` | Malformed tag templates | Production prompts live in `src/ai_psychiatrist/agents/prompts/` |
+| Feedback loop | `_reference/qualitative_assessment/feedback_loop.py` | Not wired in demo API | Production wires `FeedbackLoopService` into `/full_pipeline` |
+| Environment | `_reference/assets/env_reqs.yml` | Conda env drift vs imports | Production uses `pyproject.toml` + `uv` |
 
 ### Missing Coverage
 
@@ -45,49 +57,49 @@ Remaining “coverage gaps” are primarily depth gaps (e.g., not every notebook
 
 | Codebase File | Functionality | Spec Gap |
 |---------------|---------------|----------|
-| `_legacy/visualization/quan_visualization.ipynb` | Exact MAE/N/A aggregation formulas per symptom | Only summarized; not fully line-by-line specified |
-| `_legacy/quantitative_assessment/embedding_batch_script.py` | Full hyperparameter sweep CLI and JSONL schema variants | Only summarized; not fully specified |
+| `_reference/visualization/quan_visualization.ipynb` | Exact MAE/N/A aggregation formulas per symptom | Only summarized; not fully line-by-line specified |
+| `_reference/quantitative_assessment/embedding_batch_script.py` | Full hyperparameter sweep CLI and JSONL schema variants | Only summarized; not fully specified |
 
 ### Prompt Mismatches
 
 | Spec | Codebase Prompt | Spec Prompt | Diff |
 |------|-----------------|-------------|------|
-| 06 | `_legacy/agents/qualitative_assessor_f.py` | `docs/archive/specs/06_QUALITATIVE_AGENT.md` | Legacy prompt formatting differs from production prompt templates |
-| 08 | `_legacy/agents/quantitative_assessor_f.py` | `docs/archive/specs/08_EMBEDDING_SERVICE.md` | Legacy prompt structure differs from production prompt templates |
-| 10 | `_legacy/agents/meta_reviewer.py` | `docs/archive/specs/10_META_REVIEW_AGENT.md` | Legacy prompt differs from production prompt templates |
+| 06 | `_reference/agents/qualitative_assessor_f.py` | `docs/archive/specs/06_QUALITATIVE_AGENT.md` | Legacy prompt formatting differs from production prompt templates |
+| 08 | `_reference/agents/quantitative_assessor_f.py` | `docs/archive/specs/08_EMBEDDING_SERVICE.md` | Legacy prompt structure differs from production prompt templates |
+| 10 | `_reference/agents/meta_reviewer.py` | `docs/archive/specs/10_META_REVIEW_AGENT.md` | Legacy prompt differs from production prompt templates |
 
 ### Undocumented Constants
 
 | Constant | Value in Code | Location | Spec Status |
 |----------|---------------|----------|-------------|
-| `TRANSCRIPT_PATH` | env var | `_legacy/agents/interview_simulator.py` | Legacy-only (archived) |
-| `VERBOSE` | `True` (CLI `--quiet` disables) | `_legacy/agents/quantitative_assessor_f.py` | Legacy-only (archived) |
+| `TRANSCRIPT_PATH` | env var | `_reference/agents/interview_simulator.py` | Legacy-only (archived) |
+| `VERBOSE` | `True` (CLI `--quiet` disables) | `_reference/agents/quantitative_assessor_f.py` | Legacy-only (archived) |
 | `DOMAIN_KEYWORDS` | PHQ-8 keyword lists | `src/ai_psychiatrist/agents/prompts/quantitative.py` | Production (configurable via YAML) |
 
 ### Paper vs Spec vs Code Matrix
 
 | Parameter | Paper Value | Production Default | Legacy Prototype (archived) | Status |
 |-----------|------------|--------------------|-----------------------------|--------|
-| Chat models | Gemma 3 27B (Section 2.2); MedGemma 27B evaluated as optional quantitative alternative (Appendix F) | Production defaults use `gemma3:27b` for all agents; optional `MODEL_QUANTITATIVE_MODEL=medgemma:27b` when using the HuggingFace backend | Varies across `_legacy/*`; not used in production | **Aligned** |
-| Embedding model | Qwen 3 8B Embedding | `qwen3-embedding:8b` + `EMBEDDING_DIMENSION=4096` | Varies across `_legacy/*`; not used in production | **Aligned** |
-| `chunk_size` | 8 (optimal) | `EMBEDDING_CHUNK_SIZE=8` | Varies; see `_legacy/quantitative_assessment/*` | **Aligned** |
-| `step_size` | 2 | `EMBEDDING_CHUNK_STEP=2` | Varies; see `_legacy/quantitative_assessment/*` | **Aligned** |
-| `top_k` examples | 2 (optimal) | `EMBEDDING_TOP_K_REFERENCES=2` | Varies; see `_legacy/quantitative_assessment/*` | **Aligned** |
-| Embedding dimension | 4096 (optimal) | `EMBEDDING_DIMENSION=4096` | Varies; see `_legacy/*` | **Aligned** |
-| Feedback threshold | scores < 4 trigger refinement | `FEEDBACK_SCORE_THRESHOLD=3` and `FEEDBACK_TARGET_SCORE=4` | Varies; see `_legacy/qualitative_assessment/*` | **Aligned** |
-| Feedback max iters | 10 | `FEEDBACK_MAX_ITERATIONS=10` | Varies; see `_legacy/qualitative_assessment/*` | **Aligned** |
+| Chat models | Gemma 3 27B (Section 2.2); MedGemma 27B evaluated as optional quantitative alternative (Appendix F) | Production defaults use `gemma3:27b` for all agents; optional `MODEL_QUANTITATIVE_MODEL=medgemma:27b` when using the HuggingFace backend | Varies across `_reference/*`; not used in production | **Aligned** |
+| Embedding model | Qwen 3 8B Embedding | `qwen3-embedding:8b` + `EMBEDDING_DIMENSION=4096` | Varies across `_reference/*`; not used in production | **Aligned** |
+| `chunk_size` | 8 (optimal) | `EMBEDDING_CHUNK_SIZE=8` | Varies; see `_reference/quantitative_assessment/*` | **Aligned** |
+| `step_size` | 2 | `EMBEDDING_CHUNK_STEP=2` | Varies; see `_reference/quantitative_assessment/*` | **Aligned** |
+| `top_k` examples | 2 (optimal) | `EMBEDDING_TOP_K_REFERENCES=2` | Varies; see `_reference/quantitative_assessment/*` | **Aligned** |
+| Embedding dimension | 4096 (optimal) | `EMBEDDING_DIMENSION=4096` | Varies; see `_reference/*` | **Aligned** |
+| Feedback threshold | scores < 4 trigger refinement | `FEEDBACK_SCORE_THRESHOLD=3` and `FEEDBACK_TARGET_SCORE=4` | Varies; see `_reference/qualitative_assessment/*` | **Aligned** |
+| Feedback max iters | 10 | `FEEDBACK_MAX_ITERATIONS=10` | Varies; see `_reference/qualitative_assessment/*` | **Aligned** |
 
 ## Specific Questions (Answers)
 
 1. **Exact XML tag structures in prompts captured?**
    - Yes for the production prompt templates in `src/ai_psychiatrist/agents/prompts/`.
-   - Legacy prompt variants are preserved for auditing in `docs/archive/specs/` and `_legacy/`.
+   - Legacy prompt variants are preserved for auditing in `docs/archive/specs/` and `_reference/`.
 
 2. **Is the JSON repair cascade complete?**
    - Yes in `src/ai_psychiatrist/agents/quantitative.py`: tolerant fixups → `<answer>` extraction → LLM repair → fallback skeleton.
 
 3. **Do visualization notebooks reveal missed processing?**
-   - Yes: severity/diagnosis mapping + metric calculations live in `_legacy/visualization/meta_review_heatmap.ipynb`, and MAE/N/A aggregation + retrieval diagnostics live in `_legacy/visualization/quan_visualization.ipynb` and `_legacy/quantitative_assessment/embedding_quantitative_analysis.ipynb`.
+   - Yes: severity/diagnosis mapping + metric calculations live in `_reference/visualization/meta_review_heatmap.ipynb`, and MAE/N/A aggregation + retrieval diagnostics live in `_reference/visualization/quan_visualization.ipynb` and `_reference/quantitative_assessment/embedding_quantitative_analysis.ipynb`.
 
 4. **Does `server.py` show orchestration patterns not in Spec 11?**
    - `server.py` is the production orchestration layer and is the SSOT for endpoints; see `docs/reference/api/endpoints.md`.
@@ -96,12 +108,12 @@ Remaining “coverage gaps” are primarily depth gaps (e.g., not every notebook
    - Yes originally (`TRANSCRIPT_PATH`, plus many HPC `OLLAMA_*`/`GGML_*` exports); now documented in Spec 01/05/11.
 
 6. **SLURM job configuration reflected?**
-   - Legacy SLURM scripts are archived under `_legacy/slurm/` and referenced for historical context only.
+   - Legacy SLURM scripts are archived under `_reference/slurm/` and referenced for historical context only.
 
 7. **Are `analysis_output` CSV/JSONL structures documented?**
-   - Legacy artifacts (if present) are archived under `_legacy/analysis_output/`.
+   - Legacy artifacts (if present) are archived under `_reference/analysis_output/`.
 
-8. **Does `_legacy/agents/interview_simulator.py` serve a purpose worth preserving?**
+8. **Does `_reference/agents/interview_simulator.py` serve a purpose worth preserving?**
    - It remains useful for reproducing the legacy prototype behavior, but production uses `TranscriptService` and request-driven transcript resolution.
 
 ## 2025 Tooling Verification (Quick Check)

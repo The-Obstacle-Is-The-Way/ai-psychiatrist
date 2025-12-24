@@ -76,9 +76,7 @@ class TestChatRequest:
 
         assert len(req.messages) == 1
         assert req.model == "gemma3:27b"
-        assert req.temperature == 0.2
-        assert req.top_k == 20
-        assert req.top_p == 0.8
+        assert req.temperature == 0.0
         assert req.timeout_seconds == 300
 
     def test_valid_request_custom_params(self) -> None:
@@ -91,16 +89,12 @@ class TestChatRequest:
             messages=messages,
             model="alibayram/medgemma:27b",
             temperature=0.0,
-            top_k=40,
-            top_p=0.95,
             timeout_seconds=300,
         )
 
         assert len(req.messages) == 2
         assert req.model == "alibayram/medgemma:27b"
         assert req.temperature == 0.0
-        assert req.top_k == 40
-        assert req.top_p == 0.95
         assert req.timeout_seconds == 300
 
     def test_empty_messages_raises(self) -> None:
@@ -125,30 +119,6 @@ class TestChatRequest:
         messages = [ChatMessage(role="user", content="Hello")]
         with pytest.raises(ValueError, match="Temperature"):
             ChatRequest(messages=messages, model="test", temperature=2.1)
-
-    def test_top_k_too_low_raises(self) -> None:
-        """Should reject top_k below 1."""
-        messages = [ChatMessage(role="user", content="Hello")]
-        with pytest.raises(ValueError, match="top_k"):
-            ChatRequest(messages=messages, model="test", top_k=0)
-
-    def test_top_k_too_high_raises(self) -> None:
-        """Should reject top_k above 100."""
-        messages = [ChatMessage(role="user", content="Hello")]
-        with pytest.raises(ValueError, match="top_k"):
-            ChatRequest(messages=messages, model="test", top_k=101)
-
-    def test_top_p_too_low_raises(self) -> None:
-        """Should reject top_p below 0."""
-        messages = [ChatMessage(role="user", content="Hello")]
-        with pytest.raises(ValueError, match="top_p"):
-            ChatRequest(messages=messages, model="test", top_p=-0.1)
-
-    def test_top_p_too_high_raises(self) -> None:
-        """Should reject top_p above 1."""
-        messages = [ChatMessage(role="user", content="Hello")]
-        with pytest.raises(ValueError, match="top_p"):
-            ChatRequest(messages=messages, model="test", top_p=1.1)
 
     def test_timeout_too_low_raises(self) -> None:
         """Should reject timeout below 1."""

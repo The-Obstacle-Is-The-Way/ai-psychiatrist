@@ -155,9 +155,7 @@ class MockLLMClient:
         user_prompt: str,
         system_prompt: str = "",
         model: str | None = None,
-        temperature: float = 0.2,
-        top_k: int = 20,
-        top_p: float = 0.8,
+        temperature: float = 0.0,
     ) -> str:
         """Simple chat interface matching OllamaClient.
 
@@ -166,8 +164,6 @@ class MockLLMClient:
             system_prompt: Optional system message.
             model: Model to use (defaults to "mock").
             temperature: Sampling temperature.
-            top_k: Top-k sampling parameter.
-            top_p: Nucleus sampling parameter.
 
         Returns:
             Generated response content.
@@ -181,8 +177,6 @@ class MockLLMClient:
             messages=messages,
             model=model or "mock",
             temperature=temperature,
-            top_k=top_k,
-            top_p=top_p,
         )
         response = await self.chat(request)
         return response.content

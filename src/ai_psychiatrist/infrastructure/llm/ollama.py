@@ -155,8 +155,6 @@ class OllamaClient:
             "stream": False,
             "options": {
                 "temperature": request.temperature,
-                "top_k": request.top_k,
-                "top_p": request.top_p,
             },
         }
 
@@ -289,9 +287,7 @@ class OllamaClient:
         user_prompt: str,
         system_prompt: str = "",
         model: str | None = None,
-        temperature: float = 0.2,
-        top_k: int = 20,
-        top_p: float = 0.8,
+        temperature: float = 0.0,
     ) -> str:
         """Simple chat completion with just user/system prompts.
 
@@ -300,8 +296,6 @@ class OllamaClient:
             system_prompt: Optional system message.
             model: Model to use (Paper Section 2.2: gemma3:27b).
             temperature: Sampling temperature (e.g., 0.0 for Judge agent).
-            top_k: Top-k sampling parameter.
-            top_p: Nucleus sampling parameter.
 
         Returns:
             Generated response content.
@@ -315,8 +309,6 @@ class OllamaClient:
             messages=messages,
             model=model or "gemma3:27b",
             temperature=temperature,
-            top_k=top_k,
-            top_p=top_p,
             timeout_seconds=self._default_timeout,
         )
         response = await self.chat(request)

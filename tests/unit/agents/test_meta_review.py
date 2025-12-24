@@ -287,8 +287,6 @@ qualitative assessment reveals social stressors and biological predisposition.</
         model_settings = ModelSettings(
             meta_review_model="meta-review-model",
             temperature=0.7,
-            top_k=33,
-            top_p=0.9,
         )
         mock_client = MockLLMClient(
             chat_responses=["<severity>1</severity><explanation>Test</explanation>"]
@@ -305,8 +303,6 @@ qualitative assessment reveals social stressors and biological predisposition.</
         request = mock_client.chat_requests[0]
         assert request.model == "meta-review-model"
         assert request.temperature == 0.7
-        assert request.top_k == 33
-        assert request.top_p == 0.9
 
     @pytest.mark.asyncio
     async def test_review_is_mdd_property(

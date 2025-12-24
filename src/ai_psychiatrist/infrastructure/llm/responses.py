@@ -25,9 +25,7 @@ class SimpleChatClient(Protocol):
         user_prompt: str,
         system_prompt: str = "",
         model: str | None = None,
-        temperature: float = 0.2,
-        top_k: int = 20,
-        top_p: float = 0.8,
+        temperature: float = 0.0,
     ) -> str:
         """Send a simple chat prompt and return response."""
         ...

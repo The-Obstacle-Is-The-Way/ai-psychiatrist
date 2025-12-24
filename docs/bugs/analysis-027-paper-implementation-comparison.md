@@ -1,8 +1,17 @@
 # Analysis 027: Paper vs Implementation Comparison (Quantitative Agent)
 
-This document compares the **publicly available paper repository code** (fresh clone under
-`_reference/`, and the archived snapshot under `_legacy/`) to our production implementation
-under `src/ai_psychiatrist/`.
+This document compares the **publicly available paper repository code** (mirrored under
+`_reference/`) to our production implementation under `src/ai_psychiatrist/`.
+
+## Reference Code SSOT Hierarchy
+
+**IMPORTANT**: When referencing the paper's code:
+
+| Priority | Source | Notes |
+|----------|--------|-------|
+| 1 (SSOT) | `_reference/quantitative_assessment/*.ipynb` | Notebooks are authoritative |
+| 2 | `_reference/quantitative_assessment/*.py` | .py files have wrong model defaults (e.g., `llama3`) |
+| 3 | `_reference/agents/*.py` | Agent .py files have wrong defaults; sampling params match notebooks |
 
 It focuses on the quantitative PHQ‑8 pipeline because our reproduction diverges from the paper:
 - Our few-shot MAE: **0.778** vs paper: **0.619**
@@ -16,7 +25,7 @@ See also: `docs/bugs/investigation-026-reproduction-mae-divergence.md`.
 
 1. **Keyword backfill is in the public paper repo and is executed** in the few-shot agent:
    - `_reference/agents/quantitative_assessor_f.py` unconditionally calls `_keyword_backfill(...)`
-     inside `extract_evidence()` (line ~478 in both `_reference` and `_legacy` snapshots).
+     inside `extract_evidence()` (line ~478).
    - The paper text does **not** describe this heuristic step (Section 2.3.2 describes LLM evidence extraction).
 
 2. **Sampling parameters are not only “unspecified”**: the paper repo hardcodes them:

@@ -66,19 +66,15 @@ Zero-shot mode uses NO reference embeddings - the model scores symptoms from tra
 
 ### 2.2 Sampling Parameters
 
-**Reference**: GAP-001b/c
+**Reference**: GAP-001b/c, [Agent Sampling Registry](../reference/agent-sampling-registry.md)
 
-- [ ] **Temperature is low** (paper says "fairly deterministic"):
+- [ ] **Temperature is zero** (clinical AI best practice):
   ```bash
   grep "MODEL_TEMPERATURE" .env
-  # Should show: MODEL_TEMPERATURE=0.2 or similar low value
+  # Should show: MODEL_TEMPERATURE=0.0
   ```
 
-- [ ] **Judge temperature is zero** (deterministic scoring):
-  ```bash
-  grep "MODEL_TEMPERATURE_JUDGE" .env
-  # Optional; defaults to 0.0 if not set
-  ```
+  **Note**: We use temp=0 for all agents. top_k/top_p are not set (irrelevant at temp=0).
 
 ---
 
@@ -220,7 +216,7 @@ Expected output:
 ```text
 === CRITICAL SETTINGS ===
 Quantitative Model: gemma3:27b
-Temperature: 0.2
+Temperature: 0.0
 Keyword Backfill: False
 Timeout: 300s
 Embedding Dimension: 4096
