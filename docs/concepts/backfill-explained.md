@@ -2,7 +2,7 @@
 
 **Audience**: Researchers and developers wanting to understand the coverage-accuracy tradeoff
 **Related**: [SPEC-003](../specs/SPEC-003-backfill-toggle.md) | [Coverage Investigation](../bugs/coverage-investigation.md) | [Extraction Mechanism](./extraction-mechanism.md)
-**Last Updated**: 2025-12-23
+**Last Updated**: 2025-12-24
 
 ---
 
@@ -106,6 +106,116 @@ def _merge_evidence(
 
 ---
 
+## Detailed Quantitative Agent Pipeline (With Code References)
+
+This section shows exactly where backfill fits in the quantitative assessment flow,
+with line number references to `src/ai_psychiatrist/agents/quantitative.py`.
+
+```
+┌─────────────────────────────────────────────────────────────────────────┐
+│                    QUANTITATIVE AGENT PIPELINE                          │
+│                    (quantitative.py:102-254)                            │
+├─────────────────────────────────────────────────────────────────────────┤
+│                                                                         │
+│  STEP 1: LLM EVIDENCE EXTRACTION (Lines 256-307)                        │
+│  ─────────────────────────────────────────────────────────────────────  │
+│  • _extract_evidence() calls LLM with transcript                        │
+│  • LLM returns JSON: {"PHQ8_Sleep": ["I can't sleep"], ...}             │
+│  • Pure semantic analysis - no keywords involved                        │
+│                                                                         │
+│                              │                                          │
+│                              ▼                                          │
+│                                                                         │
+│  STEP 2: KEYWORD HIT DETECTION (Lines 127-135)                          │
+│  ─────────────────────────────────────────────────────────────────────  │
+│  IF enable_keyword_backfill=TRUE or track_na_reasons=TRUE:              │
+│    • _find_keyword_hits() scans transcript for YAML keywords            │
+│    • Returns: {"PHQ8_Tired": ["I'm exhausted"], ...}                    │
+│    • Uses substring matching (case-insensitive)                         │
+│                                                                         │
+│                              │                                          │
+│                              ▼                                          │
+│                                                                         │
+│  STEP 3: CONDITIONAL BACKFILL MERGE (Lines 137-144)                     │
+│  ─────────────────────────────────────────────────────────────────────  │
+│  IF enable_keyword_backfill=TRUE:                                       │
+│    • _merge_evidence() adds keyword hits to LLM evidence                │
+│    • Caps at 3 quotes per item (prevents prompt bloat)                  │
+│    • Deduplicates (won't add same sentence twice)                       │
+│  ELSE:                                                                  │
+│    • final_evidence = llm_evidence (no backfill)                        │
+│                                                                         │
+│                              │                                          │
+│                              ▼                                          │
+│                                                                         │
+│  STEP 4: FEW-SHOT REFERENCE RETRIEVAL (Lines 156-165)                   │
+│  ─────────────────────────────────────────────────────────────────────  │
+│  IF mode=FEW_SHOT and embedding_service exists:                         │
+│    • Embed the extracted evidence                                       │
+│    • Find similar reference chunks from training set                    │
+│    • Build reference bundle with example scores                         │
+│                                                                         │
+│                              │                                          │
+│                              ▼                                          │
+│                                                                         │
+│  STEP 5: LLM SCORING (Lines 167-184)                                    │
+│  ─────────────────────────────────────────────────────────────────────  │
+│  • LLM receives: evidence + reference examples (if few-shot)            │
+│  • Returns: {"PHQ8_Sleep": {"evidence": "...", "score": 2}, ...}        │
+│  • Items without evidence → "N/A"                                       │
+│                                                                         │
+│                              │                                          │
+│                              ▼                                          │
+│                                                                         │
+│  STEP 6: N/A REASON ASSIGNMENT (Lines 571-584)                          │
+│  ─────────────────────────────────────────────────────────────────────  │
+│  IF score is N/A and track_na_reasons=TRUE:                             │
+│    • _determine_na_reason() classifies why                              │
+│    • NO_MENTION: no LLM evidence AND no keyword hits                    │
+│    • LLM_ONLY_MISSED: keywords existed but backfill was OFF             │
+│    • KEYWORDS_INSUFFICIENT: backfill ON but scorer still said N/A       │
+│    • SCORE_NA_WITH_EVIDENCE: LLM had evidence but still said N/A        │
+│                                                                         │
+└─────────────────────────────────────────────────────────────────────────┘
+```
+
+### The Key Code (assess() method, lines 102-254)
+
+```python
+# Step 1: LLM extraction (pure semantic)
+llm_evidence = await self._extract_evidence(transcript.text)
+llm_counts = {k: len(v) for k, v in llm_evidence.items()}
+
+# Step 2: Find keyword hits (always computed if backfill OR tracking enabled)
+keyword_hits: dict[str, list[str]] = {}
+if self._settings.enable_keyword_backfill or self._settings.track_na_reasons:
+    keyword_hits = self._find_keyword_hits(
+        transcript.text,
+        cap=self._settings.keyword_backfill_cap,
+    )
+
+# Step 3: Conditional merge (THE BACKFILL DECISION)
+if self._settings.enable_keyword_backfill:
+    final_evidence = self._merge_evidence(llm_evidence, keyword_hits, cap=3)
+else:
+    final_evidence = llm_evidence  # Pure LLM only - paper parity mode
+```
+
+### File Reference Table
+
+| Component | File | Lines | What It Does |
+|-----------|------|-------|--------------|
+| Backfill toggle | `config.py` | 257-260 | `enable_keyword_backfill` setting |
+| Main pipeline | `quantitative.py` | 102-254 | `assess()` orchestrates all steps |
+| LLM extraction | `quantitative.py` | 256-307 | `_extract_evidence()` |
+| Keyword search | `quantitative.py` | 309-339 | `_find_keyword_hits()` |
+| Evidence merge | `quantitative.py` | 341-374 | `_merge_evidence()` |
+| N/A classification | `quantitative.py` | 571-584 | `_determine_na_reason()` |
+| Keyword YAML | `resources/phq8_keywords.yaml` | all | 200+ curated keyword phrases |
+| YAML loader | `prompts/quantitative.py` | ~50-70 | Loads YAML as packaged resource |
+
+---
+
 ## The Tradeoff: Coverage vs Purity
 
 ### Without Backfill (Default - Paper Parity)
@@ -130,11 +240,9 @@ def _merge_evidence(
 
 ## Paper's Approach
 
-**Unknown.** The paper does not explicitly describe a keyword backfill mechanism.
+### What the Paper TEXT Says
 
-What the paper *does* state is that when evidence is insufficient, the system produces no
-prediction for that item (resulting in substantial missingness / “no output” for many
-items):
+The paper does not explicitly describe a keyword backfill mechanism. What it states:
 
 > "If no relevant evidence was found for a given PHQ-8 item, the model produced no output."
 
@@ -142,9 +250,34 @@ And in Section 3.2:
 
 > "In ~50% of cases, the model was unable to provide a prediction due to insufficient evidence."
 
-For paper-parity experiments, the safest assumption is that the evaluation intended to
-measure **pure LLM extraction/scoring behavior**, without additional heuristic evidence
-injection. **Backfill is now OFF by default** per [SPEC-003](../specs/SPEC-003-backfill-toggle.md).
+### What the Paper CODE Does (Discovery: 2025-12-24)
+
+**The public repository has backfill ALWAYS ON.** In `_reference/agents/quantitative_assessor_f.py`,
+the few-shot agent unconditionally calls `_keyword_backfill()` inside `extract_evidence()` (~line 478).
+
+This means:
+- The paper TEXT implies pure LLM extraction
+- The paper CODE uses LLM + keyword heuristics
+
+We don't know which approach produced the reported MAE of 0.619.
+
+### Our Decision: Paper-Text Parity by Default
+
+We chose to measure **pure LLM capability** (backfill OFF) because:
+1. The paper doesn't describe keyword backfill as part of the methodology
+2. Scientific reproducibility should match documented methodology
+3. We can always enable backfill for clinical utility
+
+**Backfill is OFF by default** per [SPEC-003](../specs/SPEC-003-backfill-toggle.md).
+
+### Asking the Authors
+
+To resolve this ambiguity, consider asking:
+
+> "When the LLM couldn't find evidence for a PHQ-8 item, did you use keyword-based
+> fallback to recover missed evidence before scoring? The public repo has
+> `_keyword_backfill()` in the few-shot agent but the paper doesn't mention it.
+> Was that used in the reported 0.619 MAE evaluation?"
 
 ---
 

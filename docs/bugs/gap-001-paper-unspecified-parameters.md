@@ -18,8 +18,8 @@ This document captures ALL parameters NOT explicitly specified in the paper, alo
 |--------|-----------|-----------|-------------------|-----------|
 | GAP-001a | Data Split Membership | "58/43/41 stratified" but no participant IDs | Implement algorithm from Appendix C | Reproducible algorithm |
 | GAP-001b | Temperature | "fairly deterministic" | 0.2 (default), 0.0 (judge) | Conservative interpretation |
-| GAP-001c | top_k / top_p | Not mentioned | top_k=20, top_p=0.8 | Common defaults |
-| GAP-001d | Model Quantization | Not specified | Ollama defaults (Q4_K_M/Q8_0) | Most accessible option |
+| GAP-001c | top_k / top_p | Not mentioned | top_k=20, top_p=0.8 | Matches public repo few-shot defaults |
+| GAP-001d | Hardware / Quantization | Not specified | Local Ollama defaults (quantized GGUF) | Hardware/precision materially affect abstention |
 
 ---
 
@@ -115,6 +115,20 @@ Exact split membership will still differ from the paper because:
 
 Nothing. These parameters are not mentioned.
 
+### What the Public Paper Repo Code Does
+
+Although the paper text does not specify `top_k`/`top_p`, the publicly available repository
+does hardcode sampling options:
+
+- Few-shot agent uses:
+  - `temperature=0.2, top_k=20, top_p=0.8`
+  - Implemented in `ollama_chat()` options in `_reference/agents/quantitative_assessor_f.py`
+    (mirrored under `_legacy/agents/quantitative_assessor_f.py`).
+- Zero-shot script uses:
+  - `temperature=0, top_k=1, top_p=1.0`
+  - Implemented in `_reference/quantitative_assessment/quantitative_analysis.py`
+    (mirrored under `_legacy/quantitative_assessment/quantitative_analysis.py`).
+
 ### Our Implementation
 
 | Setting | Value | Rationale |
@@ -126,13 +140,13 @@ Nothing. These parameters are not mentioned.
 
 ### Justification
 
-- These are standard defaults for Gemma-family models
-- With low temperature (0.2), these have minimal effect
-- Can be overridden via environment variables if needed
+- These match the public repo few-shot agent defaults
+- With low temperature (0.2), these have limited effect but can still shift abstention behavior
+- Can be overridden via environment variables for ablations
 
 ---
 
-## GAP-001d: Model Quantization
+## GAP-001d: Hardware / Quantization
 
 ### What the Paper Says
 
@@ -143,16 +157,17 @@ No mention of quantization.
 
 ### Our Implementation
 
-- Use Ollama's default quantization for `gemma3:27b`
-- Ollama typically provides Q4_K_M or Q8_0 variants
-- For `qwen3-embedding:8b`, use Ollama's default (typically Q8_0)
+- Use local Ollama (quantized GGUF weights for `gemma3:27b`)
+- Use local Ollama embeddings (`qwen3-embedding:8b`) with requested dimension 4096
 
 ### Justification
 
-- Paper ran on "MacBook Pro with an Apple M3 Pro chipset"
-- 27B full precision would require ~54GB RAM (exceeds M3 Pro)
-- Quantization is implied but not specified
-- Ollama defaults are the most accessible option
+- The paper states the pipeline can run on a MacBook Pro M3 Pro (Section 2.3.5), but the public repo
+  also includes SLURM scripts configured for multi‑GPU nodes (e.g., `_reference/slurm/job_ollama.sh` uses
+  `--gres=gpu:A100:2`).
+- The hardware and precision/quantization used for the reported MAE/coverage are therefore not uniquely
+  determined from the paper text alone.
+- Quantization/precision can materially change both MAE and coverage (abstention rate).
 
 ### Alternative (For Maximum Fidelity)
 
