@@ -5,17 +5,23 @@
 
 ---
 
-## Example Reproduction Run (2025-12-23)
+## Example Reproduction Run (2025-12-23) - INVALIDATED
 
-### Summary Table
+> **⚠️ WARNING**: This run was deleted because it used **keyword backfill ON** (not paper parity).
+> The run was executed before SPEC-003 (backfill OFF default) was merged.
+> Coverage was 74.1% (backfill ON) instead of ~50% (paper parity).
+> See [Issue #53](https://github.com/The-Obstacle-Is-The-Way/ai-psychiatrist/issues/53) for experiment tracking improvements.
 
-| Metric | Paper | Our Result | Δ | Notes |
+### Historical Summary (for reference only)
+
+| Metric | Paper | Old Result | Δ | Notes |
 |--------|-------|------------|---|-------|
-| **Item MAE** | 0.619 | 0.757 (weighted) / 0.753 (by-item) | +0.14 / +0.13 | Coverage tradeoff (hypothesis) |
-| **Coverage** | ~50% | 74.1% | +24% | We predict more items |
+| **Item MAE** | 0.619 | 0.757 (weighted) | +0.14 | **NOT paper parity** - used backfill ON |
+| **Coverage** | ~50% | 74.1% | +24% | Backfill ON inflates coverage |
 | Zero-shot MAE | 0.796 | - | - | Not run yet |
-| Participants | 41 | 41 | ✓ | Paper-style split (Appendix C algorithm; membership not published) |
-| Runtime | ~1 min (M3 Pro) | ~3.9 hrs | - | Paper reports ~1 min on M3 Pro; our run was on M1 Pro with concurrent training |
+| Participants | 41 | 41 | ✓ | Paper-style split |
+
+**This run was deleted. A new paper-parity run (backfill OFF) is required.**
 
 ### Per-Item Breakdown
 
