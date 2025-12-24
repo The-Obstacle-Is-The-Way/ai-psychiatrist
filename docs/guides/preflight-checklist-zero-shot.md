@@ -27,6 +27,7 @@ Zero-shot mode uses NO reference embeddings - the model scores symptoms from tra
 
 - [ ] **Copy template**: `cp .env.example .env`
   - **Gotcha (BUG-018b)**: `.env` OVERRIDES code defaults! Always start fresh.
+  - **Gotcha (BUG-024)**: If `.env` predates SPEC-003, it may lack `QUANTITATIVE_ENABLE_KEYWORD_BACKFILL=false`. Re-copy from `.env.example` or add missing settings.
 
 - [ ] **Review .env file manually** - open it and verify:
   ```bash
@@ -138,8 +139,8 @@ Zero-shot mode uses NO reference embeddings - the model scores symptoms from tra
 
 - [ ] **AVEC2017 labels exist** (for item-level MAE):
   ```bash
-  ls data/labels/
-  # Should show: train_split.csv, dev_split.csv (minimum)
+  ls data/*_split_Depression_AVEC2017.csv
+  # Should show: dev_split, train_split, test_split files
   ```
 
 ---
@@ -195,7 +196,7 @@ Zero-shot mode uses NO reference embeddings - the model scores symptoms from tra
 
 ### 7.1 Quick Sanity Check
 
-- [ ] **Run linter**: `make lint-check`
+- [ ] **Run linter**: `make lint`
 - [ ] **Run type checker**: `make typecheck`
 - [ ] **Run unit tests**: `make test-unit`
 
@@ -229,7 +230,27 @@ Embedding Dimension: 4096
 
 ## Phase 8: Execute Zero-Shot Run
 
-### 8.1 Run Command
+### 8.1 Use tmux for Long-Running Processes
+
+**CRITICAL**: Reproduction runs take ~5 min/participant. Use tmux to prevent losing progress if your terminal disconnects.
+
+- [ ] **Start or attach to tmux session**:
+  ```bash
+  # Start new session
+  tmux new -s reproduction
+
+  # Or attach to existing session
+  tmux attach -t reproduction
+  ```
+
+- [ ] **Verify you're inside tmux**: Look for green status bar at bottom, or run:
+  ```bash
+  echo $TMUX
+  # Should show something like: /private/tmp/tmux-501/default,12345,0
+  # If empty, you're NOT in tmux!
+  ```
+
+### 8.2 Run Command
 
 ```bash
 # Zero-shot on AVEC dev split (has per-item labels)
@@ -239,7 +260,7 @@ uv run python scripts/reproduce_results.py --split dev
 uv run python scripts/reproduce_results.py --split paper
 ```
 
-### 8.2 Monitor for Issues
+### 8.3 Monitor for Issues
 
 Watch for these log patterns:
 
