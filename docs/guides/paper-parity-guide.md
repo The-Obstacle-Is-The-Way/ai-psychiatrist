@@ -56,12 +56,18 @@ Compare backfill ON vs OFF:
 
 ```bash
 # Mode 1: Paper parity (backfill OFF - default)
-uv run python scripts/reproduce_results.py --split paper --output results_backfill_off.json
+uv run python scripts/reproduce_results.py --split paper
+cp "$(ls -t data/outputs/reproduction_results_*.json | head -1)" results_backfill_off.json
 
 # Mode 2: Higher coverage (backfill ON)
 QUANTITATIVE_ENABLE_KEYWORD_BACKFILL=true \
-  uv run python scripts/reproduce_results.py --split paper --output results_backfill_on.json
+  uv run python scripts/reproduce_results.py --split paper
+cp "$(ls -t data/outputs/reproduction_results_*.json | head -1)" results_backfill_on.json
 ```
+
+Notes:
+- `scripts/reproduce_results.py` always writes results to `data/outputs/reproduction_results_<timestamp>.json`.
+- The `cp "$(ls -t ... | head -1)" ...` pattern renames the most recent output for easier comparison.
 
 ---
 
