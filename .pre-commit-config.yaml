@@ -20,7 +20,9 @@ repos:
     rev: v6.0.0
     hooks:
       - id: trailing-whitespace
+        exclude: ^(_legacy|_literature|_reference)/
       - id: end-of-file-fixer
+        exclude: ^(_legacy|_literature|_reference)/
       - id: check-yaml
       - id: check-json
       - id: check-added-large-files

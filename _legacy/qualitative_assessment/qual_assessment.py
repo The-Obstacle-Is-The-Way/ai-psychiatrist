@@ -46,13 +46,13 @@ skipped_count = 0
 
 for i, (participant_id, dataset_type) in enumerate(all_subjects):
     print(f"\n--- Processing {i+1}/{len(all_subjects)}: {participant_id} ({dataset_type} dataset) ---")
-
+    
     start_time = time.time()
-
+    
     id_transcript = os.path.join("/data/users4/user/ai-psychiatrist/datasets/daic_woz_dataset/", f"{participant_id}_P", f"{participant_id}_TRANSCRIPT.csv")
-
+    
     print(f"Looking for transcript at: {id_transcript}")
-
+    
     if not os.path.exists(id_transcript):
         print(f"Transcript not found for {participant_id}")
         skipped_count += 1
@@ -64,19 +64,19 @@ for i, (participant_id, dataset_type) in enumerate(all_subjects):
         continue
 
     print(f"Transcript found, loading data...")
-
+    
     try:
         transcript_data = pd.read_csv(id_transcript, sep='\t')
         dialogue_txt = transcript_data.dropna(subset=['speaker', 'value'])
         dialogue_txt['dialogue'] = dialogue_txt['speaker'] + " : " + dialogue_txt['value']
         full_dialogue = "\n".join(dialogue_txt['dialogue'])
-
+        
         print(f"Dialogue length: {len(full_dialogue)} characters")
         print(f"First 200 chars: {full_dialogue[:200]}...")
-
+        
         # Overall assessment
         system_prompt = "You are a psychiatrist. Your job is to assess and diagnose patients for depression. Be as objective, concise, and accurate as possible. Be specific and avoid vague generalities."
-
+        
         print(f"Sending API request for overall assessment...")
         overall_prompt = f"""The following is an interview transcript from a psychiatric assessment of a subject who is being screened for depression. Please note that 'Ellie' is the interviewer, and 'Participant' is the subject being assessed.
 {full_dialogue}
@@ -88,10 +88,10 @@ Please answer in this XML format. Use straight quotes instead of curly quotes, a
 <assessment>Summary of participant's overall mental health</assessment>
 <quotes>Exact quotes from the transcript that support the assessment</quotes>
 """
-
+        
         # Start timing
         start_time = time.time()
-
+        
         response = requests.post(
             BASE_URL,
             json = {
@@ -106,7 +106,7 @@ Please answer in this XML format. Use straight quotes instead of curly quotes, a
                 }
             }
         )
-
+        
         if response.status_code != 200:
             print(f"API request failed with status code: {response.status_code}")
             runtime_results.append({
@@ -115,18 +115,18 @@ Please answer in this XML format. Use straight quotes instead of curly quotes, a
                 "runtime_seconds": time.time() - start_time
             })
             continue
-
+            
         overall_content = response.json()['message']['content']
-
+        
         # Check tags
         if "<assessment>" not in overall_content or "<quotes>" not in overall_content:
             print("WARNING: Missing tags in overall assessment")
-
+        
         # PHQ-8 symptoms - assess each one
         phq8_results = []
         for symptom in phq8_symptoms:
             print(f"Assessing PHQ-8 symptom: {symptom[:50]}...")
-
+            
             symptom_prompt = f"""The following is an interview transcript from a psychiatric assessment of a subject who is being screened for depression. Please note that 'Ellie' is the interviewer, and 'Participant' is the subject being assessed.
 {full_dialogue}
 
@@ -143,7 +143,7 @@ Please answer in this XML format. Use straight quotes instead of curly quotes:
 <assessment>Summary of this symptom's presence, frequency, duration, and severity</assessment>
 <quotes>Exact quotes from the transcript that support this assessment</quotes>
 """
-
+            
             response = requests.post(
                 BASE_URL,
                 json = {
@@ -158,18 +158,18 @@ Please answer in this XML format. Use straight quotes instead of curly quotes:
                     }
                 }
             )
-
+            
             if response.status_code != 200:
                 phq8_results.append(f"ERROR: Failed to assess symptom")
                 continue
-
+                
             symptom_content = response.json()['message']['content']
-
+            
             if "<assessment>" not in symptom_content or "<quotes>" not in symptom_content:
                 print(f"WARNING: Missing tags for symptom assessment")
-
+            
             phq8_results.append(f"**{symptom}**\n{symptom_content}")
-
+        
         # Social factors
         print(f"Assessing social factors...")
         social_prompt = f"""The following is an interview transcript from a psychiatric assessment of a subject who is being screened for depression. Please note that 'Ellie' is the interviewer, and 'Participant' is the subject being assessed.
@@ -182,7 +182,7 @@ Please answer in this XML format. Use straight quotes instead of curly quotes:
 <assessment>Summary of social influences on patient's health</assessment>
 <quotes>Quotes from the transcript that support the assessment</quotes>
 """
-
+        
         response = requests.post(
             BASE_URL,
             json = {
@@ -197,7 +197,7 @@ Please answer in this XML format. Use straight quotes instead of curly quotes:
                 }
             }
         )
-
+        
         if response.status_code != 200:
             print(f"API request failed for social factors")
             social_content = "ERROR"
@@ -205,7 +205,7 @@ Please answer in this XML format. Use straight quotes instead of curly quotes:
             social_content = response.json()['message']['content']
             if "<assessment>" not in social_content or "<quotes>" not in social_content:
                 print(f"WARNING: Missing tags for social factors")
-
+        
         # Biological factors
         print(f"Assessing biological factors...")
         biological_prompt = f"""The following is an interview transcript from a psychiatric assessment of a subject who is being screened for depression. Please note that 'Ellie' is the interviewer, and 'Participant' is the subject being assessed.
@@ -218,7 +218,7 @@ Please answer in this XML format. Use straight quotes instead of curly quotes:
 <assessment>Summary of biological influences on patient's health</assessment>
 <quotes>Quotes from the transcript that support the assessment</quotes>
 """
-
+        
         response = requests.post(
             BASE_URL,
             json = {
@@ -233,7 +233,7 @@ Please answer in this XML format. Use straight quotes instead of curly quotes:
                 }
             }
         )
-
+        
         if response.status_code != 200:
             print(f"API request failed for biological factors")
             biological_content = "ERROR"
@@ -241,7 +241,7 @@ Please answer in this XML format. Use straight quotes instead of curly quotes:
             biological_content = response.json()['message']['content']
             if "<assessment>" not in biological_content or "<quotes>" not in biological_content:
                 print(f"WARNING: Missing tags for biological factors")
-
+        
         # Risk factors
         print(f"Assessing risk factors...")
         risk_prompt = f"""The following is an interview transcript from a psychiatric assessment of a subject who is being screened for depression. Please note that 'Ellie' is the interviewer, and 'Participant' is the subject being assessed.
@@ -254,7 +254,7 @@ Please answer in this XML format. Use straight quotes instead of curly quotes:
 <assessment>Summary of potential risk factors</assessment>
 <quotes>Exact quotes from the transcript that support the assessment</quotes>
 """
-
+        
         response = requests.post(
             BASE_URL,
             json = {
@@ -269,7 +269,7 @@ Please answer in this XML format. Use straight quotes instead of curly quotes:
                 }
             }
         )
-
+        
         if response.status_code != 200:
             print(f"API request failed for risk factors")
             risk_content = "ERROR"
@@ -277,7 +277,7 @@ Please answer in this XML format. Use straight quotes instead of curly quotes:
             risk_content = response.json()['message']['content']
             if "<assessment>" not in risk_content or "<quotes>" not in risk_content:
                 print(f"WARNING: Missing tags for risk factors")
-
+        
         # Combine all results
         final_assessment = f"""=== OVERALL ASSESSMENT ===
 {overall_content}
@@ -294,40 +294,40 @@ Please answer in this XML format. Use straight quotes instead of curly quotes:
 === RISK FACTORS ===
 {risk_content}
 """
-
+        
         runtime_seconds = time.time() - start_time
         print(f"Runtime: {runtime_seconds:.2f} seconds")
-
+        
         results.append({
             "participant_id": participant_id,
             "dataset_type": dataset_type,
             "qualitative_assessment": final_assessment
         })
-
+        
         runtime_results.append({
             "participant_id": participant_id,
             "status": "success",
             "runtime_seconds": runtime_seconds
         })
-
+        
         processed_count += 1
         print(f"Completed participant {participant_id} ({processed_count} total completed)")
-
+        
         if len(results) == 1 or len(results) % 10 == 0 or len(results) == len(all_subjects):
             resultsdf = pd.DataFrame(results)
             output_file = "/home/users/nblair7/ai-psychiatrist/qualitative_assessment/MG142ipy2.csv"
             resultsdf.to_csv(output_file, index=False)
             print(f"Checkpoint save: {len(results)} participants saved to {output_file}")
-
+            
             timing_df = pd.DataFrame(runtime_results)
             timing_file = "/home/users/nblair7/ai-psychiatrist/qualitative_assessment/MG142ipyrun2.csv"
             timing_df.to_csv(timing_file, index=False)
             print(f"Timing checkpoint save: {len(runtime_results)} participants saved to {timing_file}")
-
+            
             print(f"\n=== FORMATTED PREVIEW OF PARTICIPANT {participant_id} ===")
             print(final_assessment)
             print("=" * 60)
-
+            
     except Exception as e:
         print(f"Error processing {participant_id}: {str(e)}")
         import traceback

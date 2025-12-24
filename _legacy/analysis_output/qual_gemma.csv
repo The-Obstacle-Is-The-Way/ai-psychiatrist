@@ -136,7 +136,7 @@ The patient demonstrates strong familial bonds, particularly with her children, 
 ```xml
 <assessment>Summary of biological influences on patient's health</assessment>
 <quotes>
-The patient reports no prior diagnosis of depression (""have you been diagnosed with depression no"").
+The patient reports no prior diagnosis of depression (""have you been diagnosed with depression no""). 
 There is a reported family history of mental health issues, though unspecified (""my kids will keep me…sane…around me but that’s just part of the life experience""). This suggests a potential genetic predisposition, though further investigation would be needed.
 The patient reports high stress levels related to single parenthood (""right now I’m a single parent so that makes it hard alone itself""). This chronic stress can impact neuroendocrine function and increase vulnerability to mood disorders.
 The patient describes a challenging relationship with her adult daughter, marked by conflict and frustration (""we had an argument because…she’s kinda like stubborn…I done told you…""). Ongoing interpersonal stress can contribute to mental health challenges.
@@ -517,7 +517,7 @@ This symptom (moving/speaking slowly OR fidgety/restless) is present, reported a
 ```xml
 <assessment>Summary of social influences on patient's health</assessment>
 <quotes>
-The subject reports strained familial relationships, particularly with siblings, stating, ""I don't have much family as it is…I’m probably not really really close to none of my siblings…I don’t talk to them…I don’t ask about them."" He maintains a closer relationship with his mother and niece.
+The subject reports strained familial relationships, particularly with siblings, stating, ""I don't have much family as it is…I’m probably not really really close to none of my siblings…I don’t talk to them…I don’t ask about them."" He maintains a closer relationship with his mother and niece. 
 
 Friendship dynamics appear limited; the transcript focuses primarily on a past positive influence from a former boss rather than current friendships.
 
@@ -727,7 +727,7 @@ The patient reports a lack of close relationships, stating ""I don't have a best
 
 **Diagnostic Impression (Based on Transcript - *Important Disclaimer Below*):**
 
-Based *solely* on this transcript, the patient exhibits several indicators suggestive of a depressive disorder, though a full diagnosis requires a comprehensive evaluation.
+Based *solely* on this transcript, the patient exhibits several indicators suggestive of a depressive disorder, though a full diagnosis requires a comprehensive evaluation. 
 
 *   **Persistent Low Mood:** While he initially states he's ""fine,"" this is immediately followed by laughter and a general lack of positive affect. He describes not being ""cheery"" and consistently being ""not down"" but also not happy. He states he doesn't know when he last felt truly happy.
 *   **Social Isolation:** The patient's lack of close relationships, deliberate avoidance of social interaction, and description of himself as a loner are significant risk factors for depression.
@@ -1069,7 +1069,7 @@ The participant reports experiencing low energy as a current symptom. The freque
 The participant reports changes in appetite, indicating a potential symptom of depression. Frequency is reported as more than half the days, with duration not explicitly stated but implied to be ongoing. Severity/impact on functioning is indicated by the participant reporting being ""more easily irritated"" and ""more tired,"" potentially linked to dietary changes.
 </assessment>
 <quotes>
-""yeah i'm i'm easier more easily irritated and uh more tired more uh kind of down feeling down more not as productive""
+""yeah i'm i'm easier more easily irritated and uh more tired more uh kind of down feeling down more not as productive"" 
 </quotes>
 ```
 **Feeling bad about yourself — or that you are a failure or have let yourself or your family down**
@@ -1098,7 +1098,7 @@ Trouble concentrating is present, reported as occurring “more than half the da
 The participant reports experiencing both slowed movement/speech *and* increased restlessness/fidgeting, suggesting potential psychomotor disturbance. The frequency appears to be ""several days"" to ""more than half the days,"" with an unspecified duration, but likely ongoing given the participant's history of depression. The severity impacts functioning, as the participant notes being ""easily irritated"" and ""more tired,"" which could be linked to these psychomotor changes.
 </assessment>
 <quotes>
-""i'm easier more easily irritated and uh yell more tired more uh kind of down feeling down more not as productive""
+""i'm easier more easily irritated and uh yell more tired more uh kind of down feeling down more not as productive"" 
 ""when was the last time you argued with someone and what was it about...pretty pissed off taken advantage of"" (suggests potential agitation/restlessness leading to outbursts)
 </quotes>
 ```
@@ -1471,7 +1471,7 @@ This symptom is present, reported as increased restlessness. The frequency appea
 ```xml
 <assessment>Summary of social influences on patient's health</assessment>
 <quotes>
-The patient reports strong familial relationships, particularly with their mother, who is described as a significant positive influence (""I'd say my mom…she set herself above that and was still determined to be a good caring person""). The recent loss of both parents (father and mother within a relatively short timeframe) is a significant stressor (""I went through seeing my father be sick and then passing away…and just recently seeing my mother my mother was sick for about four years and she finally passed away…that was very hard on me"").
+The patient reports strong familial relationships, particularly with their mother, who is described as a significant positive influence (""I'd say my mom…she set herself above that and was still determined to be a good caring person""). The recent loss of both parents (father and mother within a relatively short timeframe) is a significant stressor (""I went through seeing my father be sick and then passing away…and just recently seeing my mother my mother was sick for about four years and she finally passed away…that was very hard on me""). 
 
 The patient describes enjoying social activity and having friends (""I like people and I like being around people. I like having friends, social activity""). However, the transcript doesn't detail the *quality* or current state of those friendships.
 
@@ -1640,7 +1640,7 @@ The participant demonstrates symptoms consistent with feeling bad about themselv
 Trouble concentrating is present, reported as experienced “several days” per week, with duration not explicitly stated but implied to be ongoing given the context of a depressive assessment. Severity impacts general functioning, though not detailed specifically; the participant reports feeling “tired and sluggish” and “less motivated and less interested in things,” which could be linked to concentration difficulties. The symptom is not directly addressed with specific questioning, but inferred from broader statements about mood and motivation.
 </assessment>
 <quotes>
-""just feeling tired and sluggish and um less less motivated and less interested in things""
+""just feeling tired and sluggish and um less less motivated and less interested in things"" 
 </quotes>
 ```
 **Moving or speaking so slowly that other people could have noticed? Or the opposite — being so fidgety or restless that you have been moving around a lot more than usual**
@@ -1782,7 +1782,7 @@ The participant reports experiencing fatigue, though not as a primary complaint.
 The symptom of poor appetite or overeating was not directly assessed in the interview. While the participant mentions enjoying a ""good meal"" as something that puts them in a good mood, this does not provide information about changes in appetite or eating patterns. There is no discussion of weight changes or concerns about food intake.
 </assessment>
 <quotes>
-""um i don't know a good a good meal <laughter>""
+""um i don't know a good a good meal <laughter>"" 
 </quotes>
 ```
 **Feeling bad about yourself — or that you are a failure or have let yourself or your family down**
@@ -1834,7 +1834,7 @@ The participant reports being ""pretty close"" to their family, specifically cit
 
 **Diagnostic Impression (Based on the transcript - limited data):**
 
-Based solely on this interview transcript, the participant does *not* present with clear indicators of major depressive disorder. While they report some sleep disturbance (""lately it's been pretty tough""), this is attributed to staying up late and self-reported as their own fault. There is no mention of persistent sadness, loss of interest, significant weight changes, feelings of worthlessness, or suicidal ideation – core symptoms of depression.
+Based solely on this interview transcript, the participant does *not* present with clear indicators of major depressive disorder. While they report some sleep disturbance (""lately it's been pretty tough""), this is attributed to staying up late and self-reported as their own fault. There is no mention of persistent sadness, loss of interest, significant weight changes, feelings of worthlessness, or suicidal ideation – core symptoms of depression. 
 
 The participant generally presents as upbeat and engaged, frequently using laughter and describing positive experiences. They report enjoying social activities and having supportive family relationships. The admission of past rebelliousness doesn't necessarily indicate current distress.
 
@@ -1987,7 +1987,7 @@ No direct quotes address concentration. However, the following may be relevant (
 This symptom is present, assessed as “several days” in frequency, with duration not explicitly stated but implied to be ongoing. Severity appears to be moderate, impacting daily functioning, though not debilitating. The participant doesn’t explicitly state this is a current issue, but mentions getting better at controlling emotions and walking away from situations, suggesting a past struggle with restlessness or slowed movement/speech.
 </assessment>
 <quotes>
-""i've gotten better over the years um most of the time i just try to um you know walk away or you know control my emotions in terms of you know just walking away""
+""i've gotten better over the years um most of the time i just try to um you know walk away or you know control my emotions in terms of you know just walking away"" 
 ""irritable cranky"" (suggests increased restlessness/agitation when sleep is disturbed)
 </quotes>
 ```
@@ -2348,7 +2348,7 @@ The participant reports trouble concentrating, experiencing it more than half th
 This symptom is present, reported as experiencing slowness. Frequency is reported as occurring for “over a year”. Severity appears to impact functioning, contributing to difficulty with work and concentration.
 </assessment>
 <quotes>
-“i haven’t had a good night’s sleep in a year i would say…it’s very hard because it’s uh difficult to work and it’s difficult to concentrate i make mistakes and i forget a lot”
+“i haven’t had a good night’s sleep in a year i would say…it’s very hard because it’s uh difficult to work and it’s difficult to concentrate i make mistakes and i forget a lot” 
 “um groggy and i have no energy”
 </quotes>
 ```
@@ -2357,11 +2357,11 @@ This symptom is present, reported as experiencing slowness. Frequency is reporte
 ```xml
 <assessment>Summary of social influences on patient's health</assessment>
 <quotes>
-The participant expresses a history of geographical isolation after moving to Los Angeles, initially lacking a strong social support network (""moved away from my family…didn't know anyone here""). While she eventually made friends, the initial period of adjustment appears challenging.
+The participant expresses a history of geographical isolation after moving to Los Angeles, initially lacking a strong social support network (""moved away from my family…didn't know anyone here""). While she eventually made friends, the initial period of adjustment appears challenging. 
 
 Her primary source of joy and pride stems from her children (""my children,"" ""the love of my children""). However, parenting is also a significant source of stress, particularly concerning her daughter’s cancer diagnosis and struggles with trusting her advice (""arguing with her over her therapy…she wasn't telling me enough""). She expresses frustration with feeling helpless when her children face difficulties (""watching your children fail…seeing that they can hurt themselves"").
 
-She has a close friend from work (""very close"") but hasn't seen them in over a year, indicating a potential lack of consistent social engagement.
+She has a close friend from work (""very close"") but hasn't seen them in over a year, indicating a potential lack of consistent social engagement. 
 
 The participant expresses concern about a broader societal decline in community support (""it takes a village to raise a child…nobody wants to pitch in""). This suggests a feeling of disconnection from the wider community and a sense of loss regarding traditional support systems.
 
@@ -2535,7 +2535,7 @@ This symptom is not clearly present, but there's a suggestion of restlessness. T
 ```xml
 <assessment>Summary of social influences on patient's health</assessment>
 <quotes>
-The participant describes a strained relationship with his brother and their families, stemming from differing opinions on raising children (""I tend to be judgmental…my brother doesn't seem to think along the same lines and we have disagreements""). He feels close to his parents but distant from his brother’s family.
+The participant describes a strained relationship with his brother and their families, stemming from differing opinions on raising children (""I tend to be judgmental…my brother doesn't seem to think along the same lines and we have disagreements""). He feels close to his parents but distant from his brother’s family. 
 
 He appears to value friendships, mentioning enjoying parties and cooking with friends as mood boosters (""a party with friends that I like…I also like cooking and I enjoy cooking with groups""). He also describes valuing being a good listener and offering advice to friends, suggesting a desire to be supportive and maintain positive relationships.
 
@@ -2648,7 +2648,7 @@ The assessment of ""Feeling tired or having little energy"" is difficult to defi
 <quotes>
 ""yeah just like mood swings i guess""
 ""like i'm not going forward as fast as i want to""
-""the anger [ang] i guess it's kinda hard to control the anger you know when you're going through a couple of of a few things in your life that aren't very pleasant you know""
+""the anger [ang] i guess it's kinda hard to control the anger you know when you're going through a couple of of a few things in your life that aren't very pleasant you know"" 
 </quotes>
 ```
 
@@ -2721,7 +2721,7 @@ The participant reports experiencing restlessness and fidgetiness, indicating po
 Summary of social influences on patient's health
 </assessment>
 <quotes>
-The participant describes strong familial bonds, stating ""family comes first, family is number one"" and ""pretty close"" when asked about closeness to family. This suggests a supportive family system, though the extent of emotional support isn't fully explored.
+The participant describes strong familial bonds, stating ""family comes first, family is number one"" and ""pretty close"" when asked about closeness to family. This suggests a supportive family system, though the extent of emotional support isn't fully explored. 
 
 Friendships appear present, with the participant mentioning having ""best friends"" who are understanding of their issues (""they understand when I'm going through something""). However, the depth and quality of these friendships aren't detailed.
 

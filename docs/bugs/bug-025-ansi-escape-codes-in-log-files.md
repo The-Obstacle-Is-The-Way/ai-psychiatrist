@@ -9,15 +9,15 @@
 
 ## Summary
 
-When reproduction runs are piped to log files via `tee`, ANSI color escape codes are written as raw text, making logs hard to read and grep.
+When reproduction runs are piped to log files via `tee`, ANSI color escape codes are written as raw text, making logs difficult to read and search.
 
 **Example** (from `reproduction_run_20251223_224516.log`):
-```
+```log
 [2m2025-12-24T03:45:17.652082Z[0m [[32m[1minfo     [0m] [1mLoading transcript[0m
 ```
 
-**Should be**:
-```
+**Expected output**:
+```text
 2025-12-24T03:45:17.652082Z [info] Loading transcript
 ```
 

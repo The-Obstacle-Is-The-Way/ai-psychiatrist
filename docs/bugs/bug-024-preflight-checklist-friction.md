@@ -25,7 +25,7 @@ make lint-check
 ```
 
 **Actual Makefile targets**:
-```
+```text
 lint        - Run linter (ruff)
 format-check - Check formatting without changes
 ```
@@ -45,7 +45,7 @@ ls data/labels/
 ```
 
 **Actual location**: Labels are in `data/` root:
-```
+```text
 data/dev_split_Depression_AVEC2017.csv
 data/train_split_Depression_AVEC2017.csv
 data/test_split_Depression_AVEC2017.csv
@@ -93,7 +93,7 @@ train_pids = {int(row['participant_id']) for row in csv.DictReader(f)}
 ```
 
 **Actual CSV column name**:
-```
+```text
 Participant_ID  (capital P, capital I, capital D)
 ```
 

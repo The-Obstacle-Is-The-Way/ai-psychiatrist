@@ -16,7 +16,7 @@ def load_jsonl(file_path):
     Returns
     -------
     list
-        A list of dictionaries, where each dictionary represents
+        A list of dictionaries, where each dictionary represents 
         a JSON object from a line in the JSONL file
     """
     data = []
@@ -98,7 +98,7 @@ def main():
 
         system_prompt = "You are an AI psychiatrist assistant specializing in depression. Your task is to analyze the interview transcript and related qualitative and quantitative assessments, and then predict the diagnosis label and severity level."
 
-        meta_reviewer_prompt = f"""Please review a participant's interview transcript, qualitative assessment, and quantitative assessment below.
+        meta_reviewer_prompt = f"""Please review a participant's interview transcript, qualitative assessment, and quantitative assessment below.  
 
         Here is the interview transcript in <transcript> tags:
         <transcript>
