@@ -87,7 +87,9 @@ class TestEnvExample:
 
         # Paper-optimal models
         assert "gemma3:27b" in content
-        assert "alibayram/medgemma:27b" in content
+        # MedGemma is an Appendix F alternative; official weights are HuggingFace-only and
+        # referenced via canonical alias.
+        assert "medgemma:27b" in content
         assert "qwen3-embedding:8b" in content
 
         # Paper-optimal hyperparameters

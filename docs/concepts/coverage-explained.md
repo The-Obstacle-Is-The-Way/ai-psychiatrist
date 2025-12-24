@@ -169,9 +169,10 @@ Paper Section 3.2 explicitly notes that **subjects without sufficient evidence w
 excluded**, and that in **~50% of cases** the model was unable to provide a prediction
 due to insufficient evidence.
 
-In this repository, one plausible contributor to higher coverage is the presence of a
-rule-based keyword backfill step (`QuantitativeAssessmentAgent._keyword_backfill`) that
-adds evidence when the initial LLM extraction misses it.
+In this repository, coverage can be increased by enabling the optional
+rule-based keyword backfill step (`QuantitativeAssessmentAgent._find_keyword_hits` +
+`QuantitativeAssessmentAgent._merge_evidence`) that injects keyword-matched sentences
+when the initial LLM extraction misses evidence.
 
 Other plausible contributors include:
 
@@ -179,8 +180,10 @@ Other plausible contributors include:
 2. Model weights and quantization differences (paper does not specify quantization)
 3. Backend/runtime differences (Ollama vs HuggingFace)
 
-To turn this from a hypothesis into a conclusion, we need an ablation run with keyword
-backfill disabled, using the same split and model backend.
+To turn this from a hypothesis into a conclusion, run an ablation with backfill
+disabled vs enabled using the same split and model backend:
+- Default (paper parity): `QUANTITATIVE_ENABLE_KEYWORD_BACKFILL=false`
+- Higher coverage: `QUANTITATIVE_ENABLE_KEYWORD_BACKFILL=true`
 
 ---
 

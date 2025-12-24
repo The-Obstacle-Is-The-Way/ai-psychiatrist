@@ -287,12 +287,12 @@ class TestItemAssessment:
             evidence="",
             reason="No evidence found",
             na_reason=NAReason.NO_MENTION,
-            evidence_source="none",
+            evidence_source=None,
             llm_evidence_count=0,
             keyword_evidence_count=0,
         )
         assert item.na_reason == NAReason.NO_MENTION
-        assert item.evidence_source == "none"
+        assert item.evidence_source is None
         assert item.llm_evidence_count == 0
         assert item.keyword_evidence_count == 0
 

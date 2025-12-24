@@ -74,7 +74,7 @@ Each N/A result now includes a reason for debugging:
 | `NO_MENTION` | Neither LLM nor keywords found any evidence |
 | `LLM_ONLY_MISSED` | LLM missed it but keywords would have matched (backfill OFF) |
 | `KEYWORDS_INSUFFICIENT` | Keywords matched but still insufficient for scoring |
-| `SCORE_NA_WITH_EVIDENCE` | Evidence exists but LLM declined to score |
+| `SCORE_NA_WITH_EVIDENCE` | LLM extracted evidence but scoring still returned N/A |
 
 ---
 

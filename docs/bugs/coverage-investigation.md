@@ -1,7 +1,7 @@
 # Coverage Investigation: Why 74% vs Paper's 50%
 
 **Date**: 2025-12-23
-**Status**: SPEC'D - Resolution in [SPEC-003](../specs/SPEC-003-backfill-toggle.md)
+**Status**: RESOLVED - Implemented in [SPEC-003](../specs/SPEC-003-backfill-toggle.md)
 **GitHub Issue**: [#49](https://github.com/The-Obstacle-Is-The-Way/ai-psychiatrist/issues/49)
 **Severity**: LOW - Coverage tradeoff, not necessarily a bug
 
@@ -25,39 +25,17 @@ misses it.
 
 When the LLM fails to extract evidence for a PHQ-8 item, we search the transcript for keywords related to that symptom and add matching sentences as evidence.
 
-**Code location**: `src/ai_psychiatrist/agents/quantitative.py` (`QuantitativeAssessmentAgent._keyword_backfill`)
+**Code location**: `src/ai_psychiatrist/agents/quantitative.py` (`QuantitativeAssessmentAgent._find_keyword_hits`, `QuantitativeAssessmentAgent._merge_evidence`)
 
 ```python
-def _keyword_backfill(
-    self,
-    transcript: str,
-    current: dict[str, list[str]],
-    cap: int = 3,
-) -> dict[str, list[str]]:
-    """Add keyword-matched sentences when LLM misses evidence."""
-    parts = re.split(r"(?<=[.?!])\s+|\n+", transcript.strip())
-    sentences = [p.strip() for p in parts if p and len(p.strip()) > 0]
-
-    out = {k: list(v) for k, v in current.items()}
-
-    for key, keywords in DOMAIN_KEYWORDS.items():
-        need = max(0, cap - len(out.get(key, [])))
-        if need == 0:
-            continue
-
-        hits: list[str] = []
-        for sent in sentences:
-            sent_lower = sent.lower()
-            if any(kw in sent_lower for kw in keywords):
-                hits.append(sent)
-            if len(hits) >= need:
-                break
-        if hits:
-            existing = set(out.get(key, []))
-            merged = out.get(key, []) + [h for h in hits if h not in existing]
-            out[key] = merged[:cap]
-
-    return out
+# Keyword backfill is implemented as two helpers:
+# - _find_keyword_hits(): find matching sentences per PHQ8_* key
+# - _merge_evidence(): inject matches into scorer evidence (up to cap)
+#
+# Backfill injection is controlled by:
+#   QUANTITATIVE_ENABLE_KEYWORD_BACKFILL (default: false / paper parity)
+hits = self._find_keyword_hits(transcript, cap=cap)
+enriched = self._merge_evidence(current_evidence, hits, cap=cap)
 ```
 
 ### Keyword List
@@ -136,18 +114,19 @@ plausible but unproven without an ablation run.
 ## Should We Change This?
 
 ### Option 1: Keep As-Is (Recommended)
-- Higher coverage = more clinical utility
-- MAE difference is expected given tradeoff
-- Document the difference
+- Keep backfill as an opt-in feature
+- Default remains paper parity (backfill OFF)
+- Enable for higher coverage when clinical utility is prioritized
 
 ### Option 2: Disable Keyword Backfill
-- Would lower coverage toward paper's 50%
-- Would likely improve MAE (fewer hard predictions)
-- Reduces clinical utility
+- Not applicable (already the default as of SPEC-003)
+- Run with `QUANTITATIVE_ENABLE_KEYWORD_BACKFILL=false` (explicit) to match paper parity
 
 ### Option 3: Make Configurable
-- Add flag: `--no-keyword-backfill`
-- Allow users to choose their coverage/accuracy tradeoff
+- ✅ Implemented in SPEC-003 via environment variable
+- Allow users to choose their coverage/accuracy tradeoff:
+  - `QUANTITATIVE_ENABLE_KEYWORD_BACKFILL=false` (default, paper parity)
+  - `QUANTITATIVE_ENABLE_KEYWORD_BACKFILL=true` (higher coverage)
 
 ---
 
@@ -175,12 +154,13 @@ Add an ablation mode to disable keyword backfill and rerun:
 
 This investigation led to [SPEC-003: Make Keyword Backfill Optional](../specs/SPEC-003-backfill-toggle.md), which:
 
-1. **Adds config flag**: `QUANTITATIVE_ENABLE_KEYWORD_BACKFILL` to disable backfill for paper parity
+1. **Adds config flag**: `QUANTITATIVE_ENABLE_KEYWORD_BACKFILL` to enable/disable keyword backfill
 2. **Tracks N/A reasons**: Understand why items return N/A
-3. **Maintains backwards compatibility**: Default behavior unchanged
+3. **Defaults to paper parity**: Backfill is OFF by default
 
 After implementation, users can:
-- Run `QUANTITATIVE_ENABLE_KEYWORD_BACKFILL=false` to match paper methodology
+- Run with defaults (or `QUANTITATIVE_ENABLE_KEYWORD_BACKFILL=false`) to match paper parity
+- Run `QUANTITATIVE_ENABLE_KEYWORD_BACKFILL=true` for higher coverage
 - Run ablation studies comparing backfill ON vs OFF
 - Track which items benefit most from backfill
 

@@ -14,7 +14,7 @@ from __future__ import annotations
 
 import json
 import re
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, Literal
 
 from ai_psychiatrist.agents.prompts.quantitative import (
     DOMAIN_KEYWORDS,
@@ -103,7 +103,7 @@ class QuantitativeAssessmentAgent:
         """Generate PHQ-8 assessment for transcript.
 
         Pipeline:
-        1. Extract evidence for each PHQ-8 item (with keyword backfill)
+        1. Extract evidence for each PHQ-8 item (optional keyword backfill)
         2. (Few-shot) Build reference bundle via embeddings
         3. Score with LLM using evidence + references
         4. Parse and validate scores with repair
@@ -125,11 +125,14 @@ class QuantitativeAssessmentAgent:
         llm_counts = {k: len(v) for k, v in llm_evidence.items()}
 
         # Step 2: Find keyword hits (always computed for observability/N/A reasons)
-        keyword_hits = self._find_keyword_hits(
-            transcript.text,
-            cap=self._settings.keyword_backfill_cap,
-        )
-        keyword_hit_counts = {k: len(v) for k, v in keyword_hits.items()}
+        keyword_hits: dict[str, list[str]] = {}
+        keyword_hit_counts: dict[str, int] = {}
+        if self._settings.enable_keyword_backfill or self._settings.track_na_reasons:
+            keyword_hits = self._find_keyword_hits(
+                transcript.text,
+                cap=self._settings.keyword_backfill_cap,
+            )
+            keyword_hit_counts = {k: len(v) for k, v in keyword_hits.items()}
 
         # Step 3: Conditional backfill
         if self._settings.enable_keyword_backfill:
@@ -205,26 +208,21 @@ class QuantitativeAssessmentAgent:
                 reason = "Unable to assess"
 
             # Determine NA reason and Evidence Source
-            na_reason = None
+            na_reason: NAReason | None = None
             evidence_source = self._determine_evidence_source(
-                llm_counts.get(legacy_key, 0), keyword_added_counts.get(legacy_key, 0)
+                llm_count=llm_counts.get(legacy_key, 0),
+                keyword_added_count=keyword_added_counts.get(legacy_key, 0),
             )
 
-            if score is None:
-                # Explicit N/A or missing
-                if parsed and parsed.evidence and parsed.evidence != "No relevant evidence found":
-                    na_reason = NAReason.SCORING_REFUSED
+            if score is None and self._settings.track_na_reasons:
+                na_reason = self._determine_na_reason(
+                    llm_count=llm_counts.get(legacy_key, 0),
+                    keyword_count=keyword_hit_counts.get(legacy_key, 0),
+                    backfill_enabled=self._settings.enable_keyword_backfill,
+                )
 
-                # Check for insufficient/missed evidence
-                if not na_reason:
-                    na_reason = self._determine_na_reason(
-                        llm_count=llm_counts.get(legacy_key, 0),
-                        keyword_count=keyword_hit_counts.get(legacy_key, 0),
-                        backfill_enabled=self._settings.enable_keyword_backfill,
-                    )
-
-            # Fix evidence source "none" if we found nothing
-            if evidence_source == "none" and score is not None:
+            # Fix evidence source if we found nothing but the LLM still produced a score.
+            if evidence_source is None and score is not None:
                 # This shouldn't happen usually unless LLM hallucinated evidence
                 evidence_source = "llm"
 
@@ -258,7 +256,8 @@ class QuantitativeAssessmentAgent:
     async def _extract_evidence(self, transcript_text: str) -> dict[str, list[str]]:
         """Extract evidence quotes for each PHQ-8 item.
 
-        Uses LLM extraction with keyword backfill to ensure coverage.
+        Uses LLM extraction only. Keyword backfill (if enabled) is applied later in
+        `assess()` via `_find_keyword_hits()` and `_merge_evidence()`.
 
         Args:
             transcript_text: Interview transcript text.
@@ -582,18 +581,16 @@ class QuantitativeAssessmentAgent:
             return NAReason.LLM_ONLY_MISSED
         if llm_count == 0 and keyword_count > 0 and backfill_enabled:
             return NAReason.KEYWORDS_INSUFFICIENT
-        return NAReason.SCORING_REFUSED
+        return NAReason.SCORE_NA_WITH_EVIDENCE
 
     def _determine_evidence_source(
-        self,
-        llm_count: int,
-        keyword_count: int,
-    ) -> str:
+        self, llm_count: int, keyword_added_count: int
+    ) -> Literal["llm", "keyword", "both"] | None:
         """Determine source of evidence."""
-        if llm_count > 0 and keyword_count > 0:
-            return "mixed"
+        if llm_count > 0 and keyword_added_count > 0:
+            return "both"
         if llm_count > 0:
             return "llm"
-        if keyword_count > 0:
+        if keyword_added_count > 0:
             return "keyword"
-        return "none"
+        return None

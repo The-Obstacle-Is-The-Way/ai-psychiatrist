@@ -26,7 +26,7 @@ class TestNAReason:
         assert NAReason.NO_MENTION.value == "no_mention"
         assert NAReason.LLM_ONLY_MISSED.value == "llm_only_missed"
         assert NAReason.KEYWORDS_INSUFFICIENT.value == "keywords_insufficient"
-        assert NAReason.SCORING_REFUSED.value == "scoring_refused"
+        assert NAReason.SCORE_NA_WITH_EVIDENCE.value == "score_na_with_evidence"
 
     def test_is_str_enum(self) -> None:
         """NAReason should be a StrEnum for JSON serialization."""

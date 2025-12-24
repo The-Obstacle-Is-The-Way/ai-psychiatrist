@@ -198,9 +198,6 @@ class NAReason(StrEnum):
     KEYWORDS_INSUFFICIENT = "keywords_insufficient"
     """Keywords matched but still insufficient for scoring."""
 
-    SCORING_REFUSED = "scoring_refused"
-    """Evidence exists but LLM declined to score."""
-
     SCORE_NA_WITH_EVIDENCE = "score_na_with_evidence"
     """Evidence exists (LLM and/or keyword) but scorer returned N/A (abstained)."""
 

@@ -623,7 +623,8 @@ The exact malformed pattern varies by model/backend and is surfaced in logs via 
 
 **Impact**:
 - Evidence extraction fails → empty evidence dict returned
-- `_keyword_backfill()` then adds keyword-matched sentences
+- If `QUANTITATIVE_ENABLE_KEYWORD_BACKFILL=true`, keyword hits are injected via
+  `_find_keyword_hits()` + `_merge_evidence()`
 - Result: Only keyword-matched evidence (2 items in test case) instead of LLM-extracted evidence
 - May contribute to N/A predictions for items without keyword matches
 
