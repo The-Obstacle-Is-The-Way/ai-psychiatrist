@@ -6,44 +6,85 @@
 
 ---
 
-> **⚠️ STATUS: BLOCKED ON SPEC-003**
->
-> This guide documents the **target state** after [SPEC-003](../specs/SPEC-003-backfill-toggle.md) is implemented.
-> Currently, keyword backfill **cannot be disabled** - it always runs.
->
-> **Current workaround**: None. You must implement SPEC-003 first.
-
----
-
 ## Overview
 
 This guide explains how to run AI Psychiatrist in **paper parity mode** - configuration that matches the original research methodology as closely as possible.
 
-### Why Paper Parity Matters
-
-Our implementation includes a keyword backfill mechanism that causes metrics to diverge from the paper:
-
-| Metric | Paper | Current Implementation |
-|--------|-------|------------------------|
-| Coverage | ~50% | ~74% (backfill always ON) |
-| Item MAE | 0.619 | ~0.75 |
-
-The paper likely measures **pure LLM capability** (no heuristic backfill is described). We currently
-measure **LLM + rule-based heuristics**.
-
-### What's Blocking Paper Parity?
-
-The `_keyword_backfill()` function in `src/ai_psychiatrist/agents/quantitative.py:228-268` **always runs**. There is no configuration to disable it.
-
-See [SPEC-003](../specs/SPEC-003-backfill-toggle.md) for the implementation plan.
+**Good news**: With SPEC-003 implemented, the **default configuration is now paper parity**.
 
 ---
 
-## Current State (As of 2025-12-23)
+## Default Behavior (Paper Parity)
 
-### What EXISTS Now
+Out of the box, keyword backfill is **OFF** to match the paper methodology:
 
-These settings are implemented and can be configured:
+```bash
+# Default behavior - no configuration needed
+uv run python scripts/reproduce_results.py --split paper
+```
+
+This produces results comparable to the paper:
+- Coverage: ~50% (paper reports ~50% abstention rate)
+- Pure LLM extraction (no keyword heuristics)
+
+---
+
+## Configuration Options
+
+### Paper Parity Mode (Default)
+
+```bash
+# Already the default - backfill OFF
+QUANTITATIVE_ENABLE_KEYWORD_BACKFILL=false  # (this is the default)
+```
+
+### Higher Coverage Mode
+
+For clinical utility (more items assessed), enable backfill:
+
+```bash
+# Enable backfill for ~74% coverage
+QUANTITATIVE_ENABLE_KEYWORD_BACKFILL=true \
+  uv run python scripts/reproduce_results.py --split paper
+```
+
+---
+
+## Running Ablation Studies
+
+Compare backfill ON vs OFF:
+
+```bash
+# Mode 1: Paper parity (backfill OFF - default)
+uv run python scripts/reproduce_results.py --split paper
+cp "$(ls -t data/outputs/reproduction_results_*.json | head -1)" results_backfill_off.json
+
+# Mode 2: Higher coverage (backfill ON)
+QUANTITATIVE_ENABLE_KEYWORD_BACKFILL=true \
+  uv run python scripts/reproduce_results.py --split paper
+cp "$(ls -t data/outputs/reproduction_results_*.json | head -1)" results_backfill_on.json
+```
+
+Notes:
+- `scripts/reproduce_results.py` always writes results to `data/outputs/reproduction_results_<timestamp>.json`.
+- The `cp "$(ls -t ... | head -1)" ...` pattern renames the most recent output for easier comparison.
+
+---
+
+## N/A Reason Tracking
+
+Each N/A result now includes a reason for debugging:
+
+| Reason | Description |
+|--------|-------------|
+| `NO_MENTION` | Neither LLM nor keywords found any evidence |
+| `LLM_ONLY_MISSED` | LLM missed it but keywords would have matched (backfill OFF) |
+| `KEYWORDS_INSUFFICIENT` | Keywords matched but still insufficient for scoring |
+| `SCORE_NA_WITH_EVIDENCE` | LLM extracted evidence but scoring still returned N/A |
+
+---
+
+## Full Paper Parity Configuration
 
 ```bash
 # Model selection (Paper Section 2.2)
@@ -67,51 +108,15 @@ MODEL_TEMPERATURE_JUDGE=0.0
 FEEDBACK_ENABLED=true
 FEEDBACK_MAX_ITERATIONS=10
 FEEDBACK_SCORE_THRESHOLD=3
+
+# Quantitative assessment (SPEC-003)
+QUANTITATIVE_ENABLE_KEYWORD_BACKFILL=false  # Default - paper parity
+QUANTITATIVE_TRACK_NA_REASONS=true
 ```
-
-### What DOES NOT Exist (Requires SPEC-003)
-
-❌ `QUANTITATIVE_ENABLE_KEYWORD_BACKFILL` - Not implemented
-❌ `QUANTITATIVE_TRACK_NA_REASONS` - Not implemented
-❌ `settings.quantitative.*` - No `QuantitativeSettings` class exists
 
 ---
 
-## After SPEC-003 Implementation
-
-Once SPEC-003 is implemented, you will be able to:
-
-### 1. Disable Keyword Backfill
-
-```bash
-# Paper parity mode (pure LLM) - FUTURE
-QUANTITATIVE_ENABLE_KEYWORD_BACKFILL=false
-```
-
-### 2. Run Ablation Studies
-
-```bash
-# Mode 1: Default (backfill ON) - FUTURE
-QUANTITATIVE_ENABLE_KEYWORD_BACKFILL=true \
-  uv run python scripts/reproduce_results.py --split paper --output results_backfill_on.json
-
-# Mode 2: Paper parity (backfill OFF) - FUTURE
-QUANTITATIVE_ENABLE_KEYWORD_BACKFILL=false \
-  uv run python scripts/reproduce_results.py --split paper --output results_backfill_off.json
-```
-
-### 3. Track N/A Reasons
-
-After implementation, each N/A will include a reason:
-- `NO_MENTION` - No evidence from LLM and no keyword matches
-- `LLM_ONLY_MISSED` - LLM missed it but keywords matched (backfill OFF)
-- `SCORE_NA_WITH_EVIDENCE` - Evidence exists (LLM and/or keyword) but scorer returned N/A
-
----
-
-## What You CAN Do Now
-
-### Run Reproduction (With Backfill)
+## Reproduction Steps
 
 ```bash
 # 1. Create paper-style 58/43/41 split
@@ -120,25 +125,15 @@ uv run python scripts/create_paper_split.py --seed 42
 # 2. Generate embeddings for training set
 uv run python scripts/generate_embeddings.py --split paper-train
 
-# 3. Run reproduction (few-shot mode)
-# NOTE: This runs WITH backfill - results will differ from paper
+# 3. Run reproduction (default = paper parity mode)
 uv run python scripts/reproduce_results.py --split paper --few-shot-only
 ```
 
-### Understand the Divergence
-
-Current results (with backfill always ON):
-
-| Metric | Paper | Our Results | Reason |
-|--------|-------|-------------|--------|
-| Coverage | ~50% | 74.1% | Backfill adds evidence |
-| Item MAE | 0.619 | 0.753 | More predictions = more errors |
-
-This is expected behavior until SPEC-003 is implemented.
-
 ---
 
-## Known Gaps (Even After SPEC-003)
+## Known Gaps
+
+Even with SPEC-003 implemented, some differences remain:
 
 ### GAP-001: Unspecified Parameters
 
@@ -159,33 +154,10 @@ The paper doesn't publish exact participant IDs. Our split uses the same algorit
 
 ---
 
-## How to Report Current Results
-
-Until SPEC-003 is implemented, be explicit about the backfill:
-
-```markdown
-## Results
-
-We evaluated AI Psychiatrist with keyword backfill enabled (cannot be disabled in current version):
-
-- Coverage: 74.1%
-- Item MAE: 0.753
-- Methodology: LLM + keyword backfill (always ON)
-
-Paper reference (likely pure LLM):
-- Coverage: ~50%
-- Item MAE: 0.619
-
-Note: Direct comparison is invalid due to backfill divergence.
-See GitHub Issue #49 for paper parity implementation status.
-```
-
----
-
 ## Related Documentation
 
-- [SPEC-003: Backfill Toggle](../specs/SPEC-003-backfill-toggle.md) - Implementation spec (DRAFT)
+- [SPEC-003: Backfill Toggle](../specs/SPEC-003-backfill-toggle.md) - Implementation spec
 - [Backfill Explained](../concepts/backfill-explained.md) - How backfill works
 - [Coverage Investigation](../bugs/coverage-investigation.md) - Why metrics differ
 - [Reproduction Notes](../results/reproduction-notes.md) - Current results
-- [Configuration Reference](../reference/configuration.md) - Implemented settings
+- [Configuration Reference](../reference/configuration.md) - All settings

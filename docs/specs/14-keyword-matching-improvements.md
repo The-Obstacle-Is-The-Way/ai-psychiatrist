@@ -23,7 +23,8 @@ to word-boundary regex matching with optional negation detection.
 
 ## Background
 
-The keyword backfill system in `QuantitativeAssessmentAgent._keyword_backfill()` uses
+The keyword backfill system in `QuantitativeAssessmentAgent._find_keyword_hits()` +
+`QuantitativeAssessmentAgent._merge_evidence()` uses
 case-insensitive substring matching. This has two limitations:
 
 1. **No word boundaries**: Even with collision-proofed keywords, edge cases exist
@@ -55,7 +56,8 @@ implementation uses substring matching with a collision-proofed keyword YAML.
    - `is_negated(text: str, match_start: int, window: int = 4) -> bool`
    - `find_keyword_matches(keywords: list[str], text: str, check_negation: bool = False) -> list[Match]`
 
-2. Update `QuantitativeAssessmentAgent._keyword_backfill()` to use new matching
+2. Update `QuantitativeAssessmentAgent._find_keyword_hits()` (and/or the injection step in
+   `_merge_evidence()`) to use the new matching
 
 3. Configuration option in `QuantitativeSettings`:
    - `keyword_match_mode: Literal["substring", "word_boundary"]`
@@ -136,6 +138,6 @@ that can be done later if needed.
 ## References
 
 - Current YAML: `src/ai_psychiatrist/resources/phq8_keywords.yaml`
-- Keyword backfill: `QuantitativeAssessmentAgent._keyword_backfill()`
+- Keyword backfill: `QuantitativeAssessmentAgent._find_keyword_hits()` / `_merge_evidence()`
 - PHQ-8 validation: Kroenke et al., 2009
 - GitHub Issue: #31

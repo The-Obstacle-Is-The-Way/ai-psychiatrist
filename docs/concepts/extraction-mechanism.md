@@ -123,7 +123,7 @@ The LLM **semantically analyzes** the transcript:
 
 ---
 
-## Step 2: Keyword Backfill (The Rule-Based Safety Net)
+## Step 2: Keyword Backfill (Optional Rule-Based Safety Net)
 
 ### Why We Need It
 
@@ -131,37 +131,16 @@ LLM extraction isn't perfect. Sometimes it misses obvious evidence like "I'm exh
 
 ### How It Works
 
-From `src/ai_psychiatrist/agents/quantitative.py` (`QuantitativeAssessmentAgent._keyword_backfill`):
+From `src/ai_psychiatrist/agents/quantitative.py` (backfill helpers; gated by `QUANTITATIVE_ENABLE_KEYWORD_BACKFILL`):
 
 ```python
-parts = re.split(r"(?<=[.?!])\s+|\n+", transcript.strip())
-sentences = [p.strip() for p in parts if p and len(p.strip()) > 0]
-
-out = {k: list(v) for k, v in current.items()}
-
-for key, keywords in DOMAIN_KEYWORDS.items():
-    need = max(0, cap - len(out.get(key, [])))
-    if need == 0:
-        continue
-
-    hits: list[str] = []
-    for sent in sentences:
-        sent_lower = sent.lower()
-        if any(kw in sent_lower for kw in keywords):
-            hits.append(sent)
-        if len(hits) >= need:
-            break
-
-    if hits:
-        existing = set(out.get(key, []))
-        merged = out.get(key, []) + [h for h in hits if h not in existing]
-        out[key] = merged[:cap]
-
-return out
+hits = self._find_keyword_hits(transcript, cap=cap)
+enriched = self._merge_evidence(llm_evidence, hits, cap=cap)
 ```
 
 The real implementation uses a simple sentence splitter and caps the number of
-backfilled sentences per domain to keep prompts bounded.
+backfilled sentences per domain to keep prompts bounded. See
+[backfill-explained.md](./backfill-explained.md) for the full helper implementations.
 
 ### The Keyword Lists
 
@@ -185,10 +164,12 @@ With backfill:
 
 Keyword backfill can increase coverage relative to a pure LLM-only evidence
 extraction approach. The paper reports that **in ~50% of cases** the model was
-unable to provide a prediction due to insufficient evidence (Section 3.2). In our
-example reproduction run, overall item prediction coverage was **74.1%** (see
-`docs/results/reproduction-notes.md`). Attribution requires an ablation run with
-keyword backfill disabled.
+unable to provide a prediction due to insufficient evidence (Section 3.2).
+
+As of [SPEC-003](../specs/SPEC-003-backfill-toggle.md), backfill is **OFF by default**
+for paper parity. Enable it to increase coverage:
+- Default (paper parity): `QUANTITATIVE_ENABLE_KEYWORD_BACKFILL=false`
+- Higher coverage: `QUANTITATIVE_ENABLE_KEYWORD_BACKFILL=true`
 
 ---
 

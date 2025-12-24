@@ -266,22 +266,17 @@ API_WORKERS=1
 
 ### Quantitative Assessment Settings
 
-> **⚠️ STATUS: PLANNED - NOT YET IMPLEMENTED**
->
-> These settings are defined in [SPEC-003](../specs/SPEC-003-backfill-toggle.md) but **do not exist yet**.
-> Currently, keyword backfill **always runs** and cannot be disabled.
-
-After SPEC-003 implementation, these settings will be available:
+These settings control the quantitative assessment behavior (implemented in [SPEC-003](../specs/SPEC-003-backfill-toggle.md)):
 
 | Variable | Type | Default | Description |
 |----------|------|---------|-------------|
-| `QUANTITATIVE_ENABLE_KEYWORD_BACKFILL` | bool | `true` | Enable keyword backfill for evidence extraction |
+| `QUANTITATIVE_ENABLE_KEYWORD_BACKFILL` | bool | `false` | Enable keyword backfill for evidence extraction (paper parity: OFF) |
 | `QUANTITATIVE_TRACK_NA_REASONS` | bool | `true` | Track why items return N/A |
 | `QUANTITATIVE_KEYWORD_BACKFILL_CAP` | int | `3` | Max keyword-matched sentences per domain |
 
-**Current Behavior:**
+**Default Behavior (Paper Parity):**
 
-Keyword backfill (`src/ai_psychiatrist/agents/quantitative.py:228-268`) **always runs**. When the LLM misses evidence, sentences matching symptom keywords are automatically added. This increases coverage (~74%) but diverges from paper methodology (~50% coverage).
+Keyword backfill is **OFF by default** to match paper methodology (~50% coverage). Set `QUANTITATIVE_ENABLE_KEYWORD_BACKFILL=true` to enable higher coverage (~74%) at the cost of diverging from the paper.
 
 See [Backfill Explained](../concepts/backfill-explained.md) for how it works and [Paper Parity Guide](../guides/paper-parity-guide.md) for reproduction guidance.
 

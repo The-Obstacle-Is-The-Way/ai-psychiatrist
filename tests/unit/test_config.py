@@ -20,6 +20,7 @@ from ai_psychiatrist.config import (
     LoggingSettings,
     ModelSettings,
     OllamaSettings,
+    QuantitativeSettings,
     Settings,
     get_model_settings,
     get_ollama_settings,
@@ -30,6 +31,23 @@ pytestmark = [
     pytest.mark.filterwarnings("ignore:Data directory does not exist.*:UserWarning"),
     pytest.mark.filterwarnings("ignore:Few-shot enabled but embeddings not found.*:UserWarning"),
 ]
+
+
+class TestQuantitativeSettings:
+    """Tests for QuantitativeSettings."""
+
+    def test_defaults(self) -> None:
+        """Default values should match paper parity (backfill OFF)."""
+        settings = QuantitativeSettings()
+        assert settings.enable_keyword_backfill is False  # Paper parity default
+        assert settings.track_na_reasons is True
+        assert settings.keyword_backfill_cap == 3
+
+    def test_env_override_enable_backfill(self, monkeypatch: pytest.MonkeyPatch) -> None:
+        """Environment variable can enable backfill for higher coverage."""
+        monkeypatch.setenv("QUANTITATIVE_ENABLE_KEYWORD_BACKFILL", "true")
+        settings = QuantitativeSettings()
+        assert settings.enable_keyword_backfill is True
 
 
 class TestOllamaSettings:
@@ -266,6 +284,7 @@ class TestSettings:
         assert settings.data is not None
         assert settings.logging is not None
         assert settings.api is not None
+        assert settings.quantitative is not None
 
     def test_feature_flags_default(self) -> None:
         """Feature flags should have correct defaults."""

@@ -8,7 +8,7 @@ from __future__ import annotations
 
 import pytest
 
-from ai_psychiatrist.domain.enums import EvaluationMetric, PHQ8Item
+from ai_psychiatrist.domain.enums import EvaluationMetric, NAReason, PHQ8Item
 from ai_psychiatrist.domain.value_objects import (
     EmbeddedChunk,
     EvaluationScore,
@@ -278,6 +278,23 @@ class TestItemAssessment:
         )
         with pytest.raises(AttributeError):
             assessment.score = 2  # type: ignore[misc]
+
+    def test_item_assessment_extended_fields(self) -> None:
+        """ItemAssessment should support NA reason and evidence tracking."""
+        item = ItemAssessment(
+            item=PHQ8Item.TIRED,
+            score=None,
+            evidence="",
+            reason="No evidence found",
+            na_reason=NAReason.NO_MENTION,
+            evidence_source=None,
+            llm_evidence_count=0,
+            keyword_evidence_count=0,
+        )
+        assert item.na_reason == NAReason.NO_MENTION
+        assert item.evidence_source is None
+        assert item.llm_evidence_count == 0
+        assert item.keyword_evidence_count == 0
 
 
 class TestEvaluationScore:

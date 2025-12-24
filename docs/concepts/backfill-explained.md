@@ -57,51 +57,50 @@ When the LLM returns empty evidence for a symptom, we search for known keywords:
 
 ### The Algorithm
 
-From `src/ai_psychiatrist/agents/quantitative.py` (`QuantitativeAssessmentAgent._keyword_backfill`):
+From `src/ai_psychiatrist/agents/quantitative.py` (keyword backfill helpers):
 
 ```python
-def _keyword_backfill(
-    self,
-    transcript: str,
-    current: dict[str, list[str]],
-    cap: int = 3,
-) -> dict[str, list[str]]:
-    """Add keyword-matched sentences when LLM misses evidence."""
-
-    # 1. Split transcript into sentences
+def _find_keyword_hits(self, transcript: str, cap: int = 3) -> dict[str, list[str]]:
+    """Find keyword-matched sentences per PHQ-8 item (substring match)."""
     parts = re.split(r"(?<=[.?!])\s+|\n+", transcript.strip())
     sentences = [p.strip() for p in parts if p and len(p.strip()) > 0]
 
-    out = {k: list(v) for k, v in current.items()}
-
-    # 2. For each PHQ-8 domain with insufficient evidence
+    hits: dict[str, list[str]] = {}
     for key, keywords in DOMAIN_KEYWORDS.items():
-        need = max(0, cap - len(out.get(key, [])))
-        if need == 0:
-            continue  # Already have enough evidence
-
-        # 3. Find sentences containing keywords
-        hits: list[str] = []
+        key_hits: list[str] = []
         for sent in sentences:
             sent_lower = sent.lower()
             if any(kw in sent_lower for kw in keywords):
-                hits.append(sent)
-            if len(hits) >= need:
+                key_hits.append(sent)
+            if len(key_hits) >= cap:
                 break
+        hits[key] = key_hits
+    return hits
 
-        # 4. Merge with existing evidence (deduplicated)
-        if hits:
-            existing = set(out.get(key, []))
-            merged = out.get(key, []) + [h for h in hits if h not in existing]
-            out[key] = merged[:cap]
 
+def _merge_evidence(
+    self,
+    current: dict[str, list[str]],
+    hits: dict[str, list[str]],
+    cap: int = 3,
+) -> dict[str, list[str]]:
+    """Merge keyword hits into LLM evidence, respecting a total per-item cap."""
+    out = {k: list(v) for k, v in current.items()}
+    for key, key_hits in hits.items():
+        current_items = out.get(key, [])
+        if len(current_items) >= cap:
+            continue
+        need = cap - len(current_items)
+        existing = set(current_items)
+        new_hits = [h for h in key_hits if h not in existing]
+        out[key] = current_items + new_hits[:need]
     return out
 ```
 
 ### Key Properties
 
-1. **Only runs when LLM misses evidence**: If LLM found 3+ quotes, backfill skips that domain
-2. **Caps at 3 sentences per domain**: Prevents prompt bloat
+1. **Runs when evidence is insufficient**: If LLM found `cap` quotes, backfill skips that item
+2. **Caps at 3 evidence items per domain** (LLM + keyword): Prevents prompt bloat
 3. **Simple substring matching**: Fast, deterministic, no LLM calls
 4. **Deduplicates**: Won't add the same sentence twice
 
@@ -109,16 +108,7 @@ def _keyword_backfill(
 
 ## The Tradeoff: Coverage vs Purity
 
-### With Backfill (Default)
-
-| Pros | Cons |
-|------|------|
-| Higher coverage (~74%) | Measures "LLM + heuristics" |
-| Catches LLM blind spots | May include irrelevant matches |
-| More clinical utility | Diverges from paper methodology |
-| More items get assessed | Harder to compare with paper |
-
-### Without Backfill (Paper Parity)
+### Without Backfill (Default - Paper Parity)
 
 | Pros | Cons |
 |------|------|
@@ -126,6 +116,15 @@ def _keyword_backfill(
 | Matches paper methodology | More N/A results |
 | Cleaner research comparison | Less clinical utility |
 | What the paper actually tested | Misses some obvious evidence |
+
+### With Backfill (Higher Coverage)
+
+| Pros | Cons |
+|------|------|
+| Higher coverage (~74%) | Measures "LLM + heuristics" |
+| Catches LLM blind spots | May include irrelevant matches |
+| More clinical utility | Diverges from paper methodology |
+| More items get assessed | Harder to compare with paper |
 
 ---
 
@@ -145,40 +144,38 @@ And in Section 3.2:
 
 For paper-parity experiments, the safest assumption is that the evaluation intended to
 measure **pure LLM extraction/scoring behavior**, without additional heuristic evidence
-injection. This repository currently cannot disable backfill; see [SPEC-003](../specs/SPEC-003-backfill-toggle.md).
+injection. **Backfill is now OFF by default** per [SPEC-003](../specs/SPEC-003-backfill-toggle.md).
 
 ---
 
 ## When to Use Each Mode
 
-### Use Backfill ON (Default) When:
-- Building a clinical decision support tool
-- Want maximum coverage
-- Prefer "some assessment" over "N/A"
-- Not comparing directly with paper metrics
-
-### Use Backfill OFF When:
+### Use Backfill OFF (Default) When:
 - Reproducing paper results
 - Evaluating LLM capability
 - Running ablation studies
 - Comparing different LLM models
 
+### Use Backfill ON When:
+- Building a clinical decision support tool
+- Want maximum coverage
+- Prefer "some assessment" over "N/A"
+- Not comparing directly with paper metrics
+
 ---
 
-## N/A Reason Tracking (Planned)
+## N/A Reason Tracking
 
-> **⚠️ NOT YET IMPLEMENTED** - See [SPEC-003](../specs/SPEC-003-backfill-toggle.md)
-
-Currently, when an item returns N/A, we **do not** track why. After SPEC-003 is implemented, each
-N/A will include a deterministic reason:
+With [SPEC-003](../specs/SPEC-003-backfill-toggle.md) implemented, each N/A result can include a deterministic reason (when enabled):
 
 | Reason | Description |
 |--------|-------------|
 | `NO_MENTION` | No evidence from LLM and no keyword matches found |
 | `LLM_ONLY_MISSED` | LLM found no evidence, but keyword hits exist (backfill OFF) |
-| `SCORE_NA_WITH_EVIDENCE` | Evidence was provided to the scorer, but the LLM still returned N/A |
+| `KEYWORDS_INSUFFICIENT` | Keywords matched and were provided (backfill ON), but scoring still returned N/A |
+| `SCORE_NA_WITH_EVIDENCE` | LLM extracted evidence, but scoring still returned N/A |
 
-This will enable:
+This enables:
 - Debugging extraction failures
 - Understanding model behavior
 - Comparing backfill ON vs OFF
@@ -188,13 +185,13 @@ This will enable:
 
 ## Configuration
 
-Currently backfill **always runs**. After SPEC-003 is implemented:
+Backfill is **OFF by default** (paper parity mode):
 
 ```bash
-# Paper parity mode (pure LLM)
-QUANTITATIVE_ENABLE_KEYWORD_BACKFILL=false
+# Default: paper parity mode (pure LLM)
+# QUANTITATIVE_ENABLE_KEYWORD_BACKFILL=false  # (this is the default)
 
-# Production mode (default)
+# Enable backfill for higher coverage
 QUANTITATIVE_ENABLE_KEYWORD_BACKFILL=true
 ```
 
