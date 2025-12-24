@@ -156,8 +156,12 @@ The paper doesn't publish exact participant IDs. Our split uses the same algorit
 
 ## Related Documentation
 
+- **Preflight Checklists** (run before every reproduction):
+  - [Zero-Shot Preflight](./preflight-checklist-zero-shot.md) - Pre-run verification for zero-shot
+  - [Few-Shot Preflight](./preflight-checklist-few-shot.md) - Pre-run verification for few-shot
 - [SPEC-003: Backfill Toggle](../specs/SPEC-003-backfill-toggle.md) - Implementation spec
 - [Backfill Explained](../concepts/backfill-explained.md) - How backfill works
 - [Coverage Investigation](../bugs/coverage-investigation.md) - Why metrics differ
 - [Reproduction Notes](../results/reproduction-notes.md) - Current results
 - [Configuration Reference](../reference/configuration.md) - All settings
+- [BUG-018](../bugs/bug-018-reproduction-friction.md) - Reproduction friction log
