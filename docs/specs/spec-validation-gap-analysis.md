@@ -79,40 +79,40 @@ Remaining “coverage gaps” are primarily depth gaps (e.g., not every notebook
 
 ## Specific Questions (Answers)
 
-1. **Exact XML tag structures in prompts captured?**  
-   - Yes for the production prompt templates in `src/ai_psychiatrist/agents/prompts/`.  
+1. **Exact XML tag structures in prompts captured?**
+   - Yes for the production prompt templates in `src/ai_psychiatrist/agents/prompts/`.
    - Legacy prompt variants are preserved for auditing in `docs/archive/specs/` and `_legacy/`.
 
-2. **Is the JSON repair cascade complete?**  
+2. **Is the JSON repair cascade complete?**
    - Yes in `src/ai_psychiatrist/agents/quantitative.py`: tolerant fixups → `<answer>` extraction → LLM repair → fallback skeleton.
 
-3. **Do visualization notebooks reveal missed processing?**  
+3. **Do visualization notebooks reveal missed processing?**
    - Yes: severity/diagnosis mapping + metric calculations live in `_legacy/visualization/meta_review_heatmap.ipynb`, and MAE/N/A aggregation + retrieval diagnostics live in `_legacy/visualization/quan_visualization.ipynb` and `_legacy/quantitative_assessment/embedding_quantitative_analysis.ipynb`.
 
-4. **Does `server.py` show orchestration patterns not in Spec 11?**  
+4. **Does `server.py` show orchestration patterns not in Spec 11?**
    - `server.py` is the production orchestration layer and is the SSOT for endpoints; see `docs/reference/api/endpoints.md`.
 
-5. **Environment variables in code not documented in Spec 01?**  
+5. **Environment variables in code not documented in Spec 01?**
    - Yes originally (`TRANSCRIPT_PATH`, plus many HPC `OLLAMA_*`/`GGML_*` exports); now documented in Spec 01/05/11.
 
-6. **SLURM job configuration reflected?**  
+6. **SLURM job configuration reflected?**
    - Legacy SLURM scripts are archived under `_legacy/slurm/` and referenced for historical context only.
 
-7. **Are `analysis_output` CSV/JSONL structures documented?**  
+7. **Are `analysis_output` CSV/JSONL structures documented?**
    - Legacy artifacts (if present) are archived under `_legacy/analysis_output/`.
 
-8. **Does `_legacy/agents/interview_simulator.py` serve a purpose worth preserving?**  
+8. **Does `_legacy/agents/interview_simulator.py` serve a purpose worth preserving?**
    - It remains useful for reproducing the legacy prototype behavior, but production uses `TranscriptService` and request-driven transcript resolution.
 
 ## 2025 Tooling Verification (Quick Check)
 
 Verified that the referenced docs are live as of 2025-12-18:
 
-- `uv`: https://docs.astral.sh/uv/  
-- `Ruff`: https://docs.astral.sh/ruff/  
-- `pydantic-settings v2`: https://docs.pydantic.dev/latest/concepts/pydantic_settings/  
-- `structlog`: https://www.structlog.org/en/stable/  
-- `pytest-asyncio`: redirects to https://pytest-asyncio.readthedocs.io/en/stable/  
+- `uv`: https://docs.astral.sh/uv/
+- `Ruff`: https://docs.astral.sh/ruff/
+- `pydantic-settings v2`: https://docs.pydantic.dev/latest/concepts/pydantic_settings/
+- `structlog`: https://www.structlog.org/en/stable/
+- `pytest-asyncio`: redirects to https://pytest-asyncio.readthedocs.io/en/stable/
 - `Ollama API`: https://raw.githubusercontent.com/ollama/ollama/main/docs/api.md (confirms `/api/generate`, `/api/chat`, `/api/embeddings`)
 
 ## Spec Confidence Scores (0–100%)

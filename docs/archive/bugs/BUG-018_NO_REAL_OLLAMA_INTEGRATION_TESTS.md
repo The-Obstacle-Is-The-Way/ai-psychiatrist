@@ -79,21 +79,21 @@ Minimum smoke tests:
 ### Phase 2: Vertical Slice Tests (Real Models, Minimal Assertions)
 
 Add one real test per agent with **structure-based assertions**, not exact outputs:
-1. **QualitativeAssessmentAgent**  
+1. **QualitativeAssessmentAgent**
    - Parsed `QualitativeAssessment` has non-empty core sections:
      `overall`, `phq8_symptoms`, `social_factors`, `biological_factors`, `risk_factors`
    - `supporting_quotes` may be empty (do not require quotes; they depend on transcript)
-2. **JudgeAgent**  
+2. **JudgeAgent**
    - Evaluation returns all 4 metrics with scores in [1, 5]
    - Score extraction succeeds on raw judge text (i.e., the response contains a parseable score)
-3. **QuantitativeAssessmentAgent**  
-   - All 8 items present  
-   - Scores are in {0,1,2,3} or None  
+3. **QuantitativeAssessmentAgent**
+   - All 8 items present
+   - Scores are in {0,1,2,3} or None
    - Evidence strings are non-empty or "No relevant evidence found"
    - At least one score is numeric (guards against “total fallback skeleton” passing silently)
-4. **EmbeddingService**  
-   - Embedding dimension matches config (4096)  
-   - L2 norm ≈ 1.0  
+4. **EmbeddingService**
+   - Embedding dimension matches config (4096)
+   - L2 norm ≈ 1.0
    - Retrieval returns <= top_k matches
 
 ### Phase 3: Full Pipeline E2E (Server)
@@ -140,7 +140,7 @@ This bug is a **hard gate at Checkpoint 09.5**. Do not proceed to Spec 10/11 unt
 - Ollama can run locally (M1 Max is sufficient) but tests will be slow.
 - Use smaller models for smoke tests if needed; document model substitutions in `docs/models/MODEL_REGISTRY.md`.
 - Real PHQ-8 accuracy validation requires DAIC-WOZ ground truth and is not CI-safe.
-  
+
 ### How to Run (Local)
 
 1. Start Ollama:
@@ -173,7 +173,7 @@ These are the concrete, minimal tests that close this bug without flakiness:
    - `test_server_health_real_ollama`
    - `test_server_full_pipeline_transcript_text_zero_shot_real_ollama`
    - Optional: `test_server_full_pipeline_few_shot_requires_embeddings_artifact` (skip if missing)
-  
+
 ## Definition of Done
 
 - Real Ollama tests exist and are gated by explicit opt-in.

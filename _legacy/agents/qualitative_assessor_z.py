@@ -7,7 +7,7 @@ class QualitativeAssessor:
 
     def assess(self, interview_text: str):
         prompt = f"""
-        Please analyze the following interview transcript and assess the patient's mental health status, focusing on signs of depression, from social and biological aspects. 
+        Please analyze the following interview transcript and assess the patient's mental health status, focusing on signs of depression, from social and biological aspects.
 
         Please provide your assessment in a structured format, including the following sections:
         1. Overall Impression in <overall> tags: A brief summary of the patient's mental health status.

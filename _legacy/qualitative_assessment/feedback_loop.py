@@ -15,7 +15,7 @@ def parse_score_and_explanation(response_text):
         r'rating[:\s]*(\d+)',
         r'^(\d+)',  # Number at start of line
     ]
-    
+
     score = None
     for pattern in score_patterns:
         match = re.search(pattern, response_text, re.IGNORECASE | re.MULTILINE)
@@ -24,7 +24,7 @@ def parse_score_and_explanation(response_text):
             if 1 <= potential_score <= 5:
                 score = potential_score
                 break
-    
+
     return score, response_text.strip()
 
 # Configuration
@@ -32,17 +32,17 @@ OLLAMA_NODE = "arctrdagn032" # TODO: Change this variable to the node where Olla
 BASE_URL = f"http://{OLLAMA_NODE}:11434/api/chat"
 model = "alibayram/medgemma:27b" # TODO: Change this variable to the model you want to use
 
-#All Ids 
+#All Ids
 ID_NUM = [
-414, 415, 416, 419, 423, 425, 426, 427, 428, 429, 430, 433, 434, 437, 441, 
-443, 444, 445, 446, 447, 448, 449, 454, 455, 456, 457, 459, 463, 464, 468, 
-471, 473, 474, 475, 478, 479, 485, 486, 487, 488, 491, 302, 307, 331, 335, 
-346, 367, 377, 381, 382, 403, 404, 406, 413, 417, 418, 420, 422, 436, 439, 
+414, 415, 416, 419, 423, 425, 426, 427, 428, 429, 430, 433, 434, 437, 441,
+443, 444, 445, 446, 447, 448, 449, 454, 455, 456, 457, 459, 463, 464, 468,
+471, 473, 474, 475, 478, 479, 485, 486, 487, 488, 491, 302, 307, 331, 335,
+346, 367, 377, 381, 382, 403, 404, 406, 413, 417, 418, 420, 422, 436, 439,
 440, 451, 458, 472, 476, 477, 482, 483, 484, 489, 490, 492
 ]
 
-# Input file 
-input_csv_path = "/data/users3/fborhan1/ai-psychiatrist/qualitative_assessment_results.csv"  
+# Input file
+input_csv_path = "/data/users3/fborhan1/ai-psychiatrist/qualitative_assessment_results.csv"
 
 #Output files
 feedback_assessments_csv = "/data/users3/fborhan1/ai-psychiatrist/medgemma_assesmentsplit2.csv"
@@ -92,57 +92,57 @@ if completed_subjects:
 for index, row in df.iterrows():
     participant_id = row['participant_id']
     qualitative_assessment = str(row['qualitative_assessment']) if 'qualitative_assessment' in row else ""
-    
+
     print(f"\n--- Processing {index + 1}/{len(df)}: {participant_id} ---")
-    
+
     #cleaner input text
     if qualitative_assessment.startswith('```xml'):
-        qualitative_assessment = qualitative_assessment[6:]  
+        qualitative_assessment = qualitative_assessment[6:]
         print("  Removed ```xml prefix")
     if qualitative_assessment.endswith('```'):
-        qualitative_assessment = qualitative_assessment[:-3]  
+        qualitative_assessment = qualitative_assessment[:-3]
         print("  Removed ``` suffix")
 
     qualitative_assessment = qualitative_assessment.strip()
-    
-    if len(qualitative_assessment) > 3000:  
+
+    if len(qualitative_assessment) > 3000:
         qualitative_assessment = qualitative_assessment[:3000] + "..."
         print("  Truncated long assessment")
-    
-    qualitative_assessment = re.sub(r'<[^>]+>', '', qualitative_assessment)  
-    qualitative_assessment = re.sub(r'\s+', ' ', qualitative_assessment)      
-    
+
+    qualitative_assessment = re.sub(r'<[^>]+>', '', qualitative_assessment)
+    qualitative_assessment = re.sub(r'\s+', ' ', qualitative_assessment)
+
     print(f"  After cleaning, first 200 chars: {qualitative_assessment[:200]}")
-    
+
     # Load transcript for this participant
     id_transcript = os.path.join("/data/users4/xli/ai-psychiatrist/datasets/daic_woz_dataset/", f"{participant_id}_P", f"{participant_id}_TRANSCRIPT.csv")
     print(f"Looking for transcript at: {id_transcript}")
-    
+
     if not os.path.exists(id_transcript):
         print(f"Transcript not found for {participant_id}")
         skipped_count += 1
         continue
-    
+
     print(f"Transcript found, loading data...")
-    
+
     try:
         transcript_data = pd.read_csv(id_transcript, sep='\t')
         dialogue_txt = transcript_data.dropna(subset=['speaker', 'value'])
         dialogue_txt['dialogue'] = dialogue_txt['speaker'] + " : " + dialogue_txt['value']
         transcript = "\n".join(dialogue_txt['dialogue'])
-        
+
         print(f"Dialogue length: {len(transcript)} characters")
-        
+
     except Exception as e:
         print(f"Error loading transcript for {participant_id}: {e}")
         skipped_count += 1
         continue
-    
+
     start_time = time.time()
-    
+
     # Original evaluation prompts
     coherence_prompt = f"""Evaluate the following qualitative assessment output for COHERENCE only. Compare qualitative_assessment to the provided transcript. Consider the qualitative assessment (qualitative_assessment) of the transcript (transcript) and compare qualitative_assessment to the provided transcript.
-Score from 1-5 solely based on the following criteria: 
+Score from 1-5 solely based on the following criteria:
  - score of 5 : 0 mistakes
  - score of 4 : 1-2 mistakes
  - score of 3 : 3-4 mistakes
@@ -156,16 +156,16 @@ Score: [your score]
 Explanation: [explanation]
 
 ---
-Here is the transcript: 
+Here is the transcript:
 {transcript}
 
-Here is the assessment based on the transcript: 
+Here is the assessment based on the transcript:
 {qualitative_assessment}
 ---"""
 
     completeness_prompt = f"""Evaluate the following qualitative assessment output for COMPLETENESS only. Compare qualitative_assessment to the provided transcript. Consider the qualitative assessment (qualitative_assessment) of the transcript (transcript) and compare qualitative_assessment to the provided transcript.
 
-Score from 1-5 solely based on the following criteria: 
+Score from 1-5 solely based on the following criteria:
  - score of 5 : 0 mistakes
  - score of 4 : 1-2 mistakes
  - score of 3 : 3-4 mistakes
@@ -178,16 +178,16 @@ Format your response as:
 Score: [your score]
 Explanation: [explanation]
 
-Here is the transcript: 
+Here is the transcript:
 {transcript}
 
-Here is the assessment based on the transcript: 
+Here is the assessment based on the transcript:
 {qualitative_assessment}
 ---"""
 
     specificity_prompt = f"""Evaluate the following qualitative assessment output for SPECIFICITY only. Consider the qualitative assessment (qualitative_assessment) of the transcript (transcript) and compare qualitative_assessment to the provided transcript.
 
-Score from 1-5 solely based on the following criteria: 
+Score from 1-5 solely based on the following criteria:
  - score of 5 : 0 mistakes
  - score of 4 : 1-2 mistakes
  - score of 3 : 3-4 mistakes
@@ -201,33 +201,33 @@ Score: [your score]
 Explanation: [explanation]
 
 ---
-Here is the transcript: 
+Here is the transcript:
 {transcript}
 
-Here is the assessment based on the transcript: 
+Here is the assessment based on the transcript:
 {qualitative_assessment}
 ---"""
 
     accuracy_prompt = f"""Evaluate the following qualitative assessment output for ACCURACY only. Consider the qualitative assessment (qualitative_assessment) of the transcript (transcript) and compare qualitative_assessment to the provided transcript.
 
-Score from 1-5 solely based on the following criteria: 
+Score from 1-5 solely based on the following criteria:
  - score of 5 : 0 mistakes
  - score of 4 : 1-2 mistakes
  - score of 3 : 3-4 mistakes
  - score of 2 : 5-6 mistakes
  - score of 1 : 7 or more mistakes
 *NO FLOATING POINT SCORES, ONLY INTEGERS 1-5*
-Accuracy (1–5): Are the signs/symptoms aligned with DSM-5 or PHQ-8? Mistakes are incorrect symptoms or incorrect duration/frequecy. 
+Accuracy (1–5): Are the signs/symptoms aligned with DSM-5 or PHQ-8? Mistakes are incorrect symptoms or incorrect duration/frequecy.
 
 Format your response as:
 Score: [your score]
 Explanation: [explanation]
 
 ---
-Here is the transcript: 
+Here is the transcript:
 {transcript}
 
-Here is the assessment based on the transcript: 
+Here is the assessment based on the transcript:
 {qualitative_assessment}
 ---"""
 
@@ -238,35 +238,35 @@ Here is the assessment based on the transcript:
         "stream": False,
         "options": {"temperature": 0, "top_k": 20, "top_p": 0.9}
     }
-    
+
     completeness_request = {
         "model": model,
         "messages": [{"role": "user", "content": completeness_prompt}],
         "stream": False,
         "options": {"temperature": 0, "top_k": 20, "top_p": 0.9}
     }
-    
+
     specificity_request = {
         "model": model,
         "messages": [{"role": "user", "content": specificity_prompt}],
         "stream": False,
         "options": {"temperature": 0, "top_k": 20, "top_p": 0.9}
     }
-    
+
     accuracy_request = {
         "model": model,
         "messages": [{"role": "user", "content": accuracy_prompt}],
         "stream": False,
         "options": {"temperature": 0, "top_k": 20, "top_p": 0.9}
     }
-    
-    timeout = 300  
-    
+
+    timeout = 300
+
     try:
         # Initial evaluation to check if feedback is needed
         initial_scores = {}
         initial_explanations = {}
-        
+
         # coherence
         print("  Getting initial coherence response...")
         coherence_response = requests.post(BASE_URL, json=coherence_request, timeout=timeout-10)
@@ -280,11 +280,11 @@ Here is the assessment based on the transcript:
             initial_scores['coherence'] = None
             initial_explanations['coherence'] = None
             print(f"FULL RAW RESPONSE: {coherence_response.text}")
-            print(f"RESPONSE HEADERS: {coherence_response.headers}")  
+            print(f"RESPONSE HEADERS: {coherence_response.headers}")
             print(f"REQUEST PAYLOAD: {coherence_request}")
-        
+
         time.sleep(2)
-        
+
         # completeness
         print("  Getting initial completeness response...")
         completeness_response = requests.post(BASE_URL, json=completeness_request, timeout=timeout-10)
@@ -297,9 +297,9 @@ Here is the assessment based on the transcript:
         else:
             initial_scores['completeness'] = None
             initial_explanations['completeness'] = None
-        
+
         time.sleep(2)
-        
+
         # specificity
         print("  Getting initial specificity response...")
         specificity_response = requests.post(BASE_URL, json=specificity_request, timeout=timeout-10)
@@ -312,9 +312,9 @@ Here is the assessment based on the transcript:
         else:
             initial_scores['specificity'] = None
             initial_explanations['specificity'] = None
-        
+
         time.sleep(2)
-        
+
         # accuracy
         print("  Getting initial accuracy response...")
         accuracy_response = requests.post(BASE_URL, json=accuracy_request, timeout=timeout-10)
@@ -327,31 +327,31 @@ Here is the assessment based on the transcript:
         else:
             initial_scores['accuracy'] = None
             initial_explanations['accuracy'] = None
-        
+
         time.sleep(2)
-        
+
         # Check if any score is <= 2 to trigger feedback loop
         low_scores = []
         for metric in ['coherence', 'completeness', 'specificity', 'accuracy']:
             if initial_scores[metric] and initial_scores[metric] <= 2:
                 low_scores.append(metric)
-        
+
         if low_scores:
             print(f"  LOW SCORES DETECTED: {low_scores} - Starting enhanced feedback loop...")
             feedback_count += 1
-            
+
             # Keep track of all attempts for this participant
             iteration = 0
             max_iterations = 10
             current_assessment = qualitative_assessment
             current_scores = initial_scores.copy()
             current_explanations = initial_explanations.copy()
-            
+
             # Feedback loop - keep trying until all scores are > 2
             while low_scores and iteration < max_iterations:
                 iteration += 1
                 print(f"    Iteration {iteration}: Improving assessment for low scores: {low_scores}")
-                
+
                 # feedback message for low scoring metrics
                 feedback_details = []
                 for metric in low_scores:
@@ -365,9 +365,9 @@ Here is the assessment based on the transcript:
                         feedback_details.append(f"""
 - **{metric.upper()}** scored {current_scores[metric]}/5 because: {current_explanations[metric]}
   Please specifically improve the {metric_description[metric]} in your revised assessment.""")
-                
+
                 system_prompt = "You are a psychiatrist. Your job is to assess and diagnose patients for depression. Be as objective, concise, and accurate as possible. Be specific and avoid vague generalities."
-                
+
                 # Overall assessment:
                 print("    Generating improved overall assessment...")
                 overall_prompt = f"""The following is an interview transcript from a psychiatric assessment of a subject who is being screened for depression. Please note that 'Ellie' is the interviewer, and 'Participant' is the subject being assessed.
@@ -386,7 +386,7 @@ Please answer in this XML format. Use straight quotes instead of curly quotes, a
 <assessment>Summary of participant's overall mental health</assessment>
 <quotes>Exact quotes from the transcript that support the assessment</quotes>
 """
-                
+
                 overall_response = requests.post(
                     BASE_URL,
                     json={
@@ -398,13 +398,13 @@ Please answer in this XML format. Use straight quotes instead of curly quotes, a
                     },
                     timeout=timeout
                 )
-                
+
                 if overall_response.status_code != 200:
                     print(f"    Failed to regenerate overall assessment: {overall_response.status_code}")
                     failed_evaluations.append(participant_id)
                     break
                 overall_content = overall_response.json()['message']['content']
-                
+
                 # Social factors:
                 print("    Generating improved social factors...")
                 social_prompt = f"""The following is an interview transcript from a psychiatric assessment of a subject who is being screened for depression. Please note that 'Ellie' is the interviewer, and 'Participant' is the subject being assessed.
@@ -422,7 +422,7 @@ Please answer in this XML format. Use straight quotes instead of curly quotes:
 <assessment>Summary of social influences on patient's health</assessment>
 <quotes>Quotes from the transcript that support the assessment</quotes>
 """
-                
+
                 social_response = requests.post(
                     BASE_URL,
                     json={
@@ -434,13 +434,13 @@ Please answer in this XML format. Use straight quotes instead of curly quotes:
                     },
                     timeout=timeout
                 )
-                
+
                 if social_response.status_code != 200:
                     print(f"    Failed for social factors")
                     social_content = "ERROR"
                 else:
                     social_content = social_response.json()['message']['content']
-                
+
                 # Biological factors:
                 print("    Generating improved biological factors...")
                 biological_prompt = f"""The following is an interview transcript from a psychiatric assessment of a subject who is being screened for depression. Please note that 'Ellie' is the interviewer, and 'Participant' is the subject being assessed.
@@ -458,7 +458,7 @@ Please answer in this XML format. Use straight quotes instead of curly quotes:
 <assessment>Summary of biological influences on patient's health</assessment>
 <quotes>Quotes from the transcript that support the assessment</quotes>
 """
-                
+
                 biological_response = requests.post(
                     BASE_URL,
                     json={
@@ -470,13 +470,13 @@ Please answer in this XML format. Use straight quotes instead of curly quotes:
                     },
                     timeout=timeout
                 )
-                
+
                 if biological_response.status_code != 200:
                     print(f"    Failed for biological factors")
                     biological_content = "ERROR"
                 else:
                     biological_content = biological_response.json()['message']['content']
-                
+
                 # Risk factors
                 print("    Generating improved risk factors...")
                 risk_prompt = f"""The following is an interview transcript from a psychiatric assessment of a subject who is being screened for depression. Please note that 'Ellie' is the interviewer, and 'Participant' is the subject being assessed.
@@ -494,7 +494,7 @@ Please answer in this XML format. Use straight quotes instead of curly quotes:
 <assessment>Summary of potential risk factors</assessment>
 <quotes>Exact quotes from the transcript that support the assessment</quotes>
 """
-                
+
                 risk_response = requests.post(
                     BASE_URL,
                     json={
@@ -506,13 +506,13 @@ Please answer in this XML format. Use straight quotes instead of curly quotes:
                     },
                     timeout=timeout
                 )
-                
+
                 if risk_response.status_code != 200:
                     print(f"    Failed for risk factors")
                     risk_content = "ERROR"
                 else:
                     risk_content = risk_response.json()['message']['content']
-                
+
                 # Combine all assessments into final format
                 current_assessment = f"""Overall Assessment:
 {overall_content}
@@ -526,17 +526,17 @@ Biological Factors:
 Risk Factors:
 {risk_content}
 """
-                
+
 
                 print(f"    New assessment generated, re-evaluating only low scores: {low_scores}")
-                
+
                 # Only re-evaluate the metrics that scored low
                 new_scores = {}
                 new_explanations = {}
-                
+
                 for metric in low_scores:
                     time.sleep(2)
-                    
+
                     if metric == 'coherence':
                         new_coherence_prompt = coherence_prompt.replace(qualitative_assessment, current_assessment)
                         new_coherence_request = {
@@ -552,7 +552,7 @@ Risk Factors:
                             new_scores['coherence'] = score
                             new_explanations['coherence'] = content
                             print(f"      Coherence re-evaluated: {score}")
-                    
+
                     elif metric == 'completeness':
                         new_completeness_prompt = completeness_prompt.replace(qualitative_assessment, current_assessment)
                         new_completeness_request = {
@@ -568,7 +568,7 @@ Risk Factors:
                             new_scores['completeness'] = score
                             new_explanations['completeness'] = content
                             print(f"      Completeness re-evaluated: {score}")
-                    
+
                     elif metric == 'specificity':
                         new_specificity_prompt = specificity_prompt.replace(qualitative_assessment, current_assessment)
                         new_specificity_request = {
@@ -584,7 +584,7 @@ Risk Factors:
                             new_scores['specificity'] = score
                             new_explanations['specificity'] = content
                             print(f"      Specificity re-evaluated: {score}")
-                    
+
                     elif metric == 'accuracy':
                         new_accuracy_prompt = accuracy_prompt.replace(qualitative_assessment, current_assessment)
                         new_accuracy_request = {
@@ -600,38 +600,38 @@ Risk Factors:
                             new_scores['accuracy'] = score
                             new_explanations['accuracy'] = content
                             print(f"      Accuracy re-evaluated: {score}")
-                
+
                 # Update ONLY the re-evaluated scores
                 for metric, score in new_scores.items():
                     if score is not None:
                         current_scores[metric] = score
                         current_explanations[metric] = new_explanations[metric]
-                
+
                 # Check which scores are STILL low
                 low_scores = []
                 for metric in ['coherence', 'completeness', 'specificity', 'accuracy']:
                     if current_scores.get(metric) and current_scores[metric] <= 2:
                         low_scores.append(metric)
-                
+
                 # Print current scores
-                re_eval_indicators = {metric: " (re-evaluated)" if metric in new_scores else "" 
+                re_eval_indicators = {metric: " (re-evaluated)" if metric in new_scores else ""
                                     for metric in ['coherence', 'completeness', 'specificity', 'accuracy']}
-                
-                print(f"    Iteration {iteration} scores: " + 
+
+                print(f"    Iteration {iteration} scores: " +
                       f"Coherence={current_scores.get('coherence', 'N/A')}{re_eval_indicators['coherence']}, " +
                       f"Completeness={current_scores.get('completeness', 'N/A')}{re_eval_indicators['completeness']}, " +
                       f"Specificity={current_scores.get('specificity', 'N/A')}{re_eval_indicators['specificity']}, " +
                       f"Accuracy={current_scores.get('accuracy', 'N/A')}{re_eval_indicators['accuracy']}")
-                
+
                 if low_scores:
                     print(f"    Still have low scores: {low_scores}, continuing with targeted feedback...")
                 else:
                     print(f"    All scores now above 2! Enhanced feedback loop complete after {iteration} iterations.")
-            
+
             # Save final results after feedback loop completes
             if iteration >= max_iterations:
                 print(f"    Reached max iterations ({max_iterations}), stopping feedback loop")
-            
+
             # Save the final qualitative assessment
             feedback_assessment_record = {
                 'participant_id': participant_id,
@@ -639,7 +639,7 @@ Risk Factors:
                 'qualitative_assessment': current_assessment
             }
             feedback_assessments.append(feedback_assessment_record)
-            
+
             # Save the final evaluation scores
             feedback_eval_record = {
                 'participant_id': participant_id,
@@ -652,31 +652,31 @@ Risk Factors:
                 'accuracy': current_scores.get('accuracy'),
                 'accuracy_explanation': current_explanations.get('accuracy')
             }
-            
+
             feedback_evaluations.append(feedback_eval_record)
             processed_count += 1
         else:
             print(f"  No low scores detected - skipping feedback loop")
-        
+
         elapsed_time = time.time() - start_time
         print(f"Completed participant {participant_id} in {elapsed_time:.1f}s ({processed_count} with feedback applied)")
-            
+
     except Exception as e:
         print(f"Error processing participant {participant_id}: {e}")
         failed_evaluations.append(participant_id)
-    
+
     # Save progress every 10 participants
     if (len(feedback_assessments) % 10 == 0 and len(feedback_assessments) > 0) or len(feedback_assessments) == 1:
         if feedback_assessments:
             feedback_assessments_df = pd.DataFrame(feedback_assessments)
             feedback_assessments_df.to_csv(feedback_assessments_csv, index=False)
             print(f"Saved feedback assessments: {len(feedback_assessments)} records to {feedback_assessments_csv}")
-        
+
         if feedback_evaluations:
             feedback_evaluations_df = pd.DataFrame(feedback_evaluations)
             feedback_evaluations_df.to_csv(feedback_evaluations_csv, index=False)
             print(f"Saved feedback evaluations: {len(feedback_evaluations)} records to {feedback_evaluations_csv}")
-    
+
     time.sleep(1)
 
 # Final summary

@@ -30,8 +30,8 @@ Multiple legacy scripts embed absolute, machine-specific file paths (e.g., `/dat
 
 Examples of hardcoded paths:
 
-- `quantitative_assessment/embedding_batch_script.py:774-803`  
-  - `OUTPUT_DIR = "/data/users2/user/ai-psychiatrist/analysis_output"`  
+- `quantitative_assessment/embedding_batch_script.py:774-803`
+  - `OUTPUT_DIR = "/data/users2/user/ai-psychiatrist/analysis_output"`
   - `pd.read_csv("/data/users4/user/ai-psychiatrist/datasets/daic_woz_dataset/...")`
 - `quantitative_assessment/quantitative_analysis.py:20-21,255-267`
 - `qualitative_assessment/qual_assessment.py:15-18,318-357`

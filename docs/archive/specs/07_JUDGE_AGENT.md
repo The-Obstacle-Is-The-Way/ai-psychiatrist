@@ -48,25 +48,25 @@ From `agents/qualitive_evaluator.py`:
 
 ```python
 coherence_prompt = f"""Evaluate the following qualitative assessment output for COHERENCE only. Consider the qualitative assessment (qualitative_assessment) of the transcript (transcript) and compare qualitative_assessment to the provided transcript.
-            
+
             Coherence (1–5): Is the response logically consistent? Mistakes are logically inconsistent statements or contradictions within the assessment.
-            
+
             Score from 1-5 solely based on the following criteria:
-            
+
              - score of 5 : 0 mistakes
              - score of 4 : 1-2 mistakes
              - score of 3 : 3-4 mistakes
              - score of 2 : 5-6 mistakes
              - score of 1 : 7 or more mistakes
-            
+
             Format your response as:
             Explanation: [Your rating, as text]
             Score: [your score, as a number between 1 and 5]
-            
+
             ---
             Here is the transcript:
             {transcript}
-            
+
             Here is the assessment based on the transcript:
             {qualitative_output}
             ---"""
@@ -75,7 +75,7 @@ completeness_prompt = f"""Evaluate the following qualitative assessment output f
 
         Completeness (1–5): Does the assessment cover all relevant symptoms, severities, duration/frequency? Mistakes are missed PHQ-8 symptoms, or duration/frequency details.
 
-        Score from 1-5 solely based on the following criteria: 
+        Score from 1-5 solely based on the following criteria:
          - score of 5 : 0 mistakes
          - score of 4 : 1-2 mistakes
          - score of 3 : 3-4 mistakes
@@ -86,10 +86,10 @@ completeness_prompt = f"""Evaluate the following qualitative assessment output f
         Explanation: [Your rating, as text]
         Score: [your score, as a number between 1 and 5]
 
-        Here is the transcript: 
+        Here is the transcript:
         {transcript}
 
-        Here is the assessment based on the transcript: 
+        Here is the assessment based on the transcript:
         {qualitative_output}
         ---"""
 
@@ -97,7 +97,7 @@ specificity_prompt = f"""Evaluate the following qualitative assessment output fo
 
         Specificity (1–5): Is the assessment specific? Mistakes include using vague/generic statements like 'the patient seems depressed'.
 
-        Score from 1-5 solely based on the following criteria: 
+        Score from 1-5 solely based on the following criteria:
          - score of 5 : 0 mistakes
          - score of 4 : 1-2 mistakes
          - score of 3 : 3-4 mistakes
@@ -109,18 +109,18 @@ specificity_prompt = f"""Evaluate the following qualitative assessment output fo
         Score: [your score, as a number between 1 and 5]
 
         ---
-        Here is the transcript: 
+        Here is the transcript:
         {transcript}
 
-        Here is the assessment based on the transcript: 
+        Here is the assessment based on the transcript:
         {qualitative_output}
         ---"""
 
 accuracy_prompt = f"""Evaluate the following qualitative assessment output for ACCURACY only. Consider the qualitative assessment (qualitative_assessment) of the transcript (transcript) and compare qualitative_assessment to the provided transcript.
 
-        Accuracy (1–5): Are the signs/symptoms aligned with DSM-5 or PHQ-8? Mistakes are incorrect symptoms or incorrect duration/frequency. 
+        Accuracy (1–5): Are the signs/symptoms aligned with DSM-5 or PHQ-8? Mistakes are incorrect symptoms or incorrect duration/frequency.
 
-        Score from 1-5 solely based on the following criteria: 
+        Score from 1-5 solely based on the following criteria:
          - score of 5 : 0 mistakes
          - score of 4 : 1-2 mistakes
          - score of 3 : 3-4 mistakes
@@ -132,10 +132,10 @@ accuracy_prompt = f"""Evaluate the following qualitative assessment output for A
         Score: [your score, as a number between 1 and 5]
 
         ---
-        Here is the transcript: 
+        Here is the transcript:
         {transcript}
 
-        Here is the assessment based on the transcript: 
+        Here is the assessment based on the transcript:
         {qualitative_output}
         ---"""
 ```
@@ -171,7 +171,7 @@ METRIC_DEFINITIONS = {
     EvaluationMetric.SPECIFICITY: """
 Specificity (1-5): Is the assessment specific? Mistakes include using vague/generic statements like 'the patient seems depressed'.
 
-Score from 1-5 solely based on the following criteria: 
+Score from 1-5 solely based on the following criteria:
  - score of 5 : 0 mistakes
  - score of 4 : 1-2 mistakes
  - score of 3 : 3-4 mistakes
@@ -181,7 +181,7 @@ Score from 1-5 solely based on the following criteria:
     EvaluationMetric.COMPLETENESS: """
 Completeness (1-5): Does the assessment cover all relevant symptoms, severities, duration/frequency? Mistakes are missed PHQ-8 symptoms, or duration/frequency details.
 
-Score from 1-5 solely based on the following criteria: 
+Score from 1-5 solely based on the following criteria:
  - score of 5 : 0 mistakes
  - score of 4 : 1-2 mistakes
  - score of 3 : 3-4 mistakes
@@ -199,9 +199,9 @@ Score from 1-5 solely based on the following criteria:
  - score of 1 : 7 or more mistakes
 """,
     EvaluationMetric.ACCURACY: """
-Accuracy (1-5): Are the signs/symptoms aligned with DSM-5 or PHQ-8? Mistakes are incorrect symptoms or incorrect duration/frequency. 
+Accuracy (1-5): Are the signs/symptoms aligned with DSM-5 or PHQ-8? Mistakes are incorrect symptoms or incorrect duration/frequency.
 
-Score from 1-5 solely based on the following criteria: 
+Score from 1-5 solely based on the following criteria:
  - score of 5 : 0 mistakes
  - score of 4 : 1-2 mistakes
  - score of 3 : 3-4 mistakes
@@ -237,10 +237,10 @@ Explanation: [Your rating, as text]
 Score: [your score, as a number between 1 and 5]
 
 ---
-Here is the transcript: 
+Here is the transcript:
 {transcript}
 
-Here is the assessment based on the transcript: 
+Here is the assessment based on the transcript:
 {assessment}
 ---"""
 

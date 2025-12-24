@@ -92,7 +92,7 @@ def run_phq8_analysis(patient_transcript, ground_truth):
         - accuracy_on_available (float or None): Accuracy score on questions that weren't marked N/A (0-1 scale)
         - num_questions_NA (int or None): Number of questions marked as N/A out of 8 total
         - overall_accuracy (float or None): Overall accuracy adjusted for N/A responses (0-1 scale)
-        
+
         Returns (None, None, None, None, None) if parsing fails.
     """
     quantitative_prompt = f"""Analyze the following interview transcript and predict PHQ-8 scores for each symptom domain.
@@ -145,21 +145,21 @@ Return ONLY a JSON object in <answer> tags with these exact keys:
     try:
         response_data = response.json()
         content = response_data['message']['content']
-        
+
         # Extract content from <answer> tags if present
         if '<answer>' in content and '</answer>' in content:
             content = content.split('<answer>')[1].split('</answer>')[0].strip()
-        
+
         # Remove markdown code blocks if present
         if content.startswith('```json'):
             content = content.split('```json')[1].split('```')[0].strip()
         elif content.startswith('```'):
             content = content.split('```')[1].split('```')[0].strip()
-        
+
         # Parse the JSON response and validate with Pydantic
         scores_dict = json.loads(content)
         phq8_scores = PHQ8ScoresWithExplanations(**scores_dict)
-        
+
         # Extract the 8 PHQ-8 score values
         scores_list = [
             phq8_scores.PHQ8_NoInterest.score,
@@ -171,7 +171,7 @@ Return ONLY a JSON object in <answer> tags with these exact keys:
             phq8_scores.PHQ8_Concentrating.score,
             phq8_scores.PHQ8_Moving.score
         ]
-        
+
         print("Comparison of Predicted vs Ground Truth:")
         print("Metric\t\t\tPredicted\tGround Truth\tDifference")
         print("-" * 65)
@@ -179,9 +179,9 @@ Return ONLY a JSON object in <answer> tags with these exact keys:
         differences = []
         n_available = 0
         num_questions_NA = 0
-        metrics = ['PHQ8_NoInterest', 'PHQ8_Depressed', 'PHQ8_Sleep', 'PHQ8_Tired', 
+        metrics = ['PHQ8_NoInterest', 'PHQ8_Depressed', 'PHQ8_Sleep', 'PHQ8_Tired',
                 'PHQ8_Appetite', 'PHQ8_Failure', 'PHQ8_Concentrating', 'PHQ8_Moving']
-        predicted_values = [phq8_scores.PHQ8_NoInterest.score, phq8_scores.PHQ8_Depressed.score, phq8_scores.PHQ8_Sleep.score, 
+        predicted_values = [phq8_scores.PHQ8_NoInterest.score, phq8_scores.PHQ8_Depressed.score, phq8_scores.PHQ8_Sleep.score,
                             phq8_scores.PHQ8_Tired.score, phq8_scores.PHQ8_Appetite.score, phq8_scores.PHQ8_Failure.score,
                             phq8_scores.PHQ8_Concentrating.score, phq8_scores.PHQ8_Moving.score]
 
@@ -204,21 +204,21 @@ Return ONLY a JSON object in <answer> tags with these exact keys:
         else:
             avg_difference = float('inf')
             accuracy_on_available = 0
-        
+
         # Accuracy * % available questions
         overall_accuracy = accuracy_on_available * (1 - (num_questions_NA / 8))
-        
+
         print("-" * 65)
         if n_available > 0:
             print(f"Average Absolute Difference (on available): {avg_difference:.2f}")
             print(f"Accuracy on available questions: {accuracy_on_available:.2%}")
         print(f"Questions marked N/A: {num_questions_NA}/8")
         print(f"Overall accuracy: {overall_accuracy:.2%}")
-        
+
         # Reasoning and evidence section
         print("\n\nDetailed Reasoning for Each Score:")
         print("=" * 80)
-        
+
         symptom_names = {
             'PHQ8_NoInterest': 'Little Interest/Pleasure',
             'PHQ8_Depressed': 'Feeling Depressed',
@@ -229,7 +229,7 @@ Return ONLY a JSON object in <answer> tags with these exact keys:
             'PHQ8_Concentrating': 'Concentration Problems',
             'PHQ8_Moving': 'Psychomotor Changes'
         }
-        
+
         for key, symptom_name in symptom_names.items():
             score_data = getattr(phq8_scores, key)
             print(f"\n{symptom_name} (Score: {score_data.score})")
@@ -258,17 +258,17 @@ if __name__ == "__main__":
     # Initialize CSV file with headers
     with open(csv_file, 'w', newline='') as f:
         writer = csv.writer(f)
-        writer.writerow(['participant_id', 'timestamp', 'PHQ8_NoInterest', 'PHQ8_Depressed', 'PHQ8_Sleep', 
+        writer.writerow(['participant_id', 'timestamp', 'PHQ8_NoInterest', 'PHQ8_Depressed', 'PHQ8_Sleep',
                         'PHQ8_Tired', 'PHQ8_Appetite', 'PHQ8_Failure', 'PHQ8_Concentrating', 'PHQ8_Moving',
                         'avg_difference', 'accuracy_on_available', 'num_questions_na', 'overall_accuracy'])
 
     # Execution loop
     for participant_id in participant_list:
         current_transcript = pd.read_csv(fr"/data/users4/user/ai-psychiatrist/datasets/daic_woz_dataset/{participant_id}_P/{participant_id}_TRANSCRIPT.csv", sep="\t")
-        
+
         # Reformatting transcript data to be a string with speaker name + text
-        current_patient_transcript = '\n'.join(current_transcript['speaker'].astype(str) + ': ' + current_transcript['value'].astype(str))        
-        
+        current_patient_transcript = '\n'.join(current_transcript['speaker'].astype(str) + ': ' + current_transcript['value'].astype(str))
+
         # Get ground truth data for this participant
         if participant_id in train_split_phq8['Participant_ID'].values:
             ground_truth = train_split_phq8[train_split_phq8['Participant_ID'] == participant_id].iloc[0]
@@ -290,7 +290,7 @@ if __name__ == "__main__":
                     phq8_scores.PHQ8_Concentrating.score, phq8_scores.PHQ8_Moving.score,
                     avg_difference, accuracy_on_available, num_questions_NA, overall_accuracy
                 ])
-            
+
             # Save detailed data to JSON Lines
             detailed_data = {
                 "participant_id": participant_id,
@@ -307,9 +307,9 @@ if __name__ == "__main__":
 
             with open(json_file, 'a') as f:
                 f.write(json.dumps(detailed_data) + '\n')
-            
+
             print(f"\nCompleted analysis for participant {participant_id}")
         else:
             print(f"\nFailed to analyze participant {participant_id} - skipping")
-        
+
         print("="*80)

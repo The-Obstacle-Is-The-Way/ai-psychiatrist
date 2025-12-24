@@ -37,8 +37,8 @@ Implement the meta-review agent that integrates qualitative and quantitative ass
 
 ```python
 prompt = f'''You are an AI psychiatrist assistant specializing in depression. Your task is to analyze the interview transcript and related qualitative and quantitative assessments, and then predict the diagnosis label and severity level.
-        
-                Please review a participant's interview transcript, qualitative assessment, and quantitative assessment below.  
+
+                Please review a participant's interview transcript, qualitative assessment, and quantitative assessment below.
 
                 Here is the interview transcript in <transcript> tags:
                 <transcript>
@@ -77,7 +77,7 @@ from ai_psychiatrist.domain.enums import SeverityLevel
 META_REVIEW_SYSTEM_PROMPT = """You are an AI psychiatrist assistant specializing in depression. Your task is to analyze the interview transcript and related qualitative and quantitative assessments, and then predict the diagnosis label and severity level."""
 
 def make_meta_review_prompt(transcript: str, qualitative: str, quantitative: str) -> str:
-    return f"""Please review a participant's interview transcript, qualitative assessment, and quantitative assessment below.  
+    return f"""Please review a participant's interview transcript, qualitative assessment, and quantitative assessment below.
 
         Here is the interview transcript in <transcript> tags:
         <transcript>
@@ -155,12 +155,12 @@ class MetaReviewAgent:
             item_assessment = assessment.get_item(item)
             score = item_assessment.score if item_assessment.is_available else "N/A"
             reason = item_assessment.reason
-            
+
             key_lower = item.value.lower()
             if score != "N/A":
                 lines.append(f"<{key_lower}_score>{score}</{key_lower}_score>")
                 lines.append(f"<{key_lower}_explanation>{reason}</{key_lower}_explanation>")
-                
+
         return "\n".join(lines)
 
     def _parse_response(

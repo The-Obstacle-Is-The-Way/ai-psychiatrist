@@ -157,7 +157,7 @@ but we cannot claim the pipeline works without real integration tests.
 - `/full_pipeline` E2E test returns valid response structure.
 - Any parsing/prompt issues discovered are documented as new bugs.
 - Confidence that the pipeline actually works, not just appears to work.
-  
+
 **Status**: ✅ COMPLETED (2025-12-21)
 
 ---

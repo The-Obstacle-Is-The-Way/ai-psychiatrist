@@ -69,4 +69,3 @@ class QuantitativeAssessorZ:
                 full_response += data.get("response", "")
 
         return full_response
-

@@ -39,12 +39,12 @@ class PHQ8ScoresWithExplanations(BaseModel):
     PHQ8_Moving: PHQ8ScoreWithExplanation      # Moving/speaking slowly or being fidgety/restless
 
 ############################################################################################################################
-##################### Created 4 line chunks (with a 2 lines sliding window) for each reference transcript and embedded them 
+##################### Created 4 line chunks (with a 2 lines sliding window) for each reference transcript and embedded them
 ############################################################################################################################
 
 def get_embedding(text, model="qwen3-embedding:8b", dim=None):
     """
-    Creates embedding from given text input and model 
+    Creates embedding from given text input and model
 
     Parameters
     ----------
@@ -61,7 +61,7 @@ def get_embedding(text, model="qwen3-embedding:8b", dim=None):
         The vector embedding of the text
     """
     BASE_URL = f"http://{OLLAMA_NODE}:11434/api/embeddings"
-    
+
     response = requests.post(
         BASE_URL,
         json={
@@ -69,10 +69,10 @@ def get_embedding(text, model="qwen3-embedding:8b", dim=None):
             "prompt": text
         }
     )
-    
+
     if response.status_code == 200:
         embedding = response.json()["embedding"]
-        
+
         # Manually setting dimension because ollama doesn't natively support atm
         if dim is not None:
             # Truncate and normalize for MRL models
@@ -81,14 +81,14 @@ def get_embedding(text, model="qwen3-embedding:8b", dim=None):
             norm = math.sqrt(sum(x * x for x in embedding))
             if norm > 0:
                 embedding = [x / norm for x in embedding]
-        
+
         return embedding
     else:
         raise Exception(f"API call failed with status {response.status_code}: {response.text}")
 
 def create_sliding_chunks(transcript_text, chunk_size=4, step_size=2):
     """
-    Splits the transcript into several chunks 
+    Splits the transcript into several chunks
 
     Parameters
     ----------
@@ -108,29 +108,29 @@ def create_sliding_chunks(transcript_text, chunk_size=4, step_size=2):
         The text chunk strings
     """
     lines = transcript_text.split('\n')
-    
+
     # Remove empty lines at the end if any
     while lines and lines[-1] == '':
         lines.pop()
-    
+
     chunks = []
-    
+
     # If fewer lines than chunk_size, just return the whole thing
     if len(lines) <= chunk_size:
         return ['\n'.join(lines)]
-    
+
     # Create sliding windows
     for i in range(0, len(lines) - chunk_size + 1, step_size):
         chunk = '\n'.join(lines[i:i + chunk_size])
         chunks.append(chunk)
-    
+
     # If the last chunk doesn't include the final lines, add one more chunk
     last_chunk_start = len(lines) - chunk_size
     if last_chunk_start > 0 and (last_chunk_start % step_size) != 0:
         final_chunk = '\n'.join(lines[last_chunk_start:])
         if final_chunk not in chunks:
             chunks.append(final_chunk)
-    
+
     return chunks
 
 ############################################################################################################################
@@ -140,22 +140,22 @@ def create_sliding_chunks(transcript_text, chunk_size=4, step_size=2):
 def find_similar_chunks(query_embedding, participant_embedded_transcripts, top_k=5):
     """
     Find most similar chunks to the query embedding.
-    
+
     Returns list of dicts with: participant_id, chunk_id, raw_text, similarity
     """
-    
+
     similarities = []
-    
+
     # Convert query_embedding to 2D numpy array
     query_embedding = np.array(query_embedding).reshape(1, -1)
-    
+
     for participant_id, chunks in participant_embedded_transcripts.items():
         # Iterate through each chunk with its index
         for chunk_idx in range(len(chunks)):
             # Check which column has the embedding vs text
             col0 = chunks[chunk_idx, 0]
             col1 = chunks[chunk_idx, 1]
-            
+
             # Determine which is embedding and which is text
             if isinstance(col0, str):
                 # Columns are reversed: text in col 0, embedding in col 1
@@ -165,35 +165,35 @@ def find_similar_chunks(query_embedding, participant_embedded_transcripts, top_k
                 # Normal order: embedding in col 0, text in col 1
                 chunk_embedding = col0
                 raw_text = col1
-            
+
             # Convert chunk_embedding to 2D numpy array
             try:
                 chunk_embedding = np.array(chunk_embedding).reshape(1, -1)
             except Exception as e:
                 log_message(f"ERROR reshaping embedding for participant {participant_id}, chunk {chunk_idx}: {e}")
                 continue
-            
+
             # Calculate cosine similarity
             try:
                 similarity = cosine_similarity(query_embedding, chunk_embedding)[0, 0]
             except Exception as e:
                 log_message(f"ERROR calculating similarity for participant {participant_id}, chunk {chunk_idx}: {e}")
                 continue
-            
+
             similarities.append({
                 'participant_id': participant_id,
                 'chunk_id': chunk_idx,
                 'raw_text': raw_text,
                 'similarity': similarity
             })
-            
+
     # Sort by similarity (highest first) and return top_k
     similarities.sort(key=lambda x: x['similarity'], reverse=True)
-    
+
     log_message(f"DEBUG find_similar_chunks - Returning {len(similarities[:top_k])} chunks out of {len(similarities)} total")
     for i, chunk in enumerate(similarities[:top_k]):
         log_message(f"  Rank {i+1}: participant={chunk['participant_id']}, chunk_id={chunk['chunk_id']}, similarity={chunk['similarity']:.4f}")
-    
+
     return similarities[:top_k]
 
 def log_message(message, print_to_console=True):
@@ -216,10 +216,10 @@ def log_message(message, print_to_console=True):
 
     timestamp = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
     log_entry = f"[{timestamp}] {message}"
-    
+
     with open(LOG_FILE, 'a') as f:
         f.write(log_entry + '\n')
-    
+
     if print_to_console:
         print(message)
 
@@ -233,7 +233,7 @@ def load_processed_participants(jsonl_file):
         All processed participant id ints
     """
     processed_ids = set()
-    
+
     if os.path.exists(jsonl_file):
         try:
             with open(jsonl_file, 'r') as f:
@@ -245,7 +245,7 @@ def load_processed_participants(jsonl_file):
                         continue
         except Exception as e:
             log_message(f"Could not read existing JSONL file: {str(e)}")
-    
+
     return processed_ids
 
 def save_participant_result(participant_id, phq8_scores, reference_scores, reference_total_scores, reference_ids, output_file):
@@ -259,30 +259,30 @@ def save_participant_result(participant_id, phq8_scores, reference_scores, refer
 
     phq8_scores : PHQ8ScoresWithExplanations
         Pydantic model containing PHQ-8 assessment results.
-        
+
     reference_scores : dict
         Dictionary mapping PHQ8 questions to lists of reference evidence scores.
-    
+
     reference_total_scores : dict
         Dictionary mapping PHQ8 questions to lists of reference total PHQ8 scores.
-    
+
     reference_ids : dict
         Dictionary mapping PHQ8 questions to lists of reference evidence chunk IDs.
-    
+
     Writes
     -------
     json
         Record containing participant_id, timestamp, and predicted PHQ8 information,
-        now including "reference_evidence_scores", "reference_evidence_total_scores", 
+        now including "reference_evidence_scores", "reference_evidence_total_scores",
         and "reference_evidence_id".
     """
     result = {
         "participant_id": participant_id,
         "timestamp": datetime.now().isoformat()
     }
-    
+
     # Extract scores and explanations
-    for key in ['PHQ8_NoInterest', 'PHQ8_Depressed', 'PHQ8_Sleep', 'PHQ8_Tired', 
+    for key in ['PHQ8_NoInterest', 'PHQ8_Depressed', 'PHQ8_Sleep', 'PHQ8_Tired',
                 'PHQ8_Appetite', 'PHQ8_Failure', 'PHQ8_Concentrating', 'PHQ8_Moving']:
         score_data = getattr(phq8_scores, key)
         result[key] = {
@@ -294,7 +294,7 @@ def save_participant_result(participant_id, phq8_scores, reference_scores, refer
             "reference_evidence_total_scores": reference_total_scores.get(key, []),
             "reference_evidence_id": reference_ids.get(key, [])  # NEW: Add chunk IDs
         }
-    
+
     # Append to JSONL file
     with open(output_file, 'a') as f:
         f.write(json.dumps(result) + '\n')
@@ -314,7 +314,7 @@ def extract_evidence_for_participant(transcript, participant_id):
 
     participant_id : int
         The id of the given participant
-    
+
     Returns
     -------
     dict
@@ -328,7 +328,7 @@ def extract_evidence_for_participant(transcript, participant_id):
 
 PHQ-8 scoring reference:
 - 0 = not at all (0-1 days)
-- 1 = several days (2-6 days) 
+- 1 = several days (2-6 days)
 - 2 = more than half the days (7-11 days)
 - 3 = nearly every day (12-14 days)
 
@@ -379,20 +379,20 @@ Important: Extract UNIQUE quotes only - do not repeat the same quote multiple ti
                 }
             }
         )
-        
+
         response_data = response.json()
         content = response_data['message']['content']
         content = content.strip('```json\n').strip('\n```')
-        
+
         evidence_dict = json.loads(content)
-        
+
         # Remove duplicate quotes in each evidence list
         for key in evidence_dict:
             if isinstance(evidence_dict[key], list):
                 evidence_dict[key] = list(dict.fromkeys(evidence_dict[key]))
-        
+
         return evidence_dict
-        
+
     except Exception as e:
         log_message(f"Error extracting evidence for participant {participant_id}: {str(e)}", print_to_console=False)
         raise
@@ -410,13 +410,13 @@ def process_evidence_for_references(evidence_dict, participant_embedded_transcri
     ----------
     evidence_dict : dict
         Dictionary containing PHQ-8 domain keys mapped to lists of evidence quotes
-    
+
     participant_embedded_transcripts : dict
         The dictionary with participant IDs as keys and (raw_text, embedding) as values for each transcript chunk
-    
+
     phq8_ground_truths : pandas dataframe
         Dataframe containing ground truth PHQ-8 scores for participants
-    
+
     Returns
     -------
     tuple
@@ -432,50 +432,50 @@ def process_evidence_for_references(evidence_dict, participant_embedded_transcri
         'PHQ8_NoInterest', 'PHQ8_Depressed', 'PHQ8_Sleep', 'PHQ8_Tired',
         'PHQ8_Appetite', 'PHQ8_Failure', 'PHQ8_Concentrating', 'PHQ8_Moving'
     ]
-    
+
     all_references = []
     similarity_scores = {}
     reference_scores = {}
     reference_total_scores = {}
     reference_ids = {}
-    
+
     for evidence_key in evidence_keys:
         # Get evidence texts for this key
         evidence_texts = evidence_dict.get(evidence_key, [])
-        
+
         # Initialize empty lists for this key
         similarity_scores[evidence_key] = []
         reference_scores[evidence_key] = []
         reference_total_scores[evidence_key] = []
         reference_ids[evidence_key] = []
-        
+
         # Skip if empty
         if not evidence_texts:
             continue
-        
+
         if not evidence_texts or len('\n'.join(evidence_texts)) < 15:
             continue
-        
+
         log_message(f"Processing {evidence_key}...")
-        
+
         try:
             log_message(f"DEBUG - examples_num type: {type(examples_num)}, value: {examples_num}")
-            
+
             top_k_value = int(examples_num)
             log_message(f"DEBUG - Converted top_k_value: {top_k_value}, type: {type(top_k_value)}")
-            
+
             evidence_embedding = get_embedding('\n'.join(evidence_texts), dim=dim)
             log_message(f"DEBUG - About to call find_similar_chunks...")
-            
+
             similar_chunks = find_similar_chunks(
-                evidence_embedding, 
-                participant_embedded_transcripts, 
+                evidence_embedding,
+                participant_embedded_transcripts,
                 top_k=top_k_value
             )
-            
+
             log_message(f"DEBUG - find_similar_chunks completed successfully")
             similarity_scores[evidence_key] = [str(chunk['similarity']) for chunk in similar_chunks]
-            
+
             for chunk_info in similar_chunks:
                 participant_id = chunk_info['participant_id']
                 chunk_id = chunk_info.get('chunk_id', 'unknown')
@@ -487,11 +487,11 @@ def process_evidence_for_references(evidence_dict, participant_embedded_transcri
                 except (ValueError, TypeError):
                     log_message(f"Could not convert participant_id {participant_id} to int")
                     continue
-                
+
                 participant_data = phq8_ground_truths.loc[
                     phq8_ground_truths['Participant_ID'] == participant_id_lookup
                 ]
-                
+
                 if not participant_data.empty:
                     # Get the individual score for the specific PHQ8 question
                     score = int(participant_data[evidence_key].values[0])
@@ -500,10 +500,10 @@ def process_evidence_for_references(evidence_dict, participant_embedded_transcri
                     # Get the total PHQ8 score for that same participant
                     total_score = int(participant_data['PHQ8_Score'].values[0])
                     reference_total_scores[evidence_key].append(total_score)
-                    
+
                     # Store the chunk ID
                     reference_ids[evidence_key].append(chunk_id)
-                    
+
                     reference_entry = f"({evidence_key} Score: {score})\n{raw_text}"
                     all_references.append(reference_entry)
 
@@ -519,13 +519,13 @@ def process_evidence_for_references(evidence_dict, participant_embedded_transcri
                     log_message(f"{'='*50}\n")
                 else:
                     log_message(f"No ground truth data found for participant {participant_id_lookup} (original: {participant_id})")
-                                
+
         except Exception as e:
             log_message(f"Error processing {evidence_key}: {e}")
-            
+
             traceback_str = traceback.format_exc()
             log_message(f"Full traceback:\n{traceback_str}")
-            
+
             continue
 
     # Combine all references into a string
@@ -533,7 +533,7 @@ def process_evidence_for_references(evidence_dict, participant_embedded_transcri
         reference_evidence = "<Reference Examples>\n\n" + "\n\n".join(all_references) + "\n\n<Reference Examples>"
     else:
         reference_evidence = "<Reference Examples>\nNo valid evidence found\n<Reference Examples>"
-    
+
     # Return the new IDs dictionary as well
     return reference_evidence, similarity_scores, reference_scores, reference_total_scores, reference_ids
 
@@ -554,13 +554,13 @@ def run_phq8_analysis_batch(patient_transcript, reference_evidence="", similarit
 
     reference_evidence : string
         A string containing the reference evidence chunks and their PHQ8 scores
-    
+
     Returns
     -------
     PHQ8ScoresWithExplanations
-        Pydantic model containing PHQ-8 assessment results. Has 8 attributes 
-        (PHQ8_NoInterest, PHQ8_Depressed, PHQ8_Sleep, PHQ8_Tired, PHQ8_Appetite, 
-        PHQ8_Failure, PHQ8_Concentrating, PHQ8_Moving), each of type 
+        Pydantic model containing PHQ-8 assessment results. Has 8 attributes
+        (PHQ8_NoInterest, PHQ8_Depressed, PHQ8_Sleep, PHQ8_Tired, PHQ8_Appetite,
+        PHQ8_Failure, PHQ8_Concentrating, PHQ8_Moving), each of type
         PHQ8ScoreWithExplanation with 'evidence', 'reason', and 'score' fields.
     """
     quantitative_prompt = f"""Analyze the following interview transcript and predict PHQ-8 scores for each symptom domain.
@@ -634,17 +634,17 @@ Key Principles:
         # Parsing response
         response_data = response.json()
         content = response_data['message']['content']
-        
+
         if '<answer>' in content and '</answer>' in content:
             content = content.split('<answer>')[1].split('</answer>')[0].strip()
-        
+
         if content.startswith('```json'):
             content = content.split('```json')[1].split('```')[0].strip()
         elif content.startswith('```'):
             content = content.split('```')[1].split('```')[0].strip()
-        
+
         scores_dict = json.loads(content)
-        
+
         # Add cosine similarity scores to each PHQ8 question for output
         if similarity_scores:
             for phq_key in scores_dict.keys():
@@ -659,11 +659,11 @@ Key Principles:
             # If no similarity_scores provided, add N/A to all questions
             for phq_key in scores_dict.keys():
                 scores_dict[phq_key]["cosine_similarity"] = "N/A"
-        
+
         phq8_scores = PHQ8ScoresWithExplanations(**scores_dict)
-        
+
         return phq8_scores
-        
+
     except Exception as e:
         raise
 
@@ -714,12 +714,12 @@ def check_balance(ids, df, split_name):
     log_message(f"\n{split_name} set balance:")
     log_message(f"PHQ8_Binary: {subset['PHQ8_Binary'].value_counts().to_dict()}")
     log_message(f"Gender: {subset['Gender'].value_counts().to_dict()}")
-    
+
     # Show PHQ8_Score distribution
     score_dist = subset['PHQ8_Score'].value_counts().sort_index()
     log_message(f"PHQ8_Score distribution: {dict(score_dist)}")
     log_message(f"Score stats: Mean={subset['PHQ8_Score'].mean():.1f}, Std={subset['PHQ8_Score'].std():.1f}")
-    
+
     # Show how many unique categories are in this split
     unique_categories = subset['strat_var'].nunique()
     log_message(f"Unique categories (Gender_PHQ8Score): {unique_categories}")
@@ -737,7 +737,7 @@ def timeout(duration):
     """
     def timeout_handler(signum, frame):
         raise TimeoutError(f"Operation timed out after {duration} seconds")
-    
+
     signal.signal(signal.SIGALRM, timeout_handler)
     signal.alarm(duration)
     try:
@@ -764,7 +764,7 @@ if __name__ == "__main__":
         dims = [s.strip() for s in args.dims.split(',')]
     else:
         dims = ['']
-    
+
     # Ollama Config
     OLLAMA_NODE = args.ollama_node
     BASE_URL = f"http://{OLLAMA_NODE}:11434/api/chat"
@@ -773,7 +773,7 @@ if __name__ == "__main__":
     # Output paths
     OUTPUT_DIR = r"/data/users2/user/ai-psychiatrist/analysis_output"
     LOG_FILE = os.path.join(OUTPUT_DIR, "embedding_log_file.txt")
-    
+
     # Ensure output directory exists
     os.makedirs(OUTPUT_DIR, exist_ok=True)
 
@@ -786,19 +786,19 @@ if __name__ == "__main__":
     log_message(f"Number of runs per combination: {args.num_runs}")
     log_message(f"Total combinations to run: {len(chunk_steps) * len(dims) * len(examples_nums) * args.num_runs}")
     log_message("="*80)
-    
+
     # Load data
     log_message("Loading PHQ-8 ground truth data...")
     dev_split_phq8 = pd.read_csv(r"/data/users4/user/ai-psychiatrist/datasets/daic_woz_dataset/dev_split_Depression_AVEC2017.csv")
     train_split_phq8 = pd.read_csv(r"/data/users4/user/ai-psychiatrist/datasets/daic_woz_dataset/train_split_Depression_AVEC2017.csv")
     phq8_ground_truths = pd.concat([dev_split_phq8, train_split_phq8], ignore_index=True)
     phq8_ground_truths = phq8_ground_truths.sort_values('Participant_ID').reset_index(drop=True)
-    
+
     phq8_ground_truths['score_range'] = phq8_ground_truths['PHQ8_Score'].apply(create_score_ranges)
     log_message(f"PHQ8_Score ranges distribution:\n{phq8_ground_truths['score_range'].value_counts()}")
 
     # Stratify data based on Gender + PHQ8_Score
-    phq8_ground_truths['strat_var'] = (phq8_ground_truths['Gender'].astype(str) + '_' + 
+    phq8_ground_truths['strat_var'] = (phq8_ground_truths['Gender'].astype(str) + '_' +
                                     phq8_ground_truths['PHQ8_Score'].astype(str))
 
     log_message(f"Stratification groups (Gender_PHQ8Score):\n{phq8_ground_truths['strat_var'].value_counts().sort_index()}")
@@ -830,31 +830,31 @@ if __name__ == "__main__":
         for category in categories_gte3:
             category_participants = participants_gte3[participants_gte3['strat_var'] == category]['Participant_ID'].tolist()
             n = len(category_participants)
-            
+
             # Calculate ideal splits
             ideal_train = n * 0.40
             ideal_val = n * 0.30
             ideal_test = n * 0.30
-            
+
             # Use consistent 40/30/30 split for all categories >= 3
             actual_train = round(ideal_train)
-            actual_val = round(ideal_val) 
+            actual_val = round(ideal_val)
             actual_test = n - actual_train - actual_val
 
             # Ensure no negative values
             if actual_test < 0:
                 actual_train = max(1, actual_train - 1)
                 actual_test = n - actual_train - actual_val
-            
+
             # Randomly assign participants
             np.random.seed(42)
             shuffled = category_participants.copy()
             np.random.shuffle(shuffled)
-            
+
             train_ids.extend(shuffled[:actual_train])
             val_ids.extend(shuffled[actual_train:actual_train+actual_val])
             test_ids.extend(shuffled[actual_train+actual_val:])
-            
+
     # Process categories with exactly 2 subjects (1 for train, 1 for test)
     if len(participants_eq2) > 0:
         for category in categories_eq2:
@@ -863,10 +863,10 @@ if __name__ == "__main__":
             np.random.shuffle(category_participants)
             train_ids.append(category_participants[0])
             test_ids.append(category_participants[1])
-        
+
         log_message(f"\nProcessed {len(participants_eq2)} participants from categories with 2 subjects")
         log_message(f"  {len(categories_eq2)} categories: 1 to train, 1 to test each")
-        
+
         log_message(f"\nProcessed {len(participants_eq2)} participants from categories with 2 subjects")
         log_message(f"  {len(categories_eq2)} categories: 1 to train, 1 to validation each")
 
@@ -882,7 +882,7 @@ if __name__ == "__main__":
 
     for score in scores_with_2:
         score_participants = phq8_ground_truths[phq8_ground_truths['PHQ8_Score'] == score]['Participant_ID'].tolist()
-        
+
         # Remove these participants from their current assignments
         for pid in score_participants:
             if pid in train_ids:
@@ -891,12 +891,12 @@ if __name__ == "__main__":
                 val_ids.remove(pid)
             if pid in test_ids:
                 test_ids.remove(pid)
-        
+
         # Reassign: 1 to validation, 1 to test
         np.random.shuffle(score_participants)
         val_ids.append(score_participants[0])
         test_ids.append(score_participants[1])
-        
+
         log_message(f"Override applied for PHQ8_Score={score}: 1 to validation, 1 to test")
 
     log_message(f"\nFinal split sizes:")
@@ -947,13 +947,13 @@ if __name__ == "__main__":
             except Exception as e:
                 log_message(f"Error loading embeddings from {pickle_file}: {str(e)}")
                 raise
-                
+
             for examples_num in examples_nums:
                 # to int
                 examples_num = int(examples_num) if isinstance(examples_num, str) else examples_num
                 for run_num in range(1, args.num_runs + 1):
                     combination_num += 1
-                    
+
                     # Log current combination
                     log_message("\n" + "="*80)
                     log_message(f"PROCESSING COMBINATION {combination_num}/{overall_stats['total_combinations']}")
@@ -965,7 +965,7 @@ if __name__ == "__main__":
                         JSONL_FILE = os.path.join(OUTPUT_DIR, f"ids_{chunk_step}_examples_{examples_num}_embedding_results_analysis_{run_num}.jsonl")
                     log_message(f"Output file: {JSONL_FILE}")
                     log_message(f"Total participants to process: {len(val_ids)}")
-                    
+
                     # Load already processed participants for this specific combination
                     processed_ids = load_processed_participants(JSONL_FILE)
                     log_message(f"Already processed participants for this combination: {len(processed_ids)}")
@@ -979,116 +979,116 @@ if __name__ == "__main__":
                         if participant_id in processed_ids:
                             log_message(f"[{chunk_step}, {examples_num}, run {run_num}] Skipping participant {participant_id} - already processed")
                             continue
-                        
+
                         # Retry logic - up to 10 attempts
                         max_retries = 10
                         retry_count = 0
                         participant_processed = False
-                        
+
                         while retry_count < max_retries and not participant_processed:
                             retry_count += 1
-                            
+
                             if retry_count > 1:
                                 log_message(f"[{chunk_step}, {examples_num}, run {run_num}] Retry attempt {retry_count}/{max_retries} for participant {participant_id}")
                             else:
                                 log_message(f"[{chunk_step}, {examples_num}, run {run_num}] Processing participant {participant_id} ({idx+1}/{len(test_ids)})...")
-                            
+
                             try:
                                 with timeout(600):  # 10 minutes of processing, afterwards the attempt is re-tried. Done to handle infinite looping
                                     # Load transcript
                                     transcript_path = fr"/data/users4/user/ai-psychiatrist/datasets/daic_woz_dataset/{participant_id}_P/{participant_id}_TRANSCRIPT.csv"
                                     current_transcript = pd.read_csv(transcript_path, sep="\t")
-                                    
+
                                     # Handle missing values
                                     current_transcript['speaker'] = current_transcript['speaker'].fillna('Unknown').astype(str)
                                     current_transcript['value'] = current_transcript['value'].fillna('').astype(str)
-                                    
+
                                     # Format transcript
                                     current_patient_transcript = '\n'.join(current_transcript['speaker'] + ': ' + current_transcript['value'])
-        
+
                                     # Extract evidence (using current chunk_step and examples_num)
                                     evidence_dict = extract_evidence_for_participant(
-                                        current_patient_transcript, 
+                                        current_patient_transcript,
                                         participant_id
                                     )
-                                    
+
                                     # Generate reference evidence (excluding current participant from embeddings)
                                     reference_embeddings = {k: v for k, v in participant_embedded_transcripts.items() if k != participant_id}
                                     reference_evidence, similarity_scores, reference_scores, reference_total_scores, reference_ids = process_evidence_for_references(
-                                        evidence_dict, 
-                                        reference_embeddings, 
+                                        evidence_dict,
+                                        reference_embeddings,
                                         phq8_ground_truths,
                                         dim=dim
                                     )
 
                                     # Run PHQ-8 analysis
                                     phq8_scores = run_phq8_analysis_batch(
-                                        current_patient_transcript, 
+                                        current_patient_transcript,
                                         reference_evidence,
-                                        similarity_scores 
+                                        similarity_scores
                                     )
 
                                     # Save results to the combination-specific file
                                     save_participant_result(
-                                        participant_id, 
-                                        phq8_scores, 
-                                        reference_scores, 
+                                        participant_id,
+                                        phq8_scores,
+                                        reference_scores,
                                         reference_total_scores,
-                                        reference_ids, 
+                                        reference_ids,
                                         output_file=JSONL_FILE
                                     )
 
                                     successful += 1
                                     participant_processed = True
                                     log_message(f"[{chunk_step}, {examples_num}, run {run_num}] Successfully processed participant {participant_id} (attempt {retry_count})", print_to_console=False)
-                            
+
                             except TimeoutError:
                                 error_msg = f"Timeout: Participant {participant_id} took longer than 5 minutes (attempt {retry_count}/{max_retries})"
                                 log_message(f"[{chunk_step}, {examples_num}, run {run_num}] ERROR: {error_msg}")
-                                
+
                                 if retry_count >= max_retries:
                                     failed += 1
                                     log_message(f"[{chunk_step}, {examples_num}, run {run_num}] FAILED: Participant {participant_id} failed after {max_retries} attempts")
-                                
+
                             except FileNotFoundError:
                                 error_msg = f"Transcript file not found for participant {participant_id}"
                                 log_message(f"[{chunk_step}, {examples_num}, run {run_num}] ERROR: {error_msg}")
                                 failed += 1
                                 participant_processed = True  # Don't retry if file doesn't exist
-                                
+
                             except json.JSONDecodeError as e:
                                 error_msg = f"JSON parsing error for participant {participant_id}: {str(e)} (attempt {retry_count}/{max_retries})"
                                 log_message(f"[{chunk_step}, {examples_num}, run {run_num}] ERROR: {error_msg}")
-                                
+
                                 if retry_count >= max_retries:
                                     failed += 1
                                     log_message(f"[{chunk_step}, {examples_num}, run {run_num}] FAILED: Participant {participant_id} failed after {max_retries} attempts")
-                                
+
                             except requests.RequestException as e:
                                 error_msg = f"API request failed for participant {participant_id}: {str(e)} (attempt {retry_count}/{max_retries})"
                                 log_message(f"[{chunk_step}, {examples_num}, run {run_num}] ERROR: {error_msg}")
-                                
+
                                 if retry_count >= max_retries:
                                     failed += 1
                                     log_message(f"[{chunk_step}, {examples_num}, run {run_num}] FAILED: Participant {participant_id} failed after {max_retries} attempts")
-                                
+
                             except Exception as e:
                                 error_msg = f"Unexpected error for participant {participant_id}: {str(e)} (attempt {retry_count}/{max_retries})"
                                 log_message(f"[{chunk_step}, {examples_num}, run {run_num}] ERROR: {error_msg}")
-                                
+
                                 if retry_count >= max_retries:
                                     failed += 1
                                     log_message(f"[{chunk_step}, {examples_num}, run {run_num}] FAILED: Participant {participant_id} failed after {max_retries} attempts")
-                    
+
                     # Summary for this combination
                     log_message(f"\n[{chunk_step}, dim={dim if dim else 'default'}, {examples_num}, run {run_num}] Combination completed. Successful: {successful}, Failed: {failed}")
                     log_message(f"[{chunk_step}, dim={dim if dim else 'default'}, {examples_num}, run {run_num}] Results saved to: {JSONL_FILE}")
-                    
+
                     if failed == 0:
                         overall_stats['completed_combinations'] += 1
                     else:
                         overall_stats['failed_combinations'] += 1
-            
+
 # Final overall summary
 log_message("\n" + "="*80)
 log_message("OVERALL BATCH PROCESSING COMPLETED")

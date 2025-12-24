@@ -6,8 +6,8 @@ class MetaReviewerAgent:
 
     def review(self, interview: str, qualitative: str, quantitative: str) -> str:
         prompt = f'''You are an AI psychiatrist assistant specializing in depression. Your task is to analyze the interview transcript and related qualitative and quantitative assessments, and then predict the diagnosis label and severity level.
-        
-                Please review a participant's interview transcript, qualitative assessment, and quantitative assessment below.  
+
+                Please review a participant's interview transcript, qualitative assessment, and quantitative assessment below.
 
                 Here is the interview transcript in <transcript> tags:
                 <transcript>

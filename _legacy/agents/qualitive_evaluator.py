@@ -37,25 +37,25 @@ class QualitativeEvaluatorAgent:
 
         # metric prompts
         coherence_prompt = f"""Evaluate the following qualitative assessment output for COHERENCE only. Consider the qualitative assessment (qualitative_assessment) of the transcript (transcript) and compare qualitative_assessment to the provided transcript.
-            
+
             Coherence (1–5): Is the response logically consistent? Mistakes are logically inconsistent statements or contradictions within the assessment.
-            
+
             Score from 1-5 solely based on the following criteria:
-            
+
              - score of 5 : 0 mistakes
              - score of 4 : 1-2 mistakes
              - score of 3 : 3-4 mistakes
              - score of 2 : 5-6 mistakes
              - score of 1 : 7 or more mistakes
-            
+
             Format your response as:
             Explanation: [Your rating, as text]
             Score: [your score, as a number between 1 and 5]
-            
+
             ---
             Here is the transcript:
             {transcript}
-            
+
             Here is the assessment based on the transcript:
             {qualitative_output}
             ---"""
@@ -63,7 +63,7 @@ class QualitativeEvaluatorAgent:
 
         Completeness (1–5): Does the assessment cover all relevant symptoms, severities, duration/frequency? Mistakes are missed PHQ-8 symptoms, or duration/frequency details.
 
-        Score from 1-5 solely based on the following criteria: 
+        Score from 1-5 solely based on the following criteria:
          - score of 5 : 0 mistakes
          - score of 4 : 1-2 mistakes
          - score of 3 : 3-4 mistakes
@@ -74,17 +74,17 @@ class QualitativeEvaluatorAgent:
         Explanation: [Your rating, as text]
         Score: [your score, as a number between 1 and 5]
 
-        Here is the transcript: 
+        Here is the transcript:
         {transcript}
 
-        Here is the assessment based on the transcript: 
+        Here is the assessment based on the transcript:
         {qualitative_output}
         ---"""
         specificity_prompt = f"""Evaluate the following qualitative assessment output for SPECIFICITY only. Consider the qualitative assessment (qualitative_assessment) of the transcript (transcript) and compare qualitative_assessment to the provided transcript.
 
         Specificity (1–5): Is the assessment specific? Mistakes include using vague/generic statements like 'the patient seems depressed'.
 
-        Score from 1-5 solely based on the following criteria: 
+        Score from 1-5 solely based on the following criteria:
          - score of 5 : 0 mistakes
          - score of 4 : 1-2 mistakes
          - score of 3 : 3-4 mistakes
@@ -96,18 +96,18 @@ class QualitativeEvaluatorAgent:
         Score: [your score, as a number between 1 and 5]
 
         ---
-        Here is the transcript: 
+        Here is the transcript:
         {transcript}
 
-        Here is the assessment based on the transcript: 
+        Here is the assessment based on the transcript:
         {qualitative_output}
         ---"""
 
         accuracy_prompt = f"""Evaluate the following qualitative assessment output for ACCURACY only. Consider the qualitative assessment (qualitative_assessment) of the transcript (transcript) and compare qualitative_assessment to the provided transcript.
 
-        Accuracy (1–5): Are the signs/symptoms aligned with DSM-5 or PHQ-8? Mistakes are incorrect symptoms or incorrect duration/frequecy. 
+        Accuracy (1–5): Are the signs/symptoms aligned with DSM-5 or PHQ-8? Mistakes are incorrect symptoms or incorrect duration/frequecy.
 
-        Score from 1-5 solely based on the following criteria: 
+        Score from 1-5 solely based on the following criteria:
          - score of 5 : 0 mistakes
          - score of 4 : 1-2 mistakes
          - score of 3 : 3-4 mistakes
@@ -119,10 +119,10 @@ class QualitativeEvaluatorAgent:
         Score: [your score, as a number between 1 and 5]
 
         ---
-        Here is the transcript: 
+        Here is the transcript:
         {transcript}
 
-        Here is the assessment based on the transcript: 
+        Here is the assessment based on the transcript:
         {qualitative_output}
         ---"""
 
