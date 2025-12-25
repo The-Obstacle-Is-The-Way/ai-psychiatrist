@@ -7,44 +7,48 @@ few-shot PHQ-8 assessment. It uses ONLY training data to avoid data leakage.
 Output Format (NPZ + JSON sidecar):
     - {output_path}.npz: Embeddings as numpy arrays (key: "emb_{pid}")
     - {output_path}.json: Text chunks (key: str(pid) -> list[str])
-
-This format replaces pickle for security (no arbitrary code execution).
+    - {output_path}.meta.json: Provenance metadata
 
 Usage:
-    # Generate embeddings (requires Ollama running)
+    # Generate embeddings (backend from env)
     python scripts/generate_embeddings.py
 
-    # Dry run to check configuration
-    python scripts/generate_embeddings.py --dry-run
-
-    # Use specific Ollama host
-    OLLAMA_HOST=your-server python scripts/generate_embeddings.py
+    # Override backend
+    python scripts/generate_embeddings.py --backend huggingface
 
 Paper Reference:
     - Section 2.4.2: Embedding-based few-shot prompting
     - Appendix D: Optimal hyperparameters (chunk_size=8, step_size=2, dim=4096)
-
-Spec Reference: docs/specs/08_EMBEDDING_SERVICE.md
 """
 
 from __future__ import annotations
 
 import argparse
 import asyncio
+import hashlib
 import json
 import sys
+from datetime import UTC, datetime
 from pathlib import Path
-from typing import Any
+from typing import TYPE_CHECKING, Any
 
 import numpy as np
 
 # Add src to path for imports
 sys.path.insert(0, str(Path(__file__).parent.parent / "src"))
 
-from ai_psychiatrist.config import DataSettings, LoggingSettings, get_settings
-from ai_psychiatrist.infrastructure.llm.ollama import OllamaClient
+from ai_psychiatrist.config import (
+    DataSettings,
+    EmbeddingBackend,
+    LoggingSettings,
+    get_settings,
+)
+from ai_psychiatrist.infrastructure.llm.factory import create_embedding_client
 from ai_psychiatrist.infrastructure.logging import get_logger, setup_logging
 from ai_psychiatrist.services.transcript import TranscriptService
+
+if TYPE_CHECKING:
+    from ai_psychiatrist.infrastructure.llm.protocols import EmbeddingClient
 
 logger = get_logger(__name__)
 
@@ -95,7 +99,7 @@ def create_sliding_chunks(
 
 
 async def generate_embedding(
-    client: OllamaClient,
+    client: EmbeddingClient,
     text: str,
     model: str,
     dimension: int,
@@ -103,7 +107,7 @@ async def generate_embedding(
     """Generate L2-normalized embedding for text.
 
     Args:
-        client: Ollama client.
+        client: Embedding client.
         text: Text to embed.
         model: Embedding model name.
         dimension: Target embedding dimension.
@@ -111,12 +115,18 @@ async def generate_embedding(
     Returns:
         L2-normalized embedding vector.
     """
-    embedding = await client.simple_embed(
-        text=text,
-        model=model,
-        dimension=dimension,
+    from ai_psychiatrist.infrastructure.llm.protocols import (  # noqa: PLC0415
+        EmbeddingRequest,
     )
-    return list(embedding)
+
+    response = await client.embed(
+        EmbeddingRequest(
+            text=text,
+            model=model,
+            dimension=dimension,
+        )
+    )
+    return list(response.embedding)
 
 
 def _paper_train_split_path(data_settings: DataSettings) -> Path:
@@ -152,8 +162,26 @@ def get_participant_ids(data_settings: DataSettings, *, split: str) -> list[int]
     return sorted(df["Participant_ID"].astype(int).tolist())
 
 
+def calculate_split_hash(data_settings: DataSettings, split: str) -> str:
+    """Calculate hash of the split CSV for provenance."""
+
+    if split == "avec-train":
+        csv_path = data_settings.train_csv
+    elif split == "paper-train":
+        csv_path = _paper_train_split_path(data_settings)
+    else:
+        return "unknown"
+
+    if not csv_path.exists():
+        return "missing"
+
+    # Hash the file content
+    with csv_path.open("rb") as f:
+        return hashlib.sha256(f.read()).hexdigest()[:12]
+
+
 async def process_participant(
-    client: OllamaClient,
+    client: EmbeddingClient,
     transcript_service: TranscriptService,
     participant_id: int,
     model: str,
@@ -165,7 +193,7 @@ async def process_participant(
     """Generate embeddings for all chunks of a participant's transcript.
 
     Args:
-        client: Ollama client.
+        client: Embedding client.
         transcript_service: Transcript loading service.
         participant_id: Participant to process.
         model: Embedding model name.
@@ -208,16 +236,42 @@ async def process_participant(
     return results
 
 
+def slugify_model(model: str) -> str:
+    """Deterministic model name slugification."""
+    # Qwen/Qwen3-Embedding-8B -> qwen3_8b
+    # qwen3-embedding:8b -> qwen3_8b
+    slug = model.split("/")[-1].split(":")[0].lower()
+    slug = slug.replace("-embedding", "").replace("_embedding", "")
+    slug = slug.replace("-", "_")
+    return slug
+
+
+def get_output_filename(backend: str, model: str, split: str) -> str:
+    """Generate standardized output filename.
+
+    Format: {backend}_{model_slug}_{split}
+    Example: hf_qwen3_8b_paper_train
+    """
+    model_slug = slugify_model(model)
+    split_slug = split.replace("-", "_")
+    return f"{backend}_{model_slug}_{split_slug}"
+
+
 async def main_async(args: argparse.Namespace) -> int:  # noqa: PLR0915
     """Async main entry point."""
     setup_logging(LoggingSettings(level="INFO", format="console"))
 
     # Load settings
     settings = get_settings()
+
+    # Override backend if specified
+    if args.backend:
+        settings.embedding_backend.backend = EmbeddingBackend(args.backend)
+
     data_settings = settings.data
     embedding_settings = settings.embedding
     model_settings = settings.model
-    ollama_settings = settings.ollama
+    backend_settings = settings.embedding_backend
 
     # Paper-optimal hyperparameters
     chunk_size = embedding_settings.chunk_size
@@ -226,15 +280,21 @@ async def main_async(args: argparse.Namespace) -> int:  # noqa: PLR0915
     min_chars = embedding_settings.min_evidence_chars
     model = model_settings.embedding_model
 
-    default_output = data_settings.embeddings_path
-    if args.split == "paper-train":
-        default_output = data_settings.base_dir / "embeddings" / "paper_reference_embeddings.npz"
-    output_path = args.output or default_output
+    # Determine output path
+    if args.output:
+        output_path = args.output
+    else:
+        filename = get_output_filename(
+            backend=backend_settings.backend.value,
+            model=model,
+            split=args.split,
+        )
+        output_path = data_settings.base_dir / "embeddings" / f"{filename}.npz"
 
     print("=" * 60)
     print("REFERENCE EMBEDDINGS GENERATOR")
     print("=" * 60)
-    print(f"  Ollama: {ollama_settings.base_url}")
+    print(f"  Backend: {backend_settings.backend.value}")
     print(f"  Model: {model}")
     print(f"  Dimension: {dimension}")
     print(f"  Chunk size: {chunk_size} lines")
@@ -260,22 +320,10 @@ async def main_async(args: argparse.Namespace) -> int:  # noqa: PLR0915
 
     transcript_service = TranscriptService(data_settings)
 
-    async with OllamaClient(ollama_settings) as client:
-        # Check Ollama connectivity and model availability
-        print("\nChecking Ollama connectivity...")
-        try:
-            models = await client.list_models()
-        except Exception as e:
-            print(f"ERROR: Cannot connect to Ollama: {e}")
-            print(f"Ensure Ollama is running at {ollama_settings.base_url}")
-            return 1
+    # Create client using factory
+    client = create_embedding_client(settings)
 
-        model_names = [m.get("name") for m in models if isinstance(m.get("name"), str)]
-        if model not in model_names:
-            print(f"WARNING: Model '{model}' not found in Ollama.")
-            print(f"Available models: {model_names}")
-            print(f"You may need to: ollama pull {model}")
-
+    try:
         # Process participants
         all_embeddings: dict[int, list[tuple[str, list[float]]]] = {}
         total_chunks = 0
@@ -314,15 +362,33 @@ async def main_async(args: argparse.Namespace) -> int:  # noqa: PLR0915
             json_texts[str(pid)] = texts
             npz_arrays[f"emb_{pid}"] = np.array(embeddings, dtype=np.float32)
 
-        # Save as NPZ + JSON sidecar (replaces pickle for security)
+        # Prepare metadata
+        metadata = {
+            "backend": backend_settings.backend.value,
+            "model": model,
+            "dimension": dimension,
+            "chunk_size": chunk_size,
+            "chunk_step": step_size,
+            "split": args.split,
+            "participant_count": len(all_embeddings),
+            "generated_at": datetime.now(UTC).isoformat(),
+            "generator_script": "scripts/generate_embeddings.py",
+            "split_csv_hash": calculate_split_hash(data_settings, args.split),
+        }
+
+        # Save files
         json_path = output_path.with_suffix(".json")
+        meta_path = output_path.with_suffix(".meta.json")
 
         print(f"\nSaving embeddings to {output_path}...")
         print(f"Saving text chunks to {json_path}...")
+        print(f"Saving metadata to {meta_path}...")
 
         np.savez_compressed(str(output_path), **npz_arrays)
         with json_path.open("w") as f:
             json.dump(json_texts, f, indent=2)
+        with meta_path.open("w") as f:
+            json.dump(metadata, f, indent=2)
 
         # Summary
         npz_size = output_path.stat().st_size / (1024 * 1024)
@@ -337,6 +403,9 @@ async def main_async(args: argparse.Namespace) -> int:  # noqa: PLR0915
         print(f"  JSON file: {json_path} ({json_size:.2f} MB)")
         print("=" * 60)
 
+    finally:
+        await client.close()
+
     return 0
 
 
@@ -347,15 +416,15 @@ def main() -> int:
         formatter_class=argparse.RawDescriptionHelpFormatter,
         epilog="""
 Examples:
-    # Generate embeddings (requires Ollama running)
+    # Generate embeddings (backend from env)
     python scripts/generate_embeddings.py
 
-    # Dry run to check configuration
-    python scripts/generate_embeddings.py --dry-run
+    # Override backend
+    python scripts/generate_embeddings.py --backend huggingface
 
 Environment Variables:
+    EMBEDDING_BACKEND: Backend to use (ollama or huggingface)
     OLLAMA_HOST: Ollama server host (default: 127.0.0.1)
-    OLLAMA_PORT: Ollama server port (default: 11434)
     MODEL_EMBEDDING_MODEL: Model to use (default: qwen3-embedding:8b)
     EMBEDDING_DIMENSION: Vector dimension (default: 4096)
     EMBEDDING_CHUNK_SIZE: Lines per chunk (default: 8)
@@ -373,6 +442,12 @@ Environment Variables:
         type=Path,
         default=None,
         help="Override output NPZ path (JSON sidecar is written alongside)",
+    )
+    parser.add_argument(
+        "--backend",
+        choices=["ollama", "huggingface"],
+        default=None,
+        help="Override embedding backend",
     )
     parser.add_argument(
         "--dry-run",

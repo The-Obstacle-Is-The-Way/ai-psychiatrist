@@ -20,13 +20,20 @@ import numpy as np
 import pandas as pd
 
 from ai_psychiatrist.domain.enums import PHQ8Item
-from ai_psychiatrist.domain.exceptions import EmbeddingDimensionMismatchError
+from ai_psychiatrist.domain.exceptions import (
+    EmbeddingArtifactMismatchError,
+    EmbeddingDimensionMismatchError,
+)
 from ai_psychiatrist.infrastructure.logging import get_logger
 
 if TYPE_CHECKING:
     from pathlib import Path
 
-    from ai_psychiatrist.config import DataSettings, EmbeddingSettings
+    from ai_psychiatrist.config import (
+        DataSettings,
+        EmbeddingBackendSettings,
+        EmbeddingSettings,
+    )
 
 logger = get_logger(__name__)
 
@@ -56,17 +63,26 @@ class ReferenceStore:
         self,
         data_settings: DataSettings,
         embedding_settings: EmbeddingSettings,
+        embedding_backend_settings: EmbeddingBackendSettings | None = None,
     ) -> None:
         """Initialize reference store.
 
         Args:
             data_settings: Data path configuration.
             embedding_settings: Embedding configuration.
+            embedding_backend_settings: Embedding backend configuration (optional).
         """
         self._embeddings_path = data_settings.embeddings_path
         self._train_csv = data_settings.train_csv
         self._dev_csv = data_settings.dev_csv
         self._dimension = embedding_settings.dimension
+        self._embedding_settings = embedding_settings
+
+        if embedding_backend_settings is None:
+            from ai_psychiatrist.config import get_settings  # noqa: PLC0415
+
+            embedding_backend_settings = get_settings().embedding_backend
+        self._embedding_backend = embedding_backend_settings
 
         # Lazy-loaded data
         self._embeddings: dict[int, list[tuple[str, list[float]]]] | None = None
@@ -76,12 +92,46 @@ class ReferenceStore:
         """Get path to the JSON sidecar file containing text chunks."""
         return self._embeddings_path.with_suffix(".json")
 
-    def _load_embeddings(self) -> dict[int, list[tuple[str, list[float]]]]:
+    def _validate_metadata(self, metadata: dict[str, Any]) -> None:
+        """Validate embedding artifact matches current config."""
+        errors: list[str] = []
+
+        # Backend check
+        stored_backend = metadata.get("backend")
+        current_backend = self._embedding_backend.backend.value
+        if stored_backend and stored_backend != current_backend:
+            errors.append(
+                f"backend mismatch: artifact='{stored_backend}', config='{current_backend}'"
+            )
+
+        # Dimension check
+        stored_dim = metadata.get("dimension")
+        current_dim = self._embedding_settings.dimension
+        if stored_dim and stored_dim != current_dim:
+            errors.append(f"dimension mismatch: artifact={stored_dim}, config={current_dim}")
+
+        # Chunk params check
+        stored_chunk = metadata.get("chunk_size")
+        current_chunk = self._embedding_settings.chunk_size
+        if stored_chunk and stored_chunk != current_chunk:
+            errors.append(f"chunk_size mismatch: artifact={stored_chunk}, config={current_chunk}")
+
+        if errors:
+            raise EmbeddingArtifactMismatchError(
+                "Embedding artifact validation failed:\n"
+                + "\n".join(f"  - {e}" for e in errors)
+                + "\nRegenerate embeddings or update config to match."
+            )
+
+    def _load_embeddings(  # noqa: PLR0912, PLR0915
+        self,
+    ) -> dict[int, list[tuple[str, list[float]]]]:
         """Load pre-computed embeddings from NPZ + JSON sidecar files.
 
         Format:
             - NPZ file: Contains arrays keyed by "emb_{pid}" for each participant
             - JSON file: Contains {"pid": ["text1", "text2", ...], ...}
+            - .meta.json: Provenance metadata (optional)
 
         Returns:
             Dictionary mapping participant_id -> list of (text, embedding) pairs.
@@ -107,6 +157,19 @@ class ReferenceStore:
             )
             self._embeddings = {}
             return self._embeddings
+
+        # Load and validate metadata (if present)
+        meta_path = self._embeddings_path.with_suffix(".meta.json")
+        if meta_path.exists():
+            try:
+                with meta_path.open("r", encoding="utf-8") as f:
+                    metadata = json.load(f)
+                self._validate_metadata(metadata)
+            except Exception as e:
+                # If validation fails explicitly, re-raise.
+                if isinstance(e, EmbeddingArtifactMismatchError):
+                    raise
+                logger.warning("Failed to load/validate metadata", error=str(e))
 
         logger.info(
             "Loading reference embeddings",

@@ -126,6 +126,32 @@ class TestModelSettings:
             ModelSettings(temperature=2.1)
 
 
+class TestEmbeddingBackendSettings:
+    """Tests for embedding backend configuration."""
+
+    def test_defaults(self) -> None:
+        """Defaults should be HuggingFace (FP16)."""
+        # Lazy import to avoid import error before implementation
+        from ai_psychiatrist.config import (  # noqa: PLC0415
+            EmbeddingBackend,
+            EmbeddingBackendSettings,
+        )
+
+        settings = EmbeddingBackendSettings()
+        assert settings.backend == EmbeddingBackend.HUGGINGFACE
+
+    def test_env_override(self, monkeypatch: pytest.MonkeyPatch) -> None:
+        """Environment variable can override backend."""
+        from ai_psychiatrist.config import (  # noqa: PLC0415
+            EmbeddingBackend,
+            EmbeddingBackendSettings,
+        )
+
+        monkeypatch.setenv("EMBEDDING_BACKEND", "ollama")
+        settings = EmbeddingBackendSettings()
+        assert settings.backend == EmbeddingBackend.OLLAMA
+
+
 class TestEmbeddingSettings:
     """Tests for embedding configuration."""
 
@@ -136,6 +162,7 @@ class TestEmbeddingSettings:
         assert settings.chunk_size == 8  # Paper Appendix D
         assert settings.chunk_step == 2  # Paper: step_size=2
         assert settings.top_k_references == 2  # Paper Appendix D: N_example=2
+        assert settings.embeddings_file == "paper_reference_embeddings"
 
     def test_chunk_size_validation_min(self) -> None:
         """chunk_size must be >= 2."""
@@ -264,6 +291,7 @@ class TestSettings:
         settings = Settings()
         assert settings.ollama is not None
         assert settings.model is not None
+        assert settings.embedding_backend is not None
         assert settings.embedding is not None
         assert settings.feedback is not None
         assert settings.data is not None

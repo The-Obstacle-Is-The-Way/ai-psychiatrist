@@ -38,6 +38,13 @@ class LLMBackend(str, Enum):
     HUGGINGFACE = "huggingface"
 
 
+class EmbeddingBackend(str, Enum):
+    """Embedding backend selection (separate from LLM backend)."""
+
+    OLLAMA = "ollama"
+    HUGGINGFACE = "huggingface"
+
+
 class BackendSettings(BaseSettings):
     """LLM backend configuration.
 
@@ -73,6 +80,22 @@ class BackendSettings(BaseSettings):
         default=None,
         repr=False,
         description="Optional HuggingFace token (prefer huggingface-cli login)",
+    )
+
+
+class EmbeddingBackendSettings(BaseSettings):
+    """Embedding backend configuration."""
+
+    model_config = SettingsConfigDict(
+        env_prefix="EMBEDDING_",
+        env_file=ENV_FILE,
+        env_file_encoding=ENV_FILE_ENCODING,
+        extra="ignore",
+    )
+
+    backend: EmbeddingBackend = Field(
+        default=EmbeddingBackend.HUGGINGFACE,
+        description="Embedding backend (huggingface for FP16, ollama for speed)",
     )
 
 
@@ -189,6 +212,10 @@ class EmbeddingSettings(BaseSettings):
     min_evidence_chars: int = Field(
         default=8,
         description="Minimum characters for valid evidence",
+    )
+    embeddings_file: str = Field(
+        default="paper_reference_embeddings",
+        description="Reference embeddings basename (no extension)",
     )
 
 
@@ -352,6 +379,7 @@ class Settings(BaseSettings):
 
     # Nested settings groups
     backend: BackendSettings = Field(default_factory=BackendSettings)
+    embedding_backend: EmbeddingBackendSettings = Field(default_factory=EmbeddingBackendSettings)
     ollama: OllamaSettings = Field(default_factory=OllamaSettings)
     model: ModelSettings = Field(default_factory=ModelSettings)
     embedding: EmbeddingSettings = Field(default_factory=EmbeddingSettings)

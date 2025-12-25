@@ -216,3 +216,11 @@ class EmbeddingDimensionMismatchError(EmbeddingError):
         self.expected = expected
         self.actual = actual
         super().__init__(f"Embedding dimension mismatch: expected {expected}, got {actual}")
+
+
+class EmbeddingArtifactMismatchError(EmbeddingError):
+    """Raised when embedding artifact metadata mismatches config.
+
+    Indicates that the loaded embeddings were generated with
+    different settings (backend, model, chunk size) than current config.
+    """
