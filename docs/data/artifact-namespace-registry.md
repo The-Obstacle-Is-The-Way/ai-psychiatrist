@@ -84,8 +84,8 @@ If `{artifact}.meta.json` exists, `ReferenceStore` validates metadata (backend, 
 
 | Script | Input Split | Output | Purpose |
 |--------|-------------|--------|---------|
-| `scripts/generate_embeddings.py --split avec-train` | `train_split_Depression_AVEC2017.csv` | `reference_embeddings.*` | AVEC embeddings |
-| `scripts/generate_embeddings.py --split paper-train` | `paper_split_train.csv` | `paper_reference_embeddings.*` | Paper embeddings |
+| `scripts/generate_embeddings.py --split avec-train` | `train_split_Depression_AVEC2017.csv` | `{backend}_{model_slug}_avec_train.*` | AVEC embeddings |
+| `scripts/generate_embeddings.py --split paper-train` | `paper_split_train.csv` | `{backend}_{model_slug}_paper_train.*` | Paper embeddings |
 
 ### Reproduction
 
