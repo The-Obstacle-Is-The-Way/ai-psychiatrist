@@ -27,7 +27,7 @@ The codebase now uses a separate `EMBEDDING_BACKEND` to enable:
 
 ### Embedding Artifacts
 
-```
+```text
 data/embeddings/
 ├── paper_reference_embeddings.npz   (101 MB)
 └── paper_reference_embeddings.json  (2.9 MB)
@@ -330,11 +330,11 @@ def _validate_metadata(self, metadata: dict) -> None:
 
 ## Migration Path
 
-#### 6.1 Keep Old Embeddings (Backward Compatible)
+### 6.1 Keep Old Embeddings (Backward Compatible)
 
 Existing `paper_reference_embeddings.*` files continue to work. No `.meta.json` = validation skipped.
 
-#### 6.2 Generate New Embeddings with Metadata
+### 6.2 Generate New Embeddings with Metadata
 
 ```bash
 # Generate HuggingFace embeddings (will create .meta.json)
@@ -346,7 +346,7 @@ EMBEDDING_BACKEND=huggingface python scripts/generate_embeddings.py --split pape
 #   data/embeddings/huggingface_qwen3_8b_paper_train.meta.json
 ```
 
-#### 6.3 Update Config to Use New Embeddings
+### 6.3 Update Config to Use New Embeddings
 
 ```bash
 # .env

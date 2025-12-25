@@ -769,14 +769,15 @@ Examples:
     # Quick test with 5 participants
     python scripts/reproduce_results.py --limit 5
 
-        # Zero-shot only (faster)
-        python scripts/reproduce_results.py --zero-shot-only
+    # Zero-shot only (faster)
+    python scripts/reproduce_results.py --zero-shot-only
 
-        # Few-shot only
-        python scripts/reproduce_results.py --few-shot-only
+    # Few-shot only
+    python scripts/reproduce_results.py --few-shot-only
 
-        # Use HuggingFace for embeddings
-        python scripts/reproduce_results.py --embedding-backend huggingface        """,
+    # Use HuggingFace for embeddings
+    python scripts/reproduce_results.py --embedding-backend huggingface
+        """,
     )
     parser.add_argument(
         "--split",
