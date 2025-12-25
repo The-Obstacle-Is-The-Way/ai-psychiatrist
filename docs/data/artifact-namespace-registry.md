@@ -91,8 +91,8 @@ If `{artifact}.meta.json` exists, `ReferenceStore` validates metadata (backend, 
 
 | Script | Eval Split | Embeddings Used | Purpose |
 |--------|------------|-----------------|---------|
-| `scripts/reproduce_results.py --split dev` | AVEC dev (35) | `reference_embeddings.*` | Default evaluation |
-| `scripts/reproduce_results.py --split paper` | Paper test (41) | `paper_reference_embeddings.*` | Paper reproduction |
+| `scripts/reproduce_results.py --split dev` | AVEC dev (35) | Configured reference artifact (`EMBEDDING_EMBEDDINGS_FILE` / `DATA_EMBEDDINGS_PATH`) | Default evaluation |
+| `scripts/reproduce_results.py --split paper` | Paper test (41) | Configured reference artifact (`EMBEDDING_EMBEDDINGS_FILE` / `DATA_EMBEDDINGS_PATH`) | Paper reproduction |
 
 ---
 
