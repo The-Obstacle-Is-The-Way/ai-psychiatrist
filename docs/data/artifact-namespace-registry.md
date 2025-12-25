@@ -12,6 +12,10 @@
 |--------|---------|---------|
 | (none) | AVEC2017 official splits | `reference_embeddings.npz` |
 | `paper_` | Paper-style custom splits | `paper_reference_embeddings.npz` |
+| `{backend}_...` | Embedding generator default output | `huggingface_qwen3_8b_paper_train.npz` |
+
+**Note**: `scripts/generate_embeddings.py` now defaults to `{backend}_{model_slug}_{split}.npz` naming and writes an optional `.meta.json`.
+Legacy filenames like `paper_reference_embeddings.npz` are still supported (use `--output` to regenerate with a specific name).
 
 ---
 
@@ -43,22 +47,28 @@ user-chosen seed; the 58/43/41 counts match the paper.
 
 ## Embeddings Artifacts
 
-| File | Source Split | Participants | Size | Created By |
-|------|-------------|--------------|------|------------|
-| `data/embeddings/reference_embeddings.npz` | AVEC-train | 107 | ~189 MB | `scripts/generate_embeddings.py --split avec-train` |
-| `data/embeddings/reference_embeddings.json` | AVEC-train | 107 | ~5.5 MB | Written alongside by `scripts/generate_embeddings.py` |
-| `data/embeddings/paper_reference_embeddings.npz` | Paper-train | 58 | ~101 MB | `scripts/generate_embeddings.py --split paper-train` |
-| `data/embeddings/paper_reference_embeddings.json` | Paper-train | 58 | ~2.9 MB | Written alongside by `scripts/generate_embeddings.py` |
+### Legacy (Backward Compatible)
+
+| File | Source Split | Participants | Size | Notes |
+|------|-------------|--------------|------|-------|
+| `data/embeddings/paper_reference_embeddings.npz` | Paper-train | 58 | ~101 MB | NPZ embeddings |
+| `data/embeddings/paper_reference_embeddings.json` | Paper-train | 58 | ~2.9 MB | Text chunks sidecar |
+
+### Current Generator Output (Default)
+
+`scripts/generate_embeddings.py` writes:
+- `{output}.npz` (embeddings)
+- `{output}.json` (text chunks)
+- `{output}.meta.json` (provenance metadata)
 
 ### Embedding Auto-Selection Logic
 
-`scripts/reproduce_results.py` automatically selects embeddings based on `--split`:
+Reference embeddings are selected via config, not `--split`:
 
-```python
-embeddings_path = data_settings.embeddings_path
-if split.startswith("paper"):
-    embeddings_path = data_settings.base_dir / "embeddings" / "paper_reference_embeddings.npz"
-```
+1. If `DATA_EMBEDDINGS_PATH` is explicitly set, use it.
+2. Otherwise use `EMBEDDING_EMBEDDINGS_FILE` resolved under `{DATA_BASE_DIR}/embeddings/`.
+
+If `{artifact}.meta.json` exists, `ReferenceStore` validates metadata (backend, dimension, chunking) against config at load time.
 
 ---
 
