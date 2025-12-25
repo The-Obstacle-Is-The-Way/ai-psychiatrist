@@ -23,7 +23,7 @@ cp .env.example .env
 
 ### LLM Backend Settings
 
-Selects which runtime implementation is used for chat and embeddings.
+Selects which runtime implementation is used for chat.
 
 | Variable | Type | Default | Description |
 |----------|------|---------|-------------|
@@ -37,6 +37,7 @@ Selects which runtime implementation is used for chat and embeddings.
 - HuggingFace dependencies are optional; install with `make dev-hf` (or `pip install 'ai-psychiatrist[hf]'`).
 - Canonical model names like `gemma3:27b` are resolved to backend-specific IDs when possible.
 - Official MedGemma weights are HuggingFace-only; there is no official MedGemma in the Ollama library.
+- The `LLM_HF_*` settings are used when HuggingFace is selected for either chat (`LLM_BACKEND=huggingface`) or embeddings (`EMBEDDING_BACKEND=huggingface`).
 
 **Example:**
 ```bash
@@ -44,6 +45,14 @@ LLM_BACKEND=huggingface
 LLM_HF_DEVICE=mps
 MODEL_QUANTITATIVE_MODEL=medgemma:27b
 ```
+
+### Embedding Backend Settings
+
+Selects which runtime implementation is used for embeddings (separate from `LLM_BACKEND`).
+
+| Variable | Type | Default | Description |
+|----------|------|---------|-------------|
+| `EMBEDDING_BACKEND` | string | `huggingface` | Embedding backend: `ollama` (fast, local) or `huggingface` (FP16/BF16 precision) |
 
 ### Ollama Settings
 
@@ -110,7 +119,8 @@ See [Agent Sampling Registry](./agent-sampling-registry.md) for full rationale w
 | `gemma3:27b` | Q4_K_M (4-bit) | FP16/BF16 (16-bit) | Higher quality responses |
 | `qwen3-embedding:8b` | Q4_K_M (4-bit) | FP16/BF16 (16-bit) | More accurate similarity matching |
 
-For best quality, use `LLM_BACKEND=huggingface`. See [Issue #42](https://github.com/The-Obstacle-Is-The-Way/ai-psychiatrist/issues/42) for pending graceful fallback.
+For best chat quality, use `LLM_BACKEND=huggingface`.
+For best embedding quality (similarity), use `EMBEDDING_BACKEND=huggingface` (default).
 
 **Example:**
 ```bash
@@ -139,6 +149,7 @@ Few-shot retrieval configuration.
 | `EMBEDDING_CHUNK_STEP` | int | `2` | Section 2.4.2 |
 | `EMBEDDING_TOP_K_REFERENCES` | int | `2` | Appendix D (optimal) |
 | `EMBEDDING_MIN_EVIDENCE_CHARS` | int | `8` | Minimum text for embedding |
+| `EMBEDDING_EMBEDDINGS_FILE` | string | `paper_reference_embeddings` | Reference embeddings basename (no extension), resolved under `{DATA_BASE_DIR}/embeddings/` |
 
 **Paper optimization results (Appendix D):**
 - Embedding dimension 4096 performed best among the tested dimensions (64, 256, 1024, 4096)
@@ -192,7 +203,7 @@ File path configuration.
 |----------|------|---------|-------------|
 | `DATA_BASE_DIR` | path | `data` | Base data directory |
 | `DATA_TRANSCRIPTS_DIR` | path | `data/transcripts` | Transcript files |
-| `DATA_EMBEDDINGS_PATH` | path | `data/embeddings/paper_reference_embeddings.npz` | Pre-computed embeddings |
+| `DATA_EMBEDDINGS_PATH` | path | `data/embeddings/paper_reference_embeddings.npz` | Full-path override for reference embeddings (takes precedence over `EMBEDDING_EMBEDDINGS_FILE`) |
 | `DATA_TRAIN_CSV` | path | `data/train_split_Depression_AVEC2017.csv` | Training ground truth |
 | `DATA_DEV_CSV` | path | `data/dev_split_Depression_AVEC2017.csv` | Development ground truth |
 
@@ -205,7 +216,8 @@ data/
 │   └── .../
 ├── embeddings/
 │   ├── paper_reference_embeddings.npz
-│   └── paper_reference_embeddings.json
+│   ├── paper_reference_embeddings.json
+│   └── paper_reference_embeddings.meta.json  # optional provenance metadata
 ├── train_split_Depression_AVEC2017.csv
 └── dev_split_Depression_AVEC2017.csv
 ```
@@ -305,7 +317,7 @@ System-wide toggles.
 |----------|------|---------|-------------|
 | `ENABLE_FEW_SHOT` | bool | `true` | Use embedding-based few-shot |
 
-**Note:** `ENABLE_FEW_SHOT=true` requires pre-computed embeddings at `DATA_EMBEDDINGS_PATH`.
+**Note:** `ENABLE_FEW_SHOT=true` requires pre-computed embeddings (resolved from `DATA_EMBEDDINGS_PATH` or `EMBEDDING_EMBEDDINGS_FILE`).
 
 ---
 
@@ -323,48 +335,11 @@ EMBEDDING__TOP_K_REFERENCES=3
 
 ---
 
-## Complete `.env.example`
+## `.env.example`
 
-```bash
-# AI Psychiatrist Configuration (Paper-Optimal)
-# Copy to .env and customize
-
-# ============== Required ==============
-OLLAMA_HOST=127.0.0.1
-OLLAMA_PORT=11434
-
-# ============== LLM Models (Paper Section 2.2) ==============
-# All agents use Gemma 3 27B by default
-MODEL_QUALITATIVE_MODEL=gemma3:27b
-MODEL_JUDGE_MODEL=gemma3:27b
-MODEL_META_REVIEW_MODEL=gemma3:27b
-MODEL_QUANTITATIVE_MODEL=gemma3:27b
-MODEL_EMBEDDING_MODEL=qwen3-embedding:8b
-
-# MedGemma alternative (Appendix F - requires HuggingFace backend):
-# MODEL_QUANTITATIVE_MODEL=medgemma:27b
-# Note: Better MAE (0.505 vs 0.619) but produces more N/A predictions
-
-# ============== Embedding/Few-Shot (Paper Appendix D) ==============
-EMBEDDING_CHUNK_SIZE=8
-EMBEDDING_CHUNK_STEP=2
-EMBEDDING_DIMENSION=4096
-EMBEDDING_TOP_K_REFERENCES=2
-
-# ============== Feedback Loop (Paper Section 2.3.1) ==============
-FEEDBACK_ENABLED=true
-FEEDBACK_MAX_ITERATIONS=10
-FEEDBACK_SCORE_THRESHOLD=3
-
-# ============== Server ==============
-API_HOST=0.0.0.0
-API_PORT=8000
-OLLAMA_TIMEOUT_SECONDS=300
-
-# ============== Logging ==============
-LOG_FORMAT=json
-LOG_LEVEL=INFO
-```
+See the repo-root `.env.example` for an up-to-date template, including:
+- Separate `LLM_BACKEND` (chat) and `EMBEDDING_BACKEND` (embeddings)
+- Reference embeddings selection via `EMBEDDING_EMBEDDINGS_FILE` / `DATA_EMBEDDINGS_PATH`
 
 ---
 

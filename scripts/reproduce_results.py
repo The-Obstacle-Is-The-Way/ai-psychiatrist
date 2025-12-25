@@ -47,7 +47,7 @@ import time
 from dataclasses import dataclass, field
 from datetime import datetime
 from pathlib import Path
-from typing import Any
+from typing import TYPE_CHECKING, Any
 
 import numpy as np
 import pandas as pd
@@ -58,16 +58,22 @@ sys.path.insert(0, str(Path(__file__).parent.parent / "src"))
 from ai_psychiatrist.agents import QuantitativeAssessmentAgent
 from ai_psychiatrist.config import (
     DataSettings,
+    EmbeddingBackend,
     EmbeddingSettings,
     LoggingSettings,
     ModelSettings,
     Settings,
     get_settings,
+    resolve_reference_embeddings_path,
 )
 from ai_psychiatrist.domain.enums import AssessmentMode, PHQ8Item
 from ai_psychiatrist.infrastructure.llm import OllamaClient
+from ai_psychiatrist.infrastructure.llm.factory import create_embedding_client
 from ai_psychiatrist.infrastructure.logging import get_logger, setup_logging
 from ai_psychiatrist.services import EmbeddingService, ReferenceStore, TranscriptService
+
+if TYPE_CHECKING:
+    from ai_psychiatrist.infrastructure.llm.protocols import EmbeddingClient
 
 logger = get_logger(__name__)
 
@@ -532,9 +538,7 @@ def print_run_configuration(*, settings: Settings, split: str) -> None:
     model_settings = settings.model
     ollama_settings = settings.ollama
 
-    embeddings_path = data_settings.embeddings_path
-    if split.startswith("paper"):
-        embeddings_path = data_settings.base_dir / "embeddings" / "paper_reference_embeddings.npz"
+    embeddings_path = resolve_reference_embeddings_path(data_settings, settings.embedding)
 
     print("=" * 60)
     print("PAPER REPRODUCTION: Quantitative PHQ-8 Evaluation (Item-level MAE)")
@@ -574,14 +578,17 @@ async def check_ollama_connectivity(ollama_client: OllamaClient) -> bool:
     return True
 
 
-def get_effective_embeddings_path(data_settings: DataSettings, split: str) -> Path:
+def get_effective_embeddings_path(
+    data_settings: DataSettings,
+    embedding_settings: EmbeddingSettings,
+    _split: str,
+) -> Path:
     """Get the effective embeddings path for a given split.
 
-    Paper splits use paper_reference_embeddings.npz; others use config default.
+    Uses `DATA_EMBEDDINGS_PATH` if explicitly set; otherwise resolves
+    `EMBEDDING_EMBEDDINGS_FILE` under `{DATA_BASE_DIR}/embeddings/`.
     """
-    if split.startswith("paper"):
-        return data_settings.base_dir / "embeddings" / "paper_reference_embeddings.npz"
-    return data_settings.embeddings_path
+    return resolve_reference_embeddings_path(data_settings, embedding_settings)
 
 
 def init_embedding_service(
@@ -590,20 +597,13 @@ def init_embedding_service(
     data_settings: DataSettings,
     embedding_settings: EmbeddingSettings,
     model_settings: ModelSettings,
-    ollama_client: OllamaClient,
+    embedding_client: EmbeddingClient,
 ) -> EmbeddingService | None:
     """Initialize embedding service for few-shot mode (or return None)."""
     if args.zero_shot_only:
         return None
 
-    npz_path = get_effective_embeddings_path(data_settings, args.split)
-    effective_data_settings = DataSettings(
-        base_dir=data_settings.base_dir,
-        transcripts_dir=data_settings.transcripts_dir,
-        embeddings_path=npz_path,
-        train_csv=data_settings.train_csv,
-        dev_csv=data_settings.dev_csv,
-    )
+    npz_path = get_effective_embeddings_path(data_settings, embedding_settings, args.split)
 
     json_path = npz_path.with_suffix(".json")
     if not npz_path.exists() or not json_path.exists():
@@ -612,9 +612,9 @@ def init_embedding_service(
             f"Missing: {npz_path} and/or {json_path}. "
             "Run: uv run python scripts/generate_embeddings.py"
         )
-    reference_store = ReferenceStore(effective_data_settings, embedding_settings)
+    reference_store = ReferenceStore(data_settings, embedding_settings)
     return EmbeddingService(
-        llm_client=ollama_client,
+        llm_client=embedding_client,
         reference_store=reference_store,
         settings=embedding_settings,
         model_settings=model_settings,
@@ -667,12 +667,19 @@ async def main_async(args: argparse.Namespace) -> int:
     setup_logging(LoggingSettings(level="INFO", format="console"))
 
     settings = get_settings()
+
+    # Override embedding backend if specified
+    if args.embedding_backend:
+        settings.embedding_backend.backend = EmbeddingBackend(args.embedding_backend)
+
     data_settings = settings.data
     model_settings = settings.model
     ollama_settings = settings.ollama
     embedding_settings = settings.embedding
+    embedding_backend_settings = settings.embedding_backend
 
     print_run_configuration(settings=settings, split=args.split)
+    print(f"  Embedding Backend: {embedding_backend_settings.backend.value}")
 
     if args.dry_run:
         print("\n[DRY RUN] Would run evaluation with above settings.")
@@ -686,51 +693,65 @@ async def main_async(args: argparse.Namespace) -> int:
         return 1
 
     # Initialize services
+    # Chat client (Ollama)
     async with OllamaClient(ollama_settings) as ollama_client:
         if not await check_ollama_connectivity(ollama_client):
             return 1
 
         transcript_service = TranscriptService(data_settings)
+
+        # Embedding client (Factory)
+        embedding_client = create_embedding_client(settings)
         try:
-            embedding_service = init_embedding_service(
+            try:
+                embedding_service = init_embedding_service(
+                    args=args,
+                    data_settings=data_settings,
+                    embedding_settings=embedding_settings,
+                    model_settings=model_settings,
+                    embedding_client=embedding_client,
+                )
+            except FileNotFoundError as e:
+                print(f"\nERROR: {e}")
+                return 1
+
+            experiments = await run_requested_experiments(
                 args=args,
-                data_settings=data_settings,
-                embedding_settings=embedding_settings,
-                model_settings=model_settings,
+                ground_truth=ground_truth,
                 ollama_client=ollama_client,
+                transcript_service=transcript_service,
+                embedding_service=embedding_service,
+                model_name=model_settings.quantitative_model,
             )
-        except FileNotFoundError as e:
-            print(f"\nERROR: {e}")
-            return 1
-        experiments = await run_requested_experiments(
-            args=args,
-            ground_truth=ground_truth,
-            ollama_client=ollama_client,
-            transcript_service=transcript_service,
-            embedding_service=embedding_service,
-            model_name=model_settings.quantitative_model,
-        )
 
-        # Print summary and save with provenance (BUG-023 fix)
-        print_summary(experiments)
-        output_dir = data_settings.base_dir / "outputs"
+            # Print summary and save with provenance (BUG-023 fix)
+            print_summary(experiments)
+            output_dir = data_settings.base_dir / "outputs"
 
-        # Build provenance metadata for reproducibility verification
-        embeddings_path = get_effective_embeddings_path(data_settings, args.split)
-        provenance = {
-            "split": args.split,
-            "embeddings_path": str(embeddings_path),
-            "quantitative_model": model_settings.quantitative_model,
-            "embedding_model": model_settings.embedding_model,
-            "embedding_dimension": embedding_settings.dimension,
-            "embedding_chunk_size": embedding_settings.chunk_size,
-            "embedding_chunk_step": embedding_settings.chunk_step,
-            "embedding_top_k": embedding_settings.top_k_references,
-            "enable_keyword_backfill": settings.quantitative.enable_keyword_backfill,
-            "participants_evaluated": list(ground_truth.keys()),
-        }
+            # Build provenance metadata for reproducibility verification
+            embeddings_path = get_effective_embeddings_path(
+                data_settings,
+                embedding_settings,
+                args.split,
+            )
+            provenance = {
+                "split": args.split,
+                "embeddings_path": str(embeddings_path),
+                "embedding_backend": embedding_backend_settings.backend.value,
+                "quantitative_model": model_settings.quantitative_model,
+                "embedding_model": model_settings.embedding_model,
+                "embedding_dimension": embedding_settings.dimension,
+                "embedding_chunk_size": embedding_settings.chunk_size,
+                "embedding_chunk_step": embedding_settings.chunk_step,
+                "embedding_top_k": embedding_settings.top_k_references,
+                "enable_keyword_backfill": settings.quantitative.enable_keyword_backfill,
+                "participants_evaluated": list(ground_truth.keys()),
+            }
 
-        save_results(experiments, output_dir, provenance=provenance)
+            save_results(experiments, output_dir, provenance=provenance)
+
+        finally:
+            await embedding_client.close()
 
     return 0
 
@@ -753,6 +774,9 @@ Examples:
 
     # Few-shot only
     python scripts/reproduce_results.py --few-shot-only
+
+    # Use HuggingFace for embeddings
+    python scripts/reproduce_results.py --embedding-backend huggingface
         """,
     )
     parser.add_argument(
@@ -784,6 +808,12 @@ Examples:
         type=int,
         default=None,
         help="Limit evaluation to N participants (for testing)",
+    )
+    parser.add_argument(
+        "--embedding-backend",
+        choices=["ollama", "huggingface"],
+        default=None,
+        help="Override embedding backend",
     )
     args = parser.parse_args()
 

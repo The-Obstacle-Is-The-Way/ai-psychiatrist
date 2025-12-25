@@ -77,11 +77,17 @@ packages = ["src/ai_psychiatrist"]
 "src/ai_psychiatrist/py.typed" = "ai_psychiatrist/py.typed"
 "src/ai_psychiatrist/resources/phq8_keywords.yaml" = "ai_psychiatrist/resources/phq8_keywords.yaml"
 
+# ============== UV ==============
+[tool.uv]
+required-version = ">=0.9.18"  # Enforces local/CI parity
+
 # ============== RUFF ==============
 [tool.ruff]
 target-version = "py311"
 line-length = 100
 src = ["src", "tests"]
+# Ensure excludes apply even when pre-commit passes files explicitly
+force-exclude = true
 # Exclude legacy code archived per Spec 12.5 (BUG-013, BUG-015 resolved)
 exclude = [
     "_legacy",      # Archived legacy code (agents, scripts, notebooks)

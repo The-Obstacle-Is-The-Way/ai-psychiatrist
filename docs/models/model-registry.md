@@ -7,11 +7,16 @@ Purpose: Paper-aligned, reproducible model configuration for this repo.
 
 ## Quick Reference: Which Setup Should I Use?
 
-| Setup | Backend | Quality | Hardware Needed | Use Case |
-|-------|---------|---------|-----------------|----------|
-| **Paper Parity** | Ollama | Good | Any Mac/Linux | Reproduce paper results |
-| **High Quality** | HuggingFace | Best | 32GB+ RAM, CUDA/MPS | Best possible MAE |
-| **Development** | Ollama | Fast | Any | Quick iteration |
+Chat and embeddings can be configured separately via:
+- `LLM_BACKEND` (chat models for agents)
+- `EMBEDDING_BACKEND` (embeddings only)
+
+| Setup | Chat Backend (`LLM_BACKEND`) | Embedding Backend (`EMBEDDING_BACKEND`) | Quality | Hardware Needed | Use Case |
+|-------|------------------------------|----------------------------------------|---------|-----------------|----------|
+| **Default (Recommended)** | Ollama | HuggingFace | Better similarity | 16GB+ RAM + HF deps | Paper-parity chat + FP16 embeddings |
+| **Paper Parity (Pure Ollama)** | Ollama | Ollama | Good | Any Mac/Linux | Reproduce paper results without HF deps |
+| **High Quality (Full HF)** | HuggingFace | HuggingFace | Best | 32GB+ RAM, CUDA/MPS | Best possible MAE |
+| **Development** | Ollama | Ollama | Fast | Any | Quick iteration |
 
 **Pending**: Graceful fallback from HuggingFace → Ollama ([Issue #42](https://github.com/The-Obstacle-Is-The-Way/ai-psychiatrist/issues/42))
 
@@ -136,15 +141,25 @@ embeddings = model.encode(["Your text here"])
 
 ## Configuration (.env)
 
-### Paper-optimal (Default)
+### Default (Recommended)
 
 ```bash
+LLM_BACKEND=ollama
+EMBEDDING_BACKEND=huggingface
+
 MODEL_QUALITATIVE_MODEL=gemma3:27b
 MODEL_JUDGE_MODEL=gemma3:27b
 MODEL_META_REVIEW_MODEL=gemma3:27b
 MODEL_QUANTITATIVE_MODEL=gemma3:27b
 MODEL_EMBEDDING_MODEL=qwen3-embedding:8b
 EMBEDDING_DIMENSION=4096
+```
+
+### Paper Parity (Pure Ollama)
+
+```bash
+LLM_BACKEND=ollama
+EMBEDDING_BACKEND=ollama
 ```
 
 ### With MedGemma (Appendix F - HuggingFace backend required)
@@ -173,18 +188,15 @@ For users with capable hardware (32GB+ RAM, Apple Silicon or NVIDIA GPU), use Hu
 ### High-Quality Configuration
 
 ```bash
-# .env for high-quality setup
-LLM_BACKEND=huggingface
-
-# Chat models (all use HuggingFace)
-MODEL_QUALITATIVE_MODEL=gemma3:27b      # → google/gemma-3-27b-it
-MODEL_JUDGE_MODEL=gemma3:27b            # → google/gemma-3-27b-it
-MODEL_META_REVIEW_MODEL=gemma3:27b      # → google/gemma-3-27b-it
-MODEL_QUANTITATIVE_MODEL=medgemma:27b   # → google/medgemma-27b-text-it (18% better MAE)
-
-# Embeddings (FP16 precision)
+# Option A: FP16 embeddings (keep chat on Ollama)
+LLM_BACKEND=ollama
+EMBEDDING_BACKEND=huggingface
 MODEL_EMBEDDING_MODEL=qwen3-embedding:8b  # → Qwen/Qwen3-Embedding-8B
-EMBEDDING_DIMENSION=4096
+
+# Option B: Full HuggingFace (chat + embeddings)
+# LLM_BACKEND=huggingface
+# EMBEDDING_BACKEND=huggingface
+# MODEL_QUANTITATIVE_MODEL=medgemma:27b    # → google/medgemma-27b-text-it (18% better MAE)
 ```
 
 ### Requirements

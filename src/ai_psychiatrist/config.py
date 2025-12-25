@@ -38,10 +38,17 @@ class LLMBackend(str, Enum):
     HUGGINGFACE = "huggingface"
 
 
+class EmbeddingBackend(str, Enum):
+    """Embedding backend selection (separate from LLM backend)."""
+
+    OLLAMA = "ollama"
+    HUGGINGFACE = "huggingface"
+
+
 class BackendSettings(BaseSettings):
     """LLM backend configuration.
 
-    This selects which runtime implementation to use for chat and embedding.
+    This selects which runtime implementation to use for chat.
     """
 
     model_config = SettingsConfigDict(
@@ -73,6 +80,22 @@ class BackendSettings(BaseSettings):
         default=None,
         repr=False,
         description="Optional HuggingFace token (prefer huggingface-cli login)",
+    )
+
+
+class EmbeddingBackendSettings(BaseSettings):
+    """Embedding backend configuration."""
+
+    model_config = SettingsConfigDict(
+        env_prefix="EMBEDDING_",
+        env_file=ENV_FILE,
+        env_file_encoding=ENV_FILE_ENCODING,
+        extra="ignore",
+    )
+
+    backend: EmbeddingBackend = Field(
+        default=EmbeddingBackend.HUGGINGFACE,
+        description="Embedding backend (huggingface for FP16, ollama for speed)",
     )
 
 
@@ -116,7 +139,7 @@ class ModelSettings(BaseSettings):
     for paper-parity defaults; override `quantitative_model` to evaluate Appendix F.
 
     Embeddings (Section 2.2): Qwen 3 8B Embedding. The paper does not specify
-    quantization; the default tag below uses Q8_0 to match the research scripts.
+    quantization.
     """
 
     model_config = SettingsConfigDict(
@@ -189,6 +212,10 @@ class EmbeddingSettings(BaseSettings):
     min_evidence_chars: int = Field(
         default=8,
         description="Minimum characters for valid evidence",
+    )
+    embeddings_file: str = Field(
+        default="paper_reference_embeddings",
+        description="Reference embeddings basename (no extension)",
     )
 
 
@@ -298,6 +325,35 @@ class DataSettings(BaseSettings):
         return v
 
 
+def resolve_reference_embeddings_path(
+    data_settings: DataSettings,
+    embedding_settings: EmbeddingSettings,
+) -> Path:
+    """Resolve the reference embeddings NPZ path used for few-shot retrieval.
+
+    Precedence:
+    1) `DATA_EMBEDDINGS_PATH` if explicitly set.
+    2) `EMBEDDING_EMBEDDINGS_FILE` resolved under `{DATA_BASE_DIR}/embeddings/`.
+    """
+    # Explicit full-path override wins (including env-provided values).
+    if "embeddings_path" in data_settings.model_fields_set:
+        return data_settings.embeddings_path
+
+    candidate = Path(embedding_settings.embeddings_file)
+
+    # Absolute paths are used as-is (ensure .npz suffix).
+    if candidate.is_absolute():
+        return candidate if candidate.suffix == ".npz" else candidate.with_suffix(".npz")
+
+    # Relative paths with directories are resolved under the data base dir.
+    if candidate.parent != Path():
+        resolved = data_settings.base_dir / candidate
+        return resolved if resolved.suffix == ".npz" else resolved.with_suffix(".npz")
+
+    # Basename-only: resolve under the embeddings directory.
+    return (data_settings.base_dir / "embeddings" / candidate.name).with_suffix(".npz")
+
+
 class LoggingSettings(BaseSettings):
     """Logging configuration."""
 
@@ -352,6 +408,7 @@ class Settings(BaseSettings):
 
     # Nested settings groups
     backend: BackendSettings = Field(default_factory=BackendSettings)
+    embedding_backend: EmbeddingBackendSettings = Field(default_factory=EmbeddingBackendSettings)
     ollama: OllamaSettings = Field(default_factory=OllamaSettings)
     model: ModelSettings = Field(default_factory=ModelSettings)
     embedding: EmbeddingSettings = Field(default_factory=EmbeddingSettings)
@@ -369,9 +426,10 @@ class Settings(BaseSettings):
     @model_validator(mode="after")
     def validate_consistency(self) -> Settings:
         """Validate cross-field consistency."""
-        if self.enable_few_shot and not self.data.embeddings_path.exists():
+        embeddings_path = resolve_reference_embeddings_path(self.data, self.embedding)
+        if self.enable_few_shot and not embeddings_path.exists():
             warnings.warn(
-                f"Few-shot enabled but embeddings not found: {self.data.embeddings_path}",
+                f"Few-shot enabled but embeddings not found: {embeddings_path}",
                 stacklevel=2,
             )
         return self

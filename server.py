@@ -27,6 +27,7 @@ from ai_psychiatrist.config import ModelSettings, Settings, get_settings
 from ai_psychiatrist.domain.entities import Transcript
 from ai_psychiatrist.domain.enums import AssessmentMode, EvaluationMetric
 from ai_psychiatrist.infrastructure.llm import create_llm_client
+from ai_psychiatrist.infrastructure.llm.factory import create_embedding_client
 from ai_psychiatrist.infrastructure.llm.responses import SimpleChatClient
 from ai_psychiatrist.services import EmbeddingService, ReferenceStore, TranscriptService
 from ai_psychiatrist.services.feedback_loop import FeedbackLoopService
@@ -40,18 +41,23 @@ AD_HOC_PARTICIPANT_ID = 999_999
 async def lifespan(app: FastAPI) -> AsyncIterator[None]:
     """Manage application lifecycle resources."""
     settings = get_settings()
+
+    # Create separate clients for chat (agents) and embeddings
     llm_client = create_llm_client(settings)
+    embedding_client = create_embedding_client(settings)
+
     chat_client = cast("SimpleChatClient", llm_client)
     try:
         app.state.settings = settings
         app.state.model_settings = settings.model
         app.state.llm_client = llm_client
+        app.state.embedding_client = embedding_client
 
         app.state.transcript_service = TranscriptService(settings.data)
 
         reference_store = ReferenceStore(settings.data, settings.embedding)
         app.state.embedding_service = EmbeddingService(
-            llm_client=llm_client,
+            llm_client=embedding_client,
             reference_store=reference_store,
             settings=settings.embedding,
             model_settings=app.state.model_settings,
@@ -73,9 +79,17 @@ async def lifespan(app: FastAPI) -> AsyncIterator[None]:
 
         yield
     finally:
-        close_fn = getattr(llm_client, "close", None)
-        if callable(close_fn):
-            maybe_awaitable = close_fn()
+        # Close chat client
+        close_chat = getattr(llm_client, "close", None)
+        if callable(close_chat):
+            maybe_awaitable = close_chat()
+            if inspect.isawaitable(maybe_awaitable):
+                await cast("Awaitable[object]", maybe_awaitable)
+
+        # Close embedding client
+        close_embed = getattr(embedding_client, "close", None)
+        if callable(close_embed):
+            maybe_awaitable = close_embed()
             if inspect.isawaitable(maybe_awaitable):
                 await cast("Awaitable[object]", maybe_awaitable)
 

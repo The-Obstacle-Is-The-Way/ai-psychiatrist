@@ -23,7 +23,9 @@ The API is built with FastAPI and provides endpoints for depression assessment f
 
 #### `GET /health`
 
-Check API and backend availability.
+Check API and chat backend availability (`LLM_BACKEND`).
+
+**Note**: This endpoint does not currently check embedding backend health (`EMBEDDING_BACKEND`).
 
 **Response:**
 ```json
@@ -34,7 +36,7 @@ Check API and backend availability.
 }
 ```
 
-If using the HuggingFace backend:
+If `LLM_BACKEND=huggingface`:
 ```json
 {
   "status": "healthy",

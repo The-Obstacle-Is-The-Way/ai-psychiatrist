@@ -10,7 +10,7 @@ import numpy as np
 import pandas as pd
 import pytest
 
-from ai_psychiatrist.config import DataSettings
+from ai_psychiatrist.config import DataSettings, EmbeddingSettings
 from ai_psychiatrist.domain.enums import PHQ8Item
 from ai_psychiatrist.domain.exceptions import EmbeddingDimensionMismatchError
 from ai_psychiatrist.domain.value_objects import SimilarityMatch, TranscriptChunk
@@ -474,41 +474,59 @@ class TestReferenceStore:
         p999 = store.get_participant_embeddings(999)
         assert len(p999) == 0
 
-    def test_get_score_missing_participant(self) -> None:
+    def test_get_score_missing_participant(self, tmp_path: Path) -> None:
         """Should return None for missing participant."""
-        mock_data = MagicMock()
-        mock_data.embeddings_path.exists.return_value = False
-        mock_data.train_csv.exists.return_value = False
-        mock_data.dev_csv.exists.return_value = False
+        transcripts_dir = tmp_path / "transcripts"
+        transcripts_dir.mkdir(parents=True, exist_ok=True)
 
-        mock_embed = MagicMock()
-        mock_embed.dimension = 256
+        data_settings = DataSettings(
+            base_dir=tmp_path,
+            transcripts_dir=transcripts_dir,
+            embeddings_path=tmp_path / "embeddings.npz",
+            train_csv=tmp_path / "train.csv",
+            dev_csv=tmp_path / "dev.csv",
+        )
+        embedding_settings = EmbeddingSettings(dimension=256)
 
-        store = ReferenceStore(mock_data, mock_embed)
+        store = ReferenceStore(data_settings, embedding_settings)
 
         score = store.get_score(99999, PHQ8Item.NO_INTEREST)
         assert score is None
 
-    def test_list_participants_empty(self) -> None:
+    def test_list_participants_empty(self, tmp_path: Path) -> None:
         """Should return empty list when no embeddings."""
-        mock_data = MagicMock()
-        mock_data.embeddings_path.exists.return_value = False
+        transcripts_dir = tmp_path / "transcripts"
+        transcripts_dir.mkdir(parents=True, exist_ok=True)
 
-        mock_embed = MagicMock()
-        mock_embed.dimension = 256
+        data_settings = DataSettings(
+            base_dir=tmp_path,
+            transcripts_dir=transcripts_dir,
+            embeddings_path=tmp_path / "embeddings.npz",
+            train_csv=tmp_path / "train.csv",
+            dev_csv=tmp_path / "dev.csv",
+        )
+        embedding_settings = EmbeddingSettings(dimension=256)
 
-        store = ReferenceStore(mock_data, mock_embed)
+        store = ReferenceStore(data_settings, embedding_settings)
 
         participants = store.list_participants()
         assert participants == []
 
-    def test_is_loaded_initially_false(self) -> None:
+    def test_is_loaded_initially_false(self, tmp_path: Path) -> None:
         """Should be False before loading."""
-        mock_data = MagicMock()
-        mock_embed = MagicMock()
-        mock_embed.dimension = 256
+        transcripts_dir = tmp_path / "transcripts"
+        transcripts_dir.mkdir(parents=True, exist_ok=True)
 
-        store = ReferenceStore(mock_data, mock_embed)
+        data_settings = DataSettings(
+            base_dir=tmp_path,
+            transcripts_dir=transcripts_dir,
+            embeddings_path=tmp_path / "embeddings.npz",
+            train_csv=tmp_path / "train.csv",
+            dev_csv=tmp_path / "dev.csv",
+        )
+        embedding_settings = EmbeddingSettings(dimension=256)
+
+        store = ReferenceStore(data_settings, embedding_settings)
 
         assert store.is_loaded is False
 
