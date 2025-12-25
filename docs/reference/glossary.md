@@ -152,7 +152,7 @@ Immutable domain object without identity. Equal if all attributes equal. Example
 
 ### Ollama
 
-Open-source platform for running LLMs locally. Used as the LLM backend for AI Psychiatrist.
+Open-source platform for running LLMs locally. Default chat backend (`LLM_BACKEND=ollama`) and optional embedding backend (`EMBEDDING_BACKEND=ollama`).
 
 ### Model Tags
 
