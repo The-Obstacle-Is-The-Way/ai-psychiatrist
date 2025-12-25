@@ -46,7 +46,7 @@ git clone https://github.com/The-Obstacle-Is-The-Way/ai-psychiatrist.git
 cd ai-psychiatrist
 
 # Install dependencies (uses uv)
-make dev
+make dev  # or: make dev-hf (to enable HuggingFace backends)
 
 # Pull required models
 ollama pull gemma3:27b
@@ -58,6 +58,12 @@ cp .env.example .env
 # Start server
 make serve
 ```
+
+> **Note (Embeddings backend)**: Chat and embeddings can use different backends:
+> - `LLM_BACKEND` controls chat for agents (default: `ollama`)
+> - `EMBEDDING_BACKEND` controls embeddings (default: `huggingface`)
+>
+> If you installed `make dev` (no HF deps), set `EMBEDDING_BACKEND=ollama` in `.env` for a pure-Ollama setup.
 
 > **Optional (Appendix F)**: The paper evaluates MedGemma 27B as an alternative model for the
 > quantitative agent. There is no official MedGemma model in the Ollama library; use the HuggingFace
@@ -159,10 +165,18 @@ MODEL_QUALITATIVE_MODEL=gemma3:27b
 MODEL_QUANTITATIVE_MODEL=gemma3:27b
 MODEL_EMBEDDING_MODEL=qwen3-embedding:8b
 
+# Backends (chat vs embeddings)
+LLM_BACKEND=ollama
+EMBEDDING_BACKEND=huggingface
+
 # Few-shot retrieval (Appendix D optimal)
 EMBEDDING_DIMENSION=4096
 EMBEDDING_CHUNK_SIZE=8
 EMBEDDING_TOP_K_REFERENCES=2
+
+# Reference embeddings selection (NPZ + JSON sidecar)
+EMBEDDING_EMBEDDINGS_FILE=paper_reference_embeddings
+# DATA_EMBEDDINGS_PATH=/absolute/or/relative/path/to/artifact.npz  # full-path override
 
 # Feedback loop (Section 2.3.1)
 FEEDBACK_MAX_ITERATIONS=10
