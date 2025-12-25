@@ -28,7 +28,7 @@ jobs:
       - name: Install uv
         uses: astral-sh/setup-uv@v7
         with:
-          version: "0.7.8"  # Pin for reproducibility
+          version: "0.9.18"  # Pin for reproducibility (matches required-version)
           python-version: "3.11"
           enable-cache: true
           cache-dependency-glob: "uv.lock"
@@ -58,7 +58,7 @@ jobs:
       - name: Install uv
         uses: astral-sh/setup-uv@v7
         with:
-          version: "0.7.8"  # Pin for reproducibility
+          version: "0.9.18"  # Pin for reproducibility (matches required-version)
           python-version: ${{ matrix.python-version }}
           enable-cache: true
           cache-dependency-glob: "uv.lock"
