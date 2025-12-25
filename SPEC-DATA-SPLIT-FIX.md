@@ -1,6 +1,6 @@
 # SPEC: Data Split Correction and Artifact Regeneration
 
-> **Status**: APPROVED FOR IMPLEMENTATION
+> **Status**: REVIEWED AND APPROVED
 > **Branch**: `fix/paper-data-splits`
 > **Priority**: HIGH - Blocks paper reproduction parity
 > **Related**: GH Issue #45, `CRITICAL_DATA_SPLIT_MISMATCH.md`
@@ -10,9 +10,13 @@
 
 ## Executive Summary
 
-Our `data/paper_splits/` files and `data/embeddings/paper_reference_embeddings.*` were generated algorithmically with seed=42, producing participant IDs that **do not match** the paper's actual splits. The ground truth was reverse-engineered from the paper authors' output files and is documented in `docs/data/DATA_SPLIT_REGISTRY.md`.
+Our `data/paper_splits/` files were generated algorithmically with seed=42, producing participant IDs that **do not match** the paper's actual splits. Our legacy paper embeddings artifact (`data/embeddings/paper_reference_embeddings.*`) was generated from `data/paper_splits/paper_split_train.csv`, so it inherits the same wrong membership.
+
+The ground truth was reverse-engineered from the paper authors' output files and is documented in `docs/data/DATA_SPLIT_REGISTRY.md`.
 
 **This spec defines the complete fix**: delete wrong artifacts, update scripts to use ground truth IDs, and regenerate all dependent artifacts.
+
+**Important repo constraint**: `data/*` is gitignored due to DAIC-WOZ licensing. This work must **not** commit dataset-derived CSVs or embeddings; it commits only code + docs changes and regenerates `data/...` artifacts locally.
 
 ---
 
@@ -33,8 +37,8 @@ Our `data/paper_splits/` files and `data/embeddings/paper_reference_embeddings.*
 
 | File | Status | Issue |
 |------|--------|-------|
-| `data/embeddings/paper_reference_embeddings.npz` | ❌ WRONG | Generated from wrong TRAIN (58 wrong IDs) |
-| `data/embeddings/paper_reference_embeddings.json` | ❌ WRONG | Text chunks from wrong participants |
+| `data/embeddings/paper_reference_embeddings.npz` | ❌ WRONG | Generated from the **algorithmic** TRAIN split (31 overlap with ground truth; 27 extra + 27 missing) |
+| `data/embeddings/paper_reference_embeddings.json` | ❌ WRONG | Text chunks keyed by those same algorithmic TRAIN participant IDs |
 
 **Impact**: Few-shot retrieval uses embeddings from wrong participants → different similarity matches → different predictions → cannot reproduce paper results.
 
@@ -44,6 +48,28 @@ Our `data/paper_splits/` files and `data/embeddings/paper_reference_embeddings.*
 - Uses `random.Random(seed=42)` to assign participants
 - The paper authors never disclosed their seed
 - Result: Correct sizes (58/43/41) but wrong participant assignments
+
+### 1.4 Blast Radius (What Breaks If These Files Are Missing/Wrong)
+
+**Embeddings artifact (`paper_reference_embeddings.*`)**
+
+- `src/ai_psychiatrist/config.py` defaults few-shot to `paper_reference_embeddings` (via `EmbeddingSettings.embeddings_file` and `DataSettings.embeddings_path`).
+- `src/ai_psychiatrist/services/reference_store.py` expects `{embeddings}.npz` + `{embeddings}.json` sidecar; without them it loads an empty store (few-shot degraded) and `scripts/reproduce_results.py` fails fast for few-shot mode.
+- `scripts/reproduce_results.py` requires a precomputed embeddings artifact for few-shot evaluation (`--few-shot-only` or default combined run).
+
+**Paper split CSVs (`paper_split_*.csv`)**
+
+- `scripts/generate_embeddings.py --split paper-train` reads `data/paper_splits/paper_split_train.csv` to choose the 58 knowledge-base participants.
+- `scripts/reproduce_results.py --split paper*` reads `data/paper_splits/paper_split_{train,val,test}.csv` for paper-split evaluation.
+
+**AVEC embeddings artifact (`reference_embeddings.*`)**
+
+- `data/embeddings/reference_embeddings.npz` / `.json` (107 participants) is an AVEC-train knowledge base artifact (optional; not present in this repo snapshot). It is unaffected by this spec and should **not** be deleted if it exists locally.
+
+**Tests**
+
+- Unit tests do not rely on local `data/*` artifacts (they are gitignored); deleting embeddings/splits does not break tests.
+- The one exception is that `tests/unit/scripts/test_create_paper_split.py` must be updated to cover the new ground-truth mode (and should keep the existing algorithmic `stratified_split` tests).
 
 ---
 
@@ -92,6 +118,15 @@ TEST_IDS = [
 | VAL ∩ TEST | 0 | No overlap |
 | All IDs have PHQ-8 labels | Yes | Combined AVEC train+dev |
 
+### 2.4 Verified Against This Repo Snapshot (2025-12-25)
+
+The ground-truth registry is internally consistent and matches the local dataset files:
+
+- 58/43/41 IDs in `docs/data/DATA_SPLIT_REGISTRY.md`, total 142, no overlaps
+- All 142 IDs exist in `data/train_split_Depression_AVEC2017.csv` ∪ `data/dev_split_Depression_AVEC2017.csv`
+- All 142 IDs exist as transcript directories under `data/transcripts/{ID}_P/`
+- No registry IDs overlap `data/test_split_Depression_AVEC2017.csv` (unlabeled AVEC test)
+
 ---
 
 ## 3. Files to DELETE
@@ -99,7 +134,7 @@ TEST_IDS = [
 ### 3.1 Paper Splits (Replace with correct IDs)
 
 ```bash
-# DELETE these files (will be regenerated)
+# DELETE (local-only; `data/*` is gitignored and not committed)
 rm data/paper_splits/paper_split_train.csv
 rm data/paper_splits/paper_split_val.csv
 rm data/paper_splits/paper_split_test.csv
@@ -109,12 +144,15 @@ rm data/paper_splits/paper_split_metadata.json
 ### 3.2 Embeddings (Regenerate from correct TRAIN)
 
 ```bash
-# DELETE these files (will be regenerated)
+# DELETE (local-only; `data/*` is gitignored and not committed)
 rm data/embeddings/paper_reference_embeddings.npz
 rm data/embeddings/paper_reference_embeddings.json
+rm -f data/embeddings/paper_reference_embeddings.meta.json
 ```
 
-**Note**: There is no `.meta.json` for the legacy embeddings (they predate the metadata system).
+**Do not delete**: `data/embeddings/reference_embeddings.*` (AVEC-train knowledge base), if present.
+
+**Note**: The current legacy embeddings have no `.meta.json`, but regeneration via `scripts/generate_embeddings.py` will create one.
 
 ---
 
@@ -123,7 +161,7 @@ rm data/embeddings/paper_reference_embeddings.json
 ### 4.1 `scripts/create_paper_split.py`
 
 **Current behavior**: Algorithmic stratification with seed=42
-**New behavior**: Use ground truth IDs from `DATA_SPLIT_REGISTRY.md`
+**New behavior**: Default to **paper ground truth** IDs from `docs/data/DATA_SPLIT_REGISTRY.md`, while retaining the existing algorithmic implementation as an explicit opt-in mode.
 
 #### Design Decision: Hardcode vs External File
 
@@ -133,56 +171,85 @@ rm data/embeddings/paper_reference_embeddings.json
 | **Read from DATA_SPLIT_REGISTRY.md** | Single source of truth, DRY | Fragile parsing of markdown |
 | **New JSON file for IDs** | Clean separation, easy to validate | Yet another file |
 
-**Decision**: **Hardcode IDs in script**. The IDs are static and will never change. The DATA_SPLIT_REGISTRY.md serves as documentation; the script is the implementation.
+**Decision**: **Hardcode IDs in script**, but add an automated check that the hardcoded lists exactly match `docs/data/DATA_SPLIT_REGISTRY.md`. This keeps the markdown registry as the human-readable source of truth while guaranteeing the script cannot silently drift.
 
 #### Changes Required
 
-1. Add constant lists: `_GROUND_TRUTH_TRAIN_IDS`, `_GROUND_TRUTH_VAL_IDS`, `_GROUND_TRUTH_TEST_IDS`
-2. Replace `stratified_split()` function with `load_ground_truth_split()` that returns the hardcoded IDs
-3. Remove algorithmic stratification code (keep for historical reference in comments)
-4. Update `--seed` argument to be removed (no longer applicable)
-5. Add `--verify` flag to validate IDs against AVEC data (all exist, no overlap)
-6. Update docstrings and help text
+1. Add constant lists: `_GROUND_TRUTH_TRAIN_IDS`, `_GROUND_TRUTH_VAL_IDS`, `_GROUND_TRUTH_TEST_IDS` (must match `docs/data/DATA_SPLIT_REGISTRY.md`)
+2. Keep `stratified_split()` for algorithmic “paper-style” generation (do not delete; tests cover this behavior)
+3. Add a selection mode:
+   - `--mode ground-truth` (default): use the hardcoded ground truth IDs
+   - `--mode algorithmic`: run the existing stratified algorithm
+4. Keep `--seed` but scope it to `--mode algorithmic` (error or warn if provided with ground-truth mode)
+5. Add `--verify` flag that checks:
+   - split sizes are 58/43/41 and total is 142
+   - no overlaps between splits
+   - all IDs exist in AVEC train+dev CSVs
+   - all IDs have transcript directories under `data/transcripts/{ID}_P/`
+6. Update `paper_split_metadata.json` schema to reflect mode:
+   - ground-truth mode: provenance points to `docs/data/DATA_SPLIT_REGISTRY.md` (no seed)
+   - algorithmic mode: preserve current seed/methodology fields (as today)
+7. Update docstrings/help text to clarify “paper ground truth” vs “paper-style algorithmic”
 
-### 4.2 `scripts/generate_embeddings.py`
+### 4.2 `tests/unit/scripts/test_create_paper_split.py`
+
+This test suite currently validates the algorithmic `stratified_split()` behavior and the seed-bearing metadata output. If `scripts/create_paper_split.py` defaults to ground truth, add tests to cover the new mode without removing the existing algorithmic tests:
+
+- Assert `--mode ground-truth` (or an exported helper) returns the exact ID sets from `docs/data/DATA_SPLIT_REGISTRY.md`
+- Assert `--verify` fails loudly on overlap/missing IDs/missing transcripts
+- Keep existing tests for `stratified_split(df, seed=...)` and `save_splits(..., seed=...)`
+
+### 4.3 `scripts/generate_embeddings.py`
 
 **No changes required** - This script reads from `paper_split_train.csv` which will be regenerated with correct IDs.
 
-### 4.3 `scripts/reproduce_results.py`
+### 4.4 `scripts/reproduce_results.py`
 
 **No changes required** - This script reads from `paper_split_*.csv` files which will be regenerated with correct IDs.
 
 ---
 
-## 5. Namespace and Folder Conventions
+## 5. Documentation to UPDATE (Required)
 
-### 5.1 Current Naming (Keep)
+Fixing `paper_split_*.csv` from “paper-style seeded” → “paper ground truth” will make existing docs stale. Update these tracked docs to match the new reality:
+
+- `docs/data/artifact-namespace-registry.md` (remove “paper does not publish IDs” phrasing; document the two modes)
+- `docs/data/data-splits-registry.md` (remove seed=42 guidance for paper reproduction; point to ground truth mode)
+- `docs/data/daic-woz-schema.md` (paper_splits are no longer described as “optional paper-style seeded” only)
+- `CRITICAL_DATA_SPLIT_MISMATCH.md` (status → FIXED and note the ground truth adoption)
+
+---
+
+## 6. Namespace and Folder Conventions
+
+### 6.1 Current Naming (Keep)
 
 The current naming convention is sound:
 
 | Pattern | Example | Purpose |
 |---------|---------|---------|
-| `paper_` prefix | `paper_reference_embeddings.npz` | Paper-style artifacts |
+| `paper_` prefix | `paper_reference_embeddings.npz` | Paper-derived artifacts (legacy/compat) |
 | `{backend}_{model}_{split}` | `huggingface_qwen3_8b_paper_train.npz` | New generator output |
 
-### 5.2 Folder Structure (Keep)
+### 6.2 Folder Structure (Keep)
 
 ```
 data/
-├── paper_splits/                    # Paper-style custom splits
-│   ├── paper_split_train.csv        # 58 participants (CORRECT IDs)
-│   ├── paper_split_val.csv          # 43 participants (CORRECT IDs)
-│   ├── paper_split_test.csv         # 41 participants (CORRECT IDs)
-│   └── paper_split_metadata.json    # Provenance (ground truth source)
+├── paper_splits/                    # Paper ground truth split (58/43/41)
+│   ├── paper_split_train.csv        # 58 participants (ground truth IDs)
+│   ├── paper_split_val.csv          # 43 participants (ground truth IDs)
+│   ├── paper_split_test.csv         # 41 participants (ground truth IDs)
+│   └── paper_split_metadata.json    # Provenance (ground truth source + IDs)
 ├── embeddings/
 │   ├── paper_reference_embeddings.npz   # Legacy name (for backward compat)
-│   └── paper_reference_embeddings.json
+│   ├── paper_reference_embeddings.json
+│   └── paper_reference_embeddings.meta.json  # Provenance metadata (generated)
 ├── train_split_Depression_AVEC2017.csv  # Original AVEC (107)
 ├── dev_split_Depression_AVEC2017.csv    # Original AVEC (35)
 └── transcripts/                         # Per-participant transcripts
 ```
 
-### 5.3 Metadata Provenance
+### 6.3 Metadata Provenance
 
 The new `paper_split_metadata.json` should indicate ground truth source:
 
@@ -211,7 +278,7 @@ The new `paper_split_metadata.json` should indicate ground truth source:
 
 ---
 
-## 6. Implementation Steps
+## 7. Implementation Steps
 
 ### Phase 1: Script Update
 
@@ -219,13 +286,14 @@ The new `paper_split_metadata.json` should indicate ground truth source:
 
 2. **Update `scripts/create_paper_split.py`**:
    - Add ground truth ID constants
-   - Replace algorithmic split with hardcoded IDs
+   - Add `--mode` (default ground truth, optional algorithmic)
    - Add `--verify` flag for validation
-   - Update help text and docstrings
+   - Keep algorithmic implementation for optional use + tests
+   - Update metadata schema + help text/docstrings
 
 3. **Verify the script works**:
    ```bash
-   python scripts/create_paper_split.py --dry-run --verify
+   uv run python scripts/create_paper_split.py --mode ground-truth --dry-run --verify
    ```
 
 ### Phase 2: Delete Wrong Artifacts
@@ -240,45 +308,187 @@ The new `paper_split_metadata.json` should indicate ground truth source:
    ```bash
    rm data/embeddings/paper_reference_embeddings.npz
    rm data/embeddings/paper_reference_embeddings.json
+   rm -f data/embeddings/paper_reference_embeddings.meta.json
    ```
 
 ### Phase 3: Regenerate Correct Artifacts
 
 6. **Generate correct splits**:
    ```bash
-   python scripts/create_paper_split.py
+   uv run python scripts/create_paper_split.py --mode ground-truth --verify
    ```
 
 7. **Verify split correctness**:
-   ```bash
-   # Should show 58/43/41 with correct IDs
-   python -c "import pandas as pd; print(pd.read_csv('data/paper_splits/paper_split_train.csv')['Participant_ID'].tolist())"
-   ```
+
+```bash
+# Fail-fast: compare generated CSVs to docs/data/DATA_SPLIT_REGISTRY.md
+uv run python - <<'PY'
+import hashlib
+import re
+from pathlib import Path
+
+import pandas as pd
+
+# Parse registry IDs from the first ```text blocks.
+text = Path("docs/data/DATA_SPLIT_REGISTRY.md").read_text().splitlines()
+ids_by_section = {}
+section = None
+in_code = False
+buf = []
+for line in text:
+    if line.startswith("## "):
+        if line.startswith("## TRAIN"):
+            section = "train"
+        elif line.startswith("## VAL"):
+            section = "val"
+        elif line.startswith("## TEST"):
+            section = "test"
+        else:
+            section = None
+    if section and line.strip().startswith("```text"):
+        in_code = True
+        buf = []
+        continue
+    if in_code and line.strip().startswith("```"):
+        ids_by_section[section] = [int(x) for x in re.findall(r"\b\d+\b", "\n".join(buf))]
+        in_code = False
+        continue
+    if in_code:
+        buf.append(line)
+
+registry = {k: set(v) for k, v in ids_by_section.items()}
+
+required_cols = {
+    "Participant_ID",
+    "PHQ8_NoInterest",
+    "PHQ8_Depressed",
+    "PHQ8_Sleep",
+    "PHQ8_Tired",
+    "PHQ8_Appetite",
+    "PHQ8_Failure",
+    "PHQ8_Concentrating",
+    "PHQ8_Moving",
+}
+
+current = {}
+for split in ["train", "val", "test"]:
+    df = pd.read_csv(f"data/paper_splits/paper_split_{split}.csv")
+    missing_cols = sorted(required_cols - set(df.columns))
+    assert not missing_cols, f"paper_split_{split}.csv missing columns: {missing_cols}"
+    current[split] = set(df["Participant_ID"].astype(int))
+
+# Basic invariants
+assert len(registry["train"]) == 58
+assert len(registry["val"]) == 43
+assert len(registry["test"]) == 41
+all_registry = registry["train"] | registry["val"] | registry["test"]
+assert len(all_registry) == 142
+assert not (registry["train"] & registry["val"])
+assert not (registry["train"] & registry["test"])
+assert not (registry["val"] & registry["test"])
+
+# Exact match
+for split in ["train", "val", "test"]:
+    ours = current[split]
+    reg = registry[split]
+    if ours != reg:
+        raise SystemExit(
+            f"Split mismatch: {split}\\n"
+            f"  ours-not-reg: {sorted(ours - reg)[:20]}\\n"
+            f"  reg-not-ours: {sorted(reg - ours)[:20]}"
+        )
+
+# Cross-check against AVEC2017 train+dev (must be exactly the same 142 participants).
+avec_train = set(
+    pd.read_csv("data/train_split_Depression_AVEC2017.csv")["Participant_ID"].astype(int)
+)
+avec_dev = set(pd.read_csv("data/dev_split_Depression_AVEC2017.csv")["Participant_ID"].astype(int))
+assert not (avec_train & avec_dev)
+avec_labeled = avec_train | avec_dev
+assert all_registry == avec_labeled, "Registry IDs must equal AVEC labeled (train+dev) IDs"
+
+# Ensure registry does not overlap unlabeled AVEC test split.
+test_df = pd.read_csv("data/test_split_Depression_AVEC2017.csv")
+test_col = "participant_ID" if "participant_ID" in test_df.columns else "Participant_ID"
+avec_test = set(test_df[test_col].astype(int))
+assert not (all_registry & avec_test)
+
+# Transcript presence for all 142 IDs
+missing = []
+for pid in sorted(all_registry):
+    if not (Path("data/transcripts") / f"{pid}_P").exists():
+        missing.append(pid)
+assert not missing, f"Missing transcript dirs for: {missing}"
+
+# Hash the paper-train CSV (used by embeddings metadata)
+train_bytes = Path("data/paper_splits/paper_split_train.csv").read_bytes()
+print("paper-train CSV sha256[:12]=", hashlib.sha256(train_bytes).hexdigest()[:12])
+print("OK: CSVs match registry + AVEC + transcripts present")
+PY
+```
 
 8. **Generate embeddings** (requires Ollama or HuggingFace):
    ```bash
    # Option A: Using HuggingFace (higher precision)
-   EMBEDDING_BACKEND=huggingface python scripts/generate_embeddings.py \
+   EMBEDDING_BACKEND=huggingface uv run python scripts/generate_embeddings.py \
      --split paper-train \
      --output data/embeddings/paper_reference_embeddings.npz
 
    # Option B: Using Ollama (if HuggingFace unavailable)
-   EMBEDDING_BACKEND=ollama python scripts/generate_embeddings.py \
+   EMBEDDING_BACKEND=ollama uv run python scripts/generate_embeddings.py \
      --split paper-train \
      --output data/embeddings/paper_reference_embeddings.npz
    ```
 
 ### Phase 4: Verification
 
-9. **Verify embeddings loaded correctly**:
-   ```bash
-   python -c "
-   import numpy as np
-   data = np.load('data/embeddings/paper_reference_embeddings.npz', allow_pickle=False)
-   print(f'Participants: {len([k for k in data.keys() if k.startswith(\"emb_\")])}')
-   "
-   ```
-   Expected output: `Participants: 58`
+9. **Verify embeddings artifact matches paper-train IDs (not just count)**:
+
+```bash
+uv run python - <<'PY'
+import hashlib
+import json
+import re
+from pathlib import Path
+
+import numpy as np
+import pandas as pd
+
+train_ids = set(pd.read_csv("data/paper_splits/paper_split_train.csv")["Participant_ID"].astype(int))
+npz_path = Path("data/embeddings/paper_reference_embeddings.npz")
+meta_path = npz_path.with_suffix(".meta.json")
+
+npz = np.load(npz_path, allow_pickle=False)
+try:
+    pids = {
+        int(m.group(1))
+        for k in npz.files
+        if (m := re.match(r"emb_(\d+)$", k))
+    }
+finally:
+    npz.close()
+
+missing = sorted(train_ids - pids)
+extra = sorted(pids - train_ids)
+print("participants_in_npz", len(pids))
+print("missing_from_npz", missing)
+print("extra_in_npz", extra)
+assert not missing and not extra, "NPZ participants must exactly match paper_split_train.csv"
+
+if meta_path.exists():
+    meta = json.loads(meta_path.read_text())
+    split_hash = meta.get("split_csv_hash")
+    current_hash = hashlib.sha256(
+        Path("data/paper_splits/paper_split_train.csv").read_bytes()
+    ).hexdigest()[:12]
+    print("meta.split", meta.get("split"))
+    print("meta.split_csv_hash", split_hash)
+    print("current_split_csv_hash", current_hash)
+    assert split_hash == current_hash, "Metadata split hash must match current paper_split_train.csv"
+
+print("OK: embeddings match paper-train IDs (+ metadata hash if present)")
+PY
+```
 
 10. **Run tests**:
     ```bash
@@ -287,17 +497,23 @@ The new `paper_split_metadata.json` should indicate ground truth source:
 
 11. **Optional: Run reproduction** (requires Ollama running):
     ```bash
-    python scripts/reproduce_results.py --split paper --limit 5
+    uv run python scripts/reproduce_results.py --split paper --limit 5
     ```
 
 ### Phase 5: Commit and PR
 
 12. **Commit changes**:
     ```bash
+    # DO NOT commit `data/*` (gitignored due to licensing).
     git add scripts/create_paper_split.py
-    git add data/paper_splits/
-    # Note: data/embeddings/ is typically gitignored (large files)
-    git commit -m "fix: use ground truth paper split IDs (GH-45)"
+    git add tests/unit/scripts/test_create_paper_split.py
+    git add docs/data/DATA_SPLIT_REGISTRY.md
+    git add docs/data/artifact-namespace-registry.md
+    git add docs/data/data-splits-registry.md
+    git add docs/data/daic-woz-schema.md
+    git add CRITICAL_DATA_SPLIT_MISMATCH.md
+    git add SPEC-DATA-SPLIT-FIX.md
+    git commit -m "fix(data-splits): adopt paper ground truth IDs (GH-45)"
     ```
 
 13. **Create PR**:
@@ -308,61 +524,68 @@ The new `paper_split_metadata.json` should indicate ground truth source:
 
 ---
 
-## 7. Post-Fix Verification Checklist
+## 8. Post-Fix Verification Checklist
 
 | Check | Command | Expected |
 |-------|---------|----------|
 | TRAIN count | `wc -l data/paper_splits/paper_split_train.csv` | 59 (58 + header) |
 | VAL count | `wc -l data/paper_splits/paper_split_val.csv` | 44 (43 + header) |
 | TEST count | `wc -l data/paper_splits/paper_split_test.csv` | 42 (41 + header) |
-| First TRAIN ID | `head -2 data/paper_splits/paper_split_train.csv` | 303 |
-| First VAL ID | `head -2 data/paper_splits/paper_split_val.csv` | 302 |
-| First TEST ID | `head -2 data/paper_splits/paper_split_test.csv` | 316 |
-| Embedding participants | `python -c "..."` (see above) | 58 |
+| CSVs match registry | `uv run python - <<'PY' ... PY` (see Phase 3.7) | Exact match |
+| Transcripts present | Included in Phase 3.7 script | 0 missing |
+| Embeddings participants | `uv run python - <<'PY' ... PY` (see Phase 4.9) | Exact match |
 | Tests pass | `make test-unit` | All green |
 
 ---
 
-## 8. Risks and Mitigations
+## 9. Risks and Mitigations
 
 | Risk | Mitigation |
 |------|------------|
 | Wrong IDs in DATA_SPLIT_REGISTRY.md | Double-check extraction logic; IDs verified against 7+ output files |
-| Embeddings not gitignored | Verify `.gitignore` excludes `data/embeddings/*.npz` |
-| Breaking existing workflows | Legacy `paper_reference_embeddings.*` filename preserved |
+| Accidentally committing DAIC-WOZ-derived data | Keep `data/*` gitignored; do not add exceptions; commit only code/docs |
+| Embeddings not gitignored | Verify `.gitignore` excludes `data/*` (includes embeddings + split CSVs) |
+| Breaking existing workflows | Legacy `paper_reference_embeddings.*` filename preserved via `--output` |
 | Circular dependency (script needs data, data needs script) | AVEC CSVs are independent; script only filters them |
+| Silent mismatch: new splits, old embeddings | Require Phase 4.9 equality check (IDs + split hash); regenerate embeddings after split fix |
+| Docs drift (“paper-style seeded” language becomes false) | Update docs in Section 5 (required) and add acceptance criteria |
 
 ---
 
-## 9. Files Modified Summary
+## 10. Files Modified Summary
 
 | File | Action | Reason |
 |------|--------|--------|
 | `scripts/create_paper_split.py` | MODIFY | Use ground truth IDs |
-| `data/paper_splits/paper_split_train.csv` | DELETE + REGENERATE | Wrong IDs |
-| `data/paper_splits/paper_split_val.csv` | DELETE + REGENERATE | Wrong IDs |
-| `data/paper_splits/paper_split_test.csv` | DELETE + REGENERATE | Wrong IDs |
-| `data/paper_splits/paper_split_metadata.json` | DELETE + REGENERATE | Wrong IDs |
-| `data/embeddings/paper_reference_embeddings.npz` | DELETE + REGENERATE | Generated from wrong TRAIN |
-| `data/embeddings/paper_reference_embeddings.json` | DELETE + REGENERATE | Generated from wrong TRAIN |
+| `tests/unit/scripts/test_create_paper_split.py` | MODIFY | Cover ground truth mode; keep algorithmic tests |
+| `docs/data/artifact-namespace-registry.md` | MODIFY | Remove stale “paper-style seeded” claims |
+| `docs/data/data-splits-registry.md` | MODIFY | Align reproduction guidance with ground truth mode |
+| `docs/data/daic-woz-schema.md` | MODIFY | Align dataset docs with ground truth paper split |
+| `CRITICAL_DATA_SPLIT_MISMATCH.md` | MODIFY | Update status to FIXED after implementation |
+| `data/paper_splits/paper_split_*.csv` | DELETE + REGENERATE (local-only) | Wrong IDs (gitignored) |
+| `data/paper_splits/paper_split_metadata.json` | DELETE + REGENERATE (local-only) | Wrong IDs (gitignored) |
+| `data/embeddings/paper_reference_embeddings.*` | DELETE + REGENERATE (local-only) | Generated from wrong TRAIN split (gitignored) |
 
 ---
 
-## 10. Acceptance Criteria
+## 11. Acceptance Criteria
 
-- [ ] `scripts/create_paper_split.py` uses hardcoded ground truth IDs
+- [ ] `scripts/create_paper_split.py` defaults to ground truth IDs and supports algorithmic mode explicitly
+- [ ] Hardcoded ID lists are verified (test) to match `docs/data/DATA_SPLIT_REGISTRY.md`
 - [ ] `data/paper_splits/paper_split_train.csv` contains exactly 58 correct participant IDs
 - [ ] `data/paper_splits/paper_split_val.csv` contains exactly 43 correct participant IDs
 - [ ] `data/paper_splits/paper_split_test.csv` contains exactly 41 correct participant IDs
 - [ ] All IDs match those in `docs/data/DATA_SPLIT_REGISTRY.md`
-- [ ] Embeddings regenerated from correct TRAIN split (58 participants)
+- [ ] All 142 IDs have transcript directories under `data/transcripts/{ID}_P/`
+- [ ] Embeddings regenerated from correct TRAIN split and validated against `paper_split_train.csv` (exact IDs, not just count)
 - [ ] `CRITICAL_DATA_SPLIT_MISMATCH.md` updated to status FIXED
+- [ ] Docs in Section 5 updated to remove “paper-style seeded” ambiguity
 - [ ] All unit tests pass
 - [ ] GitHub Issue #45 closed
 
 ---
 
-## 11. Related Documentation
+## 12. Related Documentation
 
 | Document | Purpose |
 |----------|---------|
@@ -375,4 +598,4 @@ The new `paper_split_metadata.json` should indicate ground truth source:
 
 *Spec Author: Claude Code*
 *Date: 2025-12-25*
-*Approved: Pending user review*
+*Reviewed and approved: 2025-12-25*
