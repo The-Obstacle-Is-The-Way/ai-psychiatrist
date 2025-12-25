@@ -100,7 +100,9 @@ class ReferenceStore:
         # Backend check
         stored_backend = metadata.get("backend")
         current_backend = self._embedding_backend.backend.value
-        if stored_backend and stored_backend != current_backend:
+        if stored_backend is None:
+            logger.debug("Metadata missing 'backend' field, skipping backend validation")
+        elif stored_backend != current_backend:
             errors.append(
                 f"backend mismatch: artifact='{stored_backend}', config='{current_backend}'"
             )
@@ -108,18 +110,24 @@ class ReferenceStore:
         # Dimension check
         stored_dim = metadata.get("dimension")
         current_dim = self._embedding_settings.dimension
-        if stored_dim and stored_dim != current_dim:
+        if stored_dim is None:
+            logger.debug("Metadata missing 'dimension' field, skipping dimension validation")
+        elif stored_dim != current_dim:
             errors.append(f"dimension mismatch: artifact={stored_dim}, config={current_dim}")
 
         # Chunk params check
         stored_chunk = metadata.get("chunk_size")
         current_chunk = self._embedding_settings.chunk_size
-        if stored_chunk and stored_chunk != current_chunk:
+        if stored_chunk is None:
+            logger.debug("Metadata missing 'chunk_size' field, skipping chunk_size validation")
+        elif stored_chunk != current_chunk:
             errors.append(f"chunk_size mismatch: artifact={stored_chunk}, config={current_chunk}")
 
         stored_step = metadata.get("chunk_step")
         current_step = self._embedding_settings.chunk_step
-        if stored_step and stored_step != current_step:
+        if stored_step is None:
+            logger.debug("Metadata missing 'chunk_step' field, skipping chunk_step validation")
+        elif stored_step != current_step:
             errors.append(f"chunk_step mismatch: artifact={stored_step}, config={current_step}")
 
         if errors:

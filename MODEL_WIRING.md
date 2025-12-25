@@ -76,7 +76,7 @@
 
 ### Quality Ranking (Best → Worst)
 
-```
+```text
 BF16 (54GB) > Q8_0 (29GB) > QAT Q4 (17GB) ≈ Q4_K_M (17GB)
      ↑              ↑              ↑              ↑
   Perfect      Very Good    Good (smart)   Good (dumb)
@@ -207,7 +207,7 @@ Generates reference embeddings for training set transcripts. Run once before few
 Location: `EmbeddingService.embed_text()` called from `QuantitativeAssessmentAgent`
 
 Flow:
-```
+```text
 Transcript → Extract Evidence → Embed Evidence → Cosine Similarity → Reference Matches
                                      ↑                    ↑
                               (runtime embed)    (pre-computed refs)
@@ -219,7 +219,7 @@ Transcript → Extract Evidence → Embed Evidence → Cosine Similarity → Ref
 
 ## Pipeline Flow
 
-```
+```text
 ┌────────────────────────────────────────────────────────────────────┐
 │                             PIPELINE                               │
 ├────────────────────────────────────────────────────────────────────┤

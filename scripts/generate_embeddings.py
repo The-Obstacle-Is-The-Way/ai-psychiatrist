@@ -47,6 +47,7 @@ from ai_psychiatrist.config import (
 )
 from ai_psychiatrist.infrastructure.llm.factory import create_embedding_client
 from ai_psychiatrist.infrastructure.llm.model_aliases import resolve_model_name
+from ai_psychiatrist.infrastructure.llm.protocols import EmbeddingRequest
 from ai_psychiatrist.infrastructure.logging import get_logger, setup_logging
 from ai_psychiatrist.services.transcript import TranscriptService
 
@@ -118,10 +119,6 @@ async def generate_embedding(
     Returns:
         L2-normalized embedding vector.
     """
-    from ai_psychiatrist.infrastructure.llm.protocols import (  # noqa: PLC0415
-        EmbeddingRequest,
-    )
-
     response = await client.embed(
         EmbeddingRequest(
             text=text,
