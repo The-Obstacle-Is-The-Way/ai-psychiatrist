@@ -19,6 +19,7 @@ from typing import TYPE_CHECKING, Any
 import numpy as np
 import pandas as pd
 
+from ai_psychiatrist.config import resolve_reference_embeddings_path
 from ai_psychiatrist.domain.enums import PHQ8Item
 from ai_psychiatrist.domain.exceptions import (
     EmbeddingArtifactMismatchError,
@@ -72,7 +73,7 @@ class ReferenceStore:
             embedding_settings: Embedding configuration.
             embedding_backend_settings: Embedding backend configuration (optional).
         """
-        self._embeddings_path = data_settings.embeddings_path
+        self._embeddings_path = resolve_reference_embeddings_path(data_settings, embedding_settings)
         self._train_csv = data_settings.train_csv
         self._dev_csv = data_settings.dev_csv
         self._dimension = embedding_settings.dimension
@@ -115,6 +116,11 @@ class ReferenceStore:
         current_chunk = self._embedding_settings.chunk_size
         if stored_chunk and stored_chunk != current_chunk:
             errors.append(f"chunk_size mismatch: artifact={stored_chunk}, config={current_chunk}")
+
+        stored_step = metadata.get("chunk_step")
+        current_step = self._embedding_settings.chunk_step
+        if stored_step and stored_step != current_step:
+            errors.append(f"chunk_step mismatch: artifact={stored_step}, config={current_step}")
 
         if errors:
             raise EmbeddingArtifactMismatchError(
@@ -170,6 +176,11 @@ class ReferenceStore:
                 if isinstance(e, EmbeddingArtifactMismatchError):
                     raise
                 logger.warning("Failed to load/validate metadata", error=str(e))
+        elif self._embedding_backend.backend.value != "ollama":
+            logger.warning(
+                "Embeddings metadata not found; skipping artifact validation",
+                meta_path=str(meta_path),
+            )
 
         logger.info(
             "Loading reference embeddings",

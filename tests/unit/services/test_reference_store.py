@@ -173,6 +173,36 @@ class TestReferenceStoreMetadata:
         ):
             store._load_embeddings()
 
+    def test_validation_fail_chunk_step(
+        self,
+        data_settings: DataSettings,
+        embedding_settings: EmbeddingSettings,
+        embedding_backend_settings: EmbeddingBackendSettings,
+    ) -> None:
+        """Should fail when chunk_step mismatches."""
+        store = ReferenceStore(data_settings, embedding_settings, embedding_backend_settings)
+
+        meta_path = data_settings.embeddings_path.with_suffix(".meta.json")
+        meta_path.write_text(
+            json.dumps(
+                {
+                    "chunk_step": 3,  # Mismatch (expect default 2)
+                }
+            )
+        )
+
+        data_settings.embeddings_path.touch()
+        data_settings.embeddings_path.with_suffix(".json").write_text("{}")
+
+        mock_npz = MagicMock()
+        mock_npz.close = MagicMock()
+
+        with (
+            patch("numpy.load", return_value=mock_npz),
+            pytest.raises(EmbeddingArtifactMismatchError, match="chunk_step mismatch"),
+        ):
+            store._load_embeddings()
+
     def test_legacy_file_skip_validation(
         self,
         data_settings: DataSettings,

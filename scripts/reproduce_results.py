@@ -64,6 +64,7 @@ from ai_psychiatrist.config import (
     ModelSettings,
     Settings,
     get_settings,
+    resolve_reference_embeddings_path,
 )
 from ai_psychiatrist.domain.enums import AssessmentMode, PHQ8Item
 from ai_psychiatrist.infrastructure.llm import OllamaClient
@@ -537,9 +538,7 @@ def print_run_configuration(*, settings: Settings, split: str) -> None:
     model_settings = settings.model
     ollama_settings = settings.ollama
 
-    embeddings_path = data_settings.embeddings_path
-    if split.startswith("paper"):
-        embeddings_path = data_settings.base_dir / "embeddings" / "paper_reference_embeddings.npz"
+    embeddings_path = resolve_reference_embeddings_path(data_settings, settings.embedding)
 
     print("=" * 60)
     print("PAPER REPRODUCTION: Quantitative PHQ-8 Evaluation (Item-level MAE)")
@@ -579,14 +578,17 @@ async def check_ollama_connectivity(ollama_client: OllamaClient) -> bool:
     return True
 
 
-def get_effective_embeddings_path(data_settings: DataSettings, split: str) -> Path:
+def get_effective_embeddings_path(
+    data_settings: DataSettings,
+    embedding_settings: EmbeddingSettings,
+    _split: str,
+) -> Path:
     """Get the effective embeddings path for a given split.
 
-    Paper splits use paper_reference_embeddings.npz; others use config default.
+    Uses `DATA_EMBEDDINGS_PATH` if explicitly set; otherwise resolves
+    `EMBEDDING_EMBEDDINGS_FILE` under `{DATA_BASE_DIR}/embeddings/`.
     """
-    if split.startswith("paper"):
-        return data_settings.base_dir / "embeddings" / "paper_reference_embeddings.npz"
-    return data_settings.embeddings_path
+    return resolve_reference_embeddings_path(data_settings, embedding_settings)
 
 
 def init_embedding_service(
@@ -601,14 +603,7 @@ def init_embedding_service(
     if args.zero_shot_only:
         return None
 
-    npz_path = get_effective_embeddings_path(data_settings, args.split)
-    effective_data_settings = DataSettings(
-        base_dir=data_settings.base_dir,
-        transcripts_dir=data_settings.transcripts_dir,
-        embeddings_path=npz_path,
-        train_csv=data_settings.train_csv,
-        dev_csv=data_settings.dev_csv,
-    )
+    npz_path = get_effective_embeddings_path(data_settings, embedding_settings, args.split)
 
     json_path = npz_path.with_suffix(".json")
     if not npz_path.exists() or not json_path.exists():
@@ -617,7 +612,7 @@ def init_embedding_service(
             f"Missing: {npz_path} and/or {json_path}. "
             "Run: uv run python scripts/generate_embeddings.py"
         )
-    reference_store = ReferenceStore(effective_data_settings, embedding_settings)
+    reference_store = ReferenceStore(data_settings, embedding_settings)
     return EmbeddingService(
         llm_client=embedding_client,
         reference_store=reference_store,
@@ -734,7 +729,11 @@ async def main_async(args: argparse.Namespace) -> int:
             output_dir = data_settings.base_dir / "outputs"
 
             # Build provenance metadata for reproducibility verification
-            embeddings_path = get_effective_embeddings_path(data_settings, args.split)
+            embeddings_path = get_effective_embeddings_path(
+                data_settings,
+                embedding_settings,
+                args.split,
+            )
             provenance = {
                 "split": args.split,
                 "embeddings_path": str(embeddings_path),

@@ -254,7 +254,7 @@ finally:
 {
     "backend": "huggingface",
     "model": "Qwen/Qwen3-Embedding-8B",
-    "model_revision": "main",
+    "model_canonical": "qwen3-embedding:8b",
     "dimension": 4096,
     "chunk_size": 8,
     "chunk_step": 2,
@@ -269,14 +269,26 @@ finally:
 #### 4.4 Filename Convention
 
 ```python
+import re
+
 def slugify_model(model: str) -> str:
     """Deterministic model name slugification."""
     # Qwen/Qwen3-Embedding-8B -> qwen3_8b
     # qwen3-embedding:8b -> qwen3_8b
-    slug = model.split("/")[-1].split(":")[0].lower()
-    slug = slug.replace("-embedding", "").replace("_embedding", "")
-    slug = slug.replace("-", "_")
-    return slug
+    raw = model.split("/")[-1].lower()
+
+    name_part, tag_part = raw, ""
+    if ":" in raw:
+        name_part, tag_part = raw.split(":", 1)
+
+    base = name_part.replace("-embedding", "").replace("_embedding", "")
+    base = re.sub(r"[^a-z0-9]+", "_", base).strip("_")
+    tag_part = re.sub(r"[^a-z0-9]+", "_", tag_part).strip("_")
+
+    if tag_part and not base.endswith(f"_{tag_part}"):
+        base = f"{base}_{tag_part}"
+
+    return base
 
 
 def get_output_filename(backend: str, model: str, split: str) -> str:
@@ -310,7 +322,7 @@ def _load_embeddings(self) -> None:
 
 def _validate_metadata(self, metadata: dict) -> None:
     """Validate embedding artifact matches current config."""
-    # Checks backend, dimension, chunk_size
+    # Checks backend, dimension, chunk_size, chunk_step
     # Raises EmbeddingArtifactMismatchError on failure
 ```
 

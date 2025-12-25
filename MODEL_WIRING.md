@@ -10,9 +10,9 @@
 
 | Component | Backend | Default Model | Precision |
 |-----------|---------|---------------|-----------|
-| Chat (all agents) | `LLM_BACKEND=ollama` | ⭐ `gemma3:27b-it-qat` | QAT 4-bit (trained for quantization) |
+| Chat (all agents) | `LLM_BACKEND=ollama` | ⭐ `gemma3:27b` | Q4_K_M (4-bit) |
 | Chat (quant alt) | `LLM_BACKEND=huggingface` | `medgemma:27b` | FP16 (16-bit) |
-| **Embedding** | `EMBEDDING_BACKEND=huggingface` | `Qwen3-Embedding-8B` | **FP16 (16-bit)** |
+| **Embedding** | `EMBEDDING_BACKEND=huggingface` | `qwen3-embedding:8b` → `Qwen/Qwen3-Embedding-8B` | **FP16 (16-bit)** |
 
 **Key decisions:**
 - **Chat**: Ollama default (paper parity). MedGemma is hard toggle for quant agent.
@@ -22,11 +22,11 @@
 
 | Component | Default | Hard Toggle Option |
 |-----------|---------|-------------------|
-| Qualitative Agent | Ollama (`gemma3:27b-it-qat`) | — |
-| Judge Agent | Ollama (`gemma3:27b-it-qat`) | — |
-| Meta-Review Agent | Ollama (`gemma3:27b-it-qat`) | — |
-| **Quant Agent** | Ollama (`gemma3:27b-it-qat`) | HF (`medgemma:27b`) |
-| **Embeddings** | **HF** (`Qwen3-Embedding-8B` FP16) | Ollama (`qwen3-embedding:8b` Q4) |
+| Qualitative Agent | Ollama (`gemma3:27b`) | — |
+| Judge Agent | Ollama (`gemma3:27b`) | — |
+| Meta-Review Agent | Ollama (`gemma3:27b`) | — |
+| **Quant Agent** | Ollama (`gemma3:27b`) | HF (`medgemma:27b`) |
+| **Embeddings** | **HF** (`qwen3-embedding:8b` → `Qwen/Qwen3-Embedding-8B`) | Ollama (`qwen3-embedding:8b`) |
 
 **Why this mix?**
 - Ollama = local, no external deps, paper parity
@@ -119,7 +119,7 @@ Paper likely ran **BF16 on A100s** for the reported 0.619 MAE. Our Q4_K_M run go
 |------|-------|-----|
 | **⭐ RECOMMENDED** | `gemma3:27b-it-qat` (4-bit) | QAT-trained, same speed as Q4, claims BF16 quality |
 | Closer to paper's likely setup | `gemma3:27b-it-q8_0` (8-bit) | Paper likely used BF16 on A100s; Q8 is closest but slow |
-| Old default (not recommended) | `gemma3:27b` (4-bit) | Post-hoc Q4_K_M, strictly worse than QAT |
+| Paper baseline (current default) | `gemma3:27b` (4-bit) | Post-hoc Q4_K_M; stable, widely available on Ollama |
 | Maximum quality | HF `gemma-3-27b-it` (16-bit) | Full BF16, 54GB, very slow on M1 |
 
 ### Estimated Run Times (Full Pipeline, 41 Transcripts)
@@ -167,10 +167,10 @@ MODEL_QUANTITATIVE_MODEL=medgemma:27b
 
 | Agent | Config Key | Default | Paper Reference |
 |-------|------------|---------|-----------------|
-| Qualitative | `MODEL_QUALITATIVE_MODEL` | `gemma3:27b-it-qat` | Section 2.2 (QAT for quality) |
-| Judge | `MODEL_JUDGE_MODEL` | `gemma3:27b-it-qat` | Section 2.2 (QAT for quality) |
-| Meta-Review | `MODEL_META_REVIEW_MODEL` | `gemma3:27b-it-qat` | Section 2.2 (QAT for quality) |
-| Quantitative | `MODEL_QUANTITATIVE_MODEL` | `gemma3:27b-it-qat` | Section 2.2 (QAT for quality) |
+| Qualitative | `MODEL_QUALITATIVE_MODEL` | `gemma3:27b` | Section 2.2 |
+| Judge | `MODEL_JUDGE_MODEL` | `gemma3:27b` | Section 2.2 |
+| Meta-Review | `MODEL_META_REVIEW_MODEL` | `gemma3:27b` | Section 2.2 |
+| Quantitative | `MODEL_QUANTITATIVE_MODEL` | `gemma3:27b` | Section 2.2 |
 
 **MedGemma** (`medgemma:27b`) is an ALTERNATIVE for quantitative agent only (Appendix F).
 It requires `LLM_BACKEND=huggingface` for official weights. The Ollama community version may behave differently.
@@ -179,10 +179,17 @@ It requires `LLM_BACKEND=huggingface` for official weights. The Ollama community
 
 | Setting | Default | Backend | Precision |
 |---------|---------|---------|-----------|
-| `MODEL_EMBEDDING_MODEL` | `Qwen/Qwen3-Embedding-8B` | HuggingFace | FP16 |
+| `MODEL_EMBEDDING_MODEL` | `qwen3-embedding:8b` | Resolved per backend | Q4 (Ollama) / FP16 (HF) |
 
 **Why HF default for embeddings?** FP16 embeddings produce better similarity scores than Q4_K_M.
 To use Ollama instead: `EMBEDDING_BACKEND=ollama` (will use `qwen3-embedding:8b` Q4_K_M).
+
+### Embedding Artifacts
+
+| Setting | Default | Purpose |
+|---------|---------|---------|
+| `EMBEDDING_EMBEDDINGS_FILE` | `paper_reference_embeddings` | Selects `{DATA_BASE_DIR}/embeddings/{name}.npz` (+ `.json`, optional `.meta.json`) |
+| `DATA_EMBEDDINGS_PATH` | `data/embeddings/paper_reference_embeddings.npz` | Full-path override (takes precedence over `EMBEDDING_EMBEDDINGS_FILE`) |
 
 ---
 
@@ -191,7 +198,7 @@ To use Ollama instead: `EMBEDDING_BACKEND=ollama` (will use `qwen3-embedding:8b`
 ### 1. Data Prep (Once)
 
 Script: `scripts/generate_embeddings.py`
-Output: `data/embeddings/paper_reference_embeddings.npz`
+Output: `data/embeddings/{backend}_{model}_{split}.npz` (+ `.json`, `.meta.json`)
 
 Generates reference embeddings for training set transcripts. Run once before few-shot mode.
 
@@ -221,29 +228,29 @@ Transcript → Extract Evidence → Embed Evidence → Cosine Similarity → Ref
 │      │                                                             │
 │      ▼                                                             │
 │  ┌─────────────────────┐                                           │
-│  │ QUALITATIVE AGENT   │  Model: gemma3:27b-it-qat (chat)          │
+│  │ QUALITATIVE AGENT   │  Model: gemma3:27b (chat)                 │
 │  │ (assess symptoms)   │  Backend: LLM_BACKEND (default: ollama)   │
 │  └─────────────────────┘                                           │
 │      │                                                             │
 │      ▼                                                             │
 │  ┌─────────────────────┐                                           │
-│  │ JUDGE AGENT         │  Model: gemma3:27b-it-qat (chat)          │
+│  │ JUDGE AGENT         │  Model: gemma3:27b (chat)                 │
 │  │ (evaluate + refine) │  Backend: LLM_BACKEND                     │
 │  └─────────────────────┘                                           │
 │      │  ↺ feedback loop (max 10 iterations)                        │
 │      ▼                                                             │
 │  ┌─────────────────────┐                                           │
-│  │ QUANTITATIVE AGENT  │  Model: gemma3:27b-it-qat OR medgemma:27b │
+│  │ QUANTITATIVE AGENT  │  Model: gemma3:27b OR medgemma:27b        │
 │  │ (PHQ-8 scoring)     │  Backend: LLM_BACKEND (default: ollama)   │
 │  │                     │                                           │
 │  │  Few-shot mode:     │                                           │
-│  │  - Embed evidence   │  Model: Qwen3-Embedding-8B                │
+│  │  - Embed evidence   │  Model: qwen3-embedding:8b (resolved)     │
 │  │  - Find references  │  Backend: EMBEDDING_BACKEND (default: hf) │
 │  └─────────────────────┘                                           │
 │      │                                                             │
 │      ▼                                                             │
 │  ┌─────────────────────┐                                           │
-│  │ META-REVIEW AGENT   │  Model: gemma3:27b-it-qat (chat)          │
+│  │ META-REVIEW AGENT   │  Model: gemma3:27b (chat)                 │
 │  │ (final severity)    │  Backend: LLM_BACKEND                     │
 │  └─────────────────────┘                                           │
 │                                                                    │
@@ -261,8 +268,17 @@ def create_llm_client(settings: Settings) -> LLMClient:
     if backend == LLMBackend.OLLAMA:
         return OllamaClient(settings.ollama)
     if backend == LLMBackend.HUGGINGFACE:
-        return HuggingFaceClient(...)  # Fails if deps missing
+        return HuggingFaceClient(...)  # HF deps are loaded lazily at first use
     raise ValueError(f"Unsupported backend: {backend}")
+
+
+def create_embedding_client(settings: Settings) -> EmbeddingClient:
+    backend = settings.embedding_backend.backend
+    if backend == EmbeddingBackend.OLLAMA:
+        return OllamaClient(settings.ollama)
+    if backend == EmbeddingBackend.HUGGINGFACE:
+        return HuggingFaceClient(...)  # HF deps are loaded lazily at first use
+    raise ValueError(f"Unsupported embedding backend: {backend}")
 ```
 
 ---
@@ -326,29 +342,21 @@ Everything FP16. Requires ~54GB VRAM for chat + ~16GB for embeddings.
 # .env (defaults)
 LLM_BACKEND=ollama                        # Chat: Ollama (paper parity)
 EMBEDDING_BACKEND=huggingface             # Embedding: HuggingFace (better precision)
-MODEL_QUANTITATIVE_MODEL=gemma3:27b-it-qat  # ⭐ QAT model (same speed, better quality)
+MODEL_QUANTITATIVE_MODEL=gemma3:27b
 ```
 
 ### Startup Validation
 
-1. **EMBEDDING_BACKEND=huggingface** (default):
-   - Check HF deps installed
-   - Missing → **ERROR**:
-     ```
-     ERROR: HuggingFace embedding backend requires dependencies.
-     Install: pip install 'ai-psychiatrist[hf]'
-     Or use: EMBEDDING_BACKEND=ollama
-     ```
+1. **HuggingFace deps** (`EMBEDDING_BACKEND=huggingface`):
+   - Transformers/torch deps are loaded lazily on first embed/chat call.
+   - If missing, the request fails with an `ImportError` containing:
+     `pip install 'ai-psychiatrist[hf]'`
 
 2. **Reference embedding validation**:
-   - Load `paper_reference_embeddings.npz`
-   - Check stored `backend` metadata
-   - If metadata ≠ current EMBEDDING_BACKEND → **ERROR**:
-     ```
-     ERROR: Reference embeddings were generated with ollama (Q4_K_M).
-     Current backend is huggingface (FP16). Precision mismatch.
-     Regenerate: uv run python scripts/generate_embeddings.py
-     ```
+   - If `{artifact}.meta.json` exists, `ReferenceStore` validates:
+     `backend`, `dimension`, `chunk_size`, `chunk_step`.
+   - If metadata is missing, validation is skipped (and a warning is logged when
+     `EMBEDDING_BACKEND != ollama`).
 
 ### MedGemma: Hard Toggle
 

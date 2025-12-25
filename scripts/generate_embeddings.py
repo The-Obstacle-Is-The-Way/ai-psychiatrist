@@ -27,6 +27,7 @@ import argparse
 import asyncio
 import hashlib
 import json
+import re
 import sys
 from datetime import UTC, datetime
 from pathlib import Path
@@ -40,10 +41,12 @@ sys.path.insert(0, str(Path(__file__).parent.parent / "src"))
 from ai_psychiatrist.config import (
     DataSettings,
     EmbeddingBackend,
+    LLMBackend,
     LoggingSettings,
     get_settings,
 )
 from ai_psychiatrist.infrastructure.llm.factory import create_embedding_client
+from ai_psychiatrist.infrastructure.llm.model_aliases import resolve_model_name
 from ai_psychiatrist.infrastructure.logging import get_logger, setup_logging
 from ai_psychiatrist.services.transcript import TranscriptService
 
@@ -240,10 +243,20 @@ def slugify_model(model: str) -> str:
     """Deterministic model name slugification."""
     # Qwen/Qwen3-Embedding-8B -> qwen3_8b
     # qwen3-embedding:8b -> qwen3_8b
-    slug = model.split("/")[-1].split(":")[0].lower()
-    slug = slug.replace("-embedding", "").replace("_embedding", "")
-    slug = slug.replace("-", "_")
-    return slug
+    raw = model.split("/")[-1].lower()
+
+    name_part, tag_part = raw, ""
+    if ":" in raw:
+        name_part, tag_part = raw.split(":", 1)
+
+    base = name_part.replace("-embedding", "").replace("_embedding", "")
+    base = re.sub(r"[^a-z0-9]+", "_", base).strip("_")
+    tag_part = re.sub(r"[^a-z0-9]+", "_", tag_part).strip("_")
+
+    if tag_part and not base.endswith(f"_{tag_part}"):
+        base = f"{base}_{tag_part}"
+
+    return base
 
 
 def get_output_filename(backend: str, model: str, split: str) -> str:
@@ -279,6 +292,7 @@ async def main_async(args: argparse.Namespace) -> int:  # noqa: PLR0915
     dimension = embedding_settings.dimension
     min_chars = embedding_settings.min_evidence_chars
     model = model_settings.embedding_model
+    resolved_model = resolve_model_name(model, LLMBackend(backend_settings.backend.value))
 
     # Determine output path
     if args.output:
@@ -296,6 +310,7 @@ async def main_async(args: argparse.Namespace) -> int:  # noqa: PLR0915
     print("=" * 60)
     print(f"  Backend: {backend_settings.backend.value}")
     print(f"  Model: {model}")
+    print(f"  Model (resolved): {resolved_model}")
     print(f"  Dimension: {dimension}")
     print(f"  Chunk size: {chunk_size} lines")
     print(f"  Step size: {step_size} lines")
@@ -365,7 +380,8 @@ async def main_async(args: argparse.Namespace) -> int:  # noqa: PLR0915
         # Prepare metadata
         metadata = {
             "backend": backend_settings.backend.value,
-            "model": model,
+            "model": resolved_model,
+            "model_canonical": model,
             "dimension": dimension,
             "chunk_size": chunk_size,
             "chunk_step": step_size,

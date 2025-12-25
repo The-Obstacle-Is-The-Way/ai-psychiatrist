@@ -48,7 +48,7 @@ class EmbeddingBackend(str, Enum):
 class BackendSettings(BaseSettings):
     """LLM backend configuration.
 
-    This selects which runtime implementation to use for chat and embedding.
+    This selects which runtime implementation to use for chat.
     """
 
     model_config = SettingsConfigDict(
@@ -139,7 +139,7 @@ class ModelSettings(BaseSettings):
     for paper-parity defaults; override `quantitative_model` to evaluate Appendix F.
 
     Embeddings (Section 2.2): Qwen 3 8B Embedding. The paper does not specify
-    quantization; the default tag below uses Q8_0 to match the research scripts.
+    quantization.
     """
 
     model_config = SettingsConfigDict(
@@ -325,6 +325,35 @@ class DataSettings(BaseSettings):
         return v
 
 
+def resolve_reference_embeddings_path(
+    data_settings: DataSettings,
+    embedding_settings: EmbeddingSettings,
+) -> Path:
+    """Resolve the reference embeddings NPZ path used for few-shot retrieval.
+
+    Precedence:
+    1) `DATA_EMBEDDINGS_PATH` if explicitly set.
+    2) `EMBEDDING_EMBEDDINGS_FILE` resolved under `{DATA_BASE_DIR}/embeddings/`.
+    """
+    # Explicit full-path override wins (including env-provided values).
+    if "embeddings_path" in data_settings.model_fields_set:
+        return data_settings.embeddings_path
+
+    candidate = Path(embedding_settings.embeddings_file)
+
+    # Absolute paths are used as-is (ensure .npz suffix).
+    if candidate.is_absolute():
+        return candidate if candidate.suffix == ".npz" else candidate.with_suffix(".npz")
+
+    # Relative paths with directories are resolved under the data base dir.
+    if candidate.parent != Path():
+        resolved = data_settings.base_dir / candidate
+        return resolved if resolved.suffix == ".npz" else resolved.with_suffix(".npz")
+
+    # Basename-only: resolve under the embeddings directory.
+    return (data_settings.base_dir / "embeddings" / candidate.name).with_suffix(".npz")
+
+
 class LoggingSettings(BaseSettings):
     """Logging configuration."""
 
@@ -397,9 +426,10 @@ class Settings(BaseSettings):
     @model_validator(mode="after")
     def validate_consistency(self) -> Settings:
         """Validate cross-field consistency."""
-        if self.enable_few_shot and not self.data.embeddings_path.exists():
+        embeddings_path = resolve_reference_embeddings_path(self.data, self.embedding)
+        if self.enable_few_shot and not embeddings_path.exists():
             warnings.warn(
-                f"Few-shot enabled but embeddings not found: {self.data.embeddings_path}",
+                f"Few-shot enabled but embeddings not found: {embeddings_path}",
                 stacklevel=2,
             )
         return self
