@@ -151,6 +151,10 @@ Few-shot retrieval configuration.
 | `EMBEDDING_MIN_EVIDENCE_CHARS` | int | `8` | Minimum text for embedding |
 | `EMBEDDING_EMBEDDINGS_FILE` | string | `paper_reference_embeddings` | Reference embeddings basename (no extension), resolved under `{DATA_BASE_DIR}/embeddings/` |
 
+**Note on artifact naming**: `scripts/generate_embeddings.py` defaults to writing a namespaced artifact like
+`data/embeddings/{backend}_{model_slug}_{split}.npz`. After generating, set `EMBEDDING_EMBEDDINGS_FILE` to that basename
+(or pass `--output` to write to `paper_reference_embeddings.npz`).
+
 **Paper optimization results (Appendix D):**
 - Embedding dimension 4096 performed best among the tested dimensions (64, 256, 1024, 4096)
 - Chunk size 8 optimal for clinical interviews

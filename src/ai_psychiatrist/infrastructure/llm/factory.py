@@ -48,7 +48,7 @@ def create_embedding_client(settings: Settings) -> EmbeddingClient:
     Separate from create_llm_client() to allow different backends
     for chat vs embeddings.
     """
-    backend = settings.embedding_backend.backend
+    backend = settings.embedding_config.backend
 
     if backend == EmbeddingBackend.OLLAMA:
         return OllamaClient(settings.ollama)

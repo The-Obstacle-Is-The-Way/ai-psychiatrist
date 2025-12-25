@@ -291,7 +291,7 @@ class TestSettings:
         settings = Settings()
         assert settings.ollama is not None
         assert settings.model is not None
-        assert settings.embedding_backend is not None
+        assert settings.embedding_config is not None
         assert settings.embedding is not None
         assert settings.feedback is not None
         assert settings.data is not None

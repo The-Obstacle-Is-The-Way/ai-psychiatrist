@@ -273,7 +273,7 @@ def create_llm_client(settings: Settings) -> LLMClient:
 
 
 def create_embedding_client(settings: Settings) -> EmbeddingClient:
-    backend = settings.embedding_backend.backend
+    backend = settings.embedding_config.backend
     if backend == EmbeddingBackend.OLLAMA:
         return OllamaClient(settings.ollama)
     if backend == EmbeddingBackend.HUGGINGFACE:

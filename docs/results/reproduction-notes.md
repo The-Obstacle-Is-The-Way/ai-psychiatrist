@@ -76,8 +76,8 @@ Possible reasons (investigation needed):
 ### Commands Run
 
 ```bash
-# 1. Create paper-style 58/43/41 split
-uv run python scripts/create_paper_split.py --seed 42
+# 1. Create paper ground truth 58/43/41 split
+uv run python scripts/create_paper_split.py --verify
 
 # 2. Generate embeddings for paper train set (58 participants, ~65 min)
 uv run python scripts/generate_embeddings.py --split paper-train
@@ -86,9 +86,9 @@ uv run python scripts/generate_embeddings.py --split paper-train
 uv run python scripts/reproduce_results.py --split paper --few-shot-only
 ```
 
-Note: `--seed` provides determinism for our implementation. The paper does not publish the exact
-split membership (participant IDs), so results may differ across implementations even when the
-methodology matches.
+Note: `scripts/create_paper_split.py` now defaults to paper ground truth IDs (see `docs/data/DATA_SPLIT_REGISTRY.md`).
+The legacy algorithmic split generator is preserved as `--mode algorithmic` for reference/testing, but it will not match
+the paper’s exact split membership.
 
 ### Artifacts Generated
 

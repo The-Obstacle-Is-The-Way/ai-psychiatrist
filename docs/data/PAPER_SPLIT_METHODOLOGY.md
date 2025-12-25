@@ -2,17 +2,17 @@
 
 **Status**: VERIFIED
 **Date**: 2025-12-25
-**Related**: `DATA_SPLIT_REGISTRY.md`, `CRITICAL_DATA_SPLIT_MISMATCH.md`
+**Related**: `DATA_SPLIT_REGISTRY.md`, `CRITICAL_DATA_SPLIT_MISMATCH.md`, `RANDOMIZATION_METHODOLOGY_DISCOVERED.md`
 
 ---
 
 ## Executive Summary
 
-We **successfully reconstructed the paper's exact data splits** by extracting participant IDs from their published output files in `_reference/analysis_output/`. This reconstruction **confirms that the paper followed their stated methodology** (Appendix C) - the heuristics they described are verifiably correct.
+We **reconstructed the paper's exact TRAIN/VAL/TEST participant IDs** by extracting them from the paper authors' published output files in `_reference/analysis_output/`. These IDs are codified in `DATA_SPLIT_REGISTRY.md` and are the authoritative ground truth for reproducing the paper's results.
 
-The **only element we cannot explicitly reproduce** is their random seed for stratifying groups with 4+ participants. However, standard tools like scikit-learn's `train_test_split` with stratification are freely available and were almost certainly used.
+We also identified how the paper authors implemented their split randomization in code (see `RANDOMIZATION_METHODOLOGY_DISCOVERED.md`). The implementation uses NumPy RNG (`np.random.seed` + `np.random.shuffle`) with a per-stratum reseed pattern and a post-processing override step for PHQ-8 scores with exactly two participants.
 
-Our `DATA_SPLIT_REGISTRY.md` contains the authoritative ground truth IDs.
+Even with the implementation details and seed discovered, **the safest reproducibility strategy remains using the hardcoded ground truth IDs** from `DATA_SPLIT_REGISTRY.md`.
 
 ---
 
@@ -28,7 +28,7 @@ The paper combined AVEC2017 train and dev sets (142 participants total):
 | dev | 35 | Yes | Yes |
 | test | 47 | **No** | **Excluded** |
 
-**Key insight**: The AVEC2017 test set was excluded because it only contains total PHQ-8 scores (for competition evaluation), not the per-item scores needed for the paper's quantitative assessment agent.
+**Key insight**: The AVEC2017 test split does not include per-item PHQ-8 labels. In this repo, `data/test_split_Depression_AVEC2017.csv` contains identifiers (and gender) only, and `data/full_test_split.csv` (if present) contains total PHQ scores only. The paper's quantitative assessment agent requires per-item PHQ-8.
 
 ### 1.2 Paper's Re-Split
 
@@ -55,7 +55,7 @@ We extracted the exact participant IDs directly from the paper authors' publishe
 | Output File | What It Contains | IDs Extracted |
 |-------------|------------------|---------------|
 | `_reference/analysis_output/quan_gemma_zero_shot.jsonl` | All 142 participants | ALL |
-| `_reference/analysis_output/quan_gemma_few_shot/VAL_analysis_output/*.jsonl` | VAL set evaluations | 43 VAL IDs |
+| `_reference/analysis_output/quan_gemma_few_shot/VAL_analysis_output/*.jsonl` | VAL set evaluations | 43 VAL IDs (union across files) |
 | `_reference/analysis_output/quan_gemma_few_shot/TEST_analysis_output/*.jsonl` | TEST set evaluations | 41 TEST IDs |
 | Computed: ALL - VAL - TEST | Remainder | 58 TRAIN IDs |
 
@@ -71,7 +71,7 @@ We extracted the exact participant IDs directly from the paper authors' publishe
 | TRAIN ∩ TEST | 0 (no overlap) |
 | VAL ∩ TEST | 0 (no overlap) |
 | All IDs exist in AVEC train+dev | Yes |
-| Consistent across all output files | Yes |
+| Consistent across output files | Yes (split membership is consistent; a minority of individual VAL analysis files omit 1 ID, so use union / `DATA_SPLIT_REGISTRY.md`) |
 
 ---
 
@@ -127,51 +127,41 @@ For (score, gender) groups with exactly 3 participants, sorted by Participant_ID
 
 ### 3.3 Groups with 4+ Participants
 
-For larger (score, gender) strata, the paper used randomized stratification maintaining the 41%/30%/29% ratio. The specific assignments cannot be reproduced without the original random seed.
+For larger (score, gender) strata, the paper used randomized stratification to achieve the global 58/43/41 split. The paper's implementation details are summarized in `RANDOMIZATION_METHODOLOGY_DISCOVERED.md`.
 
 ---
 
-## 4. Standard Tools for Stratified Splitting
+## 4. Randomization Implementation (Discovered from Code)
 
-The paper's methodology uses standard stratified splitting techniques. These tools are **freely available** and widely used in machine learning:
+This section summarizes what we learned by reviewing the paper authors' code (see `RANDOMIZATION_METHODOLOGY_DISCOVERED.md`). This is distinct from the ground truth split membership (which is derived from output files and recorded in `DATA_SPLIT_REGISTRY.md`).
 
-### 4.1 scikit-learn's `train_test_split` with Combined Stratification
+### 4.1 Key Findings
 
-```python
-from sklearn.model_selection import train_test_split
+- The split is implemented using NumPy RNG (`np.random.seed(42)` + `np.random.shuffle`), not `sklearn.model_selection.train_test_split`.
+- The seed `42` is reset inside the per-stratum loop for strata with ≥3 participants.
+- Strata with exactly 2 participants (by `Gender + '_' + PHQ8_Score`) are shuffled without reseeding and initially assigned 1 TRAIN + 1 TEST.
+- A post-processing override reassigns PHQ-8 scores with exactly 2 participants (regardless of gender) to 1 VAL + 1 TEST.
 
-# Combine PHQ-8 score and gender into a single stratification variable
-df['strata'] = df['PHQ8_Score'].astype(str) + '_' + df['Gender'].astype(str)
+### 4.2 High-Level Algorithm (as Implemented)
 
-# Two-stage split: first train vs (val+test), then val vs test
-train, temp = train_test_split(df, test_size=0.59, stratify=df['strata'], random_state=SEED)
-val, test = train_test_split(temp, test_size=0.488, stratify=temp['strata'], random_state=SEED)
+```text
+Input: AVEC train+dev participants (142) with PHQ8_Score + Gender
+
+1) Create primary strata: strat_var = Gender + '_' + PHQ8_Score
+2) Process by stratum size:
+   - size ≥ 3: reseed(42), shuffle, then split per-stratum (target ~40/30/30 with rounding)
+   - size == 2: shuffle (no reseed), then 1 TRAIN + 1 TEST
+   - size == 1: 1 TRAIN
+3) Post-processing override:
+   - For PHQ8_Score values with exactly 2 participants total (regardless of gender):
+     remove from current assignments; shuffle (no reseed); then 1 VAL + 1 TEST
 ```
 
-**Reference**: [scikit-learn train_test_split documentation](https://scikit-learn.org/stable/modules/generated/sklearn.model_selection.train_test_split.html)
+### 4.3 Practical Reproducibility Notes
 
-### 4.2 scikit-learn's `StratifiedShuffleSplit`
-
-```python
-from sklearn.model_selection import StratifiedShuffleSplit
-
-sss = StratifiedShuffleSplit(n_splits=1, test_size=0.29, random_state=SEED)
-# ... with custom handling for rare strata
-```
-
-**Reference**: [scikit-learn StratifiedShuffleSplit documentation](https://scikit-learn.org/stable/modules/generated/sklearn.model_selection.StratifiedShuffleSplit.html)
-
-### 4.3 What We Reconstructed vs What Remains Unknown
-
-| Element | Status | Notes |
-|---------|--------|-------|
-| **Exact participant IDs** | Reconstructed | Extracted from output artifacts |
-| **Stratification methodology** | Confirmed | Matches paper's Appendix C |
-| **Heuristics for rare groups** | Verified | 1-2 participant rules followed |
-| **Random seed** | Unknown | Not disclosed; affects only groups of 4+ |
-| **Tool used** | Likely scikit-learn | Standard approach, freely available |
-
-The random seed only affects groups with 4+ participants. Since we have the exact IDs from their artifacts, the unknown seed is irrelevant for reproduction.
+- The split membership is reproducible by definition via `DATA_SPLIT_REGISTRY.md` (output-derived ground truth).
+- Algorithmic reproduction is more fragile due to ordering and mixed reseeded/unseeded shuffles (details in `RANDOMIZATION_METHODOLOGY_DISCOVERED.md`).
+- With identical input CSVs, NumPy/pandas versions, and category iteration order, the paper’s splitting code is deterministic (seeding makes pseudo-random operations reproducible); the fragility is that those factors are not guaranteed across environments.
 
 ---
 
@@ -182,17 +172,18 @@ The random seed only affects groups with 4+ participants. Since we have the exac
 1. **Exact participant IDs**: Reconstructed from `_reference/analysis_output/`
 2. **Stated heuristics followed**: Rules for 1-2 participant scores are 100% followed
 3. **Stratification variables**: PHQ-8 score and Gender (jointly)
-4. **Target ratios**: 41% TRAIN / 30% VAL / 29% TEST
+4. **Global split counts**: 58 TRAIN / 43 VAL / 41 TEST (≈41% / 30% / 29%)
+5. **Implementation detail**: NumPy RNG splitting with per-stratum reseed + post-processing override (see `RANDOMIZATION_METHODOLOGY_DISCOVERED.md`)
 
 ### What We Don't Know
 
-1. **Random seed**: Not disclosed in paper
-2. **Exact library/function**: Likely scikit-learn but unconfirmed
-3. **Implementation details**: Manual vs automated handling of rare strata
+1. **Exact processing order**: category iteration order affects mixed reseeded/unseeded shuffle state
+2. **Exact input files and versions**: the paper's code reads CSVs outside this repo
+3. **Potential manual adjustments**: not evidenced in the output artifacts
 
 ### Our Approach
 
-Since algorithmic reproduction is impossible without the seed, we:
+Since the output artifacts already encode the truth, we:
 1. **Extracted exact IDs from the paper's output artifacts** (authoritative source)
 2. **Documented in `DATA_SPLIT_REGISTRY.md`** (single source of truth)
 3. **Will hardcode these IDs in `create_paper_split.py`** (reproducible implementation)
@@ -225,6 +216,7 @@ In this case, we were able to reconstruct the splits from output artifacts - but
 | `DATA_SPLIT_REGISTRY.md`          | Ground truth participant IDs (the authoritative source) |
 | `CRITICAL_DATA_SPLIT_MISMATCH.md` | How we discovered our algorithmic splits were wrong     |
 | `SPEC-DATA-SPLIT-FIX.md`          | Implementation spec for fixing our artifacts            |
+| `RANDOMIZATION_METHODOLOGY_DISCOVERED.md` | Discovered implementation details from paper authors' code |
 | `artifact-namespace-registry.md`  | Naming conventions for split-related files              |
 
 ---

@@ -11,6 +11,7 @@ from ai_psychiatrist.config import (
     EmbeddingBackend,
     EmbeddingBackendSettings,
     EmbeddingSettings,
+    ModelSettings,
 )
 from ai_psychiatrist.domain.exceptions import (
     EmbeddingArtifactMismatchError,
@@ -200,6 +201,123 @@ class TestReferenceStoreMetadata:
         with (
             patch("numpy.load", return_value=mock_npz),
             pytest.raises(EmbeddingArtifactMismatchError, match="chunk_step mismatch"),
+        ):
+            store._load_embeddings()
+
+    def test_validation_fail_model(
+        self,
+        data_settings: DataSettings,
+        embedding_settings: EmbeddingSettings,
+        embedding_backend_settings: EmbeddingBackendSettings,
+    ) -> None:
+        """Should fail when resolved model mismatches."""
+        model_settings = ModelSettings(embedding_model="qwen3-embedding:8b")
+        store = ReferenceStore(
+            data_settings,
+            embedding_settings,
+            embedding_backend_settings,
+            model_settings,
+        )
+
+        meta_path = data_settings.embeddings_path.with_suffix(".meta.json")
+        meta_path.write_text(
+            json.dumps(
+                {
+                    "backend": "huggingface",
+                    "model": "some/other-model",  # mismatch vs resolved Qwen/Qwen3-Embedding-8B
+                }
+            )
+        )
+
+        data_settings.embeddings_path.touch()
+        data_settings.embeddings_path.with_suffix(".json").write_text("{}")
+
+        mock_npz = MagicMock()
+        mock_npz.close = MagicMock()
+
+        with (
+            patch("numpy.load", return_value=mock_npz),
+            pytest.raises(EmbeddingArtifactMismatchError, match="model mismatch"),
+        ):
+            store._load_embeddings()
+
+    def test_validation_fail_split_hash(
+        self,
+        tmp_path: Path,
+        embedding_settings: EmbeddingSettings,
+        embedding_backend_settings: EmbeddingBackendSettings,
+    ) -> None:
+        """Should fail when split CSV hash mismatches."""
+        base = tmp_path / "data"
+        base.mkdir()
+        transcripts_dir = base / "transcripts"
+        transcripts_dir.mkdir()
+
+        train_csv = base / "train.csv"
+        train_csv.write_text("Participant_ID,Gender\\n1,M\\n", encoding="utf-8")
+
+        data_settings = DataSettings(
+            base_dir=base,
+            transcripts_dir=transcripts_dir,
+            embeddings_path=base / "embeddings.npz",
+            train_csv=train_csv,
+            dev_csv=base / "dev.csv",
+        )
+
+        store = ReferenceStore(data_settings, embedding_settings, embedding_backend_settings)
+
+        meta_path = data_settings.embeddings_path.with_suffix(".meta.json")
+        meta_path.write_text(
+            json.dumps(
+                {
+                    "backend": "huggingface",
+                    "split": "avec-train",
+                    "split_csv_hash": "deadbeefdead",  # mismatch
+                }
+            ),
+            encoding="utf-8",
+        )
+
+        data_settings.embeddings_path.touch()
+        data_settings.embeddings_path.with_suffix(".json").write_text("{}", encoding="utf-8")
+
+        mock_npz = MagicMock()
+        mock_npz.close = MagicMock()
+
+        with (
+            patch("numpy.load", return_value=mock_npz),
+            pytest.raises(EmbeddingArtifactMismatchError, match="split_csv_hash mismatch"),
+        ):
+            store._load_embeddings()
+
+    def test_validation_fail_min_evidence_chars(
+        self,
+        data_settings: DataSettings,
+        embedding_settings: EmbeddingSettings,
+        embedding_backend_settings: EmbeddingBackendSettings,
+    ) -> None:
+        """Should fail when min_evidence_chars mismatches."""
+        store = ReferenceStore(data_settings, embedding_settings, embedding_backend_settings)
+
+        meta_path = data_settings.embeddings_path.with_suffix(".meta.json")
+        meta_path.write_text(
+            json.dumps(
+                {
+                    "backend": "huggingface",
+                    "min_evidence_chars": 9,  # mismatch vs default 8
+                }
+            )
+        )
+
+        data_settings.embeddings_path.touch()
+        data_settings.embeddings_path.with_suffix(".json").write_text("{}")
+
+        mock_npz = MagicMock()
+        mock_npz.close = MagicMock()
+
+        with (
+            patch("numpy.load", return_value=mock_npz),
+            pytest.raises(EmbeddingArtifactMismatchError, match="min_evidence_chars mismatch"),
         ):
             store._load_embeddings()
 

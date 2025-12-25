@@ -130,10 +130,10 @@ uv run python scripts/reproduce_results.py --split dev
 **Pros**: Simpler, no data leakage concerns, uses official splits
 **Cons**: Results not directly comparable to paper's 0.619 MAE
 
-### Option B: Use Paper-Style Split (Recommended for Reproduction)
+### Option B: Use Paper Ground Truth Split (Recommended for Reproduction)
 
 ```bash
-uv run python scripts/create_paper_split.py --seed 42
+uv run python scripts/create_paper_split.py  # uses --mode ground-truth by default
 uv run python scripts/generate_embeddings.py --split paper-train
 uv run python scripts/reproduce_results.py --split paper
 ```
@@ -142,11 +142,11 @@ uv run python scripts/reproduce_results.py --split paper
 |--------|-------|
 | Evaluation set | Custom test split (41 participants) |
 | Knowledge base | Custom train split (58 participants) |
-| Comparable to paper? | ⚠️ Same methodology; exact split membership not published (see `docs/bugs/gap-001-paper-unspecified-parameters.md`) |
+| Comparable to paper? | ✅ **Exact match** (IDs reverse-engineered from output files) |
 | Valid methodology? | ✅ Yes |
 
-**Pros**: Matches paper methodology (Appendix C algorithm) and produces 58/43/41 counts deterministically
-**Cons**: Requires generating paper split + paper embeddings artifact locally (not committed)
+**Pros**: Matches paper participants exactly.
+**Cons**: Requires generating paper split + paper embeddings artifact locally (not committed).
 
 ### Option C: Full Train+Dev Evaluation
 
@@ -197,12 +197,11 @@ This is correct. We never include dev participants in the knowledge base.
 
 ### For Paper Reproduction
 
-1. **Generate paper-style splits**:
+1. **Generate paper ground truth splits**:
    ```bash
-   uv run python scripts/create_paper_split.py --seed 42
+   uv run python scripts/create_paper_split.py
    ```
-   `--seed` is required for determinism. The paper does not publish the seed or the exact
-   participant ID lists, so this produces a *paper-style* split (see `docs/bugs/gap-001-paper-unspecified-parameters.md`).
+   This uses the exact participant IDs reverse-engineered from the paper authors' output files.
 
 2. **Regenerate embeddings using paper train split only**:
    ```bash

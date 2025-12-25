@@ -276,12 +276,12 @@ async def main_async(args: argparse.Namespace) -> int:  # noqa: PLR0915
 
     # Override backend if specified
     if args.backend:
-        settings.embedding_backend.backend = EmbeddingBackend(args.backend)
+        settings.embedding_config.backend = EmbeddingBackend(args.backend)
 
     data_settings = settings.data
     embedding_settings = settings.embedding
     model_settings = settings.model
-    backend_settings = settings.embedding_backend
+    backend_settings = settings.embedding_config
 
     # Paper-optimal hyperparameters
     chunk_size = embedding_settings.chunk_size
@@ -382,6 +382,7 @@ async def main_async(args: argparse.Namespace) -> int:  # noqa: PLR0915
             "dimension": dimension,
             "chunk_size": chunk_size,
             "chunk_step": step_size,
+            "min_evidence_chars": min_chars,
             "split": args.split,
             "participant_count": len(all_embeddings),
             "generated_at": datetime.now(UTC).isoformat(),

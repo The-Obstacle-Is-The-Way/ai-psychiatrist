@@ -408,7 +408,7 @@ class Settings(BaseSettings):
 
     # Nested settings groups
     backend: BackendSettings = Field(default_factory=BackendSettings)
-    embedding_backend: EmbeddingBackendSettings = Field(default_factory=EmbeddingBackendSettings)
+    embedding_config: EmbeddingBackendSettings = Field(default_factory=EmbeddingBackendSettings)
     ollama: OllamaSettings = Field(default_factory=OllamaSettings)
     model: ModelSettings = Field(default_factory=ModelSettings)
     embedding: EmbeddingSettings = Field(default_factory=EmbeddingSettings)

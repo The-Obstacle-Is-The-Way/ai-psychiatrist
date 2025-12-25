@@ -1,109 +1,55 @@
-# CRITICAL FINDING: Data Split Mismatch
+# CRITICAL: Data Split Mismatch (FIXED)
 
-**Date**: 2024-12-24
-**Status**: CONFIRMED - NOT FIXED YET
-**Severity**: HIGH - Affects reproducibility of paper results
+> **Status**: FIXED
+> **Impact**: High (Invalidates previous reproduction attempts)
+> **Date Discovered**: 2024-12-24
+> **Date Fixed**: 2025-12-25
 
----
+## Resolution
 
-## Summary
+We have adopted the **ground truth** participant IDs reverse-engineered from the paper authors' output files. See `docs/data/DATA_SPLIT_REGISTRY.md` for the authoritative list.
 
-**Our current `data/paper_splits/` files contain WRONG participant IDs.**
+The `scripts/create_paper_split.py` script now defaults to `--mode ground-truth`, which uses these hardcoded IDs. The legacy algorithmic generation is preserved under `--mode algorithmic`.
 
-The split **sizes** are correct (58/43/41), but the **participant assignments** are completely different from what the paper actually used.
+## Problem Description (Historical)
 
----
+The paper describes a stratified split of 142 participants into 58 Train / 43 Val / 41 Test.
+However, it does **not** provide the list of participant IDs.
 
-## Evidence
+We implemented the stratification algorithm described in Appendix C (seed=42).
+**Crucially, our generated splits do NOT match the paper's splits.**
 
-### Ground Truth (from `docs/data/DATA_SPLIT_REGISTRY.md`)
+### Evidence
 
-This was reverse-engineered from the paper authors' actual output files in `_reference/analysis_output/`:
+Comparison of our `paper_split_test.csv` vs the paper's `DIM_TEST_analysis_output`:
 
-| Split | Count | Source |
-|-------|-------|--------|
-| TRAIN | 58 | Derived from `quan_gemma_zero_shot.jsonl` minus TEST minus VAL |
-| VAL | 43 | `quan_gemma_few_shot/VAL_analysis_output/*.jsonl` |
-| TEST | 41 | `quan_gemma_few_shot/TEST_analysis_output/*.jsonl` |
+| Split | Paper Count | Our Count | Overlap | Mismatch |
+|-------|-------------|-----------|---------|----------|
+| Test  | 41          | 41        | 15      | **26**   |
 
-### Our Current Splits (from `data/paper_splits/paper_split_metadata.json`)
+**26 out of 41 test participants are different.**
+This means we are testing on participants the paper used for training or validation.
 
-Generated algorithmically with seed=42, following the paper's **methodology** but not their **exact IDs**.
+### Impact
 
-### Comparison Results
-
-```
-=== COMPARISON: Our splits vs Paper ground truth ===
-
-TRAIN: Ours=58, Registry=58
-  Match: False
-  In ours but not registry: [302, 319, 322, 326, 370, 371, 372, 374, 380, 385, 393, 422, 423, 436, 443, 446, 451, 454, 455, 456, 457, 459, 468, 479, 484, 487, 489]
-  In registry but not ours: [303, 310, 312, 315, 317, 318, 324, 327, 343, 352, 363, 391, 395, 402, 406, 412, 414, 415, 429, 437, 439, 444, 463, 464, 474, 475, 483]
-
-VAL: Ours=43, Registry=43
-  Match: False
-  In ours but not registry: [310, 315, 316, 318, 330, 352, 362, 363, 377, 379, 389, 391, 395, 406, 412, 413, 414, 417, 427, 439, 447, 463, 464, 472, 483]
-  In registry but not ours: [302, 307, 322, 325, 326, 341, 348, 351, 366, 371, 372, 374, 376, 380, 381, 382, 401, 419, 443, 446, 454, 457, 479, 482, 492]
-
-TEST: Ours=41, Registry=41
-  Match: False
-  In ours but not registry: [303, 307, 312, 317, 324, 325, 327, 341, 343, 348, 351, 366, 376, 381, 382, 401, 402, 415, 419, 429, 437, 444, 474, 475, 482, 492]
-  In registry but not ours: [316, 319, 330, 362, 370, 377, 379, 385, 389, 393, 413, 417, 422, 423, 427, 436, 447, 451, 455, 456, 459, 468, 472, 484, 487, 489]
-```
-
-**27 participants in TRAIN are wrong.**
-**25 participants in VAL are wrong.**
-**26 participants in TEST are wrong.**
-
----
-
-## Impact
-
-1. **Embeddings are wrong**: `generate_embeddings.py --split paper-train` uses the wrong 58 participants
-2. **Few-shot retrieval is wrong**: The reference embeddings were generated from wrong participants
-3. **Reproduction will not match paper**: Any evaluation on our TEST split evaluates different people
-4. **Metrics will differ**: Even with identical code, results won't match the paper
-
----
+1.  **Metric Comparability**: We cannot compare our MAE/F1 scores to the paper because the test sets are effectively disjoint (only ~36% overlap).
+2.  **Few-Shot Retrieval**: Our `paper_reference_embeddings.npz` (knowledge base) is built from our wrong `paper_split_train.csv`.
+    - If the paper used Participant X in training, they are in the KB.
+    - If we put Participant X in test, we are retrieving their own transcript from the KB (data leakage) OR missing them entirely.
 
 ## Root Cause
 
-Our `scripts/create_paper_split.py` implements the paper's **stratification algorithm** (Appendix C) with seed=42, but:
+The stratification algorithm (Appendix C) is under-specified. It depends on:
+1.  Random seed (unknown).
+2.  Exact order of operations for "randomly selecting" participants to move between buckets.
 
-1. The paper authors never disclosed their random seed
-2. The paper authors never disclosed exact participant IDs
-3. We had to reverse-engineer the truth from their output files
+We assumed `seed=42` would be "close enough" or that the stratification constraints were tight enough to force a unique solution. **They are not.** The solution space is large.
 
-The script even has this warning in its docstring:
-> "IMPORTANT: The paper does NOT provide exact participant IDs, so our splits will differ from the paper's."
+## Fix Implementation
 
----
+1.  Reverse-engineered the *exact* participant IDs from the paper's raw analysis output files (which contain filenames like `302_TRANSCRIPT.csv`).
+2.  Documented these IDs in `docs/data/DATA_SPLIT_REGISTRY.md`.
+3.  Updated `scripts/create_paper_split.py` to use these IDs by default.
+4.  Regenerated `data/paper_splits/` and `data/embeddings/paper_reference_embeddings.npz`.
 
-## Files Affected
-
-| File | Status |
-|------|--------|
-| `data/paper_splits/paper_split_train.csv` | WRONG IDs |
-| `data/paper_splits/paper_split_val.csv` | WRONG IDs |
-| `data/paper_splits/paper_split_test.csv` | WRONG IDs |
-| `data/paper_splits/paper_split_metadata.json` | WRONG IDs |
-| `data/embeddings/paper_reference_embeddings.npz` | Generated from WRONG training set |
-| `data/embeddings/paper_reference_embeddings.json` | Generated from WRONG training set |
-
----
-
-## Required Fix
-
-1. Regenerate `data/paper_splits/*.csv` using exact IDs from `docs/data/DATA_SPLIT_REGISTRY.md`
-2. Regenerate embeddings using the corrected training split
-3. Update `scripts/create_paper_split.py` to use ground truth IDs (not algorithmic generation)
-
----
-
-## Related Issues
-
-- GitHub Issue #45: "Research: Paper uses custom 58/43/41 stratified split (not AVEC2017 splits)"
-
----
-
-*DO NOT CLOSE THIS ISSUE UNTIL SPLITS ARE VERIFIED CORRECT*
+See `SPEC-DATA-SPLIT-FIX.md` for details.

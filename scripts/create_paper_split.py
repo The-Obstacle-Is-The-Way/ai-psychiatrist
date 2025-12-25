@@ -10,23 +10,26 @@ From Paper Section 2.4.1:
     into training, validation, and test sets. [...] We used a 41% training (58
     participants), 30% validation (43), and 29% test (41) split"
 
-From Paper Appendix C:
-    "For PHQ-8 total scores with two participants, we put one in the validation
-    set and one in the test set. For PHQ-8 total scores with one participant,
-    we put that one participant in the training set."
+Modes:
+    --mode ground-truth (DEFAULT):
+        Uses the exact participant IDs reverse-engineered from the paper authors'
+        output files (see docs/data/DATA_SPLIT_REGISTRY.md). This is required for
+        exact reproduction of paper results.
 
-IMPORTANT: The paper does NOT provide exact participant IDs, so our splits will
-differ from the paper's. However, the ALGORITHM is reproducible.
+    --mode algorithmic:
+        Uses the Appendix C stratification algorithm with a random seed. This produces
+        valid splits of the correct sizes (58/43/41) but different participant
+        assignments than the paper used.
 
 Usage:
-    # Create splits with default seed (42)
+    # Use ground truth IDs (default)
     python scripts/create_paper_split.py
 
-    # Create splits with specific seed
-    python scripts/create_paper_split.py --seed 123
+    # Verify against AVEC data + registry
+    python scripts/create_paper_split.py --verify
 
-    # Show split statistics without saving
-    python scripts/create_paper_split.py --dry-run
+    # Use algorithmic generation with seed
+    python scripts/create_paper_split.py --mode algorithmic --seed 123
 """
 
 from __future__ import annotations
@@ -38,6 +41,7 @@ import sys
 from collections import defaultdict
 from dataclasses import dataclass, field
 from pathlib import Path
+from typing import Any
 
 import pandas as pd
 
@@ -47,6 +51,158 @@ sys.path.insert(0, str(Path(__file__).parent.parent / "src"))
 _TARGET_TRAIN_COUNT = 58
 _TARGET_VAL_COUNT = 43
 _TARGET_TEST_COUNT = 41
+
+# Ground Truth IDs from docs/data/DATA_SPLIT_REGISTRY.md
+_GROUND_TRUTH_TRAIN_IDS = [
+    303,
+    304,
+    305,
+    310,
+    312,
+    313,
+    315,
+    317,
+    318,
+    321,
+    324,
+    327,
+    335,
+    338,
+    340,
+    343,
+    344,
+    346,
+    347,
+    350,
+    352,
+    356,
+    363,
+    368,
+    369,
+    388,
+    391,
+    395,
+    397,
+    400,
+    402,
+    404,
+    406,
+    412,
+    414,
+    415,
+    416,
+    418,
+    426,
+    429,
+    433,
+    434,
+    437,
+    439,
+    444,
+    458,
+    463,
+    464,
+    473,
+    474,
+    475,
+    476,
+    477,
+    478,
+    483,
+    486,
+    488,
+    491,
+]
+
+_GROUND_TRUTH_VAL_IDS = [
+    302,
+    307,
+    320,
+    322,
+    325,
+    326,
+    328,
+    331,
+    333,
+    336,
+    341,
+    348,
+    351,
+    353,
+    355,
+    358,
+    360,
+    364,
+    366,
+    371,
+    372,
+    374,
+    376,
+    380,
+    381,
+    382,
+    392,
+    401,
+    403,
+    419,
+    420,
+    425,
+    440,
+    443,
+    446,
+    448,
+    454,
+    457,
+    471,
+    479,
+    482,
+    490,
+    492,
+]
+
+_GROUND_TRUTH_TEST_IDS = [
+    316,
+    319,
+    330,
+    339,
+    345,
+    357,
+    362,
+    367,
+    370,
+    375,
+    377,
+    379,
+    383,
+    385,
+    386,
+    389,
+    390,
+    393,
+    409,
+    413,
+    417,
+    422,
+    423,
+    427,
+    428,
+    430,
+    436,
+    441,
+    445,
+    447,
+    449,
+    451,
+    455,
+    456,
+    459,
+    468,
+    472,
+    484,
+    485,
+    487,
+    489,
+]
 
 
 @dataclass
@@ -485,10 +641,10 @@ def compute_statistics(df: pd.DataFrame, ids: list[int]) -> SplitStatistics:
         count=len(ids),
         male_count=len(subset[subset["Gender"] == 0]),
         female_count=len(subset[subset["Gender"] == 1]),
-        phq8_mean=float(subset["PHQ8_Total"].mean()),
-        phq8_std=float(subset["PHQ8_Total"].std()),
-        phq8_min=int(subset["PHQ8_Total"].min()),
-        phq8_max=int(subset["PHQ8_Total"].max()),
+        phq8_mean=float(subset["PHQ8_Total"].mean()) if not subset.empty else 0.0,
+        phq8_std=float(subset["PHQ8_Total"].std()) if len(subset) > 1 else 0.0,
+        phq8_min=int(subset["PHQ8_Total"].min()) if not subset.empty else 0,
+        phq8_max=int(subset["PHQ8_Total"].max()) if not subset.empty else 0,
     )
 
 
@@ -497,6 +653,7 @@ def print_split_report(
     train_ids: list[int],
     val_ids: list[int],
     test_ids: list[int],
+    mode: str,
 ) -> None:
     """Print detailed split report."""
     train_stats = compute_statistics(df, train_ids)
@@ -504,7 +661,10 @@ def print_split_report(
     test_stats = compute_statistics(df, test_ids)
 
     print("\n" + "=" * 70)
-    print("PAPER-STYLE STRATIFIED SPLIT (Appendix C)")
+    if mode == "ground-truth":
+        print("PAPER GROUND TRUTH SPLIT (from DATA_SPLIT_REGISTRY.md)")
+    else:
+        print("PAPER-STYLE STRATIFIED SPLIT (Algorithmic)")
     print("=" * 70)
 
     print("\n### Split Sizes ###")
@@ -544,7 +704,8 @@ def save_splits(
     train_ids: list[int],
     val_ids: list[int],
     test_ids: list[int],
-    seed: int,
+    seed: int | None,
+    mode: str,
 ) -> None:
     """Save splits to CSV files and metadata JSON."""
     output_dir.mkdir(parents=True, exist_ok=True)
@@ -557,32 +718,50 @@ def save_splits(
         print(f"Saved: {output_file}")
 
     # Save metadata
-    metadata = {
-        "description": "Paper-style stratified split (Appendix C algorithm)",
-        "seed": seed,
-        "methodology": {
-            "source": "DAIC-WOZ train (107) + dev (35) = 142 subjects with per-item PHQ-8 labels",
-            "target_ratio": "41% train / 30% val / 29% test",
-            "stratification": "By PHQ-8 total score AND gender",
-            "singleton_rule": "Groups with 1 participant → training",
-            "pair_rule": "Groups with 2 participants → one to val, one to test",
-        },
-        "actual_sizes": {
-            "train": len(train_ids),
-            "val": len(val_ids),
-            "test": len(test_ids),
-        },
-        "paper_target_sizes": {
-            "train": 58,
-            "val": 43,
-            "test": 41,
-        },
-        "participant_ids": {
-            "train": sorted(train_ids),
-            "val": sorted(val_ids),
-            "test": sorted(test_ids),
-        },
-    }
+    if mode == "ground-truth":
+        metadata: dict[str, Any] = {
+            "description": "Paper ground truth splits (reverse-engineered from output files)",
+            "source": "docs/data/DATA_SPLIT_REGISTRY.md",
+            "methodology": {
+                "derivation": "Extracted participant IDs from paper authors' output files",
+                "train_source": "quan_gemma_zero_shot.jsonl minus TEST minus VAL",
+                "val_source": "quan_gemma_few_shot/VAL_analysis_output/*.jsonl",
+                "test_source": "quan_gemma_few_shot/TEST_analysis_output/*.jsonl",
+            },
+            "actual_sizes": {
+                "train": len(train_ids),
+                "val": len(val_ids),
+                "test": len(test_ids),
+            },
+            "participant_ids": {
+                "train": sorted(train_ids),
+                "val": sorted(val_ids),
+                "test": sorted(test_ids),
+            },
+        }
+    else:
+        # Algorithmic mode
+        metadata = {
+            "description": "Paper-style stratified split (Appendix C algorithm)",
+            "seed": seed,
+            "methodology": {
+                "source": "DAIC-WOZ train (107) + dev (35) = 142 subjects with per-item PHQ-8",
+                "target_ratio": "41% train / 30% val / 29% test",
+                "stratification": "By PHQ-8 total score AND gender",
+                "singleton_rule": "Groups with 1 participant → training",
+                "pair_rule": "Groups with 2 participants → one to val, one to test",
+            },
+            "actual_sizes": {
+                "train": len(train_ids),
+                "val": len(val_ids),
+                "test": len(test_ids),
+            },
+            "participant_ids": {
+                "train": sorted(train_ids),
+                "val": sorted(val_ids),
+                "test": sorted(test_ids),
+            },
+        }
 
     metadata_file = output_dir / "paper_split_metadata.json"
     with metadata_file.open("w") as f:
@@ -590,17 +769,59 @@ def save_splits(
     print(f"Saved: {metadata_file}")
 
 
+def verify_splits(
+    data_dir: Path,
+    train_ids: list[int],
+    val_ids: list[int],
+    test_ids: list[int],
+) -> None:
+    """Verify split correctness against ground truth expectations."""
+    print("Verifying splits...")
+    errors = []
+
+    # 1. Check sizes
+    if len(train_ids) != _TARGET_TRAIN_COUNT:
+        errors.append(f"Train count {len(train_ids)} != {_TARGET_TRAIN_COUNT}")
+    if len(val_ids) != _TARGET_VAL_COUNT:
+        errors.append(f"Val count {len(val_ids)} != {_TARGET_VAL_COUNT}")
+    if len(test_ids) != _TARGET_TEST_COUNT:
+        errors.append(f"Test count {len(test_ids)} != {_TARGET_TEST_COUNT}")
+
+    # 2. Check overlaps
+    all_sets = [set(train_ids), set(val_ids), set(test_ids)]
+    all_combined = set().union(*all_sets)
+    total_len = sum(len(s) for s in all_sets)
+
+    if len(all_combined) != 142:
+        errors.append(f"Total unique participants {len(all_combined)} != 142")
+
+    if total_len != 142:
+        errors.append(f"Sum of split sizes {total_len} != 142 (indicates overlap)")
+
+    # 3. Check transcript directories
+    transcripts_dir = data_dir / "transcripts"
+    if transcripts_dir.exists():
+        missing_transcripts = []
+        for pid in all_combined:
+            if not (transcripts_dir / f"{pid}_P").exists():
+                missing_transcripts.append(pid)
+        if missing_transcripts:
+            errors.append(f"Missing transcript directories for: {missing_transcripts}")
+
+    if errors:
+        print("\nVerification FAILED:")
+        for e in errors:
+            print(f"  - {e}")
+        sys.exit(1)
+
+    print("Verification PASSED: Sizes correct, no overlaps, transcripts present.")
+
+
 def main() -> int:
     """Main entry point."""
     parser = argparse.ArgumentParser(
-        description="Create paper-style stratified splits (Appendix C)",
+        description="Create paper-style stratified splits",
         formatter_class=argparse.RawDescriptionHelpFormatter,
-        epilog="""
-IMPORTANT: The paper does NOT provide exact participant IDs, so our splits
-will differ from the paper's. However, the ALGORITHM is reproducible.
-
-See GAP-001 documentation for details on paper-unspecified parameters.
-        """,
     )
     parser.add_argument(
         "--data-dir",
@@ -615,10 +836,21 @@ See GAP-001 documentation for details on paper-unspecified parameters.
         help="Output directory for split files",
     )
     parser.add_argument(
+        "--mode",
+        choices=["ground-truth", "algorithmic"],
+        default="ground-truth",
+        help="Split generation mode (default: ground-truth)",
+    )
+    parser.add_argument(
         "--seed",
         type=int,
         default=42,
-        help="Random seed for reproducibility (default: 42)",
+        help="Random seed (only for --mode algorithmic)",
+    )
+    parser.add_argument(
+        "--verify",
+        action="store_true",
+        help="Run strict validation checks on the generated splits",
     )
     parser.add_argument(
         "--dry-run",
@@ -627,35 +859,56 @@ See GAP-001 documentation for details on paper-unspecified parameters.
     )
     args = parser.parse_args()
 
+    # Load data
     print("Loading AVEC2017 train + dev data...")
     try:
         df = load_combined_data(args.data_dir)
     except FileNotFoundError as e:
         print(f"ERROR: {e}")
         return 1
-
     print(f"Loaded {len(df)} participants with per-item PHQ-8 labels")
 
-    print(f"\nCreating stratified split with seed={args.seed}...")
-    train_ids, val_ids, test_ids = stratified_split(df, seed=args.seed)
+    # Generate or select splits
+    if args.mode == "ground-truth":
+        if args.seed != 42:
+            print("WARNING: --seed is ignored in ground-truth mode.")
 
-    # Validate no duplicates
-    all_ids = train_ids + val_ids + test_ids
-    if len(all_ids) != len(set(all_ids)):
-        print("ERROR: Duplicate participant IDs in splits!")
-        return 1
+        print("\nUsing GROUND TRUTH splits from DATA_SPLIT_REGISTRY.md...")
+        train_ids = sorted(_GROUND_TRUTH_TRAIN_IDS)
+        val_ids = sorted(_GROUND_TRUTH_VAL_IDS)
+        test_ids = sorted(_GROUND_TRUTH_TEST_IDS)
 
-    if len(all_ids) != len(df):
-        print(f"ERROR: Split total ({len(all_ids)}) != data total ({len(df)})")
-        return 1
+        # Verify all ground truth IDs exist in the loaded data
+        loaded_ids = set(df["Participant_ID"])
+        missing_ids = set(train_ids + val_ids + test_ids) - loaded_ids
+        if missing_ids:
+            print(f"ERROR: Ground truth IDs not found in AVEC data: {missing_ids}")
+            return 1
 
-    print_split_report(df, train_ids, val_ids, test_ids)
+    else:
+        print(f"\nCreating algorithmic stratified split with seed={args.seed}...")
+        train_ids, val_ids, test_ids = stratified_split(df, seed=args.seed)
+
+    # Verify logic
+    if args.verify:
+        verify_splits(args.data_dir, train_ids, val_ids, test_ids)
+
+    # Reporting
+    print_split_report(df, train_ids, val_ids, test_ids, args.mode)
 
     if args.dry_run:
-        print("\n[DRY RUN] Would save splits to:", args.output_dir)
+        print(f"\n[DRY RUN] Would save splits to: {args.output_dir}")
         return 0
 
-    save_splits(args.output_dir, df, train_ids, val_ids, test_ids, args.seed)
+    save_splits(
+        args.output_dir,
+        df,
+        train_ids,
+        val_ids,
+        test_ids,
+        seed=args.seed if args.mode == "algorithmic" else None,
+        mode=args.mode,
+    )
     print("\nSplit files saved successfully!")
 
     return 0

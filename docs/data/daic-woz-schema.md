@@ -46,12 +46,12 @@ data/
 │   │   └── 301_TRANSCRIPT.csv
 │   └── .../
 ├── embeddings/                          # Pre-computed (Spec 08)
-│   ├── paper_reference_embeddings.npz   # Default paper-style knowledge base
+│   ├── paper_reference_embeddings.npz   # Default paper reference knowledge base (TRAIN=58)
 │   ├── paper_reference_embeddings.json
 │   ├── paper_reference_embeddings.meta.json  # Optional: provenance metadata
 │   ├── reference_embeddings.npz         # Optional: AVEC train knowledge base
 │   └── reference_embeddings.json
-├── paper_splits/                        # Optional: paper-style 58/43/41 split
+├── paper_splits/                        # Optional: paper 58/43/41 split (ground truth for reproduction)
 │   ├── paper_split_train.csv
 │   ├── paper_split_val.csv
 │   ├── paper_split_test.csv
@@ -267,7 +267,8 @@ The paper creates a custom 58/43/41 split from the 142 labeled participants:
 
 **Implementation**:
 - `scripts/create_paper_split.py` generates `data/paper_splits/paper_split_{train,val,test}.csv`
-  deterministically (seeded) from the AVEC2017 train+dev labeled set.
+  from the paper’s ground truth IDs in `docs/data/DATA_SPLIT_REGISTRY.md` (default), or can
+  generate an algorithmic seeded split with `--mode algorithmic`.
 - `scripts/generate_embeddings.py --split paper-train` generates
   `data/embeddings/{backend}_{model_slug}_paper_train.{npz,json,meta.json}` by default, or use
   `--output data/embeddings/paper_reference_embeddings.npz` for the legacy filename.
