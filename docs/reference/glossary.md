@@ -215,4 +215,8 @@ Binary format for storing multiple NumPy arrays. Used for pre-computed reference
 
 ### JSON Sidecar
 
-Companion JSON file containing metadata for binary files (e.g., `reference_embeddings.json` accompanies `reference_embeddings.npz`).
+Companion JSON file stored alongside an `.npz` artifact.
+
+In this repo:
+- `{name}.json` contains chunk texts aligned with the NPZ rows per participant.
+- `{name}.meta.json` (optional) contains provenance/validation metadata (backend, model, dimension, chunking).
