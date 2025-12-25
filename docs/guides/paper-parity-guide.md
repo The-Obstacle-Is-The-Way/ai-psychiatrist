@@ -10,7 +10,9 @@
 
 This guide explains how to run AI Psychiatrist in **paper parity mode** - configuration that matches the original research methodology as closely as possible.
 
-**Good news**: With SPEC-003 implemented, the **default configuration is now paper parity**.
+**Good news**: With SPEC-003 implemented, the **default backfill behavior is paper parity** (keyword backfill OFF).
+For full paper-parity backends (pure Ollama), set `EMBEDDING_BACKEND=ollama` so runtime embeddings match the
+pre-computed reference artifact.
 
 ---
 
@@ -87,6 +89,10 @@ Each N/A result now includes a reason for debugging:
 ## Full Paper Parity Configuration
 
 ```bash
+# Backends (paper-parity / no HF deps)
+LLM_BACKEND=ollama
+EMBEDDING_BACKEND=ollama
+
 # Model selection (Paper Section 2.2)
 MODEL_QUANTITATIVE_MODEL=gemma3:27b
 MODEL_QUALITATIVE_MODEL=gemma3:27b
@@ -121,8 +127,8 @@ QUANTITATIVE_TRACK_NA_REASONS=true
 # 1. Create paper-style 58/43/41 split
 uv run python scripts/create_paper_split.py --seed 42
 
-# 2. Generate embeddings for training set
-uv run python scripts/generate_embeddings.py --split paper-train
+# 2. Generate embeddings for training set (paper-parity artifact name)
+uv run python scripts/generate_embeddings.py --split paper-train --backend ollama --output data/embeddings/paper_reference_embeddings.npz
 
 # 3. Run reproduction (default = paper parity mode)
 uv run python scripts/reproduce_results.py --split paper --few-shot-only

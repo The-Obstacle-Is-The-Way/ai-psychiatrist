@@ -40,20 +40,20 @@ uv run pre-commit install
 ### 3. Pull Required Models
 
 ```bash
-# Primary LLM (Gemma 3 27B) - used by ALL agents (paper baseline)
+# Primary chat model (Gemma 3 27B) - used by agents via Ollama (paper baseline)
 ollama pull gemma3:27b
 
-# Embedding model (Qwen 3 8B) - for few-shot retrieval
+# Embedding model (Ollama backend only) - for few-shot retrieval
 ollama pull qwen3-embedding:8b
 ```
 
 > **Note**: These are large models. Ensure you have sufficient disk space (~35GB total).
 
-> **High-Quality Setup (Optional)**: For best results on capable hardware (32GB+ RAM), use HuggingFace backend:
-> - **MedGemma** (`google/medgemma-27b-text-it`): 18% better MAE than Gemma3 (Appendix F)
-> - **Qwen3-Embedding FP16** (`Qwen/Qwen3-Embedding-8B`): Higher precision than Ollama's Q4_K_M
+> **High-Quality Setup (Optional)**:
+> - **FP16 embeddings**: keep `EMBEDDING_BACKEND=huggingface` (default) and install HF deps with `make dev-hf`
+> - **Official MedGemma** (Appendix F): set `LLM_BACKEND=huggingface` and `MODEL_QUANTITATIVE_MODEL=medgemma:27b`
 >
-> Set `LLM_BACKEND=huggingface` and see [Model Registry - High-Quality Setup](../models/model-registry.md#high-quality-setup-recommended-for-production) for details.
+> See [Model Registry - High-Quality Setup](../models/model-registry.md#high-quality-setup-recommended-for-production).
 
 ### 4. Configure Environment
 
@@ -62,6 +62,9 @@ cp .env.example .env
 ```
 
 Default configuration uses paper-optimal settings. Edit `.env` to customize.
+
+> **Note**: The codebase supports separate backends for chat and embeddings. If you installed `make dev`
+> (without HuggingFace deps), set `EMBEDDING_BACKEND=ollama` in `.env` for a pure-Ollama setup.
 
 ---
 
@@ -179,7 +182,7 @@ This extracts transcripts and ground truth files.
 uv run python scripts/generate_embeddings.py
 ```
 
-Creates `data/embeddings/reference_embeddings.npz` and `data/embeddings/reference_embeddings.json`.
+Creates `data/embeddings/{backend}_{model}_{split}.npz` plus `.json` and `.meta.json` by default.
 
 ### 3. Assess a Participant
 

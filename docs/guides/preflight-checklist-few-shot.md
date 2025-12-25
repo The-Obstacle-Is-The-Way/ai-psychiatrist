@@ -86,6 +86,12 @@ Few-shot mode uses reference embeddings to retrieve similar transcript chunks as
   # Should show: MODEL_EMBEDDING_MODEL=qwen3-embedding:8b
   ```
 
+- [ ] **Verify embedding backend is paper-parity (Ollama)**:
+  ```bash
+  grep "EMBEDDING_BACKEND" .env
+  # MUST show: EMBEDDING_BACKEND=ollama
+  ```
+
 ### 2.3 Sampling Parameters
 
 **Reference**: GAP-001b/c, [Agent Sampling Registry](../reference/agent-sampling-registry.md)
@@ -134,7 +140,8 @@ Few-shot mode uses reference embeddings to retrieve similar transcript chunks as
 
 **Reference**: BUG-009
 
-**Gotcha**: Embedding dimension mismatches are silently ignored! System returns no references and degrades to zero-shot without errors.
+**Gotcha**: Dimension mismatches can result in skipped chunks. If *all* chunks are mismatched, the system fails loudly.
+If only some chunks are mismatched, retrieval quality degrades. Always validate dimensions pre-run.
 
 - [ ] **Verify dimension consistency**:
   ```bash
@@ -171,7 +178,7 @@ Few-shot mode uses reference embeddings to retrieve similar transcript chunks as
 
   If missing, generate (takes ~65 min for 58 participants):
   ```bash
-  uv run python scripts/generate_embeddings.py --split paper-train
+  uv run python scripts/generate_embeddings.py --split paper-train --backend ollama --output data/embeddings/paper_reference_embeddings.npz
   ```
 
 ### 4.2 Verify Embedding Integrity
