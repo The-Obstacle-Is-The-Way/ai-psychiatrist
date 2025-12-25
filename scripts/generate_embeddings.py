@@ -250,7 +250,7 @@ def get_output_filename(backend: str, model: str, split: str) -> str:
     """Generate standardized output filename.
 
     Format: {backend}_{model_slug}_{split}
-    Example: hf_qwen3_8b_paper_train
+    Example: huggingface_qwen3_8b_paper_train
     """
     model_slug = slugify_model(model)
     split_slug = split.replace("-", "_")

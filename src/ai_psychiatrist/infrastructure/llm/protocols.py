@@ -182,6 +182,11 @@ class ChatClient(Protocol):
         """
         ...
 
+    @abstractmethod
+    async def close(self) -> None:
+        """Release client resources."""
+        ...
+
 
 @runtime_checkable
 class EmbeddingClient(Protocol):
@@ -205,6 +210,11 @@ class EmbeddingClient(Protocol):
             LLMError: If request fails.
             LLMTimeoutError: If request times out.
         """
+        ...
+
+    @abstractmethod
+    async def close(self) -> None:
+        """Release client resources."""
         ...
 
 
