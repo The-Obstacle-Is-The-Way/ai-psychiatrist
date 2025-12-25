@@ -2,7 +2,7 @@
 
 **Purpose**: Document exactly how models and backends are wired in the codebase.
 **Last Updated**: 2025-12-24
-**Status**: Design spec. `EMBEDDING_BACKEND` not yet implemented in code (currently uses `LLM_BACKEND` for all).
+**Status**: Implemented. `LLM_BACKEND` for chat, `EMBEDDING_BACKEND` for embeddings.
 
 ---
 
