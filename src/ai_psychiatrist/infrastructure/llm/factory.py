@@ -22,7 +22,7 @@ def create_llm_client(settings: Settings) -> LLMClient:
     """Create an LLM client based on settings.backend.backend."""
     backend = settings.backend.backend
     if backend == LLMBackend.OLLAMA:
-        return OllamaClient(settings.ollama)
+        return OllamaClient(settings.ollama, model_settings=settings.model)
     if backend == LLMBackend.HUGGINGFACE:
         try:
             from ai_psychiatrist.infrastructure.llm.huggingface import (  # noqa: PLC0415
@@ -36,6 +36,7 @@ def create_llm_client(settings: Settings) -> LLMClient:
         return HuggingFaceClient(
             backend_settings=settings.backend,
             model_settings=settings.model,
+            huggingface_settings=settings.huggingface,
         )
 
     msg = f"Unsupported LLM backend: {backend}"
@@ -51,7 +52,7 @@ def create_embedding_client(settings: Settings) -> EmbeddingClient:
     backend = settings.embedding_config.backend
 
     if backend == EmbeddingBackend.OLLAMA:
-        return OllamaClient(settings.ollama)
+        return OllamaClient(settings.ollama, model_settings=settings.model)
 
     if backend == EmbeddingBackend.HUGGINGFACE:
         # Lazy import to avoid requiring HF deps when using Ollama
@@ -68,6 +69,7 @@ def create_embedding_client(settings: Settings) -> EmbeddingClient:
         return HuggingFaceClient(
             backend_settings=settings.backend,
             model_settings=settings.model,
+            huggingface_settings=settings.huggingface,
         )
 
     raise ValueError(f"Unknown embedding backend: {backend}")

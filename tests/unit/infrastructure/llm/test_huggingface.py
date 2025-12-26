@@ -12,7 +12,13 @@ from typing import Any, cast
 
 import pytest
 
-from ai_psychiatrist.config import BackendSettings, LLMBackend, ModelSettings, Settings
+from ai_psychiatrist.config import (
+    BackendSettings,
+    HuggingFaceSettings,
+    LLMBackend,
+    ModelSettings,
+    Settings,
+)
 from ai_psychiatrist.infrastructure.llm import huggingface as hf_mod
 from ai_psychiatrist.infrastructure.llm.factory import create_llm_client
 from ai_psychiatrist.infrastructure.llm.huggingface import (
@@ -89,6 +95,7 @@ class TestHuggingFaceClientMissingDeps:
         client = HuggingFaceClient(
             backend_settings=BackendSettings(backend=LLMBackend.HUGGINGFACE),
             model_settings=ModelSettings(),
+            huggingface_settings=HuggingFaceSettings(),
         )
 
         request = ChatRequest(
@@ -113,6 +120,7 @@ class TestHuggingFaceClientMissingDeps:
         client = HuggingFaceClient(
             backend_settings=BackendSettings(backend=LLMBackend.HUGGINGFACE),
             model_settings=ModelSettings(),
+            huggingface_settings=HuggingFaceSettings(),
         )
 
         request = EmbeddingRequest(

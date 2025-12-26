@@ -6,63 +6,63 @@ This file tracks hardcoded values and implementation discrepancies identified du
 
 ### LLM Clients
 
-1.  **HuggingFaceClient Timeouts**
+1.  **HuggingFaceClient Timeouts** (RESOLVED)
     *   **Location:** `src/ai_psychiatrist/infrastructure/llm/huggingface.py`
     *   **Issue:** `simple_chat` has hardcoded `timeout_seconds=180`. `simple_embed` has hardcoded `timeout_seconds=120`.
-    *   **Impact:** These helper methods are not configurable via `Settings`; callers cannot tune timeouts without using the lower-level `chat(...)` / `embed(...)` APIs.
+    *   **Resolution:** Introduced `HuggingFaceSettings` with `default_chat_timeout` and `default_embed_timeout` in `config.py`. Updated client to use these settings.
 
-2.  **OllamaClient Default Models**
+2.  **OllamaClient Default Models** (RESOLVED)
     *   **Location:** `src/ai_psychiatrist/infrastructure/llm/ollama.py`
     *   **Issue:** `simple_chat` defaults to string literal `"gemma3:27b"` and `simple_embed` to `"qwen3-embedding:8b"` when `model` arg is `None`.
-    *   **Impact:** Bypasses `ModelSettings`. If `config.py` defaults change, these hardcoded fallbacks will drift.
+    *   **Resolution:** Injected `ModelSettings` into `OllamaClient` constructor. `simple_chat` and `simple_embed` now fall back to `model_settings` values.
 
-3.  **Client Default Model Discrepancy**
+3.  **Client Default Model Discrepancy** (RESOLVED)
     *   **Location:** `src/ai_psychiatrist/infrastructure/llm/huggingface.py` vs `ollama.py`
     *   **Issue:** `HuggingFaceClient.simple_chat` defaults to `self._model_settings.qualitative_model`. `OllamaClient` defaults to the string literal `"gemma3:27b"`.
-    *   **Impact:** Inconsistent behavior depending on backend choice.
+    *   **Resolution:** Both clients now consistently use `ModelSettings` for defaults.
 
 ### API Server
 
-4.  **Assessment Mode Validation**
+4.  **Assessment Mode Validation** (RESOLVED)
     *   **Location:** `server.py:170-173`
     *   **Issue:** `AssessmentRequest.mode` has hardcoded `le=1` validation.
-    *   **Impact:** If `AssessmentMode` enum expands (e.g., to add `FINE_TUNED = 2`), the API will reject valid requests until this hardcoded constraint is updated.
+    *   **Resolution:** Updated `AssessmentRequest` to handle `AssessmentMode` enum directly, with backward compatibility for legacy integer inputs (0/1) via a validator.
 
-5.  **Magic Number Participant ID**
+5.  **Magic Number Participant ID** (RESOLVED)
     *   **Location:** `server.py:37`
     *   **Issue:** `AD_HOC_PARTICIPANT_ID = 999_999` is defined as a constant.
-    *   **Impact:** Potential collision if the dataset expands or numbering scheme changes. Should be configurable or handled via a separate Transcript subclass.
+    *   **Resolution:** Moved to `ServerSettings.ad_hoc_participant_id` in `config.py`.
 
 ## Agents
 
 ### Pydantic AI Agent Fallbacks
 
-6.  **Hardcoded Model Fallbacks in Agents**
+6.  **Hardcoded Model Fallbacks in Agents** (RESOLVED)
     *   **Locations:**
         - `src/ai_psychiatrist/agents/qualitative.py:101` - `"gemma3:27b"`
         - `src/ai_psychiatrist/agents/quantitative.py:119` - `"gemma3:27b"`
         - `src/ai_psychiatrist/agents/judge.py:68` - `"gemma3:27b"`
         - `src/ai_psychiatrist/agents/meta_review.py:88` - `"gemma3:27b"`
     *   **Issue:** When `model_settings` is `None`, these agents fall back to hardcoded string literal `"gemma3:27b"` instead of reading from config.
-    *   **Impact:** Bypasses `ModelSettings`. Same pattern as OllamaClient defaults.
+    *   **Resolution:** Implemented `get_model_name` helper in `config.py`. Agents now use this helper to resolve model names from settings or defaults.
 
 ## Services
 
 ### Embedding Service
 
-7.  **EmbeddingService Hardcoded Default**
+7.  **EmbeddingService Hardcoded Default** (RESOLVED)
     *   **Location:** `src/ai_psychiatrist/services/embedding.py:118`
     *   **Issue:** Falls back to `"qwen3-embedding:8b"` when `model_settings` is `None`.
-    *   **Impact:** Same pattern as OllamaClient/agent defaults - bypasses config.
+    *   **Resolution:** Updated to use `get_model_name(..., "embedding")`.
 
 ## Additional HuggingFace Hardcoded Values
 
-8.  **HuggingFace max_new_tokens**
+8.  **HuggingFace max_new_tokens** (RESOLVED)
     *   **Location:** `src/ai_psychiatrist/infrastructure/llm/huggingface.py:324`
     *   **Issue:** `"max_new_tokens": 1024` is hardcoded in `_generate_text`.
-    *   **Impact:** Cannot be configured. May truncate long responses or waste compute on short ones.
+    *   **Resolution:** Added `max_new_tokens` to `HuggingFaceSettings` in `config.py`.
 
-9.  **HuggingFace Quantization group_size**
+9.  **HuggingFace Quantization group_size** (RESOLVED)
     *   **Location:** `src/ai_psychiatrist/infrastructure/llm/huggingface.py:271`
     *   **Issue:** `group_size=128` is hardcoded for int4 quantization.
-    *   **Impact:** Cannot be tuned for different model architectures or memory constraints.
+    *   **Resolution:** Added `quantization_group_size` to `HuggingFaceSettings` in `config.py`.

@@ -20,7 +20,7 @@ from ai_psychiatrist.agents.prompts.qualitative import (
     make_feedback_prompt,
     make_qualitative_prompt,
 )
-from ai_psychiatrist.config import PydanticAISettings
+from ai_psychiatrist.config import PydanticAISettings, get_model_name
 from ai_psychiatrist.domain.entities import QualitativeAssessment, Transcript
 from ai_psychiatrist.infrastructure.llm.responses import (
     SimpleChatClient,
@@ -97,9 +97,7 @@ class QualitativeAssessmentAgent:
                 )
 
                 self._agent = create_qualitative_agent(
-                    model_name=(
-                        model_settings.qualitative_model if model_settings else "gemma3:27b"
-                    ),
+                    model_name=get_model_name(model_settings, "qualitative"),
                     base_url=self._ollama_base_url,
                     retries=self._pydantic_ai.retries,
                     system_prompt=QUALITATIVE_SYSTEM_PROMPT,
@@ -111,12 +109,9 @@ class QualitativeAssessmentAgent:
         Returns:
             Tuple of (model, temperature).
         """
-        if self._model_settings:
-            return (
-                self._model_settings.qualitative_model,
-                self._model_settings.temperature,
-            )
-        return None, 0.0
+        model = get_model_name(self._model_settings, "qualitative")
+        temperature = self._model_settings.temperature if self._model_settings else 0.0
+        return model, temperature
 
     async def assess(self, transcript: Transcript) -> QualitativeAssessment:
         """Generate qualitative assessment for a transcript.

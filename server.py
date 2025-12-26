@@ -15,7 +15,7 @@ from importlib.util import find_spec
 from typing import Annotated, Any, cast
 
 from fastapi import Depends, FastAPI, HTTPException, Request
-from pydantic import BaseModel, Field
+from pydantic import BaseModel, Field, field_validator
 
 from ai_psychiatrist.agents import (
     JudgeAgent,
@@ -31,10 +31,6 @@ from ai_psychiatrist.infrastructure.llm.factory import create_embedding_client
 from ai_psychiatrist.infrastructure.llm.responses import SimpleChatClient
 from ai_psychiatrist.services import EmbeddingService, ReferenceStore, TranscriptService
 from ai_psychiatrist.services.feedback_loop import FeedbackLoopService
-
-# Reserved participant ID for ad-hoc transcripts sent as raw text.
-# Must be positive to satisfy domain constraints (Transcript.participant_id > 0).
-AD_HOC_PARTICIPANT_ID = 999_999
 
 
 @asynccontextmanager
@@ -167,12 +163,24 @@ class AssessmentRequest(BaseModel):
         default=None,
         description="Raw transcript text (alternative to participant_id)",
     )
-    mode: int | None = Field(
+    mode: AssessmentMode | None = Field(
         default=None,
-        ge=0,
-        le=1,
         description="0=zero-shot, 1=few-shot. If not specified, uses settings.enable_few_shot.",
     )
+
+    @field_validator("mode", mode="before")
+    @classmethod
+    def parse_mode(cls, v: Any) -> AssessmentMode | None:
+        """Handle legacy integer modes (0/1)."""
+        if v is None:
+            return None
+        if isinstance(v, int):
+            if v == 0:
+                return AssessmentMode.ZERO_SHOT
+            if v == 1:
+                return AssessmentMode.FEW_SHOT
+            raise ValueError("Mode must be 0 (zero-shot) or 1 (few-shot)")
+        return cast("AssessmentMode | None", v)
 
     def get_mode(self, enable_few_shot: bool = True) -> AssessmentMode:
         """Convert mode to AssessmentMode enum.
@@ -184,7 +192,7 @@ class AssessmentRequest(BaseModel):
             AssessmentMode based on request mode or settings fallback.
         """
         if self.mode is not None:
-            return AssessmentMode.ZERO_SHOT if self.mode == 0 else AssessmentMode.FEW_SHOT
+            return self.mode
         return AssessmentMode.FEW_SHOT if enable_few_shot else AssessmentMode.ZERO_SHOT
 
 
@@ -490,7 +498,7 @@ def _resolve_transcript(
             # domain constraints (Transcript requires participant_id > 0) while avoiding
             # collision with real DAIC-WOZ participants (300-492).
             return transcript_service.load_transcript_from_text(
-                participant_id=AD_HOC_PARTICIPANT_ID,
+                participant_id=get_settings().server.ad_hoc_participant_id,
                 text=request.transcript_text,
             )
         except Exception as e:

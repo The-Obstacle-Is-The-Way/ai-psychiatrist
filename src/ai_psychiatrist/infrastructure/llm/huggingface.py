@@ -12,7 +12,12 @@ import importlib
 from dataclasses import dataclass
 from typing import TYPE_CHECKING, Any
 
-from ai_psychiatrist.config import BackendSettings, LLMBackend, ModelSettings
+from ai_psychiatrist.config import (
+    BackendSettings,
+    HuggingFaceSettings,
+    LLMBackend,
+    ModelSettings,
+)
 from ai_psychiatrist.domain.exceptions import LLMError, LLMTimeoutError
 from ai_psychiatrist.infrastructure.llm.model_aliases import resolve_model_name
 from ai_psychiatrist.infrastructure.llm.protocols import (
@@ -72,9 +77,11 @@ class HuggingFaceClient:
         self,
         backend_settings: BackendSettings,
         model_settings: ModelSettings,
+        huggingface_settings: HuggingFaceSettings,
     ) -> None:
         self._backend_settings = backend_settings
         self._model_settings = model_settings
+        self._hf_settings = huggingface_settings
 
         self._chat_models: dict[str, tuple[Any, Any]] = {}
         self._embedding_models: dict[str, Any] = {}
@@ -94,6 +101,11 @@ class HuggingFaceClient:
         model, tokenizer = await self._get_chat_model(model_id)
         prompt = self._render_prompt(tokenizer, request.messages)
 
+        # Use settings timeout if request timeout is default/not specified,
+        # but request.timeout_seconds comes from pydantic defaults usually.
+        # Here we just respect the request.timeout_seconds.
+        # The defaulting logic happens in simple_chat.
+
         async def _generate_async() -> str:
             return await asyncio.to_thread(
                 self._generate_text,
@@ -101,6 +113,7 @@ class HuggingFaceClient:
                 tokenizer=tokenizer,
                 prompt=prompt,
                 temperature=request.temperature,
+                max_new_tokens=self._hf_settings.max_new_tokens,
             )
 
         try:
@@ -150,6 +163,7 @@ class HuggingFaceClient:
         system_prompt: str = "",
         model: str | None = None,
         temperature: float = 0.0,
+        timeout_seconds: int | None = None,
     ) -> str:
         messages: list[ChatMessage] = []
         if system_prompt:
@@ -160,7 +174,7 @@ class HuggingFaceClient:
             messages=messages,
             model=model or self._model_settings.qualitative_model,
             temperature=temperature,
-            timeout_seconds=180,
+            timeout_seconds=timeout_seconds or self._hf_settings.default_chat_timeout,
         )
         response = await self.chat(request)
         return response.content
@@ -170,12 +184,13 @@ class HuggingFaceClient:
         text: str,
         model: str | None = None,
         dimension: int | None = None,
+        timeout_seconds: int | None = None,
     ) -> tuple[float, ...]:
         request = EmbeddingRequest(
             text=text,
             model=model or self._model_settings.embedding_model,
             dimension=dimension,
-            timeout_seconds=120,
+            timeout_seconds=timeout_seconds or self._hf_settings.default_embed_timeout,
         )
         response = await self.embed(request)
         return response.embedding
@@ -212,6 +227,7 @@ class HuggingFaceClient:
                 model_kwargs["quantization_config"] = self._build_quantization_config(
                     transformers=transformers,
                     quantization=quant,
+                    group_size=self._hf_settings.quantization_group_size,
                 )
 
             tokenizer_kwargs: dict[str, Any] = {}
@@ -257,7 +273,12 @@ class HuggingFaceClient:
             return model
 
     @staticmethod
-    def _build_quantization_config(*, transformers: Any, quantization: str) -> Any:
+    def _build_quantization_config(
+        *,
+        transformers: Any,
+        quantization: str,
+        group_size: int,
+    ) -> Any:
         """Build a transformers quantization config.
 
         This is best-effort: the selected quantization may require optional packages.
@@ -268,7 +289,7 @@ class HuggingFaceClient:
             except AttributeError as e:
                 msg = "int4 quantization requires transformers with TorchAoConfig support"
                 raise LLMError(msg) from e
-            return torch_ao("int4_weight_only", group_size=128)
+            return torch_ao("int4_weight_only", group_size=group_size)
 
         if quantization == "int8":
             try:
@@ -305,6 +326,7 @@ class HuggingFaceClient:
         tokenizer: Any,
         prompt: str,
         temperature: float,
+        max_new_tokens: int,
     ) -> str:
         inputs = tokenizer(prompt, return_tensors="pt")
         input_ids = inputs.get("input_ids")
@@ -321,7 +343,7 @@ class HuggingFaceClient:
                 attention_mask = attention_mask.to(device)
 
         gen_kwargs: dict[str, Any] = {
-            "max_new_tokens": 1024,
+            "max_new_tokens": max_new_tokens,
             "pad_token_id": getattr(tokenizer, "pad_token_id", None)
             or getattr(tokenizer, "eos_token_id", None),
         }

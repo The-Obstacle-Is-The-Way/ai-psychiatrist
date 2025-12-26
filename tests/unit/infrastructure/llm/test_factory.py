@@ -59,6 +59,7 @@ class TestCreateEmbeddingClient:
             MockHF.assert_called_once_with(
                 backend_settings=settings.backend,
                 model_settings=settings.model,
+                huggingface_settings=settings.huggingface,
             )
 
     def test_lazy_import_failure(self, settings: Settings) -> None:

@@ -13,6 +13,7 @@ from typing import TYPE_CHECKING
 import numpy as np
 from sklearn.metrics.pairwise import cosine_similarity
 
+from ai_psychiatrist.config import get_model_name
 from ai_psychiatrist.domain.enums import PHQ8Item
 from ai_psychiatrist.domain.exceptions import EmbeddingDimensionMismatchError
 from ai_psychiatrist.domain.value_objects import EmbeddedChunk, SimilarityMatch, TranscriptChunk
@@ -112,11 +113,7 @@ class EmbeddingService:
             return ()
 
         # Use model settings if provided (Paper Section 2.2: Qwen 3 8B Embedding)
-        model = (
-            self._model_settings.embedding_model
-            if self._model_settings is not None
-            else "qwen3-embedding:8b"
-        )
+        model = get_model_name(self._model_settings, "embedding")
         response = await self._llm_client.embed(
             EmbeddingRequest(
                 text=text,
