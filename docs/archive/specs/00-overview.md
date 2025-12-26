@@ -162,8 +162,8 @@ Each spec represents a **vertical slice** - a complete feature from API to stora
 
 ## Spec Index
 
-Note: Specs **01–11.5** and **12.5** are archived under `docs/archive/specs/` (historical record).
-Active specs live under `docs/specs/`.
+Note: Specs **01–12.5**, **13**, **15**, and **16** are archived under `docs/archive/specs/` (historical record).
+Active specs (**14**) live under `docs/specs/`.
 
 | Spec | Title | Deliverable |
 |------|-------|-------------|
@@ -185,8 +185,10 @@ Active specs live under `docs/specs/`.
 | **11.5** | Integration Checkpoint | Full pipeline verification |
 | **12** | Observability | Metrics, tracing, health checks |
 | **12.5** | Final Cleanup | Legacy removal, cruft cleanup |
-| **13** | Structured Outputs (Pydantic AI) | Post-replication refactor for validated outputs |
+| **13** | Pydantic AI Integration | Full framework migration with TextOutput mode |
 | **14** | Keyword Matching Improvements | Word-boundary regex, negation detection |
+| **15** | Experiment Tracking | Full provenance, semantic naming, registry |
+| **16** | Log Output Improvements | ANSI auto-detection, clean log files |
 
 ## Integration Checkpoints
 
@@ -335,14 +337,18 @@ The specs are ordered for **maximum early value** with **mandatory checkpoints**
 6. **CHECKPOINT 09.5**: Verify quantitative pipeline
 7. **Spec 10-11**: Integration (full pipeline)
 8. **CHECKPOINT 11.5**: Verify paper metrics reproduced
-9. **Spec 12**: Polish (observability)
+9. **Spec 12 (Archived)**: Polish (observability) - deferred to production deployment
 10. **CHECKPOINT 12.5**: Remove legacy code, clean codebase
-11. **Spec 13 (Deferred)**: Structured outputs via Pydantic AI (post-replication enhancement)
+11. **Spec 13 (Archived)**: Pydantic AI `TextOutput` integration (quantitative scoring + judge + meta-review; `PYDANTIC_AI_ENABLED` opt-in) ✅
 12. **Spec 14 (Deferred)**: Word-boundary regex + negation detection (precision refinement)
+13. **Spec 15 (Archived)**: Experiment tracking with full provenance ✅
+14. **Spec 16 (Archived)**: Log output improvements (ANSI auto-detection) ✅
 
 Each spec produces a **working increment** that can be demoed and tested.
 Each checkpoint produces a **quality gate** that must pass before proceeding.
-Spec 13 is **optional** and should only be considered after paper replication is validated.
+
+**Implementation Priority**:
+- Spec 14: **Deferred** (precision refinement)
 
 ## References
 

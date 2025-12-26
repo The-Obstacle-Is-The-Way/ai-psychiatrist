@@ -1,7 +1,15 @@
 # Should We Integrate Pydantic AI?
 
+> **⚠️ SUPERSEDED**: This brainstorming document has been superseded by **Spec 13**.
+>
+> **Decision**: YES, we are integrating Pydantic AI using the `TextOutput` mode.
+>
+> See: `docs/specs/13-pydantic-ai-structured-outputs.md`
+>
+> This document is preserved for historical context only.
+
 **Date**: 2025-12-19
-**Status**: BRAINSTORMING
+**Status**: ~~BRAINSTORMING~~ → **SUPERSEDED BY SPEC 13**
 **Reference**: https://ai.pydantic.dev/
 
 ---

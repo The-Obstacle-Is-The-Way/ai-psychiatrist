@@ -10,12 +10,14 @@ to predict overall depression severity (0-4 scale).
 
 from __future__ import annotations
 
+import asyncio
 from typing import TYPE_CHECKING
 
 from ai_psychiatrist.agents.prompts.meta_review import (
     META_REVIEW_SYSTEM_PROMPT,
     make_meta_review_prompt,
 )
+from ai_psychiatrist.config import PydanticAISettings
 from ai_psychiatrist.domain.entities import (
     MetaReview,
     PHQ8Assessment,
@@ -30,6 +32,9 @@ from ai_psychiatrist.infrastructure.llm.responses import (
 from ai_psychiatrist.infrastructure.logging import get_logger
 
 if TYPE_CHECKING:
+    from pydantic_ai import Agent
+
+    from ai_psychiatrist.agents.output_models import MetaReviewOutput
     from ai_psychiatrist.config import ModelSettings
 
 logger = get_logger(__name__)
@@ -50,15 +55,42 @@ class MetaReviewAgent:
         self,
         llm_client: SimpleChatClient,
         model_settings: ModelSettings | None = None,
+        pydantic_ai_settings: PydanticAISettings | None = None,
+        ollama_base_url: str | None = None,
     ) -> None:
         """Initialize meta-review agent.
 
         Args:
             llm_client: LLM client for generating reviews.
             model_settings: Model configuration. If None, uses OllamaClient defaults.
+            pydantic_ai_settings: Pydantic AI configuration. If None, uses defaults.
+            ollama_base_url: Ollama base URL for Pydantic AI agent. Required when
+                pydantic_ai_settings.enabled is True.
         """
         self._llm = llm_client
         self._model_settings = model_settings
+        self._pydantic_ai = pydantic_ai_settings or PydanticAISettings()
+        self._ollama_base_url = ollama_base_url
+        self._review_agent: Agent[None, MetaReviewOutput] | None = None
+
+        if self._pydantic_ai.enabled:
+            if not self._ollama_base_url:
+                logger.warning(
+                    "Pydantic AI enabled but no ollama_base_url provided; falling back to legacy",
+                )
+            else:
+                from ai_psychiatrist.agents.pydantic_agents import (  # noqa: PLC0415
+                    create_meta_review_agent,
+                )
+
+                self._review_agent = create_meta_review_agent(
+                    model_name=(
+                        model_settings.meta_review_model if model_settings else "gemma3:27b"
+                    ),
+                    base_url=self._ollama_base_url,
+                    retries=self._pydantic_ai.retries,
+                    system_prompt=META_REVIEW_SYSTEM_PROMPT,
+                )
 
     async def review(
         self,
@@ -98,6 +130,37 @@ class MetaReviewAgent:
         # Get model and sampling params from settings
         model = self._model_settings.meta_review_model if self._model_settings else None
         temperature = self._model_settings.temperature if self._model_settings else 0.0
+
+        if self._review_agent is not None:
+            try:
+                result = await self._review_agent.run(
+                    prompt,
+                    model_settings={"temperature": temperature},
+                )
+                output = result.output
+                severity = SeverityLevel(output.severity)
+                explanation = output.explanation.strip()
+                logger.info(
+                    "Meta-review complete",
+                    participant_id=transcript.participant_id,
+                    severity=severity.name,
+                    is_mdd=severity.is_mdd,
+                )
+                return MetaReview(
+                    severity=severity,
+                    explanation=explanation,
+                    quantitative_assessment_id=quantitative.id,
+                    qualitative_assessment_id=qualitative.id,
+                    participant_id=transcript.participant_id,
+                )
+            except asyncio.CancelledError:
+                raise
+            except Exception as e:
+                logger.error(
+                    "Pydantic AI call failed during meta-review; falling back to legacy",
+                    participant_id=transcript.participant_id,
+                    error=str(e),
+                )
 
         response = await self._llm.simple_chat(
             user_prompt=prompt,

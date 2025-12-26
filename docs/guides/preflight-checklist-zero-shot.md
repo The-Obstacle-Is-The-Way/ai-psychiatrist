@@ -1,8 +1,8 @@
 # Preflight Checklist: Zero-Shot Reproduction
 
 **Purpose**: Comprehensive pre-run verification for zero-shot paper reproduction
-**Last Updated**: 2025-12-23
-**Related**: [Few-Shot Checklist](./preflight-checklist-few-shot.md) | [Paper Parity Guide](./paper-parity-guide.md) | [BUG-018](../bugs/bug-018-reproduction-friction.md)
+**Last Updated**: 2025-12-25
+**Related**: [Few-Shot Checklist](./preflight-checklist-few-shot.md) | [Paper Parity Guide](./paper-parity-guide.md)
 
 ---
 
@@ -326,7 +326,4 @@ If ALL items are checked:
 
 - [Few-Shot Preflight](./preflight-checklist-few-shot.md) - For few-shot runs (includes embedding setup)
 - [Paper Parity Guide](./paper-parity-guide.md) - Full paper methodology
-- [BUG-018](../bugs/bug-018-reproduction-friction.md) - Reproduction friction log (includes BUG-018a-i sub-issues)
-- [GAP-001](../bugs/gap-001-paper-unspecified-parameters.md) - Unspecified parameters
-- [Coverage Investigation](../bugs/coverage-investigation.md) - 74% vs 50% explained
-- [SPEC-003](../specs/SPEC-003-backfill-toggle.md) - Backfill toggle specification
+- [Model Registry](../models/model-registry.md) - Model configuration and backend options

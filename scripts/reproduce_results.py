@@ -47,7 +47,7 @@ import time
 from dataclasses import dataclass, field
 from datetime import datetime
 from pathlib import Path
-from typing import TYPE_CHECKING, Any
+from typing import TYPE_CHECKING, Literal
 
 import numpy as np
 import pandas as pd
@@ -71,6 +71,12 @@ from ai_psychiatrist.infrastructure.llm import OllamaClient
 from ai_psychiatrist.infrastructure.llm.factory import create_embedding_client
 from ai_psychiatrist.infrastructure.logging import get_logger, setup_logging
 from ai_psychiatrist.services import EmbeddingService, ReferenceStore, TranscriptService
+from ai_psychiatrist.services.experiment_tracking import (
+    ExperimentProvenance,
+    RunMetadata,
+    generate_output_filename,
+    update_experiment_registry,
+)
 
 if TYPE_CHECKING:
     from ai_psychiatrist.infrastructure.llm.protocols import EmbeddingClient
@@ -401,6 +407,8 @@ async def run_experiment(
         mode=mode,
         model_settings=settings.model,
         quantitative_settings=settings.quantitative,
+        pydantic_ai_settings=settings.pydantic_ai,
+        ollama_base_url=settings.ollama.base_url,
     )
 
     participant_ids = list(ground_truth.keys())
@@ -496,34 +504,18 @@ def print_summary(experiments: list[ExperimentResults]) -> None:
 
 
 def save_results(
-    experiments: list[ExperimentResults],
-    output_dir: Path,
     *,
-    provenance: dict[str, Any] | None = None,
+    run_metadata: RunMetadata,
+    experiments: list[dict[str, object]],
+    output_file: Path,
 ) -> Path:
-    """Save results to JSON file with provenance tracking.
+    """Save results to JSON file with run + per-experiment provenance."""
+    output_file.parent.mkdir(parents=True, exist_ok=True)
 
-    Args:
-        experiments: List of experiment results.
-        output_dir: Directory to save results.
-        provenance: Optional provenance metadata (embeddings path, split, config).
-
-    Returns:
-        Path to saved results file.
-    """
-    output_dir.mkdir(parents=True, exist_ok=True)
-
-    timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
-    output_file = output_dir / f"reproduction_results_{timestamp}.json"
-
-    data: dict[str, Any] = {
-        "timestamp": datetime.now().isoformat(),
-        "experiments": [exp.to_dict() for exp in experiments],
+    data: dict[str, object] = {
+        "run_metadata": run_metadata.to_dict(),
+        "experiments": experiments,
     }
-
-    # Add provenance for reproducibility verification (BUG-023 fix)
-    if provenance:
-        data["provenance"] = provenance
 
     with output_file.open("w") as f:
         json.dump(data, f, indent=2)
@@ -662,11 +654,81 @@ async def run_requested_experiments(
     return experiments
 
 
+def persist_experiment_outputs(
+    *,
+    args: argparse.Namespace,
+    settings: Settings,
+    run_metadata: RunMetadata,
+    experiments: list[ExperimentResults],
+    participants_requested: int,
+    data_settings: DataSettings,
+    embedding_settings: EmbeddingSettings,
+) -> None:
+    """Persist experiment outputs and update the experiment registry."""
+    print_summary(experiments)
+    output_dir = data_settings.base_dir / "outputs"
+
+    embeddings_path = get_effective_embeddings_path(data_settings, embedding_settings, args.split)
+
+    experiments_with_provenance: list[dict[str, object]] = []
+    for exp in experiments:
+        mode: Literal["zero_shot", "few_shot"]
+        if exp.mode == AssessmentMode.FEW_SHOT.value:
+            mode = "few_shot"
+            exp_embeddings_path = embeddings_path
+        elif exp.mode == AssessmentMode.ZERO_SHOT.value:
+            mode = "zero_shot"
+            exp_embeddings_path = None
+        else:
+            raise ValueError(f"Unknown experiment mode: {exp.mode!r}")
+
+        provenance = ExperimentProvenance.capture(
+            mode=mode,
+            split=args.split,
+            settings=settings,
+            embeddings_path=exp_embeddings_path,
+            participants_requested=participants_requested,
+            participants_evaluated=exp.total_subjects,
+        )
+        experiments_with_provenance.append(
+            {
+                "provenance": provenance.to_dict(),
+                "results": exp.to_dict(),
+            }
+        )
+
+    primary_mode = experiments[-1].mode if experiments else AssessmentMode.ZERO_SHOT.value
+    output_filename = generate_output_filename(
+        mode=primary_mode,
+        split=args.split,
+        backfill=settings.quantitative.enable_keyword_backfill,
+        timestamp=datetime.now(),
+    )
+    output_path = output_dir / output_filename
+
+    saved = save_results(
+        run_metadata=run_metadata,
+        experiments=experiments_with_provenance,
+        output_file=output_path,
+    )
+    update_experiment_registry(
+        run_metadata=run_metadata,
+        experiments=experiments_with_provenance,
+        output_file=saved,
+    )
+
+
 async def main_async(args: argparse.Namespace) -> int:
     """Async main entry point."""
     setup_logging(LoggingSettings(level="INFO", format="console"))
 
     settings = get_settings()
+    run_metadata = RunMetadata.capture(ollama_base_url=settings.ollama.base_url)
+    if run_metadata.git_dirty:
+        logger.warning(
+            "Running with uncommitted changes",
+            git_commit=run_metadata.git_commit,
+        )
 
     # Override embedding backend if specified
     if args.embedding_backend:
@@ -724,31 +786,15 @@ async def main_async(args: argparse.Namespace) -> int:
                 model_name=model_settings.quantitative_model,
             )
 
-            # Print summary and save with provenance (BUG-023 fix)
-            print_summary(experiments)
-            output_dir = data_settings.base_dir / "outputs"
-
-            # Build provenance metadata for reproducibility verification
-            embeddings_path = get_effective_embeddings_path(
-                data_settings,
-                embedding_settings,
-                args.split,
+            persist_experiment_outputs(
+                args=args,
+                settings=settings,
+                run_metadata=run_metadata,
+                experiments=experiments,
+                participants_requested=len(ground_truth),
+                data_settings=data_settings,
+                embedding_settings=embedding_settings,
             )
-            provenance = {
-                "split": args.split,
-                "embeddings_path": str(embeddings_path),
-                "embedding_backend": embedding_backend_settings.backend.value,
-                "quantitative_model": model_settings.quantitative_model,
-                "embedding_model": model_settings.embedding_model,
-                "embedding_dimension": embedding_settings.dimension,
-                "embedding_chunk_size": embedding_settings.chunk_size,
-                "embedding_chunk_step": embedding_settings.chunk_step,
-                "embedding_top_k": embedding_settings.top_k_references,
-                "enable_keyword_backfill": settings.quantitative.enable_keyword_backfill,
-                "participants_evaluated": list(ground_truth.keys()),
-            }
-
-            save_results(experiments, output_dir, provenance=provenance)
 
         finally:
             await embedding_client.close()

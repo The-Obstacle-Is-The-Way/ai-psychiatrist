@@ -2,9 +2,11 @@
 
 from __future__ import annotations
 
+import asyncio
 from typing import TYPE_CHECKING
 
 from ai_psychiatrist.agents.prompts.judge import make_evaluation_prompt
+from ai_psychiatrist.config import PydanticAISettings
 from ai_psychiatrist.domain.entities import (
     QualitativeAssessment,
     QualitativeEvaluation,
@@ -17,6 +19,9 @@ from ai_psychiatrist.infrastructure.llm.responses import extract_score_from_text
 from ai_psychiatrist.infrastructure.logging import get_logger
 
 if TYPE_CHECKING:
+    from pydantic_ai import Agent
+
+    from ai_psychiatrist.agents.output_models import JudgeMetricOutput
     from ai_psychiatrist.config import ModelSettings
     from ai_psychiatrist.infrastructure.llm.responses import SimpleChatClient
 
@@ -34,6 +39,8 @@ class JudgeAgent:
         self,
         llm_client: SimpleChatClient,
         model_settings: ModelSettings | None = None,
+        pydantic_ai_settings: PydanticAISettings | None = None,
+        ollama_base_url: str | None = None,
     ) -> None:
         """Initialize judge agent.
 
@@ -43,6 +50,26 @@ class JudgeAgent:
         """
         self._llm_client = llm_client
         self._model_settings = model_settings
+        self._pydantic_ai = pydantic_ai_settings or PydanticAISettings()
+        self._ollama_base_url = ollama_base_url
+        self._metric_agent: Agent[None, JudgeMetricOutput] | None = None
+
+        if self._pydantic_ai.enabled:
+            if not self._ollama_base_url:
+                logger.warning(
+                    "Pydantic AI enabled but no ollama_base_url provided; falling back to legacy",
+                )
+            else:
+                from ai_psychiatrist.agents.pydantic_agents import (  # noqa: PLC0415
+                    create_judge_metric_agent,
+                )
+
+                self._metric_agent = create_judge_metric_agent(
+                    model_name=(model_settings.judge_model if model_settings else "gemma3:27b"),
+                    base_url=self._ollama_base_url,
+                    retries=self._pydantic_ai.retries,
+                    system_prompt="",
+                )
 
     async def evaluate(
         self,
@@ -119,6 +146,27 @@ class JudgeAgent:
         # Use model settings if provided (GAP-001: temp=0.0 for clinical reproducibility)
         model = self._model_settings.judge_model if self._model_settings else None
         temperature = self._model_settings.temperature if self._model_settings else 0.0
+
+        if self._metric_agent is not None:
+            try:
+                result = await self._metric_agent.run(
+                    prompt,
+                    model_settings={"temperature": temperature},
+                )
+                output = result.output
+                return EvaluationScore(
+                    metric=metric,
+                    score=output.score,
+                    explanation=output.explanation.strip(),
+                )
+            except asyncio.CancelledError:
+                raise
+            except Exception as e:
+                logger.error(
+                    "Pydantic AI call failed during metric evaluation; falling back to legacy",
+                    metric=metric.value,
+                    error=str(e),
+                )
 
         try:
             response = await self._llm_client.simple_chat(

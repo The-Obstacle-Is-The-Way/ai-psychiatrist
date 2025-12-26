@@ -10,6 +10,7 @@ This module provides production-ready logging with:
 from __future__ import annotations
 
 import logging
+import os
 import sys
 from typing import TYPE_CHECKING, Any
 
@@ -19,6 +20,23 @@ if TYPE_CHECKING:
     from collections.abc import Callable
 
     from ai_psychiatrist.config import LoggingSettings
+
+
+def _stdout_isatty() -> bool:
+    """Return True when stdout is a TTY."""
+    try:
+        return sys.stdout.isatty()
+    except Exception:
+        return False
+
+
+def _should_use_colors(settings: LoggingSettings) -> bool:
+    """Determine whether to emit ANSI colors for console logs."""
+    if settings.force_colors is not None:
+        return settings.force_colors
+    if os.environ.get("NO_COLOR"):
+        return False
+    return _stdout_isatty()
 
 
 def setup_logging(settings: LoggingSettings | None = None) -> None:
@@ -68,9 +86,10 @@ def setup_logging(settings: LoggingSettings | None = None) -> None:
             structlog.processors.JSONRenderer(),
         ]
     else:
+        use_colors = _should_use_colors(settings)
         final_processors = [
             structlog.dev.ConsoleRenderer(
-                colors=True,
+                colors=use_colors,
                 exception_formatter=structlog.dev.plain_traceback,
             )
         ]

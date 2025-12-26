@@ -1,8 +1,8 @@
 # Preflight Checklist: Few-Shot Reproduction
 
 **Purpose**: Comprehensive pre-run verification for few-shot paper reproduction
-**Last Updated**: 2025-12-23
-**Related**: [Zero-Shot Checklist](./preflight-checklist-zero-shot.md) | [Paper Parity Guide](./paper-parity-guide.md) | [BUG-018](../bugs/bug-018-reproduction-friction.md)
+**Last Updated**: 2025-12-25
+**Related**: [Zero-Shot Checklist](./preflight-checklist-zero-shot.md) | [Paper Parity Guide](./paper-parity-guide.md)
 
 ---
 
@@ -86,13 +86,14 @@ Few-shot mode uses reference embeddings to retrieve similar transcript chunks as
   # Should show: MODEL_EMBEDDING_MODEL=qwen3-embedding:8b
   ```
 
-- [ ] **Verify embedding backend** (HF recommended, Ollama fallback):
+- [ ] **Verify embedding backend** (HF recommended for higher quality):
   ```bash
   grep "EMBEDDING_BACKEND" .env
-  # Should show either:
-  #   EMBEDDING_BACKEND=huggingface   (requires `make dev-hf`)
-  #   EMBEDDING_BACKEND=ollama        (no HF deps; paper-parity)
+  # Recommended (default): EMBEDDING_BACKEND=huggingface (FP16, higher quality)
+  # Alternative: EMBEDDING_BACKEND=ollama (Q4_K_M, paper-parity)
   ```
+
+  **Note**: HuggingFace backend requires `make dev-hf` to install dependencies.
 
 ### 2.3 Sampling Parameters
 
@@ -172,25 +173,23 @@ If only some chunks are mismatched, retrieval quality degrades. Always validate 
 
 ### 4.1 Embeddings Exist
 
-**Reference**: BUG-006
-
 - [ ] **Check for embedding file**:
   ```bash
   ls -lh data/embeddings/*.npz
   ```
 
+  **Default embedding artifact**: `huggingface_qwen3_8b_paper_train.npz` (FP16, recommended)
+  **Alternative**: `paper_reference_embeddings.npz` (Ollama Q4_K_M, paper-parity)
+
   If missing, generate (takes ~65 min for 58 participants):
   ```bash
-  # Uses EMBEDDING_BACKEND from .env and writes a namespaced artifact under data/embeddings/
+  # Generate HuggingFace FP16 embeddings (recommended)
   uv run python scripts/generate_embeddings.py --split paper-train
+  # Output: data/embeddings/huggingface_qwen3_8b_paper_train.npz
 
-  # Then point few-shot retrieval at the generated artifact:
-  #   EMBEDDING_EMBEDDINGS_FILE=<output filename without .npz>
-  # Example (HF backend):
-  #   EMBEDDING_EMBEDDINGS_FILE=huggingface_qwen3_8b_paper_train
-
-  # Optional legacy filename (overwrites if it already exists):
-  # uv run python scripts/generate_embeddings.py --split paper-train --output data/embeddings/paper_reference_embeddings.npz
+  # Or generate Ollama embeddings (paper-parity)
+  EMBEDDING_BACKEND=ollama uv run python scripts/generate_embeddings.py --split paper-train
+  # Output: data/embeddings/ollama_qwen3_8b_paper_train.npz
   ```
 
 ### 4.2 Verify Embedding Integrity
@@ -565,19 +564,24 @@ If ALL items are checked:
 
 ```bash
 # 1. Setup (first time only)
-make dev        # or: make dev-hf (if using EMBEDDING_BACKEND=huggingface)
+make dev-hf     # Install with HuggingFace deps (recommended)
 cp .env.example .env
 
-# 2. Create paper ground truth split
+# 2. Pull required Ollama models
+ollama pull gemma3:27b
+ollama pull qwen3-embedding:8b
+
+# 3. Create paper ground truth split
 uv run python scripts/create_paper_split.py --verify
 
-# 3. Generate embeddings from paper-train (takes ~65 min)
+# 4. Generate embeddings from paper-train (takes ~65 min)
+# Default uses HuggingFace FP16 (higher quality)
 uv run python scripts/generate_embeddings.py --split paper-train
 
-# 4. Run few-shot reproduction
+# 5. Run few-shot reproduction
 uv run python scripts/reproduce_results.py --split paper --few-shot-only
 
-# 5. (Optional) Compare with zero-shot
+# 6. (Optional) Compare with zero-shot
 uv run python scripts/reproduce_results.py --split paper
 ```
 
@@ -587,7 +591,4 @@ uv run python scripts/reproduce_results.py --split paper
 
 - [Zero-Shot Preflight](./preflight-checklist-zero-shot.md) - Simpler, no embeddings
 - [Paper Parity Guide](./paper-parity-guide.md) - Full paper methodology
-- [BUG-018](../bugs/bug-018-reproduction-friction.md) - Reproduction friction log (includes BUG-018a-i sub-issues)
-- [GAP-001](../bugs/gap-001-paper-unspecified-parameters.md) - Unspecified parameters
-- [Coverage Investigation](../bugs/coverage-investigation.md) - 74% vs 50% explained
-- [SPEC-003](../specs/SPEC-003-backfill-toggle.md) - Backfill toggle specification
+- [Model Registry](../models/model-registry.md) - Model configuration and backend options
