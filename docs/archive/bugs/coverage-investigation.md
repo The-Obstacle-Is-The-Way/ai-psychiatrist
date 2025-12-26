@@ -187,8 +187,8 @@ After implementation, users can:
 ## Related Documentation
 
 - [SPEC-003: Backfill Toggle](../specs/SPEC-003-backfill-toggle.md) - Implementation specification
-- [Backfill Explained](../concepts/backfill-explained.md) - How backfill works
-- [Paper Parity Guide](../guides/paper-parity-guide.md) - How to reproduce paper results
-- [Coverage Explained](../concepts/coverage-explained.md) - Plain-language explanation
-- [Reproduction Notes](../results/reproduction-notes.md) - Results and methodology
+- [Backfill Explained](../../concepts/backfill-explained.md) - How backfill works
+- [Paper Parity Guide](../../guides/paper-parity-guide.md) - How to reproduce paper results
+- [Coverage Explained](../../concepts/coverage-explained.md) - Plain-language explanation
+- [Reproduction Notes](../../results/reproduction-notes.md) - Results and methodology
 - `src/ai_psychiatrist/resources/phq8_keywords.yaml` - Keyword list

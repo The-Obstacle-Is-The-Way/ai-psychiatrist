@@ -1,5 +1,9 @@
+# yaml-language-server: $schema=https://squidfunk.github.io/mkdocs-material/schema.json
+
 site_name: AI Psychiatrist
 repo_url: https://github.com/The-Obstacle-Is-The-Way/ai-psychiatrist
+site_url: https://the-obstacle-is-the-way.github.io/ai-psychiatrist/
+edit_uri: edit/main/docs/
 
 # The documentation lives under `docs/`.
 docs_dir: docs
@@ -8,9 +12,27 @@ theme:
   name: material
   features:
     - content.code.copy
+    - content.action.edit
+    - content.action.view
+    - navigation.tracking
+    - navigation.sections
+    - navigation.footer
+    - navigation.instant
 
 plugins:
   - search
+
+# Keep archived pages in the build (active docs link to them), but hide them from nav.
+not_in_nav: |
+  archive/**
+
+# Enable link/anchor validation (pair with `mkdocs build --strict` in CI).
+validation:
+  omitted_files: warn
+  not_found: warn
+  absolute_links: warn
+  unrecognized_links: warn
+  anchors: warn
 
 markdown_extensions:
   - admonition

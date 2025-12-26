@@ -48,6 +48,17 @@ class QuantitativeOutput(BaseModel):
     PHQ8_Moving: EvidenceOutput
 
 
+class QualitativeOutput(BaseModel):
+    """Qualitative assessment output."""
+
+    assessment: str
+    phq8_symptoms: str
+    social_factors: str
+    biological_factors: str
+    risk_factors: str
+    exact_quotes: list[str] = Field(default_factory=list)
+
+
 class JudgeMetricOutput(BaseModel):
     """Judge output for a single metric."""
 

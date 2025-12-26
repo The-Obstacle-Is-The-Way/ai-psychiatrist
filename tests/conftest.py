@@ -133,3 +133,22 @@ def sample_ollama_response() -> dict[str, object]:
         },
         "done": True,
     }
+
+
+@pytest.hookimpl(tryfirst=True)
+def pytest_collection_modifyitems(
+    config: pytest.Config,
+    items: list[pytest.Item],
+) -> None:
+    """Apply markers based on directory structure so Makefile targets behave correctly."""
+    for item in items:
+        # pytest uses pathlib.Path for `item.path` on modern versions; normalize for all OSes.
+        raw_path = getattr(item, "path", item.fspath)
+        path = str(raw_path).replace("\\", "/")
+
+        if "/tests/unit/" in path:
+            item.add_marker(pytest.mark.unit)
+        elif "/tests/integration/" in path:
+            item.add_marker(pytest.mark.integration)
+        elif "/tests/e2e/" in path:
+            item.add_marker(pytest.mark.e2e)

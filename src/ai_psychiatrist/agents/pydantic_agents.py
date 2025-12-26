@@ -11,6 +11,7 @@ from pydantic_ai.providers.ollama import OllamaProvider
 from ai_psychiatrist.agents.extractors import (
     extract_judge_metric,
     extract_meta_review,
+    extract_qualitative,
     extract_quantitative,
 )
 
@@ -18,6 +19,7 @@ if TYPE_CHECKING:
     from ai_psychiatrist.agents.output_models import (
         JudgeMetricOutput,
         MetaReviewOutput,
+        QualitativeOutput,
         QuantitativeOutput,
     )
 
@@ -27,6 +29,26 @@ def _ollama_v1_base_url(base_url: str) -> str:
     if base_url.endswith("/v1"):
         return base_url
     return f"{base_url}/v1"
+
+
+def create_qualitative_agent(
+    *,
+    model_name: str,
+    base_url: str,
+    retries: int,
+    system_prompt: str,
+) -> Agent[None, QualitativeOutput]:
+    """Create a Pydantic AI agent for qualitative assessment."""
+    model = OpenAIChatModel(
+        model_name, provider=OllamaProvider(base_url=_ollama_v1_base_url(base_url))
+    )
+    agent: Agent[None, QualitativeOutput] = Agent(
+        model=model,
+        output_type=TextOutput(extract_qualitative),
+        retries=retries,
+        system_prompt=system_prompt,
+    )
+    return agent
 
 
 def create_quantitative_agent(

@@ -26,7 +26,7 @@ This was a friction log for reproduction attempts. **Most issues have been fixed
 - **018f** (JSON malformation): Mitigated by Pydantic AI structured outputs with retries
 - **018g** (severe underestimation): This is a research question about model behavior, not a bug
 
-**Key insight**: The reproduction workflow works end-to-end. The MAE gap (0.778 vs 0.619) is explained by Q4_K_M vs BF16 quantization (see [`model-wiring.md`](../models/model-wiring.md)).
+**Key insight**: The reproduction workflow works end-to-end. The MAE gap (0.778 vs 0.619) is explained by Q4_K_M vs BF16 quantization (see [`model-wiring.md`](../../models/model-wiring.md)).
 
 ---
 

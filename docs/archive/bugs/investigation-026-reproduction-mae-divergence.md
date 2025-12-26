@@ -16,7 +16,7 @@
 | Paper (likely) | BF16 on A100 GPUs | 0.619 | ~50% |
 | Our run | Q4_K_M (4-bit) on M1 | 0.778 | 69.2% |
 
-**Key evidence** (from [`docs/models/model-wiring.md`](../models/model-wiring.md)):
+**Key evidence** (from [`docs/models/model-wiring.md`](../../models/model-wiring.md)):
 > "Paper text claims MacBook M3 Pro, but repo has A100 SLURM scripts. Paper likely ran **BF16 on A100s** for the reported 0.619 MAE. Our Q4_K_M run got 0.778 MAE."
 
 **This is not a bug—it's a precision tradeoff:**

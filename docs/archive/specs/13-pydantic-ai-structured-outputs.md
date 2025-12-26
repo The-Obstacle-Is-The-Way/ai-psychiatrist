@@ -3,7 +3,7 @@
 > **STATUS: ARCHIVED (Complete)**
 >
 > ✅ **Fully implemented** - All target agents (Quantitative, Judge, Meta-review) now have
-> Pydantic AI integration via `PYDANTIC_AI_ENABLED` opt-in flag.
+> Pydantic AI integration (enabled by default; disable via `PYDANTIC_AI_ENABLED=false`).
 >
 > This spec describes Pydantic AI framework integration using the `TextOutput` mode
 > to preserve our reasoning-optimal `<thinking>` + `<answer>` prompt pattern while gaining
@@ -19,7 +19,7 @@
 
 ## Executive Summary
 
-**What we're doing**: Use Pydantic AI `TextOutput` as an opt-in, validated execution path for:
+**What we're doing**: Use Pydantic AI `TextOutput` as a validated execution path (enabled by default) for:
 - Quantitative scoring (PHQ-8 per-item JSON in `<answer>` tags)
 - Judge metric evaluation (paper format: `Explanation: ...` + `Score: N`)
 - Meta-review severity prediction (paper format: `<severity>` + `<explanation>` XML tags)
@@ -312,7 +312,7 @@ agent = QuantitativeAssessmentAgent(
 | **Preserve reasoning quality** | TextOutput mode, prompts unchanged |
 | **Type-safe outputs** | Pydantic models validated on extraction |
 | **Built-in retry** | Pydantic AI handles retry loops on validation errors |
-| **Cleaner execution path (opt-in)** | Pydantic AI centralizes execution + retries for quantitative scoring, judge, and meta-review when enabled; legacy remains for rollback |
+| **Cleaner execution path (default-on)** | Pydantic AI centralizes execution + retries for quantitative scoring, judge, and meta-review (disable via `PYDANTIC_AI_ENABLED=false`); legacy remains for rollback |
 | **Industry standard** | Using established framework vs custom code |
 
 ---

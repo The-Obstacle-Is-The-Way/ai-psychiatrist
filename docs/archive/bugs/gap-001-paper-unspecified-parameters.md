@@ -16,10 +16,10 @@ This investigation is complete. All gaps have been resolved and documented in de
 
 | Gap | Resolution | SSOT Location |
 |-----|------------|---------------|
-| GAP-001a (Data Split) | ✅ Reverse-engineered exact IDs from authors' output files | [`docs/data/paper-split-registry.md`](../data/paper-split-registry.md) |
-| GAP-001b (Temperature) | ✅ Evidence-based: temp=0.0 for clinical AI | [`docs/reference/agent-sampling-registry.md`](../reference/agent-sampling-registry.md) |
-| GAP-001c (top_k/top_p) | ✅ Don't set (irrelevant at temp=0; best practice) | [`docs/reference/agent-sampling-registry.md`](../reference/agent-sampling-registry.md) |
-| GAP-001d (Hardware) | ✅ Documented Q4_K_M vs BF16 quantization | [`docs/models/model-registry.md`](../models/model-registry.md) |
+| GAP-001a (Data Split) | ✅ Reverse-engineered exact IDs from authors' output files | [`docs/data/paper-split-registry.md`](../../data/paper-split-registry.md) |
+| GAP-001b (Temperature) | ✅ Evidence-based: temp=0.0 for clinical AI | [`docs/reference/agent-sampling-registry.md`](../../reference/agent-sampling-registry.md) |
+| GAP-001c (top_k/top_p) | ✅ Don't set (irrelevant at temp=0; best practice) | [`docs/reference/agent-sampling-registry.md`](../../reference/agent-sampling-registry.md) |
+| GAP-001d (Hardware) | ✅ Documented Q4_K_M vs BF16 quantization | [`docs/models/model-registry.md`](../../models/model-registry.md) |
 
 **The content below is retained for historical context.**
 
@@ -123,7 +123,7 @@ Exact split membership will still differ from the paper because:
 - Med-PaLM uses temp=0.0 for clinical answers ([Nature Medicine](https://pmc.ncbi.nlm.nih.gov/articles/PMC11922739/))
 - "Lower temperatures promote diagnostic accuracy" ([medRxiv 2025](https://www.medrxiv.org/content/10.1101/2025.06.04.25328288v1.full))
 - Anthropic: "temp 0.0 for analytical / multiple choice"
-- See [Agent Sampling Registry](../reference/agent-sampling-registry.md) for full citations
+- See [Agent Sampling Registry](../../reference/agent-sampling-registry.md) for full citations
 
 ---
 
@@ -156,7 +156,7 @@ Their codebase has contradictory values:
 4. **Claude 4.x enforces this** — Returns error: "temperature and top_p cannot both be specified"
 5. **top_k is obsolete** — "not as well-supported, notably missing from OpenAI's API" ([Vellum](https://www.vellum.ai/llm-parameters/temperature))
 
-See [Agent Sampling Registry](../reference/agent-sampling-registry.md) for full citations
+See [Agent Sampling Registry](../../reference/agent-sampling-registry.md) for full citations
 
 ---
 
@@ -179,7 +179,7 @@ No mention of quantization.
 - Chat: `google/medgemma-27b-text-it` (FP16, 18% better MAE per Appendix F)
 - Embeddings: `Qwen/Qwen3-Embedding-8B` (FP16, higher precision similarity)
 
-See [Model Registry - High-Quality Setup](../models/model-registry.md#high-quality-setup-recommended-for-production) and [Issue #42](https://github.com/The-Obstacle-Is-The-Way/ai-psychiatrist/issues/42) for graceful fallback.
+See [Model Registry - High-Quality Setup](../../models/model-registry.md#high-quality-setup-recommended-for-production) and [Issue #42](https://github.com/The-Obstacle-Is-The-Way/ai-psychiatrist/issues/42) for graceful fallback.
 
 ### Justification
 
@@ -248,7 +248,7 @@ temperature: float = 0.0     # Med-PaLM, medRxiv 2025: temp=0 for clinical AI
 # top_k and top_p: NOT SET (irrelevant at temp=0, best practice is temp only)
 ```
 
-See [Agent Sampling Registry](../reference/agent-sampling-registry.md) for full citations.
+See [Agent Sampling Registry](../../reference/agent-sampling-registry.md) for full citations.
 
 ---
 
@@ -265,7 +265,7 @@ See [Agent Sampling Registry](../reference/agent-sampling-registry.md) for full 
 ## Related Issues
 
 - [bug-018-reproduction-friction.md](./bug-018-reproduction-friction.md) - Reproduction Friction Log
-- [reproduction-notes.md](../results/reproduction-notes.md) - Reproduction results
+- [reproduction-notes.md](../../results/reproduction-notes.md) - Reproduction results
 
 ---
 

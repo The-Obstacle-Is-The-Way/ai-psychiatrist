@@ -11,11 +11,11 @@ This investigation identified discrepancies between the paper's public repositor
 
 | Finding | SSOT Location |
 |---------|---------------|
-| Keyword backfill toggle | [`docs/concepts/backfill-explained.md`](../concepts/backfill-explained.md) |
-| Coverage tradeoff (50% vs 69%) | [`docs/concepts/coverage-explained.md`](../concepts/coverage-explained.md) |
-| MAE gap (0.619 vs 0.778) | [`docs/models/model-wiring.md`](../models/model-wiring.md) - **Explained by Q4_K_M vs BF16 quantization** |
-| Sampling parameters | [`docs/reference/agent-sampling-registry.md`](../reference/agent-sampling-registry.md) |
-| Model options & hardware | [`docs/models/model-wiring.md`](../models/model-wiring.md) |
+| Keyword backfill toggle | [`docs/concepts/backfill-explained.md`](../../concepts/backfill-explained.md) |
+| Coverage tradeoff (50% vs 69%) | [`docs/concepts/coverage-explained.md`](../../concepts/coverage-explained.md) |
+| MAE gap (0.619 vs 0.778) | [`docs/models/model-wiring.md`](../../models/model-wiring.md) - **Explained by Q4_K_M vs BF16 quantization** |
+| Sampling parameters | [`docs/reference/agent-sampling-registry.md`](../../reference/agent-sampling-registry.md) |
+| Model options & hardware | [`docs/models/model-wiring.md`](../../models/model-wiring.md) |
 
 **Key insight**: The paper likely ran BF16 on A100 GPUs. Our Q4_K_M quantization (4-bit) explains the MAE difference. This is not a code bug—it's a precision tradeoff.
 

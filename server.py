@@ -66,6 +66,8 @@ async def lifespan(app: FastAPI) -> AsyncIterator[None]:
         qual_agent = QualitativeAssessmentAgent(
             llm_client=chat_client,
             model_settings=app.state.model_settings,
+            pydantic_ai_settings=settings.pydantic_ai,
+            ollama_base_url=settings.ollama.base_url,
         )
         judge_agent = JudgeAgent(
             llm_client=chat_client,
@@ -325,6 +327,7 @@ async def assess_qualitative(
     llm: Annotated[SimpleChatClient, Depends(get_llm_client)],
     transcript_service: Annotated[TranscriptService, Depends(get_transcript_service)],
     model_settings: Annotated[ModelSettings, Depends(get_model_settings)],
+    app_settings: Annotated[Settings, Depends(get_app_settings)],
 ) -> QualitativeResult:
     """Run qualitative assessment (single-pass, no feedback loop).
 
@@ -334,7 +337,12 @@ async def assess_qualitative(
     """
     transcript = _resolve_transcript(request, transcript_service)
 
-    agent = QualitativeAssessmentAgent(llm_client=llm, model_settings=model_settings)
+    agent = QualitativeAssessmentAgent(
+        llm_client=llm,
+        model_settings=model_settings,
+        pydantic_ai_settings=app_settings.pydantic_ai,
+        ollama_base_url=app_settings.ollama.base_url,
+    )
 
     try:
         assessment = await agent.assess(transcript)
