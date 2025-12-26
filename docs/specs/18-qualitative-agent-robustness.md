@@ -30,30 +30,21 @@ with deterministic failure handling and improved resilience to format drift.
 
 ## Background (Current State)
 
-### Implementation today
+### Implementation today (post-Spec 18)
 
 - `src/ai_psychiatrist/agents/qualitative.py`
-  - Calls `SimpleChatClient.simple_chat(...)`
-  - Expects an XML-tagged response:
-    - `<assessment>...</assessment>`
-    - `<PHQ8_symptoms>...</PHQ8_symptoms>`
-    - `<social_factors>...</social_factors>`
-    - `<biological_factors>...</biological_factors>`
-    - `<risk_factors>...</risk_factors>`
-    - Optional: `<exact_quotes>...</exact_quotes>`
-  - Parses via `extract_xml_tags(...)` (regex extraction)
-  - Missing tags become empty strings, then replaced with placeholders (“Not assessed”)
+  - **Pydantic AI path (preferred when enabled + configured)**:
+    - Uses `pydantic_ai.Agent(..., output_type=TextOutput(extract_qualitative))`
+    - Expects the same XML-tagged response contract (no prompt changes required)
+    - Retries via `ModelRetry` when required tags are missing/malformed
+  - **Legacy path (fallback / compatibility)**:
+    - Calls `SimpleChatClient.simple_chat(...)`
+    - Parses via `extract_xml_tags(...)` (regex extraction)
+    - Missing tags become empty strings, then replaced with placeholders (“Not assessed”)
 
-### Why this is a gap
+### Why this mattered
 
-After Spec 13, these agents have a Pydantic AI path (TextOutput + retries):
-- `src/ai_psychiatrist/agents/quantitative.py`
-- `src/ai_psychiatrist/agents/judge.py`
-- `src/ai_psychiatrist/agents/meta_review.py`
-
-But `QualitativeAssessmentAgent` does **not**:
-- It has no structured retry loop when output is malformed.
-- It doesn’t catch/handle `LLMError` (unlike Judge/Quant/MetaReview), so a transient LLM failure can abort the full pipeline.
+Pre-Spec 18, the qualitative agent had no structured retry loop when output was malformed, which made the feedback loop brittle in the face of format drift. Spec 18 adds the same validation + retry behavior used elsewhere in the pipeline while preserving the paper’s prompt contract, and retains the legacy path as a safety net.
 
 ---
 

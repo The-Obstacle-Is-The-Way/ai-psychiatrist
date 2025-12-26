@@ -400,10 +400,9 @@ class TestReferenceStore:
         }
         _create_npz_embeddings(mock_data_settings.embeddings_path, raw_data)
 
-        mock_embed = MagicMock()
-        mock_embed.dimension = 2  # Match dummy data dimension
+        embed_settings = EmbeddingSettings(dimension=2)  # Match dummy data dimension
 
-        store = ReferenceStore(mock_data_settings, mock_embed)
+        store = ReferenceStore(mock_data_settings, embed_settings)
         embeddings = store.get_all_embeddings()
 
         assert len(embeddings) == 2
@@ -440,8 +439,8 @@ class TestReferenceStore:
         )
         dev_df.to_csv(mock_data_settings.dev_csv, index=False)
 
-        mock_embed = MagicMock()
-        store = ReferenceStore(mock_data_settings, mock_embed)
+        embed_settings = EmbeddingSettings()
+        store = ReferenceStore(mock_data_settings, embed_settings)
 
         # Check scores from train split
         assert store.get_score(100, PHQ8Item.NO_INTEREST) == 1
@@ -462,10 +461,9 @@ class TestReferenceStore:
         }
         _create_npz_embeddings(mock_data_settings.embeddings_path, raw_data)
 
-        mock_embed = MagicMock()
-        mock_embed.dimension = 2
+        embed_settings = EmbeddingSettings(dimension=2)
 
-        store = ReferenceStore(mock_data_settings, mock_embed)
+        store = ReferenceStore(mock_data_settings, embed_settings)
 
         p100 = store.get_participant_embeddings(100)
         assert len(p100) == 1
@@ -595,10 +593,9 @@ class TestEmbeddingDimensionMismatch:
             dev_csv=tmp_path / "dev.csv",
         )
 
-        mock_embed = MagicMock()
-        mock_embed.dimension = 256  # Expect 256, but embeddings only have 2
+        embed_settings = EmbeddingSettings(dimension=256)  # Expect 256, but embeddings only have 2
 
-        store = ReferenceStore(data_settings, mock_embed)
+        store = ReferenceStore(data_settings, embed_settings)
 
         with pytest.raises(EmbeddingDimensionMismatchError) as excinfo:
             store.get_all_embeddings()
@@ -627,10 +624,11 @@ class TestEmbeddingDimensionMismatch:
             dev_csv=tmp_path / "dev.csv",
         )
 
-        mock_embed = MagicMock()
-        mock_embed.dimension = 4  # Need at least 4, so 2-dim is skipped, 10-dim is valid
+        embed_settings = EmbeddingSettings(
+            dimension=4
+        )  # Need at least 4, so 2-dim is skipped, 10-dim is valid
 
-        store = ReferenceStore(data_settings, mock_embed)
+        store = ReferenceStore(data_settings, embed_settings)
         embeddings = store.get_all_embeddings()
 
         # Only participant 101 should remain (100 was skipped)
@@ -658,10 +656,9 @@ class TestEmbeddingDimensionMismatch:
             dev_csv=tmp_path / "dev.csv",
         )
 
-        mock_embed = MagicMock()
-        mock_embed.dimension = 4  # Truncate to 4
+        embed_settings = EmbeddingSettings(dimension=4)  # Truncate to 4
 
-        store = ReferenceStore(data_settings, mock_embed)
+        store = ReferenceStore(data_settings, embed_settings)
         embeddings = store.get_all_embeddings()
 
         # Check truncation happened

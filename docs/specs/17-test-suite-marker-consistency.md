@@ -23,7 +23,7 @@ make test-integration # uv run pytest -m integration
 make test-e2e         # uv run pytest -m e2e
 ```
 
-Today, most tests are **not marked**, so marker-based selection does **not** match directory-based selection.
+Before this spec was implemented, most tests were **not marked**, so marker-based selection did **not** match directory-based selection.
 
 **Observed on 2025-12-26 (recompute via commands below):**
 
@@ -33,7 +33,7 @@ Today, most tests are **not marked**, so marker-based selection does **not** mat
 | Integration (`tests/integration/`) | 2 | 0 files marked | `-m integration` selects 0 / 13 tests |
 | E2E (`tests/e2e/`) | 3 | 3 files marked | ✅ works |
 
-**Consequence**: `make test-unit` and `make test-integration` are misleading (and `make test-integration` runs nothing).
+**Consequence (pre-fix)**: `make test-unit` and `make test-integration` were misleading (and `make test-integration` ran nothing).
 
 ---
 
@@ -135,7 +135,7 @@ make test
 
 ## Acceptance Criteria
 
-- [x] `uv run pytest -o addopts='' -m unit --collect-only` collects the same number of tests as `uv run pytest -o addopts='' tests/unit --collect-only`. ✅ (649 tests)
+- [x] `uv run pytest -o addopts='' -m unit --collect-only` collects the same number of tests as `uv run pytest -o addopts='' tests/unit --collect-only`. ✅ (653 tests as of 2025-12-26)
 - [x] `uv run pytest -o addopts='' -m integration --collect-only` collects the same number of tests as `uv run pytest -o addopts='' tests/integration --collect-only`. ✅ (13 tests)
 - [x] `make test-unit` runs all unit tests under `tests/unit/`.
 - [x] `make test-integration` runs all integration tests under `tests/integration/`.
