@@ -1,6 +1,6 @@
 # Spec 19: Test Suite Mock Audit
 
-> **STATUS: AUDIT COMPLETE — IMPROVEMENTS RECOMMENDED**
+> **STATUS: AUDIT COMPLETE — IMPROVEMENTS IMPLEMENTED**
 >
 > **GitHub Issue**: #59
 >
@@ -17,13 +17,13 @@ A comprehensive audit of the test suite was conducted to evaluate:
 2. Whether assertions match current codebase behavior
 3. Whether the mocking strategy follows 2025 ML testing best practices
 
-**Overall Verdict: The test suite is broadly healthy, but it has a real coverage gap.**
+**Overall Verdict: The test suite is healthy and the prior high-impact gaps are now closed.**
 
 The codebase went through significant refactoring (Pydantic AI integration, embedding backend decoupling, model wiring fixes), and the tests have been properly updated.
 
-However, two findings are higher impact:
-1. **Pydantic AI execution paths are not exercised by the default unit/integration runs**, and most e2e tests instantiate agents in a way that forces the legacy path.
-2. **Some tests use unspecced `MagicMock` / `AsyncMock` for contract-bearing collaborators** (settings objects and agent/service boundaries), which can hide interface drift.
+This spec originally identified two higher-impact gaps (P1/P2 below). Both have since been addressed:
+1. Offline unit tests now exercise the Pydantic AI `.run(...)` path for all core agents (no network required).
+2. Contract-bearing mocks were hardened (use of `spec_set` and real settings objects).
 
 ---
 
@@ -161,17 +161,17 @@ Tests cover:
 
 ## Issues Found
 
-### P1: Pydantic AI Execution Path Not Covered by Default Test Runs (CI Risk)
+### P1: Pydantic AI Execution Path Not Covered by Default Test Runs (CI Risk) — RESOLVED
 
 **Severity**: P1 (High)
 
-**What’s wrong**: The core agents have a **dual-path** execution (legacy `simple_chat` vs Pydantic AI via `pydantic_ai.Agent`). Pydantic AI is enabled by default (`PydanticAISettings.enabled = True`), but it only activates when `ollama_base_url` is provided at construction time.
+**What was wrong**: The core agents have a **dual-path** execution (legacy `simple_chat` vs Pydantic AI via `pydantic_ai.Agent`). Pydantic AI only activates when `ollama_base_url` is provided at construction time. Most unit/integration tests instantiated agents without `ollama_base_url`, which forced the legacy path even when Pydantic AI was enabled.
 
-Most unit/integration tests instantiate agents without `ollama_base_url`, which forces the legacy path even when Pydantic AI is enabled. Additionally, `tests/e2e/test_agents_real_ollama.py` instantiates agents without `ollama_base_url`, so those e2e tests also exercise the legacy path.
-
-**Why it matters**:
-- A regression in Pydantic AI integration (API changes, factory wiring, output adapter behavior) can slip through CI because the default suite won’t exercise the `.run(...)` path.
-- The production entrypoints that matter most for paper reproduction (`server.py`, `scripts/reproduce_results.py`) *do* pass `ollama_base_url`, so real runs are more likely to hit the untested path.
+**Fix implemented**: Offline unit tests now exercise the Pydantic AI `.run(...)` path for all core agents (no network required) by patching `create_*_agent()` factories and providing `ollama_base_url`:
+- `tests/unit/agents/test_quantitative.py` (`test_pydantic_ai_path_success`)
+- `tests/unit/agents/test_judge.py` (`test_pydantic_ai_path_success`)
+- `tests/unit/agents/test_meta_review.py` (`test_pydantic_ai_path_success`)
+- `tests/unit/agents/test_qualitative.py` (`test_pydantic_ai_path_success`)
 
 **Evidence** (representative; repeated across agents): when enabled but missing base URL, agents log and fall back:
 
@@ -183,55 +183,30 @@ if self._pydantic_ai.enabled:
         self._scoring_agent = create_quantitative_agent(...)
 ```
 
-**Recommendation**:
-1. Add **offline unit tests** (no network) that patch `create_*_agent()` factories and assert the `.run()` path is taken for each agent when `ollama_base_url` is provided, OR
-2. Add a dedicated integration test around FastAPI lifespan wiring with patched `create_*_agent()` factories (no network), OR
-3. Explicitly accept the risk and enforce `AI_PSYCHIATRIST_OLLAMA_TESTS=1 make test-e2e` in CI (note: makes CI depend on a running Ollama).
-
-**Effort**: ~1–2 hours (offline unit test approach)
-
 ---
 
-### P2: Contract Drift Risk from Unspecced MagicMock / AsyncMock
+### P2: Contract Drift Risk from Unspecced MagicMock / AsyncMock — RESOLVED
 
 **Severity**: P2 (Medium)
 
-**What’s wrong**: Some tests use “free-form” mocks for collaborators that represent real interfaces (settings objects and agent/service boundaries). Unspecced mocks can silently accept new/incorrect attribute and method usage, masking breaking changes.
+**What was wrong**: Some tests used “free-form” mocks for collaborators that represent real interfaces (settings objects and agent/service boundaries). Unspecced mocks can silently accept new/incorrect attribute and method usage, masking breaking changes.
 
-**Where it shows up**:
-- `tests/unit/services/test_embedding.py` mocks embedding settings with `MagicMock()` (no `spec`/`spec_set`)
-- `tests/unit/services/test_feedback_loop.py` mocks agents with `AsyncMock()` (no `spec`/`spec_set`)
+**Fix implemented**:
+- `tests/unit/services/test_embedding.py` now uses real `EmbeddingSettings(...)` objects instead of free-form mocks.
+- `tests/unit/services/test_feedback_loop.py` now uses `AsyncMock(spec_set=QualitativeAssessmentAgent)` and `AsyncMock(spec_set=JudgeAgent)`.
 
-**Why it matters**: This is a common failure mode for “fossilized” tests: the interface changes, tests keep passing, and the regression leaks into production.
-
-**Suggested fix**:
-- Prefer real settings objects where practical (e.g., use `EmbeddingSettings(...)` in tests), or use `MagicMock(spec_set=EmbeddingSettings)` to enforce attribute names.
-- For agent/service mocks, use `AsyncMock(spec_set=QualitativeAssessmentAgent)` / `AsyncMock(spec_set=JudgeAgent)` (or a small Protocol representing the boundary) so the service cannot call non-existent methods without failing the test.
-
-**Effort**: ~30–60 minutes (test-only cleanup)
+**Outcome**: Contract drift is less likely to slip through because mocks/settings now enforce real attribute/method surfaces.
 
 ---
 
-### P3: Tests Rely on Enum Iteration Order
+### P3: Tests Rely on Enum Iteration Order — RESOLVED
 
 **Severity**: P3 (Low)
 **Location**: `tests/unit/agents/test_judge.py:88-107, 117-138`
 
-**Issue**: Comments acknowledge fragility:
+**What was wrong**: Tests relied on `EvaluationMetric` enum iteration order, which is fragile if the enum changes.
 
-```python
-responses = [
-    "Explanation: Good\nScore: 5",  # Coherence
-    "Explanation: Bad\nScore: 2",   # Completeness
-    "Explanation: Good\nScore: 5",  # Specificity
-    "Explanation: Bad\nScore: 2",   # Accuracy
-]
-# NOTE: This relies on Enum order. If Enum order changes, this test might be flaky.
-```
-
-**Impact**: If `EvaluationMetric` enum order changes, tests could fail or produce false positives.
-
-**Recommendation**: Use `MockLLMClient`'s `chat_function` parameter to return responses based on prompt content:
+**Fix implemented**: `tests/unit/agents/test_judge.py` now uses `MockLLMClient(chat_function=...)` to return responses based on prompt content, making the tests stable regardless of enum order:
 
 ```python
 def response_by_metric(request: ChatRequest) -> str:
@@ -243,8 +218,6 @@ def response_by_metric(request: ChatRequest) -> str:
 
 mock_client = MockLLMClient(chat_function=response_by_metric)
 ```
-
-**Effort**: ~30 minutes
 
 ---
 
@@ -280,9 +253,9 @@ Coverage is enforced via `pyproject.toml` pytest `addopts` (`--cov-fail-under=80
 
 ### ❌ "Mocks Don't Match Implementations"
 
-**Status**: MockLLMClient aligns; some other mocks are still “loose”
+**Status**: Mitigated
 
-The `MockLLMClient` is validated against `ChatClient` / `EmbeddingClient` / `LLMClient` (and `SimpleChatClient` in agent tests), which strongly limits drift. Some tests still use unspecced mocks for settings/services (see P2).
+The `MockLLMClient` is validated against `ChatClient` / `EmbeddingClient` / `LLMClient` (and `SimpleChatClient` in agent tests), which strongly limits drift. Additional contract-bearing mocks were hardened as part of P2.
 
 ### ❌ "AsyncMock Warnings"
 
@@ -305,7 +278,7 @@ The feedback loop tests now use sync `Mock` for sync methods.
 | Test isolation (env vars, caching) | ✅ | conftest.py |
 | Auto-applied test markers | ✅ | `pytest_collection_modifyitems` in `tests/conftest.py` |
 | Pydantic AI retry/validation testing | ✅ | Extractors tested |
-| Avoid unspecced mocks for interfaces | ⚠️ | Improve settings/agent mocks (see P2) |
+| Avoid unspecced mocks for interfaces | ⚠️ | Core contract-bearing mocks are hardened (P2); a few ad-hoc unspecced mocks remain (e.g., NPZ loader objects). |
 
 ---
 
@@ -313,54 +286,21 @@ The feedback loop tests now use sync `Mock` for sync methods.
 
 | Priority | Issue | Recommendation | Effort |
 |----------|-------|----------------|--------|
-| P1 | Pydantic AI path not covered in default runs | Add offline unit tests around the `.run()` path | ~1–2 hrs |
-| P2 | Unspecced mocks for contract interfaces | Use real settings or `spec_set` mocks | ~30–60 min |
-| P3 | Enum order reliance in judge tests | Use `chat_function` for dynamic responses | ~30 min |
+| P1 | Pydantic AI path not covered in default runs | ✅ Implemented: offline unit tests cover `.run(...)` path | - |
+| P2 | Unspecced mocks for contract interfaces | ✅ Implemented: real settings + `spec_set` mocks | - |
+| P3 | Enum order reliance in judge tests | ✅ Implemented: `chat_function`-based responses | - |
 | P5 | Large hardcoded response strings | No action needed | - |
 
 ---
 
-## Implementation Plan (Optional)
+## Remediation Summary
 
-If the P1 issue is addressed:
+The remediations described in P1/P2/P3 are implemented and run in the default unit suite:
 
-### Option A: Mock Pydantic AI Agent in Unit Tests
-
-Add to `tests/unit/agents/test_quantitative.py` (and replicate the pattern for `JudgeAgent`, `MetaReviewAgent`, and `QualitativeAssessmentAgent`):
-
-```python
-from unittest.mock import AsyncMock, patch
-
-@pytest.mark.asyncio
-async def test_pydantic_ai_path_success(sample_transcript: Transcript) -> None:
-    """Should use Pydantic AI agent when enabled and configured."""
-    mock_agent = AsyncMock()
-    mock_agent.run.return_value = AsyncMock(output=QuantitativeOutput(...))
-
-    with patch('ai_psychiatrist.agents.pydantic_agents.create_quantitative_agent', return_value=mock_agent):
-        agent = QuantitativeAssessmentAgent(
-            llm_client=MockLLMClient(),
-            pydantic_ai_settings=PydanticAISettings(enabled=True),
-            ollama_base_url="http://localhost:11434",
-        )
-        result = await agent.assess(sample_transcript)
-
-    mock_agent.run.assert_called_once()
-    assert result.total_score >= 0
-```
-
-### Option B: Accept Integration Coverage
-
-Document that the Pydantic AI path is tested via:
-1. `tests/unit/agents/test_pydantic_ai_extractors.py` (extractors)
-2. `tests/e2e/test_server_real_ollama.py` (full pipeline via FastAPI lifespan wiring)
-
-Note: `tests/e2e/test_agents_real_ollama.py` currently instantiates agents without `ollama_base_url`, so it exercises the legacy path even when Pydantic AI is enabled by default.
-
-This is acceptable because:
-- The Pydantic AI agent is a thin wrapper around extractors
-- The extractors are thoroughly unit-tested
-- E2E tests validate the integrated behavior
+- P1: Offline `.run(...)`-path tests for all agents (patch `create_*_agent()` factories in each agent test module).
+- P2: Hardened contract mocks (use `spec_set` for agent/service boundaries; use real settings objects where practical).
+- P3: Removed enum-order reliance in judge tests via `MockLLMClient(chat_function=...)`.
+- Note: A few ad-hoc unspecced mocks remain (e.g., NPZ loader objects in reference store tests); treat as low risk unless those interfaces churn.
 
 ---
 
@@ -368,9 +308,9 @@ This is acceptable because:
 
 - [x] Audit completed with documented findings
 - [x] 2025 best practices verified
-- [x] P1 issue addressed or explicitly accepted (Pydantic AI path coverage)
-- [x] Optional: P2 issue addressed (specced mocks for contract-bearing collaborators)
-- [x] Optional: P3 issue addressed (enum order reliance)
+- [x] P1 issue addressed (offline unit tests cover Pydantic AI `.run(...)` path)
+- [x] P2 issue addressed (real settings + `spec_set` mocks for contract-bearing collaborators)
+- [x] P3 issue addressed (no enum-order reliance in judge tests)
 
 ---
 
