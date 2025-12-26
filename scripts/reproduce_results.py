@@ -198,7 +198,15 @@ def load_item_ground_truth_csv(csv_path: Path) -> dict[int, dict[PHQ8Item, int]]
         scores: dict[PHQ8Item, int] = {}
         for item in PHQ8Item.all_items():
             col = f"PHQ8_{item.value}"
-            scores[item] = int(row[col])
+            value = row[col]
+            # Fail loudly on missing ground truth (BUG-025)
+            if pd.isna(value):
+                raise ValueError(
+                    f"Missing ground truth for participant {participant_id} item {item.value}. "
+                    f"Run 'uv run python scripts/patch_missing_phq8_values.py --apply' to fix. "
+                    f"See docs/bugs/bug-025-missing-phq8-ground-truth-paper-test.md"
+                )
+            scores[item] = int(value)
         result[participant_id] = scores
 
     return result

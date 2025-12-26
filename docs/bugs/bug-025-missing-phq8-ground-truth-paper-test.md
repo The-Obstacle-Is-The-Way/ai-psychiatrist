@@ -1,12 +1,16 @@
 # BUG-025: Missing PHQ-8 Item-Level Ground Truth in Paper Test Split
 
-> **STATUS: DISCOVERED — AWAITING SENIOR REVIEW**
+> **STATUS: RESOLVED**
 >
 > **Discovered**: 2025-12-26
 >
-> **Severity**: Blocker (prevents paper reproduction run on `--split paper`)
+> **Resolved**: 2025-12-26
+>
+> **Severity**: Blocker (prevented paper reproduction run on `--split paper`)
 >
 > **Affects**: `scripts/reproduce_results.py --split paper`
+>
+> **Resolution**: Mathematical reconstruction applied via `scripts/patch_missing_phq8_values.py`
 
 ---
 
@@ -143,7 +147,7 @@ Sum of known items = 2+1+1+1+2+3+1 = 11
 Missing: PHQ8_Sleep = 13 - 11 = 2
 ```
 
-**This is NOT imputation or guessing** - it is mathematical reconstruction from authoritative ground truth. The `PHQ8_Score=13` is the clinician-provided total score; we are simply recovering the missing component.
+**This is NOT imputation or guessing** - it is mathematical reconstruction from authoritative ground truth. The `PHQ8_Score=13` is the questionnaire total (patient-reported via PHQ-8 self-assessment); we are simply recovering the missing component.
 
 ### Transcript Evidence (Corroborating)
 
@@ -336,4 +340,47 @@ grep "^319," data/paper_splits/paper_split_test.csv
 
 ---
 
+## Resolution Applied (2025-12-26)
+
+### Actions Taken
+
+1. **Created deterministic patch script**: `scripts/patch_missing_phq8_values.py`
+   - Validates preconditions (exactly one missing item, reconstructed value in [0,3])
+   - Applies mathematical reconstruction with full audit trail
+   - Verifies invariant `PHQ8_Score == sum(items)` for all complete rows
+
+2. **Applied patch to upstream CSV**: `data/train_split_Depression_AVEC2017.csv`
+   - Changed: `319,1,13,1,2,1,,1,1,2,3,1` → `319,1,13,1,2,1,2,1,1,2,3,1`
+   - Preserves N=41 test participants (matches paper)
+
+3. **Regenerated paper splits**: `uv run python scripts/create_paper_split.py --verify`
+   - `paper_split_test.csv` now has `PHQ8_Sleep=2` for participant 319
+   - `PHQ8_Total=13` matches `PHQ8_Score=13`
+
+4. **Added fail-loud validation** to both scripts:
+   - `scripts/reproduce_results.py`: Raises `ValueError` with fix instructions on NaN
+   - `scripts/create_paper_split.py`: Raises `ValueError` if any PHQ-8 items are missing
+
+5. **Created data provenance note**: `data/DATA_PROVENANCE.md`
+   - Documents the patch with mathematical proof
+   - Provides verification commands
+
+### Verification
+
+```bash
+# Confirm no missing values
+uv run python scripts/patch_missing_phq8_values.py --dry-run
+# Output: "OK: No missing values" for both files
+
+# Confirm participant 319 is correct
+grep "^319," data/train_split_Depression_AVEC2017.csv
+# Output: 319,1,13,1,2,1,2,1,1,2,3,1
+
+grep "^319," data/paper_splits/paper_split_test.csv
+# Output: 319,1,13,1,2,1,2,1,1,2,3,1,13
+```
+
+---
+
 *Discovered during preflight check for paper reproduction run, 2025-12-26*
+*Resolved same day after senior review approval*

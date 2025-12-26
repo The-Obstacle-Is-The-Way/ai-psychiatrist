@@ -260,6 +260,17 @@ def load_combined_data(data_dir: Path) -> pd.DataFrame:
         for c in combined.columns
         if c.startswith("PHQ8_") and c not in {"PHQ8_Binary", "PHQ8_Score"}
     ]
+
+    # Fail loudly on missing PHQ-8 item values (BUG-025)
+    missing = combined[combined[item_cols].isna().any(axis=1)]
+    if not missing.empty:
+        affected = missing["Participant_ID"].tolist()
+        raise ValueError(
+            f"Missing PHQ-8 item values for participants: {affected}. "
+            f"Run 'uv run python scripts/patch_missing_phq8_values.py --apply' to fix. "
+            f"See docs/bugs/bug-025-missing-phq8-ground-truth-paper-test.md"
+        )
+
     combined["PHQ8_Total"] = combined[item_cols].sum(axis=1).astype(int)
 
     return combined
