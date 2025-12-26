@@ -153,15 +153,21 @@ If `{name}.meta.json` exists (all newly generated artifacts have it), the server
 ### Default (Recommended)
 
 ```bash
+# Backend selection (defaults to Ollama chat + HuggingFace embeddings)
 LLM_BACKEND=ollama
 EMBEDDING_BACKEND=huggingface
 
+# Models (all default to gemma3:27b for chat, qwen3-embedding:8b for embeddings)
 MODEL_QUALITATIVE_MODEL=gemma3:27b
 MODEL_JUDGE_MODEL=gemma3:27b
 MODEL_META_REVIEW_MODEL=gemma3:27b
 MODEL_QUANTITATIVE_MODEL=gemma3:27b
 MODEL_EMBEDDING_MODEL=qwen3-embedding:8b
 EMBEDDING_DIMENSION=4096
+
+# Embeddings artifact (default: huggingface_qwen3_8b_paper_train)
+# Only set if you want to override the default HF embeddings
+# EMBEDDING_EMBEDDINGS_FILE=paper_reference_embeddings  # Use Ollama embeddings instead
 ```
 
 ### Paper Parity (Pure Ollama)
@@ -169,6 +175,7 @@ EMBEDDING_DIMENSION=4096
 ```bash
 LLM_BACKEND=ollama
 EMBEDDING_BACKEND=ollama
+EMBEDDING_EMBEDDINGS_FILE=paper_reference_embeddings  # Use Ollama Q4_K_M embeddings
 ```
 
 ### With MedGemma (Appendix F - HuggingFace backend required)

@@ -214,7 +214,7 @@ class EmbeddingSettings(BaseSettings):
         description="Minimum characters for valid evidence",
     )
     embeddings_file: str = Field(
-        default="paper_reference_embeddings",
+        default="huggingface_qwen3_8b_paper_train",
         description="Reference embeddings basename (no extension)",
     )
 
@@ -304,7 +304,7 @@ class DataSettings(BaseSettings):
         description="Transcript files directory",
     )
     embeddings_path: Path = Field(
-        default=Path("data/embeddings/paper_reference_embeddings.npz"),
+        default=Path("data/embeddings/huggingface_qwen3_8b_paper_train.npz"),
         description="Pre-computed embeddings for few-shot (NPZ + .json sidecar).",
     )
     train_csv: Path = Field(

@@ -162,7 +162,8 @@ class TestEmbeddingSettings:
         assert settings.chunk_size == 8  # Paper Appendix D
         assert settings.chunk_step == 2  # Paper: step_size=2
         assert settings.top_k_references == 2  # Paper Appendix D: N_example=2
-        assert settings.embeddings_file == "paper_reference_embeddings"
+        # Default to HuggingFace FP16 embeddings (higher quality than Ollama Q4_K_M)
+        assert settings.embeddings_file == "huggingface_qwen3_8b_paper_train"
 
     def test_chunk_size_validation_min(self) -> None:
         """chunk_size must be >= 2."""

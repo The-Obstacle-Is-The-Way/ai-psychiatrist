@@ -185,8 +185,10 @@ Active specs live under `docs/specs/`.
 | **11.5** | Integration Checkpoint | Full pipeline verification |
 | **12** | Observability | Metrics, tracing, health checks |
 | **12.5** | Final Cleanup | Legacy removal, cruft cleanup |
-| **13** | Structured Outputs (Pydantic AI) | Post-replication refactor for validated outputs |
+| **13** | Structured Outputs | Pydantic AI + Ollama JSON mode for validated outputs |
 | **14** | Keyword Matching Improvements | Word-boundary regex, negation detection |
+| **15** | Experiment Tracking | Full provenance, semantic naming, registry |
+| **16** | Log Output Improvements | ANSI auto-detection, clean log files |
 
 ## Integration Checkpoints
 
@@ -337,12 +339,19 @@ The specs are ordered for **maximum early value** with **mandatory checkpoints**
 8. **CHECKPOINT 11.5**: Verify paper metrics reproduced
 9. **Spec 12**: Polish (observability)
 10. **CHECKPOINT 12.5**: Remove legacy code, clean codebase
-11. **Spec 13 (Deferred)**: Structured outputs via Pydantic AI (post-replication enhancement)
+11. **Spec 13 (Deferred)**: Structured outputs via Pydantic AI / Ollama JSON mode
 12. **Spec 14 (Deferred)**: Word-boundary regex + negation detection (precision refinement)
+13. **Spec 15 (Required)**: Experiment tracking with full provenance
+14. **Spec 16 (Quick Fix)**: Log output improvements (ANSI auto-detection)
 
 Each spec produces a **working increment** that can be demoed and tested.
 Each checkpoint produces a **quality gate** that must pass before proceeding.
-Spec 13 is **optional** and should only be considered after paper replication is validated.
+
+**Post-Replication Enhancements**:
+- Spec 13 is **deferred** until paper replication is validated
+- Spec 14 is **deferred** (precision refinement)
+- Spec 15 is **required** for reproducibility before/during paper runs
+- Spec 16 is a **quick fix** that can be done anytime
 
 ## References
 
