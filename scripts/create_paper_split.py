@@ -13,7 +13,7 @@ From Paper Section 2.4.1:
 Modes:
     --mode ground-truth (DEFAULT):
         Uses the exact participant IDs reverse-engineered from the paper authors'
-        output files (see docs/data/DATA_SPLIT_REGISTRY.md). This is required for
+        output files (see docs/data/paper-split-registry.md). This is required for
         exact reproduction of paper results.
 
     --mode algorithmic:
@@ -52,7 +52,7 @@ _TARGET_TRAIN_COUNT = 58
 _TARGET_VAL_COUNT = 43
 _TARGET_TEST_COUNT = 41
 
-# Ground Truth IDs from docs/data/DATA_SPLIT_REGISTRY.md
+# Ground Truth IDs from docs/data/paper-split-registry.md
 _GROUND_TRUTH_TRAIN_IDS = [
     303,
     304,
@@ -662,7 +662,7 @@ def print_split_report(
 
     print("\n" + "=" * 70)
     if mode == "ground-truth":
-        print("PAPER GROUND TRUTH SPLIT (from DATA_SPLIT_REGISTRY.md)")
+        print("PAPER GROUND TRUTH SPLIT (from paper-split-registry.md)")
     else:
         print("PAPER-STYLE STRATIFIED SPLIT (Algorithmic)")
     print("=" * 70)
@@ -721,7 +721,7 @@ def save_splits(
     if mode == "ground-truth":
         metadata: dict[str, Any] = {
             "description": "Paper ground truth splits (reverse-engineered from output files)",
-            "source": "docs/data/DATA_SPLIT_REGISTRY.md",
+            "source": "docs/data/paper-split-registry.md",
             "methodology": {
                 "derivation": "Extracted participant IDs from paper authors' output files",
                 "train_source": "quan_gemma_zero_shot.jsonl minus TEST minus VAL",
@@ -873,7 +873,7 @@ def main() -> int:
         if args.seed != 42:
             print("WARNING: --seed is ignored in ground-truth mode.")
 
-        print("\nUsing GROUND TRUTH splits from DATA_SPLIT_REGISTRY.md...")
+        print("\nUsing GROUND TRUTH splits from paper-split-registry.md...")
         train_ids = sorted(_GROUND_TRUTH_TRAIN_IDS)
         val_ids = sorted(_GROUND_TRUTH_VAL_IDS)
         test_ids = sorted(_GROUND_TRUTH_TEST_IDS)

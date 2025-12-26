@@ -86,7 +86,7 @@ uv run python scripts/generate_embeddings.py --split paper-train
 uv run python scripts/reproduce_results.py --split paper --few-shot-only
 ```
 
-Note: `scripts/create_paper_split.py` now defaults to paper ground truth IDs (see `docs/data/DATA_SPLIT_REGISTRY.md`).
+Note: `scripts/create_paper_split.py` now defaults to paper ground truth IDs (see `docs/data/paper-split-registry.md`).
 The legacy algorithmic split generator is preserved as `--mode algorithmic` for reference/testing, but it will not match
 the paper’s exact split membership.
 

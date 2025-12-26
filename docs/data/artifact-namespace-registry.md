@@ -39,7 +39,7 @@ Legacy filenames like `paper_reference_embeddings.npz` are still supported (use 
 | `data/paper_splits/paper_split_test.csv` | 41 | Yes | Paper reproduction evaluation |
 | `data/paper_splits/paper_split_metadata.json` | - | - | Split provenance |
 
-**Important**: These splits are now generated using **ground truth participant IDs** reverse-engineered from the paper authors' output files (see `docs/data/DATA_SPLIT_REGISTRY.md`). This ensures exact reproduction.
+**Important**: These splits are now generated using **ground truth participant IDs** reverse-engineered from the paper authors' output files (see `docs/data/paper-split-registry.md`). This ensures exact reproduction.
 
 The script `scripts/create_paper_split.py` defaults to `--mode ground-truth`. The legacy seeded algorithmic generation (Appendix C) is available via `--mode algorithmic`.
 
@@ -164,6 +164,6 @@ See [Model Registry](../models/model-registry.md#high-quality-setup-recommended-
 
 ## See Also
 
-- [data-splits-registry.md](./data-splits-registry.md) - Detailed split documentation
+- [data-splits-overview.md](./data-splits-overview.md) - Detailed split documentation
 - [GAP-001](../bugs/gap-001-paper-unspecified-parameters.md) - Paper-unspecified parameters
 - [BUG-018](../bugs/bug-018-reproduction-friction.md) - Reproduction friction log

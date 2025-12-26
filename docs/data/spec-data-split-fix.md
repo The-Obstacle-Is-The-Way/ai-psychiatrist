@@ -1,9 +1,9 @@
 # SPEC: Data Split Correction and Artifact Regeneration
 
-> **Status**: REVIEWED AND APPROVED
+> **Status**: IMPLEMENTED
 > **Branch**: `fix/paper-data-splits`
 > **Priority**: HIGH - Blocks paper reproduction parity
-> **Related**: GH Issue #45, `CRITICAL_DATA_SPLIT_MISMATCH.md`
+> **Related**: GH Issue #45, `critical-data-split-mismatch.md`
 > **Date**: 2025-12-25
 
 ---
@@ -12,7 +12,7 @@
 
 Our `data/paper_splits/` files were generated algorithmically with seed=42, producing participant IDs that **do not match** the paper's actual splits. Our legacy paper embeddings artifact (`data/embeddings/paper_reference_embeddings.*`) was generated from `data/paper_splits/paper_split_train.csv`, so it inherits the same wrong membership.
 
-The ground truth was reverse-engineered from the paper authors' output files and is documented in `docs/data/DATA_SPLIT_REGISTRY.md`.
+The ground truth was reverse-engineered from the paper authors' output files and is documented in `docs/data/paper-split-registry.md`.
 
 **This spec defines the complete fix**: delete wrong artifacts, update scripts to use ground truth IDs, and regenerate all dependent artifacts.
 
@@ -21,6 +21,8 @@ The ground truth was reverse-engineered from the paper authors' output files and
 ---
 
 ## 1. Current State (WRONG)
+
+Note: This section describes the pre-fix state that motivated the work; it is no longer the current behavior.
 
 ### 1.1 Wrong Paper Splits
 
@@ -31,7 +33,7 @@ The ground truth was reverse-engineered from the paper authors' output files and
 | `data/paper_splits/paper_split_test.csv` | ❌ WRONG | 26 wrong participant IDs |
 | `data/paper_splits/paper_split_metadata.json` | ❌ WRONG | Contains wrong IDs |
 
-**Evidence**: Comparison in `CRITICAL_DATA_SPLIT_MISMATCH.md` shows ~50% participant mismatch per split.
+**Evidence**: Comparison in `critical-data-split-mismatch.md` shows ~50% participant mismatch per split.
 
 ### 1.2 Wrong Embeddings
 
@@ -77,7 +79,7 @@ The ground truth was reverse-engineered from the paper authors' output files and
 
 ### 2.1 Source of Truth
 
-**File**: `docs/data/DATA_SPLIT_REGISTRY.md`
+**File**: `docs/data/paper-split-registry.md`
 
 **Provenance**: Reverse-engineered from paper authors' actual output files in `_reference/analysis_output/`:
 - TRAIN: Derived from `quan_gemma_zero_shot.jsonl` minus TEST minus VAL
@@ -87,7 +89,7 @@ The ground truth was reverse-engineered from the paper authors' output files and
 ### 2.2 Correct Participant IDs
 
 ```python
-# GROUND TRUTH - From docs/data/DATA_SPLIT_REGISTRY.md
+# GROUND TRUTH - From docs/data/paper-split-registry.md
 TRAIN_IDS = [
     303, 304, 305, 310, 312, 313, 315, 317, 318, 321, 324, 327, 335, 338, 340, 343,
     344, 346, 347, 350, 352, 356, 363, 368, 369, 388, 391, 395, 397, 400, 402, 404,
@@ -122,7 +124,7 @@ TEST_IDS = [
 
 The ground-truth registry is internally consistent and matches the local dataset files:
 
-- 58/43/41 IDs in `docs/data/DATA_SPLIT_REGISTRY.md`, total 142, no overlaps
+- 58/43/41 IDs in `docs/data/paper-split-registry.md`, total 142, no overlaps
 - All 142 IDs exist in `data/train_split_Depression_AVEC2017.csv` ∪ `data/dev_split_Depression_AVEC2017.csv`
 - All 142 IDs exist as transcript directories under `data/transcripts/{ID}_P/`
 - No registry IDs overlap `data/test_split_Depression_AVEC2017.csv` (unlabeled AVEC test)
@@ -161,21 +163,21 @@ rm -f data/embeddings/paper_reference_embeddings.meta.json
 ### 4.1 `scripts/create_paper_split.py`
 
 **Current behavior**: Algorithmic stratification with seed=42
-**New behavior**: Default to **paper ground truth** IDs from `docs/data/DATA_SPLIT_REGISTRY.md`, while retaining the existing algorithmic implementation as an explicit opt-in mode.
+**New behavior**: Default to **paper ground truth** IDs from `docs/data/paper-split-registry.md`, while retaining the existing algorithmic implementation as an explicit opt-in mode.
 
 #### Design Decision: Hardcode vs External File
 
 | Option | Pros | Cons |
 |--------|------|------|
-| **Hardcode IDs in script** | Single source of truth in code, no external dependency | IDs duplicated (also in DATA_SPLIT_REGISTRY.md) |
-| **Read from DATA_SPLIT_REGISTRY.md** | Single source of truth, DRY | Fragile parsing of markdown |
+| **Hardcode IDs in script** | Single source of truth in code, no external dependency | IDs duplicated (also in paper-split-registry.md) |
+| **Read from paper-split-registry.md** | Single source of truth, DRY | Fragile parsing of markdown |
 | **New JSON file for IDs** | Clean separation, easy to validate | Yet another file |
 
-**Decision**: **Hardcode IDs in script**, but add an automated check that the hardcoded lists exactly match `docs/data/DATA_SPLIT_REGISTRY.md`. This keeps the markdown registry as the human-readable source of truth while guaranteeing the script cannot silently drift.
+**Decision**: **Hardcode IDs in script**, but add an automated check that the hardcoded lists exactly match `docs/data/paper-split-registry.md`. This keeps the markdown registry as the human-readable source of truth while guaranteeing the script cannot silently drift.
 
 #### Changes Required
 
-1. Add constant lists: `_GROUND_TRUTH_TRAIN_IDS`, `_GROUND_TRUTH_VAL_IDS`, `_GROUND_TRUTH_TEST_IDS` (must match `docs/data/DATA_SPLIT_REGISTRY.md`)
+1. Add constant lists: `_GROUND_TRUTH_TRAIN_IDS`, `_GROUND_TRUTH_VAL_IDS`, `_GROUND_TRUTH_TEST_IDS` (must match `docs/data/paper-split-registry.md`)
 2. Keep `stratified_split()` for algorithmic “paper-style” generation (do not delete; tests cover this behavior)
 3. Add a selection mode:
    - `--mode ground-truth` (default): use the hardcoded ground truth IDs
@@ -187,7 +189,7 @@ rm -f data/embeddings/paper_reference_embeddings.meta.json
    - all IDs exist in AVEC train+dev CSVs
    - all IDs have transcript directories under `data/transcripts/{ID}_P/`
 6. Update `paper_split_metadata.json` schema to reflect mode:
-   - ground-truth mode: provenance points to `docs/data/DATA_SPLIT_REGISTRY.md` (no seed)
+   - ground-truth mode: provenance points to `docs/data/paper-split-registry.md` (no seed)
    - algorithmic mode: preserve current seed/methodology fields (as today)
 7. Update docstrings/help text to clarify “paper ground truth” vs “paper-style algorithmic”
 
@@ -195,7 +197,7 @@ rm -f data/embeddings/paper_reference_embeddings.meta.json
 
 This test suite currently validates the algorithmic `stratified_split()` behavior and the seed-bearing metadata output. If `scripts/create_paper_split.py` defaults to ground truth, add tests to cover the new mode without removing the existing algorithmic tests:
 
-- Assert `--mode ground-truth` (or an exported helper) returns the exact ID sets from `docs/data/DATA_SPLIT_REGISTRY.md`
+- Assert `--mode ground-truth` (or an exported helper) returns the exact ID sets from `docs/data/paper-split-registry.md`
 - Assert `--verify` fails loudly on overlap/missing IDs/missing transcripts
 - Keep existing tests for `stratified_split(df, seed=...)` and `save_splits(..., seed=...)`
 
@@ -214,9 +216,9 @@ This test suite currently validates the algorithmic `stratified_split()` behavio
 Fixing `paper_split_*.csv` from “paper-style seeded” → “paper ground truth” will make existing docs stale. Update these tracked docs to match the new reality:
 
 - `docs/data/artifact-namespace-registry.md` (remove “paper does not publish IDs” phrasing; document the two modes)
-- `docs/data/data-splits-registry.md` (remove seed=42 guidance for paper reproduction; point to ground truth mode)
+- `docs/data/data-splits-overview.md` (remove seed=42 guidance for paper reproduction; point to ground truth mode)
 - `docs/data/daic-woz-schema.md` (paper_splits are no longer described as “optional paper-style seeded” only)
-- `CRITICAL_DATA_SPLIT_MISMATCH.md` (status → FIXED and note the ground truth adoption)
+- `docs/data/critical-data-split-mismatch.md` (status → FIXED and note the ground truth adoption)
 
 ---
 
@@ -256,7 +258,7 @@ The new `paper_split_metadata.json` should indicate ground truth source:
 ```json
 {
   "description": "Paper ground truth splits (reverse-engineered from output files)",
-  "source": "docs/data/DATA_SPLIT_REGISTRY.md",
+  "source": "docs/data/paper-split-registry.md",
   "methodology": {
     "derivation": "Extracted participant IDs from paper authors' output files",
     "train_source": "quan_gemma_zero_shot.jsonl minus TEST minus VAL",
@@ -321,7 +323,7 @@ The new `paper_split_metadata.json` should indicate ground truth source:
 7. **Verify split correctness**:
 
 ```bash
-# Fail-fast: compare generated CSVs to docs/data/DATA_SPLIT_REGISTRY.md
+# Fail-fast: compare generated CSVs to docs/data/paper-split-registry.md
 uv run python - <<'PY'
 import hashlib
 import re
@@ -330,7 +332,7 @@ from pathlib import Path
 import pandas as pd
 
 # Parse registry IDs from the first ```text blocks.
-text = Path("docs/data/DATA_SPLIT_REGISTRY.md").read_text().splitlines()
+text = Path("docs/data/paper-split-registry.md").read_text().splitlines()
 ids_by_section = {}
 section = None
 in_code = False
@@ -507,19 +509,19 @@ PY
     # DO NOT commit `data/*` (gitignored due to licensing).
     git add scripts/create_paper_split.py
     git add tests/unit/scripts/test_create_paper_split.py
-    git add docs/data/DATA_SPLIT_REGISTRY.md
+    git add docs/data/paper-split-registry.md
     git add docs/data/artifact-namespace-registry.md
-    git add docs/data/data-splits-registry.md
+    git add docs/data/data-splits-overview.md
     git add docs/data/daic-woz-schema.md
-    git add CRITICAL_DATA_SPLIT_MISMATCH.md
-    git add SPEC-DATA-SPLIT-FIX.md
+    git add docs/data/critical-data-split-mismatch.md
+    git add docs/data/spec-data-split-fix.md
     git commit -m "fix(data-splits): adopt paper ground truth IDs (GH-45)"
     ```
 
 13. **Create PR**:
     ```bash
     gh pr create --title "fix: correct paper split participant IDs" \
-      --body "Fixes #45. Uses ground truth IDs from DATA_SPLIT_REGISTRY.md instead of algorithmic generation."
+      --body "Fixes #45. Uses ground truth IDs from paper-split-registry.md instead of algorithmic generation."
     ```
 
 ---
@@ -542,7 +544,7 @@ PY
 
 | Risk | Mitigation |
 |------|------------|
-| Wrong IDs in DATA_SPLIT_REGISTRY.md | Double-check extraction logic; IDs verified against 7+ output files |
+| Wrong IDs in paper-split-registry.md | Double-check extraction logic; IDs verified against 7+ output files |
 | Accidentally committing DAIC-WOZ-derived data | Keep `data/*` gitignored; do not add exceptions; commit only code/docs |
 | Embeddings not gitignored | Verify `.gitignore` excludes `data/*` (includes embeddings + split CSVs) |
 | Breaking existing workflows | Legacy `paper_reference_embeddings.*` filename preserved via `--output` |
@@ -559,9 +561,9 @@ PY
 | `scripts/create_paper_split.py` | MODIFY | Use ground truth IDs |
 | `tests/unit/scripts/test_create_paper_split.py` | MODIFY | Cover ground truth mode; keep algorithmic tests |
 | `docs/data/artifact-namespace-registry.md` | MODIFY | Remove stale “paper-style seeded” claims |
-| `docs/data/data-splits-registry.md` | MODIFY | Align reproduction guidance with ground truth mode |
+| `docs/data/data-splits-overview.md` | MODIFY | Align reproduction guidance with ground truth mode |
 | `docs/data/daic-woz-schema.md` | MODIFY | Align dataset docs with ground truth paper split |
-| `CRITICAL_DATA_SPLIT_MISMATCH.md` | MODIFY | Update status to FIXED after implementation |
+| `docs/data/critical-data-split-mismatch.md` | MODIFY | Update status to FIXED after implementation |
 | `data/paper_splits/paper_split_*.csv` | DELETE + REGENERATE (local-only) | Wrong IDs (gitignored) |
 | `data/paper_splits/paper_split_metadata.json` | DELETE + REGENERATE (local-only) | Wrong IDs (gitignored) |
 | `data/embeddings/paper_reference_embeddings.*` | DELETE + REGENERATE (local-only) | Generated from wrong TRAIN split (gitignored) |
@@ -571,14 +573,14 @@ PY
 ## 11. Acceptance Criteria
 
 - [ ] `scripts/create_paper_split.py` defaults to ground truth IDs and supports algorithmic mode explicitly
-- [ ] Hardcoded ID lists are verified (test) to match `docs/data/DATA_SPLIT_REGISTRY.md`
+- [ ] Hardcoded ID lists are verified (test) to match `docs/data/paper-split-registry.md`
 - [ ] `data/paper_splits/paper_split_train.csv` contains exactly 58 correct participant IDs
 - [ ] `data/paper_splits/paper_split_val.csv` contains exactly 43 correct participant IDs
 - [ ] `data/paper_splits/paper_split_test.csv` contains exactly 41 correct participant IDs
-- [ ] All IDs match those in `docs/data/DATA_SPLIT_REGISTRY.md`
+- [ ] All IDs match those in `docs/data/paper-split-registry.md`
 - [ ] All 142 IDs have transcript directories under `data/transcripts/{ID}_P/`
 - [ ] Embeddings regenerated from correct TRAIN split and validated against `paper_split_train.csv` (exact IDs, not just count)
-- [ ] `CRITICAL_DATA_SPLIT_MISMATCH.md` updated to status FIXED
+- [ ] `docs/data/critical-data-split-mismatch.md` updated to status FIXED
 - [ ] Docs in Section 5 updated to remove “paper-style seeded” ambiguity
 - [ ] All unit tests pass
 - [ ] GitHub Issue #45 closed
@@ -589,8 +591,8 @@ PY
 
 | Document | Purpose |
 |----------|---------|
-| `docs/data/DATA_SPLIT_REGISTRY.md` | Ground truth split IDs |
-| `CRITICAL_DATA_SPLIT_MISMATCH.md` | Problem discovery and evidence |
+| `docs/data/paper-split-registry.md` | Ground truth split IDs |
+| `docs/data/critical-data-split-mismatch.md` | Problem discovery and evidence |
 | `docs/data/artifact-namespace-registry.md` | Naming conventions |
 | `docs/data/daic-woz-schema.md` | Dataset schema reference |
 

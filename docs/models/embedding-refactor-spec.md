@@ -3,7 +3,7 @@
 > **Status**: IMPLEMENTED
 > **Author**: Claude Code
 > **Date**: 2024-12-24
-> **Related**: MODEL_WIRING.md (design target), GH-46 (sampling params)
+> **Related**: model-wiring.md (design target), GH-46 (sampling params)
 
 ---
 
@@ -224,8 +224,17 @@ async def lifespan(app: FastAPI) -> AsyncIterator[None]:
 #### 4.1 Add Backend Selection
 
 ```python
+# scripts/generate_embeddings.py
 parser.add_argument(
     "--backend",
+    choices=["ollama", "huggingface"],
+    default=None,  # Use EMBEDDING_BACKEND from env
+    help="Override embedding backend"
+)
+
+# scripts/reproduce_results.py
+parser.add_argument(
+    "--embedding-backend",
     choices=["ollama", "huggingface"],
     default=None,  # Use EMBEDDING_BACKEND from env
     help="Override embedding backend"

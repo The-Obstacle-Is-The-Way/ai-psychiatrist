@@ -267,7 +267,7 @@ The paper creates a custom 58/43/41 split from the 142 labeled participants:
 
 **Implementation**:
 - `scripts/create_paper_split.py` generates `data/paper_splits/paper_split_{train,val,test}.csv`
-  from the paper’s ground truth IDs in `docs/data/DATA_SPLIT_REGISTRY.md` (default), or can
+  from the paper’s ground truth IDs in `docs/data/paper-split-registry.md` (default), or can
   generate an algorithmic seeded split with `--mode algorithmic`.
 - `scripts/generate_embeddings.py --split paper-train` generates
   `data/embeddings/{backend}_{model_slug}_paper_train.{npz,json,meta.json}` by default, or use

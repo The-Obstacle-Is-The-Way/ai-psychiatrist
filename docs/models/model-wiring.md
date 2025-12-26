@@ -1,7 +1,7 @@
 # Model Wiring: Current State
 
 **Purpose**: Document exactly how models and backends are wired in the codebase.
-**Last Updated**: 2025-12-24
+**Last Updated**: 2025-12-25
 **Status**: Implemented. `LLM_BACKEND` for chat, `EMBEDDING_BACKEND` for embeddings.
 
 ---
@@ -198,7 +198,7 @@ To use Ollama instead: `EMBEDDING_BACKEND=ollama` (will use `qwen3-embedding:8b`
 ### 1. Data Prep (Once)
 
 Script: `scripts/generate_embeddings.py`
-Output: `data/embeddings/{backend}_{model}_{split}.npz` (+ `.json`, `.meta.json`)
+Output: `data/embeddings/{backend}_{model_slug}_{split_slug}.npz` (+ `.json`, `.meta.json`)
 
 Generates reference embeddings for training set transcripts. Run once before few-shot mode.
 

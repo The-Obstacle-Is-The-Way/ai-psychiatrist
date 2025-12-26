@@ -1,7 +1,7 @@
-# Data Splits Registry
+# Data Splits Overview
 
 **Purpose**: Definitive reference for all data split configurations
-**Last Updated**: 2025-12-22
+**Last Updated**: 2025-12-25
 **Tracked by**: [GitHub Issue #45](https://github.com/The-Obstacle-Is-The-Way/ai-psychiatrist/issues/45)
 
 This document explains the relationship between AVEC2017 competition splits, the paper's custom splits, and our implementation.

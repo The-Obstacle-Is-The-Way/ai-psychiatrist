@@ -195,7 +195,7 @@ class TestCreatePaperSplit:
 
         metadata = (out_dir / "paper_split_metadata.json").read_text()
         assert "Paper ground truth splits" in metadata
-        assert "DATA_SPLIT_REGISTRY.md" in metadata
+        assert "paper-split-registry.md" in metadata
         assert '"seed":' not in metadata
 
     def test_verify_splits_passes_valid_splits(self, tmp_path: Path) -> None:

@@ -2,7 +2,7 @@
 
 ## Executive Summary
 
-We successfully identified the **exact randomization methodology** used by the paper authors by examining their source code in `quantitative_assessment/embedding_batch_script.py` and `quantitative_assessment/embedding_quantitative_analysis.ipynb`.
+We successfully identified the **exact randomization methodology** used by the paper authors by examining their source code snapshot in `_reference/quantitative_assessment/embedding_batch_script.py` and `_reference/quantitative_assessment/embedding_quantitative_analysis.ipynb`.
 
 **Key Discovery**: The split is implemented with NumPy RNG (`np.random.seed` + `np.random.shuffle`), not sklearn `train_test_split`. The seed `42` is reset **inside the per-stratum loop for strata with ≥3 participants**, while other shuffles (2-participant strata and the PHQ8-score override) run **without resetting the seed**.
 
@@ -10,7 +10,7 @@ We successfully identified the **exact randomization methodology** used by the p
 
 ## Source Code Evidence
 
-### File: `quantitative_assessment/embedding_batch_script.py`
+### File: `_reference/quantitative_assessment/embedding_batch_script.py`
 
 **Lines 850-856** (randomization for ≥3 participant groups):
 ```python
@@ -120,16 +120,16 @@ The seed `42` is reset inside the loop for each category with ≥3 participants.
 - But subsequent categories also reset to seed 42
 - This is NOT the same as setting seed once globally
 
-**Important nuance**: the seed reset only happens in the ≥3-participant loop (`quantitative_assessment/embedding_batch_script.py:850`). The shuffles for 2-participant strata (`quantitative_assessment/embedding_batch_script.py:863`) and the PHQ8-score override (`quantitative_assessment/embedding_batch_script.py:896`) do **not** reset the seed.
+**Important nuance**: the seed reset only happens in the ≥3-participant loop (`_reference/quantitative_assessment/embedding_batch_script.py:850`). The shuffles for 2-participant strata (`_reference/quantitative_assessment/embedding_batch_script.py:863`) and the PHQ8-score override (`_reference/quantitative_assessment/embedding_batch_script.py:896`) do **not** reset the seed.
 
-### 1.1 Bug in Original Code (`quantitative_assessment/embedding_batch_script.py:867`)
+### 1.1 Bug in Original Code (`_reference/quantitative_assessment/embedding_batch_script.py:867`)
 The original code has contradictory log messages:
 ```python
 log_message(f"  {len(categories_eq2)} categories: 1 to train, 1 to test each")
 # ...
 log_message(f"  {len(categories_eq2)} categories: 1 to train, 1 to validation each")
 ```
-First says "1 to test", then says "1 to validation". The **actual behavior** is 1 to train, 1 to test (see `quantitative_assessment/embedding_batch_script.py:864`). This is sloppy code by the original author and may have caused confusion.
+First says "1 to test", then says "1 to validation". The **actual behavior** is 1 to train, 1 to test (see `_reference/quantitative_assessment/embedding_batch_script.py:864`). This is sloppy code by the original author and may have caused confusion.
 
 ### 2. Post-Processing Override
 The paper's Appendix C mentions: "For PHQ-8 total scores with two participants, we put one in the validation set and one in the test set."
@@ -142,7 +142,7 @@ This is implemented as a POST-PROCESSING step (lines 879-900) that:
 **Note**: This is different from the initial handling of 2-participant strata (which assigns 1 to train, 1 to test).
 
 ### 3. No sklearn Usage for Splitting
-Despite importing `train_test_split` (`quantitative_assessment/embedding_batch_script.py:14`) and a misleading comment (`quantitative_assessment/embedding_batch_script.py:827`, `# Process categories with >= 3 subjects using sklearn`), the actual splitting uses:
+Despite importing `train_test_split` (`_reference/quantitative_assessment/embedding_batch_script.py:14`) and a misleading comment (`_reference/quantitative_assessment/embedding_batch_script.py:827`, `# Process categories with >= 3 subjects using sklearn`), the actual splitting uses:
 - `np.random.seed(42)`
 - `np.random.shuffle()`
 - Manual slicing of shuffled lists
@@ -169,7 +169,7 @@ This specific implementation is fragile across environments, so exact reproducti
 
 ## Verification Against Output Files
 
-We have the **ground truth IDs** from the paper's output files (see `DATA_SPLIT_REGISTRY.md`):
+We have the **ground truth IDs** from the paper's output files (see `paper-split-registry.md`):
 
 | Split | Count | Source |
 |-------|-------|--------|
@@ -201,7 +201,7 @@ These are authoritative regardless of whether we can reproduce the algorithm.
 
 ### Recommendation
 
-**Use the hardcoded IDs from `DATA_SPLIT_REGISTRY.md`** as the authoritative source. The reconstructed IDs from output files are guaranteed correct, while algorithmic reproduction has edge cases that may differ.
+**Use the hardcoded IDs from `paper-split-registry.md`** as the authoritative source. The reconstructed IDs from output files are guaranteed correct, while algorithmic reproduction has edge cases that may differ.
 
 ---
 
@@ -209,11 +209,11 @@ These are authoritative regardless of whether we can reproduce the algorithm.
 
 | File | Lines | Content |
 |------|-------|---------|
-| `quantitative_assessment/embedding_batch_script.py` | 820-926 | Complete splitting algorithm |
-| `quantitative_assessment/embedding_quantitative_analysis.ipynb` | Cell 7995b586 | Same algorithm (notebook version) |
-| `DATA_SPLIT_REGISTRY.md` | - | Authoritative ground truth IDs |
+| `_reference/quantitative_assessment/embedding_batch_script.py` | 820-926 | Complete splitting algorithm |
+| `_reference/quantitative_assessment/embedding_quantitative_analysis.ipynb` | Cell 7995b586 | Same algorithm (notebook version) |
+| `paper-split-registry.md` | - | Authoritative ground truth IDs |
 
 ---
 
 *Analysis performed: 2025-12-25*
-*Source: trendscenter/ai-psychiatrist repository*
+*Source: `_reference/quantitative_assessment/` (snapshot of `trendscenter/ai-psychiatrist`)*

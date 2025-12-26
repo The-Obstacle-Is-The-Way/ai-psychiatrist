@@ -2,17 +2,17 @@
 
 **Status**: VERIFIED
 **Date**: 2025-12-25
-**Related**: `DATA_SPLIT_REGISTRY.md`, `CRITICAL_DATA_SPLIT_MISMATCH.md`, `RANDOMIZATION_METHODOLOGY_DISCOVERED.md`
+**Related**: `paper-split-registry.md`, `critical-data-split-mismatch.md`, `randomization-methodology-discovered.md`
 
 ---
 
 ## Executive Summary
 
-We **reconstructed the paper's exact TRAIN/VAL/TEST participant IDs** by extracting them from the paper authors' published output files in `_reference/analysis_output/`. These IDs are codified in `DATA_SPLIT_REGISTRY.md` and are the authoritative ground truth for reproducing the paper's results.
+We **reconstructed the paper's exact TRAIN/VAL/TEST participant IDs** by extracting them from the paper authors' published output files in `_reference/analysis_output/`. These IDs are codified in `paper-split-registry.md` and are the authoritative ground truth for reproducing the paper's results.
 
-We also identified how the paper authors implemented their split randomization in code (see `RANDOMIZATION_METHODOLOGY_DISCOVERED.md`). The implementation uses NumPy RNG (`np.random.seed` + `np.random.shuffle`) with a per-stratum reseed pattern and a post-processing override step for PHQ-8 scores with exactly two participants.
+We also identified how the paper authors implemented their split randomization in code (see `randomization-methodology-discovered.md`). The implementation uses NumPy RNG (`np.random.seed` + `np.random.shuffle`) with a per-stratum reseed pattern and a post-processing override step for PHQ-8 scores with exactly two participants.
 
-Even with the implementation details and seed discovered, **the safest reproducibility strategy remains using the hardcoded ground truth IDs** from `DATA_SPLIT_REGISTRY.md`.
+Even with the implementation details and seed discovered, **the safest reproducibility strategy remains using the hardcoded ground truth IDs** from `paper-split-registry.md`.
 
 ---
 
@@ -71,7 +71,7 @@ We extracted the exact participant IDs directly from the paper authors' publishe
 | TRAIN ∩ TEST | 0 (no overlap) |
 | VAL ∩ TEST | 0 (no overlap) |
 | All IDs exist in AVEC train+dev | Yes |
-| Consistent across output files | Yes (split membership is consistent; a minority of individual VAL analysis files omit 1 ID, so use union / `DATA_SPLIT_REGISTRY.md`) |
+| Consistent across output files | Yes (split membership is consistent; a minority of individual VAL analysis files omit 1 ID, so use union / `paper-split-registry.md`) |
 
 ---
 
@@ -127,13 +127,13 @@ For (score, gender) groups with exactly 3 participants, sorted by Participant_ID
 
 ### 3.3 Groups with 4+ Participants
 
-For larger (score, gender) strata, the paper used randomized stratification to achieve the global 58/43/41 split. The paper's implementation details are summarized in `RANDOMIZATION_METHODOLOGY_DISCOVERED.md`.
+For larger (score, gender) strata, the paper used randomized stratification to achieve the global 58/43/41 split. The paper's implementation details are summarized in `randomization-methodology-discovered.md`.
 
 ---
 
 ## 4. Randomization Implementation (Discovered from Code)
 
-This section summarizes what we learned by reviewing the paper authors' code (see `RANDOMIZATION_METHODOLOGY_DISCOVERED.md`). This is distinct from the ground truth split membership (which is derived from output files and recorded in `DATA_SPLIT_REGISTRY.md`).
+This section summarizes what we learned by reviewing the paper authors' code (see `randomization-methodology-discovered.md`). This is distinct from the ground truth split membership (which is derived from output files and recorded in `paper-split-registry.md`).
 
 ### 4.1 Key Findings
 
@@ -159,8 +159,8 @@ Input: AVEC train+dev participants (142) with PHQ8_Score + Gender
 
 ### 4.3 Practical Reproducibility Notes
 
-- The split membership is reproducible by definition via `DATA_SPLIT_REGISTRY.md` (output-derived ground truth).
-- Algorithmic reproduction is more fragile due to ordering and mixed reseeded/unseeded shuffles (details in `RANDOMIZATION_METHODOLOGY_DISCOVERED.md`).
+- The split membership is reproducible by definition via `paper-split-registry.md` (output-derived ground truth).
+- Algorithmic reproduction is more fragile due to ordering and mixed reseeded/unseeded shuffles (details in `randomization-methodology-discovered.md`).
 - With identical input CSVs, NumPy/pandas versions, and category iteration order, the paper’s splitting code is deterministic (seeding makes pseudo-random operations reproducible); the fragility is that those factors are not guaranteed across environments.
 
 ---
@@ -173,7 +173,7 @@ Input: AVEC train+dev participants (142) with PHQ8_Score + Gender
 2. **Stated heuristics followed**: Rules for 1-2 participant scores are 100% followed
 3. **Stratification variables**: PHQ-8 score and Gender (jointly)
 4. **Global split counts**: 58 TRAIN / 43 VAL / 41 TEST (≈41% / 30% / 29%)
-5. **Implementation detail**: NumPy RNG splitting with per-stratum reseed + post-processing override (see `RANDOMIZATION_METHODOLOGY_DISCOVERED.md`)
+5. **Implementation detail**: NumPy RNG splitting with per-stratum reseed + post-processing override (see `randomization-methodology-discovered.md`)
 
 ### What We Don't Know
 
@@ -185,8 +185,8 @@ Input: AVEC train+dev participants (142) with PHQ8_Score + Gender
 
 Since the output artifacts already encode the truth, we:
 1. **Extracted exact IDs from the paper's output artifacts** (authoritative source)
-2. **Documented in `DATA_SPLIT_REGISTRY.md`** (single source of truth)
-3. **Will hardcode these IDs in `create_paper_split.py`** (reproducible implementation)
+2. **Documented in `paper-split-registry.md`** (single source of truth)
+3. **Hardcoded these IDs in `scripts/create_paper_split.py` (default behavior)** for reproducible local artifact generation
 
 ---
 
@@ -213,10 +213,10 @@ In this case, we were able to reconstruct the splits from output artifacts - but
 
 | Document                          | Purpose                                              |
 |-----------------------------------|------------------------------------------------------|
-| `DATA_SPLIT_REGISTRY.md`          | Ground truth participant IDs (the authoritative source) |
-| `CRITICAL_DATA_SPLIT_MISMATCH.md` | How we discovered our algorithmic splits were wrong     |
-| `SPEC-DATA-SPLIT-FIX.md`          | Implementation spec for fixing our artifacts            |
-| `RANDOMIZATION_METHODOLOGY_DISCOVERED.md` | Discovered implementation details from paper authors' code |
+| `paper-split-registry.md`         | Ground truth participant IDs (the authoritative source) |
+| `critical-data-split-mismatch.md` | How we discovered our algorithmic splits were wrong     |
+| `spec-data-split-fix.md`          | Implementation spec for fixing our artifacts            |
+| `randomization-methodology-discovered.md` | Discovered implementation details from paper authors' code |
 | `artifact-namespace-registry.md`  | Naming conventions for split-related files              |
 
 ---
@@ -235,7 +235,7 @@ Source: _reference/analysis_output/ (paper authors' published outputs)
                                                    (58 IDs)
                                                         │
                                                         ▼
-                                        docs/data/DATA_SPLIT_REGISTRY.md
+                                        docs/data/paper-split-registry.md
                                            (Single Source of Truth)
                                                         │
                                                         ▼

@@ -154,7 +154,7 @@ Ollama's `gemma3:27b` uses GGUF quantization, which may differ from paper's weig
 ### GAP-003: Split Membership (Fixed)
 
 The repo now uses the paper’s **ground truth** split membership reverse-engineered from the authors’ published output files.
-See `docs/data/DATA_SPLIT_REGISTRY.md` and `docs/data/PAPER_SPLIT_METHODOLOGY.md`.
+See `docs/data/paper-split-registry.md` and `docs/data/paper-split-methodology.md`.
 
 ---
 

@@ -1,14 +1,14 @@
-# DATA SPLIT REGISTRY
+# Paper Split Registry
 
 ## Authoritative Splits (Reconstructed from Output Files)
 
-These splits were reconstructed by extracting participant IDs from the actual output files in `analysis_output/`. This is the ground truth for reproducing the paper's results.
+These splits were reconstructed by extracting participant IDs from the paper authors' output files in `_reference/analysis_output/`. This is the ground truth for reproducing the paper's results.
 
 ---
 
 ## TRAIN (58 participants)
 
-**Source**: Derived from `quan_gemma_zero_shot.jsonl` minus TEST minus VAL
+**Source**: Derived from `_reference/analysis_output/quan_gemma_zero_shot.jsonl` minus TEST minus VAL
 
 ```text
 303, 304, 305, 310, 312, 313, 315, 317, 318, 321, 324, 327, 335, 338, 340, 343,
@@ -21,7 +21,7 @@ These splits were reconstructed by extracting participant IDs from the actual ou
 
 ## VAL (43 participants)
 
-**Source**: `analysis_output/quan_gemma_few_shot/VAL_analysis_output/*.jsonl`
+**Source**: `_reference/analysis_output/quan_gemma_few_shot/VAL_analysis_output/*.jsonl`
 
 ```text
 302, 307, 320, 322, 325, 326, 328, 331, 333, 336, 341, 348, 351, 353, 355, 358,
@@ -33,7 +33,7 @@ These splits were reconstructed by extracting participant IDs from the actual ou
 
 ## TEST (41 participants)
 
-**Source**: `analysis_output/quan_gemma_few_shot/TEST_analysis_output/*.jsonl`
+**Source**: `_reference/analysis_output/quan_gemma_few_shot/TEST_analysis_output/*.jsonl`
 
 ```text
 316, 319, 330, 339, 345, 357, 362, 367, 370, 375, 377, 379, 383, 385, 386, 389,
@@ -59,7 +59,7 @@ These splits were reconstructed by extracting participant IDs from the actual ou
 
 ## Output File Consistency
 
-All output files use these same splits:
+All output files use these same splits. Paths below are relative to `_reference/analysis_output/`:
 
 | File | Split Used | Count | Consistent |
 |------|------------|-------|------------|
@@ -70,7 +70,7 @@ All output files use these same splits:
 | `quan_medgemma_few_shot.jsonl` | TEST | 41 | ✓ |
 | `quan_medgemma_zero_shot.jsonl` | TEST | 41 | ✓ |
 | `metareview_gemma_few_shot.csv` | TEST | 41 | ✓ |
-| `qual_gemma.csv` | ALL (labeled "train") | 141 | ✓ |
+| `qual_gemma.csv` | ALL (142 unique IDs; one duplicated row) | 142 | ✓ |
 
 ---
 
@@ -102,5 +102,5 @@ TEST_IDS = [316, 319, 330, 339, 345, 357, 362, 367, 370, 375, 377, 379, 383, 385
 
 ---
 
-*Generated: 2024-12-24*
-*Reconstructed from: trendscenter/ai-psychiatrist analysis_output/*
+*Last verified: 2025-12-25*
+*Reconstructed from: `_reference/analysis_output/` (snapshot of paper authors' published outputs; upstream: `trendscenter/ai-psychiatrist`)*
