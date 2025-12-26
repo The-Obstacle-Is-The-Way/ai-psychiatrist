@@ -1,9 +1,9 @@
 # Spec 16: Log Output Improvements
 
-> **STATUS: LOW PRIORITY - QUICK FIX**
+> **STATUS: READY FOR IMPLEMENTATION**
 >
 > This spec addresses ANSI escape code pollution in log files when using `tee`.
-> It's a cosmetic fix but improves log readability and grep-ability.
+> One-line fix that significantly improves log readability and grep-ability.
 >
 > **Tracked by**: [GitHub Issue #54](https://github.com/The-Obstacle-Is-The-Way/ai-psychiatrist/issues/54)
 >
@@ -39,12 +39,13 @@ This makes logs:
 
 ### Root Cause
 
-In `src/ai_psychiatrist/infrastructure/logging.py:72-75`:
+In `src/ai_psychiatrist/infrastructure/logging.py` (in `setup_logging()`, console format branch):
 
 ```python
 final_processors = [
     structlog.dev.ConsoleRenderer(
         colors=True,  # <-- HARDCODED
+        exception_formatter=structlog.dev.plain_traceback,
     )
 ]
 ```
@@ -194,13 +195,16 @@ def test_logger_no_colors_when_not_tty(monkeypatch):
 
 ## Workarounds (Until Fixed)
 
-### Option A: Use JSON Format
+### Option A: Use JSON Format (Only If Script Respects `LOG_FORMAT`)
 
 ```bash
 LOG_FORMAT=json uv run python scripts/reproduce_results.py | tee log.json
 ```
 
-JSON output never has colors.
+JSON output never has colors, but note: `scripts/reproduce_results.py` currently forces
+`format="console"` when calling `setup_logging(...)`, so this workaround only applies
+after we stop hardcoding the log format in scripts (or when running other entrypoints
+that call `setup_logging(get_settings().logging)`).
 
 ### Option B: Strip ANSI Codes
 

@@ -36,10 +36,17 @@ This is now fixed:
 
 ### Reproduction Script Behavior
 
-- For paper splits (`--split paper*`), `scripts/reproduce_results.py` uses:
-  - `data/embeddings/paper_reference_embeddings.npz` (enforced via `get_effective_embeddings_path(...)`).
-- For non-paper splits, the script uses:
-  - `DATA_EMBEDDINGS_PATH` (i.e., `DataSettings.embeddings_path`).
+`scripts/reproduce_results.py` resolves the embeddings artifact via
+`ai_psychiatrist.config.resolve_reference_embeddings_path(...)`:
+
+- If `DATA_EMBEDDINGS_PATH` is explicitly set, that full path is used.
+- Otherwise, `EMBEDDING_EMBEDDINGS_FILE` (a basename or path) is resolved under
+  `{DATA_BASE_DIR}/embeddings/` and normalized to `.npz`.
+
+This resolution does **not** currently special-case paper splits; the split selection and
+the embeddings artifact selection are independent. For paper-parity reproduction, set the
+intended artifact explicitly and rely on output provenance (and optional `.meta.json`
+validation in `ReferenceStore`) to avoid ambiguity.
 
 ### Output Provenance
 

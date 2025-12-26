@@ -185,7 +185,7 @@ Active specs live under `docs/specs/`.
 | **11.5** | Integration Checkpoint | Full pipeline verification |
 | **12** | Observability | Metrics, tracing, health checks |
 | **12.5** | Final Cleanup | Legacy removal, cruft cleanup |
-| **13** | Structured Outputs | Pydantic AI + Ollama JSON mode for validated outputs |
+| **13** | Pydantic AI Integration | Full framework migration with TextOutput mode |
 | **14** | Keyword Matching Improvements | Word-boundary regex, negation detection |
 | **15** | Experiment Tracking | Full provenance, semantic naming, registry |
 | **16** | Log Output Improvements | ANSI auto-detection, clean log files |
@@ -339,19 +339,19 @@ The specs are ordered for **maximum early value** with **mandatory checkpoints**
 8. **CHECKPOINT 11.5**: Verify paper metrics reproduced
 9. **Spec 12**: Polish (observability)
 10. **CHECKPOINT 12.5**: Remove legacy code, clean codebase
-11. **Spec 13 (Deferred)**: Structured outputs via Pydantic AI / Ollama JSON mode
+11. **Spec 13 (Ready)**: Full Pydantic AI framework integration with TextOutput mode
 12. **Spec 14 (Deferred)**: Word-boundary regex + negation detection (precision refinement)
-13. **Spec 15 (Required)**: Experiment tracking with full provenance
-14. **Spec 16 (Quick Fix)**: Log output improvements (ANSI auto-detection)
+13. **Spec 15 (Ready)**: Experiment tracking with full provenance
+14. **Spec 16 (Ready)**: Log output improvements (ANSI auto-detection)
 
 Each spec produces a **working increment** that can be demoed and tested.
 Each checkpoint produces a **quality gate** that must pass before proceeding.
 
-**Post-Replication Enhancements**:
-- Spec 13 is **deferred** until paper replication is validated
-- Spec 14 is **deferred** (precision refinement)
-- Spec 15 is **required** for reproducibility before/during paper runs
-- Spec 16 is a **quick fix** that can be done anytime
+**Implementation Priority**:
+- Spec 16: **Quick fix** (one-line change) - do first
+- Spec 15: **Required** for reproducibility - do second
+- Spec 13: **Ready** for full Pydantic AI migration - do third
+- Spec 14: **Deferred** (precision refinement)
 
 ## References
 
