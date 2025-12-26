@@ -90,6 +90,9 @@ class QuantitativeAssessmentAgent:
             mode: Assessment mode (ZERO_SHOT or FEW_SHOT).
             model_settings: Model configuration. If None, uses OllamaClient defaults.
             quantitative_settings: Quantitative settings. If None, uses defaults.
+            pydantic_ai_settings: Pydantic AI configuration. If None, uses defaults.
+            ollama_base_url: Ollama base URL for Pydantic AI agent. Required when
+                pydantic_ai_settings.enabled is True.
         """
         self._llm = llm_client
         self._embedding = embedding_service

@@ -23,6 +23,7 @@ from ai_psychiatrist.infrastructure.logging import (
 )
 
 pytestmark = [
+    pytest.mark.unit,
     pytest.mark.filterwarnings("ignore:Data directory does not exist.*:UserWarning"),
     pytest.mark.filterwarnings("ignore:Few-shot enabled but embeddings not found.*:UserWarning"),
 ]
@@ -80,9 +81,10 @@ class TestLoggingSetup:
         assert "value" in output
 
     def test_setup_logging_console_disables_colors_when_not_tty(
-        self, capsys: pytest.CaptureFixture[str]
+        self, capsys: pytest.CaptureFixture[str], monkeypatch: pytest.MonkeyPatch
     ) -> None:
         """Console logs should not contain ANSI codes when stdout isn't a TTY."""
+        monkeypatch.setattr(logging_module, "_stdout_isatty", lambda: False)
         settings = LoggingSettings(level="INFO", format="console", include_caller=False)
         setup_logging(settings)
 

@@ -14,6 +14,9 @@ from ai_psychiatrist.agents.output_models import (
     QuantitativeOutput,
 )
 from ai_psychiatrist.infrastructure.llm.responses import extract_score_from_text, extract_xml_tags
+from ai_psychiatrist.infrastructure.logging import get_logger
+
+logger = get_logger(__name__)
 
 
 def _find_answer_json(text: str, *, allow_unwrapped_object: bool) -> str | None:
@@ -123,6 +126,12 @@ def extract_meta_review(text: str) -> MetaReviewOutput:
     except ValueError as e:
         raise ModelRetry(f"Invalid severity value: {severity_raw!r}. Please provide 0-4.") from e
 
+    if not (0 <= severity_value <= 4):
+        logger.warning(
+            "Clamping out-of-range severity",
+            raw_value=severity_value,
+            clamped_to=max(0, min(4, severity_value)),
+        )
     severity_value = max(0, min(4, severity_value))
     explanation = tags.get("explanation", "").strip() or text.strip()
 

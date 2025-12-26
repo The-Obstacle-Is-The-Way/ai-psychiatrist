@@ -20,8 +20,12 @@ from typing import TYPE_CHECKING, Literal
 
 import yaml
 
+from ai_psychiatrist.infrastructure.logging import get_logger
+
 if TYPE_CHECKING:
     from ai_psychiatrist.config import Settings
+
+logger = get_logger(__name__)
 
 
 def get_git_info() -> tuple[str, bool]:
@@ -31,11 +35,9 @@ def get_git_info() -> tuple[str, bool]:
         Tuple of (short_sha, is_dirty).
     """
     try:
-        repo_root = Path(__file__).resolve().parents[3]
-
+        # Let git find the repository root automatically from current working directory
         result = subprocess.run(
             ["git", "rev-parse", "--short", "HEAD"],
-            cwd=repo_root,
             capture_output=True,
             text=True,
             check=True,
@@ -44,15 +46,16 @@ def get_git_info() -> tuple[str, bool]:
 
         result = subprocess.run(
             ["git", "status", "--porcelain"],
-            cwd=repo_root,
             capture_output=True,
             text=True,
             check=True,
         )
         dirty = bool(result.stdout.strip())
 
+        logger.debug("Git info captured", commit=commit, dirty=dirty)
         return commit, dirty
-    except (subprocess.CalledProcessError, FileNotFoundError, IndexError):
+    except (subprocess.CalledProcessError, FileNotFoundError):
+        logger.warning("Failed to capture git info, using fallback")
         return "unknown", True
 
 
@@ -60,9 +63,11 @@ def compute_file_checksum(path: Path) -> str | None:
     """Compute SHA256 checksum (first 16 chars).
 
     Returns:
-        Checksum string or None if file doesn't exist.
+        Checksum string or None if file doesn't exist or is not a regular file.
     """
-    if not path.exists():
+    if not path.exists() or not path.is_file():
+        if path.exists() and not path.is_file():
+            logger.warning("Cannot compute checksum for non-file path", path=str(path))
         return None
 
     sha256 = hashlib.sha256()
@@ -203,6 +208,11 @@ def update_experiment_registry(
         results = exp.get("results")
 
         if not isinstance(provenance, dict) or not isinstance(results, dict):
+            logger.warning(
+                "Skipping malformed experiment entry",
+                has_provenance=isinstance(provenance, dict),
+                has_results=isinstance(results, dict),
+            )
             continue
 
         coverage_frac = results.get("prediction_coverage")
@@ -234,3 +244,10 @@ def update_experiment_registry(
     with tmp_path.open("w") as f:
         yaml.safe_dump(registry, f, default_flow_style=False, sort_keys=False)
     tmp_path.replace(registry_path)
+
+    logger.info(
+        "Updated experiment registry",
+        run_id=run_id,
+        num_experiments=len(experiments_list),
+        registry_path=str(registry_path),
+    )
