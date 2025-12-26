@@ -79,7 +79,6 @@ class TestReferenceStoreMetadata:
         # Mock numpy load
         mock_npz = MagicMock(spec_set=NpzFile)
         mock_npz.__getitem__.return_value = []
-        mock_npz.close = MagicMock()
         mock_npz.__contains__.return_value = True
 
         with patch("numpy.load", return_value=mock_npz):
@@ -106,8 +105,7 @@ class TestReferenceStoreMetadata:
         data_settings.embeddings_path.touch()
         data_settings.embeddings_path.with_suffix(".json").write_text("{}")
 
-        mock_npz = MagicMock()
-        mock_npz.close = MagicMock()
+        mock_npz = MagicMock(spec_set=NpzFile)
 
         with (
             patch("numpy.load", return_value=mock_npz),
@@ -136,8 +134,7 @@ class TestReferenceStoreMetadata:
         data_settings.embeddings_path.touch()
         data_settings.embeddings_path.with_suffix(".json").write_text("{}")
 
-        mock_npz = MagicMock()
-        mock_npz.close = MagicMock()
+        mock_npz = MagicMock(spec_set=NpzFile)
 
         with (
             patch("numpy.load", return_value=mock_npz),
@@ -166,8 +163,7 @@ class TestReferenceStoreMetadata:
         data_settings.embeddings_path.touch()
         data_settings.embeddings_path.with_suffix(".json").write_text("{}")
 
-        mock_npz = MagicMock()
-        mock_npz.close = MagicMock()
+        mock_npz = MagicMock(spec_set=NpzFile)
 
         with (
             patch("numpy.load", return_value=mock_npz),
@@ -196,8 +192,7 @@ class TestReferenceStoreMetadata:
         data_settings.embeddings_path.touch()
         data_settings.embeddings_path.with_suffix(".json").write_text("{}")
 
-        mock_npz = MagicMock()
-        mock_npz.close = MagicMock()
+        mock_npz = MagicMock(spec_set=NpzFile)
 
         with (
             patch("numpy.load", return_value=mock_npz),
@@ -233,8 +228,7 @@ class TestReferenceStoreMetadata:
         data_settings.embeddings_path.touch()
         data_settings.embeddings_path.with_suffix(".json").write_text("{}")
 
-        mock_npz = MagicMock()
-        mock_npz.close = MagicMock()
+        mock_npz = MagicMock(spec_set=NpzFile)
 
         with (
             patch("numpy.load", return_value=mock_npz),
@@ -282,8 +276,7 @@ class TestReferenceStoreMetadata:
         data_settings.embeddings_path.touch()
         data_settings.embeddings_path.with_suffix(".json").write_text("{}", encoding="utf-8")
 
-        mock_npz = MagicMock()
-        mock_npz.close = MagicMock()
+        mock_npz = MagicMock(spec_set=NpzFile)
 
         with (
             patch("numpy.load", return_value=mock_npz),
@@ -313,8 +306,7 @@ class TestReferenceStoreMetadata:
         data_settings.embeddings_path.touch()
         data_settings.embeddings_path.with_suffix(".json").write_text("{}")
 
-        mock_npz = MagicMock()
-        mock_npz.close = MagicMock()
+        mock_npz = MagicMock(spec_set=NpzFile)
 
         with (
             patch("numpy.load", return_value=mock_npz),
@@ -334,9 +326,8 @@ class TestReferenceStoreMetadata:
         data_settings.embeddings_path.touch()
         data_settings.embeddings_path.with_suffix(".json").write_text("{}")
 
-        mock_npz = MagicMock()
+        mock_npz = MagicMock(spec_set=NpzFile)
         mock_npz.__getitem__.return_value = []
-        mock_npz.close = MagicMock()
         mock_npz.__contains__.return_value = True
 
         with patch("numpy.load", return_value=mock_npz):

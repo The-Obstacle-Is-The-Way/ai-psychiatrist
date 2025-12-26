@@ -185,6 +185,7 @@ if self._pydantic_ai.enabled:
 
 ---
 
+
 ### P2: Contract Drift Risk from Unspecced MagicMock / AsyncMock — RESOLVED
 
 **Severity**: P2 (Medium)
@@ -194,10 +195,13 @@ if self._pydantic_ai.enabled:
 **Fix implemented**:
 - `tests/unit/services/test_embedding.py` now uses real `EmbeddingSettings(...)` objects instead of free-form mocks.
 - `tests/unit/services/test_feedback_loop.py` now uses `AsyncMock(spec_set=QualitativeAssessmentAgent)` and `AsyncMock(spec_set=JudgeAgent)`.
+- `tests/unit/services/test_reference_store.py` now uses `MagicMock(spec_set=numpy.lib.npyio.NpzFile)`.
+- Agent tests now use `AsyncMock(spec_set=pydantic_ai.Agent)`.
 
 **Outcome**: Contract drift is less likely to slip through because mocks/settings now enforce real attribute/method surfaces.
 
 ---
+
 
 ### P3: Tests Rely on Enum Iteration Order — RESOLVED
 
@@ -220,6 +224,7 @@ mock_client = MockLLMClient(chat_function=response_by_metric)
 ```
 
 ---
+
 
 ### P5: Large Hardcoded Response Strings
 
@@ -278,7 +283,7 @@ The feedback loop tests now use sync `Mock` for sync methods.
 | Test isolation (env vars, caching) | ✅ | conftest.py |
 | Auto-applied test markers | ✅ | `pytest_collection_modifyitems` in `tests/conftest.py` |
 | Pydantic AI retry/validation testing | ✅ | Extractors tested |
-| Avoid unspecced mocks for interfaces | ⚠️ | Core contract-bearing mocks are hardened (P2); a few ad-hoc unspecced mocks remain (e.g., NPZ loader objects). |
+| Avoid unspecced mocks for interfaces | ✅ | All core mocks now have `spec_set`. |
 
 ---
 
@@ -300,7 +305,6 @@ The remediations described in P1/P2/P3 are implemented and run in the default un
 - P1: Offline `.run(...)`-path tests for all agents (patch `create_*_agent()` factories in each agent test module).
 - P2: Hardened contract mocks (use `spec_set` for agent/service boundaries; use real settings objects where practical).
 - P3: Removed enum-order reliance in judge tests via `MockLLMClient(chat_function=...)`.
-- Note: A few ad-hoc unspecced mocks remain (e.g., NPZ loader objects in reference store tests); treat as low risk unless those interfaces churn.
 
 ---
 
