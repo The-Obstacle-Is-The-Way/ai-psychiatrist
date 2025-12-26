@@ -1,13 +1,13 @@
 # Spec 15: Experiment Tracking with Full Provenance
 
-> **STATUS: READY FOR IMPLEMENTATION**
+> **STATUS: IMPLEMENTED**
 >
 > BUG-023 introduced baseline provenance. This spec upgrades it to **full provenance**
 > with git info, checksums, semantic naming, **per-experiment tracking**, and a registry.
 >
 > **Tracked by**: [GitHub Issue #53](https://github.com/The-Obstacle-Is-The-Way/ai-psychiatrist/issues/53)
 >
-> **Last Updated**: 2025-12-25
+> **Last Updated**: 2025-12-26
 
 ---
 
@@ -193,6 +193,7 @@ def compute_file_checksum(path: Path) -> str | None:
 
 
 def generate_output_filename(
+    *,
     mode: str,
     split: str,
     backfill: bool,
@@ -224,7 +225,7 @@ class RunMetadata:
     ollama_base_url: str
 
     @classmethod
-    def capture(cls, ollama_base_url: str) -> RunMetadata:
+    def capture(cls, *, ollama_base_url: str) -> RunMetadata:
         """Capture current run metadata."""
         git_commit, git_dirty = get_git_info()
         return cls(
@@ -262,7 +263,7 @@ class ExperimentProvenance:
     def capture(
         cls,
         *,
-        mode: str,
+        mode: Literal["zero_shot", "few_shot"],
         split: str,
         settings: "Settings",
         embeddings_path: Path | None,
@@ -366,60 +367,25 @@ runs:
       - mode: zero_shot
         split: paper-test
         mae_weighted: 0.796
-        coverage_pct: 48.2
+        coverage_pct: 48.2  # percent (0-100), not fraction
         status: completed
 
       - mode: few_shot
         split: paper-test
         mae_weighted: 0.619
-        coverage_pct: 50.2
-        status: paper_parity
-        notes: "Matches paper MAE 0.619"
+        coverage_pct: 50.2  # percent (0-100), not fraction
+        status: completed
 ```
 
 ### 4. Registry Update Function
 
-```python
-def update_experiment_registry(
-    run_metadata: RunMetadata,
-    experiments: list[dict],
-    output_file: Path,
-) -> None:
-    """Update the experiment registry YAML."""
-    import yaml
+Authoritative implementation: `src/ai_psychiatrist/services/experiment_tracking.py`.
 
-    registry_path = Path("data/experiments/registry.yaml")
-    registry_path.parent.mkdir(parents=True, exist_ok=True)
-
-    # Load or create
-    if registry_path.exists():
-        with open(registry_path) as f:
-            registry = yaml.safe_load(f) or {"runs": {}}
-    else:
-        registry = {"runs": {}}
-
-    # Add run entry
-    run_id = run_metadata.run_id
-    registry["runs"][run_id] = {
-        "timestamp": run_metadata.timestamp,
-        "git_commit": run_metadata.git_commit,
-        "git_dirty": run_metadata.git_dirty,
-        "output_file": output_file.name,
-        "experiments": [
-            {
-                "mode": exp["provenance"]["mode"],
-                "split": exp["provenance"]["split"],
-                "mae_weighted": exp["results"].get("item_mae_weighted"),
-                "coverage_pct": exp["results"].get("prediction_coverage"),
-                "status": "completed",
-            }
-            for exp in experiments
-        ],
-    }
-
-    with open(registry_path, "w") as f:
-        yaml.dump(registry, f, default_flow_style=False, sort_keys=False)
-```
+Behavior (implemented):
+- Uses `yaml.safe_load` / `yaml.safe_dump` (no `yaml.load`)
+- Normalizes the registry shape (`{"runs": {...}}`) even if an older file is malformed
+- Writes updates atomically (temp file + `replace`) to avoid partial/empty registries on crash
+- Converts `prediction_coverage` (0–1 fraction) into `coverage_pct` (0–100 percent)
 
 ---
 
@@ -439,7 +405,7 @@ from ai_psychiatrist.services.experiment_tracking import (
 
 async def main_async(args: argparse.Namespace) -> int:
     # 1. Capture run metadata ONCE at start
-    run_metadata = RunMetadata.capture(settings.ollama.base_url)
+    run_metadata = RunMetadata.capture(ollama_base_url=settings.ollama.base_url)
 
     if run_metadata.git_dirty:
         logger.warning(

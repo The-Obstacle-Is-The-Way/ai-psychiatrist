@@ -1,13 +1,13 @@
 # Spec 16: Log Output Improvements
 
-> **STATUS: READY FOR IMPLEMENTATION**
+> **STATUS: IMPLEMENTED**
 >
 > This spec addresses ANSI escape code pollution in log files when using `tee`.
 > One-line fix that significantly improves log readability and grep-ability.
 >
 > **Tracked by**: [GitHub Issue #54](https://github.com/The-Obstacle-Is-The-Way/ai-psychiatrist/issues/54)
 >
-> **Last Updated**: 2025-12-25
+> **Last Updated**: 2025-12-26
 
 ---
 
@@ -72,6 +72,10 @@ This follows the Unix convention:
 - **TTY present**: Show colors for human readability
 - **TTY absent (pipe/redirect)**: No colors for machine processing
 
+Also follow the de-facto ecosystem convention:
+- If `NO_COLOR` is set (non-empty), disable colors even if stdout is a TTY.
+  - Reference: https://no-color.org/
+
 ---
 
 ## Deliverables
@@ -117,10 +121,15 @@ class LoggingSettings(BaseSettings):
 **File**: `src/ai_psychiatrist/infrastructure/logging.py`
 
 ```python
+import os
+import sys
+
 def _should_use_colors(settings: LoggingSettings) -> bool:
     """Determine if colors should be used."""
     if settings.force_colors is not None:
         return settings.force_colors
+    if os.environ.get("NO_COLOR"):
+        return False
     return sys.stdout.isatty()
 ```
 
@@ -163,6 +172,7 @@ LOG_FORCE_COLORS=false uv run python scripts/reproduce_results.py
 - [ ] `python script.py` (interactive) still shows colors
 - [ ] Existing tests pass
 - [ ] Optional: `LOG_FORCE_COLORS` env var works
+- [ ] Optional: `NO_COLOR` disables colors even in TTY
 
 ---
 
@@ -193,7 +203,9 @@ def test_logger_no_colors_when_not_tty(monkeypatch):
 
 ---
 
-## Workarounds (Until Fixed)
+## Workarounds (Historical)
+
+These workarounds were useful before the fix landed; they may still help if you're running an older commit or capturing logs from third-party tools.
 
 ### Option A: Use JSON Format (Only If Script Respects `LOG_FORMAT`)
 

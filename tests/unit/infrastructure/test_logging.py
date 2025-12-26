@@ -11,6 +11,7 @@ from typing import cast
 
 import pytest
 
+import ai_psychiatrist.infrastructure.logging as logging_module
 from ai_psychiatrist.config import LoggingSettings
 from ai_psychiatrist.infrastructure.logging import (
     bind_context,
@@ -77,6 +78,50 @@ class TestLoggingSetup:
         output = capsys.readouterr().out
         assert "test message" in output
         assert "value" in output
+
+    def test_setup_logging_console_disables_colors_when_not_tty(
+        self, capsys: pytest.CaptureFixture[str]
+    ) -> None:
+        """Console logs should not contain ANSI codes when stdout isn't a TTY."""
+        settings = LoggingSettings(level="INFO", format="console", include_caller=False)
+        setup_logging(settings)
+
+        logger = get_logger("test.console.no_tty")
+        logger.info("test message")
+
+        output = capsys.readouterr().out
+        assert "\x1b[" not in output
+
+    def test_setup_logging_console_force_colors_overrides_tty(
+        self, capsys: pytest.CaptureFixture[str]
+    ) -> None:
+        """LOG_FORCE_COLORS should force ANSI output even when stdout isn't a TTY."""
+        settings = LoggingSettings(
+            level="INFO", format="console", include_caller=False, force_colors=True
+        )
+        setup_logging(settings)
+
+        logger = get_logger("test.console.force_colors")
+        logger.info("test message")
+
+        output = capsys.readouterr().out
+        assert "\x1b[" in output
+
+    def test_setup_logging_console_no_color_env_disables_colors(
+        self, capsys: pytest.CaptureFixture[str], monkeypatch: pytest.MonkeyPatch
+    ) -> None:
+        """NO_COLOR should disable ANSI colors even when stdout is treated as a TTY."""
+        monkeypatch.setattr(logging_module, "_stdout_isatty", lambda: True)
+        monkeypatch.setenv("NO_COLOR", "1")
+
+        settings = LoggingSettings(level="INFO", format="console", include_caller=False)
+        setup_logging(settings)
+
+        logger = get_logger("test.console.no_color")
+        logger.info("test message")
+
+        output = capsys.readouterr().out
+        assert "\x1b[" not in output
 
     def test_setup_logging_sets_log_level(self) -> None:
         """Should set the correct log level."""

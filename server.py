@@ -293,6 +293,8 @@ async def assess_quantitative(
         mode=mode,
         model_settings=model_settings,
         quantitative_settings=app_settings.quantitative,
+        pydantic_ai_settings=app_settings.pydantic_ai,
+        ollama_base_url=app_settings.ollama.base_url,
     )
 
     try:
@@ -384,6 +386,8 @@ async def run_full_pipeline(
             mode=mode,
             model_settings=model_settings,
             quantitative_settings=app_settings.quantitative,
+            pydantic_ai_settings=app_settings.pydantic_ai,
+            ollama_base_url=app_settings.ollama.base_url,
         )
         quant_result = await quant_agent.assess(transcript)
 

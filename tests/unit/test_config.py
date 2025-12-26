@@ -299,6 +299,7 @@ class TestSettings:
         assert settings.logging is not None
         assert settings.api is not None
         assert settings.quantitative is not None
+        assert settings.pydantic_ai is not None
 
     def test_feature_flags_default(self) -> None:
         """Feature flags should have correct defaults."""

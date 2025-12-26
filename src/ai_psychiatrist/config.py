@@ -285,6 +285,30 @@ class QuantitativeSettings(BaseSettings):
     )
 
 
+class PydanticAISettings(BaseSettings):
+    """Pydantic AI integration settings."""
+
+    model_config = SettingsConfigDict(
+        env_prefix="PYDANTIC_AI_",
+        env_file=ENV_FILE,
+        env_file_encoding=ENV_FILE_ENCODING,
+        extra="ignore",
+    )
+
+    enabled: bool = Field(
+        default=False,
+        description=(
+            "Enable Pydantic AI for quantitative scoring (TextOutput validation + retries)."
+        ),
+    )
+    retries: int = Field(
+        default=3,
+        ge=0,
+        le=10,
+        description="Retry count for validation failures (0 disables retries).",
+    )
+
+
 class DataSettings(BaseSettings):
     """Data path configuration."""
 
@@ -374,6 +398,12 @@ class LoggingSettings(BaseSettings):
     )
     include_timestamp: bool = Field(default=True)
     include_caller: bool = Field(default=True)
+    force_colors: bool | None = Field(
+        default=None,
+        description=(
+            "Force ANSI colors on/off for console logs. None = auto-detect via TTY + NO_COLOR."
+        ),
+    )
 
 
 class APISettings(BaseSettings):
@@ -414,6 +444,7 @@ class Settings(BaseSettings):
     embedding: EmbeddingSettings = Field(default_factory=EmbeddingSettings)
     feedback: FeedbackLoopSettings = Field(default_factory=FeedbackLoopSettings)
     quantitative: QuantitativeSettings = Field(default_factory=QuantitativeSettings)
+    pydantic_ai: PydanticAISettings = Field(default_factory=PydanticAISettings)
     data: DataSettings = Field(default_factory=DataSettings)
     logging: LoggingSettings = Field(default_factory=LoggingSettings)
     api: APISettings = Field(default_factory=APISettings)

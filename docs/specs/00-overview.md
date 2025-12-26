@@ -339,18 +339,16 @@ The specs are ordered for **maximum early value** with **mandatory checkpoints**
 8. **CHECKPOINT 11.5**: Verify paper metrics reproduced
 9. **Spec 12**: Polish (observability)
 10. **CHECKPOINT 12.5**: Remove legacy code, clean codebase
-11. **Spec 13 (Ready)**: Full Pydantic AI framework integration with TextOutput mode
+11. **Spec 13 (Implemented - Partial)**: Pydantic AI `TextOutput` integration (quantitative scoring path; `PYDANTIC_AI_ENABLED` opt-in)
 12. **Spec 14 (Deferred)**: Word-boundary regex + negation detection (precision refinement)
-13. **Spec 15 (Ready)**: Experiment tracking with full provenance
-14. **Spec 16 (Ready)**: Log output improvements (ANSI auto-detection)
+13. **Spec 15 (Implemented)**: Experiment tracking with full provenance
+14. **Spec 16 (Implemented)**: Log output improvements (ANSI auto-detection)
 
 Each spec produces a **working increment** that can be demoed and tested.
 Each checkpoint produces a **quality gate** that must pass before proceeding.
 
 **Implementation Priority**:
-- Spec 16: **Quick fix** (one-line change) - do first
-- Spec 15: **Required** for reproducibility - do second
-- Spec 13: **Ready** for full Pydantic AI migration - do third
+- Spec 13: Extend Pydantic AI beyond quantitative scoring (judge/meta-review) if desired
 - Spec 14: **Deferred** (precision refinement)
 
 ## References

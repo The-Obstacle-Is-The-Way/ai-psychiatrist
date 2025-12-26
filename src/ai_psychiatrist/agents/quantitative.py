@@ -22,13 +22,16 @@ from ai_psychiatrist.agents.prompts.quantitative import (
     make_evidence_prompt,
     make_scoring_prompt,
 )
-from ai_psychiatrist.config import QuantitativeSettings
+from ai_psychiatrist.config import PydanticAISettings, QuantitativeSettings
 from ai_psychiatrist.domain.entities import PHQ8Assessment, Transcript
 from ai_psychiatrist.domain.enums import AssessmentMode, NAReason, PHQ8Item
 from ai_psychiatrist.domain.value_objects import ItemAssessment
 from ai_psychiatrist.infrastructure.logging import get_logger
 
 if TYPE_CHECKING:
+    from pydantic_ai import Agent
+
+    from ai_psychiatrist.agents.output_models import QuantitativeOutput
     from ai_psychiatrist.config import ModelSettings
     from ai_psychiatrist.infrastructure.llm.responses import SimpleChatClient
     from ai_psychiatrist.services.embedding import EmbeddingService
@@ -76,6 +79,8 @@ class QuantitativeAssessmentAgent:
         mode: AssessmentMode = AssessmentMode.FEW_SHOT,
         model_settings: ModelSettings | None = None,
         quantitative_settings: QuantitativeSettings | None = None,
+        pydantic_ai_settings: PydanticAISettings | None = None,
+        ollama_base_url: str | None = None,
     ) -> None:
         """Initialize quantitative assessment agent.
 
@@ -91,6 +96,28 @@ class QuantitativeAssessmentAgent:
         self._mode = mode
         self._model_settings = model_settings
         self._settings = quantitative_settings or QuantitativeSettings()
+        self._pydantic_ai = pydantic_ai_settings or PydanticAISettings()
+        self._ollama_base_url = ollama_base_url
+        self._scoring_agent: Agent[None, QuantitativeOutput] | None = None
+
+        if self._pydantic_ai.enabled:
+            if not self._ollama_base_url:
+                logger.warning(
+                    "Pydantic AI enabled but no ollama_base_url provided; falling back to legacy",
+                )
+            else:
+                from ai_psychiatrist.agents.pydantic_agents import (  # noqa: PLC0415
+                    create_quantitative_agent,
+                )
+
+                self._scoring_agent = create_quantitative_agent(
+                    model_name=(
+                        model_settings.quantitative_model if model_settings else "gemma3:27b"
+                    ),
+                    base_url=self._ollama_base_url,
+                    retries=self._pydantic_ai.retries,
+                    system_prompt=QUANTITATIVE_SYSTEM_PROMPT,
+                )
 
         # Warn if FEW_SHOT mode is used without embedding service
         if mode == AssessmentMode.FEW_SHOT and embedding_service is None:
@@ -171,17 +198,7 @@ class QuantitativeAssessmentAgent:
         model = self._model_settings.quantitative_model if self._model_settings else None
         temperature = self._model_settings.temperature if self._model_settings else 0.0
 
-        raw_response = await self._llm.simple_chat(
-            user_prompt=prompt,
-            system_prompt=QUANTITATIVE_SYSTEM_PROMPT,
-            model=model,
-            temperature=temperature,
-        )
-
-        logger.debug("LLM scoring complete", response_length=len(raw_response))
-
-        # Step 4: Parse response with multi-level repair
-        parsed_items = await self._parse_response(raw_response)
+        parsed_items = await self._score_items(prompt=prompt, model=model, temperature=temperature)
 
         # Step 5: Construct ItemAssessments with extended fields
         final_items = {}
@@ -248,6 +265,46 @@ class QuantitativeAssessmentAgent:
         )
 
         return assessment
+
+    async def _score_items(
+        self,
+        *,
+        prompt: str,
+        model: str | None,
+        temperature: float,
+    ) -> dict[PHQ8Item, ItemAssessment]:
+        """Score transcript and return parsed per-item assessments."""
+        if self._scoring_agent is not None:
+            result = await self._scoring_agent.run(
+                prompt,
+                model_settings={"temperature": temperature},
+            )
+            return self._from_quantitative_output(result.output)
+
+        raw_response = await self._llm.simple_chat(
+            user_prompt=prompt,
+            system_prompt=QUANTITATIVE_SYSTEM_PROMPT,
+            model=model,
+            temperature=temperature,
+        )
+
+        logger.debug("LLM scoring complete", response_length=len(raw_response))
+
+        return await self._parse_response(raw_response)
+
+    @staticmethod
+    def _from_quantitative_output(output: QuantitativeOutput) -> dict[PHQ8Item, ItemAssessment]:
+        """Convert validated QuantitativeOutput into ItemAssessment mapping."""
+        result: dict[PHQ8Item, ItemAssessment] = {}
+        for key, item_enum in PHQ8_KEY_MAP.items():
+            evidence_output = getattr(output, key)
+            result[item_enum] = ItemAssessment(
+                item=item_enum,
+                evidence=evidence_output.evidence,
+                reason=evidence_output.reason,
+                score=evidence_output.score,
+            )
+        return result
 
     async def _extract_evidence(self, transcript_text: str) -> dict[str, list[str]]:
         """Extract evidence quotes for each PHQ-8 item.
