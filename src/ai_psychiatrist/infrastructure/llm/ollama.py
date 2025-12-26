@@ -14,6 +14,7 @@ from typing import TYPE_CHECKING, Any
 
 import httpx
 
+from ai_psychiatrist.config import get_model_name
 from ai_psychiatrist.domain.exceptions import (
     LLMError,
     LLMResponseParseError,
@@ -310,11 +311,8 @@ class OllamaClient:
 
         # Fallback priority:
         # 1. explicit 'model' arg
-        # 2. settings.qualitative_model (if settings present)
-        # 3. hardcoded default "gemma3:27b"
-        default_model = (
-            self._model_settings.qualitative_model if self._model_settings else "gemma3:27b"
-        )
+        # 2. settings.qualitative_model (via get_model_name helper)
+        default_model = get_model_name(self._model_settings, "qualitative")
 
         request = ChatRequest(
             messages=messages,
@@ -343,11 +341,8 @@ class OllamaClient:
         """
         # Fallback priority:
         # 1. explicit 'model' arg
-        # 2. settings.embedding_model (if settings present)
-        # 3. hardcoded default "qwen3-embedding:8b"
-        default_model = (
-            self._model_settings.embedding_model if self._model_settings else "qwen3-embedding:8b"
-        )
+        # 2. settings.embedding_model (via get_model_name helper)
+        default_model = get_model_name(self._model_settings, "embedding")
 
         request = EmbeddingRequest(
             text=text,

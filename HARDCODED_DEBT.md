@@ -14,12 +14,12 @@ This file tracks hardcoded values and implementation discrepancies identified du
 2.  **OllamaClient Default Models** (RESOLVED)
     *   **Location:** `src/ai_psychiatrist/infrastructure/llm/ollama.py`
     *   **Issue:** `simple_chat` defaults to string literal `"gemma3:27b"` and `simple_embed` to `"qwen3-embedding:8b"` when `model` arg is `None`.
-    *   **Resolution:** Injected `ModelSettings` into `OllamaClient` constructor. `simple_chat` and `simple_embed` now fall back to `model_settings` values.
+    *   **Resolution:** `simple_chat` and `simple_embed` now use `get_model_name()` helper, which reads from `ModelSettings` or falls back to config defaults (no hardcoded strings in client code).
 
 3.  **Client Default Model Discrepancy** (RESOLVED)
     *   **Location:** `src/ai_psychiatrist/infrastructure/llm/huggingface.py` vs `ollama.py`
     *   **Issue:** `HuggingFaceClient.simple_chat` defaults to `self._model_settings.qualitative_model`. `OllamaClient` defaults to the string literal `"gemma3:27b"`.
-    *   **Resolution:** Both clients now consistently use `ModelSettings` for defaults.
+    *   **Resolution:** Both clients now use `get_model_name()` for model resolution, ensuring consistent config-driven defaults across all LLM backends.
 
 ### API Server
 
