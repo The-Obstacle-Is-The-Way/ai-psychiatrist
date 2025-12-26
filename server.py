@@ -70,6 +70,8 @@ async def lifespan(app: FastAPI) -> AsyncIterator[None]:
         judge_agent = JudgeAgent(
             llm_client=chat_client,
             model_settings=app.state.model_settings,
+            pydantic_ai_settings=settings.pydantic_ai,
+            ollama_base_url=settings.ollama.base_url,
         )
         app.state.feedback_loop_service = FeedbackLoopService(
             qualitative_agent=qual_agent,
@@ -395,6 +397,8 @@ async def run_full_pipeline(
         meta_review_agent = MetaReviewAgent(
             llm_client=llm,
             model_settings=model_settings,
+            pydantic_ai_settings=app_settings.pydantic_ai,
+            ollama_base_url=app_settings.ollama.base_url,
         )
         meta_review = await meta_review_agent.review(
             transcript=transcript,

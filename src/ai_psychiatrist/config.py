@@ -298,7 +298,8 @@ class PydanticAISettings(BaseSettings):
     enabled: bool = Field(
         default=False,
         description=(
-            "Enable Pydantic AI for quantitative scoring (TextOutput validation + retries)."
+            "Enable Pydantic AI for TextOutput validation + retries "
+            "(quantitative scoring, judge, meta-review)."
         ),
     )
     retries: int = Field(

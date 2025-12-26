@@ -162,8 +162,8 @@ Each spec represents a **vertical slice** - a complete feature from API to stora
 
 ## Spec Index
 
-Note: Specs **01–11.5** and **12.5** are archived under `docs/archive/specs/` (historical record).
-Active specs live under `docs/specs/`.
+Note: Specs **01–12.5**, **15**, and **16** are archived under `docs/archive/specs/` (historical record).
+Active specs (**13**, **14**) live under `docs/specs/`.
 
 | Spec | Title | Deliverable |
 |------|-------|-------------|
@@ -337,18 +337,17 @@ The specs are ordered for **maximum early value** with **mandatory checkpoints**
 6. **CHECKPOINT 09.5**: Verify quantitative pipeline
 7. **Spec 10-11**: Integration (full pipeline)
 8. **CHECKPOINT 11.5**: Verify paper metrics reproduced
-9. **Spec 12**: Polish (observability)
+9. **Spec 12 (Archived)**: Polish (observability) - deferred to production deployment
 10. **CHECKPOINT 12.5**: Remove legacy code, clean codebase
-11. **Spec 13 (Implemented - Partial)**: Pydantic AI `TextOutput` integration (quantitative scoring path; `PYDANTIC_AI_ENABLED` opt-in)
+11. **Spec 13 (Implemented)**: Pydantic AI `TextOutput` integration (quantitative scoring + judge + meta-review; `PYDANTIC_AI_ENABLED` opt-in)
 12. **Spec 14 (Deferred)**: Word-boundary regex + negation detection (precision refinement)
-13. **Spec 15 (Implemented)**: Experiment tracking with full provenance
-14. **Spec 16 (Implemented)**: Log output improvements (ANSI auto-detection)
+13. **Spec 15 (Archived)**: Experiment tracking with full provenance ✅
+14. **Spec 16 (Archived)**: Log output improvements (ANSI auto-detection) ✅
 
 Each spec produces a **working increment** that can be demoed and tested.
 Each checkpoint produces a **quality gate** that must pass before proceeding.
 
 **Implementation Priority**:
-- Spec 13: Extend Pydantic AI beyond quantitative scoring (judge/meta-review) if desired
 - Spec 14: **Deferred** (precision refinement)
 
 ## References

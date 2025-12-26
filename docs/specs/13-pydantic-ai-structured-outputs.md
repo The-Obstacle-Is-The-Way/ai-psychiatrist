@@ -1,6 +1,6 @@
 # Spec 13: Full Pydantic AI Framework Integration
 
-> **STATUS: IMPLEMENTED (Quantitative scoring path; `PYDANTIC_AI_ENABLED` opt-in)**
+> **STATUS: IMPLEMENTED (Quantitative scoring + Judge + Meta-review; `PYDANTIC_AI_ENABLED` opt-in)**
 >
 > This spec describes Pydantic AI framework integration using the `TextOutput` mode
 > to preserve our reasoning-optimal `<thinking>` + `<answer>` prompt pattern while gaining
@@ -16,7 +16,10 @@
 
 ## Executive Summary
 
-**What we're doing**: Use Pydantic AI `TextOutput` for the quantitative scoring step (opt-in).
+**What we're doing**: Use Pydantic AI `TextOutput` as an opt-in, validated execution path for:
+- Quantitative scoring (PHQ-8 per-item JSON in `<answer>` tags)
+- Judge metric evaluation (paper format: `Explanation: ...` + `Score: N`)
+- Meta-review severity prediction (paper format: `<severity>` + `<explanation>` XML tags)
 
 **Why this approach**:
 - Strict format constraints can reduce performance on some tasks/models; we keep our existing “reason → then structure” pattern and validate after generation
@@ -186,9 +189,10 @@ Schema (implemented):
 **File**: `src/ai_psychiatrist/agents/extractors.py`
 
 These are small, single-purpose extractors that:
-- Prefer `<answer>...</answer>` JSON (fallbacks: code fences, then first `{...}` block)
-- Apply tolerant fixups (smart quotes, trailing commas)
-- Parse + validate to Pydantic models
+- Prefer `<answer>...</answer>` JSON when present (fallbacks: code fences, then first `{...}` block)
+- Otherwise, parse the paper-format outputs for each agent (Judge + Meta-review)
+- Apply tolerant fixups (smart quotes, trailing commas) for JSON cases
+- Validate with Pydantic models
 - Raise `ModelRetry(...)` with actionable guidance to trigger framework retries
 
 Entry points (implemented):
@@ -204,7 +208,8 @@ Implementation is authoritative in `src/ai_psychiatrist/agents/extractors.py`.
 
 Implemented factories:
 - `create_quantitative_agent(...)` (wired into `QuantitativeAssessmentAgent` when enabled)
-- `create_judge_metric_agent(...)` and `create_meta_review_agent(...)` (not yet wired into the pipeline)
+- `create_judge_metric_agent(...)` (wired into `JudgeAgent` when enabled)
+- `create_meta_review_agent(...)` (wired into `MetaReviewAgent` when enabled)
 
 Pydantic AI talks to Ollama via the OpenAI-compatible `/v1` endpoint using
 `OpenAIChatModel` + `OllamaProvider` (see `src/ai_psychiatrist/agents/pydantic_agents.py`).
@@ -247,13 +252,13 @@ class PydanticAISettings(BaseSettings):
 
     enabled: bool = Field(
         default=False,
-        description="Enable Pydantic AI scoring path (legacy remains default until validated)",
+        description="Enable Pydantic AI TextOutput path (quantitative scoring, judge, meta-review)",
     )
     retries: int = Field(
         default=3,
-        ge=1,
+        ge=0,
         le=10,
-        description="Number of retries on validation failure",
+        description="Number of retries on validation failure (0 disables retries)",
     )
 ```
 
@@ -274,8 +279,8 @@ class PydanticAISettings(BaseSettings):
 4. Update `FeedbackLoopService` to use new agents
 
 ### Phase 3: Cleanup (Week 3)
-1. Remove legacy `_llm_repair()` logic (Pydantic AI handles retries)
-2. Remove `_tolerant_fixups()` from agent (moved to extractor)
+1. Remove legacy `_llm_repair()` logic once Pydantic AI becomes the default path (legacy is retained for rollback today)
+2. Remove duplicate parsing/helpers once the legacy path is removed (today, legacy remains opt-out)
 3. Update tests to use Pydantic AI mocking patterns
 4. Add observability with Logfire (optional)
 
@@ -304,7 +309,7 @@ agent = QuantitativeAssessmentAgent(
 | **Preserve reasoning quality** | TextOutput mode, prompts unchanged |
 | **Type-safe outputs** | Pydantic models validated on extraction |
 | **Built-in retry** | Pydantic AI handles retry loops on validation errors |
-| **Cleaner scoring path (opt-in)** | Pydantic AI replaces parsing/repair for the scoring step when enabled; legacy remains for rollback |
+| **Cleaner execution path (opt-in)** | Pydantic AI centralizes execution + retries for quantitative scoring, judge, and meta-review when enabled; legacy remains for rollback |
 | **Industry standard** | Using established framework vs custom code |
 
 ---

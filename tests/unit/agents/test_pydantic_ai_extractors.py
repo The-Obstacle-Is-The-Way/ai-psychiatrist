@@ -5,8 +5,16 @@ from __future__ import annotations
 import pytest
 from pydantic_ai import ModelRetry
 
-from ai_psychiatrist.agents.extractors import extract_quantitative
-from ai_psychiatrist.agents.output_models import QuantitativeOutput
+from ai_psychiatrist.agents.extractors import (
+    extract_judge_metric,
+    extract_meta_review,
+    extract_quantitative,
+)
+from ai_psychiatrist.agents.output_models import (
+    JudgeMetricOutput,
+    MetaReviewOutput,
+    QuantitativeOutput,
+)
 
 pytestmark = [
     pytest.mark.unit,
@@ -68,3 +76,52 @@ def test_extract_quantitative_invalid_score_range_retries() -> None:
 """
     with pytest.raises(ModelRetry):
         extract_quantitative(response)
+
+
+def test_extract_judge_metric_plain_text_valid() -> None:
+    response = """
+Explanation: The assessment is coherent and specific.
+Score: 4
+"""
+    parsed = extract_judge_metric(response)
+    assert isinstance(parsed, JudgeMetricOutput)
+    assert parsed.score == 4
+    assert "Score:" in parsed.explanation
+
+
+def test_extract_judge_metric_missing_score_retries() -> None:
+    with pytest.raises(ModelRetry):
+        extract_judge_metric("Explanation: Missing score line")
+
+
+def test_extract_meta_review_xml_valid() -> None:
+    response = """
+<severity>2</severity>
+<explanation>This is the explanation.</explanation>
+"""
+    parsed = extract_meta_review(response)
+    assert isinstance(parsed, MetaReviewOutput)
+    assert parsed.severity == 2
+    assert parsed.explanation == "This is the explanation."
+
+
+def test_extract_meta_review_json_valid() -> None:
+    response = """
+<answer>
+{"severity": 1, "explanation": "ok"}
+</answer>
+"""
+    parsed = extract_meta_review(response)
+    assert parsed.severity == 1
+    assert parsed.explanation == "ok"
+
+
+def test_extract_meta_review_missing_severity_retries() -> None:
+    with pytest.raises(ModelRetry):
+        extract_meta_review("<explanation>Test</explanation>")
+
+
+def test_extract_meta_review_clamps_severity() -> None:
+    response = "<severity>99</severity><explanation>Test</explanation>"
+    parsed = extract_meta_review(response)
+    assert parsed.severity == 4
