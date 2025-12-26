@@ -2,7 +2,7 @@
 
 **Audience**: Researchers wanting to compare results with the paper
 **Related**: [SPEC-003](../specs/SPEC-003-backfill-toggle.md) | [Backfill Explained](../concepts/backfill-explained.md) | [Reproduction Notes](../results/reproduction-notes.md)
-**Last Updated**: 2025-12-23
+**Last Updated**: 2025-12-26
 
 ---
 
@@ -94,10 +94,12 @@ LLM_BACKEND=ollama
 EMBEDDING_BACKEND=ollama
 
 # Model selection (Paper Section 2.2)
-MODEL_QUANTITATIVE_MODEL=gemma3:27b
-MODEL_QUALITATIVE_MODEL=gemma3:27b
-MODEL_JUDGE_MODEL=gemma3:27b
-MODEL_META_REVIEW_MODEL=gemma3:27b
+# Note: Paper likely used BF16 weights; both Ollama variants are quantized.
+# Use gemma3:27b-it-qat for faster inference, or gemma3:27b for name parity.
+MODEL_QUANTITATIVE_MODEL=gemma3:27b-it-qat
+MODEL_QUALITATIVE_MODEL=gemma3:27b-it-qat
+MODEL_JUDGE_MODEL=gemma3:27b-it-qat
+MODEL_META_REVIEW_MODEL=gemma3:27b-it-qat
 MODEL_EMBEDDING_MODEL=qwen3-embedding:8b
 
 # Embedding hyperparameters (Paper Appendix D)
@@ -117,6 +119,11 @@ FEEDBACK_SCORE_THRESHOLD=3
 # Quantitative assessment (SPEC-003)
 QUANTITATIVE_ENABLE_KEYWORD_BACKFILL=false  # Default - paper parity
 QUANTITATIVE_TRACK_NA_REASONS=true
+
+# Pydantic AI (Spec 13 - enabled by default since 2025-12-26)
+# Adds structured validation + automatic retries; falls back to legacy on failure
+PYDANTIC_AI_ENABLED=true
+PYDANTIC_AI_RETRIES=3
 ```
 
 ---
@@ -124,13 +131,20 @@ QUANTITATIVE_TRACK_NA_REASONS=true
 ## Reproduction Steps
 
 ```bash
-# 1. Create paper ground truth 58/43/41 split
+# 1. Pull required models
+ollama pull gemma3:27b-it-qat  # or gemma3:27b
+ollama pull qwen3-embedding:8b
+
+# 2. Create paper ground truth 58/43/41 split
 uv run python scripts/create_paper_split.py --verify
 
-# 2. Generate embeddings for training set (paper-parity artifact name)
-uv run python scripts/generate_embeddings.py --split paper-train --backend ollama --output data/embeddings/paper_reference_embeddings.npz
+# 3. Generate embeddings for training set
+# HuggingFace FP16 (recommended):
+uv run python scripts/generate_embeddings.py --split paper-train
+# Or Ollama (paper-parity naming):
+# EMBEDDING_BACKEND=ollama uv run python scripts/generate_embeddings.py --split paper-train
 
-# 3. Run reproduction (default = paper parity mode)
+# 4. Run reproduction (Pydantic AI enabled by default)
 uv run python scripts/reproduce_results.py --split paper --few-shot-only
 ```
 

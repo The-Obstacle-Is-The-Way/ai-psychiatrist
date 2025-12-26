@@ -1,7 +1,7 @@
 # Preflight Checklist: Zero-Shot Reproduction
 
 **Purpose**: Comprehensive pre-run verification for zero-shot paper reproduction
-**Last Updated**: 2025-12-25
+**Last Updated**: 2025-12-26
 **Related**: [Few-Shot Checklist](./preflight-checklist-few-shot.md) | [Paper Parity Guide](./paper-parity-guide.md)
 
 ---
@@ -40,7 +40,13 @@ Zero-shot mode uses NO reference embeddings - the model scores symptoms from tra
   - Should return JSON with model list
 
 - [ ] **Required model pulled**: `ollama list | grep gemma3:27b`
-  - If missing: `ollama pull gemma3:27b`
+  - If missing:
+    ```bash
+    # Production-recommended (QAT-quantized, faster):
+    ollama pull gemma3:27b-it-qat
+    # Paper-parity (unquantized):
+    ollama pull gemma3:27b
+    ```
 
 ---
 
@@ -53,8 +59,12 @@ Zero-shot mode uses NO reference embeddings - the model scores symptoms from tra
 - [ ] **Verify quantitative model is Gemma3** (NOT MedGemma):
   ```bash
   grep "MODEL_QUANTITATIVE_MODEL" .env
-  # MUST show: MODEL_QUANTITATIVE_MODEL=gemma3:27b
+  # Acceptable values:
+  #   MODEL_QUANTITATIVE_MODEL=gemma3:27b-it-qat  (QAT-optimized, faster inference)
+  #   MODEL_QUANTITATIVE_MODEL=gemma3:27b         (standard Ollama quantization)
   ```
+
+  **Note on quantization**: The paper authors likely used full-precision BF16 weights. Ollama's `gemma3:27b` uses Q4_K_M quantization; `-it-qat` adds QAT optimization for faster inference. Both are acceptable for reproduction (neither is true BF16).
 
   **Gotcha (BUG-018a)**: MedGemma produces ALL N/A scores due to being too conservative. Appendix F says it "detected fewer relevant chunks, making fewer predictions overall."
 
@@ -75,6 +85,18 @@ Zero-shot mode uses NO reference embeddings - the model scores symptoms from tra
   ```
 
   **Note**: We use temp=0 for all agents. top_k/top_p are not set (irrelevant at temp=0).
+
+### 2.3 Pydantic AI (Structured Validation)
+
+**Reference**: Spec 13 - Enabled by default since 2025-12-26
+
+- [ ] **Pydantic AI is enabled** (recommended for structured output validation):
+  ```bash
+  grep "PYDANTIC_AI_ENABLED" .env
+  # Should show: PYDANTIC_AI_ENABLED=true (or be absent, as true is the default)
+  ```
+
+  **What it does**: Adds structured validation + automatic retries (up to 3x) for quantitative scoring, judge metrics, and meta-review. Falls back to legacy parsing on failure.
 
 ---
 
@@ -208,6 +230,7 @@ print(f'Quantitative Model: {s.model.quantitative_model}')
 print(f'Temperature: {s.model.temperature}')
 print(f'Keyword Backfill: {s.quantitative.enable_keyword_backfill}')
 print(f'Timeout: {s.ollama.timeout_seconds}s')
+print(f'Pydantic AI Enabled: {s.pydantic_ai.enabled}')
 print(f'Embedding Dimension: {s.embedding.dimension}')
 "
 ```
@@ -215,10 +238,11 @@ print(f'Embedding Dimension: {s.embedding.dimension}')
 Expected output:
 ```text
 === CRITICAL SETTINGS ===
-Quantitative Model: gemma3:27b
+Quantitative Model: gemma3:27b-it-qat  (or gemma3:27b)
 Temperature: 0.0
 Keyword Backfill: False
 Timeout: 300s
+Pydantic AI Enabled: True
 Embedding Dimension: 4096
 ```
 
