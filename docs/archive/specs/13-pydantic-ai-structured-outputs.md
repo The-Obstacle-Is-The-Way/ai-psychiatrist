@@ -1,6 +1,9 @@
 # Spec 13: Full Pydantic AI Framework Integration
 
-> **STATUS: IMPLEMENTED (Quantitative scoring + Judge + Meta-review; `PYDANTIC_AI_ENABLED` opt-in)**
+> **STATUS: ARCHIVED (Complete)**
+>
+> ✅ **Fully implemented** - All target agents (Quantitative, Judge, Meta-review) now have
+> Pydantic AI integration via `PYDANTIC_AI_ENABLED` opt-in flag.
 >
 > This spec describes Pydantic AI framework integration using the `TextOutput` mode
 > to preserve our reasoning-optimal `<thinking>` + `<answer>` prompt pattern while gaining
@@ -8,7 +11,7 @@
 >
 > **Tracked by**:
 > - [GitHub Issue #28](https://github.com/The-Obstacle-Is-The-Way/ai-psychiatrist/issues/28) - Pydantic AI integration
-> - [GitHub Issue #29](https://github.com/The-Obstacle-Is-The-Way/ai-psychiatrist/issues/29) - Ollama JSON mode (TO BE CLOSED - see below)
+> - [GitHub Issue #29](https://github.com/The-Obstacle-Is-The-Way/ai-psychiatrist/issues/29) - Ollama JSON mode (closed)
 >
 > **Last Updated**: 2025-12-26
 
