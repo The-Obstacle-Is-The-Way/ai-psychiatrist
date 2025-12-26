@@ -296,10 +296,11 @@ class PydanticAISettings(BaseSettings):
     )
 
     enabled: bool = Field(
-        default=False,
+        default=True,
         description=(
             "Enable Pydantic AI for TextOutput validation + retries "
-            "(quantitative scoring, judge, meta-review)."
+            "(quantitative scoring, judge, meta-review). "
+            "Fallback to legacy parsing occurs automatically on failure."
         ),
     )
     retries: int = Field(

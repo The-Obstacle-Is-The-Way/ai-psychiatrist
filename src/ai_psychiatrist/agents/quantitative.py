@@ -12,6 +12,7 @@ prediction, with multi-level JSON repair for robust parsing.
 
 from __future__ import annotations
 
+import asyncio
 import json
 import re
 from typing import TYPE_CHECKING, Literal
@@ -278,11 +279,19 @@ class QuantitativeAssessmentAgent:
     ) -> dict[PHQ8Item, ItemAssessment]:
         """Score transcript and return parsed per-item assessments."""
         if self._scoring_agent is not None:
-            result = await self._scoring_agent.run(
-                prompt,
-                model_settings={"temperature": temperature},
-            )
-            return self._from_quantitative_output(result.output)
+            try:
+                result = await self._scoring_agent.run(
+                    prompt,
+                    model_settings={"temperature": temperature},
+                )
+                return self._from_quantitative_output(result.output)
+            except asyncio.CancelledError:
+                raise
+            except Exception as e:
+                logger.error(
+                    "Pydantic AI call failed during scoring; falling back to legacy",
+                    error=str(e),
+                )
 
         raw_response = await self._llm.simple_chat(
             user_prompt=prompt,
