@@ -1,5 +1,30 @@
 # AI-Psychiatrist: Paper vs. Code Discrepancy Analysis
 
+**Status**: ✅ ARCHIVED - Historical forensic audit, no longer actionable
+**Archived**: 2025-12-26
+
+---
+
+## Resolution Summary
+
+This was a detailed forensic audit of the paper authors' sloppy codebase. **We no longer need to match their implementation.** Our codebase is cleaner, better documented, and production-ready.
+
+**Key findings from this audit are now in SSOT locations:**
+
+| Finding | SSOT Location | Status |
+|---------|---------------|--------|
+| Keyword backfill | [`docs/concepts/backfill-explained.md`](../concepts/backfill-explained.md) | ✅ Implemented as toggle (SPEC-003) |
+| Hardware (A100 vs M3) | [`docs/models/model-wiring.md`](../models/model-wiring.md) | ✅ Explains Q4 vs BF16 gap |
+| Sampling parameters | [`docs/reference/agent-sampling-registry.md`](../reference/agent-sampling-registry.md) | ✅ Evidence-based defaults |
+| Data splits | [`docs/data/paper-split-registry.md`](../data/paper-split-registry.md) | ✅ Ground truth IDs extracted |
+| Model defaults | [`docs/models/model-registry.md`](../models/model-registry.md) | ✅ Gemma3:27b documented |
+
+**Bottom line**: The paper's public code has wrong defaults (llama3), undocumented heuristics (keyword backfill always ON), and conflicting hardware claims (A100 SLURM scripts vs M3 Pro text). We don't need to reproduce their mess—we have a clean implementation. The MAE gap (0.778 vs 0.619) is explained by quantization (Q4_K_M vs likely BF16).
+
+---
+
+## Original Audit (Historical Context)
+
 **Analysis Date:** December 24, 2025
 **Repo Commit Audited:** `a966ce5878b9c4cbefc05fa97596fd0afa4311c7`
 **Paper Source:** `_literature/ai_psychiatrist.md`

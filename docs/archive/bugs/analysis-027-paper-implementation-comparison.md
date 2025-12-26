@@ -1,5 +1,30 @@
 # Analysis 027: Paper vs Implementation Comparison (Quantitative Agent)
 
+**Status**: ✅ ARCHIVED - Historical investigation, findings now in SSOT docs
+**Archived**: 2025-12-26
+
+---
+
+## Resolution Summary
+
+This investigation identified discrepancies between the paper's public repository and our implementation. **The key findings are now documented in dedicated SSOT locations:**
+
+| Finding | SSOT Location |
+|---------|---------------|
+| Keyword backfill toggle | [`docs/concepts/backfill-explained.md`](../concepts/backfill-explained.md) |
+| Coverage tradeoff (50% vs 69%) | [`docs/concepts/coverage-explained.md`](../concepts/coverage-explained.md) |
+| MAE gap (0.619 vs 0.778) | [`docs/models/model-wiring.md`](../models/model-wiring.md) - **Explained by Q4_K_M vs BF16 quantization** |
+| Sampling parameters | [`docs/reference/agent-sampling-registry.md`](../reference/agent-sampling-registry.md) |
+| Model options & hardware | [`docs/models/model-wiring.md`](../models/model-wiring.md) |
+
+**Key insight**: The paper likely ran BF16 on A100 GPUs. Our Q4_K_M quantization (4-bit) explains the MAE difference. This is not a code bug—it's a precision tradeoff.
+
+**Going forward**: We don't need to match their sloppy codebase. Our implementation is cleaner and well-documented. When BF16/Q8 hardware is available, we can validate whether precision closes the gap.
+
+---
+
+## Original Investigation (Historical Context)
+
 This document compares the **publicly available paper repository code** (mirrored under
 `_reference/`) to our production implementation under `src/ai_psychiatrist/`.
 

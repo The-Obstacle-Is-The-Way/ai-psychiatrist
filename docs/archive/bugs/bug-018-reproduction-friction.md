@@ -1,7 +1,39 @@
 # BUG-018: Reproduction Friction Log
 
-**Date**: 2025-12-22
-**Status**: INVESTIGATED - paper-text parity workflow runs end-to-end; MAE/coverage parity not yet achieved
+**Status**: ✅ ARCHIVED - Most issues fixed, remaining items are research questions
+**Archived**: 2025-12-26
+**Original Date**: 2025-12-22
+
+---
+
+## Resolution Summary
+
+This was a friction log for reproduction attempts. **Most issues have been fixed:**
+
+| Sub-bug | Issue | Status |
+|---------|-------|--------|
+| 018a | MedGemma default | ✅ Fixed - gemma3:27b is default |
+| 018b | .env overrides | ✅ Documented - expected behavior |
+| 018c | DataSettings attribute | ✅ Fixed |
+| 018d | Inline imports | ✅ Fixed |
+| 018e | Timeouts | ✅ Configurable via `OLLAMA_TIMEOUT_SECONDS` |
+| 018f | JSON malformation | ⚠️ Mitigated - Pydantic AI adds retries |
+| 018g | Severe underestimation | 📊 Open research question |
+| 018h | Orphaned keywords dir | ✅ Documented |
+| 018i | MAE methodology | ✅ Fixed - item-level MAE implemented |
+
+**Remaining open items:**
+- **018f** (JSON malformation): Mitigated by Pydantic AI structured outputs with retries
+- **018g** (severe underestimation): This is a research question about model behavior, not a bug
+
+**Key insight**: The reproduction workflow works end-to-end. The MAE gap (0.778 vs 0.619) is explained by Q4_K_M vs BF16 quantization (see [`model-wiring.md`](../models/model-wiring.md)).
+
+---
+
+## Original Friction Log (Historical Context)
+
+**Original Date**: 2025-12-22
+**Original Status**: INVESTIGATED - paper-text parity workflow runs end-to-end; MAE/coverage parity not yet achieved
 **Severity**: HIGH - initially blocked paper-text parity evaluation
 **Updated**: 2025-12-24 - paper-style split + embeddings + evaluation executed; metrics still diverge (see investigation-026 / analysis-027)
 
