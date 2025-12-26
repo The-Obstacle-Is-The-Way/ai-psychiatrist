@@ -2,13 +2,21 @@
 
 from __future__ import annotations
 
+from typing import TYPE_CHECKING
+from unittest.mock import AsyncMock, patch
+
 import pytest
 
 from ai_psychiatrist.agents.judge import JudgeAgent
+from ai_psychiatrist.agents.output_models import JudgeMetricOutput
+from ai_psychiatrist.config import PydanticAISettings
 from ai_psychiatrist.domain.entities import QualitativeAssessment, Transcript
 from ai_psychiatrist.domain.enums import EvaluationMetric
 from ai_psychiatrist.domain.exceptions import LLMError
 from tests.fixtures.mock_llm import MockLLMClient
+
+if TYPE_CHECKING:
+    from ai_psychiatrist.infrastructure.llm.protocols import ChatRequest
 
 
 class TestJudgeAgent:
@@ -77,31 +85,31 @@ Score: 2
         sample_transcript: Transcript,
     ) -> None:
         """Should extract correct numeric scores."""
+
         # Mix of high and low scores
-        # Note: Order of iteration over enum might vary, but usually consistent.
-        # But MockLLMClient consumes responses FIFO.
-        # Let's mock all to return specific scores by inspecting call args if needed.
-        # Simpler: just ensure we get the values we expect if we feed different ones.
-        # Since we can't easily control which response goes to which metric with simple FIFO list,
-        # we will use the same mock response structure but different scores.
+        def response_by_metric(request: ChatRequest) -> str:
+            # Check the user prompt (last message) for the metric name
+            last_msg = request.messages[-1].content.lower()
+            if "coherence" in last_msg:
+                return "Explanation: Good\nScore: 5"
+            if "completeness" in last_msg:
+                return "Explanation: Bad\nScore: 2"
+            if "specificity" in last_msg:
+                return "Explanation: Good\nScore: 5"
+            if "accuracy" in last_msg:
+                return "Explanation: Bad\nScore: 2"
+            return "Explanation: Default\nScore: 3"
 
-        responses = [
-            "Explanation: Good\nScore: 5",
-            "Explanation: Bad\nScore: 2",
-            "Explanation: Good\nScore: 5",
-            "Explanation: Bad\nScore: 2",
-        ]
-
-        mock_client = MockLLMClient(chat_responses=responses)
+        mock_client = MockLLMClient(chat_function=response_by_metric)
         agent = JudgeAgent(llm_client=mock_client)
 
         evaluation = await agent.evaluate(sample_assessment, sample_transcript)
 
-        # We don't know which metric got which score without peeking iteration order.
-        # But we know we should have two 5s and two 2s.
-        scores = [s.score for s in evaluation.scores.values()]
-        assert scores.count(5) == 2
-        assert scores.count(2) == 2
+        # We know exactly which metric got which score
+        assert evaluation.scores[EvaluationMetric.COHERENCE].score == 5
+        assert evaluation.scores[EvaluationMetric.COMPLETENESS].score == 2
+        assert evaluation.scores[EvaluationMetric.SPECIFICITY].score == 5
+        assert evaluation.scores[EvaluationMetric.ACCURACY].score == 2
 
         assert evaluation.needs_improvement
         assert len(evaluation.low_scores) == 2
@@ -113,17 +121,21 @@ Score: 2
         sample_transcript: Transcript,
     ) -> None:
         """Should return feedback only for low scores."""
-        # Setup specific low score for one metric
-        responses = [
-            "Explanation: Good\nScore: 5",  # Coherence
-            "Explanation: Bad\nScore: 2",  # Completeness
-            "Explanation: Good\nScore: 5",  # Specificity
-            "Explanation: Good\nScore: 5",  # Accuracy
-        ]
-        # NOTE: This relies on Enum order. If Enum order changes, this test might be flaky.
-        # But logically, one will be low.
 
-        mock_client = MockLLMClient(chat_responses=responses)
+        # Setup specific low score for one metric
+        def response_by_metric(request: ChatRequest) -> str:
+            last_msg = request.messages[-1].content.lower()
+            if "coherence" in last_msg:
+                return "Explanation: Good\nScore: 5"
+            if "completeness" in last_msg:
+                return "Explanation: Bad\nScore: 2"
+            if "specificity" in last_msg:
+                return "Explanation: Good\nScore: 5"
+            if "accuracy" in last_msg:
+                return "Explanation: Good\nScore: 5"
+            return "Explanation: Default\nScore: 3"
+
+        mock_client = MockLLMClient(chat_function=response_by_metric)
         agent = JudgeAgent(llm_client=mock_client)
 
         evaluation = await agent.evaluate(sample_assessment, sample_transcript)
@@ -133,6 +145,7 @@ Score: 2
         assert len(feedback) == 1
         # The low score one
         low_metric = evaluation.low_scores[0]
+        assert low_metric == EvaluationMetric.COMPLETENESS
         assert low_metric.value in feedback
         assert "Scored 2/5" in feedback[low_metric.value]
         assert "Bad" in feedback[low_metric.value]
@@ -144,13 +157,20 @@ Score: 2
         sample_transcript: Transcript,
     ) -> None:
         """Should honor custom threshold for low scores."""
-        responses = [
-            "Explanation: OK\nScore: 4",  # Coherence
-            "Explanation: Low\nScore: 3",  # Completeness
-            "Explanation: Low\nScore: 2",  # Specificity
-            "Explanation: Good\nScore: 5",  # Accuracy
-        ]
-        mock_client = MockLLMClient(chat_responses=responses)
+
+        def response_by_metric(request: ChatRequest) -> str:
+            last_msg = request.messages[-1].content.lower()
+            if "coherence" in last_msg:
+                return "Explanation: OK\nScore: 4"
+            if "completeness" in last_msg:
+                return "Explanation: Low\nScore: 3"
+            if "specificity" in last_msg:
+                return "Explanation: Low\nScore: 2"
+            if "accuracy" in last_msg:
+                return "Explanation: Good\nScore: 5"
+            return "Explanation: Default\nScore: 3"
+
+        mock_client = MockLLMClient(chat_function=response_by_metric)
         agent = JudgeAgent(llm_client=mock_client)
 
         evaluation = await agent.evaluate(sample_assessment, sample_transcript)
@@ -159,6 +179,7 @@ Score: 2
 
         assert len(feedback) == 1
         low_metric = evaluation.low_scores_for_threshold(2)[0]
+        assert low_metric == EvaluationMetric.SPECIFICITY
         assert low_metric.value in feedback
 
     @pytest.mark.asyncio
@@ -202,3 +223,30 @@ Score: 2
         for score in evaluation.scores.values():
             assert score.score == 3
             assert score.explanation == "LLM evaluation failed; default score used."
+
+    @pytest.mark.asyncio
+    async def test_pydantic_ai_path_success(
+        self,
+        sample_assessment: QualitativeAssessment,
+        sample_transcript: Transcript,
+    ) -> None:
+        """Should use Pydantic AI agent when enabled and configured."""
+        mock_output = JudgeMetricOutput(score=5, explanation="test")
+        mock_agent = AsyncMock()
+        mock_agent.run.return_value = AsyncMock(output=mock_output)
+
+        with patch(
+            "ai_psychiatrist.agents.pydantic_agents.create_judge_metric_agent",
+            return_value=mock_agent,
+        ) as mock_factory:
+            agent = JudgeAgent(
+                llm_client=MockLLMClient(),
+                pydantic_ai_settings=PydanticAISettings(enabled=True),
+                ollama_base_url="http://localhost:11434",
+            )
+            result = await agent.evaluate(sample_assessment, sample_transcript)
+
+        mock_factory.assert_called_once()
+        assert mock_agent.run.call_count == 4
+        assert len(result.scores) == 4
+        assert result.scores[EvaluationMetric.COHERENCE].score == 5

@@ -2,10 +2,13 @@
 
 from __future__ import annotations
 
+from unittest.mock import AsyncMock, patch
+
 import pytest
 
 from ai_psychiatrist.agents.meta_review import MetaReviewAgent
-from ai_psychiatrist.config import ModelSettings
+from ai_psychiatrist.agents.output_models import MetaReviewOutput
+from ai_psychiatrist.config import ModelSettings, PydanticAISettings
 from ai_psychiatrist.domain.entities import (
     PHQ8Assessment,
     QualitativeAssessment,
@@ -339,3 +342,38 @@ qualitative assessment reveals social stressors and biological predisposition.</
         )
 
         assert meta_review.is_mdd is False
+
+    @pytest.mark.asyncio
+    async def test_pydantic_ai_path_success(
+        self,
+        sample_transcript: Transcript,
+        sample_qualitative: QualitativeAssessment,
+        sample_quantitative: PHQ8Assessment,
+    ) -> None:
+        """Should use Pydantic AI agent when enabled and configured."""
+        mock_output = MetaReviewOutput(
+            severity=3,
+            explanation="Pydantic AI Explanation",
+        )
+        mock_agent = AsyncMock()
+        mock_agent.run.return_value = AsyncMock(output=mock_output)
+
+        with patch(
+            "ai_psychiatrist.agents.pydantic_agents.create_meta_review_agent",
+            return_value=mock_agent,
+        ) as mock_factory:
+            agent = MetaReviewAgent(
+                llm_client=MockLLMClient(),
+                pydantic_ai_settings=PydanticAISettings(enabled=True),
+                ollama_base_url="http://localhost:11434",
+            )
+            result = await agent.review(
+                transcript=sample_transcript,
+                qualitative=sample_qualitative,
+                quantitative=sample_quantitative,
+            )
+
+        mock_factory.assert_called_once()
+        mock_agent.run.assert_called_once()
+        assert result.severity == SeverityLevel.MOD_SEVERE
+        assert result.explanation == "Pydantic AI Explanation"

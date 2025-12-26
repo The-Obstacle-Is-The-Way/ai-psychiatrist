@@ -142,20 +142,20 @@ class TestEmbeddingService:
         return store
 
     @pytest.fixture
-    def mock_settings(self) -> MagicMock:
+    def mock_settings(self) -> EmbeddingSettings:
         """Create mock embedding settings."""
-        settings = MagicMock()
-        settings.dimension = 256
-        settings.top_k_references = 2
-        settings.min_evidence_chars = 8
-        return settings
+        return EmbeddingSettings(
+            dimension=256,
+            top_k_references=2,
+            min_evidence_chars=8,
+        )
 
     @pytest.mark.asyncio
     async def test_embed_text(
         self,
         mock_llm_client: MagicMock,
         mock_reference_store: MagicMock,
-        mock_settings: MagicMock,
+        mock_settings: EmbeddingSettings,
     ) -> None:
         """Should generate embedding for text."""
         service = EmbeddingService(
@@ -174,7 +174,7 @@ class TestEmbeddingService:
         self,
         mock_llm_client: MagicMock,
         mock_reference_store: MagicMock,
-        mock_settings: MagicMock,
+        mock_settings: EmbeddingSettings,
     ) -> None:
         """Should return empty tuple for text below minimum chars."""
         service = EmbeddingService(
@@ -193,7 +193,7 @@ class TestEmbeddingService:
         self,
         mock_llm_client: MagicMock,
         mock_reference_store: MagicMock,
-        mock_settings: MagicMock,
+        mock_settings: EmbeddingSettings,
     ) -> None:
         """Should embed a transcript chunk."""
         service = EmbeddingService(
@@ -217,7 +217,7 @@ class TestEmbeddingService:
         self,
         mock_llm_client: MagicMock,
         mock_reference_store: MagicMock,
-        mock_settings: MagicMock,
+        mock_settings: EmbeddingSettings,
     ) -> None:
         """Should find similar chunks from reference store."""
         service = EmbeddingService(
@@ -240,7 +240,7 @@ class TestEmbeddingService:
         self,
         mock_llm_client: MagicMock,
         mock_reference_store: MagicMock,
-        mock_settings: MagicMock,
+        mock_settings: EmbeddingSettings,
     ) -> None:
         """Should raise when query embedding dimension mismatches config."""
         service = EmbeddingService(
@@ -258,7 +258,7 @@ class TestEmbeddingService:
         self,
         mock_llm_client: MagicMock,
         mock_reference_store: MagicMock,
-        mock_settings: MagicMock,
+        mock_settings: EmbeddingSettings,
     ) -> None:
         """Should return empty list for empty query embedding."""
         service = EmbeddingService(
@@ -276,7 +276,7 @@ class TestEmbeddingService:
         self,
         mock_llm_client: MagicMock,
         mock_reference_store: MagicMock,
-        mock_settings: MagicMock,
+        mock_settings: EmbeddingSettings,
     ) -> None:
         """Should handle empty reference store gracefully."""
         mock_reference_store.get_all_embeddings.return_value = {}
@@ -297,7 +297,7 @@ class TestEmbeddingService:
         self,
         mock_llm_client: MagicMock,
         mock_reference_store: MagicMock,
-        mock_settings: MagicMock,
+        mock_settings: EmbeddingSettings,
     ) -> None:
         """Should build reference bundle for evidence."""
         service = EmbeddingService(
@@ -325,7 +325,7 @@ class TestEmbeddingService:
         self,
         mock_llm_client: MagicMock,
         mock_reference_store: MagicMock,
-        mock_settings: MagicMock,
+        mock_settings: EmbeddingSettings,
     ) -> None:
         """Should skip items with evidence too short."""
         service = EmbeddingService(
@@ -683,13 +683,13 @@ class TestSimilarityTransformation:
         return MockLLMClient()
 
     @pytest.fixture
-    def mock_settings(self) -> MagicMock:
+    def mock_settings(self) -> EmbeddingSettings:
         """Create mock embedding settings."""
-        settings = MagicMock()
-        settings.dimension = 256
-        settings.top_k_references = 2
-        settings.min_evidence_chars = 8
-        return settings
+        return EmbeddingSettings(
+            dimension=256,
+            top_k_references=2,
+            min_evidence_chars=8,
+        )
 
     @pytest.fixture
     def mock_reference_store(self) -> MagicMock:
@@ -716,7 +716,7 @@ class TestSimilarityTransformation:
         self,
         mock_llm_client: MagicMock,
         mock_reference_store: MagicMock,
-        mock_settings: MagicMock,
+        mock_settings: EmbeddingSettings,
     ) -> None:
         """Similarity values should be transformed to [0, 1] range."""
         service = EmbeddingService(
@@ -737,7 +737,7 @@ class TestSimilarityTransformation:
         self,
         mock_llm_client: MagicMock,
         mock_reference_store: MagicMock,
-        mock_settings: MagicMock,
+        mock_settings: EmbeddingSettings,
     ) -> None:
         """Transformed similarity should follow (1 + cos) / 2 formula."""
         service = EmbeddingService(

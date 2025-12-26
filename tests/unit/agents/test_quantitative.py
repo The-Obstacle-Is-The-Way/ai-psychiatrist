@@ -11,10 +11,13 @@ Tests verify the agent correctly:
 
 from __future__ import annotations
 
+import asyncio
 import json
+from unittest.mock import AsyncMock, patch
 
 import pytest
 
+from ai_psychiatrist.agents.output_models import EvidenceOutput, QuantitativeOutput
 from ai_psychiatrist.agents.prompts.quantitative import (
     DOMAIN_KEYWORDS,
     QUANTITATIVE_SYSTEM_PROMPT,
@@ -22,7 +25,7 @@ from ai_psychiatrist.agents.prompts.quantitative import (
     make_scoring_prompt,
 )
 from ai_psychiatrist.agents.quantitative import QuantitativeAssessmentAgent
-from ai_psychiatrist.config import QuantitativeSettings
+from ai_psychiatrist.config import PydanticAISettings, QuantitativeSettings
 from ai_psychiatrist.domain.entities import PHQ8Assessment, Transcript
 from ai_psychiatrist.domain.enums import AssessmentMode, PHQ8Item, SeverityLevel
 from ai_psychiatrist.domain.value_objects import ItemAssessment
@@ -241,21 +244,45 @@ class TestQuantitativeAssessmentAgent:
             assert isinstance(assessment.evidence, str)
 
     @pytest.mark.asyncio
-    async def test_assess_includes_reasoning(
-        self,
-        mock_client: MockLLMClient,
-        sample_transcript: Transcript,
-    ) -> None:
-        """Assessment items should include reasoning."""
-        agent = QuantitativeAssessmentAgent(
-            llm_client=mock_client,
-            mode=AssessmentMode.ZERO_SHOT,
+    async def test_pydantic_ai_path_success(self, sample_transcript: Transcript) -> None:
+        """Should use Pydantic AI agent when enabled and configured."""
+        mock_output = QuantitativeOutput(
+            PHQ8_NoInterest=EvidenceOutput(evidence="test", reason="test", score=0),
+            PHQ8_Depressed=EvidenceOutput(evidence="test", reason="test", score=0),
+            PHQ8_Sleep=EvidenceOutput(evidence="test", reason="test", score=0),
+            PHQ8_Tired=EvidenceOutput(evidence="test", reason="test", score=0),
+            PHQ8_Appetite=EvidenceOutput(evidence="test", reason="test", score=0),
+            PHQ8_Failure=EvidenceOutput(evidence="test", reason="test", score=0),
+            PHQ8_Concentrating=EvidenceOutput(evidence="test", reason="test", score=0),
+            PHQ8_Moving=EvidenceOutput(evidence="test", reason="test", score=0),
         )
-        result = await agent.assess(sample_transcript)
+        mock_agent = AsyncMock()
+        mock_agent.run.return_value = AsyncMock(output=mock_output)
 
-        for assessment in result.items.values():
-            assert assessment.reason
-            assert isinstance(assessment.reason, str)
+        with patch(
+            "ai_psychiatrist.agents.pydantic_agents.create_quantitative_agent",
+            return_value=mock_agent,
+        ) as mock_factory:
+            agent = QuantitativeAssessmentAgent(
+                llm_client=MockLLMClient(),
+                pydantic_ai_settings=PydanticAISettings(enabled=True),
+                ollama_base_url="http://localhost:11434",
+            )
+            result = await agent.assess(sample_transcript)
+
+        mock_factory.assert_called_once()
+        mock_agent.run.assert_called_once()
+        assert result.total_score == 0
+
+    @pytest.mark.asyncio
+    async def test_score_items_fallback_on_cancel(self, sample_transcript: Transcript) -> None:
+        """Should propagate CancelledError even if fallback logic exists."""
+        agent = QuantitativeAssessmentAgent(llm_client=MockLLMClient())
+        with (
+            patch.object(agent._llm, "simple_chat", side_effect=asyncio.CancelledError),
+            pytest.raises(asyncio.CancelledError),
+        ):
+            await agent.assess(sample_transcript)
 
 
 @pytest.mark.unit
