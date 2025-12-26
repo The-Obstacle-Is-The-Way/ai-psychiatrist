@@ -59,10 +59,15 @@ AI Psychiatrist is an engineering-focused, reproducible implementation of a rese
 | Document | Description |
 |----------|-------------|
 | [Future Architecture](concepts/future-architecture.md) | LangGraph integration roadmap (Pydantic AI is already integrated) |
-| [Spec 19: Test Suite Mock Audit](specs/19-test-suite-mock-audit.md) | Comprehensive audit of test suite mocks and assertions |
-| [Spec 18: Qualitative Agent Robustness](specs/18-qualitative-agent-robustness.md) | Next-step robustness work (qualitative agent) |
-| [Spec 17: Test Suite Marker Consistency](specs/17-test-suite-marker-consistency.md) | Make `make test-unit` / `make test-integration` match directory structure |
-| [Keyword Fallback Improvements](specs/XX-keyword-fallback-improvements.md) | Deferred — intentionally not implementing (see spec) |
+| [Spec 20: Keyword Fallback Improvements](specs/20-keyword-fallback-improvements.md) | Deferred — intentionally not implementing (see spec) |
+
+### Archived Specs (Implemented)
+
+| Document | Description |
+|----------|-------------|
+| [Spec 19: Test Suite Mock Audit](archive/specs/19-test-suite-mock-audit.md) | Test suite mock hygiene and contract coverage |
+| [Spec 18: Qualitative Agent Robustness](archive/specs/18-qualitative-agent-robustness.md) | Qualitative agent Pydantic AI hardening |
+| [Spec 17: Test Suite Marker Consistency](archive/specs/17-test-suite-marker-consistency.md) | Auto-apply test markers from directory structure |
 
 ---
 

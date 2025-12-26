@@ -1,5 +1,7 @@
 # Hardcoded Technical Debt
 
+> **ARCHIVED**: retained for provenance; all items are resolved as of 2025-12-26.
+
 This file tracks hardcoded values and implementation discrepancies identified during audits.
 
 ## Infrastructure
@@ -19,7 +21,7 @@ This file tracks hardcoded values and implementation discrepancies identified du
 3.  **Client Default Model Discrepancy** (RESOLVED)
     *   **Location:** `src/ai_psychiatrist/infrastructure/llm/huggingface.py` vs `ollama.py`
     *   **Issue:** `HuggingFaceClient.simple_chat` defaults to `self._model_settings.qualitative_model`. `OllamaClient` defaults to the string literal `"gemma3:27b"`.
-    *   **Resolution:** Both clients now use `get_model_name()` for model resolution, ensuring consistent config-driven defaults across all LLM backends.
+    *   **Resolution:** Both clients now resolve default models from `ModelSettings` (HuggingFace via `self._model_settings.*`; Ollama via `get_model_name()`), ensuring consistent config-driven defaults across all LLM backends.
 
 ### API Server
 

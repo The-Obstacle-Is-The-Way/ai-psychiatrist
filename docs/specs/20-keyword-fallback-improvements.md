@@ -1,4 +1,4 @@
-# Keyword Fallback Improvements (Deferred)
+# Spec 20: Keyword Fallback Improvements (Deferred)
 
 > **STATUS: DEFERRED — LOW DESIRABILITY**
 >

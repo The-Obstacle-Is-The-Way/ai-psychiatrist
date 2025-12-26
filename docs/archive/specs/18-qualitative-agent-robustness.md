@@ -1,6 +1,6 @@
 # Spec 18: Qualitative Agent Robustness
 
-> **STATUS**: ✅ IMPLEMENTED (Phases 1-2)
+> **STATUS**: ✅ IMPLEMENTED (Phases 1-2) — ARCHIVED
 >
 > **What was implemented**: `QualitativeAssessmentAgent` now has the same Pydantic AI TextOutput
 > validation + retry path as the other pipeline agents. Phase 3 (optional quote grounding) remains

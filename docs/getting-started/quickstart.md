@@ -159,8 +159,8 @@ curl -X POST http://localhost:8000/full_pipeline \
 }
 ```
 
-> **Note:** When using `transcript_text`, the system assigns a placeholder `participant_id` of 999999.
-> Internally this is represented as `999_999` (`server.py` constant `AD_HOC_PARTICIPANT_ID`).
+> **Note:** When using `transcript_text`, the system assigns a placeholder `participant_id` of `999999`.
+> This is configurable via `ServerSettings.ad_hoc_participant_id` (`SERVER_AD_HOC_PARTICIPANT_ID`) and defaults to `999_999`.
 
 ---
 

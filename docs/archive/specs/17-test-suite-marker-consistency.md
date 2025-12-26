@@ -1,6 +1,6 @@
 # Spec 17: Test Suite Marker Consistency
 
-> **STATUS**: ✅ IMPLEMENTED
+> **STATUS**: ✅ IMPLEMENTED (ARCHIVED)
 >
 > **GitHub Issue**: [#58](https://github.com/The-Obstacle-Is-The-Way/ai-psychiatrist/issues/58)
 >
