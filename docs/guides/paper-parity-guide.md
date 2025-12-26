@@ -124,8 +124,8 @@ QUANTITATIVE_TRACK_NA_REASONS=true
 ## Reproduction Steps
 
 ```bash
-# 1. Create paper-style 58/43/41 split
-uv run python scripts/create_paper_split.py --seed 42
+# 1. Create paper ground truth 58/43/41 split
+uv run python scripts/create_paper_split.py --verify
 
 # 2. Generate embeddings for training set (paper-parity artifact name)
 uv run python scripts/generate_embeddings.py --split paper-train --backend ollama --output data/embeddings/paper_reference_embeddings.npz
@@ -151,9 +151,10 @@ See [Agent Sampling Registry](../reference/agent-sampling-registry.md) for citat
 
 Ollama's `gemma3:27b` uses GGUF quantization, which may differ from paper's weights.
 
-### GAP-003: Split Membership
+### GAP-003: Split Membership (Fixed)
 
-The paper doesn't publish exact participant IDs. Our split uses the same algorithm with a fixed seed, but membership may differ.
+The repo now uses the paper’s **ground truth** split membership reverse-engineered from the authors’ published output files.
+See `docs/data/paper-split-registry.md` and `docs/data/paper-split-methodology.md`.
 
 ---
 

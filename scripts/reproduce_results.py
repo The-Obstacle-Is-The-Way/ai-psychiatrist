@@ -670,13 +670,13 @@ async def main_async(args: argparse.Namespace) -> int:
 
     # Override embedding backend if specified
     if args.embedding_backend:
-        settings.embedding_backend.backend = EmbeddingBackend(args.embedding_backend)
+        settings.embedding_config.backend = EmbeddingBackend(args.embedding_backend)
 
     data_settings = settings.data
     model_settings = settings.model
     ollama_settings = settings.ollama
     embedding_settings = settings.embedding
-    embedding_backend_settings = settings.embedding_backend
+    embedding_backend_settings = settings.embedding_config
 
     print_run_configuration(settings=settings, split=args.split)
     print(f"  Embedding Backend: {embedding_backend_settings.backend.value}")

@@ -1,6 +1,6 @@
 # AI Psychiatrist Model Registry
 
-Last Updated: 2025-12-24
+Last Updated: 2025-12-25
 Purpose: Paper-aligned, reproducible model configuration for this repo.
 
 ---
@@ -18,7 +18,7 @@ Chat and embeddings can be configured separately via:
 | **High Quality (Full HF)** | HuggingFace | HuggingFace | Best | 32GB+ RAM, CUDA/MPS | Best possible MAE |
 | **Development** | Ollama | Ollama | Fast | Any | Quick iteration |
 
-**Pending**: Graceful fallback from HuggingFace → Ollama ([Issue #42](https://github.com/The-Obstacle-Is-The-Way/ai-psychiatrist/issues/42))
+Note: The codebase intentionally fails fast when a configured backend can’t run; there is no automatic fallback (see `model-wiring.md`).
 
 ---
 
@@ -140,6 +140,15 @@ embeddings = model.encode(["Your text here"])
 ---
 
 ## Configuration (.env)
+
+### Few-shot Embeddings Artifact Selection
+
+Few-shot retrieval loads a precomputed artifact from `{DATA_BASE_DIR}/embeddings/`:
+
+- `EMBEDDING_EMBEDDINGS_FILE` selects `{name}.npz` + `{name}.json` (+ optional `{name}.meta.json`).
+- `DATA_EMBEDDINGS_PATH` overrides with a full `.npz` path.
+
+If `{name}.meta.json` exists (all newly generated artifacts have it), the server validates backend/model/dimension/chunking against current config and fails fast on mismatch.
 
 ### Default (Recommended)
 

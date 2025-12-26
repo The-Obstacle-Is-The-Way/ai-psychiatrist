@@ -3,7 +3,7 @@
 > **Status**: IMPLEMENTED
 > **Author**: Claude Code
 > **Date**: 2024-12-24
-> **Related**: MODEL_WIRING.md (design target), GH-46 (sampling params)
+> **Related**: model-wiring.md (design target), GH-46 (sampling params)
 
 ---
 
@@ -137,7 +137,8 @@ embeddings_path: Path = Field(
 ```python
 class Settings(BaseSettings):
     # ... existing ...
-    embedding_backend: EmbeddingBackendSettings = Field(default_factory=EmbeddingBackendSettings)
+    # Note: named `embedding_config` to avoid env var collision with `EMBEDDING_BACKEND`.
+    embedding_config: EmbeddingBackendSettings = Field(default_factory=EmbeddingBackendSettings)
 ```
 
 ---
@@ -162,7 +163,7 @@ def create_embedding_client(settings: Settings) -> EmbeddingClient:
     Separate from create_llm_client() to allow different backends
     for chat vs embeddings.
     """
-    backend = settings.embedding_backend.backend
+    backend = settings.embedding_config.backend
 
     if backend == EmbeddingBackend.OLLAMA:
         return OllamaClient(settings.ollama)
@@ -223,8 +224,17 @@ async def lifespan(app: FastAPI) -> AsyncIterator[None]:
 #### 4.1 Add Backend Selection
 
 ```python
+# scripts/generate_embeddings.py
 parser.add_argument(
     "--backend",
+    choices=["ollama", "huggingface"],
+    default=None,  # Use EMBEDDING_BACKEND from env
+    help="Override embedding backend"
+)
+
+# scripts/reproduce_results.py
+parser.add_argument(
+    "--embedding-backend",
     choices=["ollama", "huggingface"],
     default=None,  # Use EMBEDDING_BACKEND from env
     help="Override embedding backend"
@@ -258,6 +268,7 @@ finally:
     "dimension": 4096,
     "chunk_size": 8,
     "chunk_step": 2,
+    "min_evidence_chars": 8,
     "split": "paper-train",
     "participant_count": 58,
     "generated_at": "2024-12-24T10:00:00Z",
@@ -322,7 +333,7 @@ def _load_embeddings(self) -> None:
 
 def _validate_metadata(self, metadata: dict) -> None:
     """Validate embedding artifact matches current config."""
-    # Checks backend, dimension, chunk_size, chunk_step
+    # Checks backend, model, dimension, chunk_size, chunk_step, min_evidence_chars, split hash
     # Raises EmbeddingArtifactMismatchError on failure
 ```
 

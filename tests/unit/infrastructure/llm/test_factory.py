@@ -44,13 +44,13 @@ class TestCreateEmbeddingClient:
 
     def test_create_ollama_client(self, settings: Settings) -> None:
         """Should create OllamaClient when backend is Ollama."""
-        settings.embedding_backend.backend = EmbeddingBackend.OLLAMA
+        settings.embedding_config.backend = EmbeddingBackend.OLLAMA
         client = create_embedding_client(settings)
         assert isinstance(client, OllamaClient)
 
     def test_create_hf_client(self, settings: Settings) -> None:
         """Should create HuggingFaceClient when backend is HF."""
-        settings.embedding_backend.backend = EmbeddingBackend.HUGGINGFACE
+        settings.embedding_config.backend = EmbeddingBackend.HUGGINGFACE
         # Mock HF import to verify it is used
         with patch("ai_psychiatrist.infrastructure.llm.huggingface.HuggingFaceClient") as MockHF:
             client = create_embedding_client(settings)
@@ -63,7 +63,7 @@ class TestCreateEmbeddingClient:
 
     def test_lazy_import_failure(self, settings: Settings) -> None:
         """Should raise ImportError with helpful message if HF deps missing."""
-        settings.embedding_backend.backend = EmbeddingBackend.HUGGINGFACE
+        settings.embedding_config.backend = EmbeddingBackend.HUGGINGFACE
 
         # Simulate ImportError when importing HuggingFaceClient
         with patch.dict("sys.modules", {"ai_psychiatrist.infrastructure.llm.huggingface": None}):
@@ -79,6 +79,6 @@ class TestCreateEmbeddingClient:
     def test_unknown_backend(self, settings: Settings) -> None:
         """Should raise ValueError for unknown backend."""
         # Using a mock enum value to simulate unknown
-        settings.embedding_backend.backend = "unknown"  # type: ignore
+        settings.embedding_config.backend = "unknown"  # type: ignore
         with pytest.raises(ValueError, match="Unknown embedding backend"):
             create_embedding_client(settings)

@@ -173,7 +173,7 @@ Zero-shot mode uses NO reference embeddings - the model scores symptoms from tra
   ```bash
   ls data/paper_splits/
   # If empty or missing:
-  uv run python scripts/create_paper_split.py --seed 42
+  uv run python scripts/create_paper_split.py --verify
   ```
 
 ### 6.2 Verify Split Sizes

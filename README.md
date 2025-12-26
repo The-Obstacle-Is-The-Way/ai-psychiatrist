@@ -175,6 +175,8 @@ EMBEDDING_CHUNK_SIZE=8
 EMBEDDING_TOP_K_REFERENCES=2
 
 # Reference embeddings selection (NPZ + JSON sidecar)
+# `scripts/generate_embeddings.py` defaults to a namespaced filename (recommended).
+# Example (HF paper-train): EMBEDDING_EMBEDDINGS_FILE=huggingface_qwen3_8b_paper_train
 EMBEDDING_EMBEDDINGS_FILE=paper_reference_embeddings
 # DATA_EMBEDDINGS_PATH=/absolute/or/relative/path/to/artifact.npz  # full-path override
 

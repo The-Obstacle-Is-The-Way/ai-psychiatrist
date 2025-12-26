@@ -13,18 +13,20 @@ This format replaces pickle for security (no arbitrary code execution).
 
 from __future__ import annotations
 
+import hashlib
 import json
 from typing import TYPE_CHECKING, Any
 
 import numpy as np
 import pandas as pd
 
-from ai_psychiatrist.config import resolve_reference_embeddings_path
+from ai_psychiatrist.config import LLMBackend, resolve_reference_embeddings_path
 from ai_psychiatrist.domain.enums import PHQ8Item
 from ai_psychiatrist.domain.exceptions import (
     EmbeddingArtifactMismatchError,
     EmbeddingDimensionMismatchError,
 )
+from ai_psychiatrist.infrastructure.llm.model_aliases import resolve_model_name
 from ai_psychiatrist.infrastructure.logging import get_logger
 
 if TYPE_CHECKING:
@@ -34,6 +36,7 @@ if TYPE_CHECKING:
         DataSettings,
         EmbeddingBackendSettings,
         EmbeddingSettings,
+        ModelSettings,
     )
 
 logger = get_logger(__name__)
@@ -65,6 +68,7 @@ class ReferenceStore:
         data_settings: DataSettings,
         embedding_settings: EmbeddingSettings,
         embedding_backend_settings: EmbeddingBackendSettings | None = None,
+        model_settings: ModelSettings | None = None,
     ) -> None:
         """Initialize reference store.
 
@@ -72,7 +76,9 @@ class ReferenceStore:
             data_settings: Data path configuration.
             embedding_settings: Embedding configuration.
             embedding_backend_settings: Embedding backend configuration (optional).
+            model_settings: Model configuration (optional).
         """
+        self._data_settings = data_settings
         self._embeddings_path = resolve_reference_embeddings_path(data_settings, embedding_settings)
         self._train_csv = data_settings.train_csv
         self._dev_csv = data_settings.dev_csv
@@ -82,8 +88,14 @@ class ReferenceStore:
         if embedding_backend_settings is None:
             from ai_psychiatrist.config import get_settings  # noqa: PLC0415
 
-            embedding_backend_settings = get_settings().embedding_backend
+            embedding_backend_settings = get_settings().embedding_config
         self._embedding_backend = embedding_backend_settings
+
+        if model_settings is None:
+            from ai_psychiatrist.config import get_settings  # noqa: PLC0415
+
+            model_settings = get_settings().model
+        self._model_settings = model_settings
 
         # Lazy-loaded data
         self._embeddings: dict[int, list[tuple[str, list[float]]]] | None = None
@@ -93,7 +105,21 @@ class ReferenceStore:
         """Get path to the JSON sidecar file containing text chunks."""
         return self._embeddings_path.with_suffix(".json")
 
-    def _validate_metadata(self, metadata: dict[str, Any]) -> None:
+    def _calculate_split_hash(self, split: str) -> str | None:
+        """Calculate hash of the split CSV referenced by an embeddings artifact (if available)."""
+        if split == "avec-train":
+            csv_path = self._data_settings.train_csv
+        elif split == "paper-train":
+            csv_path = self._data_settings.base_dir / "paper_splits" / "paper_split_train.csv"
+        else:
+            return None
+
+        if not csv_path.exists():
+            return None
+
+        return hashlib.sha256(csv_path.read_bytes()).hexdigest()[:12]
+
+    def _validate_metadata(self, metadata: dict[str, Any]) -> None:  # noqa: PLR0912, PLR0915
         """Validate embedding artifact matches current config."""
         errors: list[str] = []
 
@@ -106,6 +132,18 @@ class ReferenceStore:
             errors.append(
                 f"backend mismatch: artifact='{stored_backend}', config='{current_backend}'"
             )
+
+        # Model check (compare resolved backend-specific ID)
+        stored_model = metadata.get("model")
+        if stored_model is None:
+            logger.debug("Metadata missing 'model' field, skipping model validation")
+        else:
+            current_model = self._model_settings.embedding_model
+            resolved_model = resolve_model_name(current_model, LLMBackend(current_backend))
+            if stored_model != resolved_model:
+                errors.append(
+                    f"model mismatch: artifact='{stored_model}', config='{resolved_model}'"
+                )
 
         # Dimension check
         stored_dim = metadata.get("dimension")
@@ -129,6 +167,44 @@ class ReferenceStore:
             logger.debug("Metadata missing 'chunk_step' field, skipping chunk_step validation")
         elif stored_step != current_step:
             errors.append(f"chunk_step mismatch: artifact={stored_step}, config={current_step}")
+
+        stored_min_chars = metadata.get("min_evidence_chars")
+        current_min_chars = self._embedding_settings.min_evidence_chars
+        if stored_min_chars is None:
+            logger.debug(
+                "Metadata missing 'min_evidence_chars' field, "
+                "skipping min_evidence_chars validation"
+            )
+        elif stored_min_chars != current_min_chars:
+            errors.append(
+                "min_evidence_chars mismatch: "
+                f"artifact={stored_min_chars}, config={current_min_chars}"
+            )
+
+        stored_split = metadata.get("split")
+        stored_hash = metadata.get("split_csv_hash")
+        if stored_split is None or stored_hash is None:
+            logger.debug(
+                "Metadata missing 'split' and/or 'split_csv_hash', skipping split hash validation"
+            )
+        elif isinstance(stored_hash, str) and stored_hash in {"missing", "unknown"}:
+            logger.debug(
+                "Metadata split_csv_hash is not a content hash; skipping split hash validation",
+                split=stored_split,
+                split_csv_hash=stored_hash,
+            )
+        else:
+            current_hash = self._calculate_split_hash(str(stored_split))
+            if current_hash is None:
+                logger.debug(
+                    "Split CSV not available; skipping split hash validation",
+                    split=stored_split,
+                )
+            elif stored_hash != current_hash:
+                errors.append(
+                    "split_csv_hash mismatch: "
+                    f"artifact='{stored_hash}', current='{current_hash}' (split='{stored_split}')"
+                )
 
         if errors:
             raise EmbeddingArtifactMismatchError(

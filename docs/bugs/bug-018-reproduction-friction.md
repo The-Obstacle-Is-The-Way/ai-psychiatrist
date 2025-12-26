@@ -65,12 +65,12 @@ The handwave `4.02 ÷ 8 ≈ 0.50` is **not** equivalent to the paper's methodolo
 2. Coverage differs (paper reports % of predictions made)
 3. Aggregation differs (paper has multiple views: weighted, by-item, by-subject)
 
-### Action (Completed: methodology parity; results still diverge)
+### Action (Workflow exists; ground truth splits required)
 
-✅ Paper-text-parity reproduction was re-run end-to-end. Commands executed:
+✅ Paper-text-parity reproduction workflow exists end-to-end. It must be run using the paper’s **ground truth** split membership (not the legacy seeded algorithmic split).
 ```bash
 # Paper-text-parity workflow (paper-style split + paper embeddings + evaluation on paper test)
-uv run python scripts/create_paper_split.py --seed 42
+uv run python scripts/create_paper_split.py --verify
 uv run python scripts/generate_embeddings.py --split paper-train
 uv run python scripts/reproduce_results.py --split paper --few-shot-only
 
@@ -429,7 +429,7 @@ The file `data/outputs/reproduction_results_20251222_040100.json` contains resul
 
 Run paper-text-parity evaluation:
 ```bash
-uv run python scripts/create_paper_split.py --seed 42
+uv run python scripts/create_paper_split.py --verify
 uv run python scripts/generate_embeddings.py --split paper-train
 uv run python scripts/reproduce_results.py --split paper --few-shot-only
 ```
@@ -541,7 +541,7 @@ keywords are in `src/ai_psychiatrist/resources/phq8_keywords.yaml`.
 
 1. **Run paper-text-parity reproduction**:
    ```bash
-   uv run python scripts/create_paper_split.py --seed 42
+   uv run python scripts/create_paper_split.py --verify
    uv run python scripts/generate_embeddings.py --split paper-train
    uv run python scripts/reproduce_results.py --split paper --few-shot-only
    ```

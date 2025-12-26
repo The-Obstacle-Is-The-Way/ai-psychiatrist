@@ -8,6 +8,7 @@ from pathlib import Path
 from typing import Any, Protocol, cast
 
 import pandas as pd
+import pytest
 
 
 class CreatePaperSplitModule(Protocol):
@@ -16,6 +17,7 @@ class CreatePaperSplitModule(Protocol):
     load_combined_data: Any
     stratified_split: Any
     save_splits: Any
+    verify_splits: Any
 
 
 def _load_create_paper_split_module() -> CreatePaperSplitModule:
@@ -147,8 +149,8 @@ class TestCreatePaperSplit:
         assert len({1001, 1002} & set(val_ids)) == 1
         assert len({1001, 1002} & set(test_ids)) == 1
 
-    def test_save_splits_writes_csvs_and_metadata(self, tmp_path: Path) -> None:
-        """save_splits writes 3 CSV files and metadata JSON."""
+    def test_save_splits_writes_csvs_and_metadata_algorithmic(self, tmp_path: Path) -> None:
+        """save_splits writes 3 CSV files and metadata JSON for algorithmic mode."""
         module = _load_create_paper_split_module()
 
         df = pd.DataFrame(
@@ -172,7 +174,7 @@ class TestCreatePaperSplit:
         ].sum(axis=1)
 
         out_dir = tmp_path / "paper_splits"
-        module.save_splits(out_dir, df, [1], [2], [3], seed=123)
+        module.save_splits(out_dir, df, [1], [2], [3], seed=123, mode="algorithmic")
 
         assert (out_dir / "paper_split_train.csv").exists()
         assert (out_dir / "paper_split_val.csv").exists()
@@ -181,3 +183,60 @@ class TestCreatePaperSplit:
 
         metadata = (out_dir / "paper_split_metadata.json").read_text()
         assert '"seed": 123' in metadata
+        assert "stratified split" in metadata
+
+    def test_save_splits_writes_ground_truth_metadata(self, tmp_path: Path) -> None:
+        """save_splits writes correct metadata for ground-truth mode."""
+        module = _load_create_paper_split_module()
+        df = pd.DataFrame([_minimal_row(participant_id=1, gender=0, items=[0] * 8)])
+        out_dir = tmp_path / "paper_splits"
+
+        module.save_splits(out_dir, df, [1], [], [], seed=None, mode="ground-truth")
+
+        metadata = (out_dir / "paper_split_metadata.json").read_text()
+        assert "Paper ground truth splits" in metadata
+        assert "paper-split-registry.md" in metadata
+        assert '"seed":' not in metadata
+
+    def test_verify_splits_passes_valid_splits(self, tmp_path: Path) -> None:
+        """verify_splits passes when sizes are correct and participants exist."""
+        module = _load_create_paper_split_module()
+
+        # Create dummy transcript directories
+        transcripts_dir = tmp_path / "transcripts"
+        transcripts_dir.mkdir()
+
+        # Create exactly 142 participants
+        train_ids = list(range(1, 59))
+        val_ids = list(range(59, 102))
+        test_ids = list(range(102, 143))
+
+        for pid in train_ids + val_ids + test_ids:
+            (transcripts_dir / f"{pid}_P").mkdir()
+
+        # Should not raise exception
+        module.verify_splits(tmp_path, train_ids, val_ids, test_ids)
+
+    def test_verify_splits_fails_invalid_sizes(self, tmp_path: Path) -> None:
+        """verify_splits raises SystemExit on wrong split sizes."""
+        module = _load_create_paper_split_module()
+
+        # Wrong sizes
+        train_ids = [1]
+        val_ids = [2]
+        test_ids = [3]
+
+        with pytest.raises(SystemExit):
+            module.verify_splits(tmp_path, train_ids, val_ids, test_ids)
+
+    def test_verify_splits_fails_overlaps(self, tmp_path: Path) -> None:
+        """verify_splits raises SystemExit on overlaps."""
+        module = _load_create_paper_split_module()
+
+        # Create correct counts but with overlap
+        train_ids = list(range(1, 59))
+        val_ids = list(range(1, 44))  # Overlap with train
+        test_ids = list(range(100, 141))
+
+        with pytest.raises(SystemExit):
+            module.verify_splits(tmp_path, train_ids, val_ids, test_ids)

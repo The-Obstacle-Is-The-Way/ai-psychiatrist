@@ -86,10 +86,12 @@ Few-shot mode uses reference embeddings to retrieve similar transcript chunks as
   # Should show: MODEL_EMBEDDING_MODEL=qwen3-embedding:8b
   ```
 
-- [ ] **Verify embedding backend is paper-parity (Ollama)**:
+- [ ] **Verify embedding backend** (HF recommended, Ollama fallback):
   ```bash
   grep "EMBEDDING_BACKEND" .env
-  # MUST show: EMBEDDING_BACKEND=ollama
+  # Should show either:
+  #   EMBEDDING_BACKEND=huggingface   (requires `make dev-hf`)
+  #   EMBEDDING_BACKEND=ollama        (no HF deps; paper-parity)
   ```
 
 ### 2.3 Sampling Parameters
@@ -148,12 +150,13 @@ If only some chunks are mismatched, retrieval quality degrades. Always validate 
   # If embeddings exist, check their dimension
   uv run python -c "
   import numpy as np
-  from pathlib import Path
-  p = Path('data/embeddings/paper_reference_embeddings.npz')
+  from ai_psychiatrist.config import get_settings, resolve_reference_embeddings_path
+  s = get_settings()
+  p = resolve_reference_embeddings_path(s.data, s.embedding)
   if p.exists():
       data = np.load(str(p))
       # NPZ uses per-participant keys: emb_302, emb_304, etc.
-      dim = next(iter(data.values())).shape[1]
+      dim = data[data.files[0]].shape[1]
       print(f'Embedding dimension: {dim}')
       print(f'Config expects: 4096')
       assert dim == 4096, 'DIMENSION MISMATCH!'
@@ -178,7 +181,16 @@ If only some chunks are mismatched, retrieval quality degrades. Always validate 
 
   If missing, generate (takes ~65 min for 58 participants):
   ```bash
-  uv run python scripts/generate_embeddings.py --split paper-train --backend ollama --output data/embeddings/paper_reference_embeddings.npz
+  # Uses EMBEDDING_BACKEND from .env and writes a namespaced artifact under data/embeddings/
+  uv run python scripts/generate_embeddings.py --split paper-train
+
+  # Then point few-shot retrieval at the generated artifact:
+  #   EMBEDDING_EMBEDDINGS_FILE=<output filename without .npz>
+  # Example (HF backend):
+  #   EMBEDDING_EMBEDDINGS_FILE=huggingface_qwen3_8b_paper_train
+
+  # Optional legacy filename (overwrites if it already exists):
+  # uv run python scripts/generate_embeddings.py --split paper-train --output data/embeddings/paper_reference_embeddings.npz
   ```
 
 ### 4.2 Verify Embedding Integrity
@@ -188,17 +200,21 @@ If only some chunks are mismatched, retrieval quality degrades. Always validate 
   uv run python -c "
   import numpy as np
   from pathlib import Path
+  from ai_psychiatrist.config import get_settings, resolve_reference_embeddings_path
 
-  # Try paper embeddings first, then AVEC
-  for name in ['paper_reference_embeddings.npz', 'reference_embeddings.npz']:
-      p = Path('data/embeddings') / name
+  s = get_settings()
+  candidates = [
+      resolve_reference_embeddings_path(s.data, s.embedding),
+      Path('data/embeddings/reference_embeddings.npz'),
+  ]
+  for p in candidates:
       if p.exists():
           data = np.load(str(p))
           # NPZ uses per-participant keys: emb_302, emb_304, etc.
           pids = [int(k.split('_')[1]) for k in data.keys()]
           total_chunks = sum(data[k].shape[0] for k in data.keys())
-          dim = next(iter(data.values())).shape[1]
-          print(f'File: {name}')
+          dim = data[data.files[0]].shape[1]
+          print(f'File: {p.name}')
           print(f'  Participants: {len(pids)}')
           print(f'  Total chunks: {total_chunks}')
           print(f'  Dimension: {dim}')
@@ -211,7 +227,7 @@ If only some chunks are mismatched, retrieval quality degrades. Always validate 
 
   Expected output for paper-train:
   ```text
-  File: paper_reference_embeddings.npz
+  File: <your configured embeddings artifact>
     Participants: 58
     Total chunks: ~7000
     Dimension: 4096
@@ -322,7 +338,7 @@ If only some chunks are mismatched, retrieval quality degrades. Always validate 
   ```bash
   ls data/paper_splits/
   # If empty or missing:
-  uv run python scripts/create_paper_split.py --seed 42
+  uv run python scripts/create_paper_split.py --verify
   ```
 
 ### 8.2 Verify Split Sizes
@@ -344,11 +360,16 @@ If only some chunks are mismatched, retrieval quality degrades. Always validate 
   uv run python -c "
   import numpy as np
   import csv
+  from ai_psychiatrist.config import get_settings, resolve_reference_embeddings_path
+
+  s = get_settings()
+  npz_path = resolve_reference_embeddings_path(s.data, s.embedding)
 
   # Load embedding participant IDs from NPZ keys (emb_302, emb_304, etc.)
-  emb = np.load('data/embeddings/paper_reference_embeddings.npz')
+  emb = np.load(str(npz_path))
   emb_pids = {int(k.split('_')[1]) for k in emb.keys()}
   print(f'Embedding participants: {len(emb_pids)}')
+  print(f'Embeddings file: {npz_path}')
 
   # Load paper train split (column is Participant_ID)
   with open('data/paper_splits/paper_split_train.csv') as f:
@@ -544,11 +565,11 @@ If ALL items are checked:
 
 ```bash
 # 1. Setup (first time only)
-make dev
+make dev        # or: make dev-hf (if using EMBEDDING_BACKEND=huggingface)
 cp .env.example .env
 
-# 2. Create paper-style split
-uv run python scripts/create_paper_split.py --seed 42
+# 2. Create paper ground truth split
+uv run python scripts/create_paper_split.py --verify
 
 # 3. Generate embeddings from paper-train (takes ~65 min)
 uv run python scripts/generate_embeddings.py --split paper-train
