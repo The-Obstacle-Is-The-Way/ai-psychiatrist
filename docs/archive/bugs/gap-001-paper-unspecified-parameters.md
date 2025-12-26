@@ -1,14 +1,33 @@
 # GAP-001: Paper Unspecified Parameters
 
 **Date**: 2025-12-22
-**Status**: DOCUMENTED - Implementations use evidence-based clinical AI defaults
+**Status**: ✅ RESOLVED / ARCHIVED
 **Severity**: MEDIUM - Affects exact reproducibility but not system validity
-**Updated**: 2025-12-24 - Switched to evidence-based temp=0.0, removed top_k/top_p
+**Resolved**: 2025-12-26 - All gaps now documented in dedicated reference docs
 **Tracked by**:
 - [GitHub Issue #46](https://github.com/The-Obstacle-Is-The-Way/ai-psychiatrist/issues/46) (sampling parameters)
 - [GitHub Issue #47](https://github.com/The-Obstacle-Is-The-Way/ai-psychiatrist/issues/47) (model quantization)
 
-This document captures ALL parameters NOT explicitly specified in the paper, along with our implementation decisions and rationales.
+---
+
+## Resolution
+
+This investigation is complete. All gaps have been resolved and documented in dedicated SSOT docs:
+
+| Gap | Resolution | SSOT Location |
+|-----|------------|---------------|
+| GAP-001a (Data Split) | ✅ Reverse-engineered exact IDs from authors' output files | [`docs/data/paper-split-registry.md`](../data/paper-split-registry.md) |
+| GAP-001b (Temperature) | ✅ Evidence-based: temp=0.0 for clinical AI | [`docs/reference/agent-sampling-registry.md`](../reference/agent-sampling-registry.md) |
+| GAP-001c (top_k/top_p) | ✅ Don't set (irrelevant at temp=0; best practice) | [`docs/reference/agent-sampling-registry.md`](../reference/agent-sampling-registry.md) |
+| GAP-001d (Hardware) | ✅ Documented Q4_K_M vs BF16 quantization | [`docs/models/model-registry.md`](../models/model-registry.md) |
+
+**The content below is retained for historical context.**
+
+---
+
+## Original Investigation (Historical)
+
+This document captured ALL parameters NOT explicitly specified in the paper, along with our implementation decisions and rationales.
 
 ---
 
