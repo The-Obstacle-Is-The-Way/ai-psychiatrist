@@ -1,16 +1,24 @@
 # Keyword Fallback Improvements (Deferred)
 
-> **STATUS: DEFERRED — LOW PRIORITY**
+> **STATUS: DEFERRED — LOW DESIRABILITY**
 >
-> **Why this is deferred**: The keyword fallback system is **OFF by default**
-> (`QUANTITATIVE_ENABLE_KEYWORD_BACKFILL=false`) because the paper methodology
-> doesn't describe it. This spec improves a feature that most users won't enable.
+> **Why this is deferred**: Improving keyword fallback would **negate the research
+> question** this codebase exists to answer.
 >
-> **Current state**: The collision-proofed YAML (`phq8_keywords.yaml`) already
-> mitigates most substring matching issues. Word-boundary regex and negation
-> detection are precision refinements for an optional fallback mechanism.
+> The purpose of this codebase is to evaluate **pure LLM semantic understanding**
+> of clinical interviews for depression assessment. Keyword fallback is **rule-based
+> pattern matching** — the opposite of semantic understanding. Improving it would
+> measure "LLM + better heuristics" rather than "LLM capability."
 >
-> **Tracked by**: [GitHub Issue #31](https://github.com/The-Obstacle-Is-The-Way/ai-psychiatrist/issues/31)
+> From the paper (Section 2.3.2):
+> > "If no relevant evidence was found for a given PHQ-8 item, the model produced no output."
+>
+> **Additional reasons:**
+> - Feature is OFF by default (`QUANTITATIVE_ENABLE_KEYWORD_BACKFILL=false`)
+> - Paper methodology doesn't describe keyword backfill
+> - Collision-proofed YAML (`phq8_keywords.yaml`) already handles major false positives
+>
+> **GitHub Issue**: #31 (closed as intentionally not implementing)
 >
 > **Last Updated**: 2025-12-26
 
@@ -132,4 +140,4 @@ class QuantitativeSettings(BaseSettings):
 - Keyword YAML: `src/ai_psychiatrist/resources/phq8_keywords.yaml`
 - Backfill code: `QuantitativeAssessmentAgent._find_keyword_hits()` / `_merge_evidence()`
 - Config: `QUANTITATIVE_ENABLE_KEYWORD_BACKFILL` (default: false)
-- GitHub Issue: #31
+- GitHub Issue: #31 (closed — intentionally not implementing)
