@@ -52,7 +52,7 @@ Few-shot mode uses reference embeddings to retrieve similar transcript chunks as
   ```bash
   # Production-recommended (QAT-quantized, faster):
   ollama pull gemma3:27b-it-qat
-  # Paper-parity (unquantized):
+  # Standard Ollama tag (GGUF Q4_K_M):
   ollama pull gemma3:27b
   # Embedding model:
   ollama pull qwen3-embedding:8b
@@ -516,7 +516,7 @@ Watch for these log patterns:
 |-------------|-------|--------|
 | `LLM request timed out` | Transcript too long | Increase `OLLAMA_TIMEOUT_SECONDS` |
 | `Failed to parse evidence JSON` | LLM output malformed | Keyword backfill mitigates; check model |
-| `na_count = 8` for all | MedGemma contamination | Check model setting is `gemma3:27b` |
+| `na_count = 8` for all | MedGemma contamination | Ensure model is Gemma3 (`gemma3:27b-it-qat` or `gemma3:27b`), not MedGemma |
 | `No reference embeddings found` | Missing/wrong embeddings | Generate: `scripts/generate_embeddings.py` |
 | `Embedding dimension mismatch` | Dimension inconsistency | Regenerate embeddings with correct dimension |
 | `0 similar chunks found` | Silent dimension mismatch | Check `EMBEDDING_DIMENSION` matches NPZ |
@@ -603,7 +603,7 @@ cp .env.example .env
 # 2. Pull required Ollama models
 # Production-recommended (QAT-quantized, faster):
 ollama pull gemma3:27b-it-qat
-# Paper-parity (unquantized):
+# Standard Ollama tag (GGUF Q4_K_M):
 ollama pull gemma3:27b
 # Embedding model:
 ollama pull qwen3-embedding:8b

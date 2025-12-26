@@ -395,4 +395,4 @@ mock_agent.assess.return_value = ...  # Don't do this
 
 - [Pipeline](pipeline.md) - How agents collaborate
 - [Configuration](../reference/configuration.md) - All settings
-- [Specs Overview](../specs/00-overview.md) - Implementation details
+- [Specs Overview](../archive/specs/00-overview.md) - Implementation details

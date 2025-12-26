@@ -1,8 +1,8 @@
 # Keyword Backfill: The Safety Net for Evidence Extraction
 
 **Audience**: Researchers and developers wanting to understand the coverage-accuracy tradeoff
-**Related**: [SPEC-003](../specs/SPEC-003-backfill-toggle.md) | [Coverage Investigation](../bugs/coverage-investigation.md) | [Extraction Mechanism](./extraction-mechanism.md)
-**Last Updated**: 2025-12-24
+**Related**: [SPEC-003](../archive/specs/SPEC-003-backfill-toggle.md) | [Coverage Investigation](../archive/bugs/coverage-investigation.md) | [Extraction Mechanism](./extraction-mechanism.md)
+**Last Updated**: 2025-12-26
 
 ---
 
@@ -272,7 +272,7 @@ We chose to measure **pure LLM capability** (backfill OFF) because:
 2. Scientific reproducibility should match documented methodology
 3. We can always enable backfill for clinical utility
 
-**Backfill is OFF by default** per [SPEC-003](../specs/SPEC-003-backfill-toggle.md).
+**Backfill is OFF by default** per [SPEC-003](../archive/specs/SPEC-003-backfill-toggle.md).
 
 ### Asking the Authors
 
@@ -303,7 +303,7 @@ To resolve this ambiguity, consider asking:
 
 ## N/A Reason Tracking
 
-With [SPEC-003](../specs/SPEC-003-backfill-toggle.md) implemented, each N/A result can include a deterministic reason (when enabled):
+With [SPEC-003](../archive/specs/SPEC-003-backfill-toggle.md) implemented, each N/A result can include a deterministic reason (when enabled):
 
 | Reason | Description |
 |--------|-------------|
@@ -406,7 +406,7 @@ Transcript → LLM Evidence Extraction
 
 ## Related Documentation
 
-- [SPEC-003: Backfill Toggle](../specs/SPEC-003-backfill-toggle.md) - Implementation specification
-- [Coverage Investigation](../bugs/coverage-investigation.md) - Why our coverage differs
+- [SPEC-003: Backfill Toggle](../archive/specs/SPEC-003-backfill-toggle.md) - Implementation specification
+- [Coverage Investigation](../archive/bugs/coverage-investigation.md) - Why our coverage differs
 - [Extraction Mechanism](./extraction-mechanism.md) - Full extraction pipeline
 - [Paper Parity Guide](../guides/paper-parity-guide.md) - How to reproduce paper results

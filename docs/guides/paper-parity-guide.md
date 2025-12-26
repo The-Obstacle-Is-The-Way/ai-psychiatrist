@@ -1,7 +1,7 @@
 # Paper Parity Guide: Reproducing the Original Research
 
 **Audience**: Researchers wanting to compare results with the paper
-**Related**: [SPEC-003](../specs/SPEC-003-backfill-toggle.md) | [Backfill Explained](../concepts/backfill-explained.md) | [Reproduction Notes](../results/reproduction-notes.md)
+**Related**: [SPEC-003](../archive/specs/SPEC-003-backfill-toggle.md) | [Backfill Explained](../concepts/backfill-explained.md) | [Reproduction Notes](../results/reproduction-notes.md)
 **Last Updated**: 2025-12-26
 
 ---
@@ -177,9 +177,9 @@ See `docs/data/paper-split-registry.md` and `docs/data/paper-split-methodology.m
 - **Preflight Checklists** (run before every reproduction):
   - [Zero-Shot Preflight](./preflight-checklist-zero-shot.md) - Pre-run verification for zero-shot
   - [Few-Shot Preflight](./preflight-checklist-few-shot.md) - Pre-run verification for few-shot
-- [SPEC-003: Backfill Toggle](../specs/SPEC-003-backfill-toggle.md) - Implementation spec
+- [SPEC-003: Backfill Toggle](../archive/specs/SPEC-003-backfill-toggle.md) - Implementation spec
 - [Backfill Explained](../concepts/backfill-explained.md) - How backfill works
-- [Coverage Investigation](../bugs/coverage-investigation.md) - Why metrics differ
+- [Coverage Investigation](../archive/bugs/coverage-investigation.md) - Why metrics differ
 - [Reproduction Notes](../results/reproduction-notes.md) - Current results
 - [Configuration Reference](../reference/configuration.md) - All settings
-- [BUG-018](../bugs/bug-018-reproduction-friction.md) - Reproduction friction log
+- [BUG-018](../archive/bugs/bug-018-reproduction-friction.md) - Reproduction friction log

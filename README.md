@@ -49,7 +49,7 @@ cd ai-psychiatrist
 make dev  # or: make dev-hf (to enable HuggingFace backends)
 
 # Pull required models
-ollama pull gemma3:27b
+ollama pull gemma3:27b-it-qat  # or gemma3:27b
 ollama pull qwen3-embedding:8b
 
 # Configure (uses paper-optimal defaults)
@@ -99,7 +99,7 @@ curl -X POST http://localhost:8000/full_pipeline \
 | Document | Description |
 |----------|-------------|
 | [**CLAUDE.md**](CLAUDE.md) | Development guidelines |
-| [**Specs**](docs/specs/00-overview.md) | Implementation specifications |
+| [**Specs**](docs/archive/specs/00-overview.md) | Implementation specifications (archived) |
 | [**Data Schema**](docs/data/daic-woz-schema.md) | Dataset format documentation |
 
 ---
@@ -123,7 +123,8 @@ ai-psychiatrist/
 │   ├── concepts/         # Explanations
 │   ├── reference/        # API and config reference
 │   ├── data/             # Dataset documentation
-│   └── specs/            # Implementation specs
+│   ├── specs/            # Active specs
+│   └── archive/specs/    # Archived specs
 └── data/                 # DAIC-WOZ dataset (gitignored)
 ```
 
@@ -160,9 +161,9 @@ AI_PSYCHIATRIST_OLLAMA_TESTS=1 make test-e2e
 All settings via environment variables or `.env` file:
 
 ```bash
-# Models (paper-optimal defaults)
-MODEL_QUALITATIVE_MODEL=gemma3:27b
-MODEL_QUANTITATIVE_MODEL=gemma3:27b
+# Models (recommended defaults; see `.env.example`)
+MODEL_QUALITATIVE_MODEL=gemma3:27b-it-qat  # or gemma3:27b
+MODEL_QUANTITATIVE_MODEL=gemma3:27b-it-qat  # or gemma3:27b
 MODEL_EMBEDDING_MODEL=qwen3-embedding:8b
 
 # Backends (chat vs embeddings)
@@ -175,9 +176,10 @@ EMBEDDING_CHUNK_SIZE=8
 EMBEDDING_TOP_K_REFERENCES=2
 
 # Reference embeddings selection (NPZ + JSON sidecar)
-# `scripts/generate_embeddings.py` defaults to a namespaced filename (recommended).
-# Example (HF paper-train): EMBEDDING_EMBEDDINGS_FILE=huggingface_qwen3_8b_paper_train
-EMBEDDING_EMBEDDINGS_FILE=paper_reference_embeddings
+# Default: FP16 HuggingFace embeddings (paper-train)
+EMBEDDING_EMBEDDINGS_FILE=huggingface_qwen3_8b_paper_train
+# Alternative: legacy Ollama embeddings (paper-train)
+# EMBEDDING_EMBEDDINGS_FILE=paper_reference_embeddings
 # DATA_EMBEDDINGS_PATH=/absolute/or/relative/path/to/artifact.npz  # full-path override
 
 # Feedback loop (Section 2.3.1)

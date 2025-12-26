@@ -1,7 +1,7 @@
 # Model Wiring: Current State
 
 **Purpose**: Document exactly how models and backends are wired in the codebase.
-**Last Updated**: 2025-12-25
+**Last Updated**: 2025-12-26
 **Status**: Implemented. `LLM_BACKEND` for chat, `EMBEDDING_BACKEND` for embeddings.
 
 ---
@@ -188,8 +188,8 @@ To use Ollama instead: `EMBEDDING_BACKEND=ollama` (will use `qwen3-embedding:8b`
 
 | Setting | Default | Purpose |
 |---------|---------|---------|
-| `EMBEDDING_EMBEDDINGS_FILE` | `paper_reference_embeddings` | Selects `{DATA_BASE_DIR}/embeddings/{name}.npz` (+ `.json`, optional `.meta.json`) |
-| `DATA_EMBEDDINGS_PATH` | `data/embeddings/paper_reference_embeddings.npz` | Full-path override (takes precedence over `EMBEDDING_EMBEDDINGS_FILE`) |
+| `EMBEDDING_EMBEDDINGS_FILE` | `huggingface_qwen3_8b_paper_train` | Selects `{DATA_BASE_DIR}/embeddings/{name}.npz` (+ `.json`, optional `.meta.json`) |
+| `DATA_EMBEDDINGS_PATH` | `data/embeddings/huggingface_qwen3_8b_paper_train.npz` | Full-path override (takes precedence over `EMBEDDING_EMBEDDINGS_FILE`) |
 
 ---
 

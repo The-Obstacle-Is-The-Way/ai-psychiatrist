@@ -21,7 +21,7 @@ meta_review = await meta_review_agent.review(...)        # Meta-Review
 
 This works, but:
 - No workflow-level observability/tracing (beyond existing structured logging)
-- Manual retry/error handling
+- Manual workflow-level retry/error handling (agent-level validation/retries are handled separately)
 - State management is implicit
 - The feedback loop is a while-loop, not explicit graph structure
 

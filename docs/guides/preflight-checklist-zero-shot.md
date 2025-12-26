@@ -39,12 +39,12 @@ Zero-shot mode uses NO reference embeddings - the model scores symptoms from tra
 - [ ] **Ollama running**: `curl -s http://localhost:11434/api/tags | head`
   - Should return JSON with model list
 
-- [ ] **Required model pulled**: `ollama list | grep gemma3:27b`
+- [ ] **Required model pulled**: `ollama list | grep -E "gemma3:27b|gemma3:27b-it-qat"`
   - If missing:
     ```bash
     # Production-recommended (QAT-quantized, faster):
     ollama pull gemma3:27b-it-qat
-    # Paper-parity (unquantized):
+    # Standard Ollama tag (GGUF Q4_K_M):
     ollama pull gemma3:27b
     ```
 
@@ -288,7 +288,7 @@ Watch for these log patterns:
 |-------------|-------|--------|
 | `LLM request timed out` | Transcript too long | Increase `OLLAMA_TIMEOUT_SECONDS` |
 | `Failed to parse evidence JSON` | LLM output malformed | Keyword backfill mitigates; check model |
-| `na_count = 8` for all | MedGemma contamination | Check model setting is `gemma3:27b` |
+| `na_count = 8` for all | MedGemma contamination | Ensure model is Gemma3 (`gemma3:27b-it-qat` or `gemma3:27b`), not MedGemma |
 
 ---
 

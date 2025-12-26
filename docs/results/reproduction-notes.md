@@ -1,7 +1,7 @@
 # Reproduction Notes: PHQ-8 Assessment Evaluation
 
 **Status**: Example run log (local). Results vary by hardware, backend, and model quantization.
-**Last Updated**: 2025-12-23
+**Last Updated**: 2025-12-26
 
 ---
 
@@ -10,7 +10,7 @@
 > **⚠️ WARNING**: This run was deleted because it used **keyword backfill ON** (not paper parity).
 > The run was executed before SPEC-003 (backfill OFF default) was merged.
 > Coverage was 74.1% (backfill ON) instead of ~50% (paper parity).
-> See [Issue #53](https://github.com/The-Obstacle-Is-The-Way/ai-psychiatrist/issues/53) for experiment tracking improvements.
+> Experiment tracking is now implemented (Spec 15). Local runs capture provenance and can be indexed in `data/experiments/registry.yaml` (gitignored).
 
 ### Historical Summary (for reference only)
 
@@ -100,6 +100,7 @@ Note: `data/` is gitignored (DAIC-WOZ licensing). Your local run will write arti
 | `data/embeddings/paper_reference_embeddings.npz` | Paper-train reference embeddings (NPZ) |
 | `data/embeddings/paper_reference_embeddings.json` | Text sidecar for embeddings (JSON) |
 | `data/outputs/reproduction_results_<timestamp>.json` | Reproduction output (per-subject and aggregate metrics) |
+| `data/experiments/registry.yaml` | Experiment registry (run metadata + embedding provenance) |
 
 ---
 
@@ -117,14 +118,14 @@ MODEL_TEMPERATURE=0.0
 ```
 
 Embedding hyperparameters match paper Appendix D (optimal hyperparameters).
-Sampling parameters are documented in `docs/bugs/gap-001-paper-unspecified-parameters.md`.
+Sampling parameters are documented in `docs/archive/bugs/gap-001-paper-unspecified-parameters.md`.
 
 ---
 
 ## Known Gaps and Divergences
 
 ### GAP-001: Paper Unspecified Parameters
-See `docs/bugs/gap-001-paper-unspecified-parameters.md`:
+See `docs/archive/bugs/gap-001-paper-unspecified-parameters.md`:
 - Temperature: Paper says "fairly deterministic", we use 0.0 (evidence-based clinical AI default)
 - top_k/top_p: Not set (irrelevant at temp=0, best practice is temp only)
 - Model quantization: Not specified (see GAP-002)

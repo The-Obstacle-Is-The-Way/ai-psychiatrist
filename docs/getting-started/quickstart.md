@@ -41,7 +41,7 @@ uv run pre-commit install
 
 ```bash
 # Primary chat model (Gemma 3 27B) - used by agents via Ollama (paper baseline)
-ollama pull gemma3:27b
+ollama pull gemma3:27b-it-qat  # or gemma3:27b
 
 # Embedding model (Ollama backend only) - for few-shot retrieval
 ollama pull qwen3-embedding:8b

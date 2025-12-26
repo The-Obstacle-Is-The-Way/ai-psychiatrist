@@ -211,7 +211,7 @@ For users with capable hardware (32GB+ RAM, Apple Silicon or NVIDIA GPU), use Hu
 | **Chat (Quantitative)** | `gemma3:27b` (Q4_K_M) | `google/medgemma-27b-text-it` (FP16) | 18% better MAE (Appendix F) |
 | **Embeddings** | `qwen3-embedding:8b` (Q4_K_M) | `Qwen/Qwen3-Embedding-8B` (FP16) | Higher precision similarity |
 
-**Key insight**: Both Ollama models use **Q4_K_M quantization** (4-bit). HuggingFace provides **FP16/BF16** (16-bit) - 4x more precision.
+**Key insight**: Ollama models are quantized (typically 4-bit GGUF; e.g., Q4_K_M for `gemma3:27b` and `qwen3-embedding:8b`, and QAT for `gemma3:27b-it-qat`). HuggingFace provides **FP16/BF16** (16-bit) - 4x more precision.
 
 ### High-Quality Configuration
 
