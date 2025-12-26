@@ -13,6 +13,7 @@ from __future__ import annotations
 from unittest.mock import AsyncMock, patch
 
 import pytest
+from pydantic_ai import Agent
 
 from ai_psychiatrist.agents.output_models import QualitativeOutput
 from ai_psychiatrist.agents.prompts.qualitative import (
@@ -332,7 +333,7 @@ Nested unclosed tags
             risk_factors="Test Risk",
             exact_quotes=["Test Quote"],
         )
-        mock_agent = AsyncMock()
+        mock_agent = AsyncMock(spec_set=Agent)
         mock_agent.run.return_value = AsyncMock(output=mock_output)
 
         with patch(

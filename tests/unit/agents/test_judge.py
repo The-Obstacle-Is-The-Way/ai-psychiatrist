@@ -6,6 +6,7 @@ from typing import TYPE_CHECKING
 from unittest.mock import AsyncMock, patch
 
 import pytest
+from pydantic_ai import Agent
 
 from ai_psychiatrist.agents.judge import JudgeAgent
 from ai_psychiatrist.agents.output_models import JudgeMetricOutput
@@ -232,7 +233,7 @@ Score: 2
     ) -> None:
         """Should use Pydantic AI agent when enabled and configured."""
         mock_output = JudgeMetricOutput(score=5, explanation="test")
-        mock_agent = AsyncMock()
+        mock_agent = AsyncMock(spec_set=Agent)
         mock_agent.run.return_value = AsyncMock(output=mock_output)
 
         with patch(

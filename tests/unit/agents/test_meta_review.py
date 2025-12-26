@@ -5,6 +5,7 @@ from __future__ import annotations
 from unittest.mock import AsyncMock, patch
 
 import pytest
+from pydantic_ai import Agent
 
 from ai_psychiatrist.agents.meta_review import MetaReviewAgent
 from ai_psychiatrist.agents.output_models import MetaReviewOutput
@@ -355,7 +356,7 @@ qualitative assessment reveals social stressors and biological predisposition.</
             severity=3,
             explanation="Pydantic AI Explanation",
         )
-        mock_agent = AsyncMock()
+        mock_agent = AsyncMock(spec_set=Agent)
         mock_agent.run.return_value = AsyncMock(output=mock_output)
 
         with patch(

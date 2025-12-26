@@ -16,6 +16,7 @@ import json
 from unittest.mock import AsyncMock, patch
 
 import pytest
+from pydantic_ai import Agent
 
 from ai_psychiatrist.agents.output_models import EvidenceOutput, QuantitativeOutput
 from ai_psychiatrist.agents.prompts.quantitative import (
@@ -256,7 +257,7 @@ class TestQuantitativeAssessmentAgent:
             PHQ8_Concentrating=EvidenceOutput(evidence="test", reason="test", score=0),
             PHQ8_Moving=EvidenceOutput(evidence="test", reason="test", score=0),
         )
-        mock_agent = AsyncMock()
+        mock_agent = AsyncMock(spec_set=Agent)
         mock_agent.run.return_value = AsyncMock(output=mock_output)
 
         with patch(

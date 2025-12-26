@@ -5,6 +5,7 @@ from pathlib import Path
 from unittest.mock import MagicMock, patch
 
 import pytest
+from numpy.lib.npyio import NpzFile
 
 from ai_psychiatrist.config import (
     DataSettings,
@@ -76,7 +77,7 @@ class TestReferenceStoreMetadata:
         json_path.write_text("{}")
 
         # Mock numpy load
-        mock_npz = MagicMock()
+        mock_npz = MagicMock(spec_set=NpzFile)
         mock_npz.__getitem__.return_value = []
         mock_npz.close = MagicMock()
         mock_npz.__contains__.return_value = True
