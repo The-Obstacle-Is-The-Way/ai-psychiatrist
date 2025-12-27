@@ -212,14 +212,33 @@ Common reasons for LLM timeouts during few-shot scoring:
 3. **Few-shot context** - Embedding-based references add to prompt length
 4. **Model complexity** - 27B parameter models are compute-intensive
 
-## Potential Improvements (Not Bugs)
+## ACTUAL BUG: Timeout Mismatch (See BUG-027)
 
-If timeouts are frequent, consider:
+**A real bug was discovered during investigation:**
 
-1. **Increase timeout**: `OLLAMA_TIMEOUT_SECONDS=600`
-2. **Use smaller model**: Switch to 8B variant for faster inference
-3. **Reduce context**: Use zero-shot mode instead of few-shot
-4. **Better hardware**: GPU with more VRAM and thermal headroom
+The Pydantic AI path and legacy fallback path have **different timeout configurations**:
+
+| Path | Timeout | Source |
+| ---- | ------- | ------ |
+| Pydantic AI | 600s (HARDCODED) | `pydantic_ai.cached_async_http_client()` |
+| Legacy Fallback | 300s (configurable) | `OLLAMA_TIMEOUT_SECONDS` env var |
+
+**The Problem:**
+- We cannot configure Pydantic AI's timeout via environment variable
+- `PydanticAISettings` in `config.py` only exposes `enabled` and `retries`, not timeout
+- The two paths are not synchronized
+
+**See**: `docs/bugs/bug-027-pydantic-ai-timeout-mismatch.md` for full details and fix.
+
+## Mitigation (Until Bug Fixed)
+
+If timeouts are frequent, increase the legacy timeout to match Pydantic AI:
+
+```bash
+export OLLAMA_TIMEOUT_SECONDS=600
+```
+
+This won't fix the mismatch but reduces the chance of the fallback also timing out.
 
 ## Monitoring
 
