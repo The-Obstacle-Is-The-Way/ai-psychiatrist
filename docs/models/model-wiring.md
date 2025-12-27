@@ -111,7 +111,7 @@ BF16 (54GB) > Q8_0 (29GB) > QAT Q4 (17GB) ≈ Q4_K_M (17GB)
 | Gemma 3 27B | Ollama | `gemma3:27b` | 4-bit | 17GB | ✅ | ✅ | Fast | Good (Q4_K_M) |
 
 **Paper reality check**: Paper text claims MacBook M3 Pro, but repo has A100 SLURM scripts.
-Paper likely ran **BF16 on A100s** for the reported 0.619 MAE. Our Q4_K_M run got 0.778 MAE.
+Paper likely ran **BF16 on A100s** for the reported 0.619 MAE. Our QAT 4-bit zero-shot run achieved **0.717 MAE** (see `docs/results/reproduction-results.md`).
 
 ### Which Model Should We Use?
 
