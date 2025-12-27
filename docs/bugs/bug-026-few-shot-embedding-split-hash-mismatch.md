@@ -24,6 +24,17 @@ Regenerate embeddings or update config to match.
 
 Few-shot requires loading the reference embeddings artifact (paper-train), and `ReferenceStore` correctly fails validation when the `paper_split_train.csv` content hash differs from the one recorded in the embeddings `.meta.json`.
 
+### Important Clarification: This Is Not an Embedding Backend Wiring Bug
+
+This failure can look like “the wrong embeddings backend/artifact was used”, but the run provenance shows the opposite:
+
+- The few-shot run was configured to use **HuggingFace embeddings** (`embedding_backend=huggingface`)
+- The embeddings artifact path was the **HuggingFace paper-train artifact**:
+  `data/embeddings/huggingface_qwen3_8b_paper_train.npz`
+
+The failure happened *after* selecting the correct backend/artifact: validation rejected the artifact because its stored
+`split_csv_hash` no longer matches the current `data/paper_splits/paper_split_train.csv`.
+
 ---
 
 ## Evidence (Observed Outputs)
@@ -64,9 +75,20 @@ But the current `data/paper_splits/paper_split_train.csv` content hash is now:
 
 This typically happens after regenerating paper splits (or otherwise rewriting the CSV) **after** embeddings were generated.
 
+### Why didn’t switching artifacts/backends help?
+
+Both of the currently-present “paper-train” embedding artifacts were generated against the same older split CSV hash:
+
+- `data/embeddings/huggingface_qwen3_8b_paper_train.meta.json` → `split_csv_hash=e7ff0bbd11b6`
+- `data/embeddings/paper_reference_embeddings.meta.json` → `split_csv_hash=e7ff0bbd11b6`
+
+So **either** artifact would fail once `data/paper_splits/paper_split_train.csv` changed to a different content hash.
+
 ### Important nuance
 
 Even if the **participant ID set** is unchanged, the current implementation treats **any** change to the CSV bytes (column changes, ordering, formatting, line endings) as requiring re-generation (strict provenance).
+
+This is the direct reason the run can fail even when a “participant ID set” alignment check passes.
 
 ---
 
@@ -120,3 +142,16 @@ uv run python scripts/reproduce_results.py --split paper
 
 1. **Fail fast for few-shot**: add a startup/preflight check in `scripts/reproduce_results.py` that loads `ReferenceStore` once and aborts immediately on `EmbeddingArtifactMismatchError` (instead of spending time evaluating 41 participants that will all fail).
 2. **Document the coupling**: update the few-shot preflight checklist to explicitly require re-generating embeddings after any change to `data/paper_splits/paper_split_train.csv`.
+
+### Design Improvement Option (Reduces Unnecessary Regeneration)
+
+Right now, `split_csv_hash` is a hash of the entire CSV file bytes. For embeddings provenance, the *semantically relevant*
+piece of the split CSV is typically just the **Participant_ID membership set** (since embeddings are generated from
+transcripts, not from PHQ labels/columns).
+
+If we want to avoid forcing a full re-embed when only non-ID columns/formatting change, we can:
+
+- Change `split_csv_hash` to hash the canonicalized **sorted Participant_ID list** (stable across CSV formatting/extra columns), or
+- Add a new metadata field (e.g., `split_ids_hash`) and validate that instead of raw file bytes.
+
+This would make few-shot runs robust to harmless split CSV rewrites while still detecting true “wrong split membership”.
