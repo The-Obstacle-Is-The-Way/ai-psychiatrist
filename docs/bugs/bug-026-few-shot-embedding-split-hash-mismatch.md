@@ -216,19 +216,38 @@ Added audit fields documenting the post-hoc update:
 
 [Issue #64](https://github.com/The-Obstacle-Is-The-Way/ai-psychiatrist/issues/64): Add semantic ID hash (`split_ids_hash`) for validation, keeping content hash for audit. This prevents false failures from harmless CSV rewrites.
 
-**Status Update (2025-12-26): Implemented Issue #64**
+**Status Update (2025-12-26): Issue #64 Code Implemented**
 
-The semantic validation logic has been implemented:
-1.  **Metadata Update**: `scripts/generate_embeddings.py` now calculates and stores `split_ids_hash` (SHA256 of sorted participant IDs) in `.meta.json`.
+The semantic validation logic was added to the codebase:
+1.  **Code Update**: `scripts/generate_embeddings.py` now calculates and stores `split_ids_hash` (SHA256 of sorted participant IDs) in `.meta.json` for new embedding generations.
 2.  **Robust Validation**: `ReferenceStore` now prioritizes `split_ids_hash` for validation.
     *   If `split_ids_hash` matches the current split, validation **passes** (even if `split_csv_hash` differs, which now logs a warning).
     *   If `split_ids_hash` is missing (legacy artifacts), the system falls back to deriving IDs from the artifact content and comparing them to the split.
     *   Validation only fails if the **set of participant IDs** actually differs.
 
-This permanently resolves the fragility where harmless CSV reformatting caused few-shot runs to fail.
+**Status Update (2025-12-27): Artifacts Updated**
+
+The existing artifacts were not regenerated after the code change, so they were still relying on the manual `split_csv_hash` workaround rather than the new semantic validation path.
+
+Added `split_ids_hash` to existing artifacts:
+- `data/embeddings/huggingface_qwen3_8b_paper_train.meta.json`
+- `data/embeddings/paper_reference_embeddings.meta.json`
+
+```json
+{
+  "split_ids_hash": "e1083b6e5713",
+  "split_ids_hash_note": "SHA256[:12] of sorted Participant_IDs; added post-hoc to enable semantic validation (Issue #64)"
+}
+```
+
+This ensures:
+1. The semantic validation path (Path 1 in `ReferenceStore._validate_split_integrity`) is now exercised
+2. Future CSV formatting changes will pass validation as long as participant IDs remain unchanged
+3. The workaround-only state is eliminated
 
 ---
 
 *Discovered during few-shot paper reproduction run, 2025-12-26*
-*Resolved after first-principles analysis, 2025-12-27*
-*Permanent Fix (Issue #64) Implemented, 2025-12-26*
+*Initial workaround (manual hash update) applied, 2025-12-27*
+*Issue #64 code implemented, 2025-12-26*
+*Artifacts updated with split_ids_hash, 2025-12-27*
