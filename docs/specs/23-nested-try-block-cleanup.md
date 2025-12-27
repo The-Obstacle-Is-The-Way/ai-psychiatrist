@@ -7,12 +7,14 @@
 > **GitHub Issue**: #60 (parent tech-debt audit)
 >
 > **Created**: 2025-12-26
+>
+> **Last Verified Against Code**: 2025-12-27
 
 ---
 
 ## Problem Statement
 
-`scripts/reproduce_results.py` contains deeply nested try/finally blocks for client lifecycle management. This makes the control flow harder to follow and increases cognitive load. The pattern flagged by CodeRabbit is at lines 775-808.
+`scripts/reproduce_results.py` contains nested try/finally blocks for client lifecycle management inside `main_async()`. This makes the control flow harder to follow and increases cognitive load. As of 2025-12-27, the nesting is at `scripts/reproduce_results.py:767-808`.
 
 ---
 
@@ -62,7 +64,7 @@ Use `contextlib.AsyncExitStack` to manage multiple async resources uniformly:
 ```python
 from contextlib import AsyncExitStack
 
-async def run_evaluation(...) -> int:
+async def main_async(args: argparse.Namespace) -> int:
     async with AsyncExitStack() as stack:
         # Enter all async contexts
         ollama_client = await stack.enter_async_context(
@@ -200,12 +202,12 @@ async with OllamaClient(ollama_settings) as ollama_client:
 from contextlib import AsyncExitStack
 ```
 
-### Step 2: Refactor run_evaluation_async()
+### Step 2: Refactor `main_async()`
 
 Replace the nested try blocks with AsyncExitStack:
 
 ```python
-async def run_evaluation_async(args: argparse.Namespace) -> int:
+async def main_async(args: argparse.Namespace) -> int:
     # ... setup code ...
 
     if args.dry_run:

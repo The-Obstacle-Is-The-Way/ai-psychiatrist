@@ -83,11 +83,11 @@ These are **intentional fallback patterns** where Pydantic AI is tried first, th
 
 | File | Line | Context | Current | Recommended |
 |------|------|---------|---------|-------------|
-| `src/ai_psychiatrist/agents/judge.py` | `_evaluate_metric()` | `except Exception` | Keep broad **with comment**, OR catch `(pydantic.ValidationError, pydantic_ai.ModelRetry, pydantic_ai.UnexpectedModelBehavior, LLMError)` |
-| `src/ai_psychiatrist/agents/quantitative.py` | `_score_items()` | `except Exception` | Keep broad **with comment**, OR catch `(pydantic.ValidationError, pydantic_ai.ModelRetry, pydantic_ai.UnexpectedModelBehavior, LLMError)` |
-| `src/ai_psychiatrist/agents/qualitative.py` | `assess()` | `except Exception` | Keep broad **with comment**, OR catch `(pydantic.ValidationError, pydantic_ai.ModelRetry, pydantic_ai.UnexpectedModelBehavior, LLMError)` |
-| `src/ai_psychiatrist/agents/qualitative.py` | `refine()` | `except Exception` | Keep broad **with comment**, OR catch `(pydantic.ValidationError, pydantic_ai.ModelRetry, pydantic_ai.UnexpectedModelBehavior, LLMError)` |
-| `src/ai_psychiatrist/agents/meta_review.py` | `review()` | `except Exception` | Keep broad **with comment**, OR catch `(pydantic.ValidationError, pydantic_ai.ModelRetry, pydantic_ai.UnexpectedModelBehavior, LLMError)` |
+| `src/ai_psychiatrist/agents/judge.py` | `_evaluate_metric()` | `except Exception` | Keep broad **with comment**, OR catch `(pydantic.ValidationError, pydantic_ai.ModelRetry, pydantic_ai.UnexpectedModelBehavior)` (optionally include `httpx.HTTPError`) |
+| `src/ai_psychiatrist/agents/quantitative.py` | `_score_items()` | `except Exception` | Keep broad **with comment**, OR catch `(pydantic.ValidationError, pydantic_ai.ModelRetry, pydantic_ai.UnexpectedModelBehavior)` (optionally include `httpx.HTTPError`) |
+| `src/ai_psychiatrist/agents/qualitative.py` | `assess()` | `except Exception` | Keep broad **with comment**, OR catch `(pydantic.ValidationError, pydantic_ai.ModelRetry, pydantic_ai.UnexpectedModelBehavior)` (optionally include `httpx.HTTPError`) |
+| `src/ai_psychiatrist/agents/qualitative.py` | `refine()` | `except Exception` | Keep broad **with comment**, OR catch `(pydantic.ValidationError, pydantic_ai.ModelRetry, pydantic_ai.UnexpectedModelBehavior)` (optionally include `httpx.HTTPError`) |
+| `src/ai_psychiatrist/agents/meta_review.py` | `review()` | `except Exception` | Keep broad **with comment**, OR catch `(pydantic.ValidationError, pydantic_ai.ModelRetry, pydantic_ai.UnexpectedModelBehavior)` (optionally include `httpx.HTTPError`) |
 
 **Note**: `asyncio.CancelledError` is a `BaseException` in Python 3.11+ and will not be caught by `except Exception`. The explicit `except asyncio.CancelledError: raise` blocks are therefore redundant but harmless.
 
