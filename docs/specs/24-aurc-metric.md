@@ -76,8 +76,8 @@ Interpret AURC comparatively (method A < method B).
 ```
 Method        | Coverage | MAE   | AURC  | Fair Comparison
 --------------|----------|-------|-------|----------------
-Zero-Shot     | 56.9%    | 0.698 | ???   | ✅ Comparable
-Few-Shot      | 71.6%    | 0.852 | ???   | ✅ Comparable
+Zero-Shot     | 56.9%    | 0.717 | ???   | ✅ Comparable
+Few-Shot      | 71.6%    | 0.860 | ???   | ✅ Comparable
 ```
 
 ---
