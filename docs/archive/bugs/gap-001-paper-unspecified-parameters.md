@@ -265,7 +265,7 @@ See [Agent Sampling Registry](../../reference/agent-sampling-registry.md) for fu
 ## Related Issues
 
 - [bug-018-reproduction-friction.md](./bug-018-reproduction-friction.md) - Reproduction Friction Log
-- [reproduction-notes.md](../../results/reproduction-notes.md) - Reproduction results
+- [reproduction-results.md](../../results/reproduction-results.md) - Reproduction results
 
 ---
 

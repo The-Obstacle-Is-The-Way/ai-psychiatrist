@@ -349,7 +349,7 @@ Note: The paper text emphasizes consumer hardware (M3 Pro / no GPU requirement),
 also includes SLURM scripts configured for A100 GPUs (`_reference/slurm/job_ollama.sh`). We cannot
 determine what hardware/precision produced the reported metrics from the paper text alone.
 
-For local reproduction runtime measurements, see `docs/results/reproduction-notes.md`.
+For local reproduction runtime measurements, see `docs/results/reproduction-results.md`.
 
 ---
 

@@ -67,7 +67,7 @@ See also: `docs/bugs/investigation-026-reproduction-mae-divergence.md`.
 4. **Backfill alone does not explain our higher coverage**: we observed **69.2% coverage with backfill OFF**
    in `data/outputs/reproduction_results_20251224_003441.json` (216/(39×8); 65.9% if including all 41 subjects).
    A historical backfill-ON run was recorded at ~74.1% overall item coverage (243/328) in
-   `docs/results/reproduction-notes.md`, but that run is not paper-text parity and its raw output is not stored
+   `docs/results/reproduction-results.md`, but that run is not paper-text parity and its raw output is not stored
    under `data/outputs/` in this repo snapshot.
 
 ---

@@ -252,7 +252,7 @@ Overall Coverage = (Total items with scores) / (Total participants × 8)
 
 For a concrete example run (including per-item counts and coverage), see
 `docs/archive/bugs/investigation-026-reproduction-mae-divergence.md` (current paper-text-parity run) and
-`docs/results/reproduction-notes.md` (historical notes). Output artifacts are stored locally under
+`docs/results/reproduction-results.md` (historical notes). Output artifacts are stored locally under
 `data/outputs/` (gitignored due to DAIC-WOZ licensing; not committed to repo).
 
 ---

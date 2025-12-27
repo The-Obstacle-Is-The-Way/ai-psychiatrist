@@ -84,7 +84,7 @@ This table ensures every paper figure/image extracted under `_literature/markdow
 
 These gaps describe the original research implementation archived under `_reference/`. The modern
 refactor under `src/ai_psychiatrist/` addresses most of them; remaining paper-reproduction gaps are
-tracked in `docs/results/reproduction-notes.md` and `docs/bugs/`.
+tracked in `docs/results/reproduction-results.md` and `docs/bugs/`.
 
 | Gap (legacy) | Impact | Status in refactor |
 |-----|--------|----------|
@@ -102,7 +102,7 @@ tracked in `docs/results/reproduction-notes.md` and `docs/bugs/`.
 
 | Gap | Impact | Tracking |
 |-----|--------|----------|
-| Paper MAE parity not yet achieved | Cannot claim reproduction within tolerance | `docs/results/reproduction-notes.md` |
+| Paper MAE parity not yet achieved | Cannot claim reproduction within tolerance | `docs/results/reproduction-results.md` |
 | Paper sampling/quantization parameters unspecified | Can affect MAE/coverage and runtime | `docs/bugs/gap-001-paper-unspecified-parameters.md` |
 
 ## Modern Python Tooling Stack (2025)

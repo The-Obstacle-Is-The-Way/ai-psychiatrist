@@ -65,7 +65,7 @@ We were computing a **completely different metric** than the paper:
 
 1. **04:01 AM Dec 22**: Ran reproduction with OLD script → MAE 4.02 (WRONG)
 2. **Later Dec 22**: Rewrote `scripts/reproduce_results.py` to match paper methodology
-3. **2025-12-23**: Paper-parity workflow executed end-to-end; see `docs/results/reproduction-notes.md` (MAE still above paper)
+3. **2025-12-23**: Paper-parity workflow executed end-to-end; see `docs/results/reproduction-results.md` (MAE still above paper)
 4. **2025-12-24**: Paper-text-parity run executed; see `docs/bugs/investigation-026-reproduction-mae-divergence.md`
 
 ### The OLD Code (Wrong)
@@ -485,7 +485,7 @@ uv run python scripts/reproduce_results.py --split paper --few-shot-only
 | File | Purpose |
 |------|---------|
 | `scripts/reproduce_results.py` | Batch evaluation script |
-| `docs/results/reproduction-notes.md` | Results documentation |
+| `docs/results/reproduction-results.md` | Results documentation |
 | `docs/bugs/bug-018-reproduction-friction.md` | This file |
 | `data/outputs/reproduction_results_*.json` | Raw results |
 
@@ -618,7 +618,7 @@ keywords are in `src/ai_psychiatrist/resources/phq8_keywords.yaml`.
 
 - **Start**: 2025-12-23 02:50 UTC
 - **Estimated Duration**: ~3.5 hours
-- **Status**: Completed (see `docs/results/reproduction-notes.md`)
+- **Status**: Completed (see `docs/results/reproduction-results.md`)
 
 ### Friction Points Encountered
 
