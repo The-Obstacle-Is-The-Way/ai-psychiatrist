@@ -148,7 +148,7 @@ class ReferenceStore:
             ids = sorted(df["Participant_ID"].astype(int).tolist())
             ids_str = ",".join(map(str, ids))
             return hashlib.sha256(ids_str.encode("utf-8")).hexdigest()[:12]
-        except Exception:
+        except (ValueError, OSError, pd.errors.ParserError, pd.errors.EmptyDataError):
             return None
 
     def _derive_artifact_ids_hash(self) -> str | None:
@@ -163,7 +163,7 @@ class ReferenceStore:
                 ids = sorted(int(k) for k in data)
                 ids_str = ",".join(map(str, ids))
                 return hashlib.sha256(ids_str.encode("utf-8")).hexdigest()[:12]
-        except Exception:
+        except (ValueError, OSError):
             return None
 
     def _validate_backend(self, metadata: dict[str, Any]) -> list[str]:
@@ -459,10 +459,7 @@ class ReferenceStore:
                 with paths.meta.open("r", encoding="utf-8") as f:
                     metadata = json.load(f)
                 self._validate_metadata(metadata)
-            except Exception as e:
-                # If validation fails explicitly, re-raise.
-                if isinstance(e, EmbeddingArtifactMismatchError):
-                    raise
+            except (OSError, ValueError) as e:
                 logger.warning("Failed to load/validate metadata", error=str(e))
         elif self._embedding_backend.backend.value != "ollama":
             logger.warning(

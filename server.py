@@ -26,6 +26,7 @@ from ai_psychiatrist.agents import (
 from ai_psychiatrist.config import ModelSettings, Settings, get_settings
 from ai_psychiatrist.domain.entities import Transcript
 from ai_psychiatrist.domain.enums import AssessmentMode, EvaluationMetric
+from ai_psychiatrist.domain.exceptions import DomainError
 from ai_psychiatrist.infrastructure.llm import create_llm_client
 from ai_psychiatrist.infrastructure.llm.factory import create_embedding_client
 from ai_psychiatrist.infrastructure.llm.responses import SimpleChatClient
@@ -265,7 +266,7 @@ async def health_check(
             return {"status": "degraded", "backend": backend, "error": "ping not available"}
         try:
             is_healthy = await ping_fn()
-        except Exception as e:
+        except (DomainError, OSError) as e:
             return {"status": "degraded", "backend": backend, "error": str(e)}
         return {
             "status": "healthy" if is_healthy else "degraded",
@@ -311,7 +312,7 @@ async def assess_quantitative(
 
     try:
         assessment = await agent.assess(transcript)
-    except Exception as e:
+    except DomainError as e:
         raise HTTPException(status_code=500, detail=f"Assessment failed: {e}") from e
 
     return QuantitativeResult(
@@ -354,7 +355,7 @@ async def assess_qualitative(
 
     try:
         assessment = await agent.assess(transcript)
-    except Exception as e:
+    except DomainError as e:
         raise HTTPException(status_code=500, detail=f"Assessment failed: {e}") from e
 
     return QualitativeResult(
@@ -422,7 +423,7 @@ async def run_full_pipeline(
             quantitative=quant_result,
         )
 
-    except Exception as e:
+    except DomainError as e:
         raise HTTPException(status_code=500, detail=f"Pipeline failed: {e}") from e
 
     return FullPipelineResponse(
@@ -486,7 +487,7 @@ def _resolve_transcript(
     if request.participant_id is not None:
         try:
             return transcript_service.load_transcript(request.participant_id)
-        except Exception as e:
+        except (DomainError, ValueError) as e:
             raise HTTPException(
                 status_code=400,
                 detail=f"Failed to load transcript for participant {request.participant_id}: {e}",
@@ -501,7 +502,7 @@ def _resolve_transcript(
                 participant_id=get_settings().server.ad_hoc_participant_id,
                 text=request.transcript_text,
             )
-        except Exception as e:
+        except (DomainError, ValueError) as e:
             raise HTTPException(
                 status_code=400,
                 detail=f"Invalid transcript text: {e}",

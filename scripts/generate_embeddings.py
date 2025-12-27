@@ -49,6 +49,7 @@ from ai_psychiatrist.config import (
     ModelSettings,
     get_settings,
 )
+from ai_psychiatrist.domain.exceptions import DomainError
 from ai_psychiatrist.infrastructure.llm.factory import create_embedding_client
 from ai_psychiatrist.infrastructure.llm.model_aliases import resolve_model_name
 from ai_psychiatrist.infrastructure.llm.protocols import EmbeddingRequest
@@ -231,7 +232,7 @@ def calculate_split_ids_hash(data_settings: DataSettings, split: str) -> str:
         # Canonical string representation: "1,2,3"
         ids_str = ",".join(map(str, ids))
         return hashlib.sha256(ids_str.encode("utf-8")).hexdigest()[:12]
-    except Exception as e:
+    except (ValueError, OSError, pd.errors.ParserError, pd.errors.EmptyDataError) as e:
         logger.warning(f"Failed to calculate split_ids_hash: {e}")
         return "error"
 
@@ -263,7 +264,7 @@ async def process_participant(
     """
     try:
         transcript = transcript_service.load_transcript(participant_id)
-    except Exception as e:
+    except (DomainError, ValueError, OSError) as e:
         logger.warning(
             "Failed to load transcript",
             participant_id=participant_id,
@@ -281,7 +282,7 @@ async def process_participant(
         try:
             embedding = await generate_embedding(client, chunk, model, dimension)
             results.append((chunk, embedding))
-        except Exception as e:
+        except (DomainError, ValueError, OSError) as e:
             logger.warning(
                 "Failed to embed chunk",
                 participant_id=participant_id,
