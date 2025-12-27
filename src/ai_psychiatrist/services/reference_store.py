@@ -15,6 +15,7 @@ from __future__ import annotations
 
 import hashlib
 import json
+from dataclasses import dataclass
 from typing import TYPE_CHECKING, Any
 
 import numpy as np
@@ -53,6 +54,15 @@ PHQ8_COLUMN_MAP: dict[PHQ8Item, str] = {
     PHQ8Item.CONCENTRATING: "PHQ8_Concentrating",
     PHQ8Item.MOVING: "PHQ8_Moving",
 }
+
+
+@dataclass
+class EmbeddingPaths:
+    """Paths to embedding artifacts."""
+
+    npz: Path
+    json: Path
+    meta: Path
 
 
 class ReferenceStore:
@@ -156,11 +166,9 @@ class ReferenceStore:
         except Exception:
             return None
 
-    def _validate_metadata(self, metadata: dict[str, Any]) -> None:  # noqa: PLR0912
-        """Validate embedding artifact matches current config."""
+    def _validate_backend(self, metadata: dict[str, Any]) -> list[str]:
+        """Validate backend configuration."""
         errors: list[str] = []
-
-        # Backend check
         stored_backend = metadata.get("backend")
         current_backend = self._embedding_backend.backend.value
         if stored_backend is None:
@@ -169,28 +177,39 @@ class ReferenceStore:
             errors.append(
                 f"backend mismatch: artifact='{stored_backend}', config='{current_backend}'"
             )
+        return errors
 
-        # Model check (compare resolved backend-specific ID)
+    def _validate_model(self, metadata: dict[str, Any]) -> list[str]:
+        """Validate model configuration."""
+        errors: list[str] = []
         stored_model = metadata.get("model")
         if stored_model is None:
             logger.debug("Metadata missing 'model' field, skipping model validation")
         else:
             current_model = self._model_settings.embedding_model
-            resolved_model = resolve_model_name(current_model, LLMBackend(current_backend))
+            resolved_model = resolve_model_name(
+                current_model, LLMBackend(self._embedding_backend.backend.value)
+            )
             if stored_model != resolved_model:
                 errors.append(
                     f"model mismatch: artifact='{stored_model}', config='{resolved_model}'"
                 )
+        return errors
 
-        # Dimension check
+    def _validate_dimension(self, metadata: dict[str, Any]) -> list[str]:
+        """Validate dimension configuration."""
+        errors: list[str] = []
         stored_dim = metadata.get("dimension")
         current_dim = self._embedding_settings.dimension
         if stored_dim is None:
             logger.debug("Metadata missing 'dimension' field, skipping dimension validation")
         elif stored_dim != current_dim:
             errors.append(f"dimension mismatch: artifact={stored_dim}, config={current_dim}")
+        return errors
 
-        # Chunk params check
+    def _validate_chunk_params(self, metadata: dict[str, Any]) -> list[str]:
+        """Validate chunking parameters."""
+        errors: list[str] = []
         stored_chunk = metadata.get("chunk_size")
         current_chunk = self._embedding_settings.chunk_size
         if stored_chunk is None:
@@ -217,6 +236,16 @@ class ReferenceStore:
                 "min_evidence_chars mismatch: "
                 f"artifact={stored_min_chars}, config={current_min_chars}"
             )
+        return errors
+
+    def _validate_metadata(self, metadata: dict[str, Any]) -> None:
+        """Validate embedding artifact matches current config."""
+        errors: list[str] = []
+
+        errors.extend(self._validate_backend(metadata))
+        errors.extend(self._validate_model(metadata))
+        errors.extend(self._validate_dimension(metadata))
+        errors.extend(self._validate_chunk_params(metadata))
 
         # Split integrity check (Semantic > strict)
         stored_split = metadata.get("split")
@@ -299,73 +328,39 @@ class ReferenceStore:
             f"{msg}: artifact='{stored_csv_hash}', current='{current_csv_hash}' (split='{split}')"
         )
 
-    def _load_embeddings(  # noqa: PLR0912, PLR0915
-        self,
-    ) -> dict[int, list[tuple[str, list[float]]]]:
-        """Load pre-computed embeddings from NPZ + JSON sidecar files.
-
-        Format:
-            - NPZ file: Contains arrays keyed by "emb_{pid}" for each participant
-            - JSON file: Contains {"pid": ["text1", "text2", ...], ...}
-            - .meta.json: Provenance metadata (optional)
-
-        Returns:
-            Dictionary mapping participant_id -> list of (text, embedding) pairs.
-        """
-        if self._embeddings is not None:
-            return self._embeddings
-
+    def _resolve_embedding_paths(self) -> EmbeddingPaths | None:
+        """Resolve and validate existence of embedding artifact paths."""
         npz_path = self._embeddings_path
         json_path = self._get_texts_path()
 
         if not npz_path.exists():
-            logger.warning(
-                "Embeddings NPZ file not found",
-                path=str(npz_path),
-            )
-            self._embeddings = {}
-            return self._embeddings
+            logger.warning("Embeddings NPZ file not found", path=str(npz_path))
+            return None
 
         if not json_path.exists():
-            logger.warning(
-                "Embeddings JSON sidecar not found",
-                path=str(json_path),
-            )
-            self._embeddings = {}
-            return self._embeddings
+            logger.warning("Embeddings JSON sidecar not found", path=str(json_path))
+            return None
 
-        # Load and validate metadata (if present)
-        meta_path = self._embeddings_path.with_suffix(".meta.json")
-        if meta_path.exists():
-            try:
-                with meta_path.open("r", encoding="utf-8") as f:
-                    metadata = json.load(f)
-                self._validate_metadata(metadata)
-            except Exception as e:
-                # If validation fails explicitly, re-raise.
-                if isinstance(e, EmbeddingArtifactMismatchError):
-                    raise
-                logger.warning("Failed to load/validate metadata", error=str(e))
-        elif self._embedding_backend.backend.value != "ollama":
-            logger.warning(
-                "Embeddings metadata not found; skipping artifact validation",
-                meta_path=str(meta_path),
-            )
-
-        logger.info(
-            "Loading reference embeddings",
-            npz_path=str(npz_path),
-            json_path=str(json_path),
+        return EmbeddingPaths(
+            npz=npz_path,
+            json=json_path,
+            meta=self._embeddings_path.with_suffix(".meta.json"),
         )
 
-        # Load text chunks from JSON (safe, no code execution)
-        with json_path.open("r", encoding="utf-8") as f:
-            texts_data: dict[str, Any] = json.load(f)
+    def _load_texts_json(self, path: Path) -> dict[str, Any]:
+        """Load text chunks from JSON sidecar."""
+        with path.open("r", encoding="utf-8") as f:
+            data = json.load(f)
+            if not isinstance(data, dict):
+                raise TypeError(f"Expected dict in {path}, got {type(data)}")
+            return data
 
-        # Load embeddings from NPZ (safe, numpy arrays only)
-        npz_data = np.load(npz_path, allow_pickle=False)
-
-        # Normalize embeddings and combine with texts
+    def _combine_and_normalize(
+        self,
+        texts_data: dict[str, Any],
+        npz_data: Any,  # numpy.lib.npyio.NpzFile
+    ) -> dict[int, list[tuple[str, list[float]]]]:
+        """Combine texts with embeddings and normalize."""
         normalized: dict[int, list[tuple[str, list[float]]]] = {}
         skipped_chunks = 0
         total_chunks = 0
@@ -422,8 +417,6 @@ class ReferenceStore:
             if norm_pairs:
                 normalized[pid_int] = norm_pairs
 
-        npz_data.close()
-
         # Fail loudly if ALL embeddings are mismatched (BUG-009 fix)
         if total_chunks > 0 and skipped_chunks == total_chunks:
             raise EmbeddingDimensionMismatchError(
@@ -438,6 +431,58 @@ class ReferenceStore:
                 total=total_chunks,
                 expected_dimension=self._dimension,
             )
+
+        return normalized
+
+    def _load_embeddings(self) -> dict[int, list[tuple[str, list[float]]]]:
+        """Load pre-computed embeddings from NPZ + JSON sidecar files.
+
+        Format:
+            - NPZ file: Contains arrays keyed by "emb_{pid}" for each participant
+            - JSON file: Contains {"pid": ["text1", "text2", ...], ...}
+            - .meta.json: Provenance metadata (optional)
+
+        Returns:
+            Dictionary mapping participant_id -> list of (text, embedding) pairs.
+        """
+        if self._embeddings is not None:
+            return self._embeddings
+
+        paths = self._resolve_embedding_paths()
+        if paths is None:
+            self._embeddings = {}
+            return self._embeddings
+
+        # Load and validate metadata (if present)
+        if paths.meta.exists():
+            try:
+                with paths.meta.open("r", encoding="utf-8") as f:
+                    metadata = json.load(f)
+                self._validate_metadata(metadata)
+            except Exception as e:
+                # If validation fails explicitly, re-raise.
+                if isinstance(e, EmbeddingArtifactMismatchError):
+                    raise
+                logger.warning("Failed to load/validate metadata", error=str(e))
+        elif self._embedding_backend.backend.value != "ollama":
+            logger.warning(
+                "Embeddings metadata not found; skipping artifact validation",
+                meta_path=str(paths.meta),
+            )
+
+        logger.info(
+            "Loading reference embeddings",
+            npz_path=str(paths.npz),
+            json_path=str(paths.json),
+        )
+
+        texts_data = self._load_texts_json(paths.json)
+        npz_data = np.load(paths.npz, allow_pickle=False)
+
+        try:
+            normalized = self._combine_and_normalize(texts_data, npz_data)
+        finally:
+            npz_data.close()
 
         self._embeddings = normalized
 
