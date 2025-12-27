@@ -68,10 +68,10 @@ These are “best-effort” but should avoid masking programmer errors. Narrow t
 
 These wrap external service calls where many exception types are possible.
 
-| File | Line | Context | Current | Recommended |
-|------|------|---------|---------|-------------|
-| `src/ai_psychiatrist/infrastructure/llm/huggingface.py` | `HuggingFaceClient.chat()` | `except (RuntimeError, ValueError, OSError)` | ✅ Implemented (no blind except) |
-| `src/ai_psychiatrist/infrastructure/llm/huggingface.py` | `HuggingFaceClient.embed()` | `except (RuntimeError, ValueError, OSError)` | ✅ Implemented (no blind except) |
+| File | Context | Current | Recommended |
+|------|---------|---------|-------------|
+| `src/ai_psychiatrist/infrastructure/llm/huggingface.py` | `HuggingFaceClient.chat()` | `except (RuntimeError, ValueError, OSError, TypeError)` | ✅ Implemented |
+| `src/ai_psychiatrist/infrastructure/llm/huggingface.py` | `HuggingFaceClient.embed()` | `except (RuntimeError, ValueError, OSError, TypeError)` | ✅ Implemented |
 
 **Important constraint**: this module uses lazy imports. Do **not** reference `torch.cuda.OutOfMemoryError` in an `except (...)` tuple unless you restructure to avoid importing torch eagerly (otherwise you defeat optional deps).
 

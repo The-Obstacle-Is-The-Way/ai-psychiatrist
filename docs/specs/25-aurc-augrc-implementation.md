@@ -791,18 +791,15 @@ None of these are required to produce robust LLM-only evaluation, which is the f
 
 Definitions and critique of AURC + AUGRC:
 
-1. Overcoming Common Flaws in the Evaluation of Selective Classification Systems
-   - https://arxiv.org/html/2407.01032v1
+1. [Overcoming Common Flaws in the Evaluation of Selective Classification Systems](https://arxiv.org/html/2407.01032v1)
 
 Population AURC background (optional; not required for the empirical estimator we implement here):
 
-2. A Novel Characterization of the Population Area Under the Risk Coverage Curve (AURC)
-   - https://arxiv.org/html/2410.15361v1
+2. [A Novel Characterization of the Population Area Under the Risk Coverage Curve (AURC)](https://arxiv.org/html/2410.15361v1)
 
 Abstention background and reporting cautions:
 
-3. Know Your Limits: A Survey of Abstention in Large Language Models
-   - https://arxiv.org/abs/2407.18418
+3. [Know Your Limits: A Survey of Abstention in Large Language Models](https://arxiv.org/abs/2407.18418)
 
 Local reference implementations (used for semantic cross-checks; not imported at runtime):
 
