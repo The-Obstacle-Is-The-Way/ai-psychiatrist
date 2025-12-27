@@ -7,12 +7,14 @@
 > **GitHub Issue**: #60 (parent tech-debt audit)
 >
 > **Created**: 2025-12-26
+>
+> **Last Verified Against Code**: 2025-12-27
 
 ---
 
 ## Problem Statement
 
-Three functions have `# noqa: PLR0912, PLR0915` suppressions indicating excessive complexity:
+Three functions have Ruff pylint-complexity suppressions (`PLR0912` / `PLR0915`) indicating excessive branching/statements:
 
 - **PLR0912**: Too many branches (if/elif/else)
 - **PLR0915**: Too many statements
@@ -23,33 +25,30 @@ These functions are harder to test in isolation and have higher cognitive load f
 
 ## Current State: All Instances
 
-### 1. `reference_store.py:_validate_metadata()` (Lines 122-214)
+### 1. `ReferenceStore._validate_metadata()` (`src/ai_psychiatrist/services/reference_store.py`)
 
-**Suppressions**: `PLR0912, PLR0915` (too many branches + statements)
+**Suppression (current)**: `# noqa: PLR0912` (too many branches)
 
-**What it does**: Validates embedding artifact metadata against current config (backend, model, dimension, chunk params, split hash).
+**What it does**: Validates embedding artifact metadata against current config (backend, model, dimension, chunk params, split integrity).
 
 **Current structure**:
 ```python
 def _validate_metadata(self, metadata: dict[str, Any]) -> None:
     errors: list[str] = []
 
-    # Backend check (if/elif/else)
-    # Model check (if/elif/else)
-    # Dimension check (if/elif/else)
-    # Chunk size check (if/elif/else)
-    # Chunk step check (if/elif/else)
-    # Min evidence chars check (if/elif/else)
-    # Split hash check (if/elif/else with nested conditions)
+    # Backend check
+    # Model check (resolved backend-specific ID)
+    # Dimension check
+    # Chunk params check
+    # Split integrity check (split_ids_hash preferred; CSV hash is audit-only)
 
     if errors:
         raise EmbeddingArtifactMismatchError(...)
 ```
 
-**Line count**: ~92 lines
-**Branch count**: ~16 branches (8 field checks, each with if/elif/else)
+**Complexity driver**: repeated “missing field vs mismatch” checks and split-integrity branching.
 
-### 2. `reference_store.py:_load_embeddings()` (Lines 216-340)
+### 2. `ReferenceStore._load_embeddings()` (`src/ai_psychiatrist/services/reference_store.py`)
 
 **Suppressions**: `PLR0912, PLR0915` (too many branches + statements)
 
@@ -68,10 +67,9 @@ def _load_embeddings(self) -> dict[int, list[tuple[str, list[float]]]]:
     # Log statistics
 ```
 
-**Line count**: ~124 lines
-**Branch count**: ~12 branches
+**Complexity driver**: multiple early-return branches + metadata probing + normalization loop.
 
-### 3. `generate_embeddings.py:main_async()` (Lines 270-420)
+### 3. `main_async()` (`scripts/generate_embeddings.py`)
 
 **Suppressions**: `PLR0915` (too many statements)
 
@@ -107,7 +105,7 @@ async def main_async(args: argparse.Namespace) -> int:
 For `_validate_metadata()`, extract field-level validators:
 
 ```python
-# Before: 92 lines with 16 branches
+# Before: one large function with many conditional branches
 
 # After:
 def _validate_metadata(self, metadata: dict[str, Any]) -> None:
@@ -116,7 +114,7 @@ def _validate_metadata(self, metadata: dict[str, Any]) -> None:
     errors.extend(self._validate_model(metadata))
     errors.extend(self._validate_dimension(metadata))
     errors.extend(self._validate_chunk_params(metadata))
-    errors.extend(self._validate_split_hash(metadata))
+    errors.extend(self._validate_split_integrity(metadata))
 
     if errors:
         raise EmbeddingArtifactMismatchError(...)
@@ -133,6 +131,10 @@ def _validate_backend(self, metadata: dict[str, Any]) -> list[str]:
 
 # Similar for _validate_model, _validate_dimension, etc.
 ```
+
+**Important**: preserve the current split semantics:
+- Prefer `split_ids_hash` (semantic) when present.
+- Treat `split_csv_hash` mismatch as warning-only when IDs match.
 
 **Benefits**:
 - Each validator is testable in isolation
@@ -250,7 +252,7 @@ def save_embeddings(output_path: Path, result: GenerationResult) -> None:
 1. Create `_validate_*` helper methods for each field
 2. Refactor `_validate_metadata()` to use helpers
 3. Add unit tests for each validator
-4. Remove `PLR0912, PLR0915` suppressions
+4. Remove `PLR0912` suppression
 
 **Estimated changes**: ~100 lines added, ~50 lines refactored
 
@@ -279,10 +281,12 @@ def save_embeddings(output_path: Path, result: GenerationResult) -> None:
 
 ## Acceptance Criteria
 
-- [ ] All `# noqa: PLR0912, PLR0915` suppressions removed
-- [ ] No function exceeds 50 lines
-- [ ] No function has more than 10 branches
-- [ ] Each extracted function has unit test coverage
+- [ ] The three current suppressions are removed:
+  - `ReferenceStore._validate_metadata()` no longer needs `# noqa: PLR0912`
+  - `ReferenceStore._load_embeddings()` no longer needs `# noqa: PLR0912, PLR0915`
+  - `scripts/generate_embeddings.py:main_async()` no longer needs `# noqa: PLR0915`
+- [ ] `uv run ruff check .` passes with no new ignores
+- [ ] Refactor preserves behavior (including split integrity validation semantics)
 - [ ] No regressions in existing tests
 - [ ] mypy passes with no new errors
 
@@ -294,18 +298,15 @@ def save_embeddings(output_path: Path, result: GenerationResult) -> None:
 src/ai_psychiatrist/services/reference_store.py    (2 instances, ~180 lines)
 scripts/generate_embeddings.py                      (1 instance, ~150 lines)
 tests/unit/services/test_reference_store.py        (add validator tests)
-tests/unit/scripts/test_generate_embeddings.py     (add phase tests)
+tests/unit/scripts/test_generate_embeddings.py     (new: add unit tests for extracted pure helpers)
 ```
 
 ---
 
 ## Complexity Metrics (Before/After)
 
-| Function | Before Lines | Before Branches | After Lines | After Branches |
-|----------|--------------|-----------------|-------------|----------------|
-| `_validate_metadata` | 92 | 16 | 20 | 2 |
-| `_load_embeddings` | 124 | 12 | 25 | 3 |
-| `main_async` | 150 | 6 | 15 | 1 |
+Exact numbers are expected to drift; the goal is to remove the `PLR0912/PLR0915`
+violations by extracting single-purpose helpers and adding unit tests.
 
 ---
 
