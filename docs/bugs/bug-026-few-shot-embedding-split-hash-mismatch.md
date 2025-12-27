@@ -216,7 +216,19 @@ Added audit fields documenting the post-hoc update:
 
 [Issue #64](https://github.com/The-Obstacle-Is-The-Way/ai-psychiatrist/issues/64): Add semantic ID hash (`split_ids_hash`) for validation, keeping content hash for audit. This prevents false failures from harmless CSV rewrites.
 
+**Status Update (2025-12-26): Implemented Issue #64**
+
+The semantic validation logic has been implemented:
+1.  **Metadata Update**: `scripts/generate_embeddings.py` now calculates and stores `split_ids_hash` (SHA256 of sorted participant IDs) in `.meta.json`.
+2.  **Robust Validation**: `ReferenceStore` now prioritizes `split_ids_hash` for validation.
+    *   If `split_ids_hash` matches the current split, validation **passes** (even if `split_csv_hash` differs, which now logs a warning).
+    *   If `split_ids_hash` is missing (legacy artifacts), the system falls back to deriving IDs from the artifact content and comparing them to the split.
+    *   Validation only fails if the **set of participant IDs** actually differs.
+
+This permanently resolves the fragility where harmless CSV reformatting caused few-shot runs to fail.
+
 ---
 
 *Discovered during few-shot paper reproduction run, 2025-12-26*
 *Resolved after first-principles analysis, 2025-12-27*
+*Permanent Fix (Issue #64) Implemented, 2025-12-26*

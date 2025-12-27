@@ -180,6 +180,31 @@ def calculate_split_hash(data_settings: DataSettings, split: str) -> str:
         return hashlib.sha256(f.read()).hexdigest()[:12]
 
 
+def calculate_split_ids_hash(data_settings: DataSettings, split: str) -> str:
+    """Calculate hash of the participant IDs in the split for semantic provenance."""
+    import pandas as pd  # noqa: PLC0415
+
+    if split == "avec-train":
+        csv_path = data_settings.train_csv
+    elif split == "paper-train":
+        csv_path = _paper_train_split_path(data_settings)
+    else:
+        return "unknown"
+
+    if not csv_path.exists():
+        return "missing"
+
+    try:
+        df = pd.read_csv(csv_path)
+        ids = sorted(df["Participant_ID"].astype(int).tolist())
+        # Canonical string representation: "1,2,3"
+        ids_str = ",".join(map(str, ids))
+        return hashlib.sha256(ids_str.encode("utf-8")).hexdigest()[:12]
+    except Exception as e:
+        logger.warning(f"Failed to calculate split_ids_hash: {e}")
+        return "error"
+
+
 async def process_participant(
     client: EmbeddingClient,
     transcript_service: TranscriptService,
@@ -388,6 +413,7 @@ async def main_async(args: argparse.Namespace) -> int:  # noqa: PLR0915
             "generated_at": datetime.now(UTC).isoformat(),
             "generator_script": "scripts/generate_embeddings.py",
             "split_csv_hash": calculate_split_hash(data_settings, args.split),
+            "split_ids_hash": calculate_split_ids_hash(data_settings, args.split),
         }
 
         # Save files

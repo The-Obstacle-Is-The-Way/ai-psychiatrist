@@ -119,7 +119,44 @@ class ReferenceStore:
 
         return hashlib.sha256(csv_path.read_bytes()).hexdigest()[:12]
 
-    def _validate_metadata(self, metadata: dict[str, Any]) -> None:  # noqa: PLR0912, PLR0915
+    def _calculate_split_ids_hash(self, split: str) -> str | None:
+        """Calculate hash of the sorted participant IDs in the split (semantic provenance)."""
+        if split == "avec-train":
+            csv_path = self._data_settings.train_csv
+        elif split == "paper-train":
+            csv_path = self._data_settings.base_dir / "paper_splits" / "paper_split_train.csv"
+        else:
+            return None
+
+        if not csv_path.exists():
+            return None
+
+        try:
+            df = pd.read_csv(csv_path)
+            if "Participant_ID" not in df.columns:
+                return None
+            ids = sorted(df["Participant_ID"].astype(int).tolist())
+            ids_str = ",".join(map(str, ids))
+            return hashlib.sha256(ids_str.encode("utf-8")).hexdigest()[:12]
+        except Exception:
+            return None
+
+    def _derive_artifact_ids_hash(self) -> str | None:
+        """Derive IDs hash from the JSON sidecar (legacy fallback)."""
+        json_path = self._get_texts_path()
+        if not json_path.exists():
+            return None
+        try:
+            with json_path.open("r", encoding="utf-8") as f:
+                data = json.load(f)
+                # JSON keys are participant IDs (str)
+                ids = sorted(int(k) for k in data)
+                ids_str = ",".join(map(str, ids))
+                return hashlib.sha256(ids_str.encode("utf-8")).hexdigest()[:12]
+        except Exception:
+            return None
+
+    def _validate_metadata(self, metadata: dict[str, Any]) -> None:  # noqa: PLR0912
         """Validate embedding artifact matches current config."""
         errors: list[str] = []
 
@@ -181,30 +218,12 @@ class ReferenceStore:
                 f"artifact={stored_min_chars}, config={current_min_chars}"
             )
 
+        # Split integrity check (Semantic > strict)
         stored_split = metadata.get("split")
-        stored_hash = metadata.get("split_csv_hash")
-        if stored_split is None or stored_hash is None:
-            logger.debug(
-                "Metadata missing 'split' and/or 'split_csv_hash', skipping split hash validation"
-            )
-        elif isinstance(stored_hash, str) and stored_hash in {"missing", "unknown"}:
-            logger.debug(
-                "Metadata split_csv_hash is not a content hash; skipping split hash validation",
-                split=stored_split,
-                split_csv_hash=stored_hash,
-            )
+        if stored_split is None:
+            logger.debug("Metadata missing 'split', skipping split validation")
         else:
-            current_hash = self._calculate_split_hash(str(stored_split))
-            if current_hash is None:
-                logger.debug(
-                    "Split CSV not available; skipping split hash validation",
-                    split=stored_split,
-                )
-            elif stored_hash != current_hash:
-                errors.append(
-                    "split_csv_hash mismatch: "
-                    f"artifact='{stored_hash}', current='{current_hash}' (split='{stored_split}')"
-                )
+            self._validate_split_integrity(metadata, str(stored_split), errors)
 
         if errors:
             raise EmbeddingArtifactMismatchError(
@@ -212,6 +231,73 @@ class ReferenceStore:
                 + "\n".join(f"  - {e}" for e in errors)
                 + "\nRegenerate embeddings or update config to match."
             )
+
+    def _validate_split_integrity(
+        self,
+        metadata: dict[str, Any],
+        split: str,
+        errors: list[str],
+    ) -> None:
+        """Validate split integrity using IDs hash (preferred) or CSV hash (legacy)."""
+        stored_ids_hash = metadata.get("split_ids_hash")
+        stored_csv_hash = metadata.get("split_csv_hash")
+
+        # 1. Check if current split is accessible
+        current_ids_hash = self._calculate_split_ids_hash(split)
+        if current_ids_hash is None:
+            logger.debug("Split CSV not available/readable; skipping split validation", split=split)
+            return
+
+        # 2. Path 1: Semantic validation (Preferred - New Artifacts)
+        if stored_ids_hash:
+            if stored_ids_hash != current_ids_hash:
+                errors.append(
+                    f"split_ids_hash mismatch: artifact='{stored_ids_hash}', "
+                    f"current='{current_ids_hash}' (split='{split}')"
+                )
+            elif stored_csv_hash:
+                # Audit check (warn only)
+                current_csv_hash = self._calculate_split_hash(split)
+                if stored_csv_hash != current_csv_hash:
+                    logger.warning(
+                        "split_csv_hash mismatch (safe, IDs match)",
+                        artifact=stored_csv_hash,
+                        current=current_csv_hash,
+                        split=split,
+                    )
+            return
+
+        # 3. Path 2: Legacy validation (No split_ids_hash)
+        if isinstance(stored_csv_hash, str) and stored_csv_hash in {"missing", "unknown"}:
+            logger.debug("Legacy artifact with unknown hash; skipping")
+            return
+
+        # Try strict CSV hash first
+        current_csv_hash = self._calculate_split_hash(split)
+        if stored_csv_hash and stored_csv_hash == current_csv_hash:
+            return  # Exact match, all good
+
+        # If strict CSV hash fails, we MUST verify IDs semantically (Fallback)
+        # We need to derive artifact IDs from the sidecar
+        derived_ids_hash = self._derive_artifact_ids_hash()
+
+        if derived_ids_hash and derived_ids_hash == current_ids_hash:
+            logger.warning(
+                "split_csv_hash mismatch (safe, derived IDs match)",
+                artifact=stored_csv_hash,
+                current=current_csv_hash,
+                split=split,
+            )
+            return
+
+        # Real failure
+        msg = "split_csv_hash mismatch"
+        if derived_ids_hash:
+            msg += " AND split_ids mismatch (derived)"
+
+        errors.append(
+            f"{msg}: artifact='{stored_csv_hash}', current='{current_csv_hash}' (split='{split}')"
+        )
 
     def _load_embeddings(  # noqa: PLR0912, PLR0915
         self,
