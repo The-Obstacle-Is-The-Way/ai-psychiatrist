@@ -62,19 +62,24 @@ Connection settings for the Ollama LLM server.
 |----------|------|---------|-------------|
 | `OLLAMA_HOST` | string | `127.0.0.1` | Ollama server hostname |
 | `OLLAMA_PORT` | int | `11434` | Ollama server port |
-| `OLLAMA_TIMEOUT_SECONDS` | int | `300` | Request timeout (10-600s) |
+| `OLLAMA_TIMEOUT_SECONDS` | int | `300` | Request timeout (10-600s). **Recommend 600+ for research runs.** |
 
 **Derived properties:**
 - `base_url`: `http://{host}:{port}`
 - `chat_url`: `{base_url}/api/chat`
 - `embeddings_url`: `{base_url}/api/embeddings`
 
+**Timeout Notes:**
+- Default 300s may timeout on large transcripts (~24KB+) or slow GPUs
+- Recommend `OLLAMA_TIMEOUT_SECONDS=600` or higher for paper reproduction
+- See [BUG-027](../bugs/bug-027-timeout-configuration.md) for Pydantic AI timeout limitations
+
 **Example:**
 ```bash
-# Remote Ollama server
+# Remote Ollama server with generous timeout
 OLLAMA_HOST=192.168.1.100
 OLLAMA_PORT=11434
-OLLAMA_TIMEOUT_SECONDS=300  # 5 minutes for slow networks
+OLLAMA_TIMEOUT_SECONDS=600  # 10 minutes for research runs
 ```
 
 ---
@@ -344,6 +349,12 @@ Structured validation + automatic retries for agent outputs (Spec 13).
 **Notes:**
 - This preserves existing prompt formats (e.g., `<thinking>...</thinking>` + `<answer>...</answer>`) and adds validation after generation.
 - On repeated failure, the system falls back to legacy parsing (fail-soft), but will still log the issue.
+
+**Known Limitation (BUG-027):**
+- Pydantic AI timeout is currently hardcoded at 600s in the library's HTTP client
+- `OLLAMA_TIMEOUT_SECONDS` does NOT affect the Pydantic AI path (only legacy fallback)
+- For long transcripts on slow GPUs, this may cause timeouts
+- Workaround: Ensure `OLLAMA_TIMEOUT_SECONDS >= 600` to match Pydantic AI's limit
 
 ---
 

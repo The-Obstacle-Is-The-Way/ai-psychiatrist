@@ -1,7 +1,7 @@
 # Preflight Checklist: Zero-Shot Reproduction
 
 **Purpose**: Comprehensive pre-run verification for zero-shot paper reproduction
-**Last Updated**: 2025-12-26
+**Last Updated**: 2025-12-27
 **Related**: [Few-Shot Checklist](./preflight-checklist-few-shot.md) | [Paper Parity Guide](./paper-parity-guide.md)
 
 ---
@@ -167,15 +167,20 @@ Zero-shot mode uses NO reference embeddings - the model scores symptoms from tra
 
 ### 5.1 Timeout Setting
 
-**Reference**: BUG-018e
+**Reference**: BUG-018e, BUG-027
 
-- [ ] **Adequate timeout** for transcript size:
+- [ ] **Set generous timeout** for GPU-safe operation:
   ```bash
   grep "OLLAMA_TIMEOUT_SECONDS" .env
-  # Should show: OLLAMA_TIMEOUT_SECONDS=300 (minimum)
+  # Recommended: OLLAMA_TIMEOUT_SECONDS=600  (10 min, safe default)
+  # For slow GPU: OLLAMA_TIMEOUT_SECONDS=3600 (1 hour, research runs)
   ```
 
-  **Gotcha**: 6/47 participants (13%) timed out on first run. Large transcripts (~24KB+) may need 360+ seconds, especially with concurrent GPU workloads.
+  **Gotcha (BUG-027)**: Pydantic AI path has hardcoded 600s timeout (not configurable yet).
+  The `OLLAMA_TIMEOUT_SECONDS` setting only affects the legacy fallback path.
+  For long transcripts on throttled GPUs, set at least 600s to match Pydantic AI's limit.
+
+  **Gotcha**: 6/47 participants (13%) timed out on first run with 300s. Large transcripts (~24KB+) need 600+ seconds.
 
 ### 5.2 Check for Long Transcripts
 
@@ -241,7 +246,7 @@ Expected output:
 Quantitative Model: gemma3:27b-it-qat  (or gemma3:27b)
 Temperature: 0.0
 Keyword Backfill: False
-Timeout: 300s
+Timeout: 600s  (or higher for research runs)
 Pydantic AI Enabled: True
 Embedding Dimension: 4096
 ```
@@ -298,27 +303,71 @@ Watch for these log patterns:
 
 - [ ] **Results file exists**:
   ```bash
-  ls -lt data/outputs/reproduction_results_*.json | head -1
+  ls -lt data/outputs/*.json | head -1
   ```
 
-### 9.2 Metrics Sanity Check
+### 9.2 Verify `item_signals` Present (Required for AURC/AUGRC)
 
-- [ ] **Coverage is ~50%** (paper parity with backfill OFF):
+**Reference**: Spec 25 - Required for selective prediction evaluation
+
+- [ ] **Output includes `item_signals`** for each participant:
   ```bash
-  # Check the output JSON for coverage metrics
-  python -c "
+  python3 -c "
   import json
   from pathlib import Path
-  f = sorted(Path('data/outputs').glob('reproduction_results_*.json'))[-1]
+  f = sorted(Path('data/outputs').glob('*.json'))[-1]
   data = json.loads(f.read_text())
-  print(f'Coverage: {data.get(\"aggregate\", {}).get(\"coverage_pct\", \"N/A\")}%')
-  print(f'MAE: {data.get(\"aggregate\", {}).get(\"mae_weighted\", \"N/A\")}')
+  results = data['experiments'][0]['results']['results']
+  success = next((r for r in results if r.get('success')), None)
+  if success:
+      has_signals = 'item_signals' in success
+      print(f'Has item_signals: {has_signals}')
+      if has_signals:
+          print(f'Signal keys: {list(success[\"item_signals\"].keys())[:3]}...')
+      assert has_signals, 'FAIL: Missing item_signals! Re-run with latest code.'
+  else:
+      print('WARNING: No successful results found')
+  "
+  ```
+
+  **Gotcha**: Outputs created before 2025-12-27 lack `item_signals`. The AURC/AUGRC
+  evaluation script requires this field. Re-run if missing.
+
+### 9.3 Metrics Sanity Check
+
+- [ ] **Coverage is ~50-60%** (paper parity with backfill OFF):
+  ```bash
+  # Check the output JSON for coverage metrics
+  python3 -c "
+  import json
+  from pathlib import Path
+  f = sorted(Path('data/outputs').glob('*.json'))[-1]
+  data = json.loads(f.read_text())
+  exp = data['experiments'][0]['results']
+  print(f'Mode: {exp.get(\"mode\", \"unknown\")}')
+  print(f'Success: {sum(1 for r in exp[\"results\"] if r.get(\"success\"))}')
+  print(f'Failed: {sum(1 for r in exp[\"results\"] if not r.get(\"success\"))}')
   "
   ```
 
   Expected (zero-shot, paper parity):
-  - Coverage: ~50% (with backfill OFF)
-  - MAE: ~0.796 (paper reports 0.796 for zero-shot)
+  - Coverage: ~50-60% (with backfill OFF)
+  - MAE: ~0.72-0.80 (paper reports 0.796)
+
+### 9.4 Run AURC/AUGRC Evaluation (Optional)
+
+**Reference**: Spec 25 - Proper selective prediction evaluation
+
+- [ ] **Evaluate with risk-coverage metrics**:
+  ```bash
+  uv run python scripts/evaluate_selective_prediction.py \
+    --input data/outputs/<your_output>.json \
+    --mode zero_shot \
+    --seed 42
+  ```
+
+  This computes AURC, AUGRC, MAE@coverage with bootstrap CIs - the statistically
+  valid way to evaluate selective prediction systems.
 
 ---
 
@@ -328,10 +377,12 @@ Watch for these log patterns:
 |---------|-------|-----|
 | All items N/A | MedGemma model | Change to `gemma3:27b` |
 | 74% coverage | Backfill ON | Set `QUANTITATIVE_ENABLE_KEYWORD_BACKFILL=false` |
-| Timeouts on 13% | Long transcripts | Increase `OLLAMA_TIMEOUT_SECONDS=360` |
+| Timeouts on 13% | Long transcripts | Increase `OLLAMA_TIMEOUT_SECONDS=600` or higher |
 | Participant 487 fails | macOS resource fork | Re-extract with `unzip -x '._*'` |
 | Config not applying | .env override | Start fresh: `cp .env.example .env` |
 | MAE ~4.0 (wrong scale) | Old script | Use current `scripts/reproduce_results.py` |
+| Missing `item_signals` | Old output file | Re-run with code from 2025-12-27+ |
+| AURC eval fails | No `item_signals` | Re-run reproduction to generate new outputs |
 
 ---
 

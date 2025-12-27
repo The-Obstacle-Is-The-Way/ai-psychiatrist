@@ -1,7 +1,7 @@
 # Preflight Checklist: Few-Shot Reproduction
 
 **Purpose**: Comprehensive pre-run verification for few-shot paper reproduction
-**Last Updated**: 2025-12-26
+**Last Updated**: 2025-12-27
 **Related**: [Zero-Shot Checklist](./preflight-checklist-zero-shot.md) | [Paper Parity Guide](./paper-parity-guide.md)
 
 ---
@@ -340,15 +340,20 @@ If only some chunks are mismatched, retrieval quality degrades. Always validate 
 
 ### 7.1 Timeout Setting
 
-**Reference**: BUG-018e
+**Reference**: BUG-018e, BUG-027
 
-- [ ] **Adequate timeout** for transcript size:
+- [ ] **Set generous timeout** for GPU-safe operation:
   ```bash
   grep "OLLAMA_TIMEOUT_SECONDS" .env
-  # Should show: OLLAMA_TIMEOUT_SECONDS=300 (minimum)
+  # Recommended: OLLAMA_TIMEOUT_SECONDS=600  (10 min, safe default)
+  # For slow GPU: OLLAMA_TIMEOUT_SECONDS=3600 (1 hour, research runs)
   ```
 
-  **Gotcha**: 6/47 participants (13%) timed out on first run. Large transcripts (~24KB+) may need 360+ seconds, especially with concurrent GPU workloads.
+  **Gotcha (BUG-027)**: Pydantic AI path has hardcoded 600s timeout (not configurable yet).
+  The `OLLAMA_TIMEOUT_SECONDS` setting only affects the legacy fallback path.
+  For long transcripts on throttled GPUs, set at least 600s to match Pydantic AI's limit.
+
+  **Gotcha**: 6/47 participants (13%) timed out on first run with 300s. Large transcripts (~24KB+) need 600+ seconds.
 
 ### 7.2 Check for Long Transcripts
 
@@ -456,7 +461,7 @@ Quantitative Model: gemma3:27b-it-qat  (or gemma3:27b for paper-parity)
 Embedding Model: qwen3-embedding:8b
 Temperature: 0.0
 Keyword Backfill: False
-Timeout: 300s
+Timeout: 600s  (or higher for research runs)
 Pydantic AI Enabled: True
 
 === EMBEDDING SETTINGS (Appendix D) ===
@@ -529,39 +534,87 @@ Watch for these log patterns:
 
 - [ ] **Results file exists**:
   ```bash
-  ls -lt data/outputs/reproduction_results_*.json | head -1
+  ls -lt data/outputs/*.json | head -1
   ```
 
-### 11.2 Metrics Sanity Check
+### 11.2 Verify `item_signals` Present (Required for AURC/AUGRC)
 
-- [ ] **Coverage is ~50%** (paper parity with backfill OFF):
+**Reference**: Spec 25 - Required for selective prediction evaluation
+
+- [ ] **Output includes `item_signals`** for each participant:
   ```bash
-  # Check the output JSON for coverage metrics
-  python -c "
+  python3 -c "
   import json
   from pathlib import Path
-  f = sorted(Path('data/outputs').glob('reproduction_results_*.json'))[-1]
+  f = sorted(Path('data/outputs').glob('*.json'))[-1]
   data = json.loads(f.read_text())
-  print(f'Coverage: {data.get(\"aggregate\", {}).get(\"coverage_pct\", \"N/A\")}%')
-  print(f'MAE (weighted): {data.get(\"aggregate\", {}).get(\"mae_weighted\", \"N/A\")}')
-  print(f'MAE (by-item): {data.get(\"aggregate\", {}).get(\"mae_by_item\", \"N/A\")}')
+  results = data['experiments'][0]['results']['results']
+  success = next((r for r in results if r.get('success')), None)
+  if success:
+      has_signals = 'item_signals' in success
+      print(f'Has item_signals: {has_signals}')
+      if has_signals:
+          print(f'Signal keys: {list(success[\"item_signals\"].keys())[:3]}...')
+      assert has_signals, 'FAIL: Missing item_signals! Re-run with latest code.'
+  else:
+      print('WARNING: No successful results found')
   "
   ```
 
-  Expected (few-shot, paper parity):
-  - Coverage: ~50% (with backfill OFF)
-  - MAE: ~0.619 (paper reports 0.619 for few-shot)
-  - Our actual: ~0.757 (higher coverage explains difference)
+  **Gotcha**: Outputs created before 2025-12-27 lack `item_signals`. The AURC/AUGRC
+  evaluation script requires this field. Re-run if missing.
 
-### 11.3 Compare to Paper Targets
+### 11.3 Metrics Sanity Check
 
-| Metric | Paper | Acceptable Range | Your Result |
-|--------|-------|-----------------|-------------|
-| MAE (few-shot) | 0.619 | 0.52 - 0.72 | ______ |
-| MAE (zero-shot) | 0.796 | 0.70 - 0.90 | ______ |
-| Coverage | ~50% | 40% - 60% | ______ |
+- [ ] **Coverage is ~50-70%** (few-shot typically higher than zero-shot):
+  ```bash
+  python3 -c "
+  import json
+  from pathlib import Path
+  f = sorted(Path('data/outputs').glob('*.json'))[-1]
+  data = json.loads(f.read_text())
+  exp = data['experiments'][0]['results']
+  print(f'Mode: {exp.get(\"mode\", \"unknown\")}')
+  print(f'Success: {sum(1 for r in exp[\"results\"] if r.get(\"success\"))}')
+  print(f'Failed: {sum(1 for r in exp[\"results\"] if not r.get(\"success\"))}')
+  "
+  ```
 
-**Note**: Paper acknowledges stochasticity. Results within ±0.1 MAE and ±10% coverage are consistent.
+  Expected (few-shot):
+  - Coverage: ~50-72% (higher than zero-shot due to few-shot examples)
+  - MAE: ~0.62-0.90 (varies with coverage - see BUG-029)
+
+### 11.4 Compare to Paper Targets
+
+| Metric | Paper | Our Actual | Notes |
+|--------|-------|------------|-------|
+| MAE (few-shot) | 0.619 | ~0.86 | Higher coverage = higher MAE (expected) |
+| Coverage (few-shot) | ~50% | ~72% | Our system predicts more items |
+
+**Note**: Paper compares MAE at different coverages (invalid per Spec 25). Use AURC/AUGRC for fair comparison.
+
+### 11.5 Run AURC/AUGRC Evaluation (Recommended)
+
+**Reference**: Spec 25 - Proper selective prediction evaluation
+
+- [ ] **Evaluate with risk-coverage metrics**:
+  ```bash
+  uv run python scripts/evaluate_selective_prediction.py \
+    --input data/outputs/<your_output>.json \
+    --mode few_shot \
+    --seed 42
+  ```
+
+- [ ] **Compare zero-shot vs few-shot** (paired analysis):
+  ```bash
+  uv run python scripts/evaluate_selective_prediction.py \
+    --input data/outputs/<zero_shot>.json \
+    --input data/outputs/<few_shot>.json \
+    --seed 42
+  ```
+
+  This computes AURC, AUGRC, and paired Δ with bootstrap CIs - the statistically
+  valid way to compare selective prediction systems.
 
 ---
 
@@ -571,13 +624,16 @@ Watch for these log patterns:
 |---------|-------|-----|
 | All items N/A | MedGemma model | Change to `gemma3:27b` |
 | 74% coverage | Backfill ON | Set `QUANTITATIVE_ENABLE_KEYWORD_BACKFILL=false` |
-| Timeouts on 13% | Long transcripts | Increase `OLLAMA_TIMEOUT_SECONDS=360` |
+| Timeouts on 13% | Long transcripts | Increase `OLLAMA_TIMEOUT_SECONDS=600` or higher |
 | Participant 487 fails | macOS resource fork | Re-extract with `unzip -x '._*'` |
 | Config not applying | .env override | Start fresh: `cp .env.example .env` |
 | MAE ~4.0 (wrong scale) | Old script | Use current `scripts/reproduce_results.py` |
 | No few-shot effect | Missing embeddings | Generate: `scripts/generate_embeddings.py` |
 | Silent zero-shot | Dimension mismatch | Check `EMBEDDING_DIMENSION=4096` matches NPZ |
 | Wrong participants | AVEC vs paper split | Use `--split paper` for paper methodology |
+| Missing `item_signals` | Old output file | Re-run with code from 2025-12-27+ |
+| AURC eval fails | No `item_signals` | Re-run reproduction to generate new outputs |
+| Embedding hash mismatch | Wrong split used | Regenerate embeddings for paper-train split |
 
 ---
 
