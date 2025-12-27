@@ -140,4 +140,4 @@ When auditing dependencies:
 |------|--------|-----|
 | 2025-12-26 | Updated fastapi 0.124→0.127, uvicorn 0.38→0.40, numpy 2.3→2.4 | dependency-audit |
 | 2025-12-24 | Added pydantic-ai 1.39.0 | PR #62 |
-| 2025-12-23 | Initial v2.0.0 release | initial |
+| 2025-12-23 | Initial v0.1.0 release | initial |

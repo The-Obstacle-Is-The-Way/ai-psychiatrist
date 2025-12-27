@@ -97,7 +97,7 @@ async def lifespan(app: FastAPI) -> AsyncIterator[None]:
 
 app = FastAPI(
     title="AI Psychiatrist Pipeline",
-    version="2.0.0",
+    version="0.1.0",
     description="Modern API using paper-aligned agent implementations",
     lifespan=lifespan,
 )

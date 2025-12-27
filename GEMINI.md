@@ -5,7 +5,7 @@ This file provides context and guidance for Gemini when working with the `ai-psy
 ## Project Overview
 
 **Name:** `ai-psychiatrist`
-**Version:** 2.0.0
+**Version:** 0.1.0
 **Purpose:** An LLM-based Multi-Agent System for Depression Assessment from Clinical Interviews. It is a production-grade, clean-room implementation of the methodology described in Greene et al. "AI Psychiatrist Assistant".
 **Core Function:** Analyzes clinical interview transcripts to predict PHQ-8 depression scores and severity levels using a four-agent pipeline with iterative self-refinement.
 
