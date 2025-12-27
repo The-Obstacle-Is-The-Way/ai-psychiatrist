@@ -132,7 +132,7 @@ for item in PHQ8Item.all_items():
 ```
 
 **Error (before data was patched)**:
-```
+```text
 ValueError: cannot convert float NaN to integer
   File "scripts/reproduce_results.py", line 201
 ```
@@ -161,7 +161,7 @@ Only participant 319 is affected across all splits.
 
 The AVEC2017 dataset provides `PHQ8_Score` (the authoritative total) separately from per-item scores. This allows us to **reconstruct** the missing value with certainty:
 
-```
+```text
 PHQ8_Score (ground truth total from AVEC) = 13
 Known items: PHQ8_NoInterest=2, PHQ8_Depressed=1, PHQ8_Tired=1,
              PHQ8_Appetite=1, PHQ8_Failure=2, PHQ8_Concentrating=3, PHQ8_Moving=1
@@ -176,7 +176,7 @@ Missing: PHQ8_Sleep = 13 - 11 = 2
 The transcript for participant 319 (`data/transcripts/319_P/319_TRANSCRIPT.csv`) provides supporting clinical evidence:
 
 **Direct Sleep Question:**
-```
+```text
 Ellie: "what are you like when you don't sleep well"
 Participant: "irritable"
 Participant: "cranky"
@@ -185,7 +185,7 @@ Participant: "yeah it is"
 ```
 
 **Depression Symptoms (self-described):**
-```
+```text
 Participant: "always tired and"
 Participant: "not excited about things anymore and"
 Participant: "kinda lethargic you know laying around and"
@@ -193,7 +193,7 @@ Participant: "just not feeling myself"
 ```
 
 **Current State:**
-```
+```text
 Ellie: "how have you been feeling lately"
 Participant: "mm about the same"
 ```
@@ -262,7 +262,7 @@ The paper authors included 319 in their TEST output files. Possibilities:
 
 Scanning the entire data tree shows the missing value exists in exactly 2 files:
 
-```
+```text
 data/train_split_Depression_AVEC2017.csv    <-- SOURCE (fix here)
     ↓ (via create_paper_split.py)
 data/paper_splits/paper_split_test.csv      <-- DERIVED (regenerate)

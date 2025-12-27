@@ -41,7 +41,7 @@ This document captures ALL friction points encountered when attempting to reprod
 
 Terminology note (SSOT): “paper parity” has two plausible meanings because the paper text and the public repo diverge.
 This doc uses **paper-text parity** (methodology as written; keyword backfill not described). For the code-level mismatch,
-see `docs/bugs/analysis-027-paper-implementation-comparison.md`.
+see [`analysis-027-paper-implementation-comparison.md`](analysis-027-paper-implementation-comparison.md).
 
 Note: `.env` is gitignored; any `.env` references below describe **local developer configuration**
 changes made during reproduction attempts.
@@ -66,7 +66,7 @@ We were computing a **completely different metric** than the paper:
 1. **04:01 AM Dec 22**: Ran reproduction with OLD script → MAE 4.02 (WRONG)
 2. **Later Dec 22**: Rewrote `scripts/reproduce_results.py` to match paper methodology
 3. **2025-12-23**: Paper-parity workflow executed end-to-end; see `docs/results/reproduction-results.md` (MAE still above paper)
-4. **2025-12-24**: Paper-text-parity run executed; see `docs/bugs/investigation-026-reproduction-mae-divergence.md`
+4. **2025-12-24**: Paper-text-parity run executed; see [`investigation-026-reproduction-mae-divergence.md`](investigation-026-reproduction-mae-divergence.md)
 
 ### The OLD Code (Wrong)
 
@@ -111,8 +111,8 @@ uv run python scripts/reproduce_results.py --split dev
 ```
 
 The output file `data/outputs/reproduction_results_20251222_040100.json` is **INVALID** and should be ignored.
-See `docs/bugs/investigation-026-reproduction-mae-divergence.md` and
-`docs/bugs/analysis-027-paper-implementation-comparison.md` for current metrics and divergence hypotheses.
+See [`investigation-026-reproduction-mae-divergence.md`](investigation-026-reproduction-mae-divergence.md) and
+[`analysis-027-paper-implementation-comparison.md`](analysis-027-paper-implementation-comparison.md) for current metrics and divergence hypotheses.
 
 ---
 
@@ -339,7 +339,7 @@ The quantitative agent uses a multi-level repair cascade:
 JSON parsing failures are **mitigated**, not eliminated. In a paper-text-parity run (2025-12-24),
 we observed two participants where the quantitative scoring response could not be parsed after all
 attempts (all items N/A), and the run continued normally (see
-`docs/bugs/investigation-026-reproduction-mae-divergence.md`).
+[`investigation-026-reproduction-mae-divergence.md`](investigation-026-reproduction-mae-divergence.md)).
 
 However, because malformed JSON can reappear due to model variability and long generations, treat
 this as **mitigated**, not permanently “resolved”.

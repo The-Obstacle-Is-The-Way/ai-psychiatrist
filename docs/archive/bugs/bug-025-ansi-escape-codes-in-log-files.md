@@ -28,7 +28,10 @@ def _should_use_colors(settings: LoggingSettings) -> bool:
     return _stdout_isatty()
 ```
 
-**Test coverage**: `tests/unit/infrastructure/test_logging.py:97-106`
+**Test coverage**: `tests/unit/infrastructure/test_logging.py`
+- `test_setup_logging_console_disables_colors_when_not_tty`
+- `test_setup_logging_console_force_colors_overrides_tty`
+- `test_setup_logging_console_no_color_env_disables_colors`
 
 ---
 
