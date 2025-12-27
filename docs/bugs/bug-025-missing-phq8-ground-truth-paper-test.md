@@ -16,22 +16,27 @@
 
 ## Summary
 
-The paper test split (`data/paper_splits/paper_split_test.csv`) contains 1 participant (ID 319) with missing PHQ-8 item-level ground truth (PHQ8_Sleep is NaN). This causes `reproduce_results.py` to crash with `ValueError: cannot convert float NaN to integer`.
+The paper test split (`data/paper_splits/paper_split_test.csv`) **contained** 1 participant (ID 319) with missing PHQ-8 item-level ground truth (PHQ8_Sleep was NaN). This caused `reproduce_results.py` to crash with `ValueError: cannot convert float NaN to integer`. **Now fixed** via deterministic mathematical reconstruction.
 
 ---
 
 ## Complete Data Provenance Chain
+
+> **Note**: This section documents the **pre-fix state** for forensic purposes. All issues described below have been resolved.
 
 ### Level 1: AVEC2017 Raw Dataset (Upstream)
 
 **File**: `data/train_split_Depression_AVEC2017.csv`
 
 ```csv
-Participant_ID,PHQ8_Binary,PHQ8_Score,Gender,PHQ8_NoInterest,PHQ8_Depressed,PHQ8_Sleep,PHQ8_Tired,PHQ8_Appetite,PHQ8_Failure,PHQ8_Concentrating,PHQ8_Moving
+# BEFORE FIX:
 319,1,13,1,2,1,,1,1,2,3,1
+
+# AFTER FIX:
+319,1,13,1,2,1,2,1,1,2,3,1
 ```
 
-**Observation**: PHQ8_Sleep is empty (missing) in the original AVEC2017 dataset. This is a data collection issue from the DAIC-WOZ study, not introduced by our code.
+**Observation**: PHQ8_Sleep was empty (missing) in the original AVEC2017 dataset. This was a data collection issue from the DAIC-WOZ study, not introduced by our code. **Now patched** with mathematically reconstructed value `2`.
 
 ### Level 2: Paper Authors' Ground Truth IDs
 
@@ -69,53 +74,70 @@ combined["PHQ8_Total"] = combined[item_cols].sum(axis=1).astype(int)
 # NOTE: pandas.sum() treats NaN as 0, so PHQ8_Total = 11 (not 13)
 ```
 
-**Observation**: The script copies raw AVEC data to paper splits without validating for complete per-item data.
+**Observation (pre-fix)**: The script copied raw AVEC data to paper splits without validating for complete per-item data. **Now fixed**: Script has fail-loud validation that raises `ValueError` if any PHQ-8 items are missing (see lines 264-272).
 
 ### Level 4: Paper Split Output
 
 **File**: `data/paper_splits/paper_split_test.csv`
 
 ```csv
+# BEFORE FIX:
 319,1,13,1,2,1,,1,1,2,3,1,11
+
+# AFTER FIX:
+319,1,13,1,2,1,2,1,1,2,3,1,13
 ```
 
-| Column | Value | Notes |
-|--------|-------|-------|
-| Participant_ID | 319 | |
-| PHQ8_Binary | 1 | Depressed classification |
-| PHQ8_Score | 13 | **Ground truth total from AVEC** |
-| Gender | 1 | Female |
-| PHQ8_NoInterest | 2 | |
-| PHQ8_Depressed | 1 | |
-| **PHQ8_Sleep** | **EMPTY** | **MISSING VALUE** |
-| PHQ8_Tired | 1 | |
-| PHQ8_Appetite | 1 | |
-| PHQ8_Failure | 2 | |
-| PHQ8_Concentrating | 3 | |
-| PHQ8_Moving | 1 | |
-| PHQ8_Total | 11 | **Computed (treats NaN as 0)** |
+| Column | Before Fix | After Fix | Notes |
+|--------|------------|-----------|-------|
+| Participant_ID | 319 | 319 | |
+| PHQ8_Binary | 1 | 1 | Depressed classification |
+| PHQ8_Score | 13 | 13 | Ground truth total from AVEC |
+| Gender | 1 | 1 | Female |
+| PHQ8_NoInterest | 2 | 2 | |
+| PHQ8_Depressed | 1 | 1 | |
+| **PHQ8_Sleep** | **EMPTY** | **2** | **Reconstructed** |
+| PHQ8_Tired | 1 | 1 | |
+| PHQ8_Appetite | 1 | 1 | |
+| PHQ8_Failure | 2 | 2 | |
+| PHQ8_Concentrating | 3 | 3 | |
+| PHQ8_Moving | 1 | 1 | |
+| PHQ8_Total | 11 | 13 | Now matches PHQ8_Score |
 
-**Key Discrepancy**:
+**Key Discrepancy (pre-fix)**:
 - `PHQ8_Score` (AVEC ground truth) = 13
 - `PHQ8_Total` (computed from items) = 11
-- Difference = 2 → This is the missing PHQ8_Sleep value
+- Difference = 2 → This was the missing PHQ8_Sleep value, **now reconstructed**
 
-### Level 5: reproduce_results.py Failure
+### Level 5: reproduce_results.py Failure (Pre-Fix)
 
 **File**: `scripts/reproduce_results.py`
 
 ```python
-# Line 199-201
+# BEFORE FIX (line 199-201): Crashed on NaN
 for item in PHQ8Item.all_items():
     col = f"PHQ8_{item.value}"
     scores[item] = int(row[col])  # CRASH: cannot convert NaN to int
+
+# AFTER FIX (lines 201-208): Fail-loud with actionable message
+for item in PHQ8Item.all_items():
+    col = f"PHQ8_{item.value}"
+    value = row[col]
+    if pd.isna(value):
+        raise ValueError(
+            f"Missing ground truth for participant {participant_id} item {item.value}. "
+            f"Run 'uv run python scripts/patch_missing_phq8_values.py --apply' to fix."
+        )
+    scores[item] = int(value)
 ```
 
-**Error**:
+**Error (before data was patched)**:
 ```
 ValueError: cannot convert float NaN to integer
   File "scripts/reproduce_results.py", line 201
 ```
+
+**Now**: Data is patched, so this error no longer occurs. If future missing values appear, the script will fail loudly with fix instructions.
 
 ---
 
@@ -288,26 +310,29 @@ if not missing.empty:
 
 ---
 
-## Temporary Workaround
+## Temporary Workaround (Obsolete)
 
-Until resolved, use AVEC dev split for testing:
+> **No longer needed** - issue is resolved. Paper split now works correctly.
+
+~~Until resolved, use AVEC dev split for testing:~~
 ```bash
-uv run python scripts/reproduce_results.py --split dev --zero-shot-only
+# Now you can use paper split directly:
+uv run python scripts/reproduce_results.py --split paper --zero-shot-only
 ```
-
-AVEC dev has 35 participants with complete ground truth (no missing values).
 
 ---
 
 ## Files Involved
 
-| File | Role | Issue |
-|------|------|-------|
-| `data/train_split_Depression_AVEC2017.csv` | Upstream data | Contains original missing value |
-| `docs/data/paper-split-registry.md` | Ground truth IDs | Lists 319 in TEST |
-| `scripts/create_paper_split.py` | Split creation | No validation for complete data |
-| `data/paper_splits/paper_split_test.csv` | Output | Contains propagated missing value |
-| `scripts/reproduce_results.py` | Evaluation | Crashes on NaN |
+| File | Role | Pre-Fix Issue | Post-Fix Status |
+|------|------|---------------|-----------------|
+| `data/train_split_Depression_AVEC2017.csv` | Upstream data | Contained missing PHQ8_Sleep | ✅ Patched (value=2) |
+| `docs/data/paper-split-registry.md` | Ground truth IDs | Lists 319 in TEST | ✅ No change needed |
+| `scripts/create_paper_split.py` | Split creation | No validation | ✅ Fail-loud validation added |
+| `data/paper_splits/paper_split_test.csv` | Output | Contained propagated NaN | ✅ Regenerated with fix |
+| `scripts/reproduce_results.py` | Evaluation | Crashed on NaN | ✅ Fail-loud validation added |
+| `scripts/patch_missing_phq8_values.py` | Patch tool | — | ✅ Created for auditability |
+| `data/DATA_PROVENANCE.md` | Audit trail | — | ✅ Created for provenance |
 
 ---
 
