@@ -58,7 +58,16 @@ AI Psychiatrist is an engineering-focused, reproducible implementation of a rese
 
 | Document | Description |
 |----------|-------------|
-| [Future Architecture](concepts/future-architecture.md) | Pydantic AI + LangGraph integration roadmap |
+| [Future Architecture](concepts/future-architecture.md) | LangGraph integration roadmap (Pydantic AI is already integrated) |
+| [Spec 20: Keyword Fallback Improvements](specs/20-keyword-fallback-improvements.md) | Deferred — intentionally not implementing (see spec) |
+
+### Archived Specs (Implemented)
+
+| Document | Description |
+|----------|-------------|
+| [Spec 19: Test Suite Mock Audit](archive/specs/19-test-suite-mock-audit.md) | Test suite mock hygiene and contract coverage |
+| [Spec 18: Qualitative Agent Robustness](archive/specs/18-qualitative-agent-robustness.md) | Qualitative agent Pydantic AI hardening |
+| [Spec 17: Test Suite Marker Consistency](archive/specs/17-test-suite-marker-consistency.md) | Auto-apply test markers from directory structure |
 
 ---
 

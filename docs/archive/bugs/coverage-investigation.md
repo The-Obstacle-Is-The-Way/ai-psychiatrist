@@ -117,7 +117,7 @@ If paper used pure LLM extraction without backfill:
 | Moving | 44% | Hard to detect from text |
 | Appetite | 34% | Rarely discussed |
 
-These values come from a historical run recorded in `docs/results/reproduction-notes.md` (that run is
+These values come from a historical run recorded in `docs/results/reproduction-results.md` (that run is
 explicitly **invalidated** for paper-text parity because it used backfill ON).
 
 **Paper confirms** (Appendix E):
@@ -187,8 +187,8 @@ After implementation, users can:
 ## Related Documentation
 
 - [SPEC-003: Backfill Toggle](../specs/SPEC-003-backfill-toggle.md) - Implementation specification
-- [Backfill Explained](../concepts/backfill-explained.md) - How backfill works
-- [Paper Parity Guide](../guides/paper-parity-guide.md) - How to reproduce paper results
-- [Coverage Explained](../concepts/coverage-explained.md) - Plain-language explanation
-- [Reproduction Notes](../results/reproduction-notes.md) - Results and methodology
+- [Backfill Explained](../../concepts/backfill-explained.md) - How backfill works
+- [Paper Parity Guide](../../guides/paper-parity-guide.md) - How to reproduce paper results
+- [Coverage Explained](../../concepts/coverage-explained.md) - Plain-language explanation
+- [Reproduction Notes](../../results/reproduction-results.md) - Results and methodology
 - `src/ai_psychiatrist/resources/phq8_keywords.yaml` - Keyword list

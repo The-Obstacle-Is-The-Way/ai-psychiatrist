@@ -1,7 +1,7 @@
 # Coverage Explained: What It Is and Why It Matters
 
 **Audience**: Anyone trying to understand what "coverage" means in PHQ-8 assessment
-**Last Updated**: 2025-12-24
+**Last Updated**: 2025-12-26
 
 ---
 
@@ -72,8 +72,8 @@ coverage/MAE depends on model weights/quantization, backend, and prompt behavior
 | Item MAE | 0.619 | 0.778 (weighted across predicted items) |
 
 Run details and a discussion of the remaining gap live in:
-- `docs/bugs/investigation-026-reproduction-mae-divergence.md`
-- `docs/bugs/analysis-027-paper-implementation-comparison.md`
+- `docs/archive/bugs/investigation-026-reproduction-mae-divergence.md`
+- `docs/archive/bugs/analysis-027-paper-implementation-comparison.md`
 
 Interpretation: higher coverage often increases MAE because the model attempts more
 items (including harder-to-evidence symptoms). This is a general tradeoff; attributing
@@ -210,6 +210,6 @@ disabled vs enabled using the same split and model backend:
 ## Related Documentation
 
 - [clinical-understanding.md](./clinical-understanding.md) - How the system works
-- [investigation-026-reproduction-mae-divergence.md](../bugs/investigation-026-reproduction-mae-divergence.md) - Current paper-text-parity run analysis
-- [reproduction-notes.md](../results/reproduction-notes.md) - Historical run notes (includes invalidated backfill-ON run)
-- [gap-001-paper-unspecified-parameters.md](../bugs/gap-001-paper-unspecified-parameters.md) - Why results may differ
+- [investigation-026-reproduction-mae-divergence.md](../archive/bugs/investigation-026-reproduction-mae-divergence.md) - Current paper-text-parity run analysis
+- [reproduction-results.md](../results/reproduction-results.md) - Historical run notes (includes invalidated backfill-ON run)
+- [gap-001-paper-unspecified-parameters.md](../archive/bugs/gap-001-paper-unspecified-parameters.md) - Why results may differ

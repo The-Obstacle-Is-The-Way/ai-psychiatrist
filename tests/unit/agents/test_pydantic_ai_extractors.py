@@ -8,11 +8,13 @@ from pydantic_ai import ModelRetry
 from ai_psychiatrist.agents.extractors import (
     extract_judge_metric,
     extract_meta_review,
+    extract_qualitative,
     extract_quantitative,
 )
 from ai_psychiatrist.agents.output_models import (
     JudgeMetricOutput,
     MetaReviewOutput,
+    QualitativeOutput,
     QuantitativeOutput,
 )
 
@@ -125,3 +127,46 @@ def test_extract_meta_review_clamps_severity() -> None:
     response = "<severity>99</severity><explanation>Test</explanation>"
     parsed = extract_meta_review(response)
     assert parsed.severity == 4
+
+
+def test_extract_qualitative_valid() -> None:
+    text = """
+    <assessment>Overall assessment</assessment>
+    <PHQ8_symptoms>Symptoms here</PHQ8_symptoms>
+    <social_factors>Social stuff</social_factors>
+    <biological_factors>Bio stuff</biological_factors>
+    <risk_factors>Risk stuff</risk_factors>
+    <exact_quotes>
+    - "Quote 1"
+    * "Quote 2"
+    </exact_quotes>
+    """
+    output = extract_qualitative(text)
+    assert isinstance(output, QualitativeOutput)
+    assert output.assessment == "Overall assessment"
+    assert output.phq8_symptoms == "Symptoms here"
+    assert output.social_factors == "Social stuff"
+    assert output.biological_factors == "Bio stuff"
+    assert output.risk_factors == "Risk stuff"
+    assert output.exact_quotes == ['"Quote 1"', '"Quote 2"']
+
+
+def test_extract_qualitative_missing_tags_retries() -> None:
+    text = """
+    <assessment>Overall assessment</assessment>
+    """
+    with pytest.raises(ModelRetry) as exc:
+        extract_qualitative(text)
+    assert "Missing required XML tags" in str(exc.value)
+
+
+def test_extract_qualitative_empty_quotes() -> None:
+    text = """
+    <assessment>Overall assessment</assessment>
+    <PHQ8_symptoms>Symptoms here</PHQ8_symptoms>
+    <social_factors>Social stuff</social_factors>
+    <biological_factors>Bio stuff</biological_factors>
+    <risk_factors>Risk stuff</risk_factors>
+    """
+    output = extract_qualitative(text)
+    assert output.exact_quotes == []

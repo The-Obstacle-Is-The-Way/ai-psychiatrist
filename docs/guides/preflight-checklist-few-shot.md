@@ -1,7 +1,7 @@
 # Preflight Checklist: Few-Shot Reproduction
 
 **Purpose**: Comprehensive pre-run verification for few-shot paper reproduction
-**Last Updated**: 2025-12-25
+**Last Updated**: 2025-12-26
 **Related**: [Zero-Shot Checklist](./preflight-checklist-zero-shot.md) | [Paper Parity Guide](./paper-parity-guide.md)
 
 ---
@@ -50,7 +50,11 @@ Few-shot mode uses reference embeddings to retrieve similar transcript chunks as
   ```
   If missing:
   ```bash
+  # Production-recommended (QAT-quantized, faster):
+  ollama pull gemma3:27b-it-qat
+  # Standard Ollama tag (GGUF Q4_K_M):
   ollama pull gemma3:27b
+  # Embedding model:
   ollama pull qwen3-embedding:8b
   ```
 
@@ -65,8 +69,12 @@ Few-shot mode uses reference embeddings to retrieve similar transcript chunks as
 - [ ] **Verify quantitative model is Gemma3** (NOT MedGemma):
   ```bash
   grep "MODEL_QUANTITATIVE_MODEL" .env
-  # MUST show: MODEL_QUANTITATIVE_MODEL=gemma3:27b
+  # Acceptable values:
+  #   MODEL_QUANTITATIVE_MODEL=gemma3:27b-it-qat  (QAT-optimized, faster inference)
+  #   MODEL_QUANTITATIVE_MODEL=gemma3:27b         (standard Ollama quantization)
   ```
+
+  **Note on quantization**: The paper authors likely used full-precision BF16 weights. Ollama's `gemma3:27b` uses Q4_K_M quantization; `-it-qat` adds QAT optimization for faster inference. Both are acceptable for reproduction (neither is true BF16).
 
   **Gotcha (BUG-018a)**: MedGemma produces ALL N/A scores due to being too conservative. Appendix F says it "detected fewer relevant chunks, making fewer predictions overall."
 
@@ -106,6 +114,29 @@ Few-shot mode uses reference embeddings to retrieve similar transcript chunks as
   ```
 
   **Note**: We use temp=0 for all agents. top_k/top_p are not set (irrelevant at temp=0).
+
+### 2.4 Pydantic AI (Structured Validation)
+
+**Reference**: Spec 13 - Enabled by default since 2025-12-26
+
+- [ ] **Pydantic AI is enabled** (recommended for structured output validation):
+  ```bash
+  grep "PYDANTIC_AI_ENABLED" .env
+  # Should show: PYDANTIC_AI_ENABLED=true (or be absent, as true is the default)
+  ```
+
+  **What it does**: Adds structured validation + automatic retries (up to 3x) for quantitative scoring, judge metrics, and meta-review. Falls back to legacy parsing on failure.
+
+- [ ] **Verify in config summary**:
+  ```bash
+  uv run python -c "
+  from ai_psychiatrist.config import get_settings
+  s = get_settings()
+  print(f'Pydantic AI Enabled: {s.pydantic_ai.enabled}')
+  print(f'Pydantic AI Retries: {s.pydantic_ai.retries}')
+  "
+  # Expected: Enabled=True, Retries=3
+  ```
 
 ---
 
@@ -408,6 +439,7 @@ print(f'Embedding Model: {s.model.embedding_model}')
 print(f'Temperature: {s.model.temperature}')
 print(f'Keyword Backfill: {s.quantitative.enable_keyword_backfill}')
 print(f'Timeout: {s.ollama.timeout_seconds}s')
+print(f'Pydantic AI Enabled: {s.pydantic_ai.enabled}')
 print()
 print('=== EMBEDDING SETTINGS (Appendix D) ===')
 print(f'Dimension: {s.embedding.dimension} (paper: 4096)')
@@ -420,11 +452,12 @@ print(f'Top-K References: {s.embedding.top_k_references} (paper: 2)')
 Expected output:
 ```text
 === CRITICAL SETTINGS ===
-Quantitative Model: gemma3:27b
+Quantitative Model: gemma3:27b-it-qat  (or gemma3:27b for paper-parity)
 Embedding Model: qwen3-embedding:8b
 Temperature: 0.0
 Keyword Backfill: False
 Timeout: 300s
+Pydantic AI Enabled: True
 
 === EMBEDDING SETTINGS (Appendix D) ===
 Dimension: 4096 (paper: 4096)
@@ -483,7 +516,7 @@ Watch for these log patterns:
 |-------------|-------|--------|
 | `LLM request timed out` | Transcript too long | Increase `OLLAMA_TIMEOUT_SECONDS` |
 | `Failed to parse evidence JSON` | LLM output malformed | Keyword backfill mitigates; check model |
-| `na_count = 8` for all | MedGemma contamination | Check model setting is `gemma3:27b` |
+| `na_count = 8` for all | MedGemma contamination | Ensure model is Gemma3 (`gemma3:27b-it-qat` or `gemma3:27b`), not MedGemma |
 | `No reference embeddings found` | Missing/wrong embeddings | Generate: `scripts/generate_embeddings.py` |
 | `Embedding dimension mismatch` | Dimension inconsistency | Regenerate embeddings with correct dimension |
 | `0 similar chunks found` | Silent dimension mismatch | Check `EMBEDDING_DIMENSION` matches NPZ |
@@ -568,7 +601,11 @@ make dev-hf     # Install with HuggingFace deps (recommended)
 cp .env.example .env
 
 # 2. Pull required Ollama models
+# Production-recommended (QAT-quantized, faster):
+ollama pull gemma3:27b-it-qat
+# Standard Ollama tag (GGUF Q4_K_M):
 ollama pull gemma3:27b
+# Embedding model:
 ollama pull qwen3-embedding:8b
 
 # 3. Create paper ground truth split
@@ -578,12 +615,14 @@ uv run python scripts/create_paper_split.py --verify
 # Default uses HuggingFace FP16 (higher quality)
 uv run python scripts/generate_embeddings.py --split paper-train
 
-# 5. Run few-shot reproduction
+# 5. Run few-shot reproduction (Pydantic AI enabled by default)
 uv run python scripts/reproduce_results.py --split paper --few-shot-only
 
 # 6. (Optional) Compare with zero-shot
 uv run python scripts/reproduce_results.py --split paper
 ```
+
+**Note**: Pydantic AI is enabled by default, providing structured validation with automatic retries. No additional configuration needed.
 
 ---
 

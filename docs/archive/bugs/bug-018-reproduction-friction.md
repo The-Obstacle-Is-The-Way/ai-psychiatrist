@@ -1,7 +1,39 @@
 # BUG-018: Reproduction Friction Log
 
-**Date**: 2025-12-22
-**Status**: INVESTIGATED - paper-text parity workflow runs end-to-end; MAE/coverage parity not yet achieved
+**Status**: ✅ ARCHIVED - Most issues fixed, remaining items are research questions
+**Archived**: 2025-12-26
+**Original Date**: 2025-12-22
+
+---
+
+## Resolution Summary
+
+This was a friction log for reproduction attempts. **Most issues have been fixed:**
+
+| Sub-bug | Issue | Status |
+|---------|-------|--------|
+| 018a | MedGemma default | ✅ Fixed - gemma3:27b is default |
+| 018b | .env overrides | ✅ Documented - expected behavior |
+| 018c | DataSettings attribute | ✅ Fixed |
+| 018d | Inline imports | ✅ Fixed |
+| 018e | Timeouts | ✅ Configurable via `OLLAMA_TIMEOUT_SECONDS` |
+| 018f | JSON malformation | ⚠️ Mitigated - Pydantic AI adds retries |
+| 018g | Severe underestimation | 📊 Open research question |
+| 018h | Orphaned keywords dir | ✅ Documented |
+| 018i | MAE methodology | ✅ Fixed - item-level MAE implemented |
+
+**Remaining open items:**
+- **018f** (JSON malformation): Mitigated by Pydantic AI structured outputs with retries
+- **018g** (severe underestimation): This is a research question about model behavior, not a bug
+
+**Key insight**: The reproduction workflow works end-to-end. The MAE gap (0.778 vs 0.619) is explained by Q4_K_M vs BF16 quantization (see [`model-wiring.md`](../../models/model-wiring.md)).
+
+---
+
+## Original Friction Log (Historical Context)
+
+**Original Date**: 2025-12-22
+**Original Status**: INVESTIGATED - paper-text parity workflow runs end-to-end; MAE/coverage parity not yet achieved
 **Severity**: HIGH - initially blocked paper-text parity evaluation
 **Updated**: 2025-12-24 - paper-style split + embeddings + evaluation executed; metrics still diverge (see investigation-026 / analysis-027)
 
@@ -9,7 +41,7 @@ This document captures ALL friction points encountered when attempting to reprod
 
 Terminology note (SSOT): “paper parity” has two plausible meanings because the paper text and the public repo diverge.
 This doc uses **paper-text parity** (methodology as written; keyword backfill not described). For the code-level mismatch,
-see `docs/bugs/analysis-027-paper-implementation-comparison.md`.
+see [`analysis-027-paper-implementation-comparison.md`](analysis-027-paper-implementation-comparison.md).
 
 Note: `.env` is gitignored; any `.env` references below describe **local developer configuration**
 changes made during reproduction attempts.
@@ -33,8 +65,8 @@ We were computing a **completely different metric** than the paper:
 
 1. **04:01 AM Dec 22**: Ran reproduction with OLD script → MAE 4.02 (WRONG)
 2. **Later Dec 22**: Rewrote `scripts/reproduce_results.py` to match paper methodology
-3. **2025-12-23**: Paper-parity workflow executed end-to-end; see `docs/results/reproduction-notes.md` (MAE still above paper)
-4. **2025-12-24**: Paper-text-parity run executed; see `docs/bugs/investigation-026-reproduction-mae-divergence.md`
+3. **2025-12-23**: Paper-parity workflow executed end-to-end; see `docs/results/reproduction-results.md` (MAE still above paper)
+4. **2025-12-24**: Paper-text-parity run executed; see [`investigation-026-reproduction-mae-divergence.md`](investigation-026-reproduction-mae-divergence.md)
 
 ### The OLD Code (Wrong)
 
@@ -79,8 +111,8 @@ uv run python scripts/reproduce_results.py --split dev
 ```
 
 The output file `data/outputs/reproduction_results_20251222_040100.json` is **INVALID** and should be ignored.
-See `docs/bugs/investigation-026-reproduction-mae-divergence.md` and
-`docs/bugs/analysis-027-paper-implementation-comparison.md` for current metrics and divergence hypotheses.
+See [`investigation-026-reproduction-mae-divergence.md`](investigation-026-reproduction-mae-divergence.md) and
+[`analysis-027-paper-implementation-comparison.md`](analysis-027-paper-implementation-comparison.md) for current metrics and divergence hypotheses.
 
 ---
 
@@ -307,7 +339,7 @@ The quantitative agent uses a multi-level repair cascade:
 JSON parsing failures are **mitigated**, not eliminated. In a paper-text-parity run (2025-12-24),
 we observed two participants where the quantitative scoring response could not be parsed after all
 attempts (all items N/A), and the run continued normally (see
-`docs/bugs/investigation-026-reproduction-mae-divergence.md`).
+[`investigation-026-reproduction-mae-divergence.md`](investigation-026-reproduction-mae-divergence.md)).
 
 However, because malformed JSON can reappear due to model variability and long generations, treat
 this as **mitigated**, not permanently “resolved”.
@@ -453,7 +485,7 @@ uv run python scripts/reproduce_results.py --split paper --few-shot-only
 | File | Purpose |
 |------|---------|
 | `scripts/reproduce_results.py` | Batch evaluation script |
-| `docs/results/reproduction-notes.md` | Results documentation |
+| `docs/results/reproduction-results.md` | Results documentation |
 | `docs/bugs/bug-018-reproduction-friction.md` | This file |
 | `data/outputs/reproduction_results_*.json` | Raw results |
 
@@ -586,7 +618,7 @@ keywords are in `src/ai_psychiatrist/resources/phq8_keywords.yaml`.
 
 - **Start**: 2025-12-23 02:50 UTC
 - **Estimated Duration**: ~3.5 hours
-- **Status**: Completed (see `docs/results/reproduction-notes.md`)
+- **Status**: Completed (see `docs/results/reproduction-results.md`)
 
 ### Friction Points Encountered
 

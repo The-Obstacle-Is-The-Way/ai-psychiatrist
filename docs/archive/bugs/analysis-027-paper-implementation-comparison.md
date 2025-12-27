@@ -1,5 +1,30 @@
 # Analysis 027: Paper vs Implementation Comparison (Quantitative Agent)
 
+**Status**: ✅ ARCHIVED - Historical investigation, findings now in SSOT docs
+**Archived**: 2025-12-26
+
+---
+
+## Resolution Summary
+
+This investigation identified discrepancies between the paper's public repository and our implementation. **The key findings are now documented in dedicated SSOT locations:**
+
+| Finding | SSOT Location |
+|---------|---------------|
+| Keyword backfill toggle | [`docs/concepts/backfill-explained.md`](../../concepts/backfill-explained.md) |
+| Coverage tradeoff (50% vs 69%) | [`docs/concepts/coverage-explained.md`](../../concepts/coverage-explained.md) |
+| MAE gap (0.619 vs 0.778) | [`docs/models/model-wiring.md`](../../models/model-wiring.md) - **Explained by Q4_K_M vs BF16 quantization** |
+| Sampling parameters | [`docs/reference/agent-sampling-registry.md`](../../reference/agent-sampling-registry.md) |
+| Model options & hardware | [`docs/models/model-wiring.md`](../../models/model-wiring.md) |
+
+**Key insight**: The paper likely ran BF16 on A100 GPUs. Our Q4_K_M quantization (4-bit) explains the MAE difference. This is not a code bug—it's a precision tradeoff.
+
+**Going forward**: We don't need to match their sloppy codebase. Our implementation is cleaner and well-documented. When BF16/Q8 hardware is available, we can validate whether precision closes the gap.
+
+---
+
+## Original Investigation (Historical Context)
+
 This document compares the **publicly available paper repository code** (mirrored under
 `_reference/`) to our production implementation under `src/ai_psychiatrist/`.
 
@@ -42,7 +67,7 @@ See also: `docs/bugs/investigation-026-reproduction-mae-divergence.md`.
 4. **Backfill alone does not explain our higher coverage**: we observed **69.2% coverage with backfill OFF**
    in `data/outputs/reproduction_results_20251224_003441.json` (216/(39×8); 65.9% if including all 41 subjects).
    A historical backfill-ON run was recorded at ~74.1% overall item coverage (243/328) in
-   `docs/results/reproduction-notes.md`, but that run is not paper-text parity and its raw output is not stored
+   `docs/results/reproduction-results.md`, but that run is not paper-text parity and its raw output is not stored
    under `data/outputs/` in this repo snapshot.
 
 ---

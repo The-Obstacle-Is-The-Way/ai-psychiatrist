@@ -1,7 +1,7 @@
 # Data Splits Overview
 
 **Purpose**: Definitive reference for all data split configurations
-**Last Updated**: 2025-12-25
+**Last Updated**: 2025-12-26
 **Tracked by**: [GitHub Issue #45](https://github.com/The-Obstacle-Is-The-Way/ai-psychiatrist/issues/45)
 
 This document explains the relationship between AVEC2017 competition splits, the paper's custom splits, and our implementation.
@@ -249,5 +249,5 @@ uv run python scripts/reproduce_results.py --split dev
 ## See Also
 
 - [daic-woz-schema.md](./daic-woz-schema.md) - Full dataset schema
-- [GAP-001](../bugs/gap-001-paper-unspecified-parameters.md) - Paper-unspecified parameters
-- [reproduction-notes.md](../results/reproduction-notes.md) - Reproduction status
+- [GAP-001](../archive/bugs/gap-001-paper-unspecified-parameters.md) - Paper-unspecified parameters
+- [reproduction-results.md](../results/reproduction-results.md) - Reproduction status

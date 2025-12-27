@@ -105,9 +105,12 @@ See [Agent Sampling Registry](./agent-sampling-registry.md) for full rationale w
 
 | Model | Size | Use Case | Performance |
 |-------|------|----------|-------------|
+| `gemma3:27b-it-qat` | ~17GB | All agents (Ollama recommended) | QAT 4-bit variant (same size, better quality/speed vs standard Q4) |
 | `gemma3:27b` | ~16GB | All agents (default) | Paper Section 2.2 |
 | `medgemma:27b` | ~16GB | Quantitative (HuggingFace only) | Appendix F, 18% better MAE but more N/A |
 | `qwen3-embedding:8b` | ~4GB | Embeddings | Paper standard |
+
+**Note**: `gemma3:27b-it-qat` is an Ollama tag; use it only with `LLM_BACKEND=ollama`. For HuggingFace, use canonical `gemma3:27b` (resolved to `google/gemma-3-27b-it`).
 
 > **Note**: MedGemma is not available in Ollama officially. Use HuggingFace backend for official weights.
 > See [Model Registry](../models/model-registry.md) for HuggingFace setup.
@@ -149,7 +152,7 @@ Few-shot retrieval configuration.
 | `EMBEDDING_CHUNK_STEP` | int | `2` | Section 2.4.2 |
 | `EMBEDDING_TOP_K_REFERENCES` | int | `2` | Appendix D (optimal) |
 | `EMBEDDING_MIN_EVIDENCE_CHARS` | int | `8` | Minimum text for embedding |
-| `EMBEDDING_EMBEDDINGS_FILE` | string | `paper_reference_embeddings` | Reference embeddings basename (no extension), resolved under `{DATA_BASE_DIR}/embeddings/` |
+| `EMBEDDING_EMBEDDINGS_FILE` | string | `huggingface_qwen3_8b_paper_train` | Reference embeddings basename (no extension), resolved under `{DATA_BASE_DIR}/embeddings/` |
 
 **Note on artifact naming**: `scripts/generate_embeddings.py` defaults to writing a namespaced artifact like
 `data/embeddings/{backend}_{model_slug}_{split}.npz`. After generating, set `EMBEDDING_EMBEDDINGS_FILE` to that basename
@@ -207,7 +210,7 @@ File path configuration.
 |----------|------|---------|-------------|
 | `DATA_BASE_DIR` | path | `data` | Base data directory |
 | `DATA_TRANSCRIPTS_DIR` | path | `data/transcripts` | Transcript files |
-| `DATA_EMBEDDINGS_PATH` | path | `data/embeddings/paper_reference_embeddings.npz` | Full-path override for reference embeddings (takes precedence over `EMBEDDING_EMBEDDINGS_FILE`) |
+| `DATA_EMBEDDINGS_PATH` | path | `data/embeddings/huggingface_qwen3_8b_paper_train.npz` | Full-path override for reference embeddings (takes precedence over `EMBEDDING_EMBEDDINGS_FILE`) |
 | `DATA_TRAIN_CSV` | path | `data/train_split_Depression_AVEC2017.csv` | Training ground truth |
 | `DATA_DEV_CSV` | path | `data/dev_split_Depression_AVEC2017.csv` | Development ground truth |
 
@@ -219,9 +222,12 @@ data/
 │   │   └── 300_TRANSCRIPT.csv
 │   └── .../
 ├── embeddings/
-│   ├── paper_reference_embeddings.npz
+│   ├── huggingface_qwen3_8b_paper_train.npz         # default reference knowledge base (paper-train)
+│   ├── huggingface_qwen3_8b_paper_train.json
+│   ├── huggingface_qwen3_8b_paper_train.meta.json   # provenance metadata (backend/model/dim/chunking)
+│   ├── paper_reference_embeddings.npz               # legacy/compat filename (paper-train)
 │   ├── paper_reference_embeddings.json
-│   └── paper_reference_embeddings.meta.json  # optional provenance metadata
+│   └── paper_reference_embeddings.meta.json         # provenance metadata (legacy/compat)
 ├── train_split_Depression_AVEC2017.csv
 └── dev_split_Depression_AVEC2017.csv
 ```
@@ -297,7 +303,8 @@ API_WORKERS=1
 
 ### Quantitative Assessment Settings
 
-These settings control the quantitative assessment behavior (implemented in [SPEC-003](../specs/SPEC-003-backfill-toggle.md)):
+These settings control the quantitative assessment behavior (implemented in
+[SPEC-003](../archive/specs/SPEC-003-backfill-toggle.md)):
 
 | Variable | Type | Default | Description |
 |----------|------|---------|-------------|
@@ -322,6 +329,21 @@ System-wide toggles.
 | `ENABLE_FEW_SHOT` | bool | `true` | Use embedding-based few-shot |
 
 **Note:** `ENABLE_FEW_SHOT=true` requires pre-computed embeddings (resolved from `DATA_EMBEDDINGS_PATH` or `EMBEDDING_EMBEDDINGS_FILE`).
+
+---
+
+### Pydantic AI Settings
+
+Structured validation + automatic retries for agent outputs (Spec 13).
+
+| Variable | Type | Default | Description |
+|----------|------|---------|-------------|
+| `PYDANTIC_AI_ENABLED` | bool | `true` | Enable Pydantic AI `TextOutput` validation + retry loop |
+| `PYDANTIC_AI_RETRIES` | int | `3` | Retry count when validation fails (`0` disables retries) |
+
+**Notes:**
+- This preserves existing prompt formats (e.g., `<thinking>...</thinking>` + `<answer>...</answer>`) and adds validation after generation.
+- On repeated failure, the system falls back to legacy parsing (fail-soft), but will still log the issue.
 
 ---
 

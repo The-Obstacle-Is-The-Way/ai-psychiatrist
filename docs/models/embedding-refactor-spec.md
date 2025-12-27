@@ -3,6 +3,7 @@
 > **Status**: IMPLEMENTED
 > **Author**: Claude Code
 > **Date**: 2024-12-24
+> **Last Updated**: 2025-12-26
 > **Related**: model-wiring.md (design target), GH-46 (sampling params)
 
 ---
@@ -117,7 +118,7 @@ embedding_model: str = Field(
 ```python
 # Add embeddings artifact selection
 embeddings_file: str = Field(
-    default="paper_reference_embeddings",  # Keep existing default for backward compat
+    default="huggingface_qwen3_8b_paper_train",  # Default FP16 artifact; legacy name still supported
     description="Reference embeddings basename (no extension)"
 )
 ```
@@ -127,7 +128,7 @@ embeddings_file: str = Field(
 ```python
 # DataSettings.embeddings_path stays as a simple Path field
 embeddings_path: Path = Field(
-    default=Path("data/embeddings/paper_reference_embeddings.npz"),
+    default=Path("data/embeddings/huggingface_qwen3_8b_paper_train.npz"),
     description="Pre-computed embeddings (NPZ + .json sidecar).",
 )
 ```

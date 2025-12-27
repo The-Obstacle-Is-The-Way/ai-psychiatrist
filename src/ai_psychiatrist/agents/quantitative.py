@@ -23,7 +23,11 @@ from ai_psychiatrist.agents.prompts.quantitative import (
     make_evidence_prompt,
     make_scoring_prompt,
 )
-from ai_psychiatrist.config import PydanticAISettings, QuantitativeSettings
+from ai_psychiatrist.config import (
+    PydanticAISettings,
+    QuantitativeSettings,
+    get_model_name,
+)
 from ai_psychiatrist.domain.entities import PHQ8Assessment, Transcript
 from ai_psychiatrist.domain.enums import AssessmentMode, NAReason, PHQ8Item
 from ai_psychiatrist.domain.value_objects import ItemAssessment
@@ -115,9 +119,7 @@ class QuantitativeAssessmentAgent:
                 )
 
                 self._scoring_agent = create_quantitative_agent(
-                    model_name=(
-                        model_settings.quantitative_model if model_settings else "gemma3:27b"
-                    ),
+                    model_name=get_model_name(model_settings, "quantitative"),
                     base_url=self._ollama_base_url,
                     retries=self._pydantic_ai.retries,
                     system_prompt=QUANTITATIVE_SYSTEM_PROMPT,
@@ -199,7 +201,7 @@ class QuantitativeAssessmentAgent:
         prompt = make_scoring_prompt(transcript.text, reference_text)
 
         # Model settings (Appendix F: MedGemma; GAP-001: temp=0.0 for reproducibility)
-        model = self._model_settings.quantitative_model if self._model_settings else None
+        model = get_model_name(self._model_settings, "quantitative")
         temperature = self._model_settings.temperature if self._model_settings else 0.0
 
         parsed_items = await self._score_items(prompt=prompt, model=model, temperature=temperature)
@@ -333,7 +335,7 @@ class QuantitativeAssessmentAgent:
         user_prompt = make_evidence_prompt(transcript_text)
 
         # Use model settings if provided (GAP-001: temp=0.0 for clinical reproducibility)
-        model = self._model_settings.quantitative_model if self._model_settings else None
+        model = get_model_name(self._model_settings, "quantitative")
         temperature = self._model_settings.temperature if self._model_settings else 0.0
 
         raw = await self._llm.simple_chat(
@@ -498,7 +500,7 @@ class QuantitativeAssessmentAgent:
         )
         try:
             # Use model settings if provided, with lower temperature for repair
-            model = self._model_settings.quantitative_model if self._model_settings else None
+            model = get_model_name(self._model_settings, "quantitative")
 
             fixed = await self._llm.simple_chat(
                 user_prompt=repair_prompt,

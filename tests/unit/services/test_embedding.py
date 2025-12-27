@@ -142,20 +142,20 @@ class TestEmbeddingService:
         return store
 
     @pytest.fixture
-    def mock_settings(self) -> MagicMock:
+    def mock_settings(self) -> EmbeddingSettings:
         """Create mock embedding settings."""
-        settings = MagicMock()
-        settings.dimension = 256
-        settings.top_k_references = 2
-        settings.min_evidence_chars = 8
-        return settings
+        return EmbeddingSettings(
+            dimension=256,
+            top_k_references=2,
+            min_evidence_chars=8,
+        )
 
     @pytest.mark.asyncio
     async def test_embed_text(
         self,
         mock_llm_client: MagicMock,
         mock_reference_store: MagicMock,
-        mock_settings: MagicMock,
+        mock_settings: EmbeddingSettings,
     ) -> None:
         """Should generate embedding for text."""
         service = EmbeddingService(
@@ -174,7 +174,7 @@ class TestEmbeddingService:
         self,
         mock_llm_client: MagicMock,
         mock_reference_store: MagicMock,
-        mock_settings: MagicMock,
+        mock_settings: EmbeddingSettings,
     ) -> None:
         """Should return empty tuple for text below minimum chars."""
         service = EmbeddingService(
@@ -193,7 +193,7 @@ class TestEmbeddingService:
         self,
         mock_llm_client: MagicMock,
         mock_reference_store: MagicMock,
-        mock_settings: MagicMock,
+        mock_settings: EmbeddingSettings,
     ) -> None:
         """Should embed a transcript chunk."""
         service = EmbeddingService(
@@ -217,7 +217,7 @@ class TestEmbeddingService:
         self,
         mock_llm_client: MagicMock,
         mock_reference_store: MagicMock,
-        mock_settings: MagicMock,
+        mock_settings: EmbeddingSettings,
     ) -> None:
         """Should find similar chunks from reference store."""
         service = EmbeddingService(
@@ -240,7 +240,7 @@ class TestEmbeddingService:
         self,
         mock_llm_client: MagicMock,
         mock_reference_store: MagicMock,
-        mock_settings: MagicMock,
+        mock_settings: EmbeddingSettings,
     ) -> None:
         """Should raise when query embedding dimension mismatches config."""
         service = EmbeddingService(
@@ -258,7 +258,7 @@ class TestEmbeddingService:
         self,
         mock_llm_client: MagicMock,
         mock_reference_store: MagicMock,
-        mock_settings: MagicMock,
+        mock_settings: EmbeddingSettings,
     ) -> None:
         """Should return empty list for empty query embedding."""
         service = EmbeddingService(
@@ -276,7 +276,7 @@ class TestEmbeddingService:
         self,
         mock_llm_client: MagicMock,
         mock_reference_store: MagicMock,
-        mock_settings: MagicMock,
+        mock_settings: EmbeddingSettings,
     ) -> None:
         """Should handle empty reference store gracefully."""
         mock_reference_store.get_all_embeddings.return_value = {}
@@ -297,7 +297,7 @@ class TestEmbeddingService:
         self,
         mock_llm_client: MagicMock,
         mock_reference_store: MagicMock,
-        mock_settings: MagicMock,
+        mock_settings: EmbeddingSettings,
     ) -> None:
         """Should build reference bundle for evidence."""
         service = EmbeddingService(
@@ -325,7 +325,7 @@ class TestEmbeddingService:
         self,
         mock_llm_client: MagicMock,
         mock_reference_store: MagicMock,
-        mock_settings: MagicMock,
+        mock_settings: EmbeddingSettings,
     ) -> None:
         """Should skip items with evidence too short."""
         service = EmbeddingService(
@@ -400,10 +400,9 @@ class TestReferenceStore:
         }
         _create_npz_embeddings(mock_data_settings.embeddings_path, raw_data)
 
-        mock_embed = MagicMock()
-        mock_embed.dimension = 2  # Match dummy data dimension
+        embed_settings = EmbeddingSettings(dimension=2)  # Match dummy data dimension
 
-        store = ReferenceStore(mock_data_settings, mock_embed)
+        store = ReferenceStore(mock_data_settings, embed_settings)
         embeddings = store.get_all_embeddings()
 
         assert len(embeddings) == 2
@@ -440,8 +439,8 @@ class TestReferenceStore:
         )
         dev_df.to_csv(mock_data_settings.dev_csv, index=False)
 
-        mock_embed = MagicMock()
-        store = ReferenceStore(mock_data_settings, mock_embed)
+        embed_settings = EmbeddingSettings()
+        store = ReferenceStore(mock_data_settings, embed_settings)
 
         # Check scores from train split
         assert store.get_score(100, PHQ8Item.NO_INTEREST) == 1
@@ -462,10 +461,9 @@ class TestReferenceStore:
         }
         _create_npz_embeddings(mock_data_settings.embeddings_path, raw_data)
 
-        mock_embed = MagicMock()
-        mock_embed.dimension = 2
+        embed_settings = EmbeddingSettings(dimension=2)
 
-        store = ReferenceStore(mock_data_settings, mock_embed)
+        store = ReferenceStore(mock_data_settings, embed_settings)
 
         p100 = store.get_participant_embeddings(100)
         assert len(p100) == 1
@@ -595,10 +593,9 @@ class TestEmbeddingDimensionMismatch:
             dev_csv=tmp_path / "dev.csv",
         )
 
-        mock_embed = MagicMock()
-        mock_embed.dimension = 256  # Expect 256, but embeddings only have 2
+        embed_settings = EmbeddingSettings(dimension=256)  # Expect 256, but embeddings only have 2
 
-        store = ReferenceStore(data_settings, mock_embed)
+        store = ReferenceStore(data_settings, embed_settings)
 
         with pytest.raises(EmbeddingDimensionMismatchError) as excinfo:
             store.get_all_embeddings()
@@ -627,10 +624,11 @@ class TestEmbeddingDimensionMismatch:
             dev_csv=tmp_path / "dev.csv",
         )
 
-        mock_embed = MagicMock()
-        mock_embed.dimension = 4  # Need at least 4, so 2-dim is skipped, 10-dim is valid
+        embed_settings = EmbeddingSettings(
+            dimension=4
+        )  # Need at least 4, so 2-dim is skipped, 10-dim is valid
 
-        store = ReferenceStore(data_settings, mock_embed)
+        store = ReferenceStore(data_settings, embed_settings)
         embeddings = store.get_all_embeddings()
 
         # Only participant 101 should remain (100 was skipped)
@@ -658,10 +656,9 @@ class TestEmbeddingDimensionMismatch:
             dev_csv=tmp_path / "dev.csv",
         )
 
-        mock_embed = MagicMock()
-        mock_embed.dimension = 4  # Truncate to 4
+        embed_settings = EmbeddingSettings(dimension=4)  # Truncate to 4
 
-        store = ReferenceStore(data_settings, mock_embed)
+        store = ReferenceStore(data_settings, embed_settings)
         embeddings = store.get_all_embeddings()
 
         # Check truncation happened
@@ -683,13 +680,13 @@ class TestSimilarityTransformation:
         return MockLLMClient()
 
     @pytest.fixture
-    def mock_settings(self) -> MagicMock:
+    def mock_settings(self) -> EmbeddingSettings:
         """Create mock embedding settings."""
-        settings = MagicMock()
-        settings.dimension = 256
-        settings.top_k_references = 2
-        settings.min_evidence_chars = 8
-        return settings
+        return EmbeddingSettings(
+            dimension=256,
+            top_k_references=2,
+            min_evidence_chars=8,
+        )
 
     @pytest.fixture
     def mock_reference_store(self) -> MagicMock:
@@ -716,7 +713,7 @@ class TestSimilarityTransformation:
         self,
         mock_llm_client: MagicMock,
         mock_reference_store: MagicMock,
-        mock_settings: MagicMock,
+        mock_settings: EmbeddingSettings,
     ) -> None:
         """Similarity values should be transformed to [0, 1] range."""
         service = EmbeddingService(
@@ -737,7 +734,7 @@ class TestSimilarityTransformation:
         self,
         mock_llm_client: MagicMock,
         mock_reference_store: MagicMock,
-        mock_settings: MagicMock,
+        mock_settings: EmbeddingSettings,
     ) -> None:
         """Transformed similarity should follow (1 + cos) / 2 formula."""
         service = EmbeddingService(

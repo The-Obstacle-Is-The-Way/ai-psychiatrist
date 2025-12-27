@@ -1,8 +1,8 @@
 # Keyword Backfill: The Safety Net for Evidence Extraction
 
 **Audience**: Researchers and developers wanting to understand the coverage-accuracy tradeoff
-**Related**: [SPEC-003](../specs/SPEC-003-backfill-toggle.md) | [Coverage Investigation](../bugs/coverage-investigation.md) | [Extraction Mechanism](./extraction-mechanism.md)
-**Last Updated**: 2025-12-24
+**Related**: [SPEC-003](../archive/specs/SPEC-003-backfill-toggle.md) | [Coverage Investigation](../archive/bugs/coverage-investigation.md) | [Extraction Mechanism](./extraction-mechanism.md)
+**Last Updated**: 2025-12-26
 
 ---
 
@@ -235,7 +235,7 @@ else:
 
 | Pros | Cons |
 |------|------|
-| Often higher coverage (e.g., 74.1% in one historical run recorded in `docs/results/reproduction-notes.md`) | Measures "LLM + heuristics" |
+| Often higher coverage (e.g., 74.1% in one historical run recorded in `docs/results/reproduction-results.md`) | Measures "LLM + heuristics" |
 | Catches LLM blind spots | May include irrelevant matches |
 | More clinical utility | Diverges from paper-text methodology; closer to paper-repo behavior |
 | More items get assessed | Harder to compare with paper |
@@ -272,7 +272,7 @@ We chose to measure **pure LLM capability** (backfill OFF) because:
 2. Scientific reproducibility should match documented methodology
 3. We can always enable backfill for clinical utility
 
-**Backfill is OFF by default** per [SPEC-003](../specs/SPEC-003-backfill-toggle.md).
+**Backfill is OFF by default** per [SPEC-003](../archive/specs/SPEC-003-backfill-toggle.md).
 
 ### Asking the Authors
 
@@ -303,7 +303,7 @@ To resolve this ambiguity, consider asking:
 
 ## N/A Reason Tracking
 
-With [SPEC-003](../specs/SPEC-003-backfill-toggle.md) implemented, each N/A result can include a deterministic reason (when enabled):
+With [SPEC-003](../archive/specs/SPEC-003-backfill-toggle.md) implemented, each N/A result can include a deterministic reason (when enabled):
 
 | Reason | Description |
 |--------|-------------|
@@ -341,7 +341,7 @@ QUANTITATIVE_ENABLE_KEYWORD_BACKFILL=true
 | Run | Mode | Coverage | Item MAE | Notes |
 |-----|------|----------|---------|-------|
 | 2025-12-24 (paper split, backfill OFF) | Paper-text parity | 69.2% (216/312) | 0.778 | Local output: `data/outputs/reproduction_results_20251224_003441.json` |
-| 2025-12-23 (historical, backfill ON) | Heuristic-augmented | 74.1% (243/328) | 0.757 | Recorded in `docs/results/reproduction-notes.md` (no JSON artifact stored under `data/outputs/` in this repo snapshot) |
+| 2025-12-23 (historical, backfill ON) | Heuristic-augmented | 74.1% (243/328) | 0.757 | Recorded in `docs/results/reproduction-results.md` (no JSON artifact stored under `data/outputs/` in this repo snapshot) |
 
 ### Per-Item Impact
 
@@ -406,7 +406,7 @@ Transcript → LLM Evidence Extraction
 
 ## Related Documentation
 
-- [SPEC-003: Backfill Toggle](../specs/SPEC-003-backfill-toggle.md) - Implementation specification
-- [Coverage Investigation](../bugs/coverage-investigation.md) - Why our coverage differs
+- [SPEC-003: Backfill Toggle](../archive/specs/SPEC-003-backfill-toggle.md) - Implementation specification
+- [Coverage Investigation](../archive/bugs/coverage-investigation.md) - Why our coverage differs
 - [Extraction Mechanism](./extraction-mechanism.md) - Full extraction pipeline
 - [Paper Parity Guide](../guides/paper-parity-guide.md) - How to reproduce paper results

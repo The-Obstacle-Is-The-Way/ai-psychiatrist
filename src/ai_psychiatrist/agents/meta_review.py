@@ -17,7 +17,7 @@ from ai_psychiatrist.agents.prompts.meta_review import (
     META_REVIEW_SYSTEM_PROMPT,
     make_meta_review_prompt,
 )
-from ai_psychiatrist.config import PydanticAISettings
+from ai_psychiatrist.config import PydanticAISettings, get_model_name
 from ai_psychiatrist.domain.entities import (
     MetaReview,
     PHQ8Assessment,
@@ -84,9 +84,7 @@ class MetaReviewAgent:
                 )
 
                 self._review_agent = create_meta_review_agent(
-                    model_name=(
-                        model_settings.meta_review_model if model_settings else "gemma3:27b"
-                    ),
+                    model_name=get_model_name(model_settings, "meta_review"),
                     base_url=self._ollama_base_url,
                     retries=self._pydantic_ai.retries,
                     system_prompt=META_REVIEW_SYSTEM_PROMPT,
@@ -128,7 +126,7 @@ class MetaReviewAgent:
         )
 
         # Get model and sampling params from settings
-        model = self._model_settings.meta_review_model if self._model_settings else None
+        model = get_model_name(self._model_settings, "meta_review")
         temperature = self._model_settings.temperature if self._model_settings else 0.0
 
         if self._review_agent is not None:

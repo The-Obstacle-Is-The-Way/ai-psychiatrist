@@ -45,6 +45,50 @@ class EmbeddingBackend(str, Enum):
     HUGGINGFACE = "huggingface"
 
 
+class HuggingFaceSettings(BaseSettings):
+    """HuggingFace-specific configuration."""
+
+    model_config = SettingsConfigDict(
+        env_prefix="HF_",
+        env_file=ENV_FILE,
+        env_file_encoding=ENV_FILE_ENCODING,
+        extra="ignore",
+    )
+
+    default_chat_timeout: int = Field(
+        default=180,
+        description="Default timeout for chat requests",
+    )
+    default_embed_timeout: int = Field(
+        default=120,
+        description="Default timeout for embedding requests",
+    )
+    max_new_tokens: int = Field(
+        default=1024,
+        description="Maximum tokens to generate (HuggingFace)",
+    )
+    quantization_group_size: int = Field(
+        default=128,
+        description="Group size for int4 quantization",
+    )
+
+
+class ServerSettings(BaseSettings):
+    """Server-specific configuration."""
+
+    model_config = SettingsConfigDict(
+        env_prefix="SERVER_",
+        env_file=ENV_FILE,
+        env_file_encoding=ENV_FILE_ENCODING,
+        extra="ignore",
+    )
+
+    ad_hoc_participant_id: int = Field(
+        default=999_999,
+        description="Participant ID assigned to ad-hoc text submissions",
+    )
+
+
 class BackendSettings(BaseSettings):
     """LLM backend configuration.
 
@@ -441,6 +485,8 @@ class Settings(BaseSettings):
     # Nested settings groups
     backend: BackendSettings = Field(default_factory=BackendSettings)
     embedding_config: EmbeddingBackendSettings = Field(default_factory=EmbeddingBackendSettings)
+    huggingface: HuggingFaceSettings = Field(default_factory=HuggingFaceSettings)
+    server: ServerSettings = Field(default_factory=ServerSettings)
     ollama: OllamaSettings = Field(default_factory=OllamaSettings)
     model: ModelSettings = Field(default_factory=ModelSettings)
     embedding: EmbeddingSettings = Field(default_factory=EmbeddingSettings)
@@ -472,6 +518,22 @@ class Settings(BaseSettings):
 def get_settings() -> Settings:
     """Get cached settings singleton."""
     return Settings()
+
+
+def get_model_name(model_settings: ModelSettings | None, model_type: str) -> str:
+    """Get model name from settings or fall back to config defaults.
+
+    Args:
+        model_settings: Optional settings object
+        model_type: One of "qualitative", "quantitative", "judge", "meta_review", "embedding"
+
+    Returns:
+        Model name string
+    """
+    if model_settings is not None:
+        return str(getattr(model_settings, f"{model_type}_model"))
+    # Fall back to fresh settings instance (reads from env/defaults)
+    return str(getattr(ModelSettings(), f"{model_type}_model"))
 
 
 def get_ollama_settings() -> OllamaSettings:

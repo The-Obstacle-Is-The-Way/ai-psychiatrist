@@ -46,9 +46,12 @@ data/
 │   │   └── 301_TRANSCRIPT.csv
 │   └── .../
 ├── embeddings/                          # Pre-computed (Spec 08)
-│   ├── paper_reference_embeddings.npz   # Default paper reference knowledge base (TRAIN=58)
+│   ├── huggingface_qwen3_8b_paper_train.npz       # Default paper-train knowledge base (TRAIN=58)
+│   ├── huggingface_qwen3_8b_paper_train.json
+│   ├── huggingface_qwen3_8b_paper_train.meta.json  # Provenance metadata
+│   ├── paper_reference_embeddings.npz             # Optional legacy/compat filename (paper-train)
 │   ├── paper_reference_embeddings.json
-│   ├── paper_reference_embeddings.meta.json  # Optional: provenance metadata
+│   ├── paper_reference_embeddings.meta.json       # Optional provenance metadata
 │   ├── reference_embeddings.npz         # Optional: AVEC train knowledge base
 │   └── reference_embeddings.json
 ├── paper_splits/                        # Optional: paper 58/43/41 split (ground truth for reproduction)
@@ -70,7 +73,7 @@ Defined in `src/ai_psychiatrist/config.py`:
 class DataSettings(BaseSettings):
     base_dir: Path = Path("data")
     transcripts_dir: Path = Path("data/transcripts")
-    embeddings_path: Path = Path("data/embeddings/paper_reference_embeddings.npz")
+    embeddings_path: Path = Path("data/embeddings/huggingface_qwen3_8b_paper_train.npz")
     train_csv: Path = Path("data/train_split_Depression_AVEC2017.csv")
     dev_csv: Path = Path("data/dev_split_Depression_AVEC2017.csv")
 ```

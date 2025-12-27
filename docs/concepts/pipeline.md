@@ -167,7 +167,7 @@ First, the agent extracts evidence quotes for each PHQ-8 item:
 
 **Keyword Backfill (Optional):** If enabled, keyword matching can supplement extraction when the
 LLM misses evidence. By default (paper-text parity), backfill is OFF; see
-`docs/concepts/backfill-explained.md` and `docs/bugs/analysis-027-paper-implementation-comparison.md`.
+`docs/concepts/backfill-explained.md` and `docs/archive/bugs/analysis-027-paper-implementation-comparison.md`.
 
 #### Few-Shot Reference Retrieval
 
@@ -349,7 +349,7 @@ Note: The paper text emphasizes consumer hardware (M3 Pro / no GPU requirement),
 also includes SLURM scripts configured for A100 GPUs (`_reference/slurm/job_ollama.sh`). We cannot
 determine what hardware/precision produced the reported metrics from the paper text alone.
 
-For local reproduction runtime measurements, see `docs/results/reproduction-notes.md`.
+For local reproduction runtime measurements, see `docs/results/reproduction-results.md`.
 
 ---
 

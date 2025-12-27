@@ -1,6 +1,6 @@
 # AI Psychiatrist Model Registry
 
-Last Updated: 2025-12-25
+Last Updated: 2025-12-26
 Purpose: Paper-aligned, reproducible model configuration for this repo.
 
 ---
@@ -28,11 +28,19 @@ These models match the paper's methodology and are required for paper-accurate r
 
 | Role | Model family | Params | Ollama tag | Paper reference | Notes |
 |------|--------------|--------|------------|-----------------|-------|
-| Qualitative Agent | Gemma 3 | 27B | `gemma3:27b` | Section 2.2 | Used for qualitative assessment |
-| Judge Agent | Gemma 3 | 27B | `gemma3:27b` | Section 2.2 | Used for feedback loop |
-| Meta-Review Agent | Gemma 3 | 27B | `gemma3:27b` | Section 2.2 | Used for final review |
-| Quantitative Agent | Gemma 3 | 27B | `gemma3:27b` | Section 2.2 | **Default** (see MedGemma note below) |
+| Qualitative Agent | Gemma 3 | 27B | `gemma3:27b` or `gemma3:27b-it-qat` | Section 2.2 | Used for qualitative assessment |
+| Judge Agent | Gemma 3 | 27B | `gemma3:27b` or `gemma3:27b-it-qat` | Section 2.2 | Used for feedback loop |
+| Meta-Review Agent | Gemma 3 | 27B | `gemma3:27b` or `gemma3:27b-it-qat` | Section 2.2 | Used for final review |
+| Quantitative Agent | Gemma 3 | 27B | `gemma3:27b` or `gemma3:27b-it-qat` | Section 2.2 | **Default** (see MedGemma note below) |
 | Embedding | Qwen3 Embedding | 8B | `qwen3-embedding:8b` | Section 2.2 | 4096-dim embeddings (Appendix D) |
+
+### Quantization Note
+
+The paper authors likely used full-precision BF16 weights. Both Ollama variants are quantized:
+- `gemma3:27b` - Standard Ollama GGUF quantization (Q4_K_M)
+- `gemma3:27b-it-qat` - QAT (Quantization-Aware Training) optimized, faster inference
+
+Both are acceptable for reproduction. Use `-it-qat` for faster runs, or `27b` for closer naming parity with the paper.
 
 Approximate disk for paper-optimal pulls: ~32 GB.
 
@@ -67,8 +75,12 @@ Use these for fast local testing only. They do not reproduce paper metrics.
 ### Ollama (Paper-optimal)
 
 ```bash
-ollama pull gemma3:27b
+# Recommended (QAT-optimized, faster):
+ollama pull gemma3:27b-it-qat
 ollama pull qwen3-embedding:8b
+
+# Alternative (standard quantization):
+ollama pull gemma3:27b
 ```
 
 ### Ollama (Development - smaller/faster)
@@ -199,7 +211,7 @@ For users with capable hardware (32GB+ RAM, Apple Silicon or NVIDIA GPU), use Hu
 | **Chat (Quantitative)** | `gemma3:27b` (Q4_K_M) | `google/medgemma-27b-text-it` (FP16) | 18% better MAE (Appendix F) |
 | **Embeddings** | `qwen3-embedding:8b` (Q4_K_M) | `Qwen/Qwen3-Embedding-8B` (FP16) | Higher precision similarity |
 
-**Key insight**: Both Ollama models use **Q4_K_M quantization** (4-bit). HuggingFace provides **FP16/BF16** (16-bit) - 4x more precision.
+**Key insight**: Ollama models are quantized (typically 4-bit GGUF; e.g., Q4_K_M for `gemma3:27b` and `qwen3-embedding:8b`, and QAT for `gemma3:27b-it-qat`). HuggingFace provides **FP16/BF16** (16-bit) - 4x more precision.
 
 ### High-Quality Configuration
 

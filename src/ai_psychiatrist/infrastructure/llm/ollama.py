@@ -14,6 +14,7 @@ from typing import TYPE_CHECKING, Any
 
 import httpx
 
+from ai_psychiatrist.config import get_model_name
 from ai_psychiatrist.domain.exceptions import (
     LLMError,
     LLMResponseParseError,
@@ -29,7 +30,7 @@ from ai_psychiatrist.infrastructure.llm.protocols import (
 from ai_psychiatrist.infrastructure.logging import get_logger
 
 if TYPE_CHECKING:
-    from ai_psychiatrist.config import OllamaSettings
+    from ai_psychiatrist.config import ModelSettings, OllamaSettings
 
 logger = get_logger(__name__)
 
@@ -65,16 +66,19 @@ class OllamaClient:
     def __init__(
         self,
         ollama_settings: OllamaSettings,
+        model_settings: ModelSettings | None = None,
     ) -> None:
         """Initialize Ollama client.
 
         Args:
             ollama_settings: Ollama server configuration.
+            model_settings: Optional model configuration for defaults.
         """
         self._base_url = ollama_settings.base_url
         self._chat_url = ollama_settings.chat_url
         self._embeddings_url = ollama_settings.embeddings_url
         self._default_timeout = ollama_settings.timeout_seconds
+        self._model_settings = model_settings
 
         self._client = httpx.AsyncClient(timeout=httpx.Timeout(self._default_timeout))
 
@@ -305,9 +309,14 @@ class OllamaClient:
             messages.append(ChatMessage(role="system", content=system_prompt))
         messages.append(ChatMessage(role="user", content=user_prompt))
 
+        # Fallback priority:
+        # 1. explicit 'model' arg
+        # 2. settings.qualitative_model (via get_model_name helper)
+        default_model = get_model_name(self._model_settings, "qualitative")
+
         request = ChatRequest(
             messages=messages,
-            model=model or "gemma3:27b",
+            model=model or default_model,
             temperature=temperature,
             timeout_seconds=self._default_timeout,
         )
@@ -330,9 +339,14 @@ class OllamaClient:
         Returns:
             L2-normalized embedding vector.
         """
+        # Fallback priority:
+        # 1. explicit 'model' arg
+        # 2. settings.embedding_model (via get_model_name helper)
+        default_model = get_model_name(self._model_settings, "embedding")
+
         request = EmbeddingRequest(
             text=text,
-            model=model or "qwen3-embedding:8b",
+            model=model or default_model,
             dimension=dimension,
             timeout_seconds=self._default_timeout,
         )

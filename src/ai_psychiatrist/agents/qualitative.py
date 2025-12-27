@@ -11,6 +11,7 @@ iterative refinement.
 
 from __future__ import annotations
 
+import asyncio
 import re
 from typing import TYPE_CHECKING, ClassVar
 
@@ -19,6 +20,7 @@ from ai_psychiatrist.agents.prompts.qualitative import (
     make_feedback_prompt,
     make_qualitative_prompt,
 )
+from ai_psychiatrist.config import PydanticAISettings, get_model_name
 from ai_psychiatrist.domain.entities import QualitativeAssessment, Transcript
 from ai_psychiatrist.infrastructure.llm.responses import (
     SimpleChatClient,
@@ -27,6 +29,9 @@ from ai_psychiatrist.infrastructure.llm.responses import (
 from ai_psychiatrist.infrastructure.logging import get_logger
 
 if TYPE_CHECKING:
+    from pydantic_ai import Agent
+
+    from ai_psychiatrist.agents.output_models import QualitativeOutput
     from ai_psychiatrist.config import ModelSettings
 
 logger = get_logger(__name__)
@@ -63,15 +68,40 @@ class QualitativeAssessmentAgent:
         self,
         llm_client: SimpleChatClient,
         model_settings: ModelSettings | None = None,
+        pydantic_ai_settings: PydanticAISettings | None = None,
+        ollama_base_url: str | None = None,
     ) -> None:
         """Initialize qualitative assessment agent.
 
         Args:
             llm_client: LLM client for chat completions.
             model_settings: Model configuration. If None, uses OllamaClient defaults.
+            pydantic_ai_settings: Pydantic AI configuration. If None, uses defaults.
+            ollama_base_url: Ollama base URL for Pydantic AI agent. Required when
+                pydantic_ai_settings.enabled is True.
         """
         self._llm_client = llm_client
         self._model_settings = model_settings
+        self._pydantic_ai = pydantic_ai_settings or PydanticAISettings()
+        self._ollama_base_url = ollama_base_url
+        self._agent: Agent[None, QualitativeOutput] | None = None
+
+        if self._pydantic_ai.enabled:
+            if not self._ollama_base_url:
+                logger.warning(
+                    "Pydantic AI enabled but no ollama_base_url provided; falling back to legacy",
+                )
+            else:
+                from ai_psychiatrist.agents.pydantic_agents import (  # noqa: PLC0415
+                    create_qualitative_agent,
+                )
+
+                self._agent = create_qualitative_agent(
+                    model_name=get_model_name(model_settings, "qualitative"),
+                    base_url=self._ollama_base_url,
+                    retries=self._pydantic_ai.retries,
+                    system_prompt=QUALITATIVE_SYSTEM_PROMPT,
+                )
 
     def _get_llm_params(self) -> tuple[str | None, float]:
         """Get LLM parameters from model settings or defaults.
@@ -79,12 +109,9 @@ class QualitativeAssessmentAgent:
         Returns:
             Tuple of (model, temperature).
         """
-        if self._model_settings:
-            return (
-                self._model_settings.qualitative_model,
-                self._model_settings.temperature,
-            )
-        return None, 0.0
+        model = get_model_name(self._model_settings, "qualitative")
+        temperature = self._model_settings.temperature if self._model_settings else 0.0
+        return model, temperature
 
     async def assess(self, transcript: Transcript) -> QualitativeAssessment:
         """Generate qualitative assessment for a transcript.
@@ -107,7 +134,29 @@ class QualitativeAssessmentAgent:
         # Get LLM params (Paper Section 2.2: Gemma 3 27B)
         model, temperature = self._get_llm_params()
 
-        # Call LLM
+        # Try Pydantic AI path first if enabled
+        if self._agent is not None:
+            try:
+                result = await self._agent.run(
+                    user_prompt,
+                    model_settings={"temperature": temperature},
+                )
+                assessment = self._from_qualitative_output(result.output, transcript.participant_id)
+                logger.info(
+                    "Qualitative assessment complete (Pydantic AI)",
+                    participant_id=transcript.participant_id,
+                    overall_length=len(assessment.overall),
+                )
+                return assessment
+            except asyncio.CancelledError:
+                raise
+            except Exception as e:
+                logger.error(
+                    "Pydantic AI call failed during assessment; falling back to legacy",
+                    error=str(e),
+                )
+
+        # Call LLM (Legacy Path)
         raw_response = await self._llm_client.simple_chat(
             user_prompt=user_prompt,
             system_prompt=QUALITATIVE_SYSTEM_PROMPT,
@@ -157,6 +206,27 @@ class QualitativeAssessmentAgent:
         # Get LLM params
         model, temperature = self._get_llm_params()
 
+        # Try Pydantic AI path first if enabled
+        if self._agent is not None:
+            try:
+                result = await self._agent.run(
+                    user_prompt,
+                    model_settings={"temperature": temperature},
+                )
+                assessment = self._from_qualitative_output(result.output, transcript.participant_id)
+                logger.info(
+                    "Assessment refinement complete (Pydantic AI)",
+                    participant_id=transcript.participant_id,
+                )
+                return assessment
+            except asyncio.CancelledError:
+                raise
+            except Exception as e:
+                logger.error(
+                    "Pydantic AI call failed during refinement; falling back to legacy",
+                    error=str(e),
+                )
+
         raw_response = await self._llm_client.simple_chat(
             user_prompt=user_prompt,
             system_prompt=QUALITATIVE_SYSTEM_PROMPT,
@@ -172,6 +242,22 @@ class QualitativeAssessmentAgent:
         )
 
         return assessment
+
+    def _from_qualitative_output(
+        self,
+        output: QualitativeOutput,
+        participant_id: int,
+    ) -> QualitativeAssessment:
+        """Convert validated QualitativeOutput into domain entity."""
+        return QualitativeAssessment(
+            overall=output.assessment,
+            phq8_symptoms=output.phq8_symptoms,
+            social_factors=output.social_factors,
+            biological_factors=output.biological_factors,
+            risk_factors=output.risk_factors,
+            supporting_quotes=output.exact_quotes,
+            participant_id=participant_id,
+        )
 
     def _parse_response(
         self,

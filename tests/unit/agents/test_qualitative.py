@@ -10,13 +10,18 @@ Tests verify the agent correctly:
 
 from __future__ import annotations
 
-import pytest
+from unittest.mock import AsyncMock, patch
 
+import pytest
+from pydantic_ai import Agent
+
+from ai_psychiatrist.agents.output_models import QualitativeOutput
 from ai_psychiatrist.agents.prompts.qualitative import (
     make_feedback_prompt,
     make_qualitative_prompt,
 )
 from ai_psychiatrist.agents.qualitative import QualitativeAssessmentAgent
+from ai_psychiatrist.config import PydanticAISettings
 from ai_psychiatrist.domain.entities import QualitativeAssessment, Transcript
 from ai_psychiatrist.infrastructure.llm.responses import SimpleChatClient
 from tests.fixtures.mock_llm import MockLLMClient
@@ -313,6 +318,39 @@ Nested unclosed tags
         assert "Social Factors:" in full_text
         assert "Biological Factors:" in full_text
         assert "Risk Factors:" in full_text
+
+    @pytest.mark.asyncio
+    async def test_pydantic_ai_path_success(
+        self,
+        sample_transcript: Transcript,
+    ) -> None:
+        """Should use Pydantic AI agent when enabled and configured."""
+        mock_output = QualitativeOutput(
+            assessment="Test Assessment",
+            phq8_symptoms="Test Symptoms",
+            social_factors="Test Social",
+            biological_factors="Test Bio",
+            risk_factors="Test Risk",
+            exact_quotes=["Test Quote"],
+        )
+        mock_agent = AsyncMock(spec_set=Agent)
+        mock_agent.run.return_value = AsyncMock(output=mock_output)
+
+        with patch(
+            "ai_psychiatrist.agents.pydantic_agents.create_qualitative_agent",
+            return_value=mock_agent,
+        ) as mock_factory:
+            agent = QualitativeAssessmentAgent(
+                llm_client=MockLLMClient(),
+                pydantic_ai_settings=PydanticAISettings(enabled=True),
+                ollama_base_url="http://localhost:11434",
+            )
+            result = await agent.assess(sample_transcript)
+
+        mock_factory.assert_called_once()
+        mock_agent.run.assert_called_once()
+        assert result.overall == "Test Assessment"
+        assert result.phq8_symptoms == "Test Symptoms"
 
 
 class TestQualitativePrompts:

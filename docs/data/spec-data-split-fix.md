@@ -55,7 +55,7 @@ Note: This section describes the pre-fix state that motivated the work; it is no
 
 **Embeddings artifact (`paper_reference_embeddings.*`)**
 
-- `src/ai_psychiatrist/config.py` defaults few-shot to `paper_reference_embeddings` (via `EmbeddingSettings.embeddings_file` and `DataSettings.embeddings_path`).
+- `src/ai_psychiatrist/config.py` defaults few-shot to `huggingface_qwen3_8b_paper_train` (via `EmbeddingSettings.embeddings_file` and `DataSettings.embeddings_path`). The legacy/compat basename `paper_reference_embeddings` is still supported but must be explicitly selected.
 - `src/ai_psychiatrist/services/reference_store.py` expects `{embeddings}.npz` + `{embeddings}.json` sidecar; without them it loads an empty store (few-shot degraded) and `scripts/reproduce_results.py` fails fast for few-shot mode.
 - `scripts/reproduce_results.py` requires a precomputed embeddings artifact for few-shot evaluation (`--few-shot-only` or default combined run).
 

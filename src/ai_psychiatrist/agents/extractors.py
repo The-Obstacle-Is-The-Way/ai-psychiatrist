@@ -11,6 +11,7 @@ from pydantic_ai import ModelRetry
 from ai_psychiatrist.agents.output_models import (
     JudgeMetricOutput,
     MetaReviewOutput,
+    QualitativeOutput,
     QuantitativeOutput,
 )
 from ai_psychiatrist.infrastructure.llm.responses import extract_score_from_text, extract_xml_tags
@@ -62,6 +63,58 @@ def _tolerant_fixups(json_str: str) -> str:
     json_str = re.sub(r",\s*([}\]])", r"\1", json_str)
 
     return json_str
+
+
+def _clean_quote_line(line: str) -> str:
+    """Normalize a quote line from an exact_quotes block."""
+    cleaned = line.strip()
+    if not cleaned or cleaned == "-":
+        return ""
+    if cleaned[0] in {"-", "*", "•"}:
+        cleaned = cleaned[1:].strip()
+    return cleaned
+
+
+def extract_qualitative(text: str) -> QualitativeOutput:
+    """Extract and validate qualitative assessment output from a raw LLM response.
+
+    Expects XML tags for assessment domains and optional exact_quotes.
+    """
+    required_tags = [
+        "assessment",
+        "PHQ8_symptoms",
+        "social_factors",
+        "biological_factors",
+        "risk_factors",
+    ]
+    extracted = extract_xml_tags(text, [*required_tags, "exact_quotes"])
+
+    # Validation: Check for missing required tags
+    missing = [tag for tag in required_tags if not extracted.get(tag)]
+    if missing:
+        raise ModelRetry(
+            f"Missing required XML tags: {', '.join(missing)}. "
+            "Please ensure all assessment sections are provided in XML tags."
+        )
+
+    # Parse quotes
+    quotes: list[str] = []
+    raw_quotes = extracted.get("exact_quotes", "")
+    if raw_quotes:
+        quotes = [_clean_quote_line(line) for line in raw_quotes.split("\n")]
+        quotes = [q for q in quotes if q]
+
+    try:
+        return QualitativeOutput(
+            assessment=extracted["assessment"],
+            phq8_symptoms=extracted["PHQ8_symptoms"],
+            social_factors=extracted["social_factors"],
+            biological_factors=extracted["biological_factors"],
+            risk_factors=extracted["risk_factors"],
+            exact_quotes=quotes,
+        )
+    except ValidationError as e:
+        raise ModelRetry(f"Output validation failed: {e}") from e
 
 
 def extract_quantitative(text: str) -> QuantitativeOutput:

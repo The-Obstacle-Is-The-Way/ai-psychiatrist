@@ -6,6 +6,8 @@ from unittest.mock import AsyncMock, Mock
 
 import pytest
 
+from ai_psychiatrist.agents.judge import JudgeAgent
+from ai_psychiatrist.agents.qualitative import QualitativeAssessmentAgent
 from ai_psychiatrist.config import FeedbackLoopSettings
 from ai_psychiatrist.domain.entities import (
     QualitativeAssessment,
@@ -23,7 +25,7 @@ class TestFeedbackLoopService:
     @pytest.fixture
     def mock_qualitative_agent(self) -> AsyncMock:
         """Mock qualitative agent."""
-        agent = AsyncMock()
+        agent = AsyncMock(spec_set=QualitativeAssessmentAgent)
         agent.assess.return_value = QualitativeAssessment(
             overall="Initial",
             phq8_symptoms="Initial",
@@ -45,7 +47,7 @@ class TestFeedbackLoopService:
     @pytest.fixture
     def mock_judge_agent(self) -> AsyncMock:
         """Mock judge agent."""
-        agent = AsyncMock()
+        agent = AsyncMock(spec_set=JudgeAgent)
         # Default behavior: Acceptable scores
         agent.evaluate.return_value = QualitativeEvaluation(
             scores={

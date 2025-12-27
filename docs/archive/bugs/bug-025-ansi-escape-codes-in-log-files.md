@@ -1,9 +1,37 @@
 # BUG-025: ANSI Escape Codes in Log Files
 
-**Status**: Open
+**Status**: ✅ RESOLVED
 **Severity**: LOW (cosmetic, doesn't affect functionality)
 **Found**: 2025-12-23 (during few-shot reproduction run)
+**Resolved**: 2025-12-26 (Spec 16 implementation)
 **Related**: Issue #53 (experiment tracking/provenance)
+
+---
+
+## Resolution
+
+**Fixed in**: Spec 16 (Log Output Improvements), commit `b72e45d`
+
+The fix implemented the recommended approach:
+- Added `LOG_FORCE_COLORS` config setting (`LoggingSettings.force_colors`)
+- Auto-detects TTY via `sys.stdout.isatty()`
+- Respects `NO_COLOR` environment variable
+
+**Code location**: `src/ai_psychiatrist/infrastructure/logging.py:33-39`
+
+```python
+def _should_use_colors(settings: LoggingSettings) -> bool:
+    if settings.force_colors is not None:
+        return settings.force_colors
+    if os.environ.get("NO_COLOR"):
+        return False
+    return _stdout_isatty()
+```
+
+**Test coverage**: `tests/unit/infrastructure/test_logging.py`
+- `test_setup_logging_console_disables_colors_when_not_tty`
+- `test_setup_logging_console_force_colors_overrides_tty`
+- `test_setup_logging_console_no_color_env_disables_colors`
 
 ---
 

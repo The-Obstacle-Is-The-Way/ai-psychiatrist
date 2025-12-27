@@ -1,7 +1,7 @@
 # Evidence Extraction Mechanism: How It Actually Works
 
 **Audience**: Anyone wanting to understand the core engineering behind PHQ-8 scoring
-**Last Updated**: 2025-12-24
+**Last Updated**: 2025-12-26
 
 ---
 
@@ -166,10 +166,10 @@ Keyword backfill can increase coverage relative to a pure LLM-only evidence
 extraction approach. The paper reports that **in ~50% of cases** the model was
 unable to provide a prediction due to insufficient evidence (Section 3.2).
 
-As of [SPEC-003](../specs/SPEC-003-backfill-toggle.md), backfill is **OFF by default**
+As of [SPEC-003](../archive/specs/SPEC-003-backfill-toggle.md), backfill is **OFF by default**
 for **paper-text parity** (paper methodology as written; keyword backfill is not described).
 The paper’s public repo does include keyword backfill in its few-shot agent (see
-`docs/bugs/analysis-027-paper-implementation-comparison.md`).
+`docs/archive/bugs/analysis-027-paper-implementation-comparison.md`).
 
 Enable backfill to increase coverage:
 - Default (paper-text parity): `QUANTITATIVE_ENABLE_KEYWORD_BACKFILL=false`
@@ -251,8 +251,8 @@ Overall Coverage = (Total items with scores) / (Total participants × 8)
 ```
 
 For a concrete example run (including per-item counts and coverage), see
-`docs/bugs/investigation-026-reproduction-mae-divergence.md` (current paper-text-parity run) and
-`docs/results/reproduction-notes.md` (historical notes). Output artifacts are stored locally under
+`docs/archive/bugs/investigation-026-reproduction-mae-divergence.md` (current paper-text-parity run) and
+`docs/results/reproduction-results.md` (historical notes). Output artifacts are stored locally under
 `data/outputs/` (gitignored due to DAIC-WOZ licensing; not committed to repo).
 
 ---
@@ -261,12 +261,12 @@ For a concrete example run (including per-item counts and coverage), see
 
 ### Temperature
 
-Note: The paper text does not specify exact sampling settings; the effects below are heuristics and can vary by model/backend. See `docs/bugs/gap-001-paper-unspecified-parameters.md`.
+Note: The paper text does not specify exact sampling settings; the effects below are heuristics and can vary by model/backend. See `docs/archive/bugs/gap-001-paper-unspecified-parameters.md`.
 
 | Value | Effect on Extraction |
 |-------|---------------------|
-| 0.0 | Very conservative, may miss subtle evidence |
-| 0.2 (default) | Slightly creative, catches more evidence |
+| 0.0 (default) | Conservative and reproducible (greedy decoding); may miss subtle evidence |
+| 0.2 | Slightly more permissive; may catch more evidence but increases variability |
 | 0.7+ | Too creative, may hallucinate evidence |
 
 ### Model Choice

@@ -1,7 +1,7 @@
 # Embeddings and Few-Shot Learning: A Plain-Language Guide
 
 **Audience**: Clinicians and non-CS folks who want to understand the "magic"
-**Last Updated**: 2025-12-24
+**Last Updated**: 2025-12-26
 
 ---
 
@@ -241,7 +241,7 @@ extraction step returns no appetite evidence, there’s nothing to embed/query, 
 returns no appetite examples.
 
 This often correlates with low appetite coverage (more N/A), but the two are not identical metrics.
-Appetite coverage varies by run/model; see `docs/bugs/investigation-026-reproduction-mae-divergence.md`
+Appetite coverage varies by run/model; see `docs/archive/bugs/investigation-026-reproduction-mae-divergence.md`
 for a concrete paper-text-parity example run.
 
 ---

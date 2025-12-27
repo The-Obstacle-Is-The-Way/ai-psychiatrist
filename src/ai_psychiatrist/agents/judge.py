@@ -6,7 +6,7 @@ import asyncio
 from typing import TYPE_CHECKING
 
 from ai_psychiatrist.agents.prompts.judge import make_evaluation_prompt
-from ai_psychiatrist.config import PydanticAISettings
+from ai_psychiatrist.config import PydanticAISettings, get_model_name
 from ai_psychiatrist.domain.entities import (
     QualitativeAssessment,
     QualitativeEvaluation,
@@ -65,7 +65,7 @@ class JudgeAgent:
                 )
 
                 self._metric_agent = create_judge_metric_agent(
-                    model_name=(model_settings.judge_model if model_settings else "gemma3:27b"),
+                    model_name=get_model_name(model_settings, "judge"),
                     base_url=self._ollama_base_url,
                     retries=self._pydantic_ai.retries,
                     system_prompt="",
@@ -144,7 +144,7 @@ class JudgeAgent:
         prompt = make_evaluation_prompt(metric, transcript, assessment)
 
         # Use model settings if provided (GAP-001: temp=0.0 for clinical reproducibility)
-        model = self._model_settings.judge_model if self._model_settings else None
+        model = get_model_name(self._model_settings, "judge")
         temperature = self._model_settings.temperature if self._model_settings else 0.0
 
         if self._metric_agent is not None:
