@@ -41,6 +41,7 @@ from __future__ import annotations
 
 import argparse
 import asyncio
+import contextlib
 import json
 import sys
 import time
@@ -763,8 +764,10 @@ async def main_async(args: argparse.Namespace) -> int:
         return 1
 
     # Initialize services
-    # Chat client (Ollama)
-    async with OllamaClient(ollama_settings) as ollama_client:
+    async with contextlib.AsyncExitStack() as stack:
+        # Chat client (Ollama)
+        ollama_client = await stack.enter_async_context(OllamaClient(ollama_settings))
+
         if not await check_ollama_connectivity(ollama_client):
             return 1
 
@@ -772,40 +775,38 @@ async def main_async(args: argparse.Namespace) -> int:
 
         # Embedding client (Factory)
         embedding_client = create_embedding_client(settings)
+        stack.push_async_callback(embedding_client.close)
+
         try:
-            try:
-                embedding_service = init_embedding_service(
-                    args=args,
-                    data_settings=data_settings,
-                    embedding_settings=embedding_settings,
-                    model_settings=model_settings,
-                    embedding_client=embedding_client,
-                )
-            except FileNotFoundError as e:
-                print(f"\nERROR: {e}")
-                return 1
-
-            experiments = await run_requested_experiments(
+            embedding_service = init_embedding_service(
                 args=args,
-                ground_truth=ground_truth,
-                ollama_client=ollama_client,
-                transcript_service=transcript_service,
-                embedding_service=embedding_service,
-                model_name=model_settings.quantitative_model,
-            )
-
-            persist_experiment_outputs(
-                args=args,
-                settings=settings,
-                run_metadata=run_metadata,
-                experiments=experiments,
-                participants_requested=len(ground_truth),
                 data_settings=data_settings,
                 embedding_settings=embedding_settings,
+                model_settings=model_settings,
+                embedding_client=embedding_client,
             )
+        except FileNotFoundError as e:
+            print(f"\nERROR: {e}")
+            return 1
 
-        finally:
-            await embedding_client.close()
+        experiments = await run_requested_experiments(
+            args=args,
+            ground_truth=ground_truth,
+            ollama_client=ollama_client,
+            transcript_service=transcript_service,
+            embedding_service=embedding_service,
+            model_name=model_settings.quantitative_model,
+        )
+
+        persist_experiment_outputs(
+            args=args,
+            settings=settings,
+            run_metadata=run_metadata,
+            experiments=experiments,
+            participants_requested=len(ground_truth),
+            data_settings=data_settings,
+            embedding_settings=embedding_settings,
+        )
 
     return 0
 
