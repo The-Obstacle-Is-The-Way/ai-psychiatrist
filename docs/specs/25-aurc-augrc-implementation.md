@@ -1,6 +1,6 @@
 # Spec 25: AURC/AUGRC Implementation for Selective Prediction Evaluation (Risk-Coverage, Bootstrap CIs)
 
-> **STATUS**: Proposed
+> **STATUS**: In Progress (Phase 1 Implemented)
 >
 > **Priority**: High - required for statistically valid reporting
 >
@@ -176,7 +176,19 @@ Candidates (not required for this spec’s first implementation):
             "na_items": 2,
             "mae_available": 0.5,
             "ground_truth_items": {"NoInterest": 2, "Depressed": 1, "...": 0},
-            "predicted_items": {"NoInterest": 2, "Depressed": null, "...": null}
+            "predicted_items": {"NoInterest": 2, "Depressed": null, "...": null},
+            "item_signals": {
+              "NoInterest": {
+                "llm_evidence_count": 3,
+                "keyword_evidence_count": 0,
+                "evidence_source": "llm"
+              },
+              "Depressed": {
+                "llm_evidence_count": 0,
+                "keyword_evidence_count": 1,
+                "evidence_source": "keyword"
+              }
+            }
           }
         ]
       }
@@ -185,31 +197,22 @@ Candidates (not required for this spec’s first implementation):
 }
 ```
 
-This is insufficient for selective prediction evaluation because participant results do not persist
-any per-item ranking signal (evidence/confidence).
+Note: `item_signals` was added in Phase 1 (completed). This signal persistence allows selective
+prediction evaluation without re-running the heavy inference steps.
 
-### 5.2 Required output (backward compatible)
+### 5.2 Signal Persistence (Implemented)
 
-Add a new key: `item_signals` (do not rename/remove existing keys):
+The `item_signals` key is structured as follows:
 
 ```json
-{
-  "participant_id": 300,
-  "predicted_items": {"NoInterest": 2, "Depressed": null, "...": null},
-  "ground_truth_items": {"NoInterest": 2, "Depressed": 1, "...": 0},
   "item_signals": {
     "NoInterest": {
       "llm_evidence_count": 3,
       "keyword_evidence_count": 0,
       "evidence_source": "llm"
     },
-    "Depressed": {
-      "llm_evidence_count": 0,
-      "keyword_evidence_count": 1,
-      "evidence_source": "keyword"
-    }
+    ...
   }
-}
 ```
 
 Rules:
@@ -432,19 +435,13 @@ For MAE@coverage:
 
 ## 8) Implementation Plan (TDD)
 
-### Phase 1 - Persist `item_signals` in `scripts/reproduce_results.py`
+### Phase 1 - Persist `item_signals` in `scripts/reproduce_results.py` [COMPLETED]
 
-Modify:
+**Status**: Implemented.
 
-- `scripts/reproduce_results.py`
-
-Changes:
-
-- Extend `EvaluationResult` dataclass with:
-  - `item_signals: dict[PHQ8Item, dict[str, object]] = field(default_factory=dict)`
-- In `evaluate_participant()`, after `assessment = await agent.assess(transcript)`:
-  - build `item_signals` from `assessment.items[item]` for all items in `PHQ8Item.all_items()`.
-- In `ExperimentResults.to_dict()`, include `"item_signals"` under each successful result.
+- `EvaluationResult` dataclass extended with `item_signals`.
+- `evaluate_participant()` populates signals from `assessment.items`.
+- `ExperimentResults.to_dict()` persists signals for successful results.
 
 ### Phase 2 - Implement metrics module
 
