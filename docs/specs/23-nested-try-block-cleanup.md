@@ -1,6 +1,6 @@
 # Spec 23: Nested Try Block Cleanup
 
-> **STATUS: OPEN**
+> **STATUS: IMPLEMENTED**
 >
 > **Priority**: Low - Code works correctly. This is maintainability/readability debt.
 >
@@ -254,11 +254,11 @@ Verify existing integration tests still pass.
 
 ## Acceptance Criteria
 
-- [ ] No triple-nested try blocks
-- [ ] All async resources cleaned up via AsyncExitStack or context managers
-- [ ] Existing tests pass
-- [ ] Error handling behavior unchanged (FileNotFoundError still returns 1)
-- [ ] Resource cleanup order is correct (embedding_client before ollama_client)
+- [x] No triple-nested try blocks
+- [x] All async resources cleaned up via AsyncExitStack or context managers
+- [x] Existing tests pass
+- [x] Error handling behavior unchanged (FileNotFoundError still returns 1)
+- [x] Resource cleanup order is correct (embedding_client before ollama_client)
 
 ---
 

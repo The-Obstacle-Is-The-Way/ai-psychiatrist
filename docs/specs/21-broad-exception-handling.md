@@ -1,6 +1,6 @@
 # Spec 21: Broad Exception Handling Cleanup
 
-> **STATUS: OPEN**
+> **STATUS: IMPLEMENTED**
 >
 > **Priority**: Low — Code works correctly. This is maintainability/readability debt.
 >
@@ -14,7 +14,9 @@
 
 ## Problem Statement
 
-The codebase contains **24** instances of `except Exception` (non-doc code). Some are **intentional** (best-effort helpers, graceful degradation paths), but others can mask unexpected errors and make debugging harder.
+When this spec was created, the codebase contained **24** instances of `except Exception` (non-doc code). Some were **intentional** (best-effort helpers, graceful degradation paths), but others masked unexpected errors and made debugging harder.
+
+This spec has now been implemented. The remaining `except Exception` sites are intentional and limited to cases where graceful degradation is desired (e.g., Pydantic AI → legacy fallback) or where a helper must never crash the process.
 
 This spec enumerates **every current** `except Exception` site and defines what we should do for each:
 - **Replace** with narrower exception types when the error surface is understood.
@@ -28,16 +30,14 @@ Note: GitHub Issue #60 originally listed 9 sites; the repo has since grown (Fast
 
 ### Inventory Summary (Current)
 
-- **24×** `except Exception` in non-doc code:
-  - `server.py`: 6
-  - `src/ai_psychiatrist/services/reference_store.py`: 3
-  - `scripts/generate_embeddings.py`: 3
-  - `scripts/reproduce_results.py`: 2
-  - `scripts/prepare_dataset.py`: 2
-  - `src/ai_psychiatrist/infrastructure/llm/huggingface.py`: 2
-  - `src/ai_psychiatrist/agents/qualitative.py`: 2
-  - `src/ai_psychiatrist/agents/{judge,quantitative,meta_review}.py`: 3
+- **8×** `except Exception` in non-doc code (as of 2025-12-27):
   - `src/ai_psychiatrist/infrastructure/logging.py`: 1
+  - `scripts/reproduce_results.py`: 1
+  - `scripts/prepare_dataset.py`: 1
+  - `src/ai_psychiatrist/agents/judge.py`: 1
+  - `src/ai_psychiatrist/agents/meta_review.py`: 1
+  - `src/ai_psychiatrist/agents/quantitative.py`: 1
+  - `src/ai_psychiatrist/agents/qualitative.py`: 2
 
 ---
 
@@ -58,9 +58,9 @@ These are “best-effort” but should avoid masking programmer errors. Narrow t
 
 | File | Symbol | Current | Recommended |
 |------|--------|---------|-------------|
-| `src/ai_psychiatrist/services/reference_store.py` | `_calculate_split_ids_hash()` | `except Exception: return None` | Catch `(OSError, pd.errors.ParserError, pd.errors.EmptyDataError, KeyError, ValueError, TypeError)` |
-| `src/ai_psychiatrist/services/reference_store.py` | `_derive_artifact_ids_hash()` | `except Exception: return None` | Catch `(OSError, json.JSONDecodeError, KeyError, ValueError, TypeError)` |
-| `scripts/generate_embeddings.py` | `calculate_split_ids_hash()` | `except Exception: return "error"` | Catch `(OSError, pd.errors.ParserError, pd.errors.EmptyDataError, KeyError, ValueError, TypeError)` |
+| `src/ai_psychiatrist/services/reference_store.py` | `_calculate_split_ids_hash()` | `except (ValueError, OSError, pd.errors.ParserError, pd.errors.EmptyDataError): return None` | ✅ Implemented (no blind except) |
+| `src/ai_psychiatrist/services/reference_store.py` | `_derive_artifact_ids_hash()` | `except (TypeError, ValueError, OSError): return None` | ✅ Implemented (no blind except) |
+| `scripts/generate_embeddings.py` | `calculate_split_ids_hash()` | `except (KeyError, TypeError, ValueError, OSError, pd.errors.ParserError, pd.errors.EmptyDataError): return "error"` | ✅ Implemented (no blind except) |
 
 ---
 
@@ -70,8 +70,8 @@ These wrap external service calls where many exception types are possible.
 
 | File | Line | Context | Current | Recommended |
 |------|------|---------|---------|-------------|
-| `src/ai_psychiatrist/infrastructure/llm/huggingface.py` | `HuggingFaceClient.chat()` | `except Exception` | Catch `(RuntimeError, ValueError, OSError)` **or keep broad with explicit justification** |
-| `src/ai_psychiatrist/infrastructure/llm/huggingface.py` | `HuggingFaceClient.embed()` | `except Exception` | Catch `(RuntimeError, ValueError, OSError)` **or keep broad with explicit justification** |
+| `src/ai_psychiatrist/infrastructure/llm/huggingface.py` | `HuggingFaceClient.chat()` | `except (RuntimeError, ValueError, OSError)` | ✅ Implemented (no blind except) |
+| `src/ai_psychiatrist/infrastructure/llm/huggingface.py` | `HuggingFaceClient.embed()` | `except (RuntimeError, ValueError, OSError)` | ✅ Implemented (no blind except) |
 
 **Important constraint**: this module uses lazy imports. Do **not** reference `torch.cuda.OutOfMemoryError` in an `except (...)` tuple unless you restructure to avoid importing torch eagerly (otherwise you defeat optional deps).
 
@@ -99,7 +99,7 @@ These are **intentional fallback patterns** where Pydantic AI is tried first, th
 
 | File | Line | Context | Current | Recommended |
 |------|------|---------|---------|-------------|
-| `src/ai_psychiatrist/services/reference_store.py` | `_load_embeddings()` | `except Exception` around meta load/validate | Catch `(OSError, json.JSONDecodeError, ValueError, TypeError)` and **let unexpected exceptions propagate**; keep explicit re-raise for `EmbeddingArtifactMismatchError` |
+| `src/ai_psychiatrist/services/reference_store.py` | `_load_embeddings()` | `except (OSError, TypeError, ValueError)` around meta load/validate | ✅ Implemented (with explicit type-check for dict metadata; mismatch errors propagate) |
 
 ---
 
@@ -109,30 +109,32 @@ Scripts often choose to continue on per-participant failures. That’s acceptabl
 
 | File | Line | Context | Current | Recommended |
 |------|------|---------|---------|-------------|
-| `scripts/reproduce_results.py` | `evaluate_participant()` | `except Exception` | Keep broad (record failure), but use `logger.exception(...)` to preserve stack, OR narrow to known domain errors + re-raise unexpected |
-| `scripts/reproduce_results.py` | `check_ollama_connectivity()` | `except Exception` | Catch `LLMError` (since `OllamaClient.ping()` wraps httpx into `LLMError`) |
-| `scripts/generate_embeddings.py` | `process_participant()` transcript load | `except Exception` | Catch `(TranscriptError, EmptyTranscriptError)` |
-| `scripts/generate_embeddings.py` | `process_participant()` embed chunk | `except Exception` | Catch `(LLMError, LLMTimeoutError, ValueError)` (client wrappers already convert httpx/TimeoutError) |
-| `scripts/prepare_dataset.py` | transcript extraction loop | `except Exception` | Catch `(OSError, KeyError, ValueError)` (keep `zipfile.BadZipFile` explicit) |
+| `scripts/reproduce_results.py` | `evaluate_participant()` | `except Exception` | ✅ Implemented (`logger.exception(...)` preserves stack; continue-on-failure behavior unchanged) |
+| `scripts/reproduce_results.py` | `check_ollama_connectivity()` | `except LLMError` | ✅ Implemented |
+| `scripts/generate_embeddings.py` | `process_participant()` transcript load | `except (DomainError, ValueError, OSError)` | ✅ Implemented (no blind except) |
+| `scripts/generate_embeddings.py` | `process_participant()` embed chunk | `except (DomainError, ValueError, OSError)` | ✅ Implemented (no blind except) |
+| `scripts/prepare_dataset.py` | transcript extraction loop | `except (OSError, KeyError, ValueError)` | ✅ Implemented (keeps `zipfile.BadZipFile` explicit) |
 
 ---
 
 ### Category G: FastAPI Layer (server.py)
 
-The API currently catches `Exception` in multiple endpoints/helpers. Prefer catching known domain errors and letting unexpected exceptions crash the request (FastAPI will return 500 + logs), rather than masking.
+The API no longer uses `except Exception` in endpoints/helpers. It catches known domain errors and lets unexpected exceptions propagate (FastAPI returns 500 and logs a stack trace), rather than masking failures.
 
 | File | Symbol | Current | Recommended |
 |------|--------|---------|-------------|
-| `server.py` | `health_check()` ollama ping | `except Exception` | Catch `LLMError` (Ollama ping wraps httpx) |
-| `server.py` | `assess_quantitative()` | `except Exception` | Catch `LLMError`, `EmbeddingArtifactMismatchError`, `TranscriptError` / `EmptyTranscriptError` and map to 4xx/5xx; let unknown exceptions propagate |
-| `server.py` | `assess_qualitative()` | `except Exception` | Same principle as above |
-| `server.py` | `run_full_pipeline()` | `except Exception` | Same principle as above |
-| `server.py` | `_resolve_transcript()` participant_id path | `except Exception` | Catch `(TranscriptError, EmptyTranscriptError)` |
-| `server.py` | `_resolve_transcript()` ad-hoc text path | `except Exception` | Catch `(TranscriptError, EmptyTranscriptError, ValueError)` |
+| `server.py` | `health_check()` ollama ping | `except (DomainError, OSError)` | ✅ Implemented |
+| `server.py` | `assess_quantitative()` | `except DomainError` | ✅ Implemented (unexpected exceptions propagate) |
+| `server.py` | `assess_qualitative()` | `except DomainError` | ✅ Implemented (unexpected exceptions propagate) |
+| `server.py` | `run_full_pipeline()` | `except DomainError` | ✅ Implemented (unexpected exceptions propagate) |
+| `server.py` | `_resolve_transcript()` participant_id path | `except (DomainError, ValueError)` | ✅ Implemented |
+| `server.py` | `_resolve_transcript()` ad-hoc text path | `except (DomainError, ValueError)` | ✅ Implemented |
 
 ---
 
 ## Implementation Plan
+
+All phases below have been completed; this plan is kept for historical reference.
 
 ### Phase 1: Update Spec Inventory (This Document)
 
@@ -216,11 +218,11 @@ Replace broad exceptions with specific ones as documented above.
 
 ## Acceptance Criteria
 
-- [ ] Spec inventory matches `rg -n "except Exception" --glob '!docs/**'` (24 current sites)
-- [ ] All “best-effort” sites that keep `except Exception` have an explicit comment
-- [ ] All non-best-effort sites either narrow exception types or explicitly justify why broad is required
-- [ ] No regressions in test suite
-- [ ] No new `except Exception` introduced without justification
+- [x] Spec inventory matches `rg -n "except Exception" --glob '!docs/**'` (8 current sites)
+- [x] All “best-effort” sites that keep `except Exception` have an explicit comment where applicable
+- [x] All non-best-effort sites either narrow exception types or explicitly justify why broad is required
+- [x] No regressions in test suite
+- [x] No new `except Exception` introduced without justification
 
 ---
 

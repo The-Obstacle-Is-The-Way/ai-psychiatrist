@@ -68,6 +68,7 @@ from ai_psychiatrist.config import (
     resolve_reference_embeddings_path,
 )
 from ai_psychiatrist.domain.enums import AssessmentMode, PHQ8Item
+from ai_psychiatrist.domain.exceptions import LLMError
 from ai_psychiatrist.infrastructure.llm import OllamaClient
 from ai_psychiatrist.infrastructure.llm.factory import create_embedding_client
 from ai_psychiatrist.infrastructure.logging import get_logger, setup_logging
@@ -290,8 +291,9 @@ async def evaluate_participant(
         )
 
     except Exception as e:
+        # Intentionally broad: per-participant failures should not abort the full run.
         duration = time.perf_counter() - start
-        logger.error(
+        logger.exception(
             "Evaluation failed",
             participant_id=participant_id,
             error=str(e),
@@ -567,7 +569,7 @@ async def check_ollama_connectivity(ollama_client: OllamaClient) -> bool:
     print("\nChecking Ollama connectivity...")
     try:
         is_healthy = await ollama_client.ping()
-    except Exception as e:
+    except LLMError as e:
         print(f"ERROR: Cannot connect to Ollama: {e}")
         return False
 

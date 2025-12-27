@@ -163,7 +163,7 @@ class ReferenceStore:
                 ids = sorted(int(k) for k in data)
                 ids_str = ",".join(map(str, ids))
                 return hashlib.sha256(ids_str.encode("utf-8")).hexdigest()[:12]
-        except (ValueError, OSError):
+        except (TypeError, ValueError, OSError):
             return None
 
     def _validate_backend(self, metadata: dict[str, Any]) -> list[str]:
@@ -458,8 +458,10 @@ class ReferenceStore:
             try:
                 with paths.meta.open("r", encoding="utf-8") as f:
                     metadata = json.load(f)
+                if not isinstance(metadata, dict):
+                    raise TypeError(f"Expected dict in {paths.meta}, got {type(metadata)}")
                 self._validate_metadata(metadata)
-            except (OSError, ValueError) as e:
+            except (OSError, TypeError, ValueError) as e:
                 logger.warning("Failed to load/validate metadata", error=str(e))
         elif self._embedding_backend.backend.value != "ollama":
             logger.warning(

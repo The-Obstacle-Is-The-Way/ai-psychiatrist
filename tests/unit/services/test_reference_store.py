@@ -85,6 +85,32 @@ class TestReferenceStoreMetadata:
         with patch("numpy.load", return_value=mock_npz):
             store._load_embeddings()
 
+    def test_invalid_metadata_type_skips_validation(
+        self,
+        data_settings: DataSettings,
+        embedding_settings: EmbeddingSettings,
+        embedding_backend_settings: EmbeddingBackendSettings,
+    ) -> None:
+        """Should not crash if .meta.json is valid JSON but not a dict."""
+        store = ReferenceStore(data_settings, embedding_settings, embedding_backend_settings)
+
+        # Setup files
+        meta_path = data_settings.embeddings_path.with_suffix(".meta.json")
+        meta_path.write_text(json.dumps(["not-a-dict"]), encoding="utf-8")
+
+        npz_path = data_settings.embeddings_path
+        npz_path.touch()
+        json_path = data_settings.embeddings_path.with_suffix(".json")
+        json_path.write_text("{}", encoding="utf-8")
+
+        # Mock numpy load
+        mock_npz = MagicMock(spec_set=NpzFile)
+        mock_npz.__getitem__.return_value = []
+        mock_npz.__contains__.return_value = True
+
+        with patch("numpy.load", return_value=mock_npz):
+            store._load_embeddings()
+
     def test_validation_fail_backend(
         self,
         data_settings: DataSettings,

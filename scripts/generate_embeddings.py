@@ -232,7 +232,14 @@ def calculate_split_ids_hash(data_settings: DataSettings, split: str) -> str:
         # Canonical string representation: "1,2,3"
         ids_str = ",".join(map(str, ids))
         return hashlib.sha256(ids_str.encode("utf-8")).hexdigest()[:12]
-    except (ValueError, OSError, pd.errors.ParserError, pd.errors.EmptyDataError) as e:
+    except (
+        KeyError,
+        TypeError,
+        ValueError,
+        OSError,
+        pd.errors.ParserError,
+        pd.errors.EmptyDataError,
+    ) as e:
         logger.warning(f"Failed to calculate split_ids_hash: {e}")
         return "error"
 

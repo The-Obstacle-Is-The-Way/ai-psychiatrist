@@ -1,6 +1,6 @@
 # Spec 22: Complexity Refactoring (noqa Suppressions)
 
-> **STATUS: OPEN**
+> **STATUS: IMPLEMENTED**
 >
 > **Priority**: Low - Code works correctly. This is maintainability/readability debt.
 >
@@ -281,14 +281,14 @@ def save_embeddings(output_path: Path, result: GenerationResult) -> None:
 
 ## Acceptance Criteria
 
-- [ ] The three current suppressions are removed:
+- [x] The three current suppressions are removed:
   - `ReferenceStore._validate_metadata()` no longer needs `# noqa: PLR0912`
   - `ReferenceStore._load_embeddings()` no longer needs `# noqa: PLR0912, PLR0915`
   - `scripts/generate_embeddings.py:main_async()` no longer needs `# noqa: PLR0915`
-- [ ] `uv run ruff check .` passes with no new ignores
-- [ ] Refactor preserves behavior (including split integrity validation semantics)
-- [ ] No regressions in existing tests
-- [ ] mypy passes with no new errors
+- [x] `uv run ruff check .` passes with no new ignores
+- [x] Refactor preserves behavior (including split integrity validation semantics)
+- [x] No regressions in existing tests
+- [x] mypy passes with no new errors
 
 ---
 
