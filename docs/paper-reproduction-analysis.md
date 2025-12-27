@@ -150,7 +150,7 @@ The issue is not that the numbers are "impossible"; it is that the paper does no
 
 ### 4. Proper Comparison Requires AURC
 
-- See `docs/specs/24-aurc-metric.md`
+- See `docs/specs/25-aurc-implementation.md`
 - Would enable fair zero-shot vs few-shot comparison
 - Standard in selective prediction literature
 
@@ -182,7 +182,7 @@ This analysis should be included in any future publication reproducing or extend
 
 - `docs/bugs/bug-029-coverage-mae-discrepancy.md` - Detailed discrepancy analysis
 - `docs/bugs/fallback-architecture-audit.md` - Code quality issues
-- `docs/specs/24-aurc-metric.md` - AURC implementation spec
+- `docs/specs/25-aurc-implementation.md` - Selective prediction evaluation suite
 
 ---
 

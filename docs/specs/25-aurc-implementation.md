@@ -7,8 +7,6 @@
 > **GitHub Issue**: #66
 >
 > **Created**: 2025-12-27
->
-> **Supersedes**: `docs/specs/24-aurc-metric.md`
 
 ---
 
@@ -125,11 +123,29 @@ This allows reporting robustness to the confidence definition.
 
 ### 4.4 Tie-breaking (must be deterministic)
 
-Evidence counts are discrete; ties are common. To ensure exact reproducibility, sorting MUST be:
+Evidence counts are discrete; ties are common. To avoid creating *unachievable* operating points
+(partial acceptance within a confidence plateau), we treat ties as **plateaus**:
 
-1. `confidence` descending
-2. `participant_id` ascending
-3. `item_index` ascending, where `item_index` follows `PHQ8Item.all_items()` order
+- RC curves and all area/MAE@coverage metrics are computed at **working points defined by unique
+  confidence values** (thresholding on `confidence`), so within-plateau ordering is irrelevant.
+- When a deterministic total order is needed (debug-only), sort by:
+  1. `confidence` descending
+  2. `participant_id` ascending
+  3. `item_index` ascending, where `item_index` follows `PHQ8Item.all_items()` order
+
+### 4.5 Recommended future confidence signals (optional, but high-value)
+
+Counts are low-cardinality; adding at least one **continuous** confidence signal improves curve
+resolution and reduces tie artifacts.
+
+Candidates (not required for this spec’s first implementation):
+
+- Few-shot retrieval quality:
+  - top-k cosine similarity (per item) from the embedding retrieval step
+  - mean/median similarity across retrieved references
+- Evidence grounding:
+  - fraction of evidence quotes that are exact transcript substrings
+  - evidence quote token/character length (longer grounded spans often correlate with confidence)
 
 ---
 
@@ -137,17 +153,40 @@ Evidence counts are discrete; ties are common. To ensure exact reproducibility, 
 
 ### 5.1 Current output
 
-`scripts/reproduce_results.py` currently persists (per successful participant) only:
+`scripts/reproduce_results.py` writes a run JSON shaped like:
 
 ```json
 {
-  "participant_id": 300,
-  "predicted_items": {"NoInterest": 2, "Depressed": null, "...": null},
-  "ground_truth_items": {"NoInterest": 2, "Depressed": 1, "...": 0}
+  "run_metadata": {"run_id": "...", "git_commit": "...", "...": "..."},
+  "experiments": [
+    {
+      "provenance": {"mode": "few_shot", "split": "dev", "...": "..."},
+      "results": {
+        "mode": "few_shot",
+        "model": "...",
+        "...": "...",
+        "results": [
+          {
+            "participant_id": 300,
+            "success": true,
+            "error": null,
+            "ground_truth_total": 10,
+            "predicted_total": 8,
+            "available_items": 6,
+            "na_items": 2,
+            "mae_available": 0.5,
+            "ground_truth_items": {"NoInterest": 2, "Depressed": 1, "...": 0},
+            "predicted_items": {"NoInterest": 2, "Depressed": null, "...": null}
+          }
+        ]
+      }
+    }
+  ]
 }
 ```
 
-This is insufficient for selective prediction evaluation because no ranking signal exists.
+This is insufficient for selective prediction evaluation because participant results do not persist
+any per-item ranking signal (evidence/confidence).
 
 ### 5.2 Required output (backward compatible)
 
@@ -176,6 +215,7 @@ Add a new key: `item_signals` (do not rename/remove existing keys):
 Rules:
 
 - For `success=True`, `item_signals` MUST contain all 8 PHQ-8 items.
+- Keys under `item_signals` MUST match `PHQ8Item.value` (same as `predicted_items`/`ground_truth_items`).
 - For `success=False`, preserve the minimal failure payload (no requirement to include signals).
 
 Implementation detail (repo-accurate):
@@ -201,64 +241,97 @@ Unless explicitly stated, “risk” refers to MAE on the chosen loss.
 
 ### 6.2 Risk–Coverage curve (RC curve)
 
+We define the RC curve using **confidence-threshold working points** (tie-plateau aware), matching
+the intent of `_reference/fd-shifts/fd_shifts/analysis/rc_stats_utils.py` while adapting coverage to
+include abstentions.
+
 Given a list of `N` item instances (including abstentions):
 
-1. Filter to predicted items (`pred is not None`).
-2. Sort predicted items by confidence (desc) with deterministic tie-breaking.
-3. Let `K = number of predicted items` and `Δ = 1 / N`.
-4. For each `k = 1..K`:
-   - `coverage_k = k / N`
-   - `risk_k = (1/k) * sum(loss_i for i in top k)`
-   - `joint_risk_k = (k/N) * risk_k = (1/N) * sum(loss_i for i in top k)`
+1. Filter to predicted items `S = {i | pred_i is not None}`.
+2. Let `K = |S|` and `Cmax = K / N` (max achievable coverage).
+3. Group `S` by `confidence` value and sort unique confidence values descending:
+   - `c1 > c2 > ... > cM`
+4. Iterate `j = 1..M`, where the accepted set is all predicted items with confidence ≥ `cj`:
+   - `A_j = {i ∈ S | confidence_i ≥ cj}`
+   - `k_j = |A_j|`
+   - `coverage_j = k_j / N`
+   - `selective_risk_j = (1/k_j) * Σ(loss_i for i ∈ A_j)`
+   - `generalized_risk_j = (1/N) * Σ(loss_i for i ∈ A_j)`  (a.k.a. “joint risk”)
 
-Return a curve with `K` points:
+The RC curve is the sequence of `M` working points:
 
-- `[(coverage_k, risk_k, joint_risk_k) for k in 1..K]`
+- `[(coverage_j, selective_risk_j, generalized_risk_j, threshold=cj) for j in 1..M]`
+
+Notes:
+
+- `coverage_j` is strictly increasing and ends at `Cmax`.
+- If `K == 0`, the curve is empty and `Cmax == 0`.
 
 ### 6.3 AURC (Area Under Risk–Coverage Curve)
 
-We implement **empirical step AURC** (not trapezoidal). This matches the discrete integration
-interpretation of selective risk aggregated over acceptance thresholds.
+We compute AURC as the area under the selective-risk RC curve over the **achievable** coverage
+range `[0, Cmax]`.
 
-Let `Δ = 1 / N` and `risk_k` defined above. Then:
+Let the RC curve have working points `(coverage_j, selective_risk_j)` for `j=1..M`. Define the
+right-continuous convention at 0 coverage:
 
-- `AURC = sum_{k=1..K} risk_k * Δ`
+- `selective_risk(0) = selective_risk_1` when `M > 0`
 
-Properties:
+Then:
 
-- If `K == 0` (all abstained), `AURC = 0.0`.
-- AURC integrates over `[0, Cmax]` where `Cmax = K/N`.
+- `AURC = ∫_0^{Cmax} selective_risk(c) dc`
 
-Optional normalized variant:
+Estimator (linear/trapezoidal integration over working points):
 
-- If `Cmax > 0`: `nAURC = AURC / Cmax` (mean risk across acceptance levels).
+- If `M == 0`: `AURC = 0.0`
+- Else compute `trapz` over the augmented points:
+  - `coverages = [0.0] + [coverage_1, ..., coverage_M]`
+  - `risks = [selective_risk_1] + [selective_risk_1, ..., selective_risk_M]`
+  - `AURC = numpy.trapz(risks, coverages)`
+
+Optional normalized variant (often easier to interpret across runs):
+
+- If `Cmax > 0`: `nAURC = AURC / Cmax` (mean selective risk over `[0, Cmax]`)
 
 ### 6.4 AUGRC (Area Under Generalized Risk–Coverage Curve)
 
-We implement **AUGRC** using *joint risk* (generalized risk) to reduce pathological weighting of
-high-confidence failures.
+We compute AUGRC as the area under the **generalized-risk** (a.k.a. joint-risk) RC curve, which is
+less prone to unintuitive weighting than AURC in some regimes.
 
-Let `joint_risk_k` and `Δ = 1 / N`. Then:
+Let the RC curve have working points `(coverage_j, generalized_risk_j)` for `j=1..M`, and define:
 
-- `AUGRC = sum_{k=1..K} joint_risk_k * Δ`
+- `generalized_risk(0) = 0.0`
+
+Then:
+
+- `AUGRC = ∫_0^{Cmax} generalized_risk(c) dc`
+
+Estimator (linear/trapezoidal integration over working points):
+
+- If `M == 0`: `AUGRC = 0.0`
+- Else compute `trapz` over:
+  - `coverages = [0.0] + [coverage_1, ..., coverage_M]`
+  - `risks = [0.0] + [generalized_risk_1, ..., generalized_risk_M]`
+  - `AUGRC = numpy.trapz(risks, coverages)`
 
 Implementation rules:
 
-- Compute AUGRC on normalized loss (`abs_err_norm`) by default.
-- Also expose a raw-loss AUGRC for internal debugging if needed.
+- Compute AUGRC on normalized loss (`abs_err_norm`) by default (keeps residuals in [0, 1], matching
+  many reference implementations including fd-shifts).
+- Also expose raw-loss AUGRC for internal debugging if needed.
 
 Optional normalized variant:
 
-- If `Cmax > 0`: `nAUGRC = AUGRC / Cmax`.
+- If `Cmax > 0`: `nAUGRC = AUGRC / Cmax`
 
 ### 6.5 Matched-coverage risk (MAE@coverage)
 
-Define `risk_at_coverage(target_c)`:
+Define `risk_at_coverage(target_c)` (achievable by thresholding on `confidence`):
 
 - Validate `0 < target_c <= 1`.
-- `k* = ceil(target_c * N)`.
-- If `k* > K`, return `None`.
-- Else return `risk_{k*}`.
+- Find the *smallest* working point `j` such that `coverage_j >= target_c`.
+- If no such working point exists (`target_c > Cmax`), return `None`.
+- Else return `selective_risk_j`.
 
 We report MAE@coverage for a fixed grid of coverages (configurable), but only compare methods at
 coverages where both methods have `Cmax >= target_c`.
@@ -273,26 +346,42 @@ We therefore also define **truncated areas** at a chosen coverage `C`:
 - `C` must satisfy `0 < C <= 1`
 - for paired method comparison, default to `C_common = min(Cmax_A, Cmax_B)`
 
-Define the step-function risk `r(c)` implied by the RC curve:
+Define:
 
-- `r(c) = risk_k` for `c ∈ ((k-1)/N, k/N]`
+- `C' = min(C, Cmax)`
+- `AURC@C = ∫_0^{C'} selective_risk(c) dc`
+- `AUGRC@C = ∫_0^{C'} generalized_risk(c) dc`
 
-Then:
+Estimator:
 
-- `AURC@C = ∫_0^{min(C, Cmax)} r(c) dc`
-- `AUGRC@C = ∫_0^{min(C, Cmax)} joint_risk(c) dc` (same step convention)
-
-Discrete implementation (exact, for step integration):
-
-1. Let `C' = min(C, Cmax)` and `x = C' * N`.
-2. Let `k_full = floor(x)` and `frac = x - k_full` (so `0 <= frac < 1`).
-3. `AURC@C = (sum_{k=1..k_full} risk_k + frac * risk_{k_full+1}) * (1/N)` (if `k_full == K`, the last term is omitted).
-4. `AUGRC@C = (sum_{k=1..k_full} joint_risk_k + frac * joint_risk_{k_full+1}) * (1/N)`.
+- Compute the full augmented curve points used for AURC/AUGRC (Section 6.3/6.4).
+- If `C'` falls between two coverage points, linearly interpolate the corresponding risk value at `C'`.
+- Compute `numpy.trapz` on the truncated arrays ending at `C'`.
 
 We will report both:
 
 - `AURC_full` / `AUGRC_full` (integrated over `[0, Cmax]`) plus `Cmax`
 - `AURC@C_common` / `AUGRC@C_common` for method comparisons
+
+### 6.7 Excess AURC-family metrics (optional, confidence-quality diagnostics)
+
+To evaluate the *ranking quality* of the confidence signal (separately from the underlying model’s
+prediction quality), implement the fd-shifts-style “excess” variants:
+
+- `eAURC = AURC − AURC_optimal`
+- `eAUGRC = AUGRC − AUGRC_optimal`
+
+Where `*_optimal` is computed on the same set of residuals but with an “ideal” confidence ordering
+(lowest loss treated as highest confidence). For non-binary residuals, mirror
+`_reference/fd-shifts/fd_shifts/analysis/rc_stats.py`:
+
+1. Sort predicted items by `loss` ascending.
+2. Assign strictly decreasing synthetic confidences (e.g., `np.linspace(1, 0, K)`).
+3. Recompute the metric (same integration method) to obtain `*_optimal`.
+
+Notes:
+
+- With confidence plateaus and finite samples, `eAURC`/`eAUGRC` can be slightly negative; do not clamp.
 
 ---
 
@@ -362,16 +451,25 @@ Core API (stable + typed):
   - `pred: int | None`
   - `gt: int`
   - `confidence: float`
-- `compute_risk_coverage_curve(items: Sequence[ItemPrediction], *, loss: Literal["abs", "abs_norm"])`
+- `@dataclass(frozen=True, slots=True) class RiskCoverageCurve:`
+  - `coverage: list[float]` (working points; increasing)
+  - `selective_risk: list[float]`
+  - `generalized_risk: list[float]`
+  - `threshold: list[float]` (unique confidence values; decreasing)
+  - `cmax: float`
+- `compute_risk_coverage_curve(items: Sequence[ItemPrediction], *, loss: Literal["abs", "abs_norm"]) -> RiskCoverageCurve`
 - `compute_aurc(items: Sequence[ItemPrediction], *, loss: Literal["abs", "abs_norm"])`
 - `compute_augrc(items: Sequence[ItemPrediction], *, loss: Literal["abs", "abs_norm"])`
+- `compute_aurc_at_coverage(items: Sequence[ItemPrediction], *, max_coverage: float, loss: ...)`
+- `compute_augrc_at_coverage(items: Sequence[ItemPrediction], *, max_coverage: float, loss: ...)`
 - `compute_risk_at_coverage(items: Sequence[ItemPrediction], *, target_coverage: float, loss: ...)`
 - `compute_cmax(items: Sequence[ItemPrediction]) -> float`
 
 Note: the spec requires that:
 
-- AURC uses empirical step integration.
-- AUGRC uses joint risk (coverage × risk) and empirical step integration.
+- RC curves are computed at **unique confidence thresholds** (tie-plateau aware).
+- AURC uses `numpy.trapz` over the augmented selective-risk curve on `[0, Cmax]`.
+- AUGRC uses `numpy.trapz` over the augmented generalized-risk curve on `[0, Cmax]`.
 
 ### Phase 3 — Bootstrap utilities
 
@@ -396,14 +494,107 @@ Responsibilities:
 - Select an experiment (mode) and build `ItemPrediction` rows using:
   - `predicted_items`
   - `ground_truth_items`
-  - `item_signals` + chosen confidence function
-- Compute:
-  - RC curve arrays (coverage, risk, joint_risk)
-  - AURC, AUGRC, Cmax
+- `item_signals` + confidence function(s)
+- Compute, for each configured confidence function (at minimum `conf_llm` and `conf_total_evidence`):
+  - RC curve arrays (coverage, selective_risk, generalized_risk, threshold)
+  - AURC_full, AUGRC_full, Cmax
+  - AURC@C and AUGRC@C for a configurable `C` (default: `C_common` when comparing two runs)
   - MAE@coverage grid
   - bootstrap CIs for scalars
   - paired Δ CIs when two runs are provided
 - Write a metrics JSON artifact plus a concise console report.
+
+#### Phase 4a — CLI contract (required)
+
+The script MUST support:
+
+- `--input` (repeatable): one or more paths to `data/outputs/*.json` produced by `scripts/reproduce_results.py`.
+- `--mode`: which experiment to evaluate from a run file (`zero_shot` or `few_shot`).
+- `--confidence`: which confidence function(s) to compute metrics for:
+  - `llm` (llm_evidence_count)
+  - `total_evidence` (llm_evidence_count + keyword_evidence_count)
+  - `all` (default; computes both)
+- `--coverage-grid`: comma-separated floats in `(0, 1]` (default: `0.1,0.2,...,0.9`).
+- `--area-coverage`: float in `(0, 1]` for reporting AURC@C/AUGRC@C in single-run mode
+  (default: `0.5`).
+- `--bootstrap-resamples`: int (default: 10_000).
+- `--seed`: int (required for any bootstrap computation; optional when `--bootstrap-resamples=0`).
+- `--output`: optional path for metrics JSON; default under `data/outputs/`.
+
+Paired comparison mode:
+
+- If two inputs are provided, the script MUST compute paired deltas for all overlapping participant IDs.
+- If participant sets differ, the script MUST either:
+  - error with a clear message, or
+  - run “intersection-only” mode explicitly behind a flag (default should be strict).
+
+#### Phase 4b — Metrics artifact schema (required)
+
+The output metrics JSON MUST include:
+
+```json
+{
+  "schema_version": "1",
+  "created_at": "2025-12-27T01:23:45Z",
+  "inputs": [
+    {"path": "data/outputs/...", "run_id": "...", "git_commit": "...", "mode": "few_shot"}
+  ],
+  "population": {
+    "participants_included": 123,
+    "participants_failed": 0,
+    "items_total": 984
+  },
+  "confidence_variants": {
+    "llm": {
+      "cmax": 0.716,
+      "aurc_full": 0.1234,
+      "augrc_full": 0.0456,
+      "aurc_at_c": {"requested": 0.50, "used": 0.50, "value": 0.0812},
+      "augrc_at_c": {"requested": 0.50, "used": 0.50, "value": 0.0301},
+      "mae_at_coverage": {
+        "0.10": {"requested": 0.10, "achieved": 0.10, "value": 0.12},
+        "0.20": {"requested": 0.20, "achieved": 0.33, "value": 0.20},
+        "...": null
+      },
+      "bootstrap": {
+        "seed": 7,
+        "n_resamples": 10000,
+        "ci95": {
+          "aurc_full": [0.11, 0.14],
+          "augrc_full": [0.04, 0.05],
+          "cmax": [0.70, 0.73]
+        }
+      },
+      "curve": {
+        "coverage": [0.10, 0.33, "..."],
+        "selective_risk": [0.0, 0.5, "..."],
+        "generalized_risk": [0.0, 0.05, "..."],
+        "threshold": [3, 2, "..."]
+      }
+    }
+  },
+  "comparison": {
+    "enabled": false,
+    "participants_overlap": null,
+    "deltas": null
+  }
+}
+```
+
+Rules:
+
+- `curve.coverage` MUST be strictly increasing and end at `cmax` (within float tolerance).
+- `curve.threshold` MUST have the same length as `curve.coverage` and be strictly decreasing.
+- `mae_at_coverage` values MUST be `null` when `target_c > cmax`; otherwise they must include
+  `requested`, `achieved`, and `value`.
+- Bootstrap CI arrays MUST be `[low, high]` percentiles.
+
+If `comparison.enabled == true` (paired comparison mode), the artifact MUST include:
+
+- `participants_overlap: int`
+- `deltas`: per confidence variant, a structure containing:
+  - point estimates for Δ metrics (right − left),
+  - bootstrap CI95 for Δ metrics.
 
 ---
 
@@ -420,12 +611,15 @@ Required tests:
 - Perfect predictions → AURC=0 and AUGRC=0.
 - Single prediction + abstentions:
   - verify `N` includes abstentions,
-  - verify AURC = risk * (1/N) (step integration),
-  - verify MAE@coverage uses ceil rule.
-- Deterministic tie-breaking:
-  - same confidence values reorder by participant_id and item_index only.
-- AUGRC consistency:
-  - verify `joint_risk_k == coverage_k * risk_k` for the curve.
+  - verify AURC reduces to `coverage_1 * selective_risk_1` (right-continuous convention at 0),
+  - verify MAE@coverage uses the smallest achievable working point `coverage >= target`.
+- Tie plateaus:
+  - two predictions with identical `confidence` produce a single RC working point,
+  - MAE@coverage at a target between plateaus snaps to the next plateau.
+- Truncated areas:
+  - verify `AURC@C` and `AUGRC@C` linearly interpolate within the segment containing `C`.
+- AUGRC consistency at working points:
+  - verify `generalized_risk_j == coverage_j * selective_risk_j` for the curve.
 
 ### 9.2 Integration test (parsing output schema)
 
@@ -450,12 +644,30 @@ Assertions:
 ## 10) Acceptance Criteria
 
 - `scripts/reproduce_results.py` persists `item_signals` for each successful participant.
-- Metrics module implements RC curve, AURC (step), AUGRC (joint risk), MAE@coverage, Cmax.
+- Metrics module implements RC curve working points (unique confidence thresholds), AURC/AUGRC
+  (`numpy.trapz` on `[0, Cmax]`), MAE@coverage (achievable by thresholding), Cmax, and truncated
+  AURC@C/AUGRC@C.
 - Bootstrap module produces participant-level CIs and paired Δ CIs.
 - Evaluation script produces a machine-readable metrics artifact and console summary.
 - `make ci` passes.
 
 ---
+
+## Appendix A) Human baselines (informational; not implemented here)
+
+If we ever want to compare to a human rater:
+
+- A human typically provides one point: (coverage≈100%, risk≈human MAE). Without a ranking signal,
+  “human AURC/AUGRC” is not defined.
+- Valid options (separate protocol design work):
+  1. **Forced-coverage model**: define a model variant that always outputs 0–3 (no abstention), then
+     compare MAE at coverage=1 against a human MAE at coverage=1.
+  2. **Human selective protocol**: ask humans to abstain (or provide a calibrated confidence) so they
+     also define a risk–coverage curve.
+  3. **Compare at matched operating points** only (e.g., MAE@50%) if both systems can produce those
+     operating points via an agreed abstention/confidence protocol.
+
+None of these are required to produce robust LLM-only evaluation, which is the focus of this spec.
 
 ## 11) References
 
@@ -473,3 +685,12 @@ Abstention background and reporting cautions:
 
 3. Know Your Limits: A Survey of Abstention in Large Language Models
    - https://arxiv.org/abs/2407.18418
+
+Local reference implementations (used for semantic cross-checks; not imported at runtime):
+
+4. fd-shifts RC metrics (AURC/AUGRC/eAURC/eAUGRC + bootstrap CI utilities)
+   - `_reference/fd-shifts/fd_shifts/analysis/rc_stats.py`
+   - `_reference/fd-shifts/fd_shifts/analysis/rc_stats_utils.py`
+
+5. AsymptoticAURC (finite-sample estimator bias context; alternative estimators)
+   - `_reference/AsymptoticAURC/utils/estimators.py`

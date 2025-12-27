@@ -125,7 +125,7 @@ To compare results rigorously, we either need:
 If strict paper comparison is needed:
 1. Match the paper's few-shot hyperparameters (Appendix D: chunk size 8, 2 reference examples) — already matched
 2. Match their model variant and sampling parameters (their notebooks set `temperature/top_k/top_p`)
-3. Introduce a principled abstention/thresholding mechanism (see `docs/specs/24-aurc-metric.md`)
+3. Introduce a principled abstention/thresholding mechanism (see `docs/specs/25-aurc-implementation.md`)
 
 This would likely bring MAE closer to 0.619 but sacrifices clinical utility.
 
