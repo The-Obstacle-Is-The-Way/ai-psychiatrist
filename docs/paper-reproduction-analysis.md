@@ -9,53 +9,54 @@
 
 Our reproduction shows **different behavior** than the paper claims. After deep analysis, we believe:
 
-1. **Our results are MORE intuitive** - they follow expected statistical behavior
-2. **Their results are suspicious** - they defy expectations without explanation
-3. **The paper lacks proper evaluation methodology** - AURC should be used, not single-point MAE
+1. **Our results differ materially from the paper** (coverage and MAE move in different directions)
+2. **The paper omits key evaluation details** (notably, zero-shot coverage on the test set)
+3. **A coverage-adjusted evaluation is required** for fair comparison (risk–coverage curve / AURC-family metrics)
 
 ---
 
 ## The Discrepancy
 
-### Their Results (from paper + notebook outputs)
+### Their Results (from paper + released output artifacts)
 
 | Mode | Coverage | MAE | Observation |
 |------|----------|-----|-------------|
-| Zero-Shot | 43.8% | 0.796 | Baseline |
-| Few-Shot | 50.0% | 0.619 | Coverage ↑ 6%, MAE ↓ 22% |
+| Zero-Shot | 40.9% | 0.796 | Baseline |
+| Few-Shot | 50.0% | 0.619 | Coverage ↑ ~9%, MAE ↓ ~22% |
 
-**Counterintuitive**: More predictions AND better accuracy?
+Notes:
+- Coverage above is on the **paper TEST split (41 participants)**.
+- The MAE above is the **paper-style metric**: mean of per-item MAEs excluding "N/A" (each item equally weighted).
+- The often-cited 43.8% zero-shot coverage is the coverage across **all 142 participants**, not the test split.
 
 ### Our Results
 
 | Mode | Coverage | MAE | Observation |
 |------|----------|-----|-------------|
-| Zero-Shot | 56.9% | 0.698 | Baseline |
-| Few-Shot | 71.6% | 0.852 | Coverage ↑ 15%, MAE ↑ 22% |
+| Zero-Shot | 56.9% | 0.717 | Baseline |
+| Few-Shot | 71.6% | 0.860 | Coverage ↑ ~15%, MAE ↑ ~20% |
 
-**Intuitive**: More predictions on harder cases = higher error.
+Notes:
+- Our MAE above is aligned to the paper-style MAE (mean of per-item MAEs excluding "N/A").
 
 ---
 
-## Why Our Results Make More Sense
+## First-Principles Interpretation
 
-### From First Principles
+Few-shot prompting can plausibly do **either** of the following:
+- Improve accuracy and increase coverage (best case)
+- Increase coverage but harm accuracy (overconfidence / bad retrieval / mismatched hyperparameters)
 
-When a model goes from zero-shot to few-shot:
-
-1. **Reference examples prime the model** to recognize patterns
-2. **Model becomes more confident** → makes more predictions
-3. **New predictions are on "borderline" cases** → harder to predict accurately
-4. **Expected outcome**: Coverage ↑, MAE ↑ (or stable)
-
-### The Only Way Their Results Work
+### Why Their Results Are Counterintuitive (but not impossible)
 
 For coverage to increase AND MAE to decrease, few-shot would need to:
 
 1. **Dramatically improve accuracy on existing predictions** (to offset new errors)
 2. **Make new predictions that are ALSO accurate** (despite being harder cases)
 
-This requires near-perfect reference example matching and calibration - unlikely with their sloppy implementation.
+Their released test-set artifacts support that this happened for their run:
+- Zero-shot (test): MAE_by_item = 0.796 at 40.9% coverage
+- Few-shot (test, chunk=8/examples=2): MAE_by_item = 0.619 at 50.0% coverage
 
 ---
 
@@ -69,7 +70,7 @@ From Figure 5 in the paper, we can see zero-shot MAE (0.796) vs few-shot MAE (0.
 
 **Their implied claim**: Few-shot improved MAE by 22% while also increasing coverage (from unknown to 50%).
 
-From their output files, zero-shot coverage was **43.8%** - so few-shot increased coverage by **6 percentage points** while **decreasing** MAE by 22%. This is counterintuitive and unexplained.
+From their released artifacts on the test split, zero-shot coverage is **40.9%**. The paper does not report this value.
 
 ### 2. Sloppy Python Code vs Notebooks
 
@@ -82,10 +83,9 @@ We documented extensively that their Python files contain dead code:
 
 The paper compares MAE at **different coverage levels** - this is fundamentally unfair.
 
-**Proper evaluation** (per [MIT Press survey on LLM abstention](https://direct.mit.edu/tacl/article/doi/10.1162/tacl_a_00754)):
-- Use AURC (Area Under Risk-Coverage Curve)
+**Proper evaluation** (selective prediction / abstention literature):
+- Use risk–coverage curves (or AURC-family metrics)
 - Compare entire tradeoff curves, not single points
-- This is standard in selective prediction literature
 
 ### 4. Missing Statistical Rigor
 
@@ -122,33 +122,25 @@ From [Overcoming Common Flaws in Evaluation of Selective Classification Systems]
 
 > "Current evaluation of SC systems often focuses on fixed working points defined by pre-set rejection thresholds... [this] does not provide a comprehensive evaluation of the system's overall performance."
 
-### Recommended Metrics
+From [A Novel Characterization of the Population Area Under the Risk Coverage Curve (AURC)](https://arxiv.org/abs/2410.15361) (2024):
 
-From [Know Your Limits: A Survey of Abstention in LLMs](https://arxiv.org/html/2407.18418v2) (MIT Press, 2024):
-
-| Metric | Purpose |
-|--------|---------|
-| AURC/AURCC | Area under risk-coverage curve |
-| C@Acc | Coverage at fixed accuracy |
-| E-AURC | Normalized AURC (excess over optimal) |
-
-**Single-point MAE comparisons (what the paper uses) are NOT recommended.**
+> "The Area Under the Risk-Coverage Curve (AURC) has emerged as the foremost evaluation metric for assessing the performance of [selective] systems."
 
 ---
 
 ## Our Conclusion
 
-### 1. Our Results Are Legitimate
+### 1. Our Results Are Internally Consistent
 
 - Coverage increase + MAE increase is expected behavior
 - Follows statistical intuition
 - Consistent with selective prediction theory
 
-### 2. Their Results Are Suspicious
+### 2. Their Results Are Supported by Their Artifacts
 
-- Coverage increase + MAE decrease is anomalous
-- No explanation provided
-- Contradicts expected behavior
+Coverage increase + MAE decrease is counterintuitive, but their released test-set outputs reproduce the paper's MAE values.
+The issue is not that the numbers are "impossible"; it is that the paper does not supply enough evaluation context
+(zero-shot coverage, confidence intervals, multiple runs) to interpret the claim rigorously.
 
 ### 3. Non-Reproducibility Concerns
 
@@ -158,7 +150,7 @@ From [Know Your Limits: A Survey of Abstention in LLMs](https://arxiv.org/html/2
 
 ### 4. Proper Comparison Requires AURC
 
-- See `docs/specs/spec-024-aurc-metric.md`
+- See `docs/specs/24-aurc-metric.md`
 - Would enable fair zero-shot vs few-shot comparison
 - Standard in selective prediction literature
 
@@ -190,13 +182,12 @@ This analysis should be included in any future publication reproducing or extend
 
 - `docs/bugs/bug-029-coverage-mae-discrepancy.md` - Detailed discrepancy analysis
 - `docs/bugs/fallback-architecture-audit.md` - Code quality issues
-- `docs/specs/spec-024-aurc-metric.md` - AURC implementation spec
+- `docs/specs/24-aurc-metric.md` - AURC implementation spec
 
 ---
 
 ## Sources
 
-1. [Know Your Limits: A Survey of Abstention in Large Language Models](https://direct.mit.edu/tacl/article/doi/10.1162/tacl_a_00754) - MIT Press, Dec 2024
-2. [Overcoming Common Flaws in Evaluation of Selective Classification Systems](https://arxiv.org/html/2407.01032v1) - Jul 2024
-3. [A Novel Characterization of Population AURC](https://arxiv.org/abs/2410.15361) - Oct 2024
-4. [An Empirical Evaluation of Prompting Strategies for LLMs in Zero-Shot Clinical NLP](https://pmc.ncbi.nlm.nih.gov/articles/PMC11036183/) - PMC 2024
+1. [Overcoming Common Flaws in Evaluation of Selective Classification Systems](https://arxiv.org/html/2407.01032v1) - 2024
+2. [A Novel Characterization of the Population Area Under the Risk Coverage Curve (AURC)](https://arxiv.org/abs/2410.15361) - 2024
+3. [Know Your Limits: A Survey of Abstention in Large Language Models](https://arxiv.org/abs/2407.18418) - 2024

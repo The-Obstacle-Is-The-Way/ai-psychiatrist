@@ -22,10 +22,14 @@ Our implementation shows significantly higher coverage than the paper reports. T
 
 | Method | Their Coverage | Our Coverage | Difference |
 |--------|----------------|--------------|------------|
-| Zero-Shot | 43.8% | 56.9% | +13.1% |
+| Zero-Shot | 40.9% | 56.9% | +16.0% |
 | Few-Shot | 50.0% | 71.6% | +21.6% |
 
 Our coverage is **30-40% higher** (relative) than theirs.
+
+**Note**: Their zero-shot coverage above is computed on the **paper TEST split (41 participants)** by filtering
+`_reference/ai_psychiatrist/analysis_output/quan_gemma_zero_shot.jsonl` to the 41 test IDs. (The oft-quoted 43.8%
+figure is the coverage over all 142 participants.)
 
 ---
 
@@ -44,9 +48,8 @@ Our coverage is **30-40% higher** (relative) than theirs.
 
 ### 3. Model differences?
 
-- [ ] We use gemma3:27b, they use gemma3-optimized:27b
-- [ ] We use temperature 0.0, they use 0.2 in notebooks
-- [ ] Embedding model differences (qwen3-embedding:8b vs dengcao/Qwen3-Embedding-8B:Q8_0)
+- [ ] We use `gemma3:27b-it-qat`, they use `gemma3-optimized:27b` in notebooks/output artifacts
+- [ ] Sampling parameters: their few-shot notebook sets `temperature/top_k/top_p`; our pipeline currently controls only `temperature`
 
 ### 4. Prompt differences?
 
@@ -67,7 +70,7 @@ Our coverage is **30-40% higher** (relative) than theirs.
 
 - `docs/bugs/bug-029-coverage-mae-discrepancy.md` - Coverage/MAE analysis
 - `docs/paper-reproduction-analysis.md` - Comprehensive analysis
-- `docs/specs/spec-024-aurc-metric.md` - AURC implementation spec
+- `docs/specs/24-aurc-metric.md` - AURC implementation spec
 
 ---
 
