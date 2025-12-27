@@ -12,7 +12,7 @@
 >
 > **Root Cause**: Reference embeddings metadata (`split_csv_hash`) was stale relative to the current `data/paper_splits/paper_split_train.csv`.
 >
-> **Resolution**: Updated hash in `.meta.json` files after verifying participant IDs are identical (58/58 exact match). See [Issue #64](https://github.com/The-Obstacle-Is-The-Way/ai-psychiatrist/issues/64) for design improvement to prevent recurrence.
+> **Resolution**: Implemented semantic split validation via `split_ids_hash` (Issue #64) and updated the existing embedding artifacts to include `split_ids_hash`. `split_csv_hash` is retained as audit/provenance and may legitimately differ after harmless CSV rewrites.
 
 ---
 
@@ -26,7 +26,9 @@ Embedding artifact validation failed:
 Regenerate embeddings or update config to match.
 ```
 
-Few-shot requires loading the reference embeddings artifact (paper-train), and `ReferenceStore` correctly fails validation when the `paper_split_train.csv` content hash differs from the one recorded in the embeddings `.meta.json`.
+At the time of the incident (before Issue #64 semantic validation), few-shot required loading the reference embeddings artifact (paper-train), and `ReferenceStore` failed validation when the `paper_split_train.csv` content hash differed from the one recorded in the embeddings `.meta.json`.
+
+As of the Issue #64 fix, `ReferenceStore` prioritizes `split_ids_hash` (semantic Participant_ID membership) and only **warns** if `split_csv_hash` differs while IDs match.
 
 ### Important Clarification: This Is Not an Embedding Backend Wiring Bug
 
@@ -36,8 +38,8 @@ This failure can look like “the wrong embeddings backend/artifact was used”,
 - The embeddings artifact path was the **HuggingFace paper-train artifact**:
   `data/embeddings/huggingface_qwen3_8b_paper_train.npz`
 
-The failure happened *after* selecting the correct backend/artifact: validation rejected the artifact because its stored
-`split_csv_hash` no longer matches the current `data/paper_splits/paper_split_train.csv`.
+The failure happened *after* selecting the correct backend/artifact: at the time, validation rejected the artifact because its stored
+`split_csv_hash` no longer matched `data/paper_splits/paper_split_train.csv`.
 
 ---
 
@@ -90,7 +92,7 @@ So **either** artifact would fail once `data/paper_splits/paper_split_train.csv`
 
 ### Important nuance
 
-Even if the **participant ID set** is unchanged, the current implementation treats **any** change to the CSV bytes (column changes, ordering, formatting, line endings) as requiring re-generation (strict provenance).
+Before the Issue #64 fix, the system treated **any** change to the split CSV bytes (column changes, ordering, formatting, line endings) as requiring re-generation (strict provenance), even if the **participant ID set** was unchanged.
 
 This is the direct reason the run can fail even when a “participant ID set” alignment check passes.
 
@@ -149,7 +151,7 @@ uv run python scripts/reproduce_results.py --split paper
 ## Preventing Repeat Incidents (Recommended Follow-Up)
 
 1. **Fail fast for few-shot**: add a startup/preflight check in `scripts/reproduce_results.py` that loads `ReferenceStore` once and aborts immediately on `EmbeddingArtifactMismatchError` (instead of spending time evaluating 41 participants that will all fail).
-2. **Document the coupling**: update the few-shot preflight checklist to explicitly require re-generating embeddings after any change to `data/paper_splits/paper_split_train.csv`.
+2. **Document the coupling**: update the few-shot preflight checklist to explicitly require re-generating embeddings after any change to the **Participant_ID membership** of `data/paper_splits/paper_split_train.csv` (formatting-only changes should be safe with `split_ids_hash`).
 
 ### Design Improvement Option (Reduces Unnecessary Regeneration)
 
@@ -203,12 +205,11 @@ Updated `split_csv_hash` in both `.meta.json` files:
 
 Changed: `e7ff0bbd11b6` → `789c5f289023`
 
-Added audit fields documenting the post-hoc update:
+Also added `split_ids_hash` (semantic IDs hash) to both artifacts so validation no longer depends on raw CSV bytes:
 ```json
 {
   "split_csv_hash": "789c5f289023",
-  "split_csv_hash_updated": "2025-12-27T02:50:00Z",
-  "split_csv_hash_update_reason": "BUG-026: CSV regenerated after BUG-025 fix; participant IDs unchanged (verified)"
+  "split_ids_hash": "e1083b6e5713"
 }
 ```
 
