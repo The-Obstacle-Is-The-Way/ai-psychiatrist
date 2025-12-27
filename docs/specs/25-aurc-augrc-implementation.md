@@ -1,6 +1,6 @@
 # Spec 25: AURC/AUGRC Implementation for Selective Prediction Evaluation (Risk-Coverage, Bootstrap CIs)
 
-> **STATUS**: In Progress (Phase 1 Implemented)
+> **STATUS**: IMPLEMENTED
 >
 > **Priority**: High - required for statistically valid reporting
 >

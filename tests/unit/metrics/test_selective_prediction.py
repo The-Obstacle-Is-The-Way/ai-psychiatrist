@@ -253,3 +253,92 @@ class TestSelectivePredictionEdgeCases:
         # Integral [0, 0.5] of 0 = 0.
         aurc_05 = compute_aurc_at_coverage(items, max_coverage=0.5, loss="abs")
         assert aurc_05 == 0.0
+
+    def test_mae_at_coverage_snaps_to_next_plateau(self) -> None:
+        """Spec 9.1: MAE@coverage at target between plateaus snaps to next plateau.
+
+        Items (3 total, 2 predicted):
+        - (pred=1, gt=1, conf=2) -> err=0 at cov=0.33
+        - (pred=2, gt=1, conf=1) -> err=1 at cov=0.67
+        - (pred=None, gt=0, conf=0) -> abstain
+
+        Target 0.5 is between 0.33 and 0.67, should snap to 0.67.
+        """
+        items = [
+            ItemPrediction(1, 0, 1, 1, 2.0),  # err=0
+            ItemPrediction(1, 1, 2, 1, 1.0),  # err=1
+            ItemPrediction(1, 2, None, 0, 0.0),  # abstain
+        ]
+
+        # Target 0.5: should snap to coverage 0.67 with risk = (0+1)/2 = 0.5
+        risk = compute_risk_at_coverage(items, target_coverage=0.5, loss="abs")
+        assert risk is not None
+        assert math.isclose(risk, 0.5), f"Expected 0.5, got {risk}"
+
+    def test_augrc_consistency_at_working_points(self) -> None:
+        """Spec 9.1: verify generalized_risk_j == coverage_j * selective_risk_j."""
+        items = [
+            ItemPrediction(1, 0, 2, 2, 2.0),  # err=0
+            ItemPrediction(1, 1, 3, 1, 2.0),  # err=2
+            ItemPrediction(1, 2, 1, 1, 1.0),  # err=0
+            ItemPrediction(1, 3, None, 0, 0.0),  # abstain
+        ]
+
+        curve = compute_risk_coverage_curve(items, loss="abs")
+
+        for i, (cov, sel_risk, gen_risk) in enumerate(
+            zip(curve.coverage, curve.selective_risk, curve.generalized_risk, strict=True)
+        ):
+            expected_gen_risk = cov * sel_risk
+            assert math.isclose(gen_risk, expected_gen_risk), (
+                f"Working point {i}: gen_risk={gen_risk} != cov*sel_risk={expected_gen_risk}"
+            )
+
+    def test_all_same_confidence_single_plateau(self) -> None:
+        """Spec 9.1: all predicted items have identical confidence -> single working point.
+
+        All 3 predicted items have conf=1.0, so there's exactly one threshold.
+        Cmax = 3/4 = 0.75 (one abstention).
+        """
+        items = [
+            ItemPrediction(1, 0, 1, 1, 1.0),  # err=0
+            ItemPrediction(1, 1, 2, 1, 1.0),  # err=1
+            ItemPrediction(1, 2, 0, 1, 1.0),  # err=1
+            ItemPrediction(1, 3, None, 0, 0.0),  # abstain
+        ]
+
+        curve = compute_risk_coverage_curve(items, loss="abs")
+
+        # Single working point
+        assert len(curve.coverage) == 1, f"Expected 1 working point, got {len(curve.coverage)}"
+        assert curve.coverage[0] == curve.cmax
+        assert curve.cmax == 0.75
+        # Risk = (0+1+1)/3 = 2/3
+        assert math.isclose(curve.selective_risk[0], 2 / 3)
+
+    def test_truncated_area_linear_interpolation(self) -> None:
+        """Spec 9.1: AURC@C and AUGRC@C linearly interpolate within segment containing C.
+
+        Items:
+        - (pred=0, gt=0, conf=2) -> err=0 at cov=0.5
+        - (pred=1, gt=0, conf=1) -> err=1 at cov=1.0
+
+        Test C=0.7, which is between working points 0.5 and 1.0.
+        """
+        items = [
+            ItemPrediction(1, 0, 0, 0, 2.0),  # err=0
+            ItemPrediction(1, 1, 1, 0, 1.0),  # err=1
+        ]
+
+        curve = compute_risk_coverage_curve(items, loss="abs")
+        assert curve.coverage == [0.5, 1.0]
+        assert curve.selective_risk == [0.0, 0.5]
+
+        # AURC@0.7: interpolate risk between working points (0.5, 0.0) and (1.0, 0.5).
+        # Interpolated risk at 0.7 is 0.2. Right-continuous at 0 means risk(0)=0.
+        # Trapezoidal integration over xs=[0, 0.5, 0.7], ys=[0, 0, 0.2] gives 0.02.
+        aurc_07 = compute_aurc_at_coverage(items, max_coverage=0.7, loss="abs")
+        expected = 0.02
+        assert math.isclose(aurc_07, expected, rel_tol=1e-9), (
+            f"AURC@0.7: got {aurc_07}, expected {expected}"
+        )
