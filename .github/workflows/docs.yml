@@ -11,31 +11,30 @@ on:
 permissions:
   contents: write
 
+# Prevent parallel deploys from conflicting
+concurrency:
+  group: docs-${{ github.ref }}
+  cancel-in-progress: true
+
 jobs:
   deploy:
     runs-on: ubuntu-latest
+    timeout-minutes: 10
     steps:
-      - uses: actions/checkout@v5
+      - uses: actions/checkout@v6
 
       - name: Configure Git Credentials
         run: |
           git config user.name github-actions[bot]
           git config user.email 41898282+github-actions[bot]@users.noreply.github.com
 
-      - uses: actions/setup-python@v5
+      - uses: actions/setup-python@v6
         with:
           python-version: "3.11"
-
-      - name: Cache MkDocs
-        uses: actions/cache@v4
-        with:
-          key: mkdocs-material-${{ github.ref }}
-          path: ~/.cache
-          restore-keys: |
-            mkdocs-material-
+          cache: pip  # Built-in pip caching (cleaner than ~/.cache)
 
       - name: Install MkDocs Material
         run: pip install mkdocs-material
 
       - name: Deploy to GitHub Pages
-        run: mkdocs gh-deploy --force
+        run: mkdocs gh-deploy --force --strict
