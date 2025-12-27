@@ -64,7 +64,7 @@ Per-item coverage (TEST split) shows the gap clearly:
   - Theirs: 10.3% (zero-shot) → 14.6% (few-shot)
   - Ours: 25.0% (zero-shot) → 47.5% (few-shot)
 
-This is consistent with the paper's Appendix A observation that **PHQ8_Appetite had no successfully retrieved reference chunks**
+This is consistent with the paper's Appendix E observation that **PHQ8_Appetite had no successfully retrieved reference chunks**
 because the model did not identify appetite evidence during evidence retrieval.
 
 Potential contributors (not mutually exclusive):
@@ -123,7 +123,7 @@ To compare results rigorously, we either need:
 
 ### Option B: Match Paper Coverage (For Comparison Only)
 If strict paper comparison is needed:
-1. Match the paper's few-shot hyperparameters (Appendix A: chunk size 8, 2 reference examples) — already matched
+1. Match the paper's few-shot hyperparameters (Appendix D: chunk size 8, 2 reference examples) — already matched
 2. Match their model variant and sampling parameters (their notebooks set `temperature/top_k/top_p`)
 3. Introduce a principled abstention/thresholding mechanism (see `docs/specs/24-aurc-metric.md`)
 
