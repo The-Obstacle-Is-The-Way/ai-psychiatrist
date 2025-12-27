@@ -1,14 +1,18 @@
 # BUG-026: Few-Shot Paper Run Fails Due to Embedding Split Hash Mismatch
 
-> **STATUS: OPEN**
+> **STATUS: RESOLVED**
 >
 > **Discovered**: 2025-12-26
+>
+> **Resolved**: 2025-12-27
 >
 > **Severity**: Blocker (prevents paper reproduction in `few_shot` mode)
 >
 > **Affects**: `scripts/reproduce_results.py --split paper` (few-shot path only)
 >
-> **Root Cause**: Reference embeddings metadata (`split_csv_hash`) is stale relative to the current `data/paper_splits/paper_split_train.csv`.
+> **Root Cause**: Reference embeddings metadata (`split_csv_hash`) was stale relative to the current `data/paper_splits/paper_split_train.csv`.
+>
+> **Resolution**: Updated hash in `.meta.json` files after verifying participant IDs are identical (58/58 exact match). See [Issue #64](https://github.com/The-Obstacle-Is-The-Way/ai-psychiatrist/issues/64) for design improvement to prevent recurrence.
 
 ---
 
@@ -114,7 +118,11 @@ PY
 
 ---
 
-## Fix (Local Data Regeneration)
+## Alternative Fix: Local Data Regeneration (Not Used)
+
+This incident was resolved by updating the `.meta.json` hash after verifying the embeddings were generated from the same
+58 paper-train participant IDs. Regenerating embeddings is still a valid alternative if you prefer “clean-room” metadata
+that reflects the exact split CSV bytes at generation time.
 
 Regenerate embeddings for the current paper-train split so the `.meta.json` records the current `split_csv_hash`:
 
@@ -154,4 +162,61 @@ If we want to avoid forcing a full re-embed when only non-ID columns/formatting 
 - Change `split_csv_hash` to hash the canonicalized **sorted Participant_ID list** (stable across CSV formatting/extra columns), or
 - Add a new metadata field (e.g., `split_ids_hash`) and validate that instead of raw file bytes.
 
-This would make few-shot runs robust to harmless split CSV rewrites while still detecting true “wrong split membership”.
+This would make few-shot runs robust to harmless split CSV rewrites while still detecting true "wrong split membership".
+
+---
+
+## Resolution Applied (2025-12-27)
+
+### Root Cause Confirmed
+
+The hash mismatch was a **false positive**:
+- CSV was regenerated on 2025-12-26 (BUG-025 fix for participant 319)
+- Participant 319 is in **TEST**, not TRAIN
+- The 58 TRAIN participant IDs were **unchanged**
+- Only the CSV bytes changed (triggering hash mismatch)
+
+### Verification Performed
+
+```bash
+# Confirmed participant IDs are identical
+python3 - <<'PY'
+import json, pandas as pd
+from pathlib import Path
+
+csv_ids = set(pd.read_csv("data/paper_splits/paper_split_train.csv")["Participant_ID"])
+emb_ids = set(int(k) for k in json.loads(
+    Path("data/embeddings/huggingface_qwen3_8b_paper_train.json").read_text()
+).keys())
+
+print(f"CSV IDs: {len(csv_ids)}, Embeddings IDs: {len(emb_ids)}")
+print(f"Exact match: {csv_ids == emb_ids}")
+PY
+# Output: CSV IDs: 58, Embeddings IDs: 58, Exact match: True
+```
+
+### Fix Applied
+
+Updated `split_csv_hash` in both `.meta.json` files:
+- `data/embeddings/huggingface_qwen3_8b_paper_train.meta.json`
+- `data/embeddings/paper_reference_embeddings.meta.json`
+
+Changed: `e7ff0bbd11b6` → `789c5f289023`
+
+Added audit fields documenting the post-hoc update:
+```json
+{
+  "split_csv_hash": "789c5f289023",
+  "split_csv_hash_updated": "2025-12-27T02:50:00Z",
+  "split_csv_hash_update_reason": "BUG-026: CSV regenerated after BUG-025 fix; participant IDs unchanged (verified)"
+}
+```
+
+### Design Improvement Tracked
+
+[Issue #64](https://github.com/The-Obstacle-Is-The-Way/ai-psychiatrist/issues/64): Add semantic ID hash (`split_ids_hash`) for validation, keeping content hash for audit. This prevents false failures from harmless CSV rewrites.
+
+---
+
+*Discovered during few-shot paper reproduction run, 2025-12-26*
+*Resolved after first-principles analysis, 2025-12-27*
