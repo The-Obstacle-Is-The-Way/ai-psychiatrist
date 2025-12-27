@@ -1,8 +1,8 @@
-# Spec 25: AURC/AUGRC Implementation for Selective Prediction Evaluation (Risk–Coverage, Bootstrap CIs)
+# Spec 25: AURC/AUGRC Implementation for Selective Prediction Evaluation (Risk-Coverage, Bootstrap CIs)
 
 > **STATUS**: Proposed
 >
-> **Priority**: High — required for statistically valid reporting
+> **Priority**: High - required for statistically valid reporting
 >
 > **GitHub Issue**: #66
 >
@@ -24,7 +24,7 @@ Comparing MAE between methods at *different* coverages is statistically invalid 
 
 We need a metrics + reporting suite that:
 
-1. Evaluates the **full risk–coverage tradeoff** (not one arbitrary operating point),
+1. Evaluates the **full risk-coverage tradeoff** (not one arbitrary operating point),
 2. Supports **matched-coverage comparisons**,
 3. Provides **uncertainty estimates** (CIs) respecting participant-level clustering,
 4. Is deterministic and reproducible.
@@ -37,9 +37,9 @@ We need a metrics + reporting suite that:
 
 - Persist per-item confidence/evidence signals already present in domain objects.
 - Implement, test, and report:
-  - risk–coverage curve (RC curve),
-  - **AURC** (Area Under the Risk–Coverage curve),
-  - **AUGRC** (Area Under the Generalized Risk–Coverage curve; “joint risk”),
+  - risk-coverage curve (RC curve),
+  - **AURC** (Area Under the Risk-Coverage curve),
+  - **AUGRC** (Area Under the Generalized Risk-Coverage curve; "joint risk"),
   - **MAE@coverage** (matched coverage),
   - max achievable coverage (**Cmax**),
   - participant-cluster bootstrap CIs for all reported scalars.
@@ -93,8 +93,8 @@ All coverage computations must use `N` (never “predicted count”).
 
 `ItemAssessment` already stores:
 
-- `llm_evidence_count: int` — number of evidence quotes extracted by the LLM evidence step
-- `keyword_evidence_count: int` — number of keyword-hit quotes injected into scorer evidence
+- `llm_evidence_count: int` - number of evidence quotes extracted by the LLM evidence step
+- `keyword_evidence_count: int` - number of keyword-hit quotes injected into scorer evidence
 - `evidence_source: "llm" | "keyword" | "both" | None`
 
 Source: `src/ai_psychiatrist/domain/value_objects.py` (`ItemAssessment`)
@@ -231,15 +231,15 @@ Implementation detail (repo-accurate):
 
 Primary (human-readable) loss:
 
-- `abs_err = |pred - gt|` (range 0–3)
+- `abs_err = |pred - gt|` (range 0-3)
 
 Normalized loss (recommended for bounded “generalized risk” metrics):
 
-- `abs_err_norm = abs_err / 3` (range 0–1)
+- `abs_err_norm = abs_err / 3` (range 0-1)
 
 Unless explicitly stated, “risk” refers to MAE on the chosen loss.
 
-### 6.2 Risk–Coverage curve (RC curve)
+### 6.2 Risk-Coverage curve (RC curve)
 
 We define the RC curve using **confidence-threshold working points** (tie-plateau aware), matching
 the intent of `_reference/fd-shifts/fd_shifts/analysis/rc_stats_utils.py` while adapting coverage to
@@ -267,7 +267,7 @@ Notes:
 - `coverage_j` is strictly increasing and ends at `Cmax`.
 - If `K == 0`, the curve is empty and `Cmax == 0`.
 
-### 6.3 AURC (Area Under Risk–Coverage Curve)
+### 6.3 AURC (Area Under Risk-Coverage Curve)
 
 We compute AURC as the area under the selective-risk RC curve over the **achievable** coverage
 range `[0, Cmax]`.
@@ -301,7 +301,7 @@ Implementation notes:
   `_reference/AsymptoticAURC/utils/estimators.py`). The trapezoidal estimator is the standard choice
   and matches fd-shifts default behavior.
 
-### 6.4 AUGRC (Area Under Generalized Risk–Coverage Curve)
+### 6.4 AUGRC (Area Under Generalized Risk-Coverage Curve)
 
 We compute AUGRC as the area under the **generalized-risk** (a.k.a. joint-risk) RC curve, which is
 less prone to unintuitive weighting than AURC in some regimes.
@@ -378,8 +378,8 @@ We will report both:
 To evaluate the *ranking quality* of the confidence signal (separately from the underlying model’s
 prediction quality), implement the fd-shifts-style “excess” variants:
 
-- `eAURC = AURC − AURC_optimal`
-- `eAUGRC = AUGRC − AUGRC_optimal`
+- `eAURC = AURC - AURC_optimal`
+- `eAUGRC = AUGRC - AUGRC_optimal`
 
 Where `*_optimal` is computed on the same set of residuals but with an “ideal” confidence ordering
 (lowest loss treated as highest confidence). For non-binary residuals, mirror
@@ -412,7 +412,7 @@ For comparisons on the same participant set (e.g., zero-shot vs few-shot):
 
 - sample participants once per replicate,
 - compute metric for each method on that sample,
-- store Δ = (method_B − method_A),
+- store Δ = (method_B - method_A),
 - report percentile CI for Δ.
 
 ### 7.3 Defaults (final reporting)
@@ -432,7 +432,7 @@ For MAE@coverage:
 
 ## 8) Implementation Plan (TDD)
 
-### Phase 1 — Persist `item_signals` in `scripts/reproduce_results.py`
+### Phase 1 - Persist `item_signals` in `scripts/reproduce_results.py`
 
 Modify:
 
@@ -446,7 +446,7 @@ Changes:
   - build `item_signals` from `assessment.items[item]` for all items in `PHQ8Item.all_items()`.
 - In `ExperimentResults.to_dict()`, include `"item_signals"` under each successful result.
 
-### Phase 2 — Implement metrics module
+### Phase 2 - Implement metrics module
 
 Create:
 
@@ -481,7 +481,7 @@ Note: the spec requires that:
 - AURC uses `numpy.trapz` over the augmented selective-risk curve on `[0, Cmax]`.
 - AUGRC uses `numpy.trapz` over the augmented generalized-risk curve on `[0, Cmax]`.
 
-### Phase 3 — Bootstrap utilities
+### Phase 3 - Bootstrap utilities
 
 Create:
 
@@ -492,7 +492,7 @@ Implement:
 - `bootstrap_by_participant(...) -> BootstrapResult`
 - `paired_bootstrap_delta_by_participant(...) -> BootstrapDeltaResult`
 
-### Phase 4 — Add an evaluation script (separation of concerns)
+### Phase 4 - Add an evaluation script (separation of concerns)
 
 Create:
 
@@ -514,12 +514,20 @@ Responsibilities:
   - paired Δ CIs when two runs are provided
 - Write a metrics JSON artifact plus a concise console report.
 
-#### Phase 4a — CLI contract (required)
+#### Phase 4a - CLI contract (required)
 
 The script MUST support:
 
-- `--input` (repeatable): one or more paths to `data/outputs/*.json` produced by `scripts/reproduce_results.py`.
-- `--mode`: which experiment to evaluate from a run file (`zero_shot` or `few_shot`).
+- `--input` (repeatable): one or two paths to `data/outputs/*.json` produced by `scripts/reproduce_results.py`.
+- `--mode` (repeatable): experiment selection for each `--input` (`zero_shot` or `few_shot`).
+  - If `--mode` is provided once, it applies to all inputs.
+  - If `--mode` is provided multiple times, it MUST match the number of `--input` flags and is paired by position.
+  - If `--mode` is omitted for an input:
+    - If the run file contains exactly one experiment, select it.
+    - Else error with a clear message listing available experiments and how to disambiguate.
+- `--loss`: which loss to compute risk on:
+  - `abs` (raw absolute error; range 0-3)
+  - `abs_norm` (normalized absolute error; range 0-1; default)
 - `--confidence`: which confidence function(s) to compute metrics for:
   - `llm` (llm_evidence_count)
   - `total_evidence` (llm_evidence_count + keyword_evidence_count)
@@ -530,15 +538,24 @@ The script MUST support:
 - `--bootstrap-resamples`: int (default: 10_000).
 - `--seed`: int (required for any bootstrap computation; optional when `--bootstrap-resamples=0`).
 - `--output`: optional path for metrics JSON; default under `data/outputs/`.
+- `--intersection-only`: if two inputs have different participant sets, restrict evaluation to the overlap
+  (default: strict error if sets differ).
 
 Paired comparison mode:
 
-- If two inputs are provided, the script MUST compute paired deltas for all overlapping participant IDs.
-- If participant sets differ, the script MUST either:
-  - error with a clear message, or
-  - run “intersection-only” mode explicitly behind a flag (default should be strict).
+- If exactly two inputs are provided, the script MUST compute paired deltas over overlapping participant IDs.
+- Define `Δ = right - left`, where `left` is the first `--input` and `right` is the second.
+- If participant sets differ and `--intersection-only` is not set, exit non-zero with a clear message.
+- In paired mode, the script MUST compute per-method point estimates on the same participant set used for
+  deltas:
+  - Let `ids_left_total` / `ids_right_total` be all participant IDs present in each selected experiment.
+  - If `--intersection-only` is set: `ids_overlap_total = ids_left_total ∩ ids_right_total`.
+  - Else require `ids_left_total == ids_right_total` and set `ids_overlap_total = ids_left_total`.
+  - Let `ids_left_success` / `ids_right_success` be success participants within `ids_overlap_total`.
+  - Define the analysis set `ids_included = ids_left_success ∩ ids_right_success`.
+  - Compute `cmax`, RC curves, AURC/AUGRC, and MAE@coverage for each method on `ids_included` only.
 
-#### Phase 4b — Metrics artifact schema (required)
+#### Phase 4b - Metrics artifact schema (required)
 
 The output metrics JSON MUST include:
 
@@ -550,9 +567,15 @@ The output metrics JSON MUST include:
     {"path": "data/outputs/...", "run_id": "...", "git_commit": "...", "mode": "few_shot"}
   ],
   "population": {
+    "participants_total": 123,
     "participants_included": 123,
     "participants_failed": 0,
     "items_total": 984
+  },
+  "loss": {
+    "name": "abs_norm",
+    "definition": "abs(pred - gt) / 3",
+    "raw_multiplier": 3
   },
   "confidence_variants": {
     "llm": {
@@ -572,7 +595,21 @@ The output metrics JSON MUST include:
         "ci95": {
           "aurc_full": [0.11, 0.14],
           "augrc_full": [0.04, 0.05],
-          "cmax": [0.70, 0.73]
+          "aurc_at_c": [0.07, 0.10],
+          "augrc_at_c": [0.02, 0.04],
+          "cmax": [0.70, 0.73],
+          "mae_at_coverage": {
+            "0.10": [0.10, 0.14],
+            "0.20": [0.18, 0.24],
+            "...": null
+          }
+        },
+        "drop_rate": {
+          "mae_at_coverage": {
+            "0.10": 0.0,
+            "0.20": 0.0,
+            "...": 1.0
+          }
         }
       },
       "curve": {
@@ -585,7 +622,13 @@ The output metrics JSON MUST include:
   },
   "comparison": {
     "enabled": false,
-    "participants_overlap": null,
+    "intersection_only": null,
+    "participants_left_only": null,
+    "participants_right_only": null,
+    "participants_overlap_total": null,
+    "participants_overlap_included": null,
+    "participants_failed_left": null,
+    "participants_failed_right": null,
     "deltas": null
   }
 }
@@ -593,17 +636,30 @@ The output metrics JSON MUST include:
 
 Rules:
 
+- If `comparison.enabled == false`, `inputs` MUST have length 1.
+- If `comparison.enabled == true`, `inputs` MUST have length 2.
 - `curve.coverage` MUST be strictly increasing and end at `cmax` (within float tolerance).
 - `curve.threshold` MUST have the same length as `curve.coverage` and be strictly decreasing.
+- `population.participants_total == population.participants_included + population.participants_failed`.
+- `population.items_total == population.participants_included * 8`.
 - `mae_at_coverage` values MUST be `null` when `target_c > cmax`; otherwise they must include
   `requested`, `achieved`, and `value`.
+- When bootstrap is enabled (`n_resamples > 0`), the artifact MUST include:
+  - `bootstrap.ci95` for: `aurc_full`, `augrc_full`, `aurc_at_c`, `augrc_at_c`, `cmax`, and `mae_at_coverage`.
+  - `bootstrap.drop_rate.mae_at_coverage[target_c]` for each requested `target_c`.
 - Bootstrap CI arrays MUST be `[low, high]` percentiles.
 
 If `comparison.enabled == true` (paired comparison mode), the artifact MUST include:
 
-- `participants_overlap: int`
+- `intersection_only: bool`
+- `participants_left_only: int`
+- `participants_right_only: int`
+- `participants_overlap_total: int` (participant IDs present in both inputs, regardless of success)
+- `participants_overlap_included: int` (participant IDs used for paired metrics; MUST equal `population.participants_included`)
+- `participants_failed_left: int` (in `participants_overlap_total`, failed in left input)
+- `participants_failed_right: int` (in `participants_overlap_total`, failed in right input)
 - `deltas`: per confidence variant, a structure containing:
-  - point estimates for Δ metrics (right − left),
+  - point estimates for Δ metrics (right - left),
   - bootstrap CI95 for Δ metrics.
 
 ---
@@ -645,6 +701,40 @@ Required tests:
   - all resamples are identical (only one cluster to draw),
   - CI degenerates to point estimate (low == high).
 
+Canonical numeric test vector (MUST be included verbatim in unit tests):
+
+Given `N=4` item instances with `(pred, gt, confidence)`:
+
+1. `(2, 2, 2)`  -> `abs_err=0`
+2. `(3, 1, 2)`  -> `abs_err=2`
+3. `(1, 1, 1)`  -> `abs_err=0`
+4. `(None, 0, 0)` -> abstain (excluded from `S`, but included in `N`)
+
+Expected RC curve working points (ties treated as plateaus):
+
+- `threshold = [2, 1]`
+- `coverage = [2/4, 3/4] = [0.5, 0.75]`
+
+Expected values for `loss="abs"`:
+
+- `selective_risk = [1, 2/3]`
+- `generalized_risk = [1/2, 1/2]`
+- `AURC_full = 17/24`
+- `AUGRC_full = 1/4`
+- `risk_at_coverage(target_c=0.6)` returns `2/3` with achieved coverage `0.75`
+- `AURC@0.6 = 89/150`
+- `AUGRC@0.6 = 7/40`
+
+Expected values for `loss="abs_norm"` (exactly scaled by 1/3):
+
+- `selective_risk = [1/3, 2/9]`
+- `generalized_risk = [1/6, 1/6]`
+- `AURC_full = 17/72`
+- `AUGRC_full = 1/12`
+- `risk_at_coverage(target_c=0.6)` returns `2/9` with achieved coverage `0.75`
+- `AURC@0.6 = 89/450`
+- `AUGRC@0.6 = 7/120`
+
 ### 9.2 Integration test (parsing output schema)
 
 File:
@@ -677,6 +767,8 @@ Assertions:
 - Bootstrap module produces participant-level CIs and paired Δ CIs.
 - Bootstrap with single participant does not crash (degenerates to point estimate).
 - Evaluation script produces a machine-readable metrics artifact and console summary.
+- Evaluation script supports per-input mode selection (`--mode` repeatable, paired-by-position with `--input`), `--loss`, and strict-vs-intersection participant handling.
+- Metrics artifact includes top-level `loss`, plus bootstrap `ci95` and `drop_rate` for `mae_at_coverage` when bootstrapping is enabled.
 - All tests in Section 9.1 pass with exact numeric assertions.
 - `make ci` passes.
 
@@ -686,13 +778,13 @@ Assertions:
 
 If we ever want to compare to a human rater:
 
-- A human typically provides one point: (coverage≈100%, risk≈human MAE). Without a ranking signal,
+  - A human typically provides one point: (coverage≈100%, risk≈human MAE). Without a ranking signal,
   “human AURC/AUGRC” is not defined.
 - Valid options (separate protocol design work):
-  1. **Forced-coverage model**: define a model variant that always outputs 0–3 (no abstention), then
+  1. **Forced-coverage model**: define a model variant that always outputs 0-3 (no abstention), then
      compare MAE at coverage=1 against a human MAE at coverage=1.
   2. **Human selective protocol**: ask humans to abstain (or provide a calibrated confidence) so they
-     also define a risk–coverage curve.
+     also define a risk-coverage curve.
   3. **Compare at matched operating points** only (e.g., MAE@50%) if both systems can produce those
      operating points via an agreed abstention/confidence protocol.
 
