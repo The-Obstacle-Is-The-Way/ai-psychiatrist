@@ -9,6 +9,8 @@ import pytest
 
 from ai_psychiatrist.domain.enums import PHQ8Item
 
+pytestmark = [pytest.mark.integration]
+
 
 @pytest.fixture
 def mock_output_json(tmp_path: Path) -> Path:
