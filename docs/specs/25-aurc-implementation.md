@@ -1,558 +1,475 @@
-# Spec 25: AURC Implementation for Rigorous Selective Prediction Evaluation
+# Spec 25: Selective Prediction Evaluation Suite (Risk–Coverage, AURC, AUGRC, Bootstrap CIs)
 
 > **STATUS**: Proposed
 >
-> **Priority**: High — Required for valid statistical comparison of zero-shot vs few-shot
+> **Priority**: High — required for statistically valid reporting
 >
 > **GitHub Issue**: #66
 >
 > **Created**: 2025-12-27
 >
-> **Resolves**: Paper uses invalid statistical comparison (MAE at different coverage levels)
+> **Supersedes**: `docs/specs/24-aurc-metric.md`
 
 ---
 
-## Problem Statement
+## 1) Context and Problem
 
-The paper compares MAE between zero-shot and few-shot at different coverage levels (40.9% vs 50.0%). This is statistically invalid for selective prediction systems because lower coverage means the model only predicts on "easy" cases, artificially lowering MAE.
+Our quantitative PHQ-8 system is a **selective prediction** system: it can abstain at the
+PHQ-8 item level by outputting `"N/A"` (represented as `None` in code/JSON). This means
+different runs/modes can operate at different **coverage** levels.
 
-**Current state**: Our outputs only save `predicted_items[item] = score | None`. We have no confidence signal to rank predictions.
+Comparing MAE between methods at *different* coverages is statistically invalid because:
 
-**Required state**: Capture `llm_evidence_count` per item, enabling AURC computation and matched-coverage comparison.
+- lower coverage selectively keeps easier cases (“cherry-picking”),
+- higher coverage necessarily includes harder cases,
+- MAE monotonically tends to worsen as coverage increases (in expectation).
+
+We need a metrics + reporting suite that:
+
+1. Evaluates the **full risk–coverage tradeoff** (not one arbitrary operating point),
+2. Supports **matched-coverage comparisons**,
+3. Provides **uncertainty estimates** (CIs) respecting participant-level clustering,
+4. Is deterministic and reproducible.
 
 ---
 
-## Solution Overview
+## 2) Goals / Non-goals
 
-1. **Capture confidence signal** in `reproduce_results.py` outputs
-2. **Implement AURC computation** in `src/ai_psychiatrist/metrics/aurc.py`
-3. **Add matched-coverage comparison** utility
-4. **Integrate into experiment output** with backward compatibility
+### Goals
+
+- Persist per-item confidence/evidence signals already present in domain objects.
+- Implement, test, and report:
+  - risk–coverage curve (RC curve),
+  - **AURC** (Area Under the Risk–Coverage curve),
+  - **AUGRC** (Area Under the Generalized Risk–Coverage curve; “joint risk”),
+  - **MAE@coverage** (matched coverage),
+  - max achievable coverage (**Cmax**),
+  - participant-cluster bootstrap CIs for all reported scalars.
+- Provide an evaluation script that turns saved run outputs into a metrics artifact + console summary.
+
+### Non-goals (explicitly out of scope for this spec)
+
+- Human clinician “baseline AURC”: humans typically produce a single operating point (coverage≈1) and do
+  not emit a ranking signal, so “human AURC” is not defined without extra protocol design.
+- Human+LLM assistance study design (valuable, but a different research question).
+- Forcing “100% coverage” by changing prompts/logic (that defines a different system; we may analyze
+  forced-coverage variants separately).
 
 ---
 
-## TDD Implementation Plan
+## 3) Repo-accurate Data Model (What We Evaluate)
 
-### Phase 1: Unit Tests for AURC Computation
+### 3.1 Unit of evaluation
 
-**File**: `tests/unit/metrics/test_aurc.py`
+We evaluate **item instances**: one PHQ-8 item for one participant.
 
-```python
-"""Unit tests for AURC metric computation."""
+For each (participant_id, item):
 
-import pytest
+- `pred` ∈ {0,1,2,3} or `None` (abstain)
+- `gt` ∈ {0,1,2,3} (ground truth; required)
+- `confidence` (scalar ranking signal; higher = more confident)
 
-from ai_psychiatrist.metrics.aurc import (
-    compute_aurc,
-    compute_risk_at_coverage,
-    compute_risk_coverage_curve,
-    ItemPrediction,
-)
+### 3.2 Inclusion rules (critical)
 
+- Include only `success=True` participants from `scripts/reproduce_results.py` output.
+- Include participants even if they have 0 predicted items (coverage 0 for that participant).
+  - This is required; excluding them inflates coverage.
+- Failed participants (`success=False`) are reported separately as a reliability statistic and are not
+  included in selective prediction metrics (unless a future spec explicitly defines “end-to-end coverage”
+  semantics).
 
-class TestComputeAURC:
-    """Tests for compute_aurc function."""
+### 3.3 Total item count (denominator)
 
-    def test_perfect_ranking_low_aurc(self) -> None:
-        """Perfect confidence ranking (correct predictions ranked highest) yields low AURC."""
-        # All predictions correct and ranked by confidence
-        items = [
-            ItemPrediction(score=2, ground_truth=2, confidence=1.0),  # correct, highest conf
-            ItemPrediction(score=1, ground_truth=1, confidence=0.9),  # correct
-            ItemPrediction(score=0, ground_truth=0, confidence=0.8),  # correct
-            ItemPrediction(score=None, ground_truth=1, confidence=0.0),  # abstained
-        ]
-        aurc = compute_aurc(items)
-        assert aurc == 0.0  # Perfect predictions = 0 risk at all coverage levels
+Let:
 
-    def test_random_ranking_higher_aurc(self) -> None:
-        """Random confidence ranking yields higher AURC than perfect ranking."""
-        # Errors ranked higher than correct predictions (bad calibration)
-        items = [
-            ItemPrediction(score=3, ground_truth=0, confidence=1.0),  # error=3, highest conf
-            ItemPrediction(score=2, ground_truth=2, confidence=0.5),  # correct
-            ItemPrediction(score=1, ground_truth=1, confidence=0.3),  # correct
-        ]
-        aurc = compute_aurc(items)
-        assert aurc > 0.0  # Errors at high confidence = higher AURC
+- `P = number of included participants`
+- `N = P * 8` (total items; includes abstentions)
 
-    def test_all_abstained_returns_zero(self) -> None:
-        """All abstained predictions yield AURC of 0 (no predictions to rank)."""
-        items = [
-            ItemPrediction(score=None, ground_truth=1, confidence=0.0),
-            ItemPrediction(score=None, ground_truth=2, confidence=0.0),
-        ]
-        aurc = compute_aurc(items)
-        assert aurc == 0.0
-
-    def test_single_prediction(self) -> None:
-        """Single prediction yields AURC equal to its absolute error times coverage."""
-        items = [
-            ItemPrediction(score=2, ground_truth=1, confidence=1.0),  # error = 1
-            ItemPrediction(score=None, ground_truth=0, confidence=0.0),  # abstained
-        ]
-        aurc = compute_aurc(items)
-        # At coverage 0.5, risk is 1.0 (error of 1). Area = 0.5 * 1.0 = 0.5
-        assert aurc == pytest.approx(0.5, abs=0.01)
-
-    def test_coverage_denominator_includes_abstentions(self) -> None:
-        """Coverage should be predicted / total, including abstentions."""
-        items = [
-            ItemPrediction(score=2, ground_truth=2, confidence=1.0),  # correct
-            ItemPrediction(score=None, ground_truth=1, confidence=0.0),  # abstained
-            ItemPrediction(score=None, ground_truth=0, confidence=0.0),  # abstained
-        ]
-        curve = compute_risk_coverage_curve(items)
-        assert len(curve) == 1
-        coverage, risk = curve[0]
-        assert coverage == pytest.approx(1 / 3)  # 1 prediction / 3 total
-        assert risk == 0.0  # correct prediction
-
-
-class TestComputeRiskAtCoverage:
-    """Tests for matched-coverage comparison."""
-
-    def test_risk_at_50_percent(self) -> None:
-        """Compute MAE at exactly 50% coverage."""
-        items = [
-            ItemPrediction(score=2, ground_truth=2, confidence=1.0),  # correct
-            ItemPrediction(score=3, ground_truth=1, confidence=0.8),  # error=2
-            ItemPrediction(score=1, ground_truth=1, confidence=0.5),  # correct
-            ItemPrediction(score=0, ground_truth=2, confidence=0.3),  # error=2
-        ]
-        risk = compute_risk_at_coverage(items, target_coverage=0.5)
-        # Top 50% by confidence: first 2 items. MAE = (0 + 2) / 2 = 1.0
-        assert risk == pytest.approx(1.0)
-
-    def test_risk_at_100_percent(self) -> None:
-        """Risk at 100% coverage equals overall MAE."""
-        items = [
-            ItemPrediction(score=2, ground_truth=2, confidence=1.0),
-            ItemPrediction(score=1, ground_truth=0, confidence=0.5),
-        ]
-        risk = compute_risk_at_coverage(items, target_coverage=1.0)
-        # All items: MAE = (0 + 1) / 2 = 0.5
-        assert risk == pytest.approx(0.5)
-
-    def test_insufficient_coverage_returns_none(self) -> None:
-        """Return None if not enough predictions to reach target coverage."""
-        items = [
-            ItemPrediction(score=2, ground_truth=2, confidence=1.0),
-            ItemPrediction(score=None, ground_truth=1, confidence=0.0),
-            ItemPrediction(score=None, ground_truth=0, confidence=0.0),
-            ItemPrediction(score=None, ground_truth=1, confidence=0.0),
-        ]
-        risk = compute_risk_at_coverage(items, target_coverage=0.5)
-        # Only 25% coverage available (1/4), cannot reach 50%
-        assert risk is None
-
-
-class TestRiskCoverageCurve:
-    """Tests for risk-coverage curve generation."""
-
-    def test_curve_is_sorted_by_coverage(self) -> None:
-        """Curve points should be sorted by increasing coverage."""
-        items = [
-            ItemPrediction(score=1, ground_truth=1, confidence=0.5),
-            ItemPrediction(score=2, ground_truth=2, confidence=1.0),
-            ItemPrediction(score=0, ground_truth=1, confidence=0.3),
-        ]
-        curve = compute_risk_coverage_curve(items)
-        coverages = [c for c, r in curve]
-        assert coverages == sorted(coverages)
-
-    def test_curve_length_equals_predictions(self) -> None:
-        """Curve has one point per prediction (not per abstention)."""
-        items = [
-            ItemPrediction(score=1, ground_truth=1, confidence=1.0),
-            ItemPrediction(score=None, ground_truth=2, confidence=0.0),
-            ItemPrediction(score=2, ground_truth=2, confidence=0.5),
-        ]
-        curve = compute_risk_coverage_curve(items)
-        assert len(curve) == 2  # 2 predictions, 1 abstention
-```
-
-### Phase 2: AURC Module Implementation
-
-**File**: `src/ai_psychiatrist/metrics/__init__.py`
-
-```python
-"""Metrics for evaluation and model analysis."""
-
-from ai_psychiatrist.metrics.aurc import (
-    ItemPrediction,
-    compute_aurc,
-    compute_risk_at_coverage,
-    compute_risk_coverage_curve,
-)
-
-__all__ = [
-    "ItemPrediction",
-    "compute_aurc",
-    "compute_risk_at_coverage",
-    "compute_risk_coverage_curve",
-]
-```
-
-**File**: `src/ai_psychiatrist/metrics/aurc.py`
-
-```python
-"""AURC (Area Under Risk-Coverage Curve) computation for selective prediction.
-
-Paper Reference:
-    - A Novel Characterization of the Population Area Under the Risk Coverage Curve (AURC)
-      https://arxiv.org/abs/2410.15361
-    - Overcoming Common Flaws in Evaluation of Selective Classification Systems
-      https://arxiv.org/abs/2407.01032
-
-This module provides coverage-adjusted evaluation metrics for selective prediction,
-where the model can abstain (output N/A) on low-confidence items.
-"""
-
-from __future__ import annotations
-
-from dataclasses import dataclass
-
-
-@dataclass(frozen=True, slots=True)
-class ItemPrediction:
-    """A single item prediction with confidence for AURC computation.
-
-    Attributes:
-        score: Predicted score (0-3) or None if abstained (N/A).
-        ground_truth: Actual score (0-3).
-        confidence: Confidence signal (higher = more confident). Used to rank predictions.
-    """
-
-    score: int | None
-    ground_truth: int
-    confidence: float
-
-    @property
-    def is_predicted(self) -> bool:
-        """True if a prediction was made (not abstained)."""
-        return self.score is not None
-
-    @property
-    def absolute_error(self) -> int:
-        """Absolute error between prediction and ground truth. Returns 0 if abstained."""
-        if self.score is None:
-            return 0
-        return abs(self.score - self.ground_truth)
-
-
-def compute_risk_coverage_curve(
-    items: list[ItemPrediction],
-) -> list[tuple[float, float]]:
-    """Compute the risk-coverage curve.
-
-    Ranks predictions by confidence (descending) and computes cumulative
-    MAE (risk) at each coverage level.
-
-    Args:
-        items: List of predictions with confidence signals.
-
-    Returns:
-        List of (coverage, risk) tuples, sorted by increasing coverage.
-        Coverage is relative to total items (including abstentions).
-        Risk is MAE over the included predictions.
-    """
-    # Filter to predictions only, sorted by confidence (high to low)
-    predicted = [x for x in items if x.is_predicted]
-    predicted.sort(key=lambda x: x.confidence, reverse=True)
-
-    if not predicted:
-        return []
-
-    total = len(items)
-    curve: list[tuple[float, float]] = []
-    cumulative_error = 0
-
-    for k, item in enumerate(predicted, start=1):
-        cumulative_error += item.absolute_error
-        coverage = k / total
-        risk = cumulative_error / k  # MAE over first k predictions
-        curve.append((coverage, risk))
-
-    return curve
-
-
-def compute_aurc(items: list[ItemPrediction]) -> float:
-    """Compute Area Under Risk-Coverage Curve.
-
-    Lower AURC is better. AURC = 0 means perfect predictions ranked by confidence.
-
-    Uses trapezoidal integration over the risk-coverage curve.
-
-    Args:
-        items: List of predictions with confidence signals.
-
-    Returns:
-        AURC value (lower is better). Returns 0.0 if no predictions.
-    """
-    curve = compute_risk_coverage_curve(items)
-
-    if len(curve) < 2:
-        # 0 or 1 point: area is risk * coverage for single point, or 0
-        if len(curve) == 1:
-            coverage, risk = curve[0]
-            return coverage * risk
-        return 0.0
-
-    # Trapezoidal integration
-    aurc = 0.0
-    for i in range(1, len(curve)):
-        c_prev, r_prev = curve[i - 1]
-        c_curr, r_curr = curve[i]
-        # Trapezoid area = width * average height
-        aurc += (c_curr - c_prev) * (r_prev + r_curr) / 2
-
-    return aurc
-
-
-def compute_risk_at_coverage(
-    items: list[ItemPrediction],
-    target_coverage: float,
-) -> float | None:
-    """Compute risk (MAE) at a specific coverage level.
-
-    Useful for matched-coverage comparison between methods.
-
-    Args:
-        items: List of predictions with confidence signals.
-        target_coverage: Target coverage (0.0-1.0).
-
-    Returns:
-        MAE at the target coverage, or None if insufficient predictions.
-    """
-    if not 0.0 < target_coverage <= 1.0:
-        raise ValueError(f"target_coverage must be in (0, 1], got {target_coverage}")
-
-    curve = compute_risk_coverage_curve(items)
-
-    if not curve:
-        return None
-
-    # Find the point at or just above target coverage
-    for coverage, risk in curve:
-        if coverage >= target_coverage - 1e-9:  # Small epsilon for float comparison
-            return risk
-
-    # Not enough predictions to reach target coverage
-    return None
-```
-
-### Phase 3: Extend `reproduce_results.py` to Capture Confidence Signal
-
-**File**: `scripts/reproduce_results.py`
-
-Add `evidence_counts` to `EvaluationResult` and output serialization:
-
-```python
-# In EvaluationResult dataclass, add:
-evidence_counts: dict[PHQ8Item, int] = field(default_factory=dict)
-"""Number of LLM-extracted evidence quotes per item (confidence signal)."""
-
-# In evaluate_participant(), after getting assessment:
-evidence_counts = {
-    item: assessment.items[item].llm_evidence_count
-    for item in PHQ8Item.all_items()
-}
-
-# In EvaluationResult construction:
-evidence_counts=evidence_counts,
-
-# In ExperimentResults.to_dict(), add to each result:
-"evidence_counts": {
-    item.value: count for item, count in r.evidence_counts.items()
-},
-```
-
-### Phase 4: Integration Tests
-
-**File**: `tests/integration/test_aurc_pipeline.py`
-
-```python
-"""Integration tests for AURC computation from experiment outputs."""
-
-import json
-from pathlib import Path
-
-import pytest
-
-from ai_psychiatrist.metrics.aurc import ItemPrediction, compute_aurc, compute_risk_at_coverage
-
-
-class TestAURCFromExperimentOutput:
-    """Test AURC computation from saved experiment JSON."""
-
-    @pytest.fixture
-    def sample_output(self, tmp_path: Path) -> Path:
-        """Create a sample experiment output with evidence_counts."""
-        data = {
-            "experiments": [
-                {
-                    "results": {
-                        "results": [
-                            {
-                                "participant_id": 300,
-                                "success": True,
-                                "predicted_items": {
-                                    "NoInterest": 2,
-                                    "Depressed": None,
-                                    "Sleep": 1,
-                                },
-                                "ground_truth_items": {
-                                    "NoInterest": 2,
-                                    "Depressed": 1,
-                                    "Sleep": 2,
-                                },
-                                "evidence_counts": {
-                                    "NoInterest": 3,
-                                    "Depressed": 0,
-                                    "Sleep": 1,
-                                },
-                            }
-                        ]
-                    }
-                }
-            ]
-        }
-        path = tmp_path / "output.json"
-        path.write_text(json.dumps(data))
-        return path
-
-    def test_load_and_compute_aurc(self, sample_output: Path) -> None:
-        """Load experiment output and compute AURC."""
-        data = json.loads(sample_output.read_text())
-        results = data["experiments"][0]["results"]["results"]
-
-        items: list[ItemPrediction] = []
-        for r in results:
-            for item_name in r["predicted_items"]:
-                pred = r["predicted_items"][item_name]
-                gt = r["ground_truth_items"][item_name]
-                conf = r["evidence_counts"][item_name]
-                items.append(ItemPrediction(score=pred, ground_truth=gt, confidence=conf))
-
-        aurc = compute_aurc(items)
-        assert aurc >= 0.0
-
-        # Matched coverage at 50%
-        risk_50 = compute_risk_at_coverage(items, target_coverage=0.5)
-        # 2/3 items predicted, so 66% max coverage. 50% should work.
-        if risk_50 is not None:
-            assert risk_50 >= 0.0
-```
-
-### Phase 5: Add CLI Option to `reproduce_results.py`
-
-Add `--compute-aurc` flag to compute and report AURC after experiments:
-
-```python
-# In argument parser:
-parser.add_argument(
-    "--compute-aurc",
-    action="store_true",
-    help="Compute and report AURC after experiments (requires evidence_counts in output)",
-)
-
-# After experiment completion, if --compute-aurc:
-if args.compute_aurc:
-    from ai_psychiatrist.metrics.aurc import ItemPrediction, compute_aurc, compute_risk_at_coverage
-
-    items: list[ItemPrediction] = []
-    for exp in all_experiments:
-        for r in exp.results:
-            if not r.success:
-                continue
-            for item in PHQ8Item.all_items():
-                pred = r.predicted_items.get(item)
-                gt = r.ground_truth_items.get(item)
-                conf = r.evidence_counts.get(item, 0)
-                if gt is not None:
-                    items.append(ItemPrediction(score=pred, ground_truth=gt, confidence=conf))
-
-    aurc = compute_aurc(items)
-    risk_50 = compute_risk_at_coverage(items, target_coverage=0.5)
-
-    logger.info(
-        "AURC metrics computed",
-        aurc=round(aurc, 4),
-        risk_at_50_pct=round(risk_50, 4) if risk_50 else "N/A",
-        total_items=len(items),
-    )
-```
+All coverage computations must use `N` (never “predicted count”).
 
 ---
 
-## Acceptance Criteria
+## 4) Confidence Signals (What We Rank By)
 
-- [ ] `src/ai_psychiatrist/metrics/aurc.py` exists with `compute_aurc`, `compute_risk_at_coverage`, `compute_risk_coverage_curve`
-- [ ] `ItemPrediction` dataclass defined with `score`, `ground_truth`, `confidence`
-- [ ] Unit tests in `tests/unit/metrics/test_aurc.py` pass (all 10 tests)
-- [ ] `reproduce_results.py` outputs `evidence_counts` per item per participant
-- [ ] Integration test verifies AURC computation from saved experiment JSON
-- [ ] `--compute-aurc` flag works in `reproduce_results.py`
-- [ ] AURC is reported in experiment summary when flag is used
-- [ ] No regressions in existing tests
-- [ ] Documentation updated in `docs/specs/24-aurc-metric.md` to reference this implementation
+### 4.1 Signals available today
+
+`ItemAssessment` already stores:
+
+- `llm_evidence_count: int` — number of evidence quotes extracted by the LLM evidence step
+- `keyword_evidence_count: int` — number of keyword-hit quotes injected into scorer evidence
+- `evidence_source: "llm" | "keyword" | "both" | None`
+
+Source: `src/ai_psychiatrist/domain/value_objects.py` (`ItemAssessment`)
+
+### 4.2 Signals to persist (required)
+
+We must persist per item:
+
+- `llm_evidence_count`
+- `keyword_evidence_count`
+- `evidence_source`
+
+Rationale:
+
+- Confidence is low-cardinality and tied to evidence extraction; we need the raw components to interpret
+  curve behavior and to support future refinements without rerunning expensive LLM calls.
+
+### 4.3 Default ranking functions (required to support)
+
+We will compute metrics for at least two ranking functions:
+
+1. `conf_llm = llm_evidence_count` (mode-agnostic, stable across backfill)
+2. `conf_total_evidence = llm_evidence_count + keyword_evidence_count` (reflects evidence presented to scorer)
+
+This allows reporting robustness to the confidence definition.
+
+### 4.4 Tie-breaking (must be deterministic)
+
+Evidence counts are discrete; ties are common. To ensure exact reproducibility, sorting MUST be:
+
+1. `confidence` descending
+2. `participant_id` ascending
+3. `item_index` ascending, where `item_index` follows `PHQ8Item.all_items()` order
 
 ---
 
-## Files to Create
+## 5) Output Schema Extension (Backward Compatible)
 
-```
-src/ai_psychiatrist/metrics/__init__.py
-src/ai_psychiatrist/metrics/aurc.py
-tests/unit/metrics/__init__.py
-tests/unit/metrics/test_aurc.py
-tests/integration/test_aurc_pipeline.py
-```
+### 5.1 Current output
 
-## Files to Modify
+`scripts/reproduce_results.py` currently persists (per successful participant) only:
 
-```
-scripts/reproduce_results.py  # Add evidence_counts output + --compute-aurc flag
-docs/specs/24-aurc-metric.md  # Update status to reference this spec
-```
-
----
-
-## Output Schema Extension
-
-Current output (per participant):
 ```json
 {
   "participant_id": 300,
-  "predicted_items": {"NoInterest": 2, "Depressed": null, ...},
-  "ground_truth_items": {"NoInterest": 2, "Depressed": 1, ...}
+  "predicted_items": {"NoInterest": 2, "Depressed": null, "...": null},
+  "ground_truth_items": {"NoInterest": 2, "Depressed": 1, "...": 0}
 }
 ```
 
-New output (backward compatible):
+This is insufficient for selective prediction evaluation because no ranking signal exists.
+
+### 5.2 Required output (backward compatible)
+
+Add a new key: `item_signals` (do not rename/remove existing keys):
+
 ```json
 {
   "participant_id": 300,
-  "predicted_items": {"NoInterest": 2, "Depressed": null, ...},
-  "ground_truth_items": {"NoInterest": 2, "Depressed": 1, ...},
-  "evidence_counts": {"NoInterest": 3, "Depressed": 0, ...}
+  "predicted_items": {"NoInterest": 2, "Depressed": null, "...": null},
+  "ground_truth_items": {"NoInterest": 2, "Depressed": 1, "...": 0},
+  "item_signals": {
+    "NoInterest": {
+      "llm_evidence_count": 3,
+      "keyword_evidence_count": 0,
+      "evidence_source": "llm"
+    },
+    "Depressed": {
+      "llm_evidence_count": 0,
+      "keyword_evidence_count": 1,
+      "evidence_source": "keyword"
+    }
+  }
 }
 ```
 
+Rules:
+
+- For `success=True`, `item_signals` MUST contain all 8 PHQ-8 items.
+- For `success=False`, preserve the minimal failure payload (no requirement to include signals).
+
+Implementation detail (repo-accurate):
+
+- These values come directly from `PHQ8Assessment.items[item]` returned by
+  `src/ai_psychiatrist/agents/quantitative.py` (`QuantitativeAssessmentAgent.assess`).
+
 ---
 
-## References
+## 6) Metric Definitions (Exact; no ambiguity)
 
-1. [A Novel Characterization of the Population AURC](https://arxiv.org/abs/2410.15361) - 2024
-2. [Overcoming Common Flaws in SC Evaluation](https://arxiv.org/abs/2407.01032) - 2024
-3. [Know Your Limits: Abstention in LLMs](https://arxiv.org/abs/2407.18418) - 2024
-4. GitHub Issue #66 - Paper uses invalid statistical comparison
+### 6.1 Loss function
+
+Primary (human-readable) loss:
+
+- `abs_err = |pred - gt|` (range 0–3)
+
+Normalized loss (recommended for bounded “generalized risk” metrics):
+
+- `abs_err_norm = abs_err / 3` (range 0–1)
+
+Unless explicitly stated, “risk” refers to MAE on the chosen loss.
+
+### 6.2 Risk–Coverage curve (RC curve)
+
+Given a list of `N` item instances (including abstentions):
+
+1. Filter to predicted items (`pred is not None`).
+2. Sort predicted items by confidence (desc) with deterministic tie-breaking.
+3. Let `K = number of predicted items` and `Δ = 1 / N`.
+4. For each `k = 1..K`:
+   - `coverage_k = k / N`
+   - `risk_k = (1/k) * sum(loss_i for i in top k)`
+   - `joint_risk_k = (k/N) * risk_k = (1/N) * sum(loss_i for i in top k)`
+
+Return a curve with `K` points:
+
+- `[(coverage_k, risk_k, joint_risk_k) for k in 1..K]`
+
+### 6.3 AURC (Area Under Risk–Coverage Curve)
+
+We implement **empirical step AURC** (not trapezoidal). This matches the discrete integration
+interpretation of selective risk aggregated over acceptance thresholds.
+
+Let `Δ = 1 / N` and `risk_k` defined above. Then:
+
+- `AURC = sum_{k=1..K} risk_k * Δ`
+
+Properties:
+
+- If `K == 0` (all abstained), `AURC = 0.0`.
+- AURC integrates over `[0, Cmax]` where `Cmax = K/N`.
+
+Optional normalized variant:
+
+- If `Cmax > 0`: `nAURC = AURC / Cmax` (mean risk across acceptance levels).
+
+### 6.4 AUGRC (Area Under Generalized Risk–Coverage Curve)
+
+We implement **AUGRC** using *joint risk* (generalized risk) to reduce pathological weighting of
+high-confidence failures.
+
+Let `joint_risk_k` and `Δ = 1 / N`. Then:
+
+- `AUGRC = sum_{k=1..K} joint_risk_k * Δ`
+
+Implementation rules:
+
+- Compute AUGRC on normalized loss (`abs_err_norm`) by default.
+- Also expose a raw-loss AUGRC for internal debugging if needed.
+
+Optional normalized variant:
+
+- If `Cmax > 0`: `nAUGRC = AUGRC / Cmax`.
+
+### 6.5 Matched-coverage risk (MAE@coverage)
+
+Define `risk_at_coverage(target_c)`:
+
+- Validate `0 < target_c <= 1`.
+- `k* = ceil(target_c * N)`.
+- If `k* > K`, return `None`.
+- Else return `risk_{k*}`.
+
+We report MAE@coverage for a fixed grid of coverages (configurable), but only compare methods at
+coverages where both methods have `Cmax >= target_c`.
+
+### 6.6 Truncated areas for fair cross-method comparison (AURC@C, AUGRC@C)
+
+When two methods have different `Cmax`, comparing “full” AURC (integrated over `[0, Cmax]`) is not a
+clean apples-to-apples comparison because the integration domain differs.
+
+We therefore also define **truncated areas** at a chosen coverage `C`:
+
+- `C` must satisfy `0 < C <= 1`
+- for paired method comparison, default to `C_common = min(Cmax_A, Cmax_B)`
+
+Define the step-function risk `r(c)` implied by the RC curve:
+
+- `r(c) = risk_k` for `c ∈ ((k-1)/N, k/N]`
+
+Then:
+
+- `AURC@C = ∫_0^{min(C, Cmax)} r(c) dc`
+- `AUGRC@C = ∫_0^{min(C, Cmax)} joint_risk(c) dc` (same step convention)
+
+Discrete implementation (exact, for step integration):
+
+1. Let `C' = min(C, Cmax)` and `x = C' * N`.
+2. Let `k_full = floor(x)` and `frac = x - k_full` (so `0 <= frac < 1`).
+3. `AURC@C = (sum_{k=1..k_full} risk_k + frac * risk_{k_full+1}) * (1/N)` (if `k_full == K`, the last term is omitted).
+4. `AUGRC@C = (sum_{k=1..k_full} joint_risk_k + frac * joint_risk_{k_full+1}) * (1/N)`.
+
+We will report both:
+
+- `AURC_full` / `AUGRC_full` (integrated over `[0, Cmax]`) plus `Cmax`
+- `AURC@C_common` / `AUGRC@C_common` for method comparisons
 
 ---
 
-## Related
+## 7) Statistical Inference (Publication-grade CIs)
 
-- `docs/specs/24-aurc-metric.md` - Original AURC proposal (now superseded by this implementation spec)
-- `docs/bugs/bug-029-coverage-mae-discrepancy.md` - Coverage/MAE discrepancy analysis
-- `docs/paper-reproduction-analysis.md` - Full reproduction analysis
+### 7.1 Why participant-cluster bootstrap
+
+PHQ-8 items within a participant are correlated. Treating items as i.i.d. leads to overly narrow CIs.
+We therefore compute CIs via **cluster bootstrap by participant**:
+
+- sample participant IDs with replacement,
+- include all 8 items per sampled participant,
+- recompute metrics on pooled items.
+
+### 7.2 Paired bootstrap for method comparisons
+
+For comparisons on the same participant set (e.g., zero-shot vs few-shot):
+
+- sample participants once per replicate,
+- compute metric for each method on that sample,
+- store Δ = (method_B − method_A),
+- report percentile CI for Δ.
+
+### 7.3 Defaults (final reporting)
+
+- `n_resamples = 10_000`
+- `ci = 95%` (percentiles 2.5 and 97.5)
+- `seed` is required, recorded into the metrics artifact for reproducibility.
+
+### 7.4 Handling insufficient coverage in bootstrap replicates
+
+For MAE@coverage:
+
+- if a bootstrap replicate does not reach `target_c`, record `None`;
+- exclude `None` replicates from percentile calculation and report the exclusion rate.
+
+---
+
+## 8) Implementation Plan (TDD)
+
+### Phase 1 — Persist `item_signals` in `scripts/reproduce_results.py`
+
+Modify:
+
+- `scripts/reproduce_results.py`
+
+Changes:
+
+- Extend `EvaluationResult` dataclass with:
+  - `item_signals: dict[PHQ8Item, dict[str, object]] = field(default_factory=dict)`
+- In `evaluate_participant()`, after `assessment = await agent.assess(transcript)`:
+  - build `item_signals` from `assessment.items[item]` for all items in `PHQ8Item.all_items()`.
+- In `ExperimentResults.to_dict()`, include `"item_signals"` under each successful result.
+
+### Phase 2 — Implement metrics module
+
+Create:
+
+- `src/ai_psychiatrist/metrics/__init__.py`
+- `src/ai_psychiatrist/metrics/selective_prediction.py`
+
+Core API (stable + typed):
+
+- `@dataclass(frozen=True, slots=True) class ItemPrediction:`
+  - `participant_id: int`
+  - `item_index: int`
+  - `pred: int | None`
+  - `gt: int`
+  - `confidence: float`
+- `compute_risk_coverage_curve(items: Sequence[ItemPrediction], *, loss: Literal["abs", "abs_norm"])`
+- `compute_aurc(items: Sequence[ItemPrediction], *, loss: Literal["abs", "abs_norm"])`
+- `compute_augrc(items: Sequence[ItemPrediction], *, loss: Literal["abs", "abs_norm"])`
+- `compute_risk_at_coverage(items: Sequence[ItemPrediction], *, target_coverage: float, loss: ...)`
+- `compute_cmax(items: Sequence[ItemPrediction]) -> float`
+
+Note: the spec requires that:
+
+- AURC uses empirical step integration.
+- AUGRC uses joint risk (coverage × risk) and empirical step integration.
+
+### Phase 3 — Bootstrap utilities
+
+Create:
+
+- `src/ai_psychiatrist/metrics/bootstrap.py`
+
+Implement:
+
+- `bootstrap_by_participant(...) -> BootstrapResult`
+- `paired_bootstrap_delta_by_participant(...) -> BootstrapDeltaResult`
+
+### Phase 4 — Add an evaluation script (separation of concerns)
+
+Create:
+
+- `scripts/evaluate_selective_prediction.py`
+
+Responsibilities:
+
+- Load one or more output JSON files produced by `scripts/reproduce_results.py`
+- Select an experiment (mode) and build `ItemPrediction` rows using:
+  - `predicted_items`
+  - `ground_truth_items`
+  - `item_signals` + chosen confidence function
+- Compute:
+  - RC curve arrays (coverage, risk, joint_risk)
+  - AURC, AUGRC, Cmax
+  - MAE@coverage grid
+  - bootstrap CIs for scalars
+  - paired Δ CIs when two runs are provided
+- Write a metrics JSON artifact plus a concise console report.
+
+---
+
+## 9) Test Plan (must catch real bugs)
+
+### 9.1 Unit tests (exact values; no “> 0”)
+
+File:
+
+- `tests/unit/metrics/test_selective_prediction.py`
+
+Required tests:
+
+- Perfect predictions → AURC=0 and AUGRC=0.
+- Single prediction + abstentions:
+  - verify `N` includes abstentions,
+  - verify AURC = risk * (1/N) (step integration),
+  - verify MAE@coverage uses ceil rule.
+- Deterministic tie-breaking:
+  - same confidence values reorder by participant_id and item_index only.
+- AUGRC consistency:
+  - verify `joint_risk_k == coverage_k * risk_k` for the curve.
+
+### 9.2 Integration test (parsing output schema)
+
+File:
+
+- `tests/integration/test_selective_prediction_from_output.py`
+
+Fixture must include:
+
+- at least 1 participant with all 8 items present,
+- predicted + abstained mix,
+- `item_signals` for all 8 items.
+
+Assertions:
+
+- `N == 8 * P` (not “predicted count”),
+- `Cmax == predicted_count / N`,
+- metrics computed without exceptions and match exact expected values for the fixture.
+
+---
+
+## 10) Acceptance Criteria
+
+- `scripts/reproduce_results.py` persists `item_signals` for each successful participant.
+- Metrics module implements RC curve, AURC (step), AUGRC (joint risk), MAE@coverage, Cmax.
+- Bootstrap module produces participant-level CIs and paired Δ CIs.
+- Evaluation script produces a machine-readable metrics artifact and console summary.
+- `make ci` passes.
+
+---
+
+## 11) References
+
+Definitions and critique of AURC + AUGRC:
+
+1. Overcoming Common Flaws in the Evaluation of Selective Classification Systems
+   - https://arxiv.org/html/2407.01032v1
+
+Population AURC background (optional; not required for the empirical estimator we implement here):
+
+2. A Novel Characterization of the Population Area Under the Risk Coverage Curve (AURC)
+   - https://arxiv.org/html/2410.15361v1
+
+Abstention background and reporting cautions:
+
+3. Know Your Limits: A Survey of Abstention in Large Language Models
+   - https://arxiv.org/abs/2407.18418
