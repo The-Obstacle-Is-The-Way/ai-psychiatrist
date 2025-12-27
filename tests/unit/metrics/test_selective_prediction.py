@@ -41,7 +41,9 @@ def canonical_vectors_abs_loss() -> Sequence[ItemPrediction]:
 class TestSelectivePredictionCanonical:
     """Strict numeric validation against Spec 25 canonical vectors."""
 
-    def test_risk_coverage_curve_structure(self, canonical_vectors_abs_loss):
+    def test_risk_coverage_curve_structure(
+        self, canonical_vectors_abs_loss: Sequence[ItemPrediction]
+    ) -> None:
         """Verify RC curve working points (ties treated as plateaus).
 
         Expected:
@@ -54,7 +56,7 @@ class TestSelectivePredictionCanonical:
         np.testing.assert_allclose(curve.coverage, [0.5, 0.75], err_msg="Coverages mismatch")
         assert curve.cmax == 0.75
 
-    def test_metrics_abs_loss(self, canonical_vectors_abs_loss):
+    def test_metrics_abs_loss(self, canonical_vectors_abs_loss: Sequence[ItemPrediction]) -> None:
         """Verify metrics for loss="abs".
 
         Expected:
@@ -80,7 +82,9 @@ class TestSelectivePredictionCanonical:
         assert math.isclose(aurc, 17 / 24), f"AURC mismatch: got {aurc}, expected {17 / 24}"
         assert math.isclose(augrc, 1 / 4), f"AUGRC mismatch: got {augrc}, expected {0.25}"
 
-    def test_metrics_at_coverage_abs_loss(self, canonical_vectors_abs_loss):
+    def test_metrics_at_coverage_abs_loss(
+        self, canonical_vectors_abs_loss: Sequence[ItemPrediction]
+    ) -> None:
         """Verify metrics at specific coverage target (0.6) for loss="abs".
 
         Expected:
@@ -92,6 +96,7 @@ class TestSelectivePredictionCanonical:
         risk_at_06 = compute_risk_at_coverage(
             canonical_vectors_abs_loss, target_coverage=0.6, loss="abs"
         )
+        assert risk_at_06 is not None
         assert math.isclose(risk_at_06, 2 / 3), (
             f"Risk@0.6 mismatch: got {risk_at_06}, expected {2 / 3}"
         )
@@ -111,7 +116,9 @@ class TestSelectivePredictionCanonical:
             f"AUGRC@0.6 mismatch: got {augrc_at_06}, expected {7 / 40}"
         )
 
-    def test_metrics_abs_norm_loss(self, canonical_vectors_abs_loss):
+    def test_metrics_abs_norm_loss(
+        self, canonical_vectors_abs_loss: Sequence[ItemPrediction]
+    ) -> None:
         """Verify metrics for loss="abs_norm" (exactly scaled by 1/3).
 
         Expected:
@@ -135,7 +142,9 @@ class TestSelectivePredictionCanonical:
         assert math.isclose(aurc, 17 / 72), f"AURC (norm) mismatch: got {aurc}, expected {17 / 72}"
         assert math.isclose(augrc, 1 / 12), f"AUGRC (norm) mismatch: got {augrc}, expected {1 / 12}"
 
-    def test_metrics_at_coverage_abs_norm_loss(self, canonical_vectors_abs_loss):
+    def test_metrics_at_coverage_abs_norm_loss(
+        self, canonical_vectors_abs_loss: Sequence[ItemPrediction]
+    ) -> None:
         """Verify metrics at coverage 0.6 for loss="abs_norm".
 
         Expected:
@@ -146,6 +155,7 @@ class TestSelectivePredictionCanonical:
         risk_at_06 = compute_risk_at_coverage(
             canonical_vectors_abs_loss, target_coverage=0.6, loss="abs_norm"
         )
+        assert risk_at_06 is not None
         assert math.isclose(risk_at_06, 2 / 9), f"Risk@0.6 (norm) mismatch: got {risk_at_06}"
 
         aurc_at_06 = compute_aurc_at_coverage(
@@ -162,7 +172,7 @@ class TestSelectivePredictionCanonical:
 class TestSelectivePredictionEdgeCases:
     """Test cases for edge conditions defined in Spec 25."""
 
-    def test_perfect_predictions(self):
+    def test_perfect_predictions(self) -> None:
         """Perfect predictions -> AURC=0 and AUGRC=0."""
         items = [
             ItemPrediction(1, 0, 2, 2, 1.0),
@@ -171,7 +181,7 @@ class TestSelectivePredictionEdgeCases:
         assert compute_aurc(items, loss="abs") == 0.0
         assert compute_augrc(items, loss="abs") == 0.0
 
-    def test_all_abstain(self):
+    def test_all_abstain(self) -> None:
         """All abstain (K=0) -> Cmax=0, AURC=0, AUGRC=0, empty curve."""
         items = [
             ItemPrediction(1, 0, None, 2, 0.0),
@@ -183,7 +193,7 @@ class TestSelectivePredictionEdgeCases:
         assert compute_aurc(items, loss="abs") == 0.0
         assert compute_augrc(items, loss="abs") == 0.0
 
-    def test_single_prediction_with_abstention(self):
+    def test_single_prediction_with_abstention(self) -> None:
         """Single prediction + abstentions.
 
         Verifies right-continuous convention at 0.
@@ -209,19 +219,18 @@ class TestSelectivePredictionEdgeCases:
         aurc = compute_aurc(items, loss="abs")
         assert math.isclose(aurc, 0.5)
 
-    def test_risk_at_coverage_target_too_high(self):
+    def test_risk_at_coverage_target_too_high(self) -> None:
         """If target_c > Cmax, return None (or handle gracefully, here we expect None or similar).
 
         Spec says: If no such working point exists (target_c > Cmax), return None.
         But the function signature in implementation might return optional float.
         """
-        items = [ItemPrediction(1, 0, 2, 2, 1.0)]  # Cmax=1.0
         # If we have abstentions...
         items_ab = [ItemPrediction(1, 0, None, 2, 1.0)]  # Cmax=0.0
 
         assert compute_risk_at_coverage(items_ab, target_coverage=0.1, loss="abs") is None
 
-    def test_exact_working_point_truncation(self):
+    def test_exact_working_point_truncation(self) -> None:
         """When truncation coverage C equals an exact working point coverage.
 
         Items:
