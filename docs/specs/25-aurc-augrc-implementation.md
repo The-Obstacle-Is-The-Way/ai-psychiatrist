@@ -1,4 +1,4 @@
-# Spec 25: Selective Prediction Evaluation Suite (Risk–Coverage, AURC, AUGRC, Bootstrap CIs)
+# Spec 25: AURC/AUGRC Implementation for Selective Prediction Evaluation (Risk–Coverage, Bootstrap CIs)
 
 > **STATUS**: Proposed
 >
