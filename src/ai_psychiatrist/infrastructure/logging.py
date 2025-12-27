@@ -27,6 +27,7 @@ def _stdout_isatty() -> bool:
     try:
         return sys.stdout.isatty()
     except Exception:
+        # Intentionally broad: logging must not crash on odd stdout objects.
         return False
 
 

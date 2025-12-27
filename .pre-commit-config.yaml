@@ -12,7 +12,8 @@ repos:
     hooks:
       - id: mypy
         name: mypy (uv)
-        entry: uv run --locked mypy src
+        # Must match CI: src tests scripts server.py
+        entry: uv run --locked mypy src tests scripts server.py
         language: system
         pass_filenames: false
         types: [python]

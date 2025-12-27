@@ -201,7 +201,7 @@ def extract_transcripts(
         except zipfile.BadZipFile as e:
             log_error("Bad zip file", zip_path=str(zip_path), error=str(e))
             stats["errors"] += 1
-        except Exception as e:
+        except (OSError, KeyError, ValueError) as e:
             log_error("Extraction failed", zip_path=str(zip_path), error=str(e))
             stats["errors"] += 1
 
@@ -252,6 +252,7 @@ def _sample_transcript_lines(transcripts_dir: Path) -> int:
         with sample_files[0].open() as handle:
             return len(handle.readlines())
     except Exception:
+        # Intentionally broad: best-effort helper used only for validation output.
         return 0
 
 

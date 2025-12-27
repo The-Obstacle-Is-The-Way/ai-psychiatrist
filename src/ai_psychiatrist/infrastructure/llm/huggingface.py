@@ -120,7 +120,7 @@ class HuggingFaceClient:
             content = await asyncio.wait_for(_generate_async(), timeout=request.timeout_seconds)
         except TimeoutError as e:
             raise LLMTimeoutError(request.timeout_seconds) from e
-        except Exception as e:
+        except (RuntimeError, ValueError, OSError, TypeError) as e:
             logger.error("HuggingFace chat failed", model=model_id, error=str(e))
             raise LLMError(f"HuggingFace chat failed: {e}") from e
 
@@ -145,7 +145,7 @@ class HuggingFaceClient:
             embedding = await asyncio.wait_for(_embed_async(), timeout=request.timeout_seconds)
         except TimeoutError as e:
             raise LLMTimeoutError(request.timeout_seconds) from e
-        except Exception as e:
+        except (RuntimeError, ValueError, OSError, TypeError) as e:
             logger.error("HuggingFace embed failed", model=model_id, error=str(e))
             raise LLMError(f"HuggingFace embedding failed: {e}") from e
 

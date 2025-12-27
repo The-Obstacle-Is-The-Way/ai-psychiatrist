@@ -290,6 +290,8 @@ class QuantitativeAssessmentAgent:
             except asyncio.CancelledError:
                 raise
             except Exception as e:
+                # Intentionally broad: Fallback for any Pydantic AI error
+                # (see docs/specs/21-broad-exception-handling.md)
                 logger.error(
                     "Pydantic AI call failed during scoring; falling back to legacy",
                     error=str(e),

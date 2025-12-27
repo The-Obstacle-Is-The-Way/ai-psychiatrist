@@ -29,6 +29,7 @@ import hashlib
 import json
 import re
 import sys
+from dataclasses import dataclass
 from datetime import UTC, datetime
 from pathlib import Path
 from typing import TYPE_CHECKING, Any
@@ -41,10 +42,14 @@ sys.path.insert(0, str(Path(__file__).parent.parent / "src"))
 from ai_psychiatrist.config import (
     DataSettings,
     EmbeddingBackend,
+    EmbeddingBackendSettings,
+    EmbeddingSettings,
     LLMBackend,
     LoggingSettings,
+    ModelSettings,
     get_settings,
 )
+from ai_psychiatrist.domain.exceptions import DomainError
 from ai_psychiatrist.infrastructure.llm.factory import create_embedding_client
 from ai_psychiatrist.infrastructure.llm.model_aliases import resolve_model_name
 from ai_psychiatrist.infrastructure.llm.protocols import EmbeddingRequest
@@ -57,6 +62,33 @@ if TYPE_CHECKING:
 logger = get_logger(__name__)
 
 PAPER_SPLITS_DIRNAME = "paper_splits"
+
+
+@dataclass
+class GenerationConfig:
+    """Configuration for embedding generation."""
+
+    data_settings: DataSettings
+    embedding_settings: EmbeddingSettings
+    backend_settings: EmbeddingBackendSettings
+    model_settings: ModelSettings
+    chunk_size: int
+    step_size: int
+    dimension: int
+    min_chars: int
+    model: str
+    resolved_model: str
+    output_path: Path
+    split: str
+    dry_run: bool
+
+
+@dataclass
+class GenerationResult:
+    """Result of embedding generation."""
+
+    embeddings: dict[int, list[tuple[str, list[float]]]]
+    total_chunks: int
 
 
 def create_sliding_chunks(
@@ -180,6 +212,38 @@ def calculate_split_hash(data_settings: DataSettings, split: str) -> str:
         return hashlib.sha256(f.read()).hexdigest()[:12]
 
 
+def calculate_split_ids_hash(data_settings: DataSettings, split: str) -> str:
+    """Calculate hash of the participant IDs in the split for semantic provenance."""
+    import pandas as pd  # noqa: PLC0415
+
+    if split == "avec-train":
+        csv_path = data_settings.train_csv
+    elif split == "paper-train":
+        csv_path = _paper_train_split_path(data_settings)
+    else:
+        return "unknown"
+
+    if not csv_path.exists():
+        return "missing"
+
+    try:
+        df = pd.read_csv(csv_path)
+        ids = sorted(df["Participant_ID"].astype(int).tolist())
+        # Canonical string representation: "1,2,3"
+        ids_str = ",".join(map(str, ids))
+        return hashlib.sha256(ids_str.encode("utf-8")).hexdigest()[:12]
+    except (
+        KeyError,
+        TypeError,
+        ValueError,
+        OSError,
+        pd.errors.ParserError,
+        pd.errors.EmptyDataError,
+    ) as e:
+        logger.warning(f"Failed to calculate split_ids_hash: {e}")
+        return "error"
+
+
 async def process_participant(
     client: EmbeddingClient,
     transcript_service: TranscriptService,
@@ -207,7 +271,7 @@ async def process_participant(
     """
     try:
         transcript = transcript_service.load_transcript(participant_id)
-    except Exception as e:
+    except (DomainError, ValueError, OSError) as e:
         logger.warning(
             "Failed to load transcript",
             participant_id=participant_id,
@@ -225,7 +289,7 @@ async def process_participant(
         try:
             embedding = await generate_embedding(client, chunk, model, dimension)
             results.append((chunk, embedding))
-        except Exception as e:
+        except (DomainError, ValueError, OSError) as e:
             logger.warning(
                 "Failed to embed chunk",
                 participant_id=participant_id,
@@ -267,10 +331,8 @@ def get_output_filename(backend: str, model: str, split: str) -> str:
     return f"{backend}_{model_slug}_{split_slug}"
 
 
-async def main_async(args: argparse.Namespace) -> int:  # noqa: PLR0915
-    """Async main entry point."""
-    setup_logging(LoggingSettings(level="INFO", format="console"))
-
+def prepare_config(args: argparse.Namespace) -> GenerationConfig:
+    """Prepare configuration from args and environment."""
     # Load settings
     settings = get_settings()
 
@@ -302,121 +364,162 @@ async def main_async(args: argparse.Namespace) -> int:  # noqa: PLR0915
         )
         output_path = data_settings.base_dir / "embeddings" / f"{filename}.npz"
 
-    print("=" * 60)
-    print("REFERENCE EMBEDDINGS GENERATOR")
-    print("=" * 60)
-    print(f"  Backend: {backend_settings.backend.value}")
-    print(f"  Model: {model}")
-    print(f"  Model (resolved): {resolved_model}")
-    print(f"  Dimension: {dimension}")
-    print(f"  Chunk size: {chunk_size} lines")
-    print(f"  Step size: {step_size} lines")
-    print(f"  Min chars: {min_chars}")
-    print(f"  Split: {args.split}")
-    print(f"  Output: {output_path}")
-    print("=" * 60)
+    return GenerationConfig(
+        data_settings=data_settings,
+        embedding_settings=embedding_settings,
+        backend_settings=backend_settings,
+        model_settings=model_settings,
+        chunk_size=chunk_size,
+        step_size=step_size,
+        dimension=dimension,
+        min_chars=min_chars,
+        model=model,
+        resolved_model=resolved_model,
+        output_path=output_path,
+        split=args.split,
+        dry_run=args.dry_run,
+    )
 
-    if args.dry_run:
-        print("\n[DRY RUN] Would generate embeddings with above settings.")
-        print("[DRY RUN] No files will be created.")
-        return 0
 
+async def run_generation_loop(
+    config: GenerationConfig,
+    client: EmbeddingClient,
+    transcript_service: TranscriptService,
+) -> GenerationResult:
+    """Run the main generation loop."""
     # Get training participants only (avoid data leakage)
     try:
-        participant_ids = get_participant_ids(data_settings, split=args.split)
+        participant_ids = get_participant_ids(config.data_settings, split=config.split)
         print(f"\nFound {len(participant_ids)} participants")
     except FileNotFoundError as e:
         print(f"\nERROR: {e}")
         print("Please ensure DAIC-WOZ dataset is prepared.")
-        return 1
+        raise  # Propagate to main to handle exit code
 
-    transcript_service = TranscriptService(data_settings)
+    # Process participants
+    all_embeddings: dict[int, list[tuple[str, list[float]]]] = {}
+    total_chunks = 0
 
-    # Create client using factory
-    client = create_embedding_client(settings)
+    print(f"\nProcessing {len(participant_ids)} participants...")
+    for idx, pid in enumerate(participant_ids, 1):
+        if idx % 10 == 0 or idx == len(participant_ids):
+            print(f"  Progress: {idx}/{len(participant_ids)} participants...")
+
+        results = await process_participant(
+            client,
+            transcript_service,
+            pid,
+            config.model,
+            config.dimension,
+            config.chunk_size,
+            config.step_size,
+            config.min_chars,
+        )
+
+        if results:
+            all_embeddings[pid] = results
+            total_chunks += len(results)
+
+    return GenerationResult(embeddings=all_embeddings, total_chunks=total_chunks)
+
+
+def save_embeddings(
+    result: GenerationResult,
+    config: GenerationConfig,
+) -> None:
+    """Save embeddings, text chunks, and metadata."""
+    # Ensure output directory exists
+    config.output_path.parent.mkdir(parents=True, exist_ok=True)
+
+    # Prepare NPZ and JSON data
+    npz_arrays: dict[str, Any] = {}
+    json_texts: dict[str, list[str]] = {}
+
+    for pid, pairs in result.embeddings.items():
+        texts = [text for text, _ in pairs]
+        embeddings = [emb for _, emb in pairs]
+
+        json_texts[str(pid)] = texts
+        npz_arrays[f"emb_{pid}"] = np.array(embeddings, dtype=np.float32)
+
+    # Prepare metadata
+    metadata = {
+        "backend": config.backend_settings.backend.value,
+        "model": config.resolved_model,
+        "model_canonical": config.model,
+        "dimension": config.dimension,
+        "chunk_size": config.chunk_size,
+        "chunk_step": config.step_size,
+        "min_evidence_chars": config.min_chars,
+        "split": config.split,
+        "participant_count": len(result.embeddings),
+        "generated_at": datetime.now(UTC).isoformat(),
+        "generator_script": "scripts/generate_embeddings.py",
+        "split_csv_hash": calculate_split_hash(config.data_settings, config.split),
+        "split_ids_hash": calculate_split_ids_hash(config.data_settings, config.split),
+    }
+
+    # Save files
+    json_path = config.output_path.with_suffix(".json")
+    meta_path = config.output_path.with_suffix(".meta.json")
+
+    print(f"\nSaving embeddings to {config.output_path}...")
+    print(f"Saving text chunks to {json_path}...")
+    print(f"Saving metadata to {meta_path}...")
+
+    np.savez_compressed(str(config.output_path), **npz_arrays)
+    with json_path.open("w") as f:
+        json.dump(json_texts, f, indent=2)
+    with meta_path.open("w") as f:
+        json.dump(metadata, f, indent=2)
+
+    # Summary
+    npz_size = config.output_path.stat().st_size / (1024 * 1024)
+    json_size = json_path.stat().st_size / (1024 * 1024)
+
+    print("\n" + "=" * 60)
+    print("GENERATION COMPLETE")
+    print("=" * 60)
+    print(f"  Participants: {len(result.embeddings)}")
+    print(f"  Total chunks: {result.total_chunks}")
+    print(f"  NPZ file: {config.output_path} ({npz_size:.2f} MB)")
+    print(f"  JSON file: {json_path} ({json_size:.2f} MB)")
+    print("=" * 60)
+
+
+async def main_async(args: argparse.Namespace) -> int:
+    """Async main entry point."""
+    setup_logging(LoggingSettings(level="INFO", format="console"))
+
+    config = prepare_config(args)
+
+    print("=" * 60)
+    print("REFERENCE EMBEDDINGS GENERATOR")
+    print("=" * 60)
+    print(f"  Backend: {config.backend_settings.backend.value}")
+    print(f"  Model: {config.model}")
+    print(f"  Model (resolved): {config.resolved_model}")
+    print(f"  Dimension: {config.dimension}")
+    print(f"  Chunk size: {config.chunk_size} lines")
+    print(f"  Step size: {config.step_size} lines")
+    print(f"  Min chars: {config.min_chars}")
+    print(f"  Split: {config.split}")
+    print(f"  Output: {config.output_path}")
+    print("=" * 60)
+
+    if config.dry_run:
+        print("\n[DRY RUN] Would generate embeddings with above settings.")
+        print("[DRY RUN] No files will be created.")
+        return 0
+
+    transcript_service = TranscriptService(config.data_settings)
+    client = create_embedding_client(get_settings())
 
     try:
-        # Process participants
-        all_embeddings: dict[int, list[tuple[str, list[float]]]] = {}
-        total_chunks = 0
-
-        print(f"\nProcessing {len(participant_ids)} participants...")
-        for idx, pid in enumerate(participant_ids, 1):
-            if idx % 10 == 0 or idx == len(participant_ids):
-                print(f"  Progress: {idx}/{len(participant_ids)} participants...")
-
-            results = await process_participant(
-                client,
-                transcript_service,
-                pid,
-                model,
-                dimension,
-                chunk_size,
-                step_size,
-                min_chars,
-            )
-
-            if results:
-                all_embeddings[pid] = results
-                total_chunks += len(results)
-
-        # Ensure output directory exists
-        output_path.parent.mkdir(parents=True, exist_ok=True)
-
-        # Prepare NPZ and JSON data
-        npz_arrays: dict[str, Any] = {}
-        json_texts: dict[str, list[str]] = {}
-
-        for pid, pairs in all_embeddings.items():
-            texts = [text for text, _ in pairs]
-            embeddings = [emb for _, emb in pairs]
-
-            json_texts[str(pid)] = texts
-            npz_arrays[f"emb_{pid}"] = np.array(embeddings, dtype=np.float32)
-
-        # Prepare metadata
-        metadata = {
-            "backend": backend_settings.backend.value,
-            "model": resolved_model,
-            "model_canonical": model,
-            "dimension": dimension,
-            "chunk_size": chunk_size,
-            "chunk_step": step_size,
-            "min_evidence_chars": min_chars,
-            "split": args.split,
-            "participant_count": len(all_embeddings),
-            "generated_at": datetime.now(UTC).isoformat(),
-            "generator_script": "scripts/generate_embeddings.py",
-            "split_csv_hash": calculate_split_hash(data_settings, args.split),
-        }
-
-        # Save files
-        json_path = output_path.with_suffix(".json")
-        meta_path = output_path.with_suffix(".meta.json")
-
-        print(f"\nSaving embeddings to {output_path}...")
-        print(f"Saving text chunks to {json_path}...")
-        print(f"Saving metadata to {meta_path}...")
-
-        np.savez_compressed(str(output_path), **npz_arrays)
-        with json_path.open("w") as f:
-            json.dump(json_texts, f, indent=2)
-        with meta_path.open("w") as f:
-            json.dump(metadata, f, indent=2)
-
-        # Summary
-        npz_size = output_path.stat().st_size / (1024 * 1024)
-        json_size = json_path.stat().st_size / (1024 * 1024)
-
-        print("\n" + "=" * 60)
-        print("GENERATION COMPLETE")
-        print("=" * 60)
-        print(f"  Participants: {len(all_embeddings)}")
-        print(f"  Total chunks: {total_chunks}")
-        print(f"  NPZ file: {output_path} ({npz_size:.2f} MB)")
-        print(f"  JSON file: {json_path} ({json_size:.2f} MB)")
-        print("=" * 60)
-
+        result = await run_generation_loop(config, client, transcript_service)
+        save_embeddings(result, config)
+    except FileNotFoundError:
+        return 1
     finally:
         await client.close()
 

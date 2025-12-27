@@ -1,5 +1,6 @@
 """Tests for ReferenceStore."""
 
+import hashlib
 import json
 from pathlib import Path
 from unittest.mock import MagicMock, patch
@@ -75,6 +76,32 @@ class TestReferenceStoreMetadata:
         npz_path.touch()
         json_path = data_settings.embeddings_path.with_suffix(".json")
         json_path.write_text("{}")
+
+        # Mock numpy load
+        mock_npz = MagicMock(spec_set=NpzFile)
+        mock_npz.__getitem__.return_value = []
+        mock_npz.__contains__.return_value = True
+
+        with patch("numpy.load", return_value=mock_npz):
+            store._load_embeddings()
+
+    def test_invalid_metadata_type_skips_validation(
+        self,
+        data_settings: DataSettings,
+        embedding_settings: EmbeddingSettings,
+        embedding_backend_settings: EmbeddingBackendSettings,
+    ) -> None:
+        """Should not crash if .meta.json is valid JSON but not a dict."""
+        store = ReferenceStore(data_settings, embedding_settings, embedding_backend_settings)
+
+        # Setup files
+        meta_path = data_settings.embeddings_path.with_suffix(".meta.json")
+        meta_path.write_text(json.dumps(["not-a-dict"]), encoding="utf-8")
+
+        npz_path = data_settings.embeddings_path
+        npz_path.touch()
+        json_path = data_settings.embeddings_path.with_suffix(".json")
+        json_path.write_text("{}", encoding="utf-8")
 
         # Mock numpy load
         mock_npz = MagicMock(spec_set=NpzFile)
@@ -236,20 +263,24 @@ class TestReferenceStoreMetadata:
         ):
             store._load_embeddings()
 
-    def test_validation_fail_split_hash(
+    def test_validation_semantic_success(
         self,
         tmp_path: Path,
         embedding_settings: EmbeddingSettings,
         embedding_backend_settings: EmbeddingBackendSettings,
     ) -> None:
-        """Should fail when split CSV hash mismatches."""
+        """Should succeed when split_ids_hash matches even if split_csv_hash mismatches."""
         base = tmp_path / "data"
         base.mkdir()
         transcripts_dir = base / "transcripts"
         transcripts_dir.mkdir()
 
         train_csv = base / "train.csv"
-        train_csv.write_text("Participant_ID,Gender\\n1,M\\n", encoding="utf-8")
+        # Create CSV with IDs 1, 2
+        train_csv.write_text("Participant_ID,Gender\n1,M\n2,F\n", encoding="utf-8")
+
+        # Calculate correct IDs hash for "1,2"
+        correct_ids_hash = hashlib.sha256(b"1,2").hexdigest()[:12]
 
         data_settings = DataSettings(
             base_dir=base,
@@ -267,7 +298,56 @@ class TestReferenceStoreMetadata:
                 {
                     "backend": "huggingface",
                     "split": "avec-train",
-                    "split_csv_hash": "deadbeefdead",  # mismatch
+                    "split_csv_hash": "deadbeef",  # Mismatched CSV hash
+                    "split_ids_hash": correct_ids_hash,  # Matching IDs hash
+                }
+            ),
+            encoding="utf-8",
+        )
+
+        data_settings.embeddings_path.touch()
+        data_settings.embeddings_path.with_suffix(".json").write_text("{}", encoding="utf-8")
+
+        mock_npz = MagicMock(spec_set=NpzFile)
+        mock_npz.__getitem__.return_value = []
+        mock_npz.__contains__.return_value = True
+
+        with patch("numpy.load", return_value=mock_npz):
+            # Should NOT raise
+            store._load_embeddings()
+
+    def test_validation_fail_ids_mismatch(
+        self,
+        tmp_path: Path,
+        embedding_settings: EmbeddingSettings,
+        embedding_backend_settings: EmbeddingBackendSettings,
+    ) -> None:
+        """Should fail when split_ids_hash mismatches."""
+        base = tmp_path / "data"
+        base.mkdir()
+        transcripts_dir = base / "transcripts"
+        transcripts_dir.mkdir()
+
+        train_csv = base / "train.csv"
+        train_csv.write_text("Participant_ID,Gender\n1,M\n2,F\n", encoding="utf-8")
+
+        data_settings = DataSettings(
+            base_dir=base,
+            transcripts_dir=transcripts_dir,
+            embeddings_path=base / "embeddings.npz",
+            train_csv=train_csv,
+            dev_csv=base / "dev.csv",
+        )
+
+        store = ReferenceStore(data_settings, embedding_settings, embedding_backend_settings)
+
+        meta_path = data_settings.embeddings_path.with_suffix(".meta.json")
+        meta_path.write_text(
+            json.dumps(
+                {
+                    "backend": "huggingface",
+                    "split": "avec-train",
+                    "split_ids_hash": "badhash123",  # Mismatched IDs hash
                 }
             ),
             encoding="utf-8",
@@ -280,7 +360,110 @@ class TestReferenceStoreMetadata:
 
         with (
             patch("numpy.load", return_value=mock_npz),
-            pytest.raises(EmbeddingArtifactMismatchError, match="split_csv_hash mismatch"),
+            pytest.raises(EmbeddingArtifactMismatchError, match="split_ids_hash mismatch"),
+        ):
+            store._load_embeddings()
+
+    def test_validation_legacy_fallback_success(
+        self,
+        tmp_path: Path,
+        embedding_settings: EmbeddingSettings,
+        embedding_backend_settings: EmbeddingBackendSettings,
+    ) -> None:
+        """Legacy artifact: split_csv_hash mismatch but derived IDs match -> Success."""
+        base = tmp_path / "data"
+        base.mkdir()
+        transcripts_dir = base / "transcripts"
+        transcripts_dir.mkdir()
+
+        train_csv = base / "train.csv"
+        train_csv.write_text("Participant_ID,Gender\n1,M\n", encoding="utf-8")
+
+        data_settings = DataSettings(
+            base_dir=base,
+            transcripts_dir=transcripts_dir,
+            embeddings_path=base / "embeddings.npz",
+            train_csv=train_csv,
+            dev_csv=base / "dev.csv",
+        )
+
+        store = ReferenceStore(data_settings, embedding_settings, embedding_backend_settings)
+
+        # Meta has mismatched CSV hash and NO split_ids_hash
+        meta_path = data_settings.embeddings_path.with_suffix(".meta.json")
+        meta_path.write_text(
+            json.dumps(
+                {
+                    "backend": "huggingface",
+                    "split": "avec-train",
+                    "split_csv_hash": "deadbeef",
+                }
+            ),
+            encoding="utf-8",
+        )
+
+        data_settings.embeddings_path.touch()
+        # Sidecar has ID "1" which matches the CSV
+        data_settings.embeddings_path.with_suffix(".json").write_text(
+            '{"1": ["text"]}', encoding="utf-8"
+        )
+
+        mock_npz = MagicMock(spec_set=NpzFile)
+        mock_npz.__contains__.return_value = True
+        mock_npz.__getitem__.return_value = []
+
+        with patch("numpy.load", return_value=mock_npz):
+            store._load_embeddings()
+
+    def test_validation_legacy_fallback_fail(
+        self,
+        tmp_path: Path,
+        embedding_settings: EmbeddingSettings,
+        embedding_backend_settings: EmbeddingBackendSettings,
+    ) -> None:
+        """Legacy artifact: split_csv_hash mismatch AND derived IDs mismatch -> Fail."""
+        base = tmp_path / "data"
+        base.mkdir()
+        transcripts_dir = base / "transcripts"
+        transcripts_dir.mkdir()
+
+        train_csv = base / "train.csv"
+        # CSV has ID 1
+        train_csv.write_text("Participant_ID,Gender\n1,M\n", encoding="utf-8")
+
+        data_settings = DataSettings(
+            base_dir=base,
+            transcripts_dir=transcripts_dir,
+            embeddings_path=base / "embeddings.npz",
+            train_csv=train_csv,
+            dev_csv=base / "dev.csv",
+        )
+
+        store = ReferenceStore(data_settings, embedding_settings, embedding_backend_settings)
+
+        meta_path = data_settings.embeddings_path.with_suffix(".meta.json")
+        meta_path.write_text(
+            json.dumps(
+                {
+                    "backend": "huggingface",
+                    "split": "avec-train",
+                    "split_csv_hash": "deadbeef",
+                }
+            ),
+            encoding="utf-8",
+        )
+
+        data_settings.embeddings_path.touch()
+        # Sidecar has ID "2" which DOES NOT match CSV ID "1"
+        data_settings.embeddings_path.with_suffix(".json").write_text(
+            '{"2": ["text"]}', encoding="utf-8"
+        )
+
+        mock_npz = MagicMock(spec_set=NpzFile)
+
+        with (
+            patch("numpy.load", return_value=mock_npz),
+            pytest.raises(EmbeddingArtifactMismatchError, match="split_ids mismatch"),
         ):
             store._load_embeddings()
 

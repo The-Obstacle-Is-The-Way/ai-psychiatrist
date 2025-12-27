@@ -151,6 +151,8 @@ class QualitativeAssessmentAgent:
             except asyncio.CancelledError:
                 raise
             except Exception as e:
+                # Intentionally broad: Fallback for any Pydantic AI error
+                # (see docs/specs/21-broad-exception-handling.md)
                 logger.error(
                     "Pydantic AI call failed during assessment; falling back to legacy",
                     error=str(e),
@@ -222,6 +224,8 @@ class QualitativeAssessmentAgent:
             except asyncio.CancelledError:
                 raise
             except Exception as e:
+                # Intentionally broad: Fallback for any Pydantic AI error
+                # (see docs/specs/21-broad-exception-handling.md)
                 logger.error(
                     "Pydantic AI call failed during refinement; falling back to legacy",
                     error=str(e),

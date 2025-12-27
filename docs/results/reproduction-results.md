@@ -1,7 +1,7 @@
 # Paper Reproduction Results
 
-**Last Updated**: 2025-12-26
-**Status**: Validated zero-shot baseline complete. Few-shot pending.
+**Last Updated**: 2025-12-27
+**Status**: Validated zero-shot + few-shot runs complete (paper split).
 
 ---
 
@@ -10,9 +10,12 @@
 | Mode | Our MAE | Paper MAE | Delta | Coverage | Participants |
 |------|---------|-----------|-------|----------|--------------|
 | **Zero-shot** | **0.717** | 0.796 | **-0.079 (better)** | 56.9% | 40/41 |
-| Few-shot | *pending* | 0.619 | — | ~50% | 41 |
+| **Few-shot** | **0.860** | 0.619 | **+0.241 (worse)** | 71.6% | 40/41 |
 
-**Key finding**: Our zero-shot baseline **beats the paper's zero-shot MAE** (0.717 vs 0.796). This is encouraging - we're not far from the paper's few-shot result (0.619).
+**Key findings**:
+- Our zero-shot baseline **beats the paper's zero-shot MAE** (0.717 vs 0.796).
+- Our few-shot run has **much higher coverage** than the paper's few-shot (~50%), and **worse MAE**.
+  This is a coverage/MAE tradeoff issue (selective prediction), not a simple apples-to-apples comparison.
 
 ---
 
@@ -65,7 +68,7 @@
 
 **Observations**:
 - Sleep has the highest coverage (95%) - frequently discussed in interviews
-- Appetite and Moving have lowest coverage (~20-25%) - consistent with paper's Appendix E noting "no retrieved chunks" for these items
+- Appetite has low coverage (~20%) - consistent with the paper noting appetite evidence is rarely found during retrieval
 - Concentrating has highest MAE (0.94) despite moderate coverage
 
 ### Excluded Participant
@@ -77,21 +80,53 @@
 
 ---
 
-## Pending: Few-Shot Run
+## Validated Run: Few-Shot (2025-12-27)
 
-Few-shot evaluation is currently running in TMUX session `few-shot-paper`.
+### Run Metadata
 
-**Expected completion**: ~80 minutes from start
+| Field | Value |
+|-------|-------|
+| Run ID | `507f129e` |
+| Git Commit | `f6d2653` |
+| Git Dirty | `true` |
+| Timestamp | 2025-12-26T21:52:50 |
+| Output File | `data/outputs/few_shot_paper_backfill-off_20251227_000125.json` |
 
-**Command**:
-```bash
-uv run python scripts/reproduce_results.py --split paper --few-shot-only
-```
+### Configuration
 
-**Embeddings used**:
-- File: `data/embeddings/paper_reference_embeddings.npz`
-- Backend: HuggingFace (FP16)
-- Training set: 58 participants (paper-train split)
+| Setting | Value | Paper Reference |
+|---------|-------|-----------------|
+| Quantitative Model | `gemma3:27b-it-qat` | Gemma 3 27B (Section 2.2) |
+| Embedding Model | `qwen3-embedding:8b` | Qwen 3 8B Embedding (Section 2.2) |
+| LLM Backend | `ollama` | Local inference |
+| Embedding Backend | `huggingface` | FP16 precision |
+| Keyword Backfill | `OFF` | Paper parity (Section 3.2) |
+| Split | `paper` | 41 test participants |
+| Embeddings Artifact | `data/embeddings/huggingface_qwen3_8b_paper_train.npz` | Paper-train reference set (58) |
+
+### Results
+
+| Metric | Value | Notes |
+|--------|-------|-------|
+| **Item MAE (by item)** | **0.860** | Primary metric for paper comparison |
+| Item MAE (weighted) | 0.852 | Weighted by item coverage |
+| Item MAE (by subject) | 0.831 | Averaged per-subject first |
+| Coverage | 71.6% | Items with predictions (vs N/A) |
+| Evaluated | 40/41 | 1 failed (timeout) |
+| Runtime | 128 min | M1 Max 64GB |
+
+### Per-Item Breakdown
+
+| PHQ-8 Item | MAE | Coverage | N/A Count |
+|------------|-----|----------|-----------|
+| NoInterest | 0.73 | 82.5% | 7 |
+| Depressed | 0.56 | 90.0% | 4 |
+| Sleep | 1.03 | 95.0% | 2 |
+| Tired | 0.97 | 85.0% | 6 |
+| Appetite | 1.18 | 42.5% | 23 |
+| Failure | 0.83 | 72.5% | 11 |
+| Concentrating | 1.17 | 57.5% | 17 |
+| Moving | 0.42 | 47.5% | 21 |
 
 ---
 

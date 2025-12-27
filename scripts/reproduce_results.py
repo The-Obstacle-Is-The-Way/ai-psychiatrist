@@ -41,6 +41,7 @@ from __future__ import annotations
 
 import argparse
 import asyncio
+import contextlib
 import json
 import sys
 import time
@@ -67,6 +68,7 @@ from ai_psychiatrist.config import (
     resolve_reference_embeddings_path,
 )
 from ai_psychiatrist.domain.enums import AssessmentMode, PHQ8Item
+from ai_psychiatrist.domain.exceptions import LLMError
 from ai_psychiatrist.infrastructure.llm import OllamaClient
 from ai_psychiatrist.infrastructure.llm.factory import create_embedding_client
 from ai_psychiatrist.infrastructure.logging import get_logger, setup_logging
@@ -102,6 +104,9 @@ class EvaluationResult:
     available_items: int = 0
     na_items: int = 0
     mae_available: float | None = None
+
+    # Spec 25: Per-item confidence signals for selective prediction evaluation
+    item_signals: dict[PHQ8Item, dict[str, int | str | None]] = field(default_factory=dict)
 
 
 @dataclass
@@ -157,6 +162,12 @@ class ExperimentResults:
                     "predicted_items": {
                         item.value: score for item, score in r.predicted_items.items()
                     },
+                    # Spec 25: Per-item confidence signals for selective prediction evaluation
+                    "item_signals": {
+                        item.value: signals for item, signals in r.item_signals.items()
+                    }
+                    if r.item_signals
+                    else {},
                 }
                 for r in self.results
             ],
@@ -273,6 +284,16 @@ async def evaluate_participant(
             errors.append(abs(pred - ground_truth_items[item]))
         mae_available = float(np.mean(errors)) if errors else None
 
+        # Spec 25: Build item_signals for selective prediction evaluation
+        item_signals: dict[PHQ8Item, dict[str, int | str | None]] = {}
+        for item in PHQ8Item.all_items():
+            item_assessment = assessment.items[item]
+            item_signals[item] = {
+                "llm_evidence_count": item_assessment.llm_evidence_count,
+                "keyword_evidence_count": item_assessment.keyword_evidence_count,
+                "evidence_source": item_assessment.evidence_source,
+            }
+
         duration = time.perf_counter() - start
         return EvaluationResult(
             participant_id=participant_id,
@@ -286,11 +307,13 @@ async def evaluate_participant(
             available_items=assessment.available_count,
             na_items=assessment.na_count,
             mae_available=mae_available,
+            item_signals=item_signals,
         )
 
     except Exception as e:
+        # Intentionally broad: per-participant failures should not abort the full run.
         duration = time.perf_counter() - start
-        logger.error(
+        logger.exception(
             "Evaluation failed",
             participant_id=participant_id,
             error=str(e),
@@ -566,7 +589,7 @@ async def check_ollama_connectivity(ollama_client: OllamaClient) -> bool:
     print("\nChecking Ollama connectivity...")
     try:
         is_healthy = await ollama_client.ping()
-    except Exception as e:
+    except LLMError as e:
         print(f"ERROR: Cannot connect to Ollama: {e}")
         return False
 
@@ -763,8 +786,10 @@ async def main_async(args: argparse.Namespace) -> int:
         return 1
 
     # Initialize services
-    # Chat client (Ollama)
-    async with OllamaClient(ollama_settings) as ollama_client:
+    async with contextlib.AsyncExitStack() as stack:
+        # Chat client (Ollama)
+        ollama_client = await stack.enter_async_context(OllamaClient(ollama_settings))
+
         if not await check_ollama_connectivity(ollama_client):
             return 1
 
@@ -772,40 +797,38 @@ async def main_async(args: argparse.Namespace) -> int:
 
         # Embedding client (Factory)
         embedding_client = create_embedding_client(settings)
+        stack.push_async_callback(embedding_client.close)
+
         try:
-            try:
-                embedding_service = init_embedding_service(
-                    args=args,
-                    data_settings=data_settings,
-                    embedding_settings=embedding_settings,
-                    model_settings=model_settings,
-                    embedding_client=embedding_client,
-                )
-            except FileNotFoundError as e:
-                print(f"\nERROR: {e}")
-                return 1
-
-            experiments = await run_requested_experiments(
+            embedding_service = init_embedding_service(
                 args=args,
-                ground_truth=ground_truth,
-                ollama_client=ollama_client,
-                transcript_service=transcript_service,
-                embedding_service=embedding_service,
-                model_name=model_settings.quantitative_model,
-            )
-
-            persist_experiment_outputs(
-                args=args,
-                settings=settings,
-                run_metadata=run_metadata,
-                experiments=experiments,
-                participants_requested=len(ground_truth),
                 data_settings=data_settings,
                 embedding_settings=embedding_settings,
+                model_settings=model_settings,
+                embedding_client=embedding_client,
             )
+        except FileNotFoundError as e:
+            print(f"\nERROR: {e}")
+            return 1
 
-        finally:
-            await embedding_client.close()
+        experiments = await run_requested_experiments(
+            args=args,
+            ground_truth=ground_truth,
+            ollama_client=ollama_client,
+            transcript_service=transcript_service,
+            embedding_service=embedding_service,
+            model_name=model_settings.quantitative_model,
+        )
+
+        persist_experiment_outputs(
+            args=args,
+            settings=settings,
+            run_metadata=run_metadata,
+            experiments=experiments,
+            participants_requested=len(ground_truth),
+            data_settings=data_settings,
+            embedding_settings=embedding_settings,
+        )
 
     return 0
 
