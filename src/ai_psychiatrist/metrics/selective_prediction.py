@@ -163,6 +163,8 @@ def compute_risk_at_coverage(
     items: Sequence[ItemPrediction], *, target_coverage: float, loss: Literal["abs", "abs_norm"]
 ) -> float | None:
     """Compute risk at a specific target coverage (MAE@coverage)."""
+    if not 0.0 < target_coverage <= 1.0:
+        raise ValueError(f"target_coverage must be in (0, 1], got {target_coverage}")
     curve = compute_risk_coverage_curve(items, loss=loss)
 
     # Find smallest working point j such that coverage_j >= target_coverage
@@ -189,6 +191,8 @@ def compute_aurc_at_coverage(
     items: Sequence[ItemPrediction], *, max_coverage: float, loss: Literal["abs", "abs_norm"]
 ) -> float:
     """Compute truncated AURC up to a maximum coverage."""
+    if not 0.0 < max_coverage <= 1.0:
+        raise ValueError(f"max_coverage must be in (0, 1], got {max_coverage}")
     curve = compute_risk_coverage_curve(items, loss=loss)
     return _integrate_truncated(curve.coverage, curve.selective_risk, max_coverage, mode="aurc")
 
@@ -197,6 +201,8 @@ def compute_augrc_at_coverage(
     items: Sequence[ItemPrediction], *, max_coverage: float, loss: Literal["abs", "abs_norm"]
 ) -> float:
     """Compute truncated AUGRC up to a maximum coverage."""
+    if not 0.0 < max_coverage <= 1.0:
+        raise ValueError(f"max_coverage must be in (0, 1], got {max_coverage}")
     curve = compute_risk_coverage_curve(items, loss=loss)
     return _integrate_truncated(curve.coverage, curve.generalized_risk, max_coverage, mode="augrc")
 

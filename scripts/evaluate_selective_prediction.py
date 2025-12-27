@@ -51,9 +51,15 @@ class InputConfig:
 
 def parse_coverage_grid(s: str) -> list[float]:
     try:
-        return [float(x.strip()) for x in s.split(",")]
+        values = [float(x.strip()) for x in s.split(",")]
     except ValueError as err:
         raise argparse.ArgumentTypeError(f"Invalid coverage grid: {s}") from err
+    if not values:
+        raise argparse.ArgumentTypeError("Coverage grid must contain at least one value")
+    invalid = [v for v in values if not 0.0 < v <= 1.0]
+    if invalid:
+        raise argparse.ArgumentTypeError(f"Coverage values must be in (0, 1], got {invalid}")
+    return values
 
 
 def load_run_data(path: Path) -> dict[str, Any]:
@@ -102,6 +108,20 @@ def extract_experiment(
         )
 
 
+def _require_dict(value: Any, *, participant_id: int, field_name: str) -> dict[str, Any]:
+    if not isinstance(value, dict):
+        raise TypeError(f"Participant {participant_id}: {field_name} must be a dict")
+    return cast("dict[str, Any]", value)
+
+
+def _require_contains_all_keys(
+    mapping: dict[str, Any], item_keys: list[str], *, participant_id: int, field_name: str
+) -> None:
+    missing = [k for k in item_keys if k not in mapping]
+    if missing:
+        raise ValueError(f"Participant {participant_id}: missing {field_name} keys: {missing}")
+
+
 def parse_items(
     experiment: dict[str, Any], confidence_key: str
 ) -> tuple[list[ItemPrediction], set[int], set[int]]:
@@ -113,55 +133,55 @@ def parse_items(
         participants_failed: Set of PIDs with success=False
     """
     results = experiment.get("results", {}).get("results", [])
+    if not isinstance(results, list):
+        raise TypeError(f"Experiment results must be a list, got {type(results).__name__}")
+
+    if confidence_key not in {"llm", "total_evidence"}:
+        raise ValueError(f"Unknown confidence_key: {confidence_key}")
+
+    item_keys = [item.value for item in PHQ8Item.all_items()]
 
     items: list[ItemPrediction] = []
     included = set()
     failed = set()
 
     for r in results:
-        pid = cast("int", r["participant_id"])
+        pid = int(cast("int", r["participant_id"]))
         if not r.get("success"):
             failed.add(pid)
             continue
 
         included.add(pid)
 
-        # Parse items
-        # "item_signals" is required for selective prediction evaluation
-        signals = r.get("item_signals", {})
-        if not signals:
-            # If signals missing, we can't compute confidence.
-            # We must skip or error? Spec says "include only success=True".
-            # If signals missing, maybe warn? But for now assuming schema compliance.
-            print(f"WARNING: No item_signals for participant {pid}", file=sys.stderr)
-            continue
+        pred_map = _require_dict(
+            r.get("predicted_items"), participant_id=pid, field_name="predicted_items"
+        )
+        gt_map = _require_dict(
+            r.get("ground_truth_items"), participant_id=pid, field_name="ground_truth_items"
+        )
+        signals = _require_dict(
+            r.get("item_signals"), participant_id=pid, field_name="item_signals"
+        )
 
-        pred_map = r.get("predicted_items", {})
-        gt_map = r.get("ground_truth_items", {})
-
-        # Ordering by PHQ8Item enum (assuming standard string keys)
-        # We need item_index for stability.
-        # PHQ8Item.all_items() order.
-        # But here we just iterate items present.
-
-        # We need a stable index. Let's map keys to index 0-7.
-        # The enum values are unique strings.
-        item_keys = [item.value for item in PHQ8Item.all_items()]
+        _require_contains_all_keys(
+            gt_map, item_keys, participant_id=pid, field_name="ground_truth_items"
+        )
+        _require_contains_all_keys(
+            pred_map, item_keys, participant_id=pid, field_name="predicted_items"
+        )
+        _require_contains_all_keys(
+            signals, item_keys, participant_id=pid, field_name="item_signals"
+        )
 
         for idx, key in enumerate(item_keys):
-            if key not in gt_map:
-                continue
-
-            gt = gt_map[key]
-            pred = pred_map.get(key)
-
-            sig = signals.get(key, {})
+            gt = cast("int", gt_map[key])
+            pred = cast("int | None", pred_map[key])
+            sig = _require_dict(signals[key], participant_id=pid, field_name=f"item_signals[{key}]")
 
             # Compute confidence
-            conf = 0.0
             if confidence_key == "llm":
                 conf = float(sig.get("llm_evidence_count", 0))
-            elif confidence_key == "total_evidence":
+            else:
                 conf = float(sig.get("llm_evidence_count", 0)) + float(
                     sig.get("keyword_evidence_count", 0)
                 )
@@ -414,23 +434,26 @@ def main() -> int:  # noqa: PLR0912, PLR0915
     if not is_paired:
         analysis_pids = input_records[0]["included_pids"]
     else:
-        left = input_records[0]["included_pids"]
-        right = input_records[1]["included_pids"]
+        left_total = input_records[0]["included_pids"] | input_records[0]["failed_pids"]
+        right_total = input_records[1]["included_pids"] | input_records[1]["failed_pids"]
 
-        if args.intersection_only:
-            analysis_pids = left.intersection(right)
-        else:
-            if left != right:
-                print(
-                    "Error: Participant sets differ and --intersection-only not set.",
-                    file=sys.stderr,
-                )
-                print(
-                    f"Left: {len(left)}, Right: {len(right)}, Overlap: {len(left & right)}",
-                    file=sys.stderr,
-                )
-                return 1
-            analysis_pids = left
+        overlap_total = left_total & right_total
+
+        if not args.intersection_only and left_total != right_total:
+            print(
+                "Error: Participant sets differ and --intersection-only not set.", file=sys.stderr
+            )
+            print(
+                f"Left total: {len(left_total)}, "
+                f"Right total: {len(right_total)}, "
+                f"Overlap: {len(overlap_total)}",
+                file=sys.stderr,
+            )
+            return 1
+
+        left_success = input_records[0]["included_pids"] & overlap_total
+        right_success = input_records[1]["included_pids"] & overlap_total
+        analysis_pids = left_success & right_success
 
     # Compute population stats
     # Total is union of included + failed in the scope of analysis?
@@ -477,6 +500,13 @@ def main() -> int:  # noqa: PLR0912, PLR0915
             items_all, _, _ = parse_items(rec["exp"], variant)
             # Filter
             items_filtered = [i for i in items_all if i.participant_id in analysis_pids]
+            expected_n = len(analysis_pids) * 8
+            if len(items_filtered) != expected_n:
+                raise ValueError(
+                    f"Parsed {len(items_filtered)} items for {len(analysis_pids)} participants; "
+                    f"expected {expected_n}. "
+                    "Check predicted_items/ground_truth_items/item_signals keys."
+                )
 
             # Compute metrics
             metrics = compute_metrics_for_variant(
@@ -600,11 +630,15 @@ def main() -> int:  # noqa: PLR0912, PLR0915
         )
 
     # Output
-    if args.output:
-        args.output.parent.mkdir(parents=True, exist_ok=True)
-        with args.output.open("w") as f:
-            json.dump(artifact, f, indent=2)
-        print(f"Metrics saved to {args.output}")
+    output_path = args.output
+    if output_path is None:
+        timestamp = datetime.now(UTC).strftime("%Y%m%dT%H%M%SZ")
+        output_path = Path("data/outputs") / f"selective_prediction_metrics_{timestamp}.json"
+
+    output_path.parent.mkdir(parents=True, exist_ok=True)
+    with output_path.open("w") as f:
+        json.dump(artifact, f, indent=2)
+    print(f"Metrics saved to {output_path}")
 
     # Console Summary
     print("\nSELECTIVE PREDICTION EVALUATION")
