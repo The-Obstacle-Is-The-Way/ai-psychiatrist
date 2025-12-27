@@ -62,9 +62,22 @@ class PydanticAISettings(BaseSettings):
 2. **Configuration confusion**: Setting `OLLAMA_TIMEOUT_SECONDS=600` only affects the fallback path
 3. **Unnecessary failures**: Participants that would succeed with longer timeout are marked as failed
 
+## Root Cause Clarification
+
+**This is primarily a GPU/compute limitation, not a code bug.**
+
+The LLM times out because:
+1. Large transcripts require more processing
+2. GPU thermal throttling slows inference
+3. 27B parameter models are compute-intensive
+
+**The fix is to give the LLM as much time as it needs** since we're GPU-limited.
+
 ## Proposed Fix
 
-### Option A: Pass Custom HTTP Client to OllamaProvider (Recommended)
+### Option A: Infinite Timeout (Recommended for Research)
+
+For research runs where we want results no matter how long it takes:
 
 ```python
 # src/ai_psychiatrist/agents/pydantic_agents.py
@@ -76,10 +89,10 @@ def create_quantitative_agent(
     base_url: str,
     retries: int,
     system_prompt: str,
-    timeout_seconds: int = 300,  # Add parameter
+    timeout_seconds: float | None = None,  # None = infinite
 ) -> Agent[None, QuantitativeOutput]:
-    # Create custom client with configurable timeout
-    http_client = httpx.AsyncClient(timeout=httpx.Timeout(timeout_seconds))
+    # timeout=None means wait forever
+    http_client = httpx.AsyncClient(timeout=timeout_seconds)
 
     model = OpenAIChatModel(
         model_name,
@@ -91,18 +104,25 @@ def create_quantitative_agent(
     # ...
 ```
 
-### Option B: Add Timeout to PydanticAISettings
+### Option B: Very Long Timeout (1 hour)
+
+If infinite feels risky, use a very long timeout:
+
+```python
+http_client = httpx.AsyncClient(timeout=3600)  # 1 hour
+```
+
+### Option C: Add Timeout to PydanticAISettings (Full Solution)
 
 ```python
 # src/ai_psychiatrist/config.py
 class PydanticAISettings(BaseSettings):
     enabled: bool = True
     retries: int = 3
-    timeout_seconds: int = Field(
-        default=300,
-        ge=10,
-        le=1200,
-        description="Timeout for Pydantic AI LLM calls",
+    timeout_seconds: float | None = Field(
+        default=None,  # None = infinite (wait as long as needed)
+        ge=0,
+        description="Timeout for Pydantic AI LLM calls. None = infinite.",
     )
 ```
 
