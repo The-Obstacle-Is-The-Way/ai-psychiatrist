@@ -293,6 +293,14 @@ Optional normalized variant (often easier to interpret across runs):
 
 - If `Cmax > 0`: `nAURC = AURC / Cmax` (mean selective risk over `[0, Cmax]`)
 
+Implementation notes:
+
+- Some implementations (e.g., fd-shifts) scale AURC by 1000 for display purposes. Our implementation
+  returns raw values; multiply by 1000 for display if desired.
+- Alternative estimators exist with lower finite-sample bias (e.g., harmonic-weighted `em_AURC` in
+  `_reference/AsymptoticAURC/utils/estimators.py`). The trapezoidal estimator is the standard choice
+  and matches fd-shifts default behavior.
+
 ### 6.4 AUGRC (Area Under Generalized Risk–Coverage Curve)
 
 We compute AUGRC as the area under the **generalized-risk** (a.k.a. joint-risk) RC curve, which is
@@ -331,6 +339,8 @@ Define `risk_at_coverage(target_c)` (achievable by thresholding on `confidence`)
 - Validate `0 < target_c <= 1`.
 - Find the *smallest* working point `j` such that `coverage_j >= target_c`.
 - If no such working point exists (`target_c > Cmax`), return `None`.
+- If `target_c <= coverage_1` (smallest achievable coverage), return `selective_risk_1`
+  (the highest-confidence operating point).
 - Else return `selective_risk_j`.
 
 We report MAE@coverage for a fixed grid of coverages (configurable), but only compare methods at
@@ -620,6 +630,20 @@ Required tests:
   - verify `AURC@C` and `AUGRC@C` linearly interpolate within the segment containing `C`.
 - AUGRC consistency at working points:
   - verify `generalized_risk_j == coverage_j * selective_risk_j` for the curve.
+- All abstain (K=0):
+  - verify `Cmax == 0`, `AURC == 0.0`, `AUGRC == 0.0`,
+  - verify curve is empty (`len(coverage) == 0`).
+- All same confidence (single plateau):
+  - all predicted items have identical confidence,
+  - verify single working point in curve (`len(coverage) == 1`),
+  - verify `coverage[0] == Cmax`.
+- C exactly at working point:
+  - when truncation coverage `C` equals an exact working point coverage,
+  - verify no interpolation occurs (value matches working point exactly).
+- Single participant cluster bootstrap:
+  - with `P=1`, cluster bootstrap should not crash,
+  - all resamples are identical (only one cluster to draw),
+  - CI degenerates to point estimate (low == high).
 
 ### 9.2 Integration test (parsing output schema)
 
@@ -644,11 +668,16 @@ Assertions:
 ## 10) Acceptance Criteria
 
 - `scripts/reproduce_results.py` persists `item_signals` for each successful participant.
+- `EvaluationResult` includes `item_signals` field with all 8 PHQ-8 items for successful participants.
 - Metrics module implements RC curve working points (unique confidence thresholds), AURC/AUGRC
   (`numpy.trapz` on `[0, Cmax]`), MAE@coverage (achievable by thresholding), Cmax, and truncated
   AURC@C/AUGRC@C.
+- `compute_risk_coverage_curve()` returns empty curve (`cmax=0`) when all items abstain.
+- `compute_aurc()` and `compute_augrc()` return `0.0` when `cmax=0`.
 - Bootstrap module produces participant-level CIs and paired Δ CIs.
+- Bootstrap with single participant does not crash (degenerates to point estimate).
 - Evaluation script produces a machine-readable metrics artifact and console summary.
+- All tests in Section 9.1 pass with exact numeric assertions.
 - `make ci` passes.
 
 ---

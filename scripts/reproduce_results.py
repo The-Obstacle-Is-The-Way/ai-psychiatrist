@@ -105,6 +105,9 @@ class EvaluationResult:
     na_items: int = 0
     mae_available: float | None = None
 
+    # Spec 25: Per-item confidence signals for selective prediction evaluation
+    item_signals: dict[PHQ8Item, dict[str, int | str | None]] = field(default_factory=dict)
+
 
 @dataclass
 class ExperimentResults:
@@ -159,6 +162,12 @@ class ExperimentResults:
                     "predicted_items": {
                         item.value: score for item, score in r.predicted_items.items()
                     },
+                    # Spec 25: Per-item confidence signals for selective prediction evaluation
+                    "item_signals": {
+                        item.value: signals for item, signals in r.item_signals.items()
+                    }
+                    if r.item_signals
+                    else {},
                 }
                 for r in self.results
             ],
@@ -275,6 +284,16 @@ async def evaluate_participant(
             errors.append(abs(pred - ground_truth_items[item]))
         mae_available = float(np.mean(errors)) if errors else None
 
+        # Spec 25: Build item_signals for selective prediction evaluation
+        item_signals: dict[PHQ8Item, dict[str, int | str | None]] = {}
+        for item in PHQ8Item.all_items():
+            item_assessment = assessment.items[item]
+            item_signals[item] = {
+                "llm_evidence_count": item_assessment.llm_evidence_count,
+                "keyword_evidence_count": item_assessment.keyword_evidence_count,
+                "evidence_source": item_assessment.evidence_source,
+            }
+
         duration = time.perf_counter() - start
         return EvaluationResult(
             participant_id=participant_id,
@@ -288,6 +307,7 @@ async def evaluate_participant(
             available_items=assessment.available_count,
             na_items=assessment.na_count,
             mae_available=mae_available,
+            item_signals=item_signals,
         )
 
     except Exception as e:
