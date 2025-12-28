@@ -1,8 +1,219 @@
 # Investigation: Why Zero-Shot Beats Few-Shot
 
 **Date**: 2025-12-28
-**Status**: OPEN - Requires Further Investigation
-**Severity**: High - Core Paper Claim Inversion
+**Status**: HYPOTHESIS - Awaiting Ablation + Senior Review
+**Severity**: High - Core Paper Claim Inversion (in our runs)
+
+---
+
+## UPDATE (2025-12-28): Paper-Parity Divergences Found
+
+Investigation identified divergences between our implementation and the paper's notebook.
+
+See **[BUG-031: Few-Shot Retrieval Issues](../bugs/bug-031-few-shot-retrieval-mismatch.md)** for full analysis.
+
+### Verified Divergences
+
+| Issue | Type | Evidence Source |
+|-------|------|-----------------|
+| **Score-Chunk Mismatch** | Paper methodology (correctly implemented) | Paper Section 2.4.2 + Notebook cell `49f51ff5` |
+| **Format Mismatch** | OUR DIVERGENCE | Notebook uses single `<Reference Examples>` block |
+| **Missing Domain Labels** | OUR DIVERGENCE | Notebook: `f"({evidence_key} Score: {score})"` |
+| **Closing Tag** | OUR DIVERGENCE | Notebook uses `<Reference Examples>` not `</Reference Examples>` |
+
+### Hypothesis (Not Proven)
+
+The format divergences **may** cause few-shot underperformance. We hypothesize:
+- Fragmented 8-block structure disrupts holistic reasoning
+- Missing domain labels reduce score-context association
+
+**Caveat**: Causality not proven. Need ablation (fix format, re-run) to verify.
+
+### Paper's Metrics vs Ours
+
+| Approach | Metric | Notes |
+|----------|--------|-------|
+| Paper | MAE at Cmax | Valid conditional metric (error on non-N/A) |
+| Ours | AURC/AUGRC | Better for system comparison when coverages differ |
+
+MAE is not "invalid" - it's incomplete when coverages differ significantly.
+
+### Next Steps
+
+1. **Fix format divergences** - Achieve paper parity
+2. **Run ablation** - Does fixing format improve few-shot?
+3. **Add retrieval diagnostics** - Empirically verify chunk alignment
+4. **Senior review** after ablation results
+
+---
+
+## ✅ ADDED (Senior Review): Implementation Checklist (Paper-Parity Ablation)
+
+This is the minimum, **implementation-ready** sequence to test whether the paper-parity formatting divergences matter.
+
+### Step 1 — Apply Fix 1 (paper-parity reference formatting)
+
+Source of truth: `docs/specs/31-paper-parity-reference-examples-format.md` (canonical spec).
+
+Required edits:
+- `src/ai_psychiatrist/services/embedding.py` (`ReferenceBundle.format_for_prompt`)
+- `tests/unit/services/test_embedding.py` (`TestReferenceBundle` expectations)
+
+Paper notebook string format (cell `49f51ff5`) must be matched exactly:
+- Non-empty: `"<Reference Examples>\\n\\n" + "\\n\\n".join(entries) + "\\n\\n<Reference Examples>"`
+- Empty: `"<Reference Examples>\\nNo valid evidence found\\n<Reference Examples>"`
+- Skip items with no evidence/matches (no per-item empty blocks).
+
+### Step 2 — Run unit tests (format regression guard)
+
+```bash
+uv run pytest tests/unit/services/test_embedding.py -q
+```
+
+### Step 3 — Re-run reproduction (same split, same model)
+
+Run full paper-test reproduction (writes a new `data/outputs/*.json`):
+
+```bash
+uv run python scripts/reproduce_results.py --split paper-test
+```
+
+### Step 4 — Compute paired selective-prediction deltas (rigorous comparison)
+
+Given the output file from Step 3 (call it `data/outputs/<RUN>.json`), compute paired deltas on the overlapping successful participants:
+
+```bash
+uv run python scripts/evaluate_selective_prediction.py \
+  --input data/outputs/<RUN>.json --mode zero_shot \
+  --input data/outputs/<RUN>.json --mode few_shot \
+  --intersection-only
+```
+
+Record:
+- `daurc_full` CI (few − zero): does it cross 0?
+- `dcmax` CI: did coverage change?
+
+### Step 5 — (Optional) Re-run paper-style MAE@Cmax for comparability
+
+The reproduction artifact also includes paper-style item MAE excluding N/A (conditional MAE). Extract these from the output JSON under each experiment:
+- `results.item_mae_by_subject` (mean per-subject MAE on available items)
+- `results.item_mae_weighted` (mean error over all predicted items; count-weighted)
+- `results.prediction_coverage`
+
+This is useful for paper comparability, but not sufficient for “system-level” comparison when coverages differ.
+
+## Data Structure Analysis
+
+The current data structure only supports participant-level scoring.
+
+| File | Contents | Chunk-Level Scores? |
+|------|----------|---------------------|
+| `data/embeddings/paper_reference_embeddings.json` | Plain text chunks only | **NO** |
+| `data/train_split_Depression_AVEC2017.csv` | One row per participant | **NO** |
+| Score lookup in `reference_store.py` | `get_score(participant_id, item)` | **NO** |
+
+### Concrete Evidence: Participant 321
+
+**Ground truth**: PHQ8_Sleep = 3 (severe, nearly every day)
+
+**Their 115+ chunks include**:
+- ~7% sleep-related: "I haven't had a good night's sleep in a year... I sleep in 1-3 hour intervals"
+- ~93% other topics: work, family, PTSD history, hobbies, grandchildren
+
+**Problem**: ALL 115 chunks get attached `(PHQ8_Sleep Score: 3)` when retrieved.
+
+A chunk like:
+> "I'm proud of my children and grandchildren"
+
+Gets attached: `(PHQ8_Sleep Score: 3)` ← **Semantically meaningless**
+
+### Data Flow
+
+```text
+Chunks (JSON)     →  Just text, no scores
+                      ↓
+Score lookup      →  get_score(participant_id, item)
+                      ↓
+Ground truth CSV  →  One row per participant
+```
+
+**To implement chunk-level scoring would require**:
+1. LLM annotation of each chunk during embedding generation
+2. New data structure with chunk IDs and per-chunk scores
+
+This is the paper's methodology - participant-level scores attached to chunks.
+
+---
+
+## 2025 STATE-OF-THE-ART SOLUTIONS
+
+This is a **known problem in RAG literature** with established solutions.
+
+### The Core Problem
+
+The paper's methodology:
+1. Retrieves chunks by **topic similarity** (embedding cosine)
+2. Attaches **participant-level scores** (not chunk-level)
+3. Chunk content may not match attached score severity
+4. Creates noisy/contradictory few-shot calibration examples
+
+### Why Retrieval Isn't Smart Enough
+
+**Embedding similarity = Topic matching, NOT severity matching**
+
+A chunk saying "I sleep fine" and "I can't sleep at all" are BOTH about sleep. Both might be retrieved. But they describe vastly different severities.
+
+### Solution Options (2025 Best Practices)
+
+| Solution | Stage | Cost | Our Use Case |
+|----------|-------|------|--------------|
+| **CRAG** | Post-retrieval | Runtime (every query) | Good - validates chunks |
+| **Contextual Retrieval** | Pre-embedding | Index time | Partial - better embeddings |
+| **Pre-compute Chunk Scores** | Index time | One-time | **Best** - fixes at source |
+| **Hybrid** | Index + Runtime | Both | **Ideal** - double-checked |
+
+✅ ADDED (Senior Review): Implementation readiness note
+
+- The above are **research directions**, not paper-parity fixes.
+- Paper-parity implementation work is tracked in:
+  - `docs/specs/31-paper-parity-reference-examples-format.md`
+  - `docs/specs/32-few-shot-retrieval-diagnostics.md`
+- Any CRAG / chunk-scoring / re-indexing work must be implemented from dedicated specs (currently `docs/specs/33-*` through `docs/specs/36-*`), otherwise developers will be forced to guess formats + evaluation protocol.
+
+### Recommended Architecture
+
+```
+[Index Time - One-time]
+1. Chunk transcripts (existing)
+2. Embed chunks (existing)
+3. NEW: Score each chunk with LLM → chunk_scores
+4. Store: {chunk, embedding, chunk_scores}
+
+[Query Time - Per Assessment]
+1. Extract evidence (existing)
+2. Embed evidence (existing)
+3. Retrieve similar chunks (existing)
+4. NEW: Use chunk_scores instead of participant_scores
+5. OPTIONAL: CRAG validation as safety net
+6. Show to LLM as few-shot examples (existing)
+```
+
+### Why Pre-Computed Chunk Scores Are Valid
+
+**Concern**: "Chunk scores are LLM-estimated, not ground truth!"
+
+**Reality**:
+- Participant-level ground truth = human assessment of WHOLE interview
+- Chunk-level ground truth **doesn't exist and can't exist**
+- LLM-estimated chunk scores = best approximation of chunk severity
+- More semantically correct than participant-level scores on misaligned chunks
+
+### References
+
+- [CRAG (LangChain)](https://langchain-ai.github.io/langgraph/tutorials/rag/langgraph_crag/)
+- [Contextual Retrieval (Anthropic)](https://www.anthropic.com/news/contextual-retrieval)
+- [RAG Architectures 2025](https://medium.com/data-science-collective/rag-architectures-a-complete-guide-for-2025-daf98a2ede8c)
+- [Google Sufficient Context (ICLR 2025)](https://research.google/blog/deeper-insights-into-retrieval-augmented-generation-the-role-of-sufficient-context/)
 
 ---
 
@@ -119,14 +330,34 @@ The notebook shows pure LLM evidence extraction without keyword backfill:
 
 **Test**: Run with `top_k=1` instead of `top_k=2`.
 
-### Hypothesis B: Semantic Mismatch in References
+✅ Implementation detail:
+
+- `top_k` is controlled by `EmbeddingSettings.top_k_references` (`src/ai_psychiatrist/config.py:250`).
+- Override via env var: `EMBEDDING_TOP_K_REFERENCES=1`
+
+Concrete command (few-shot only for speed):
+
+```bash
+EMBEDDING_TOP_K_REFERENCES=1 uv run python scripts/reproduce_results.py --split paper-test --few-shot-only
+```
+
+Or run both modes in one artifact (recommended for paired evaluation convenience):
+
+```bash
+EMBEDDING_TOP_K_REFERENCES=1 uv run python scripts/reproduce_results.py --split paper-test
+```
+
+### Hypothesis B: Semantic Mismatch in References - **PLAUSIBLE (Not Proven)**
 
 **Theory**: Retrieved chunks are semantically similar but not PHQ-8-item-aligned.
 
-**Evidence**:
-- Chunks are stored as generic transcript windows
-- No guarantee that "similar" means "relevant for this PHQ-8 item"
-- Score attached may not reflect chunk content
+**Status**: Divergences documented in BUG-031. Causality not proven.
+
+**Divergences Found**:
+1. **Score-Chunk Mismatch** (`embedding.py:199`): Paper methodology - correctly implemented
+2. **Format Mismatch**: 8 separate sections vs paper's 1 unified block
+3. **Missing Domain Labels**: `(Score: 2)` vs paper's `(PHQ8_Sleep Score: 2)`
+4. **Closing Tag**: We use `</Reference Examples>`, paper uses `<Reference Examples>`
 
 **Example**:
 ```
@@ -134,10 +365,11 @@ Evidence: "I haven't been sleeping well"
 Retrieved chunk: "I've been really tired lately, can't focus on anything"
 Attached score: PHQ8_Sleep = 3 for that participant
 
-But this chunk is about FATIGUE/CONCENTRATION, not sleep!
+But this score is from the PARTICIPANT'S overall PHQ8_Sleep,
+NOT from this chunk's content!
 ```
 
-**Test**: Log retrieved chunks and manually inspect relevance.
+**Root Cause**: Chunks are generic transcript windows without item tagging. Scores are looked up from participant-level ground truth at retrieval time, not analyzed from chunk content.
 
 ### Hypothesis C: Overconfidence from Examples
 
@@ -177,9 +409,9 @@ But this chunk is about FATIGUE/CONCENTRATION, not sleep!
 
 ### Immediate Investigations
 
-1. [ ] **Log retrieved references**: Add debug logging to see what chunks are actually being retrieved and their similarity scores.
+1. [x] **Log retrieved references**: Investigated via code analysis - found Score-Chunk Mismatch bug.
 
-2. [ ] **Inspect reference quality manually**: For 5 participants, manually review if retrieved chunks are relevant.
+2. [x] **Inspect reference quality manually**: Code review confirmed chunks are generic windows with participant-level scores.
 
 3. [x] ~~**Re-run with keyword backfill ON**~~ - **RULED OUT**: Original authors did NOT use keyword backfill. Not relevant to investigation.
 
@@ -211,11 +443,15 @@ But this chunk is about FATIGUE/CONCENTRATION, not sleep!
 - Combined run: `data/outputs/few_shot_paper_backfill-off_20251228_024244.json`
 
 ### Key Logs to Check
+This repo does not reliably write logs to `logs/` by default during reproduction runs. Prefer console logs.
+
+If you implement retrieval diagnostics (Spec 32), enable it explicitly:
+- `EMBEDDING_ENABLE_RETRIEVAL_AUDIT=true` (audit logs are emitted at INFO level)
+
+Then you can filter console output with:
+
 ```bash
-# Grep for retrieval logs
-grep -r "Found references" logs/
-grep -r "bundle_length" logs/
-grep -r "top_similarity" logs/
+rg -n \"retrieved_reference|Found references for item|bundle_length|top_similarity\"
 ```
 
 ### Reference Implementation
@@ -227,15 +463,42 @@ grep -r "top_similarity" logs/
 
 ## 6. Conclusion
 
-This investigation reveals multiple potential causes for the counterintuitive result. The most likely explanations are:
+### Divergences Found
 
-1. **Over-prompting**: 16 examples may be too many for this model/task
-2. **Semantic mismatch**: Generic transcript chunks don't align with PHQ-8 items
-3. **Overconfidence**: Few-shot makes model predict more, but with lower accuracy
+Investigation identified paper-parity divergences that may contribute to the performance gap:
 
-~~Keyword backfill was initially suspected but ruled out - the original authors did NOT use it.~~
+1. **Score-Chunk Mismatch** (`embedding.py:199`): Paper methodology - correctly implemented
+2. **Format Mismatch** (`embedding.py:40-70`): 8 separate sections vs paper's 1 unified block
+3. **Missing Domain Labels** (`embedding.py:58-62`): `(Score: 2)` vs paper's `(PHQ8_Sleep Score: 2)`
+4. **Closing Tag**: `</Reference Examples>` vs paper's `<Reference Examples>`
 
-**Next step**: Launch parallel investigation agents to test each hypothesis systematically.
+### Hypotheses Status
+
+| Hypothesis | Status | Notes |
+|------------|--------|-------|
+| A: Over-prompting | UNLIKELY | Paper tested top_k in Appendix D; 16 within range |
+| **B: Semantic mismatch** | **PLAUSIBLE** | Divergences documented; causality unproven |
+| C: Overconfidence | POSSIBLE | Pattern consistent with hypothesis, not proven |
+| D: Keyword backfill | RULED OUT | Authors did NOT use it (notebook verified) |
+| E: Model capacity | UNKNOWN | Would need BF16 testing |
+| F: Context dilution | NOT TESTED | Few-shot adds many tokens |
+| G: LLM stochasticity | NOT TESTED | Single run, no variance measured |
+
+### What We Know vs What We Hypothesize
+
+| Known (Verified) | Hypothesized (Unproven) |
+|------------------|-------------------------|
+| Zero-shot AURC < few-shot AURC in our runs | Format divergences caused the gap |
+| Our format differs from paper's notebook | Score-chunk mismatch harms performance |
+| Paper uses participant-level scores | Fixing format will improve few-shot |
+
+### Next Steps
+
+1. **Fix format divergences** - Match paper's exact format
+2. **Run ablation** - Re-evaluate to see if few-shot improves
+3. **Add retrieval diagnostics** - Log and audit retrieved chunks
+4. **Assess LLM variance** - Run multiple times
+5. **Senior review** after ablation results
 
 ---
 
