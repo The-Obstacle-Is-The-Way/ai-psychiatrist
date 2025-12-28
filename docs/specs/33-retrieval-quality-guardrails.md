@@ -156,8 +156,8 @@ async def test_reference_threshold_filters_low_similarity(self) -> None:
     service.embed_text = AsyncMock(return_value=tuple([0.1] * 256))  # type: ignore[method-assign]
 
     matches = [
-        SimilarityMatch(TranscriptChunk(text="good", participant_id=1), similarity=0.9, reference_score=1),
-        SimilarityMatch(TranscriptChunk(text="bad", participant_id=2), similarity=0.1, reference_score=1),
+        SimilarityMatch(chunk=TranscriptChunk(text="good", participant_id=1), similarity=0.9, reference_score=1),
+        SimilarityMatch(chunk=TranscriptChunk(text="bad", participant_id=2), similarity=0.1, reference_score=1),
     ]
     service._compute_similarities = MagicMock(return_value=matches)  # type: ignore[method-assign]
 
@@ -177,8 +177,8 @@ async def test_reference_budget_limits_included_matches(self) -> None:
     service.embed_text = AsyncMock(return_value=tuple([0.1] * 256))  # type: ignore[method-assign]
 
     matches = [
-        SimilarityMatch(TranscriptChunk(text="12345", participant_id=1), similarity=0.9, reference_score=1),
-        SimilarityMatch(TranscriptChunk(text="12345", participant_id=2), similarity=0.8, reference_score=1),
+        SimilarityMatch(chunk=TranscriptChunk(text="12345", participant_id=1), similarity=0.9, reference_score=1),
+        SimilarityMatch(chunk=TranscriptChunk(text="12345", participant_id=2), similarity=0.8, reference_score=1),
     ]
     service._compute_similarities = MagicMock(return_value=matches)  # type: ignore[method-assign]
 
