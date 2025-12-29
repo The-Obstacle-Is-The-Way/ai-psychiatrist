@@ -118,6 +118,41 @@ See: `docs/reference/statistical-methodology-aurc-augrc.md`
 
 ---
 
+### Run 4: Dec 29, 2025 - Spec 33 Development Snapshot (Pre-merge)
+
+**File**: `both_paper-test_backfill-off_20251229_173727.json`
+
+**Git Commit**: `5e62455` (pre-merge dev commit; not on `main`)
+
+**Timestamp**: 2025-12-29T14:41:44
+
+**Code Changes (Spec 33)**:
+- Retrieval quality guardrails (similarity threshold + per-item reference budget)
+- XML-style closing tag: `</Reference Examples>` (deviates from notebook tag mirroring)
+
+**Results** (single-run metrics; note different included-N due to one zero-shot failure):
+
+| Mode | AURC | AUGRC | Cmax | MAE_w | N_included (AURC) |
+|------|------|-------|------|-------|-------------------|
+| Zero-shot | 0.138 | 0.039 | 56.9% | 0.698 | 40 |
+| Few-shot | 0.192 | 0.058 | 65.5% | 0.777 | 41 |
+
+**95% Bootstrap CIs** (10,000 resamples, participant-level):
+
+| Mode | AURC CI | AUGRC CI | Cmax CI | N_included (AURC) |
+|------|---------|----------|---------|-------------------|
+| Zero-shot | [0.097, 0.180] | [0.025, 0.055] | [0.491, 0.650] | 40 |
+| Few-shot | [0.144, 0.243] | [0.039, 0.081] | [0.555, 0.753] | 41 |
+
+**Statistical Analysis**:
+- Computed 2025-12-29 via `scripts/evaluate_selective_prediction.py --seed 42`
+- Metrics files: `selective_prediction_metrics_20251229T231237Z.json` (zero-shot), `selective_prediction_metrics_20251229T231302Z.json` (few-shot)
+- Paired comparison (overlap N=40 due to one zero-shot failure): `selective_prediction_metrics_20251229T233314Z.json` (ΔAURC = +0.058 [0.010, 0.109], few-shot − zero-shot)
+
+**Note**: This was a pre-merge development snapshot. The fully merged Spec 33 + Spec 34 codebase has not been rerun yet.
+
+---
+
 ## Spec 31/32 Impact Analysis
 
 ### What Changed
@@ -181,14 +216,14 @@ Spec 31/32 improved few-shot by ~10%, proving formatting matters. But the gap to
 
 ### Specs 33-36: Retrieval Quality Fixes
 
-| Spec | Description | Hypothesis |
-|------|-------------|------------|
-| 33 | Similarity threshold + context budget | Filter low-quality references |
-| 34 | Item-tagged reference embeddings | Improve semantic matching |
-| 35 | Offline chunk-level PHQ-8 scoring | Better ground truth for retrieval |
-| 36 | CRAG reference validation | LLM-based relevance filtering |
+| Spec | Description | Status | Hypothesis |
+|------|-------------|--------|------------|
+| 33 | Similarity threshold + context budget | ✅ Implemented (merged) | Filter low-quality references |
+| 34 | Item-tagged reference embeddings | ✅ Implemented (not yet rerun) | Improve semantic matching |
+| 35 | Offline chunk-level PHQ-8 scoring | PLANNED | Better ground truth for retrieval |
+| 36 | CRAG reference validation | PLANNED | LLM-based relevance filtering |
 
-**Expected outcome**: If retrieval quality is the issue, these specs should close the gap between few-shot and zero-shot.
+**Next action**: Run a fresh ablation with the current merged codebase (Spec 33 + Spec 34) and update this run history.
 
 ---
 
@@ -254,6 +289,8 @@ uv run python scripts/generate_embeddings.py --split paper-train
 ## References
 
 - Statistical methodology: `docs/reference/statistical-methodology-aurc-augrc.md`
-- Spec 31 (format): `docs/specs/31-paper-parity-reference-examples-format.md`
-- Spec 32 (audit): `docs/specs/32-few-shot-retrieval-diagnostics.md`
+- Spec 31 (format): `docs/archive/specs/31-paper-parity-reference-examples-format.md`
+- Spec 32 (audit): `docs/archive/specs/32-few-shot-retrieval-diagnostics.md`
+- Spec 33 (guardrails): `docs/archive/specs/33-retrieval-quality-guardrails.md`
+- Spec 34 (item tagging): `docs/specs/34-item-tagged-reference-embeddings.md`
 - Paper analysis: `docs/paper-reproduction-analysis.md`

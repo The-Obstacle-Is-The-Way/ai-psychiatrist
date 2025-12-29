@@ -1,7 +1,7 @@
 # Paper Reproduction Results
 
 **Last Updated**: 2025-12-29
-**Status**: Post Spec 31/32 (paper-parity format). AURC/AUGRC analysis complete.
+**Status**: Baseline is Post Spec 31/32 (paper-parity format). Spec 33/34 rerun pending.
 
 > **For complete run history**: See [run-history.md](./run-history.md) for comprehensive documentation of all runs, code changes, and statistical analyses.
 
@@ -19,6 +19,8 @@ Latest validated run with paper-parity reference format:
 | Few-shot | 0.774 | 0.193 | 0.065 | 70.1% | 41 |
 
 **Run**: `both_paper-test_backfill-off_20251229_003543.json` (commit `7d54d98`)
+
+**Note**: A pre-merge Spec 33 development snapshot (`both_paper-test_backfill-off_20251229_173727.json`, commit `5e62455`) shows few-shot AUGRC ≈ 0.058 (down from 0.065), but it includes one zero-shot participant failure (so single-mode AURC uses N=40 vs N=41) and is not treated as the current baseline. See `docs/results/run-history.md`.
 
 ### AURC/AUGRC Analysis (Latest Run - Post Spec 31/32)
 
