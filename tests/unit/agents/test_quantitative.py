@@ -266,13 +266,14 @@ class TestQuantitativeAssessmentAgent:
         ) as mock_factory:
             agent = QuantitativeAssessmentAgent(
                 llm_client=MockLLMClient(),
-                pydantic_ai_settings=PydanticAISettings(enabled=True),
+                pydantic_ai_settings=PydanticAISettings(enabled=True, timeout_seconds=123.0),
                 ollama_base_url="http://localhost:11434",
             )
             result = await agent.assess(sample_transcript)
 
         mock_factory.assert_called_once()
         mock_agent.run.assert_called_once()
+        assert mock_agent.run.call_args.kwargs["model_settings"]["timeout"] == 123.0
         assert result.total_score == 0
 
     @pytest.mark.asyncio

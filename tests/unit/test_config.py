@@ -58,7 +58,7 @@ class TestOllamaSettings:
         settings = OllamaSettings()
         assert settings.host == "127.0.0.1"
         assert settings.port == 11434
-        assert settings.timeout_seconds == 300
+        assert settings.timeout_seconds == 600
 
     def test_base_url_property(self) -> None:
         """Should construct correct base URL."""
@@ -90,10 +90,10 @@ class TestOllamaSettings:
         with pytest.raises(ValueError):
             OllamaSettings(timeout_seconds=5)
 
-    def test_timeout_validation_max(self) -> None:
-        """Timeout must be <= 600."""
-        with pytest.raises(ValueError):
-            OllamaSettings(timeout_seconds=700)
+    def test_timeout_allows_large_values(self) -> None:
+        """Timeout should allow long-running research runs."""
+        settings = OllamaSettings(timeout_seconds=3_600)
+        assert settings.timeout_seconds == 3_600
 
 
 class TestModelSettings:
@@ -322,6 +322,38 @@ class TestSettings:
         assert settings.model.quantitative_model == "test-model"
 
         get_settings.cache_clear()
+
+    def test_timeout_sync_from_ollama_to_pydantic(self, monkeypatch: pytest.MonkeyPatch) -> None:
+        """If only OLLAMA timeout is set, Pydantic AI timeout should match."""
+        monkeypatch.setenv("OLLAMA_TIMEOUT_SECONDS", "3600")
+        get_settings.cache_clear()
+
+        settings = get_settings()
+
+        assert settings.ollama.timeout_seconds == 3600
+        assert settings.pydantic_ai.timeout_seconds == 3600.0
+
+    def test_timeout_sync_from_pydantic_to_ollama(self, monkeypatch: pytest.MonkeyPatch) -> None:
+        """If only Pydantic AI timeout is set, legacy timeout should match."""
+        monkeypatch.setenv("PYDANTIC_AI_TIMEOUT_SECONDS", "3600")
+        get_settings.cache_clear()
+
+        settings = get_settings()
+
+        assert settings.pydantic_ai.timeout_seconds == 3600.0
+        assert settings.ollama.timeout_seconds == 3600
+
+    def test_timeout_mismatch_warns(self, monkeypatch: pytest.MonkeyPatch) -> None:
+        """Mismatch should warn since fallback can behave differently."""
+        monkeypatch.setenv("OLLAMA_TIMEOUT_SECONDS", "600")
+        monkeypatch.setenv("PYDANTIC_AI_TIMEOUT_SECONDS", "3600")
+        get_settings.cache_clear()
+
+        with pytest.warns(
+            UserWarning,
+            match="OLLAMA_TIMEOUT_SECONDS and PYDANTIC_AI_TIMEOUT_SECONDS differ",
+        ):
+            _settings = get_settings()
 
     @pytest.mark.skipif(
         os.environ.get("TESTING") == "1",

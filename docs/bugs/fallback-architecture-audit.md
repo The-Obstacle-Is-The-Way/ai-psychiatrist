@@ -100,16 +100,16 @@ Participant evaluation failures → `success=False` → run continues.
 
 ---
 
-## The Timeout Problem
+## The Timeout Problem (Fixed via BUG-027)
 
 ### Current Mismatch
 
 | Path | Default Timeout | Configurable? |
 | ---- | --------------- | ------------- |
 | Pydantic AI | 600s | YES via `model_settings={"timeout": ...}` |
-| Legacy | 300s | YES via `OLLAMA_TIMEOUT_SECONDS` |
+| Legacy | 600s | YES via `OLLAMA_TIMEOUT_SECONDS` |
 
-**Problem**: We don't pass timeout to Pydantic AI today, and the defaults differ.
+**Problem (historical)**: We didn't pass timeout to Pydantic AI and defaults differed, causing stacked timeouts when fallback triggered.
 
 ### What Happened to Participant 390
 

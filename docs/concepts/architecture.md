@@ -265,7 +265,7 @@ HTTP client for Ollama LLM API.
 - Convenience helpers `simple_chat()` / `simple_embed()` used by agents/services
 
 **Features:**
-- Configurable timeout (Ollama default: 300s via `OLLAMA_TIMEOUT_SECONDS`)
+- Configurable timeout (Ollama default: 600s via `OLLAMA_TIMEOUT_SECONDS`; kept aligned with `PYDANTIC_AI_TIMEOUT_SECONDS` by default)
 - Model-specific temperature and sampling parameters
 - L2 normalization for embeddings
 

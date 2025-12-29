@@ -12,8 +12,8 @@
 
 The Pydantic AI agents don't pass a configurable timeout, causing:
 1. Default 600s timeout (hardcoded in pydantic_ai library)
-2. Mismatch with legacy path (300s default)
-3. No way to set infinite timeout for GPU-limited research runs
+2. Mismatch with legacy path (historically 300s default)
+3. Confusing timeout behavior during fallback
 
 ---
 
@@ -27,8 +27,8 @@ Large transcripts + GPU throttling = slow inference. The fix is to give the LLM 
 
 | Path | Timeout | Source |
 | ---- | ------- | ------ |
-| Pydantic AI | 600s | `pydantic_ai.models.cached_async_http_client(timeout=600)` |
-| Legacy | 300s | `OllamaSettings.timeout_seconds` |
+| Pydantic AI | 600s (default) / configurable | `model_settings={"timeout": ...}` |
+| Legacy | configurable | `OllamaSettings.timeout_seconds` |
 
 ### The Gap
 
@@ -46,9 +46,9 @@ class PydanticAISettings(BaseSettings):
     enabled: bool = True
     retries: int = 3
     timeout_seconds: float | None = Field(
-        default=None,  # None = infinite (wait as long as needed)
+        default=None,  # None = use pydantic_ai library default (600s)
         ge=0,
-        description="Timeout for Pydantic AI LLM calls. None = infinite.",
+        description="Timeout for Pydantic AI LLM calls. None = use library default.",
     )
 ```
 
@@ -70,21 +70,23 @@ result = await self._scoring_agent.run(
 Ensure both paths use the same timeout source:
 
 ```python
-# Both should read from same config or at least be synchronized
-OLLAMA_TIMEOUT_SECONDS = PYDANTIC_AI_TIMEOUT_SECONDS
+# Keep legacy and Pydantic AI timeouts aligned by default:
+# - If only one of {OLLAMA_TIMEOUT_SECONDS, PYDANTIC_AI_TIMEOUT_SECONDS} is set, propagate to the other.
+# - If both are set and differ, emit a warning (fallback path may timeout sooner).
+# - If both are unset, use defaults (Pydantic AI: 600s library default; Ollama: 600s project default).
 ```
 
 ---
 
 ## Workaround (Until Fixed)
 
-For current research runs, increase legacy timeout:
+For long-running research runs, increase the timeout (either env var works; Settings will sync if the other is unset):
 
 ```bash
-export OLLAMA_TIMEOUT_SECONDS=3600  # 1 hour
+export PYDANTIC_AI_TIMEOUT_SECONDS=3600
+# or:
+export OLLAMA_TIMEOUT_SECONDS=3600
 ```
-
-This doesn't fix Pydantic AI (still 600s default) but helps if fallback triggers.
 
 ---
 
@@ -118,6 +120,14 @@ Step 3 (sync legacy timeout) was NOT implemented because:
 - Forcing them in sync would limit flexibility
 
 **Usage**: Set `PYDANTIC_AI_TIMEOUT_SECONDS=3600` for 1-hour timeout, or leave unset for library default (600s).
+
+### Follow-up (2025-12-29)
+
+Step 3 was implemented in a flexible form:
+
+- Defaults are now aligned (Ollama default timeout increased to 600s).
+- If only one timeout env var is set, it propagates to the other at `Settings` construction time.
+- If both are set and differ, a warning is emitted.
 
 ---
 

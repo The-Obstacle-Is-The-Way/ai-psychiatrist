@@ -123,16 +123,16 @@ Pydantic AI call failed during scoring; falling back to legacy
 
 ## The Timeout Configuration Gap
 
-### Current Mismatch
+### Current State (Fixed via BUG-027)
 
 | Path        | Default Timeout | Configurable?                                   | Source            |
 | ----------- | --------------- | ----------------------------------------------- | ----------------- |
-| Pydantic AI | 600s            | YES via `model_settings={"timeout": ...}`       | Library default   |
-| Legacy      | 300s            | YES via `OLLAMA_TIMEOUT_SECONDS`                | `OllamaSettings`  |
+| Pydantic AI | 600s (default)  | YES via `PYDANTIC_AI_TIMEOUT_SECONDS`           | `model_settings`  |
+| Legacy      | 600s (default)  | YES via `OLLAMA_TIMEOUT_SECONDS`                | `OllamaSettings`  |
 
-### The Problem
+### The Problem (Historical)
 
-We **don't pass** the timeout to Pydantic AI agents. The code looks like:
+We used to **not pass** the timeout to Pydantic AI agents. The code looked like:
 
 ```python
 # Current (BROKEN)
@@ -142,7 +142,7 @@ result = await self._scoring_agent.run(
 )
 ```
 
-So Pydantic AI uses its hardcoded 600s default, while legacy uses our configured 300s.
+So Pydantic AI used its hardcoded 600s default, while legacy used a different configured default.
 
 ### The Fix (BUG-027)
 
@@ -161,9 +161,9 @@ Add to `PydanticAISettings`:
 
 ```python
 timeout_seconds: float | None = Field(
-    default=None,  # None = infinite (for research runs)
+    default=None,  # None = use pydantic_ai library default (600s)
     ge=0,
-    description="Timeout for Pydantic AI LLM calls. None = infinite.",
+    description="Timeout for Pydantic AI LLM calls. None = use library default.",
 )
 ```
 
@@ -388,13 +388,14 @@ When the LLM is struggling (GPU throttled, complex transcript), retrying with th
 
 ## Recommendations
 
-### A. ~~Immediate: Unify Timeout Configuration (BUG-027)~~ ✅ IMPLEMENTED (2025-12-28)
+### A. ~~Immediate: Unify Timeout Configuration (BUG-027)~~ ✅ IMPLEMENTED (2025-12-29)
 
 Configurable timeout added to Pydantic AI agents:
 
 - `PydanticAISettings.timeout_seconds: float | None` (default=None = use library default)
 - All 4 agents pass timeout via `model_settings`
-- Usage: `PYDANTIC_AI_TIMEOUT_SECONDS=3600` for 1-hour timeout
+- Defaults aligned at 600s; no upper bound on `OLLAMA_TIMEOUT_SECONDS`
+- Usage: set either `PYDANTIC_AI_TIMEOUT_SECONDS=3600` or `OLLAMA_TIMEOUT_SECONDS=3600` (Settings syncs if the other is unset)
 
 See `docs/archive/bugs/bug-027-timeout-configuration.md` for implementation details.
 
@@ -476,7 +477,7 @@ These are fine and should be kept:
 | `src/ai_psychiatrist/agents/meta_review.py`           | Meta-review agent + fallback + severity fallback     |
 | `src/ai_psychiatrist/agents/pydantic_agents.py`       | Agent factories (need timeout parameter)             |
 | `src/ai_psychiatrist/agents/extractors.py`            | TextOutput extractors with `ModelRetry`              |
-| `docs/bugs/bug-027-timeout-configuration.md`          | Timeout gap documentation                            |
+| `docs/archive/bugs/bug-027-timeout-configuration.md`  | Timeout gap documentation                            |
 | `docs/specs/21-broad-exception-handling.md`           | Why broad exception catches are intentional          |
 
 ---

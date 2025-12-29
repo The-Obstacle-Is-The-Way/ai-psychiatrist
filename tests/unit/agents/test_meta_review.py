@@ -365,7 +365,7 @@ qualitative assessment reveals social stressors and biological predisposition.</
         ) as mock_factory:
             agent = MetaReviewAgent(
                 llm_client=MockLLMClient(),
-                pydantic_ai_settings=PydanticAISettings(enabled=True),
+                pydantic_ai_settings=PydanticAISettings(enabled=True, timeout_seconds=123.0),
                 ollama_base_url="http://localhost:11434",
             )
             result = await agent.review(
@@ -376,5 +376,6 @@ qualitative assessment reveals social stressors and biological predisposition.</
 
         mock_factory.assert_called_once()
         mock_agent.run.assert_called_once()
+        assert mock_agent.run.call_args.kwargs["model_settings"]["timeout"] == 123.0
         assert result.severity == SeverityLevel.MOD_SEVERE
         assert result.explanation == "Pydantic AI Explanation"

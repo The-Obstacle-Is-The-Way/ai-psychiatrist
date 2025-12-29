@@ -242,12 +242,14 @@ Score: 2
         ) as mock_factory:
             agent = JudgeAgent(
                 llm_client=MockLLMClient(),
-                pydantic_ai_settings=PydanticAISettings(enabled=True),
+                pydantic_ai_settings=PydanticAISettings(enabled=True, timeout_seconds=123.0),
                 ollama_base_url="http://localhost:11434",
             )
             result = await agent.evaluate(sample_assessment, sample_transcript)
 
         mock_factory.assert_called_once()
         assert mock_agent.run.call_count == 4
+        for call in mock_agent.run.call_args_list:
+            assert call.kwargs["model_settings"]["timeout"] == 123.0
         assert len(result.scores) == 4
         assert result.scores[EvaluationMetric.COHERENCE].score == 5
