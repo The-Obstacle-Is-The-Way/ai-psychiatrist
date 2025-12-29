@@ -493,7 +493,7 @@ Update `ReferenceBundle.format_for_prompt()` in `embedding.py:40-70`:
 
 ## ✅ ADDED (Senior Review): Implementation-Ready Spec for Fix 1 (Paper Parity)
 
-**Canonical spec**: `docs/specs/31-paper-parity-reference-examples-format.md` (this section should match it).
+**Canonical spec**: `docs/archive/specs/31-paper-parity-reference-examples-format.md` (this section should match it).
 
 This section is intentionally **copy/paste-able** and contains the exact behavior required to match the paper notebook.
 
@@ -735,7 +735,7 @@ class TestReferenceBundle:
 
 This is a legitimate research direction, but it requires a separate design spec (new artifact formats + new indexing pipeline + evaluation protocol). Keeping it here as a “Fix” is misleading.
 
-**Action**: Implement only from a dedicated spec (now tracked as `docs/specs/34-item-tagged-reference-embeddings.md`).
+**Action**: Implement only from a dedicated spec (now tracked as `docs/archive/specs/34-item-tagged-reference-embeddings.md`).
 
 **Why**: A developer should not attempt this based only on BUG-031.
 
@@ -903,7 +903,7 @@ Best of both worlds:
 
 **Effort**: Low | **Impact**: Enables empirical verification
 
-✅ ADDED (Senior Review): Implementation spec is now canonicalized in `docs/specs/32-few-shot-retrieval-diagnostics.md`.
+✅ ADDED (Senior Review): Implementation spec is now canonicalized in `docs/archive/specs/32-few-shot-retrieval-diagnostics.md`.
 
 - **File**: `src/ai_psychiatrist/services/embedding.py`
 - **Function**: `EmbeddingService.build_reference_bundle` (around `src/ai_psychiatrist/services/embedding.py:238`)
@@ -940,8 +940,8 @@ Then manually audit a stratified sample to verify if retrieved chunks are actual
 **Priority**: DEFER (not needed for parity ablation)
 
 **Related specs**:
-- `docs/specs/33-retrieval-quality-guardrails.md` (similarity threshold + context budget)
-- `docs/specs/34-item-tagged-reference-embeddings.md` (index-time item tags)
+- `docs/archive/specs/33-retrieval-quality-guardrails.md` (similarity threshold + context budget)
+- `docs/archive/specs/34-item-tagged-reference-embeddings.md` (index-time item tags)
 
 This could be a non-circular improvement, but it is **not implementation-ready** here because it requires explicit decisions:
 - which keyword source (LLM evidence vs `DOMAIN_KEYWORDS` vs curated list),

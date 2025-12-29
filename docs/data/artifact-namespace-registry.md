@@ -60,6 +60,29 @@ The script `scripts/create_paper_split.py` defaults to `--mode ground-truth`. Th
 - `{output}.npz` (embeddings)
 - `{output}.json` (text chunks)
 - `{output}.meta.json` (provenance metadata)
+- `{output}.tags.json` (optional, with `--write-item-tags` flag)
+
+### Item Tags Sidecar (Spec 34)
+
+When generated with `--write-item-tags`, the `.tags.json` sidecar contains per-chunk PHQ-8 item tags:
+
+```json
+{
+  "303": [
+    ["PHQ8_Sleep", "PHQ8_Tired"],   // chunk 0 mentions sleep/fatigue
+    [],                              // chunk 1 has no PHQ-8 keywords
+    ["PHQ8_Depressed"]               // chunk 2 mentions depression
+  ],
+  "304": [...]
+}
+```
+
+**Purpose**: Enables item-level filtering at retrieval time (`EMBEDDING_ENABLE_ITEM_TAG_FILTER=true`).
+
+**Validation**: `ReferenceStore` validates that:
+- Participant IDs match the texts sidecar
+- Per-participant list length equals chunk count
+- Tag values are valid `PHQ8_*` strings
 
 ### Embedding Auto-Selection Logic
 

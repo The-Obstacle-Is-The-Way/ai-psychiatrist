@@ -53,7 +53,7 @@ This is the minimum, **implementation-ready** sequence to test whether the paper
 
 ### Step 1 — Apply Fix 1 (paper-parity reference formatting)
 
-Source of truth: `docs/specs/31-paper-parity-reference-examples-format.md` (canonical spec).
+Source of truth: `docs/archive/specs/31-paper-parity-reference-examples-format.md` (canonical spec).
 
 Required edits:
 - `src/ai_psychiatrist/services/embedding.py` (`ReferenceBundle.format_for_prompt`)
@@ -176,9 +176,9 @@ A chunk saying "I sleep fine" and "I can't sleep at all" are BOTH about sleep. B
 
 - The above are **research directions**, not paper-parity fixes.
 - Paper-parity implementation work is tracked in:
-  - `docs/specs/31-paper-parity-reference-examples-format.md`
-  - `docs/specs/32-few-shot-retrieval-diagnostics.md`
-- Any CRAG / chunk-scoring / re-indexing work must be implemented from dedicated specs (currently `docs/specs/33-*` through `docs/specs/36-*`), otherwise developers will be forced to guess formats + evaluation protocol.
+  - `docs/archive/specs/31-paper-parity-reference-examples-format.md`
+  - `docs/archive/specs/32-few-shot-retrieval-diagnostics.md`
+- Any CRAG / chunk-scoring / re-indexing work must be implemented from dedicated specs (Specs 33-36 in `docs/archive/specs/` and `docs/specs/`), otherwise developers will be forced to guess formats + evaluation protocol.
 
 ### Recommended Architecture
 
