@@ -131,9 +131,13 @@ class MetaReviewAgent:
 
         if self._review_agent is not None:
             try:
+                timeout = self._pydantic_ai.timeout_seconds
                 result = await self._review_agent.run(
                     prompt,
-                    model_settings={"temperature": temperature},
+                    model_settings={
+                        "temperature": temperature,
+                        **({"timeout": timeout} if timeout is not None else {}),
+                    },
                 )
                 output = result.output
                 severity = SeverityLevel(output.severity)

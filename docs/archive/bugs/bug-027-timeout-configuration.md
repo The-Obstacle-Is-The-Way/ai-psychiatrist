@@ -1,9 +1,10 @@
 # BUG-027: Timeout Configuration Gaps
 
-**Status**: Open
+**Status**: IMPLEMENTED
 **Severity**: Medium
 **Discovered**: 2025-12-27
-**Component**: `src/ai_psychiatrist/agents/pydantic_agents.py`, `src/ai_psychiatrist/config.py`
+**Implemented**: 2025-12-28
+**Component**: `src/ai_psychiatrist/config.py`, all 4 agents
 
 ---
 
@@ -94,6 +95,29 @@ This doesn't fix Pydantic AI (still 600s default) but helps if fallback triggers
 3. `src/ai_psychiatrist/agents/qualitative.py` - Pass timeout in `model_settings`
 4. `src/ai_psychiatrist/agents/judge.py` - Pass timeout in `model_settings`
 5. `src/ai_psychiatrist/agents/meta_review.py` - Pass timeout in `model_settings`
+
+---
+
+## Implementation Notes (2025-12-28)
+
+Steps 1 and 2 were implemented:
+
+1. **config.py**: Added `timeout_seconds: float | None = Field(default=None, ge=0, ...)` to `PydanticAISettings`
+2. **All 4 agents**: Pass timeout via `model_settings` using conditional spread syntax:
+   ```python
+   timeout = self._pydantic_ai.timeout_seconds
+   model_settings={
+       "temperature": temperature,
+       **({"timeout": timeout} if timeout is not None else {}),
+   }
+   ```
+
+Step 3 (sync legacy timeout) was NOT implemented because:
+- Legacy timeout is already configurable via `OLLAMA_TIMEOUT_SECONDS`
+- Users who need long timeouts can set both env vars
+- Forcing them in sync would limit flexibility
+
+**Usage**: Set `PYDANTIC_AI_TIMEOUT_SECONDS=3600` for 1-hour timeout, or leave unset for library default (600s).
 
 ---
 

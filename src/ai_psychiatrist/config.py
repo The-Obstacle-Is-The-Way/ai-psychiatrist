@@ -357,6 +357,11 @@ class PydanticAISettings(BaseSettings):
         le=10,
         description="Retry count for validation failures (0 disables retries).",
     )
+    timeout_seconds: float | None = Field(
+        default=None,
+        ge=0,
+        description="Timeout for Pydantic AI LLM calls. None = infinite.",
+    )
 
 
 class DataSettings(BaseSettings):

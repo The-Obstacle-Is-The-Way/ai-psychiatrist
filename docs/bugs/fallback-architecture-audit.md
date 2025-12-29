@@ -1,7 +1,10 @@
 # Fallback Architecture Audit
 
+> **DEPRECATED**: This document has been superseded by `/PYDANTIC_AI_FALLBACK_ARCHITECTURE.md` (root level).
+> See that document for the authoritative analysis.
+
 **Date**: 2025-12-27
-**Status**: Analyzed - action items identified
+**Status**: SUPERSEDED - See `/PYDANTIC_AI_FALLBACK_ARCHITECTURE.md`
 **Scope**: Runtime fallbacks affecting paper reproduction correctness and reproducibility
 
 ---
@@ -228,3 +231,18 @@ These are fine and should be kept:
 - `src/ai_psychiatrist/agents/meta_review.py` - Fallback + severity fallback
 - `src/ai_psychiatrist/agents/pydantic_agents.py` - Agent factories (need timeout)
 - `src/ai_psychiatrist/config.py` - Add timeout to PydanticAISettings
+
+---
+
+## 2025 Industry Best Practices (Added 2025-12-28)
+
+> See `/PYDANTIC_AI_FALLBACK_ARCHITECTURE.md` for full details.
+
+**Key findings from research**:
+
+1. **Smaller models (27B) are inherently more error-prone** for structured output than 70B+ models
+2. **Our architecture is correct** according to industry best practices (retry → programmatic fix → LLM repair → fallback)
+3. **Instructor library** is the industry standard alternative (3M+ downloads, works with Ollama)
+4. **Gemma 3 27B has known issues** with constrained decoding (vLLM GitHub Issue #15766)
+
+**Recommendation**: Keep current architecture but fix timeout handling (BUG-027)
