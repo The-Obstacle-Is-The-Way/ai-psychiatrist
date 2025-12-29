@@ -91,7 +91,7 @@ class KeywordTagger:
 
         for item_key, keywords in self._keywords_map.items():
             for kw in keywords:
-                if kw in text_lower:
+                if kw.lower() in text_lower:
                     tags.append(item_key)
                     break  # One match per item is sufficient
 

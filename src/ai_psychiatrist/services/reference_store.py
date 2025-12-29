@@ -439,10 +439,113 @@ class ReferenceStore:
 
         return normalized
 
+    def _warn_missing_tags(self, tags_path: Path) -> None:
+        """Warn once when tag filtering is enabled but tags are missing."""
+        if self._embedding_settings.enable_item_tag_filter:
+            logger.warning(
+                "Item tag filtering enabled but tags sidecar missing; "
+                "falling back to unfiltered retrieval",
+                path=str(tags_path),
+            )
+
+    @staticmethod
+    def _validate_tags_top_level(
+        tags_data: Any,
+        texts_data: dict[str, Any],
+        tags_path: Path,
+    ) -> dict[str, Any]:
+        if not isinstance(tags_data, dict):
+            raise EmbeddingArtifactMismatchError(
+                f"Invalid tags schema in {tags_path.name}: expected object at top level"
+            )
+
+        # Validate participant ids match exactly
+        texts_pids = set(texts_data.keys())
+        tags_pids = set(tags_data.keys())
+        missing_pids = texts_pids - tags_pids
+        if missing_pids:
+            missing_preview = ", ".join(sorted(missing_pids)[:5])
+            raise EmbeddingArtifactMismatchError(
+                f"Missing tags for participants in {tags_path.name}: {missing_preview}"
+            )
+
+        extra_pids = tags_pids - texts_pids
+        if extra_pids:
+            extra_preview = ", ".join(sorted(extra_pids)[:5])
+            raise EmbeddingArtifactMismatchError(
+                f"Extra participants present in {tags_path.name}: {extra_preview}"
+            )
+
+        return tags_data
+
+    @staticmethod
+    def _validate_chunk_tags(
+        pid: int,
+        chunk_idx: int,
+        raw_chunk_tags: Any,
+        tags_path: Path,
+        valid_tags: set[str],
+    ) -> list[str]:
+        if not isinstance(raw_chunk_tags, list):
+            raise EmbeddingArtifactMismatchError(
+                f"Invalid tags schema for participant {pid} chunk {chunk_idx} "
+                f"in {tags_path.name}: expected list"
+            )
+
+        chunk_tags: list[str] = []
+        for raw_tag in raw_chunk_tags:
+            if not isinstance(raw_tag, str):
+                raise EmbeddingArtifactMismatchError(
+                    f"Invalid tag type for participant {pid} chunk {chunk_idx} "
+                    f"in {tags_path.name}: expected string"
+                )
+            if raw_tag not in valid_tags:
+                raise EmbeddingArtifactMismatchError(
+                    f"Unknown tag '{raw_tag}' for participant {pid} chunk {chunk_idx} "
+                    f"in {tags_path.name}"
+                )
+            chunk_tags.append(raw_tag)
+
+        return chunk_tags
+
+    @staticmethod
+    def _validate_participant_tags(
+        pid: int,
+        raw_p_tags: Any,
+        expected_len: int,
+        tags_path: Path,
+        valid_tags: set[str],
+    ) -> list[list[str]]:
+        if not isinstance(raw_p_tags, list):
+            raise EmbeddingArtifactMismatchError(
+                f"Invalid tags schema for participant {pid} in {tags_path.name}: expected list"
+            )
+
+        if len(raw_p_tags) != expected_len:
+            raise EmbeddingArtifactMismatchError(
+                f"Tag count mismatch for participant {pid}: "
+                f"texts={expected_len}, tags={len(raw_p_tags)}"
+            )
+
+        participant_tags: list[list[str]] = []
+        for chunk_idx, raw_chunk_tags in enumerate(raw_p_tags):
+            participant_tags.append(
+                ReferenceStore._validate_chunk_tags(
+                    pid=pid,
+                    chunk_idx=chunk_idx,
+                    raw_chunk_tags=raw_chunk_tags,
+                    tags_path=tags_path,
+                    valid_tags=valid_tags,
+                )
+            )
+
+        return participant_tags
+
     def _load_tags(self, texts_data: dict[str, Any]) -> None:
         """Load and validate item tags sidecar."""
         tags_path = self._get_tags_path()
         if not tags_path.exists():
+            self._warn_missing_tags(tags_path)
             self._tags = {}
             return
 
@@ -450,22 +553,20 @@ class ReferenceStore:
             with tags_path.open("r", encoding="utf-8") as f:
                 tags_data = json.load(f)
 
+            tags_data = self._validate_tags_top_level(tags_data, texts_data, tags_path)
+
             # Validate tags integrity against texts
+            valid_tags = {f"PHQ8_{item.value}" for item in PHQ8Item}
             validated_tags: dict[int, list[list[str]]] = {}
             for pid_str, texts in texts_data.items():
                 pid = int(pid_str)
-                if pid_str not in tags_data:
-                    raise EmbeddingArtifactMismatchError(
-                        f"Missing tags for participant {pid} in {tags_path.name}"
-                    )
-
-                p_tags = tags_data[pid_str]
-                if len(p_tags) != len(texts):
-                    raise EmbeddingArtifactMismatchError(
-                        f"Tag count mismatch for participant {pid}: "
-                        f"texts={len(texts)}, tags={len(p_tags)}"
-                    )
-                validated_tags[pid] = p_tags
+                validated_tags[pid] = self._validate_participant_tags(
+                    pid=pid,
+                    raw_p_tags=tags_data[pid_str],
+                    expected_len=len(texts),
+                    tags_path=tags_path,
+                    valid_tags=valid_tags,
+                )
 
             self._tags = validated_tags
             logger.info("Item tags loaded", participants=len(self._tags))

@@ -67,8 +67,7 @@ Modify `scripts/generate_embeddings.py` to optionally write `{name}.tags.json` w
 
 - CLI flag: `--write-item-tags`
 - AND tagging backend is configured:
-  - `--tagger keyword` (deterministic baseline)
-  - `--tagger llm` (semantic; must be mocked in tests)
+  - `--tagger keyword` (deterministic baseline; the only implemented option today)
 
 #### Keyword Tagger (Deterministic Baseline)
 
@@ -88,7 +87,7 @@ parser.add_argument(
 )
 parser.add_argument(
     "--tagger",
-    choices=["keyword", "llm"],
+    choices=["keyword"],
     default="keyword",
     help="Chunk tagger backend (only used when --write-item-tags is set)",
 )
@@ -173,4 +172,4 @@ Copy/paste scaffolding guidance:
 ## Risks
 
 - Keyword tagger may under-tag (false negatives), harming retrieval recall.
-- LLM tagger may introduce variance; must run multiple seeds / multiple runs.
+- Future: LLM tagger may introduce variance; must run multiple seeds / multiple runs.
