@@ -12,6 +12,7 @@ Paper references:
 
 from __future__ import annotations
 
+import math
 import os
 import warnings
 from enum import Enum
@@ -155,7 +156,7 @@ class OllamaSettings(BaseSettings):
 
     host: str = Field(default="127.0.0.1", description="Ollama server host")
     port: int = Field(default=11434, ge=1, le=65535, description="Ollama server port")
-    timeout_seconds: int = Field(default=300, ge=10, le=600, description="Request timeout")
+    timeout_seconds: int = Field(default=600, ge=10, description="Request timeout")
 
     @property
     def base_url(self) -> str:
@@ -357,6 +358,11 @@ class PydanticAISettings(BaseSettings):
         le=10,
         description="Retry count for validation failures (0 disables retries).",
     )
+    timeout_seconds: float | None = Field(
+        default=None,
+        ge=0,
+        description="Timeout for Pydantic AI LLM calls. None = use library default.",
+    )
 
 
 class DataSettings(BaseSettings):
@@ -515,6 +521,26 @@ class Settings(BaseSettings):
                 f"Few-shot enabled but embeddings not found: {embeddings_path}",
                 stacklevel=2,
             )
+
+        # BUG-027: Keep timeouts aligned across Pydantic AI + legacy fallback paths.
+        pydantic_timeout_set = "timeout_seconds" in self.pydantic_ai.model_fields_set
+        ollama_timeout_set = "timeout_seconds" in self.ollama.model_fields_set
+
+        if pydantic_timeout_set and not ollama_timeout_set:
+            timeout = self.pydantic_ai.timeout_seconds
+            if timeout is not None:
+                self.ollama.timeout_seconds = max(10, math.ceil(timeout))
+        elif ollama_timeout_set and not pydantic_timeout_set:
+            self.pydantic_ai.timeout_seconds = float(self.ollama.timeout_seconds)
+        elif pydantic_timeout_set and ollama_timeout_set:
+            timeout = self.pydantic_ai.timeout_seconds
+            if timeout is not None and self.ollama.timeout_seconds != math.ceil(timeout):
+                warnings.warn(
+                    "OLLAMA_TIMEOUT_SECONDS and PYDANTIC_AI_TIMEOUT_SECONDS differ; "
+                    "fallback path may timeout sooner than the primary path.",
+                    stacklevel=2,
+                )
+
         return self
 
 

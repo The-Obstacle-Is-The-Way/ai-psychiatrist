@@ -149,9 +149,13 @@ class JudgeAgent:
 
         if self._metric_agent is not None:
             try:
+                timeout = self._pydantic_ai.timeout_seconds
                 result = await self._metric_agent.run(
                     prompt,
-                    model_settings={"temperature": temperature},
+                    model_settings={
+                        "temperature": temperature,
+                        **({"timeout": timeout} if timeout is not None else {}),
+                    },
                 )
                 output = result.output
                 return EvaluationScore(

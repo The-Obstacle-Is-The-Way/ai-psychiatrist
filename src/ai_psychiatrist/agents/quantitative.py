@@ -282,9 +282,13 @@ class QuantitativeAssessmentAgent:
         """Score transcript and return parsed per-item assessments."""
         if self._scoring_agent is not None:
             try:
+                timeout = self._pydantic_ai.timeout_seconds
                 result = await self._scoring_agent.run(
                     prompt,
-                    model_settings={"temperature": temperature},
+                    model_settings={
+                        "temperature": temperature,
+                        **({"timeout": timeout} if timeout is not None else {}),
+                    },
                 )
                 return self._from_quantitative_output(result.output)
             except asyncio.CancelledError:

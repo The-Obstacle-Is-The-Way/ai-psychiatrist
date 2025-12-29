@@ -137,9 +137,13 @@ class QualitativeAssessmentAgent:
         # Try Pydantic AI path first if enabled
         if self._agent is not None:
             try:
+                timeout = self._pydantic_ai.timeout_seconds
                 result = await self._agent.run(
                     user_prompt,
-                    model_settings={"temperature": temperature},
+                    model_settings={
+                        "temperature": temperature,
+                        **({"timeout": timeout} if timeout is not None else {}),
+                    },
                 )
                 assessment = self._from_qualitative_output(result.output, transcript.participant_id)
                 logger.info(
@@ -211,9 +215,13 @@ class QualitativeAssessmentAgent:
         # Try Pydantic AI path first if enabled
         if self._agent is not None:
             try:
+                timeout = self._pydantic_ai.timeout_seconds
                 result = await self._agent.run(
                     user_prompt,
-                    model_settings={"temperature": temperature},
+                    model_settings={
+                        "temperature": temperature,
+                        **({"timeout": timeout} if timeout is not None else {}),
+                    },
                 )
                 assessment = self._from_qualitative_output(result.output, transcript.participant_id)
                 logger.info(

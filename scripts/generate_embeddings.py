@@ -47,7 +47,9 @@ from ai_psychiatrist.config import (
     LLMBackend,
     LoggingSettings,
     ModelSettings,
+    Settings,
     get_settings,
+    resolve_reference_embeddings_path,
 )
 from ai_psychiatrist.domain.exceptions import DomainError
 from ai_psychiatrist.infrastructure.llm.factory import create_embedding_client
@@ -331,11 +333,8 @@ def get_output_filename(backend: str, model: str, split: str) -> str:
     return f"{backend}_{model_slug}_{split_slug}"
 
 
-def prepare_config(args: argparse.Namespace) -> GenerationConfig:
+def prepare_config(args: argparse.Namespace, *, settings: Settings) -> GenerationConfig:
     """Prepare configuration from args and environment."""
-    # Load settings
-    settings = get_settings()
-
     # Override backend if specified
     if args.backend:
         settings.embedding_config.backend = EmbeddingBackend(args.backend)
@@ -356,6 +355,8 @@ def prepare_config(args: argparse.Namespace) -> GenerationConfig:
     # Determine output path
     if args.output:
         output_path = args.output
+    elif "embeddings_file" in embedding_settings.model_fields_set:
+        output_path = resolve_reference_embeddings_path(data_settings, embedding_settings)
     else:
         filename = get_output_filename(
             backend=backend_settings.backend.value,
@@ -363,6 +364,9 @@ def prepare_config(args: argparse.Namespace) -> GenerationConfig:
             split=args.split,
         )
         output_path = data_settings.base_dir / "embeddings" / f"{filename}.npz"
+
+    if output_path.suffix != ".npz":
+        output_path = output_path.with_suffix(".npz")
 
     return GenerationConfig(
         data_settings=data_settings,
@@ -393,6 +397,8 @@ async def run_generation_loop(
         print(f"\nFound {len(participant_ids)} participants")
     except FileNotFoundError as e:
         print(f"\nERROR: {e}")
+        if config.split == "paper-train":
+            print("Hint: Run 'uv run python scripts/create_paper_split.py' first.")
         print("Please ensure DAIC-WOZ dataset is prepared.")
         raise  # Propagate to main to handle exit code
 
@@ -491,7 +497,8 @@ async def main_async(args: argparse.Namespace) -> int:
     """Async main entry point."""
     setup_logging(LoggingSettings(level="INFO", format="console"))
 
-    config = prepare_config(args)
+    settings = get_settings()
+    config = prepare_config(args, settings=settings)
 
     print("=" * 60)
     print("REFERENCE EMBEDDINGS GENERATOR")
@@ -513,7 +520,7 @@ async def main_async(args: argparse.Namespace) -> int:
         return 0
 
     transcript_service = TranscriptService(config.data_settings)
-    client = create_embedding_client(get_settings())
+    client = create_embedding_client(settings)
 
     try:
         result = await run_generation_loop(config, client, transcript_service)
@@ -551,7 +558,7 @@ Environment Variables:
     parser.add_argument(
         "--split",
         choices=["avec-train", "paper-train"],
-        default="avec-train",
+        default="paper-train",
         help="Which training population to embed (paper-train requires create_paper_split.py)",
     )
     parser.add_argument(

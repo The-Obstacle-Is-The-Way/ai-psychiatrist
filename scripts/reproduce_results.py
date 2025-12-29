@@ -728,9 +728,15 @@ def persist_experiment_outputs(
             }
         )
 
-    primary_mode = experiments[-1].mode if experiments else AssessmentMode.ZERO_SHOT.value
+    mode_set = {exp.mode for exp in experiments}
+    if mode_set == {AssessmentMode.ZERO_SHOT.value, AssessmentMode.FEW_SHOT.value}:
+        filename_mode = "both"
+    elif mode_set:
+        filename_mode = experiments[0].mode
+    else:
+        filename_mode = AssessmentMode.ZERO_SHOT.value
     output_filename = generate_output_filename(
-        mode=primary_mode,
+        mode=filename_mode,
         split=args.split,
         backfill=settings.quantitative.enable_keyword_backfill,
         timestamp=datetime.now(),
@@ -795,21 +801,23 @@ async def main_async(args: argparse.Namespace) -> int:
 
         transcript_service = TranscriptService(data_settings)
 
-        # Embedding client (Factory)
-        embedding_client = create_embedding_client(settings)
-        stack.push_async_callback(embedding_client.close)
+        embedding_service = None
+        if not args.zero_shot_only:
+            # Embedding client (Factory)
+            embedding_client = create_embedding_client(settings)
+            stack.push_async_callback(embedding_client.close)
 
-        try:
-            embedding_service = init_embedding_service(
-                args=args,
-                data_settings=data_settings,
-                embedding_settings=embedding_settings,
-                model_settings=model_settings,
-                embedding_client=embedding_client,
-            )
-        except FileNotFoundError as e:
-            print(f"\nERROR: {e}")
-            return 1
+            try:
+                embedding_service = init_embedding_service(
+                    args=args,
+                    data_settings=data_settings,
+                    embedding_settings=embedding_settings,
+                    model_settings=model_settings,
+                    embedding_client=embedding_client,
+                )
+            except FileNotFoundError as e:
+                print(f"\nERROR: {e}")
+                return 1
 
         experiments = await run_requested_experiments(
             args=args,

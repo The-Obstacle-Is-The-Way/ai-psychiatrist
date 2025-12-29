@@ -171,16 +171,15 @@ Zero-shot mode uses NO reference embeddings - the model scores symptoms from tra
 
 - [ ] **Set generous timeout** for GPU-safe operation:
   ```bash
-  grep "OLLAMA_TIMEOUT_SECONDS" .env
-  # Recommended: OLLAMA_TIMEOUT_SECONDS=600  (10 min, safe default)
-  # For slow GPU: OLLAMA_TIMEOUT_SECONDS=3600 (1 hour, research runs)
+  grep -E "^(OLLAMA_TIMEOUT_SECONDS|PYDANTIC_AI_TIMEOUT_SECONDS)=" .env
+  # Recommended: 600  (10 min, safe default)
+  # For slow GPU: 3600 (1 hour, research runs)
   ```
 
-  **Gotcha (BUG-027)**: Pydantic AI path has hardcoded 600s timeout (not configurable yet).
-  The `OLLAMA_TIMEOUT_SECONDS` setting only affects the legacy fallback path.
-  For long transcripts on throttled GPUs, set at least 600s to match Pydantic AI's limit.
+  **Gotcha (BUG-027)**: Pydantic AI timeout is configurable via `PYDANTIC_AI_TIMEOUT_SECONDS`.
+  If you set only one of `{OLLAMA_TIMEOUT_SECONDS, PYDANTIC_AI_TIMEOUT_SECONDS}`, Settings syncs the other; if you set both, keep them equal to avoid fallback timeouts.
 
-  **Gotcha**: 6/47 participants (13%) timed out on first run with 300s. Large transcripts (~24KB+) need 600+ seconds.
+  **Gotcha**: 6/47 participants (13%) timed out on first run with 300s. Large transcripts (~24KB+) need 600s+ (often 3600s on slow GPUs).
 
 ### 5.2 Check for Long Transcripts
 
