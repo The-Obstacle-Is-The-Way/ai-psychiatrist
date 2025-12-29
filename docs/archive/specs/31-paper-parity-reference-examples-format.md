@@ -1,8 +1,10 @@
 # Spec 31: Paper-Parity Few-Shot Reference Examples Format
 
-> **STATUS: READY (Implement Now)**
+> **STATUS: ✅ IMPLEMENTED (2025-12-28) → Archive**
 >
 > **Scope**: Fix paper-parity divergences in `ReferenceBundle.format_for_prompt()` only.
+>
+> **Result**: Few-shot AURC improved 10% (0.214 → 0.193). See `docs/results/run-history.md`.
 
 ## Problem
 

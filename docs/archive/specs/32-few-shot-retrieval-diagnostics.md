@@ -1,6 +1,6 @@
 # Spec 32: Few-Shot Retrieval Diagnostics (Audit Logs)
 
-> **STATUS: READY (Implement Now)**
+> **STATUS: ✅ IMPLEMENTED (2025-12-28) → Archive**
 >
 > **Scope**: Add an auditable, structured log trail for what retrieval returned.
 
