@@ -466,16 +466,12 @@ async def run_generation_loop(
     # Initialize Tagger
     tagger: KeywordTagger | None = None
     if config.write_item_tags:
-        if config.tagger_type == "keyword":
-            try:
-                tagger = KeywordTagger(config.keywords_path)
-                print(f"Initialized KeywordTagger from {config.keywords_path}")
-            except Exception as e:
-                print(f"Failed to initialize tagger: {e}")
-                raise
-        elif config.tagger_type == "llm":
-            print("WARNING: LLM tagger not yet implemented (Spec 34). Using no tags.")
-            # Fallthrough to None
+        try:
+            tagger = KeywordTagger(config.keywords_path)
+            print(f"Initialized KeywordTagger from {config.keywords_path}")
+        except Exception as e:
+            print(f"Failed to initialize tagger: {e}")
+            raise
 
     # Process participants
     all_embeddings: dict[int, list[tuple[str, list[float]]]] = {}
@@ -685,7 +681,7 @@ Environment Variables:
     )
     parser.add_argument(
         "--tagger",
-        choices=["keyword", "llm"],
+        choices=["keyword"],
         default="keyword",
         help="Chunk tagger backend (only used when --write-item-tags is set)",
     )

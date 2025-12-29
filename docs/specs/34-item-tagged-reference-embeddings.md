@@ -1,8 +1,10 @@
 # Spec 34: Item-Tagged Reference Embeddings (Index-Time Tagging + Retrieval-Time Filtering)
 
-> **STATUS: PLANNED (New method / paper divergence)**
+> **STATUS: IMPLEMENTED**
 >
-> This addresses “topic vs item” mismatch by restricting retrieval to chunks tagged as relevant to a PHQ-8 item.
+> This addresses "topic vs item" mismatch by restricting retrieval to chunks tagged as relevant to a PHQ-8 item.
+>
+> **Note**: Only `--tagger keyword` is implemented. LLM-based tagging (`--tagger llm`) is deferred to a future spec.
 
 ## Problem
 
