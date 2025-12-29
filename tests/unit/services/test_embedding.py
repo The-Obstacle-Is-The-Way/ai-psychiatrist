@@ -54,13 +54,13 @@ class TestReferenceBundle:
     """Tests for ReferenceBundle (paper-parity formatting)."""
 
     def test_format_empty_bundle(self) -> None:
-        """Should format empty bundle as notebook 'no valid evidence' sentinel."""
         bundle = ReferenceBundle(item_references={})
-        formatted = bundle.format_for_prompt()
-        assert formatted == "<Reference Examples>\nNo valid evidence found\n<Reference Examples>"
+        assert (
+            bundle.format_for_prompt()
+            == "<Reference Examples>\nNo valid evidence found\n<Reference Examples>"
+        )
 
-    def test_format_with_matches(self) -> None:
-        """Should format bundle with labeled references correctly."""
+    def test_format_with_single_match(self) -> None:
         match = SimilarityMatch(
             chunk=TranscriptChunk(text="I can't enjoy anything anymore", participant_id=123),
             similarity=0.95,
@@ -75,20 +75,22 @@ class TestReferenceBundle:
         assert "(PHQ8_NoInterest Score: 2)\nI can't enjoy anything anymore" in formatted
         assert "[NoInterest]" not in formatted
         assert "</Reference Examples>" not in formatted
+        assert "No valid evidence found" not in formatted
 
     def test_format_skips_none_score(self) -> None:
-        """Notebook behavior: skip references without available ground truth."""
         match = SimilarityMatch(
             chunk=TranscriptChunk(text="Some text", participant_id=123),
             similarity=0.8,
             reference_score=None,
         )
         bundle = ReferenceBundle(item_references={PHQ8Item.SLEEP: [match]})
-        formatted = bundle.format_for_prompt()
-        assert formatted == "<Reference Examples>\nNo valid evidence found\n<Reference Examples>"
+        assert (
+            bundle.format_for_prompt()
+            == "<Reference Examples>\nNo valid evidence found\n<Reference Examples>"
+        )
 
-    def test_format_multiple_matches_and_items(self) -> None:
-        """Should include multiple references in a single unified block."""
+    def test_format_multiple_items_preserves_order(self) -> None:
+        # Order must follow PHQ8Item.all_items(): NoInterest, Depressed, Sleep, Tired, ...
         sleep_match = SimilarityMatch(
             chunk=TranscriptChunk(text="sleep ref", participant_id=100),
             similarity=0.9,
@@ -101,14 +103,15 @@ class TestReferenceBundle:
         )
         bundle = ReferenceBundle(
             item_references={
-                PHQ8Item.SLEEP: [sleep_match],
                 PHQ8Item.TIRED: [tired_match],
+                PHQ8Item.SLEEP: [sleep_match],
             }
         )
         formatted = bundle.format_for_prompt()
-        assert "(PHQ8_Sleep Score: 3)\nsleep ref" in formatted
-        assert "(PHQ8_Tired Score: 1)\ntired ref" in formatted
-        assert "[Sleep]" not in formatted
+
+        sleep_idx = formatted.index("(PHQ8_Sleep Score: 3)\nsleep ref")
+        tired_idx = formatted.index("(PHQ8_Tired Score: 1)\ntired ref")
+        assert sleep_idx < tired_idx
 
 
 class TestEmbeddingService:

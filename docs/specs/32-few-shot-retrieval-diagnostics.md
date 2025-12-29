@@ -148,7 +148,8 @@ self._enable_retrieval_audit = settings.enable_retrieval_audit
 
 ## Verification
 
-- `uv run pytest tests/unit/services/test_embedding.py -q`
+- Fast unit check (skip global coverage gate): `uv run pytest tests/unit/services/test_embedding.py -q --no-cov`
+- Full suite (enforces coverage): `make test`
 - Run a reproduction with audit enabled:
 
 ```bash
