@@ -34,7 +34,6 @@ from ai_psychiatrist.infrastructure.llm.protocols import (
 )
 
 
-@pytest.mark.unit
 class TestModelAliases:
     """Tests for canonical model alias mapping."""
 
@@ -61,7 +60,6 @@ class TestModelAliases:
             resolve_model_name("medgemma:27b", LLMBackend.OLLAMA)
 
 
-@pytest.mark.unit
 class TestLLMFactory:
     """Tests for LLM client factory selection."""
 
@@ -78,7 +76,6 @@ class TestLLMFactory:
         assert isinstance(client, HuggingFaceClient)
 
 
-@pytest.mark.unit
 class TestHuggingFaceClientMissingDeps:
     """Tests for behavior when HF optional deps are not installed."""
 
