@@ -333,6 +333,8 @@ class TestSettings:
         assert settings.ollama.timeout_seconds == 3600
         assert settings.pydantic_ai.timeout_seconds == 3600.0
 
+        get_settings.cache_clear()
+
     def test_timeout_sync_from_pydantic_to_ollama(self, monkeypatch: pytest.MonkeyPatch) -> None:
         """If only Pydantic AI timeout is set, legacy timeout should match."""
         monkeypatch.setenv("PYDANTIC_AI_TIMEOUT_SECONDS", "3600")
@@ -342,6 +344,8 @@ class TestSettings:
 
         assert settings.pydantic_ai.timeout_seconds == 3600.0
         assert settings.ollama.timeout_seconds == 3600
+
+        get_settings.cache_clear()
 
     def test_timeout_mismatch_warns(self, monkeypatch: pytest.MonkeyPatch) -> None:
         """Mismatch should warn since fallback can behave differently."""
@@ -353,7 +357,13 @@ class TestSettings:
             UserWarning,
             match="OLLAMA_TIMEOUT_SECONDS and PYDANTIC_AI_TIMEOUT_SECONDS differ",
         ):
-            _settings = get_settings()
+            settings = get_settings()
+
+        # Verify both values are preserved (no auto-sync on mismatch)
+        assert settings.ollama.timeout_seconds == 600
+        assert settings.pydantic_ai.timeout_seconds == 3600.0
+
+        get_settings.cache_clear()
 
     @pytest.mark.skipif(
         os.environ.get("TESTING") == "1",
