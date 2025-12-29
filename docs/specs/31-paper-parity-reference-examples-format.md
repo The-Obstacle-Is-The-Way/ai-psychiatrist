@@ -203,8 +203,9 @@ class TestReferenceBundle:
 
 ## Verification
 
-1. `uv run pytest tests/unit/services/test_embedding.py -q`
-2. (Optional paper-parity ablation) `uv run python scripts/reproduce_results.py --split paper-test`
+1. Fast unit check (skip global coverage gate): `uv run pytest tests/unit/services/test_embedding.py -q --no-cov`
+2. Full suite (enforces coverage): `make test`
+3. (Optional paper-parity ablation) `uv run python scripts/reproduce_results.py --split paper-test`
 
 ## Design Notes (SOLID / DRY / GoF)
 

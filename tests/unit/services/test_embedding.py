@@ -14,6 +14,7 @@ from ai_psychiatrist.config import DataSettings, EmbeddingSettings
 from ai_psychiatrist.domain.enums import PHQ8Item
 from ai_psychiatrist.domain.exceptions import EmbeddingDimensionMismatchError
 from ai_psychiatrist.domain.value_objects import SimilarityMatch, TranscriptChunk
+from ai_psychiatrist.services import embedding as embedding_service_module
 from ai_psychiatrist.services.embedding import EmbeddingService, ReferenceBundle
 from ai_psychiatrist.services.reference_store import PHQ8_COLUMN_MAP, ReferenceStore
 from tests.fixtures.mock_llm import MockLLMClient
@@ -50,20 +51,16 @@ def _create_npz_embeddings(
 
 
 class TestReferenceBundle:
-    """Tests for ReferenceBundle."""
+    """Tests for ReferenceBundle (paper-parity formatting)."""
 
     def test_format_empty_bundle(self) -> None:
-        """Should format empty bundle with 'no evidence' for all items."""
         bundle = ReferenceBundle(item_references={})
-        formatted = bundle.format_for_prompt()
+        assert (
+            bundle.format_for_prompt()
+            == "<Reference Examples>\nNo valid evidence found\n<Reference Examples>"
+        )
 
-        # Should have sections for all 8 PHQ-8 items
-        for item in PHQ8Item.all_items():
-            assert f"[{item.value}]" in formatted
-            assert "No valid evidence found" in formatted
-
-    def test_format_with_matches(self) -> None:
-        """Should format bundle with matches correctly."""
+    def test_format_with_single_match(self) -> None:
         match = SimilarityMatch(
             chunk=TranscriptChunk(text="I can't enjoy anything anymore", participant_id=123),
             similarity=0.95,
@@ -73,47 +70,48 @@ class TestReferenceBundle:
         bundle = ReferenceBundle(item_references={PHQ8Item.NO_INTEREST: [match]})
         formatted = bundle.format_for_prompt()
 
-        assert "[NoInterest]" in formatted
-        assert "(Score: 2)" in formatted
-        assert "I can't enjoy anything anymore" in formatted
-        assert "<Reference Examples>" in formatted
-        assert "</Reference Examples>" in formatted
+        assert formatted.startswith("<Reference Examples>\n\n")
+        assert formatted.endswith("\n\n<Reference Examples>")
+        assert "(PHQ8_NoInterest Score: 2)\nI can't enjoy anything anymore" in formatted
+        assert "[NoInterest]" not in formatted
+        assert "</Reference Examples>" not in formatted
+        assert "No valid evidence found" not in formatted
 
-    def test_format_with_none_score(self) -> None:
-        """Should handle None reference score."""
+    def test_format_skips_none_score(self) -> None:
         match = SimilarityMatch(
             chunk=TranscriptChunk(text="Some text", participant_id=123),
             similarity=0.8,
             reference_score=None,
         )
-
         bundle = ReferenceBundle(item_references={PHQ8Item.SLEEP: [match]})
+        assert (
+            bundle.format_for_prompt()
+            == "<Reference Examples>\nNo valid evidence found\n<Reference Examples>"
+        )
+
+    def test_format_multiple_items_preserves_order(self) -> None:
+        # Order must follow PHQ8Item.all_items(): NoInterest, Depressed, Sleep, Tired, ...
+        sleep_match = SimilarityMatch(
+            chunk=TranscriptChunk(text="sleep ref", participant_id=100),
+            similarity=0.9,
+            reference_score=3,
+        )
+        tired_match = SimilarityMatch(
+            chunk=TranscriptChunk(text="tired ref", participant_id=101),
+            similarity=0.85,
+            reference_score=1,
+        )
+        bundle = ReferenceBundle(
+            item_references={
+                PHQ8Item.TIRED: [tired_match],
+                PHQ8Item.SLEEP: [sleep_match],
+            }
+        )
         formatted = bundle.format_for_prompt()
 
-        assert "(Score: N/A)" in formatted
-
-    def test_format_multiple_matches(self) -> None:
-        """Should format multiple matches for same item."""
-        matches = [
-            SimilarityMatch(
-                chunk=TranscriptChunk(text="First reference", participant_id=100),
-                similarity=0.9,
-                reference_score=3,
-            ),
-            SimilarityMatch(
-                chunk=TranscriptChunk(text="Second reference", participant_id=101),
-                similarity=0.85,
-                reference_score=2,
-            ),
-        ]
-
-        bundle = ReferenceBundle(item_references={PHQ8Item.TIRED: matches})
-        formatted = bundle.format_for_prompt()
-
-        assert "First reference" in formatted
-        assert "Second reference" in formatted
-        assert "(Score: 3)" in formatted
-        assert "(Score: 2)" in formatted
+        sleep_idx = formatted.index("(PHQ8_Sleep Score: 3)\nsleep ref")
+        tired_idx = formatted.index("(PHQ8_Tired Score: 1)\ntired ref")
+        assert sleep_idx < tired_idx
 
 
 class TestEmbeddingService:
@@ -341,6 +339,66 @@ class TestEmbeddingService:
         bundle = await service.build_reference_bundle(evidence)
 
         assert len(bundle.item_references.get(PHQ8Item.NO_INTEREST, [])) == 0
+
+    @pytest.mark.asyncio
+    async def test_build_reference_bundle_logs_audit_when_enabled(
+        self,
+        mock_llm_client: MagicMock,
+        mock_reference_store: MagicMock,
+        monkeypatch: pytest.MonkeyPatch,
+    ) -> None:
+        """Should log retrieved references when audit is enabled."""
+        settings = EmbeddingSettings(
+            dimension=256,
+            top_k_references=2,
+            min_evidence_chars=1,
+            enable_retrieval_audit=True,
+        )
+
+        service = EmbeddingService(mock_llm_client, mock_reference_store, settings)
+
+        # Force deterministic matches without depending on sklearn cosine math.
+        sleep_item = PHQ8Item.SLEEP
+        matches = [
+            SimilarityMatch(
+                chunk=TranscriptChunk(text="aaa " * 100, participant_id=111),
+                similarity=0.9,
+                reference_score=3,
+            ),
+            SimilarityMatch(
+                chunk=TranscriptChunk(text="bbb " * 100, participant_id=222),
+                similarity=0.8,
+                reference_score=1,
+            ),
+        ]
+        monkeypatch.setattr(service, "_compute_similarities", MagicMock(return_value=matches))
+
+        # Patch module logger
+        logger_mock = MagicMock()
+        monkeypatch.setattr(embedding_service_module, "logger", logger_mock)
+
+        bundle = await service.build_reference_bundle({sleep_item: ["evidence"]})
+
+        assert sleep_item in bundle.item_references
+
+        # Two audit log calls for two matches
+        retrieved = [
+            call
+            for call in logger_mock.info.call_args_list
+            if call.args and call.args[0] == "retrieved_reference"
+        ]
+        assert len(retrieved) == 2
+        logger_mock.info.assert_any_call(
+            "retrieved_reference",
+            item="Sleep",
+            evidence_key="PHQ8_Sleep",
+            rank=1,
+            similarity=0.9,
+            participant_id=111,
+            reference_score=3,
+            chunk_preview=("aaa " * 100)[:160],
+            chunk_chars=len("aaa " * 100),
+        )
 
 
 class TestReferenceStore:

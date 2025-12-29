@@ -38,36 +38,30 @@ class ReferenceBundle:
     item_references: dict[PHQ8Item, list[SimilarityMatch]]
 
     def format_for_prompt(self) -> str:
-        """Format references as prompt text.
+        """Format references as prompt text (paper-parity).
 
-        Returns:
-            Formatted reference string for LLM prompt.
+        Paper notebook behavior (cell 49f51ff5):
+        - Single unified <Reference Examples> block.
+        - Each reference entry is labeled like: (PHQ8_Sleep Score: 2)
+        - Items with no matches are omitted (no empty per-item blocks).
+        - Uses the same literal tag to open and close: <Reference Examples>
         """
-        blocks: list[str] = []
+        entries: list[str] = []
+
         for item in PHQ8Item.all_items():
-            matches = self.item_references.get(item, [])
-            if not matches:
-                block = (
-                    f"[{item.value}]\n"
-                    "<Reference Examples>\n"
-                    "No valid evidence found\n"
-                    "</Reference Examples>"
+            evidence_key = f"PHQ8_{item.value}"
+            for match in self.item_references.get(item, []):
+                # Notebook behavior: only include references with available ground truth.
+                if match.reference_score is None:
+                    continue
+                entries.append(
+                    f"({evidence_key} Score: {match.reference_score})\n{match.chunk.text}"
                 )
-            else:
-                lines: list[str] = []
-                for match in matches:
-                    score_text = (
-                        f"(Score: {match.reference_score})"
-                        if match.reference_score is not None
-                        else "(Score: N/A)"
-                    )
-                    lines.append(f"{score_text}\n{match.chunk.text}")
-                block = (
-                    f"[{item.value}]\n"
-                    "<Reference Examples>\n\n" + "\n\n".join(lines) + "\n\n</Reference Examples>"
-                )
-            blocks.append(block)
-        return "\n\n".join(blocks)
+
+        if entries:
+            return "<Reference Examples>\n\n" + "\n\n".join(entries) + "\n\n<Reference Examples>"
+
+        return "<Reference Examples>\nNo valid evidence found\n<Reference Examples>"
 
 
 class EmbeddingService:
@@ -98,6 +92,7 @@ class EmbeddingService:
         self._top_k = settings.top_k_references
         self._min_chars = settings.min_evidence_chars
         self._model_settings = model_settings
+        self._enable_retrieval_audit = settings.enable_retrieval_audit
 
     async def embed_text(self, text: str) -> tuple[float, ...]:
         """Generate embedding for text.
@@ -283,6 +278,21 @@ class EmbeddingService:
             matches = self._compute_similarities(query_emb, item=item)
             matches.sort(key=lambda x: x.similarity, reverse=True)
             top_matches = matches[: self._top_k]
+
+            if self._enable_retrieval_audit:
+                evidence_key = f"PHQ8_{item.value}"
+                for rank, match in enumerate(top_matches, start=1):
+                    logger.info(
+                        "retrieved_reference",
+                        item=item.value,
+                        evidence_key=evidence_key,
+                        rank=rank,
+                        similarity=match.similarity,
+                        participant_id=match.chunk.participant_id,
+                        reference_score=match.reference_score,
+                        chunk_preview=match.chunk.text[:160],
+                        chunk_chars=len(match.chunk.text),
+                    )
 
             item_references[item] = top_matches
 

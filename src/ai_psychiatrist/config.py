@@ -261,6 +261,10 @@ class EmbeddingSettings(BaseSettings):
         default="huggingface_qwen3_8b_paper_train",
         description="Reference embeddings basename (no extension)",
     )
+    enable_retrieval_audit: bool = Field(
+        default=False,
+        description="Enable audit logging for retrieved references (Spec 32)",
+    )
 
 
 class FeedbackLoopSettings(BaseSettings):
