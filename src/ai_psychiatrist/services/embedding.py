@@ -93,6 +93,9 @@ class EmbeddingService:
         self._min_chars = settings.min_evidence_chars
         self._model_settings = model_settings
         self._enable_retrieval_audit = settings.enable_retrieval_audit
+        # Retrieval quality guardrails (Spec 33, post-hoc improvements not in paper)
+        # - min_reference_similarity: Floor for filtering low-similarity (0.0 = disabled)
+        # - max_reference_chars_per_item: Character budget per item (0 = unlimited)
         self._min_reference_similarity = settings.min_reference_similarity
         self._max_reference_chars_per_item = settings.max_reference_chars_per_item
 
