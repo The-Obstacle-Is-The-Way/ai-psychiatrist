@@ -2,7 +2,6 @@
 
 from __future__ import annotations
 
-import asyncio
 from typing import TYPE_CHECKING
 from unittest.mock import AsyncMock, patch
 
@@ -313,7 +312,8 @@ class TestMetaReviewAgent:
                 ollama_base_url=None,
             )
 
-    def test_review_without_agent_raises(self) -> None:
+    @pytest.mark.asyncio
+    async def test_review_without_agent_raises(self) -> None:
         """Should raise ValueError when agent not initialized."""
         agent = MetaReviewAgent(
             llm_client=MockLLMClient(),
@@ -343,6 +343,4 @@ class TestMetaReviewAgent:
         )
 
         with pytest.raises(ValueError, match="Pydantic AI review agent not initialized"):
-            asyncio.get_event_loop().run_until_complete(
-                agent.review(transcript, qualitative, quantitative)
-            )
+            await agent.review(transcript, qualitative, quantitative)

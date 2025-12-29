@@ -8,7 +8,6 @@ Tests verify the agent correctly:
 
 from __future__ import annotations
 
-import asyncio
 from typing import TYPE_CHECKING
 from unittest.mock import AsyncMock, patch
 
@@ -279,7 +278,8 @@ class TestQualitativeAssessmentAgent:
                 ollama_base_url=None,
             )
 
-    def test_assess_without_agent_raises(self) -> None:
+    @pytest.mark.asyncio
+    async def test_assess_without_agent_raises(self) -> None:
         """Should raise ValueError when agent not initialized."""
         # Create agent with Pydantic AI disabled
         agent = QualitativeAssessmentAgent(
@@ -289,7 +289,7 @@ class TestQualitativeAssessmentAgent:
         transcript = Transcript(participant_id=1, text="Test")
 
         with pytest.raises(ValueError, match="Pydantic AI agent not initialized"):
-            asyncio.get_event_loop().run_until_complete(agent.assess(transcript))
+            await agent.assess(transcript)
 
 
 class TestQualitativePrompts:

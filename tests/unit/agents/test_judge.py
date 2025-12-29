@@ -2,7 +2,6 @@
 
 from __future__ import annotations
 
-import asyncio
 from typing import TYPE_CHECKING, Any
 from unittest.mock import AsyncMock, patch
 
@@ -292,7 +291,8 @@ class TestJudgeAgent:
                 ollama_base_url=None,
             )
 
-    def test_evaluate_without_agent_raises(self) -> None:
+    @pytest.mark.asyncio
+    async def test_evaluate_without_agent_raises(self) -> None:
         """Should raise ValueError when agent not initialized."""
         agent = JudgeAgent(
             llm_client=MockLLMClient(),
@@ -309,4 +309,4 @@ class TestJudgeAgent:
         transcript = Transcript(participant_id=1, text="Test")
 
         with pytest.raises(ValueError, match="Pydantic AI metric agent not initialized"):
-            asyncio.get_event_loop().run_until_complete(agent.evaluate(assessment, transcript))
+            await agent.evaluate(assessment, transcript)
