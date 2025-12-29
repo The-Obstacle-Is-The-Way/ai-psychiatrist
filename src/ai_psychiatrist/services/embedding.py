@@ -40,11 +40,11 @@ class ReferenceBundle:
     def format_for_prompt(self) -> str:
         """Format references as prompt text (paper-parity).
 
-        Paper notebook behavior (cell 49f51ff5):
+        Paper notebook behavior (cell 49f51ff5) + Spec 33 XML fix:
         - Single unified <Reference Examples> block.
         - Each reference entry is labeled like: (PHQ8_Sleep Score: 2)
         - Items with no matches are omitted (no empty per-item blocks).
-        - Uses the same literal tag to open and close: <Reference Examples>
+        - Proper XML closing tag: </Reference Examples> (Spec 33 fix).
         """
         entries: list[str] = []
 
