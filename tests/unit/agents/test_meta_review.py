@@ -2,14 +2,19 @@
 
 from __future__ import annotations
 
+import asyncio
+from typing import TYPE_CHECKING
 from unittest.mock import AsyncMock, patch
 
 import pytest
 from pydantic_ai import Agent
 
+if TYPE_CHECKING:
+    from collections.abc import Generator
+
 from ai_psychiatrist.agents.meta_review import MetaReviewAgent
 from ai_psychiatrist.agents.output_models import MetaReviewOutput
-from ai_psychiatrist.config import ModelSettings, PydanticAISettings
+from ai_psychiatrist.config import PydanticAISettings
 from ai_psychiatrist.domain.entities import (
     PHQ8Assessment,
     QualitativeAssessment,
@@ -63,27 +68,43 @@ class TestMetaReviewAgent:
         )
 
     @pytest.fixture
-    def mock_severity_response(self) -> str:
-        """Mock response with severity and explanation."""
-        return """Based on the assessments provided, I have analyzed the participant's condition.
+    def mock_meta_review_output(self) -> MetaReviewOutput:
+        """Create valid MetaReviewOutput for mocking."""
+        return MetaReviewOutput(
+            severity=2,
+            explanation="The participant shows moderate depressive symptoms.",
+        )
 
-<severity>2</severity>
-<explanation>The participant shows moderate depressive symptoms. The PHQ-8 scores indicate \
-clinically significant depression with symptoms present more than half the days. The \
-qualitative assessment reveals social stressors and biological predisposition.</explanation>
-"""
+    @pytest.fixture
+    def mock_agent_factory(
+        self, mock_meta_review_output: MetaReviewOutput
+    ) -> Generator[AsyncMock, None, None]:
+        """Patch create_meta_review_agent to return a mock agent."""
+        mock_agent = AsyncMock(spec_set=Agent)
+        mock_agent.run.return_value = AsyncMock(output=mock_meta_review_output)
+
+        patcher = patch(
+            "ai_psychiatrist.agents.pydantic_agents.create_meta_review_agent",
+            return_value=mock_agent,
+        )
+        mock = patcher.start()
+        yield mock
+        patcher.stop()
 
     @pytest.mark.asyncio
+    @pytest.mark.usefixtures("mock_agent_factory")
     async def test_review_returns_meta_review(
         self,
         sample_transcript: Transcript,
         sample_qualitative: QualitativeAssessment,
         sample_quantitative: PHQ8Assessment,
-        mock_severity_response: str,
     ) -> None:
         """Should return MetaReview entity with correct fields."""
-        mock_client = MockLLMClient(chat_responses=[mock_severity_response])
-        agent = MetaReviewAgent(llm_client=mock_client)
+        agent = MetaReviewAgent(
+            llm_client=MockLLMClient(),
+            pydantic_ai_settings=PydanticAISettings(enabled=True),
+            ollama_base_url="http://mock",
+        )
 
         meta_review = await agent.review(
             transcript=sample_transcript,
@@ -106,85 +127,35 @@ qualitative assessment reveals social stressors and biological predisposition.</
     ) -> None:
         """Should parse severity values 0-4 correctly."""
         test_cases = [
-            ("<severity>0</severity>", SeverityLevel.MINIMAL),
-            ("<severity>1</severity>", SeverityLevel.MILD),
-            ("<severity>2</severity>", SeverityLevel.MODERATE),
-            ("<severity>3</severity>", SeverityLevel.MOD_SEVERE),
-            ("<severity>4</severity>", SeverityLevel.SEVERE),
+            (0, SeverityLevel.MINIMAL),
+            (1, SeverityLevel.MILD),
+            (2, SeverityLevel.MODERATE),
+            (3, SeverityLevel.MOD_SEVERE),
+            (4, SeverityLevel.SEVERE),
         ]
 
-        for response, expected_severity in test_cases:
-            mock_client = MockLLMClient(
-                chat_responses=[f"{response}<explanation>Test</explanation>"]
-            )
-            agent = MetaReviewAgent(llm_client=mock_client)
+        for severity_value, expected_severity in test_cases:
+            mock_output = MetaReviewOutput(severity=severity_value, explanation="Test")
+            mock_agent = AsyncMock(spec_set=Agent)
+            mock_agent.run.return_value = AsyncMock(output=mock_output)
 
-            meta_review = await agent.review(
-                transcript=sample_transcript,
-                qualitative=sample_qualitative,
-                quantitative=sample_quantitative,
-            )
+            with patch(
+                "ai_psychiatrist.agents.pydantic_agents.create_meta_review_agent",
+                return_value=mock_agent,
+            ):
+                agent = MetaReviewAgent(
+                    llm_client=MockLLMClient(),
+                    pydantic_ai_settings=PydanticAISettings(enabled=True),
+                    ollama_base_url="http://mock",
+                )
 
-            assert meta_review.severity == expected_severity
+                meta_review = await agent.review(
+                    transcript=sample_transcript,
+                    qualitative=sample_qualitative,
+                    quantitative=sample_quantitative,
+                )
 
-    @pytest.mark.asyncio
-    async def test_review_clamps_out_of_range_severity(
-        self,
-        sample_transcript: Transcript,
-        sample_qualitative: QualitativeAssessment,
-        sample_quantitative: PHQ8Assessment,
-    ) -> None:
-        """Should clamp severity values outside 0-4 range."""
-        # Test value above 4
-        mock_client = MockLLMClient(
-            chat_responses=["<severity>5</severity><explanation>Test</explanation>"]
-        )
-        agent = MetaReviewAgent(llm_client=mock_client)
-
-        meta_review = await agent.review(
-            transcript=sample_transcript,
-            qualitative=sample_qualitative,
-            quantitative=sample_quantitative,
-        )
-
-        assert meta_review.severity == SeverityLevel.SEVERE  # Clamped to 4
-
-        # Test negative value
-        mock_client = MockLLMClient(
-            chat_responses=["<severity>-1</severity><explanation>Test</explanation>"]
-        )
-        agent = MetaReviewAgent(llm_client=mock_client)
-
-        meta_review = await agent.review(
-            transcript=sample_transcript,
-            qualitative=sample_qualitative,
-            quantitative=sample_quantitative,
-        )
-
-        assert meta_review.severity == SeverityLevel.MINIMAL  # Clamped to 0
-
-    @pytest.mark.asyncio
-    async def test_review_falls_back_on_parse_failure(
-        self,
-        sample_transcript: Transcript,
-        sample_qualitative: QualitativeAssessment,
-        sample_quantitative: PHQ8Assessment,
-    ) -> None:
-        """Should fall back to quantitative severity on parse failure."""
-        # Response without proper severity tag
-        mock_client = MockLLMClient(
-            chat_responses=["The patient seems fine.<explanation>Test</explanation>"]
-        )
-        agent = MetaReviewAgent(llm_client=mock_client)
-
-        meta_review = await agent.review(
-            transcript=sample_transcript,
-            qualitative=sample_qualitative,
-            quantitative=sample_quantitative,
-        )
-
-        # Should use quantitative severity (8 = MILD)
-        assert meta_review.severity == sample_quantitative.severity
+                assert meta_review.severity == expected_severity
 
     @pytest.mark.asyncio
     async def test_review_extracts_explanation(
@@ -193,120 +164,29 @@ qualitative assessment reveals social stressors and biological predisposition.</
         sample_qualitative: QualitativeAssessment,
         sample_quantitative: PHQ8Assessment,
     ) -> None:
-        """Should extract explanation from response."""
+        """Should extract explanation from Pydantic AI output."""
         explanation_text = "This is the detailed clinical explanation."
-        mock_client = MockLLMClient(
-            chat_responses=[f"<severity>2</severity><explanation>{explanation_text}</explanation>"]
-        )
-        agent = MetaReviewAgent(llm_client=mock_client)
+        mock_output = MetaReviewOutput(severity=2, explanation=explanation_text)
+        mock_agent = AsyncMock(spec_set=Agent)
+        mock_agent.run.return_value = AsyncMock(output=mock_output)
 
-        meta_review = await agent.review(
-            transcript=sample_transcript,
-            qualitative=sample_qualitative,
-            quantitative=sample_quantitative,
-        )
+        with patch(
+            "ai_psychiatrist.agents.pydantic_agents.create_meta_review_agent",
+            return_value=mock_agent,
+        ):
+            agent = MetaReviewAgent(
+                llm_client=MockLLMClient(),
+                pydantic_ai_settings=PydanticAISettings(enabled=True),
+                ollama_base_url="http://mock",
+            )
 
-        assert meta_review.explanation == explanation_text
+            meta_review = await agent.review(
+                transcript=sample_transcript,
+                qualitative=sample_qualitative,
+                quantitative=sample_quantitative,
+            )
 
-    @pytest.mark.asyncio
-    async def test_review_uses_raw_response_if_no_explanation_tag(
-        self,
-        sample_transcript: Transcript,
-        sample_qualitative: QualitativeAssessment,
-        sample_quantitative: PHQ8Assessment,
-    ) -> None:
-        """Should use raw response if explanation tag is missing."""
-        raw_response = "<severity>1</severity>The patient has mild symptoms."
-        mock_client = MockLLMClient(chat_responses=[raw_response])
-        agent = MetaReviewAgent(llm_client=mock_client)
-
-        meta_review = await agent.review(
-            transcript=sample_transcript,
-            qualitative=sample_qualitative,
-            quantitative=sample_quantitative,
-        )
-
-        assert meta_review.explanation == raw_response.strip()
-
-    @pytest.mark.asyncio
-    async def test_review_formats_quantitative_scores(
-        self,
-        sample_transcript: Transcript,
-        sample_qualitative: QualitativeAssessment,
-        sample_quantitative: PHQ8Assessment,
-    ) -> None:
-        """Should format quantitative scores in prompt."""
-        mock_client = MockLLMClient(
-            chat_responses=["<severity>1</severity><explanation>Test</explanation>"]
-        )
-        agent = MetaReviewAgent(llm_client=mock_client)
-
-        await agent.review(
-            transcript=sample_transcript,
-            qualitative=sample_qualitative,
-            quantitative=sample_quantitative,
-        )
-
-        # Verify prompt contains formatted scores
-        assert mock_client.chat_call_count == 1
-        request = mock_client.chat_requests[0]
-        user_message = next(m for m in request.messages if m.role == "user")
-
-        # Should contain score tags
-        assert "<nointerest_score>" in user_message.content.lower()
-        assert "</nointerest_score>" in user_message.content.lower()
-
-    @pytest.mark.asyncio
-    async def test_review_includes_transcript_in_prompt(
-        self,
-        sample_transcript: Transcript,
-        sample_qualitative: QualitativeAssessment,
-        sample_quantitative: PHQ8Assessment,
-    ) -> None:
-        """Should include transcript in prompt."""
-        mock_client = MockLLMClient(
-            chat_responses=["<severity>1</severity><explanation>Test</explanation>"]
-        )
-        agent = MetaReviewAgent(llm_client=mock_client)
-
-        await agent.review(
-            transcript=sample_transcript,
-            qualitative=sample_qualitative,
-            quantitative=sample_quantitative,
-        )
-
-        request = mock_client.chat_requests[0]
-        user_message = next(m for m in request.messages if m.role == "user")
-
-        assert sample_transcript.text in user_message.content
-
-    @pytest.mark.asyncio
-    async def test_review_uses_meta_review_model_settings(
-        self,
-        sample_transcript: Transcript,
-        sample_qualitative: QualitativeAssessment,
-        sample_quantitative: PHQ8Assessment,
-    ) -> None:
-        """Should use ModelSettings meta-review parameters in LLM call."""
-        model_settings = ModelSettings(
-            meta_review_model="meta-review-model",
-            temperature=0.7,
-        )
-        mock_client = MockLLMClient(
-            chat_responses=["<severity>1</severity><explanation>Test</explanation>"]
-        )
-        agent = MetaReviewAgent(llm_client=mock_client, model_settings=model_settings)
-
-        await agent.review(
-            transcript=sample_transcript,
-            qualitative=sample_qualitative,
-            quantitative=sample_quantitative,
-        )
-
-        assert mock_client.chat_call_count == 1
-        request = mock_client.chat_requests[0]
-        assert request.model == "meta-review-model"
-        assert request.temperature == 0.7
+            assert meta_review.explanation == explanation_text
 
     @pytest.mark.asyncio
     async def test_review_is_mdd_property(
@@ -317,32 +197,49 @@ qualitative assessment reveals social stressors and biological predisposition.</
     ) -> None:
         """is_mdd should reflect severity >= MODERATE."""
         # Test MDD case (severity >= 2)
-        mock_client = MockLLMClient(
-            chat_responses=["<severity>2</severity><explanation>Test</explanation>"]
-        )
-        agent = MetaReviewAgent(llm_client=mock_client)
+        mock_output_mdd = MetaReviewOutput(severity=2, explanation="Test")
+        mock_agent = AsyncMock(spec_set=Agent)
+        mock_agent.run.return_value = AsyncMock(output=mock_output_mdd)
 
-        meta_review = await agent.review(
-            transcript=sample_transcript,
-            qualitative=sample_qualitative,
-            quantitative=sample_quantitative,
-        )
+        with patch(
+            "ai_psychiatrist.agents.pydantic_agents.create_meta_review_agent",
+            return_value=mock_agent,
+        ):
+            agent = MetaReviewAgent(
+                llm_client=MockLLMClient(),
+                pydantic_ai_settings=PydanticAISettings(enabled=True),
+                ollama_base_url="http://mock",
+            )
 
-        assert meta_review.is_mdd is True
+            meta_review = await agent.review(
+                transcript=sample_transcript,
+                qualitative=sample_qualitative,
+                quantitative=sample_quantitative,
+            )
+
+            assert meta_review.is_mdd is True
 
         # Test non-MDD case (severity < 2)
-        mock_client = MockLLMClient(
-            chat_responses=["<severity>1</severity><explanation>Test</explanation>"]
-        )
-        agent = MetaReviewAgent(llm_client=mock_client)
+        mock_output_no_mdd = MetaReviewOutput(severity=1, explanation="Test")
+        mock_agent.run.return_value = AsyncMock(output=mock_output_no_mdd)
 
-        meta_review = await agent.review(
-            transcript=sample_transcript,
-            qualitative=sample_qualitative,
-            quantitative=sample_quantitative,
-        )
+        with patch(
+            "ai_psychiatrist.agents.pydantic_agents.create_meta_review_agent",
+            return_value=mock_agent,
+        ):
+            agent = MetaReviewAgent(
+                llm_client=MockLLMClient(),
+                pydantic_ai_settings=PydanticAISettings(enabled=True),
+                ollama_base_url="http://mock",
+            )
 
-        assert meta_review.is_mdd is False
+            meta_review = await agent.review(
+                transcript=sample_transcript,
+                qualitative=sample_qualitative,
+                quantitative=sample_quantitative,
+            )
+
+            assert meta_review.is_mdd is False
 
     @pytest.mark.asyncio
     async def test_pydantic_ai_path_success(
@@ -379,3 +276,73 @@ qualitative assessment reveals social stressors and biological predisposition.</
         assert mock_agent.run.call_args.kwargs["model_settings"]["timeout"] == 123.0
         assert result.severity == SeverityLevel.MOD_SEVERE
         assert result.explanation == "Pydantic AI Explanation"
+
+    @pytest.mark.asyncio
+    async def test_pydantic_ai_failure_raises(
+        self,
+        sample_transcript: Transcript,
+        sample_qualitative: QualitativeAssessment,
+        sample_quantitative: PHQ8Assessment,
+    ) -> None:
+        """Should raise ValueError when Pydantic AI call fails."""
+        mock_agent = AsyncMock(spec_set=Agent)
+        mock_agent.run.side_effect = RuntimeError("LLM timeout")
+
+        with patch(
+            "ai_psychiatrist.agents.pydantic_agents.create_meta_review_agent",
+            return_value=mock_agent,
+        ):
+            agent = MetaReviewAgent(
+                llm_client=MockLLMClient(),
+                pydantic_ai_settings=PydanticAISettings(enabled=True),
+                ollama_base_url="http://localhost:11434",
+            )
+            with pytest.raises(ValueError, match="Pydantic AI meta-review failed"):
+                await agent.review(
+                    transcript=sample_transcript,
+                    qualitative=sample_qualitative,
+                    quantitative=sample_quantitative,
+                )
+
+    def test_init_without_ollama_url_raises(self) -> None:
+        """Should raise ValueError when Pydantic AI enabled but no ollama_base_url."""
+        with pytest.raises(ValueError, match="ollama_base_url"):
+            MetaReviewAgent(
+                llm_client=MockLLMClient(),
+                pydantic_ai_settings=PydanticAISettings(enabled=True),
+                ollama_base_url=None,
+            )
+
+    def test_review_without_agent_raises(self) -> None:
+        """Should raise ValueError when agent not initialized."""
+        agent = MetaReviewAgent(
+            llm_client=MockLLMClient(),
+            pydantic_ai_settings=PydanticAISettings(enabled=False),
+        )
+        transcript = Transcript(participant_id=1, text="Test")
+        qualitative = QualitativeAssessment(
+            overall="Test",
+            phq8_symptoms="Test",
+            social_factors="Test",
+            biological_factors="Test",
+            risk_factors="Test",
+            participant_id=1,
+        )
+        items = {}
+        for item in PHQ8Item.all_items():
+            items[item] = ItemAssessment(
+                item=item,
+                evidence="Test",
+                reason="Test",
+                score=0,
+            )
+        quantitative = PHQ8Assessment(
+            items=items,
+            mode=AssessmentMode.ZERO_SHOT,
+            participant_id=1,
+        )
+
+        with pytest.raises(ValueError, match="Pydantic AI review agent not initialized"):
+            asyncio.get_event_loop().run_until_complete(
+                agent.review(transcript, qualitative, quantitative)
+            )

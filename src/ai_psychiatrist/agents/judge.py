@@ -13,9 +13,7 @@ from ai_psychiatrist.domain.entities import (
     Transcript,
 )
 from ai_psychiatrist.domain.enums import EvaluationMetric
-from ai_psychiatrist.domain.exceptions import LLMError
 from ai_psychiatrist.domain.value_objects import EvaluationScore
-from ai_psychiatrist.infrastructure.llm.responses import extract_score_from_text
 from ai_psychiatrist.infrastructure.logging import get_logger
 
 if TYPE_CHECKING:
@@ -56,20 +54,20 @@ class JudgeAgent:
 
         if self._pydantic_ai.enabled:
             if not self._ollama_base_url:
-                logger.warning(
-                    "Pydantic AI enabled but no ollama_base_url provided; falling back to legacy",
+                raise ValueError(
+                    "Pydantic AI enabled but no ollama_base_url provided. "
+                    "Legacy fallback is disabled."
                 )
-            else:
-                from ai_psychiatrist.agents.pydantic_agents import (  # noqa: PLC0415
-                    create_judge_metric_agent,
-                )
+            from ai_psychiatrist.agents.pydantic_agents import (  # noqa: PLC0415
+                create_judge_metric_agent,
+            )
 
-                self._metric_agent = create_judge_metric_agent(
-                    model_name=get_model_name(model_settings, "judge"),
-                    base_url=self._ollama_base_url,
-                    retries=self._pydantic_ai.retries,
-                    system_prompt="",
-                )
+            self._metric_agent = create_judge_metric_agent(
+                model_name=get_model_name(model_settings, "judge"),
+                base_url=self._ollama_base_url,
+                retries=self._pydantic_ai.retries,
+                system_prompt="",
+            )
 
     async def evaluate(
         self,
@@ -141,75 +139,39 @@ class JudgeAgent:
         Returns:
             EvaluationScore for the metric.
         """
+        if self._metric_agent is None:
+            raise ValueError("Pydantic AI metric agent not initialized")
+
         prompt = make_evaluation_prompt(metric, transcript, assessment)
 
         # Use model settings if provided (GAP-001: temp=0.0 for clinical reproducibility)
-        model = get_model_name(self._model_settings, "judge")
         temperature = self._model_settings.temperature if self._model_settings else 0.0
 
-        if self._metric_agent is not None:
-            try:
-                timeout = self._pydantic_ai.timeout_seconds
-                result = await self._metric_agent.run(
-                    prompt,
-                    model_settings={
-                        "temperature": temperature,
-                        **({"timeout": timeout} if timeout is not None else {}),
-                    },
-                )
-                output = result.output
-                return EvaluationScore(
-                    metric=metric,
-                    score=output.score,
-                    explanation=output.explanation.strip(),
-                )
-            except asyncio.CancelledError:
-                raise
-            except Exception as e:
-                # Intentionally broad: Fallback for any Pydantic AI error
-                # (see docs/specs/21-broad-exception-handling.md)
-                logger.error(
-                    "Pydantic AI call failed during metric evaluation; falling back to legacy",
-                    metric=metric.value,
-                    error=str(e),
-                )
-
         try:
-            response = await self._llm_client.simple_chat(
-                user_prompt=prompt,
-                model=model,
-                temperature=temperature,
+            timeout = self._pydantic_ai.timeout_seconds
+            result = await self._metric_agent.run(
+                prompt,
+                model_settings={
+                    "temperature": temperature,
+                    **({"timeout": timeout} if timeout is not None else {}),
+                },
             )
-        except LLMError as e:
+            output = result.output
+            return EvaluationScore(
+                metric=metric,
+                score=output.score,
+                explanation=output.explanation.strip(),
+            )
+        except asyncio.CancelledError:
+            raise
+        except Exception as e:
+            # Fail fast - no legacy fallback
             logger.error(
-                "LLM call failed during metric evaluation",
+                "Pydantic AI call failed during metric evaluation",
                 metric=metric.value,
                 error=str(e),
             )
-            # Return default score on LLM failure (triggers refinement as fail-safe)
-            return EvaluationScore(
-                metric=metric,
-                score=3,
-                explanation="LLM evaluation failed; default score used.",
-            )
-
-        # Extract score from response
-        score = extract_score_from_text(response)
-
-        # Default to 3 if extraction fails
-        if score is None:
-            logger.warning(
-                "Could not extract score, defaulting to 3",
-                metric=metric.value,
-                response_preview=response[:200],
-            )
-            score = 3
-
-        return EvaluationScore(
-            metric=metric,
-            score=score,
-            explanation=response.strip(),
-        )
+            raise ValueError(f"Pydantic AI evaluation failed for {metric.value}: {e}") from e
 
     def get_feedback_for_low_scores(
         self,

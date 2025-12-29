@@ -2,42 +2,52 @@
 
 from __future__ import annotations
 
-from typing import TYPE_CHECKING
+import asyncio
+from typing import TYPE_CHECKING, Any
 from unittest.mock import AsyncMock, patch
 
 import pytest
 from pydantic_ai import Agent
+
+if TYPE_CHECKING:
+    from collections.abc import Generator
 
 from ai_psychiatrist.agents.judge import JudgeAgent
 from ai_psychiatrist.agents.output_models import JudgeMetricOutput
 from ai_psychiatrist.config import PydanticAISettings
 from ai_psychiatrist.domain.entities import QualitativeAssessment, Transcript
 from ai_psychiatrist.domain.enums import EvaluationMetric
-from ai_psychiatrist.domain.exceptions import LLMError
 from tests.fixtures.mock_llm import MockLLMClient
-
-if TYPE_CHECKING:
-    from ai_psychiatrist.infrastructure.llm.protocols import ChatRequest
 
 
 class TestJudgeAgent:
     """Tests for JudgeAgent."""
 
     @pytest.fixture
-    def mock_high_score_response(self) -> str:
-        """Response indicating high score."""
-        return """
-Explanation: The assessment is highly specific.
-Score: 5
-"""
+    def mock_judge_output_high(self) -> JudgeMetricOutput:
+        """Create high-score output for mocking."""
+        return JudgeMetricOutput(score=5, explanation="The assessment is highly specific.")
 
     @pytest.fixture
-    def mock_low_score_response(self) -> str:
-        """Response indicating low score."""
-        return """
-Explanation: The assessment is too vague.
-Score: 2
-"""
+    def mock_judge_output_low(self) -> JudgeMetricOutput:
+        """Create low-score output for mocking."""
+        return JudgeMetricOutput(score=2, explanation="The assessment is too vague.")
+
+    @pytest.fixture
+    def mock_agent_factory(
+        self, mock_judge_output_high: JudgeMetricOutput
+    ) -> Generator[AsyncMock, None, None]:
+        """Patch create_judge_metric_agent to return a mock agent."""
+        mock_agent = AsyncMock(spec_set=Agent)
+        mock_agent.run.return_value = AsyncMock(output=mock_judge_output_high)
+
+        patcher = patch(
+            "ai_psychiatrist.agents.pydantic_agents.create_judge_metric_agent",
+            return_value=mock_agent,
+        )
+        mock = patcher.start()
+        yield mock
+        patcher.stop()
 
     @pytest.fixture
     def sample_assessment(self) -> QualitativeAssessment:
@@ -60,16 +70,18 @@ Score: 2
         )
 
     @pytest.mark.asyncio
+    @pytest.mark.usefixtures("mock_agent_factory")
     async def test_evaluate_all_metrics(
         self,
-        mock_high_score_response: str,
         sample_assessment: QualitativeAssessment,
         sample_transcript: Transcript,
     ) -> None:
         """Should evaluate all 4 metrics."""
-        # 4 responses for 4 metrics
-        mock_client = MockLLMClient(chat_responses=[mock_high_score_response] * 4)
-        agent = JudgeAgent(llm_client=mock_client)
+        agent = JudgeAgent(
+            llm_client=MockLLMClient(),
+            pydantic_ai_settings=PydanticAISettings(enabled=True),
+            ollama_base_url="http://mock",
+        )
 
         evaluation = await agent.evaluate(sample_assessment, sample_transcript)
 
@@ -85,28 +97,42 @@ Score: 2
         sample_assessment: QualitativeAssessment,
         sample_transcript: Transcript,
     ) -> None:
-        """Should extract correct numeric scores."""
+        """Should extract correct numeric scores from Pydantic AI output."""
+        # Create outputs with different scores for each metric
+        outputs = {
+            EvaluationMetric.COHERENCE: JudgeMetricOutput(score=5, explanation="Good coherence"),
+            EvaluationMetric.COMPLETENESS: JudgeMetricOutput(
+                score=2, explanation="Bad completeness"
+            ),
+            EvaluationMetric.SPECIFICITY: JudgeMetricOutput(
+                score=5, explanation="Good specificity"
+            ),
+            EvaluationMetric.ACCURACY: JudgeMetricOutput(score=2, explanation="Bad accuracy"),
+        }
 
-        # Mix of high and low scores
-        def response_by_metric(request: ChatRequest) -> str:
-            # Check the user prompt (last message) for the metric name
-            last_msg = request.messages[-1].content.lower()
-            if "coherence" in last_msg:
-                return "Explanation: Good\nScore: 5"
-            if "completeness" in last_msg:
-                return "Explanation: Bad\nScore: 2"
-            if "specificity" in last_msg:
-                return "Explanation: Good\nScore: 5"
-            if "accuracy" in last_msg:
-                return "Explanation: Bad\nScore: 2"
-            return "Explanation: Default\nScore: 3"
+        call_count = 0
+        metrics_order = list(EvaluationMetric.all_metrics())
 
-        mock_client = MockLLMClient(chat_function=response_by_metric)
-        agent = JudgeAgent(llm_client=mock_client)
+        async def mock_run(prompt: str, **kwargs: Any) -> AsyncMock:
+            nonlocal call_count
+            metric = metrics_order[call_count]
+            call_count += 1
+            return AsyncMock(output=outputs[metric])
 
-        evaluation = await agent.evaluate(sample_assessment, sample_transcript)
+        mock_agent = AsyncMock(spec_set=Agent)
+        mock_agent.run = mock_run
 
-        # We know exactly which metric got which score
+        with patch(
+            "ai_psychiatrist.agents.pydantic_agents.create_judge_metric_agent",
+            return_value=mock_agent,
+        ):
+            agent = JudgeAgent(
+                llm_client=MockLLMClient(),
+                pydantic_ai_settings=PydanticAISettings(enabled=True),
+                ollama_base_url="http://mock",
+            )
+            evaluation = await agent.evaluate(sample_assessment, sample_transcript)
+
         assert evaluation.scores[EvaluationMetric.COHERENCE].score == 5
         assert evaluation.scores[EvaluationMetric.COMPLETENESS].score == 2
         assert evaluation.scores[EvaluationMetric.SPECIFICITY].score == 5
@@ -122,29 +148,40 @@ Score: 2
         sample_transcript: Transcript,
     ) -> None:
         """Should return feedback only for low scores."""
+        # Create outputs with one low score
+        outputs = {
+            EvaluationMetric.COHERENCE: JudgeMetricOutput(score=5, explanation="Good"),
+            EvaluationMetric.COMPLETENESS: JudgeMetricOutput(score=2, explanation="Bad"),
+            EvaluationMetric.SPECIFICITY: JudgeMetricOutput(score=5, explanation="Good"),
+            EvaluationMetric.ACCURACY: JudgeMetricOutput(score=5, explanation="Good"),
+        }
 
-        # Setup specific low score for one metric
-        def response_by_metric(request: ChatRequest) -> str:
-            last_msg = request.messages[-1].content.lower()
-            if "coherence" in last_msg:
-                return "Explanation: Good\nScore: 5"
-            if "completeness" in last_msg:
-                return "Explanation: Bad\nScore: 2"
-            if "specificity" in last_msg:
-                return "Explanation: Good\nScore: 5"
-            if "accuracy" in last_msg:
-                return "Explanation: Good\nScore: 5"
-            return "Explanation: Default\nScore: 3"
+        call_count = 0
+        metrics_order = list(EvaluationMetric.all_metrics())
 
-        mock_client = MockLLMClient(chat_function=response_by_metric)
-        agent = JudgeAgent(llm_client=mock_client)
+        async def mock_run(prompt: str, **kwargs: Any) -> AsyncMock:
+            nonlocal call_count
+            metric = metrics_order[call_count]
+            call_count += 1
+            return AsyncMock(output=outputs[metric])
 
-        evaluation = await agent.evaluate(sample_assessment, sample_transcript)
+        mock_agent = AsyncMock(spec_set=Agent)
+        mock_agent.run = mock_run
+
+        with patch(
+            "ai_psychiatrist.agents.pydantic_agents.create_judge_metric_agent",
+            return_value=mock_agent,
+        ):
+            agent = JudgeAgent(
+                llm_client=MockLLMClient(),
+                pydantic_ai_settings=PydanticAISettings(enabled=True),
+                ollama_base_url="http://mock",
+            )
+            evaluation = await agent.evaluate(sample_assessment, sample_transcript)
 
         feedback = agent.get_feedback_for_low_scores(evaluation)
 
         assert len(feedback) == 1
-        # The low score one
         low_metric = evaluation.low_scores[0]
         assert low_metric == EvaluationMetric.COMPLETENESS
         assert low_metric.value in feedback
@@ -158,23 +195,35 @@ Score: 2
         sample_transcript: Transcript,
     ) -> None:
         """Should honor custom threshold for low scores."""
+        outputs = {
+            EvaluationMetric.COHERENCE: JudgeMetricOutput(score=4, explanation="OK"),
+            EvaluationMetric.COMPLETENESS: JudgeMetricOutput(score=3, explanation="Low"),
+            EvaluationMetric.SPECIFICITY: JudgeMetricOutput(score=2, explanation="Low"),
+            EvaluationMetric.ACCURACY: JudgeMetricOutput(score=5, explanation="Good"),
+        }
 
-        def response_by_metric(request: ChatRequest) -> str:
-            last_msg = request.messages[-1].content.lower()
-            if "coherence" in last_msg:
-                return "Explanation: OK\nScore: 4"
-            if "completeness" in last_msg:
-                return "Explanation: Low\nScore: 3"
-            if "specificity" in last_msg:
-                return "Explanation: Low\nScore: 2"
-            if "accuracy" in last_msg:
-                return "Explanation: Good\nScore: 5"
-            return "Explanation: Default\nScore: 3"
+        call_count = 0
+        metrics_order = list(EvaluationMetric.all_metrics())
 
-        mock_client = MockLLMClient(chat_function=response_by_metric)
-        agent = JudgeAgent(llm_client=mock_client)
+        async def mock_run(prompt: str, **kwargs: Any) -> AsyncMock:
+            nonlocal call_count
+            metric = metrics_order[call_count]
+            call_count += 1
+            return AsyncMock(output=outputs[metric])
 
-        evaluation = await agent.evaluate(sample_assessment, sample_transcript)
+        mock_agent = AsyncMock(spec_set=Agent)
+        mock_agent.run = mock_run
+
+        with patch(
+            "ai_psychiatrist.agents.pydantic_agents.create_judge_metric_agent",
+            return_value=mock_agent,
+        ):
+            agent = JudgeAgent(
+                llm_client=MockLLMClient(),
+                pydantic_ai_settings=PydanticAISettings(enabled=True),
+                ollama_base_url="http://mock",
+            )
+            evaluation = await agent.evaluate(sample_assessment, sample_transcript)
 
         feedback = agent.get_feedback_for_low_scores(evaluation, threshold=2)
 
@@ -182,48 +231,6 @@ Score: 2
         low_metric = evaluation.low_scores_for_threshold(2)[0]
         assert low_metric == EvaluationMetric.SPECIFICITY
         assert low_metric.value in feedback
-
-    @pytest.mark.asyncio
-    async def test_default_score_on_failure(
-        self,
-        sample_assessment: QualitativeAssessment,
-        sample_transcript: Transcript,
-    ) -> None:
-        """Should default to 3 if score extraction fails."""
-        mock_client = MockLLMClient(chat_responses=["I am confused"] * 4)
-        agent = JudgeAgent(llm_client=mock_client)
-
-        evaluation = await agent.evaluate(sample_assessment, sample_transcript)
-
-        for score in evaluation.scores.values():
-            assert score.score == 3
-
-    @pytest.mark.asyncio
-    async def test_default_score_on_llm_error(
-        self,
-        sample_assessment: QualitativeAssessment,
-        sample_transcript: Transcript,
-    ) -> None:
-        """Should default to 3 and use safe explanation on LLM errors."""
-
-        class FailingClient:
-            """Chat client that raises LLMError for every request."""
-
-            async def simple_chat(
-                self,
-                user_prompt: str,  # noqa: ARG002
-                system_prompt: str = "",  # noqa: ARG002
-                model: str | None = None,  # noqa: ARG002
-                temperature: float = 0.0,  # noqa: ARG002
-            ) -> str:
-                raise LLMError("LLM unavailable")
-
-        agent = JudgeAgent(llm_client=FailingClient())
-        evaluation = await agent.evaluate(sample_assessment, sample_transcript)
-
-        for score in evaluation.scores.values():
-            assert score.score == 3
-            assert score.explanation == "LLM evaluation failed; default score used."
 
     @pytest.mark.asyncio
     async def test_pydantic_ai_path_success(
@@ -253,3 +260,53 @@ Score: 2
             assert call.kwargs["model_settings"]["timeout"] == 123.0
         assert len(result.scores) == 4
         assert result.scores[EvaluationMetric.COHERENCE].score == 5
+
+    @pytest.mark.asyncio
+    async def test_pydantic_ai_failure_raises(
+        self,
+        sample_assessment: QualitativeAssessment,
+        sample_transcript: Transcript,
+    ) -> None:
+        """Should raise ValueError when Pydantic AI call fails."""
+        mock_agent = AsyncMock(spec_set=Agent)
+        mock_agent.run.side_effect = RuntimeError("LLM timeout")
+
+        with patch(
+            "ai_psychiatrist.agents.pydantic_agents.create_judge_metric_agent",
+            return_value=mock_agent,
+        ):
+            agent = JudgeAgent(
+                llm_client=MockLLMClient(),
+                pydantic_ai_settings=PydanticAISettings(enabled=True),
+                ollama_base_url="http://localhost:11434",
+            )
+            with pytest.raises(ValueError, match="Pydantic AI evaluation failed"):
+                await agent.evaluate(sample_assessment, sample_transcript)
+
+    def test_init_without_ollama_url_raises(self) -> None:
+        """Should raise ValueError when Pydantic AI enabled but no ollama_base_url."""
+        with pytest.raises(ValueError, match="ollama_base_url"):
+            JudgeAgent(
+                llm_client=MockLLMClient(),
+                pydantic_ai_settings=PydanticAISettings(enabled=True),
+                ollama_base_url=None,
+            )
+
+    def test_evaluate_without_agent_raises(self) -> None:
+        """Should raise ValueError when agent not initialized."""
+        agent = JudgeAgent(
+            llm_client=MockLLMClient(),
+            pydantic_ai_settings=PydanticAISettings(enabled=False),
+        )
+        assessment = QualitativeAssessment(
+            overall="Test",
+            phq8_symptoms="Test",
+            social_factors="Test",
+            biological_factors="Test",
+            risk_factors="Test",
+            participant_id=1,
+        )
+        transcript = Transcript(participant_id=1, text="Test")
+
+        with pytest.raises(ValueError, match="Pydantic AI metric agent not initialized"):
+            asyncio.get_event_loop().run_until_complete(agent.evaluate(assessment, transcript))

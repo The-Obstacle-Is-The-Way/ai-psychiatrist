@@ -348,8 +348,8 @@ class PydanticAISettings(BaseSettings):
         default=True,
         description=(
             "Enable Pydantic AI for TextOutput validation + retries "
-            "(quantitative scoring, judge, meta-review). "
-            "Fallback to legacy parsing occurs automatically on failure."
+            "(quantitative scoring, qualitative assessment, judge, meta-review). "
+            "When enabled, ollama_base_url is required."
         ),
     )
     retries: int = Field(
