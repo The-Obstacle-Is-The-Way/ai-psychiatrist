@@ -82,7 +82,7 @@ class KeywordTagger:
         valid_items = {f"PHQ8_{item.value}" for item in PHQ8Item}
         for key in self._keywords_map:
             if key not in valid_items:
-                logger.warning(f"Unknown item key in keywords file: {key}")
+                logger.warning("Unknown item key in keywords file", key=key)
 
     def tag_chunk(self, text: str) -> list[str]:
         """Tag a chunk with PHQ-8 items based on keyword matches."""

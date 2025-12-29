@@ -928,6 +928,7 @@ class TestSimilarityTransformation:
         np.testing.assert_almost_equal(similarity_map[102], 0.0, decimal=5)
 
 
+@pytest.mark.unit
 class TestItemTaggedFiltering:
     """Tests for Spec 34: Item-Tagged Reference Embeddings."""
 
@@ -1031,6 +1032,7 @@ class TestItemTaggedFiltering:
         assert len(matches) == 3
 
 
+@pytest.mark.unit
 class TestReferenceStoreTags:
     """Tests for loading and validating tags in ReferenceStore."""
 
