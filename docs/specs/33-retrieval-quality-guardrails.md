@@ -1,6 +1,6 @@
 # Spec 33: Retrieval Quality Guardrails (Similarity Threshold + Context Budget)
 
-> **STATUS: PLANNED / EXPERIMENTAL (Not paper-parity)**
+> **STATUS: ✅ IMPLEMENTED (2025-12-29)**
 >
 > **Do not enable by default**. This changes the method vs the paper.
 
