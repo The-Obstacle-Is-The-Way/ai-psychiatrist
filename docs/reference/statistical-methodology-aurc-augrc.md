@@ -2,13 +2,13 @@
 
 **Purpose**: Explains why AURC/AUGRC are the correct metrics for evaluating selective prediction systems, and why naive MAE comparisons are invalid.
 
-**Last Updated**: 2025-12-28
+**Last Updated**: 2025-12-29
 
 ---
 
 ## The Problem: Comparing MAE at Different Coverages
 
-When a model can abstain (say "N/A" or "I don't know"), comparing raw MAE values is **statistically invalid** if the models have different coverage rates.
+When a model can abstain (say "N/A" or "I don't know"), comparing raw MAE values is **not coverage-adjusted** if the models have different coverage rates.
 
 ### Example of Invalid Comparison
 
@@ -98,11 +98,11 @@ We use two confidence signals for ranking predictions:
 
 ### Bootstrap Confidence Intervals
 
-We compute 95% CIs using participant-level bootstrap (1000 resamples):
+We compute 95% CIs using participant-level bootstrap (default: 10,000 resamples; configurable via `--bootstrap-resamples`):
 
 ```python
 # Pseudocode
-for b in range(1000):
+for b in range(10_000):
     resampled_participants = bootstrap_sample(participants)
     metrics[b] = compute_aurc(resampled_participants)
 ci_low, ci_high = percentile(metrics, [2.5, 97.5])
