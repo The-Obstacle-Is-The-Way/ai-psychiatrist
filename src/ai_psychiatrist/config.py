@@ -266,6 +266,17 @@ class EmbeddingSettings(BaseSettings):
         default=False,
         description="Enable audit logging for retrieved references (Spec 32)",
     )
+    min_reference_similarity: float = Field(
+        default=0.0,
+        ge=0.0,
+        le=1.0,
+        description="Drop retrieved references below this similarity (0 disables)",
+    )
+    max_reference_chars_per_item: int = Field(
+        default=0,
+        ge=0,
+        description="Max total reference chunk chars per item (0 disables)",
+    )
 
 
 class FeedbackLoopSettings(BaseSettings):

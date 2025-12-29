@@ -59,9 +59,9 @@ class ReferenceBundle:
                 )
 
         if entries:
-            return "<Reference Examples>\n\n" + "\n\n".join(entries) + "\n\n<Reference Examples>"
+            return "<Reference Examples>\n\n" + "\n\n".join(entries) + "\n\n</Reference Examples>"
 
-        return "<Reference Examples>\nNo valid evidence found\n<Reference Examples>"
+        return "<Reference Examples>\nNo valid evidence found\n</Reference Examples>"
 
 
 class EmbeddingService:
@@ -93,6 +93,8 @@ class EmbeddingService:
         self._min_chars = settings.min_evidence_chars
         self._model_settings = model_settings
         self._enable_retrieval_audit = settings.enable_retrieval_audit
+        self._min_reference_similarity = settings.min_reference_similarity
+        self._max_reference_chars_per_item = settings.max_reference_chars_per_item
 
     async def embed_text(self, text: str) -> tuple[float, ...]:
         """Generate embedding for text.
@@ -277,7 +279,22 @@ class EmbeddingService:
             # Find similar chunks with this item's scores
             matches = self._compute_similarities(query_emb, item=item)
             matches.sort(key=lambda x: x.similarity, reverse=True)
+
+            if self._min_reference_similarity > 0.0:
+                matches = [m for m in matches if m.similarity >= self._min_reference_similarity]
+
             top_matches = matches[: self._top_k]
+
+            if self._max_reference_chars_per_item > 0:
+                budgeted: list[SimilarityMatch] = []
+                used = 0
+                for m in top_matches:
+                    cost = len(m.chunk.text)
+                    if used + cost > self._max_reference_chars_per_item:
+                        break
+                    budgeted.append(m)
+                    used += cost
+                top_matches = budgeted
 
             if self._enable_retrieval_audit:
                 evidence_key = f"PHQ8_{item.value}"
