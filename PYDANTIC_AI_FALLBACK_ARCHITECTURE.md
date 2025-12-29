@@ -21,7 +21,7 @@ Both independent investigations converged on the same findings:
 
 4. **The real research risk is unrecorded pipeline divergence.** Per-participant path differences (Pydantic AI vs legacy vs repair ladder) can cause run-to-run drift.
 
-5. **Timeouts ARE configurable.** Pydantic AI accepts `model_settings={"timeout": ...}`. We just don't pass it today.
+5. **Timeouts ARE configurable.** Pydantic AI accepts `model_settings={"timeout": ...}` and we now pass it (BUG-027).
 
 ---
 
@@ -113,7 +113,7 @@ Pydantic AI call failed during scoring; falling back to legacy
 ```text
 04:05:06 - Started (2371-word transcript)
 04:37:13 - Pydantic AI timeout (~32 min with 3 retries × 600s)
-04:42:13 - Legacy fallback timeout (300s)
+04:42:13 - Legacy fallback timeout (historical run: 300s)
 04:42:13 - Participant marked as failed
 ```
 
@@ -135,7 +135,7 @@ Pydantic AI call failed during scoring; falling back to legacy
 We used to **not pass** the timeout to Pydantic AI agents. The code looked like:
 
 ```python
-# Current (BROKEN)
+# Historical (pre-BUG-027)
 result = await self._scoring_agent.run(
     prompt,
     model_settings={"temperature": temperature},  # No timeout!
@@ -148,11 +148,12 @@ So Pydantic AI used its hardcoded 600s default, while legacy used a different co
 
 ```python
 # Fixed
+timeout = self._pydantic_ai.timeout_seconds
 result = await self._scoring_agent.run(
     prompt,
     model_settings={
         "temperature": temperature,
-        "timeout": self._pydantic_ai.timeout_seconds,  # Pass configurable timeout
+        **({"timeout": timeout} if timeout is not None else {}),  # Pass configurable timeout
     },
 )
 ```
@@ -186,10 +187,10 @@ provider = OllamaProvider(base_url=..., http_client=http_client)
 
 Verified at these exact locations:
 
-- `quantitative.py:292`
-- `qualitative.py:153, 226`
-- `judge.py:164`
-- `meta_review.py:156`
+- `quantitative.py:296`
+- `qualitative.py:157, 234`
+- `judge.py:168`
+- `meta_review.py:160`
 
 ```python
 try:
@@ -244,10 +245,10 @@ except Exception as e:
 
 | Agent        | Location                    | Trigger                        |
 | ------------ | --------------------------- | ------------------------------ |
-| Quantitative | `quantitative.py:292`       | Any exception after retries    |
-| Qualitative  | `qualitative.py:153, 226`   | Any exception (assess/refine)  |
-| Judge        | `judge.py:164`              | Any exception                  |
-| Meta-Review  | `meta_review.py:156`        | Any exception                  |
+| Quantitative | `quantitative.py:296`       | Any exception after retries    |
+| Qualitative  | `qualitative.py:157, 234`   | Any exception (assess/refine)  |
+| Judge        | `judge.py:168`              | Any exception                  |
+| Meta-Review  | `meta_review.py:160`        | Any exception                  |
 
 **When helpful**: Library bugs, validation failures where legacy parsing succeeds.
 
@@ -255,7 +256,7 @@ except Exception as e:
 
 ### 2. Quantitative Parsing Repair Ladder
 
-**Location**: `quantitative.py:441-479` (`_parse_response()`) + `_llm_repair()`
+**Location**: `quantitative.py:445-483` (`_parse_response()`) + `_llm_repair()`
 
 ```text
 Strategy 1: Direct Parse
@@ -274,7 +275,7 @@ Strategy 3: Fallback Skeleton
 
 ### 3. Meta-Review Severity Fallback
 
-**Location**: `meta_review.py:229-241` (`_parse_response()`)
+**Location**: `meta_review.py:233-246` (`_parse_response()`)
 
 ```python
 severity_str = tags.get("severity", "").strip()
@@ -295,7 +296,7 @@ except (ValueError, TypeError):
 
 ### 4. Judge Default Score on Failure
 
-**Location**: `judge.py:179-190`
+**Location**: `judge.py:183-206`
 
 ```python
 except LLMError as e:
@@ -475,7 +476,7 @@ These are fine and should be kept:
 | `src/ai_psychiatrist/agents/qualitative.py`           | Qualitative agent + fallback                         |
 | `src/ai_psychiatrist/agents/judge.py`                 | Judge agent + fallback + default score               |
 | `src/ai_psychiatrist/agents/meta_review.py`           | Meta-review agent + fallback + severity fallback     |
-| `src/ai_psychiatrist/agents/pydantic_agents.py`       | Agent factories (need timeout parameter)             |
+| `src/ai_psychiatrist/agents/pydantic_agents.py`       | Agent factories used by agents                       |
 | `src/ai_psychiatrist/agents/extractors.py`            | TextOutput extractors with `ModelRetry`              |
 | `docs/archive/bugs/bug-027-timeout-configuration.md`  | Timeout gap documentation                            |
 | `docs/specs/21-broad-exception-handling.md`           | Why broad exception catches are intentional          |
@@ -553,7 +554,7 @@ From [Medium article on small LLM JSON handling](https://watchsound.medium.com/h
 2. **LLM self-correction second**: Ask the LLM to fix its own malformed output (our `_llm_repair()`)
 3. **Fallback to skeleton third**: Return N/A for all items if unfixable
 
-**We already implement this** in `quantitative.py:441-479`.
+**We already implement this** in `quantitative.py:445-483`.
 
 ### Known Issues with Gemma 3 27B
 

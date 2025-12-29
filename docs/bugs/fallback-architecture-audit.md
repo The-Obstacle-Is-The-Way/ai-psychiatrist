@@ -21,7 +21,7 @@ Both independent investigations converged on the same findings:
 
 4. **The real research risk is unrecorded pipeline divergence.** Per-participant path differences (Pydantic AI vs legacy vs repair ladder) can cause run-to-run drift.
 
-5. **Timeouts ARE configurable.** Pydantic AI accepts `model_settings={"timeout": ...}`. We just don't pass it today.
+5. **Timeouts ARE configurable.** Pydantic AI accepts `model_settings={"timeout": ...}` and we now pass it (BUG-027).
 
 ---
 
