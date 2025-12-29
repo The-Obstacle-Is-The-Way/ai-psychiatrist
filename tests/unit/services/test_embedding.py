@@ -12,7 +12,10 @@ import pytest
 
 from ai_psychiatrist.config import DataSettings, EmbeddingSettings
 from ai_psychiatrist.domain.enums import PHQ8Item
-from ai_psychiatrist.domain.exceptions import EmbeddingDimensionMismatchError
+from ai_psychiatrist.domain.exceptions import (
+    EmbeddingArtifactMismatchError,
+    EmbeddingDimensionMismatchError,
+)
 from ai_psychiatrist.domain.value_objects import SimilarityMatch, TranscriptChunk
 from ai_psychiatrist.services import embedding as embedding_service_module
 from ai_psychiatrist.services.embedding import EmbeddingService, ReferenceBundle
@@ -923,3 +926,191 @@ class TestSimilarityTransformation:
 
         # Opposite (cos=-1): (1-1)/2 = 0.0
         np.testing.assert_almost_equal(similarity_map[102], 0.0, decimal=5)
+
+
+class TestItemTaggedFiltering:
+    """Tests for Spec 34: Item-Tagged Reference Embeddings."""
+
+    @pytest.fixture
+    def mock_llm_client(self) -> MockLLMClient:
+        return MockLLMClient()
+
+    @pytest.fixture
+    def mock_store(self) -> MagicMock:
+        store = MagicMock(spec=ReferenceStore)
+        # 3 Chunks:
+        # 1. Tagged with SLEEP (participant 100)
+        # 2. Tagged with DEPRESSED (participant 101)
+        # 3. Untagged (participant 102)
+        store.get_all_embeddings.return_value = {
+            100: [("sleepy chunk", [1.0] * 256)],
+            101: [("sad chunk", [1.0] * 256)],
+            102: [("random chunk", [1.0] * 256)],
+        }
+        store.get_score.return_value = 2
+        # Mock get_participant_tags
+        store.get_participant_tags.side_effect = lambda pid: {
+            100: [["PHQ8_Sleep"]],
+            101: [["PHQ8_Depressed"]],
+            102: [[]],
+        }.get(pid, [])
+        return store
+
+    @pytest.mark.asyncio
+    async def test_item_tag_filter_excludes_untagged_chunks(
+        self,
+        mock_llm_client: MagicMock,
+        mock_store: MagicMock,
+    ) -> None:
+        """Should only retrieve chunks tagged with the specific item."""
+        settings = EmbeddingSettings(
+            dimension=256,
+            enable_item_tag_filter=True,
+        )
+        service = EmbeddingService(mock_llm_client, mock_store, settings)
+
+        # Mock compute_similarities to call the real logic if we weren't mocking the store
+        # But here we are unit testing EmbeddingService, which calls store.get_all_embeddings()
+        # and then filters. So we just need to ensure _compute_similarities does the filtering.
+
+        # We can't easily test _compute_similarities in isolation without instantiating it,
+        # but build_reference_bundle calls it.
+        # However, _compute_similarities is what implements the logic.
+        # Let's call _compute_similarities directly.
+
+        query = tuple([1.0] * 256)
+
+        # 1. Filter for SLEEP -> Should only get participant 100
+        matches_sleep = service._compute_similarities(query, item=PHQ8Item.SLEEP)
+        assert len(matches_sleep) == 1
+        assert matches_sleep[0].chunk.participant_id == 100
+
+        # 2. Filter for DEPRESSED -> Should only get participant 101
+        matches_dep = service._compute_similarities(query, item=PHQ8Item.DEPRESSED)
+        assert len(matches_dep) == 1
+        assert matches_dep[0].chunk.participant_id == 101
+
+        # 3. Filter for ANHEDONIA (NoInterest) -> Should get NONE (no matches)
+        matches_anh = service._compute_similarities(query, item=PHQ8Item.NO_INTEREST)
+        assert len(matches_anh) == 0
+
+    @pytest.mark.asyncio
+    async def test_missing_tags_falls_back_to_unfiltered(
+        self,
+        mock_llm_client: MagicMock,
+        mock_store: MagicMock,
+    ) -> None:
+        """Should ignore filter if tags are missing/empty in store."""
+        # Setup store to return empty tags (simulate missing file or load failure)
+        mock_store.get_participant_tags.side_effect = lambda _: []
+
+        settings = EmbeddingSettings(
+            dimension=256,
+            enable_item_tag_filter=True,
+        )
+        service = EmbeddingService(mock_llm_client, mock_store, settings)
+
+        query = tuple([1.0] * 256)
+
+        # Should return ALL chunks because tags are missing (fallback)
+        matches = service._compute_similarities(query, item=PHQ8Item.SLEEP)
+        assert len(matches) == 3  # 100, 101, 102
+
+    @pytest.mark.asyncio
+    async def test_filter_disabled_by_default(
+        self,
+        mock_llm_client: MagicMock,
+        mock_store: MagicMock,
+    ) -> None:
+        """Should not filter if setting is False."""
+        settings = EmbeddingSettings(dimension=256, enable_item_tag_filter=False)
+        service = EmbeddingService(mock_llm_client, mock_store, settings)
+
+        query = tuple([1.0] * 256)
+        matches = service._compute_similarities(query, item=PHQ8Item.SLEEP)
+        assert len(matches) == 3
+
+
+class TestReferenceStoreTags:
+    """Tests for loading and validating tags in ReferenceStore."""
+
+    def test_load_tags_and_validate_length(self, tmp_path: Path) -> None:
+        """Should load tags and validate lengths against texts."""
+        transcripts_dir = tmp_path / "transcripts"
+        transcripts_dir.mkdir(parents=True, exist_ok=True)
+        embeddings_path = tmp_path / "embeddings.npz"
+
+        # 1. Create .npz + .json
+        raw_data = {
+            "100": [("chunk1", [1.0, 0.0]), ("chunk2", [0.0, 1.0])],
+        }
+        _create_npz_embeddings(embeddings_path, raw_data)
+
+        # 2. Create .tags.json (Valid: 2 chunks -> 2 tag lists)
+        tags_data = {"100": [["PHQ8_Sleep"], []]}
+        embeddings_path.with_suffix(".tags.json").write_text(json.dumps(tags_data))
+
+        data_settings = DataSettings(
+            base_dir=tmp_path,
+            transcripts_dir=transcripts_dir,
+            embeddings_path=embeddings_path,
+        )
+        embed_settings = EmbeddingSettings(dimension=2)
+
+        store = ReferenceStore(data_settings, embed_settings)
+        store._load_embeddings()  # Trigger load
+
+        # Verify tags loaded
+        tags = store.get_participant_tags(100)
+        assert tags == [["PHQ8_Sleep"], []]
+
+    def test_mismatched_tags_length_raises(self, tmp_path: Path) -> None:
+        """Should raise error if tags list length != texts list length."""
+        transcripts_dir = tmp_path / "transcripts"
+        transcripts_dir.mkdir(parents=True, exist_ok=True)
+        embeddings_path = tmp_path / "embeddings.npz"
+
+        # 1. Create .npz + .json (2 chunks)
+        raw_data = {
+            "100": [("chunk1", [1.0, 0.0]), ("chunk2", [0.0, 1.0])],
+        }
+        _create_npz_embeddings(embeddings_path, raw_data)
+
+        # 2. Create .tags.json (Invalid: 1 tag list)
+        tags_data = {"100": [["PHQ8_Sleep"]]}
+        embeddings_path.with_suffix(".tags.json").write_text(json.dumps(tags_data))
+
+        data_settings = DataSettings(
+            base_dir=tmp_path,
+            transcripts_dir=transcripts_dir,
+            embeddings_path=embeddings_path,
+        )
+        embed_settings = EmbeddingSettings(dimension=2)
+
+        store = ReferenceStore(data_settings, embed_settings)
+
+        with pytest.raises(EmbeddingArtifactMismatchError, match="Tag count mismatch"):
+            store._load_embeddings()
+
+    def test_missing_tags_file_is_handled(self, tmp_path: Path) -> None:
+        """Should handle missing tags file gracefully (return empty)."""
+        transcripts_dir = tmp_path / "transcripts"
+        transcripts_dir.mkdir(parents=True, exist_ok=True)
+        embeddings_path = tmp_path / "embeddings.npz"
+
+        raw_data = {"100": [("chunk1", [1.0, 0.0])]}
+        _create_npz_embeddings(embeddings_path, raw_data)
+
+        # NO .tags.json created
+
+        data_settings = DataSettings(
+            base_dir=tmp_path,
+            transcripts_dir=transcripts_dir,
+            embeddings_path=embeddings_path,
+        )
+        embed_settings = EmbeddingSettings(dimension=2)
+
+        store = ReferenceStore(data_settings, embed_settings)
+        store._load_embeddings()
+
+        assert store.get_participant_tags(100) == []

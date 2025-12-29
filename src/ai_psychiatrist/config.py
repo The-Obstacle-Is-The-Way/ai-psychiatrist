@@ -277,6 +277,10 @@ class EmbeddingSettings(BaseSettings):
         ge=0,
         description="Max total reference chunk chars per item (0 disables)",
     )
+    enable_item_tag_filter: bool = Field(
+        default=False,
+        description="Enable filtering reference chunks by PHQ-8 item tags.",
+    )
 
 
 class FeedbackLoopSettings(BaseSettings):

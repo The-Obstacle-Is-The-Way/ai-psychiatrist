@@ -109,11 +109,16 @@ class ReferenceStore:
 
         # Lazy-loaded data
         self._embeddings: dict[int, list[tuple[str, list[float]]]] | None = None
+        self._tags: dict[int, list[list[str]]] | None = None
         self._scores_df: pd.DataFrame | None = None
 
     def _get_texts_path(self) -> Path:
         """Get path to the JSON sidecar file containing text chunks."""
         return self._embeddings_path.with_suffix(".json")
+
+    def _get_tags_path(self) -> Path:
+        """Get path to the JSON sidecar file containing item tags."""
+        return self._embeddings_path.with_suffix(".tags.json")
 
     def _calculate_split_hash(self, split: str) -> str | None:
         """Calculate hash of the split CSV referenced by an embeddings artifact (if available)."""
@@ -434,6 +439,41 @@ class ReferenceStore:
 
         return normalized
 
+    def _load_tags(self, texts_data: dict[str, Any]) -> None:
+        """Load and validate item tags sidecar."""
+        tags_path = self._get_tags_path()
+        if not tags_path.exists():
+            self._tags = {}
+            return
+
+        try:
+            with tags_path.open("r", encoding="utf-8") as f:
+                tags_data = json.load(f)
+
+            # Validate tags integrity against texts
+            validated_tags: dict[int, list[list[str]]] = {}
+            for pid_str, texts in texts_data.items():
+                pid = int(pid_str)
+                if pid_str not in tags_data:
+                    raise EmbeddingArtifactMismatchError(
+                        f"Missing tags for participant {pid} in {tags_path.name}"
+                    )
+
+                p_tags = tags_data[pid_str]
+                if len(p_tags) != len(texts):
+                    raise EmbeddingArtifactMismatchError(
+                        f"Tag count mismatch for participant {pid}: "
+                        f"texts={len(texts)}, tags={len(p_tags)}"
+                    )
+                validated_tags[pid] = p_tags
+
+            self._tags = validated_tags
+            logger.info("Item tags loaded", participants=len(self._tags))
+
+        except (json.JSONDecodeError, OSError) as e:
+            logger.warning("Failed to load tags file", path=str(tags_path), error=str(e))
+            self._tags = {}
+
     def _load_embeddings(self) -> dict[int, list[tuple[str, list[float]]]]:
         """Load pre-computed embeddings from NPZ + JSON sidecar files.
 
@@ -451,6 +491,7 @@ class ReferenceStore:
         paths = self._resolve_embedding_paths()
         if paths is None:
             self._embeddings = {}
+
             return self._embeddings
 
         # Load and validate metadata (if present)
@@ -477,6 +518,9 @@ class ReferenceStore:
 
         texts_data = self._load_texts_json(paths.json)
         npz_data = np.load(paths.npz, allow_pickle=False)
+
+        # Load item tags if present (Spec 34)
+        self._load_tags(texts_data)
 
         try:
             normalized = self._combine_and_normalize(texts_data, npz_data)
@@ -559,6 +603,25 @@ class ReferenceStore:
         """
         embeddings = self._load_embeddings()
         return embeddings.get(participant_id, [])
+
+    def get_participant_tags(self, participant_id: int) -> list[list[str]]:
+        """Get item tags for a specific participant's chunks.
+
+        Args:
+            participant_id: Participant ID.
+
+        Returns:
+            List of tag lists (one list of tags per chunk).
+            Returns empty list if no tags available.
+        """
+        # Ensure loaded
+        if self._tags is None:
+            self._load_embeddings()
+
+        if self._tags is None:
+            return []
+
+        return self._tags.get(participant_id, [])
 
     def get_score(self, participant_id: int, item: PHQ8Item) -> int | None:
         """Get PHQ-8 item score for a participant.

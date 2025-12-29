@@ -98,6 +98,7 @@ class EmbeddingService:
         # - max_reference_chars_per_item: Character budget per item (0 = unlimited)
         self._min_reference_similarity = settings.min_reference_similarity
         self._max_reference_chars_per_item = settings.max_reference_chars_per_item
+        self._enable_item_tag_filter = settings.enable_item_tag_filter
 
     async def embed_text(self, text: str) -> tuple[float, ...]:
         """Generate embedding for text.
@@ -174,7 +175,26 @@ class EmbeddingService:
         lookup_item = item or PHQ8Item.NO_INTEREST
 
         for participant_id, chunks in all_refs.items():
-            for chunk_text, embedding in chunks:
+            # Spec 34: Item Tag Filtering
+            should_filter = False
+            participant_tags: list[list[str]] = []
+            target_tag = ""
+
+            if self._enable_item_tag_filter and item is not None:
+                participant_tags = self._reference_store.get_participant_tags(participant_id)
+                if participant_tags:
+                    should_filter = True
+                    target_tag = f"PHQ8_{item.value}"
+
+            for idx, (chunk_text, embedding) in enumerate(chunks):
+                # Filter out chunks that don't have the target item tag
+                if (
+                    should_filter
+                    and idx < len(participant_tags)
+                    and target_tag not in participant_tags[idx]
+                ):
+                    continue
+
                 if len(embedding) != len(query_embedding):
                     # Skip embeddings with dimension mismatch
                     # (can occur if reference data has mixed dimensions)

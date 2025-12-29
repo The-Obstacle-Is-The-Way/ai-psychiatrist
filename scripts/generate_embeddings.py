@@ -35,6 +35,7 @@ from pathlib import Path
 from typing import TYPE_CHECKING, Any
 
 import numpy as np
+import yaml
 
 # Add src to path for imports
 sys.path.insert(0, str(Path(__file__).parent.parent / "src"))
@@ -51,6 +52,7 @@ from ai_psychiatrist.config import (
     get_settings,
     resolve_reference_embeddings_path,
 )
+from ai_psychiatrist.domain.enums import PHQ8Item
 from ai_psychiatrist.domain.exceptions import DomainError
 from ai_psychiatrist.infrastructure.llm.factory import create_embedding_client
 from ai_psychiatrist.infrastructure.llm.model_aliases import resolve_model_name
@@ -64,6 +66,36 @@ if TYPE_CHECKING:
 logger = get_logger(__name__)
 
 PAPER_SPLITS_DIRNAME = "paper_splits"
+
+
+class KeywordTagger:
+    """Deterministic keyword-based tagger for PHQ-8 items."""
+
+    def __init__(self, keywords_path: Path) -> None:
+        if not keywords_path.exists():
+            raise FileNotFoundError(f"Keywords file not found: {keywords_path}")
+
+        with keywords_path.open("r", encoding="utf-8") as f:
+            self._keywords_map: dict[str, list[str]] = yaml.safe_load(f)
+
+        # Validate keys against PHQ8Item
+        valid_items = {f"PHQ8_{item.value}" for item in PHQ8Item}
+        for key in self._keywords_map:
+            if key not in valid_items:
+                logger.warning(f"Unknown item key in keywords file: {key}")
+
+    def tag_chunk(self, text: str) -> list[str]:
+        """Tag a chunk with PHQ-8 items based on keyword matches."""
+        tags: list[str] = []
+        text_lower = text.lower()
+
+        for item_key, keywords in self._keywords_map.items():
+            for kw in keywords:
+                if kw in text_lower:
+                    tags.append(item_key)
+                    break  # One match per item is sufficient
+
+        return sorted(tags)
 
 
 @dataclass
@@ -83,6 +115,10 @@ class GenerationConfig:
     output_path: Path
     split: str
     dry_run: bool
+    # Spec 34: Tagging support
+    write_item_tags: bool
+    tagger_type: str
+    keywords_path: Path
 
 
 @dataclass
@@ -90,6 +126,7 @@ class GenerationResult:
     """Result of embedding generation."""
 
     embeddings: dict[int, list[tuple[str, list[float]]]]
+    tags: dict[int, list[list[str]]]  # pid -> list of tags per chunk
     total_chunks: int
 
 
@@ -255,7 +292,8 @@ async def process_participant(
     chunk_size: int,
     step_size: int,
     min_chars: int,
-) -> list[tuple[str, list[float]]]:
+    tagger: KeywordTagger | None = None,
+) -> tuple[list[tuple[str, list[float]]], list[list[str]]]:
     """Generate embeddings for all chunks of a participant's transcript.
 
     Args:
@@ -267,9 +305,12 @@ async def process_participant(
         chunk_size: Lines per chunk.
         step_size: Sliding window step.
         min_chars: Minimum characters for a chunk to be embedded.
+        tagger: Optional tagger for generating item tags.
 
     Returns:
-        List of (chunk_text, embedding) pairs.
+        Tuple of:
+        - List of (chunk_text, embedding) pairs.
+        - List of tag lists (one per chunk).
     """
     try:
         transcript = transcript_service.load_transcript(participant_id)
@@ -279,10 +320,11 @@ async def process_participant(
             participant_id=participant_id,
             error=str(e),
         )
-        return []
+        return [], []
 
     chunks = create_sliding_chunks(transcript.text, chunk_size, step_size)
     results: list[tuple[str, list[float]]] = []
+    chunk_tags: list[list[str]] = []
 
     for chunk in chunks:
         if len(chunk.strip()) < min_chars:
@@ -291,6 +333,13 @@ async def process_participant(
         try:
             embedding = await generate_embedding(client, chunk, model, dimension)
             results.append((chunk, embedding))
+
+            if tagger:
+                tags = tagger.tag_chunk(chunk)
+                chunk_tags.append(tags)
+            else:
+                chunk_tags.append([])
+
         except (DomainError, ValueError, OSError) as e:
             logger.warning(
                 "Failed to embed chunk",
@@ -299,7 +348,7 @@ async def process_participant(
             )
             continue
 
-    return results
+    return results, chunk_tags
 
 
 def slugify_model(model: str) -> str:
@@ -371,6 +420,12 @@ def prepare_config(args: argparse.Namespace, *, settings: Settings) -> Generatio
     if output_path.suffix != ".npz":
         output_path = output_path.with_suffix(".npz")
 
+    # Spec 34: Keywords path
+    # Assuming standard project structure
+    keywords_path = (
+        Path(__file__).parent.parent / "src/ai_psychiatrist/resources/phq8_keywords.yaml"
+    ).resolve()
+
     return GenerationConfig(
         data_settings=data_settings,
         embedding_settings=embedding_settings,
@@ -385,6 +440,9 @@ def prepare_config(args: argparse.Namespace, *, settings: Settings) -> Generatio
         output_path=output_path,
         split=args.split,
         dry_run=args.dry_run,
+        write_item_tags=args.write_item_tags,
+        tagger_type=args.tagger,
+        keywords_path=keywords_path,
     )
 
 
@@ -405,8 +463,23 @@ async def run_generation_loop(
         print("Please ensure DAIC-WOZ dataset is prepared.")
         raise  # Propagate to main to handle exit code
 
+    # Initialize Tagger
+    tagger: KeywordTagger | None = None
+    if config.write_item_tags:
+        if config.tagger_type == "keyword":
+            try:
+                tagger = KeywordTagger(config.keywords_path)
+                print(f"Initialized KeywordTagger from {config.keywords_path}")
+            except Exception as e:
+                print(f"Failed to initialize tagger: {e}")
+                raise
+        elif config.tagger_type == "llm":
+            print("WARNING: LLM tagger not yet implemented (Spec 34). Using no tags.")
+            # Fallthrough to None
+
     # Process participants
     all_embeddings: dict[int, list[tuple[str, list[float]]]] = {}
+    all_tags: dict[int, list[list[str]]] = {}
     total_chunks = 0
 
     print(f"\nProcessing {len(participant_ids)} participants...")
@@ -414,7 +487,7 @@ async def run_generation_loop(
         if idx % 10 == 0 or idx == len(participant_ids):
             print(f"  Progress: {idx}/{len(participant_ids)} participants...")
 
-        results = await process_participant(
+        results, chunk_tags = await process_participant(
             client,
             transcript_service,
             pid,
@@ -423,13 +496,15 @@ async def run_generation_loop(
             config.chunk_size,
             config.step_size,
             config.min_chars,
+            tagger=tagger,
         )
 
         if results:
             all_embeddings[pid] = results
+            all_tags[pid] = chunk_tags
             total_chunks += len(results)
 
-    return GenerationResult(embeddings=all_embeddings, total_chunks=total_chunks)
+    return GenerationResult(embeddings=all_embeddings, tags=all_tags, total_chunks=total_chunks)
 
 
 def save_embeddings(
@@ -443,6 +518,7 @@ def save_embeddings(
     # Prepare NPZ and JSON data
     npz_arrays: dict[str, Any] = {}
     json_texts: dict[str, list[str]] = {}
+    json_tags: dict[str, list[list[str]]] = {}
 
     for pid, pairs in result.embeddings.items():
         texts = [text for text, _ in pairs]
@@ -450,6 +526,11 @@ def save_embeddings(
 
         json_texts[str(pid)] = texts
         npz_arrays[f"emb_{pid}"] = np.array(embeddings, dtype=np.float32)
+
+    # Prepare tags JSON if enabled
+    if config.write_item_tags and result.tags:
+        for pid, tags in result.tags.items():
+            json_tags[str(pid)] = tags
 
     # Prepare metadata
     metadata = {
@@ -471,16 +552,23 @@ def save_embeddings(
     # Save files
     json_path = config.output_path.with_suffix(".json")
     meta_path = config.output_path.with_suffix(".meta.json")
+    tags_path = config.output_path.with_suffix(".tags.json")
 
     print(f"\nSaving embeddings to {config.output_path}...")
     print(f"Saving text chunks to {json_path}...")
     print(f"Saving metadata to {meta_path}...")
+    if config.write_item_tags:
+        print(f"Saving item tags to {tags_path}...")
 
     np.savez_compressed(str(config.output_path), **npz_arrays)
     with json_path.open("w") as f:
         json.dump(json_texts, f, indent=2)
     with meta_path.open("w") as f:
         json.dump(metadata, f, indent=2)
+
+    if config.write_item_tags:
+        with tags_path.open("w") as f:
+            json.dump(json_tags, f, indent=2)
 
     # Summary
     npz_size = config.output_path.stat().st_size / (1024 * 1024)
@@ -493,6 +581,9 @@ def save_embeddings(
     print(f"  Total chunks: {result.total_chunks}")
     print(f"  NPZ file: {config.output_path} ({npz_size:.2f} MB)")
     print(f"  JSON file: {json_path} ({json_size:.2f} MB)")
+    if config.write_item_tags:
+        tags_size = tags_path.stat().st_size / (1024 * 1024)
+        print(f"  Tags file: {tags_path} ({tags_size:.2f} MB)")
     print("=" * 60)
 
 
@@ -515,6 +606,9 @@ async def main_async(args: argparse.Namespace) -> int:
     print(f"  Min chars: {config.min_chars}")
     print(f"  Split: {config.split}")
     print(f"  Output: {config.output_path}")
+    print(f"  Write Tags: {config.write_item_tags}")
+    if config.write_item_tags:
+        print(f"  Tagger: {config.tagger_type}")
     print("=" * 60)
 
     if config.dry_run:
@@ -549,6 +643,9 @@ Examples:
     # Override backend
     python scripts/generate_embeddings.py --backend huggingface
 
+    # Generate with item tags
+    python scripts/generate_embeddings.py --write-item-tags
+
 Environment Variables:
     EMBEDDING_BACKEND: Backend to use (ollama or huggingface)
     OLLAMA_HOST: Ollama server host (default: 127.0.0.1)
@@ -580,6 +677,17 @@ Environment Variables:
         "--dry-run",
         action="store_true",
         help="Show configuration without generating embeddings",
+    )
+    parser.add_argument(
+        "--write-item-tags",
+        action="store_true",
+        help="Write <output>.tags.json sidecar aligned with <output>.json texts",
+    )
+    parser.add_argument(
+        "--tagger",
+        choices=["keyword", "llm"],
+        default="keyword",
+        help="Chunk tagger backend (only used when --write-item-tags is set)",
     )
     args = parser.parse_args()
 
