@@ -53,14 +53,25 @@ AURC = ∫₀^Cmax Risk(c) dc
 
 #### AUGRC (Area Under Generalized Risk-Coverage Curve)
 
+We also compute a **generalized risk** (a.k.a. *joint risk*) curve:
+
 ```
-AUGRC = (1/Cmax) × ∫₀^Cmax Risk(c) dc
+GeneralizedRisk(c) = (1/N) × Σ(loss_i for accepted items up to coverage c)
+```
+
+At each working point, this equals:
+
+```
+GeneralizedRisk(c) = Coverage(c) × Risk(c)
+```
+
+```
+AUGRC = ∫₀^Cmax GeneralizedRisk(c) dc
 ```
 
 - **Lower is better**
-- AURC normalized by maximum coverage
-- Useful when comparing models with very different Cmax values
-- Interpretation: "average risk per unit coverage"
+- Penalizes both error **and** abstention (because generalized risk scales with coverage)
+- Optional normalized variant (sometimes reported): `nAUGRC = AUGRC / Cmax` when `Cmax > 0`
 
 ---
 
@@ -82,7 +93,7 @@ Our system predicts PHQ-8 item scores (0-3 scale) from clinical interview transc
 
 - **Low AURC**: Model has good calibration—when it's confident, it's usually right
 - **High AURC**: Model is overconfident—high-confidence predictions are often wrong
-- **Similar AUGRC, different Cmax**: Models have similar quality but different "willingness to predict"
+- **Low AUGRC**: Model accumulates low joint loss as it increases coverage (good accuracy without reckless over-prediction)
 
 ---
 
