@@ -3,6 +3,9 @@
 > **STATUS: ✅ IMPLEMENTED (2025-12-29)**
 >
 > **Do not enable by default**. This changes the method vs the paper.
+>
+> **Reproduction note**: This spec intentionally breaks Spec 31’s character-for-character
+> notebook parity by switching the closing delimiter to proper XML (`</Reference Examples>`).
 
 ## Problem
 
@@ -17,7 +20,7 @@ Even with perfect paper-parity formatting (Spec 31), retrieval can still inject 
 1. Add an optional **minimum similarity threshold** for including a retrieved reference.
 2. Add an optional **context budget** for references to prevent prompt bloat.
 3. **Fix XML closing tag** to use proper `</Reference Examples>` syntax (per [Anthropic best practices](https://platform.claude.com/docs/en/build-with-claude/prompt-engineering/use-xml-tags)).
-4. Defaults must preserve current behavior (no filtering, no budget).
+4. Defaults must preserve current **retrieval selection** behavior (no filtering, no budget).
 
 ## Non-goals
 
@@ -34,6 +37,10 @@ Introduce a small post-retrieval pipeline:
 3. Enforce reference context budget (new)
 
 This should be implemented as a composable chain so additional filters/rerankers can be added without branching logic.
+
+**Implementation note (2025-12-29):** The current implementation uses simple sequential
+post-processing (straight-line `if` blocks). If additional stages are added (e.g., Spec 34+),
+consider refactoring into an explicit Strategy/CoR pipeline to avoid branching growth.
 
 ## Implementation
 

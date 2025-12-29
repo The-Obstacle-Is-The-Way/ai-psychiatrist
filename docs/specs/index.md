@@ -13,5 +13,5 @@ Implementation-ready (or implementation-planned) specifications for changes that
 See `docs/archive/specs/` for completed specs:
 
 - **Spec 33**: Retrieval quality guardrails ✅ (2025-12-29) — similarity threshold + context budget + XML fix
-- **Spec 31**: Paper-parity few-shot reference formatting ✅ (2025-12-28) — 10% AURC improvement
+- **Spec 31**: Paper-parity few-shot reference formatting ✅ (2025-12-28) — 10% AURC improvement (closing delimiter later changed by Spec 33)
 - **Spec 32**: Few-shot retrieval diagnostics ✅ (2025-12-28) — opt-in audit logging

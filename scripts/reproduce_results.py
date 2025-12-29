@@ -60,6 +60,7 @@ from ai_psychiatrist.agents import QuantitativeAssessmentAgent
 from ai_psychiatrist.config import (
     DataSettings,
     EmbeddingBackend,
+    EmbeddingBackendSettings,
     EmbeddingSettings,
     LoggingSettings,
     ModelSettings,
@@ -618,6 +619,7 @@ def init_embedding_service(
     *,
     args: argparse.Namespace,
     data_settings: DataSettings,
+    embedding_backend_settings: EmbeddingBackendSettings,
     embedding_settings: EmbeddingSettings,
     model_settings: ModelSettings,
     embedding_client: EmbeddingClient,
@@ -635,7 +637,12 @@ def init_embedding_service(
             f"Missing: {npz_path} and/or {json_path}. "
             "Run: uv run python scripts/generate_embeddings.py"
         )
-    reference_store = ReferenceStore(data_settings, embedding_settings)
+    reference_store = ReferenceStore(
+        data_settings=data_settings,
+        embedding_settings=embedding_settings,
+        embedding_backend_settings=embedding_backend_settings,
+        model_settings=model_settings,
+    )
     return EmbeddingService(
         llm_client=embedding_client,
         reference_store=reference_store,
@@ -811,6 +818,7 @@ async def main_async(args: argparse.Namespace) -> int:
                 embedding_service = init_embedding_service(
                     args=args,
                     data_settings=data_settings,
+                    embedding_backend_settings=embedding_backend_settings,
                     embedding_settings=embedding_settings,
                     model_settings=model_settings,
                     embedding_client=embedding_client,
