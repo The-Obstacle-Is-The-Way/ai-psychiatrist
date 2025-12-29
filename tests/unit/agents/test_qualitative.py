@@ -2,18 +2,20 @@
 
 Tests verify the agent correctly:
 - Generates assessments across all 4 clinical domains
-- Extracts supporting quotes from transcripts
-- Parses XML responses from LLM
-- Handles malformed responses gracefully
+- Returns supporting quotes from Pydantic AI output
 - Supports feedback-based refinement
 """
 
 from __future__ import annotations
 
+from typing import TYPE_CHECKING
 from unittest.mock import AsyncMock, patch
 
 import pytest
 from pydantic_ai import Agent
+
+if TYPE_CHECKING:
+    from collections.abc import Generator
 
 from ai_psychiatrist.agents.output_models import QualitativeOutput
 from ai_psychiatrist.agents.prompts.qualitative import (
@@ -25,49 +27,6 @@ from ai_psychiatrist.config import PydanticAISettings
 from ai_psychiatrist.domain.entities import QualitativeAssessment, Transcript
 from ai_psychiatrist.infrastructure.llm.responses import SimpleChatClient
 from tests.fixtures.mock_llm import MockLLMClient
-
-# Sample LLM response for fixtures
-SAMPLE_LLM_RESPONSE = """
-<assessment>
-The participant shows signs of moderate depression with evident sleep disturbances
-and low energy. They expressed feelings of hopelessness related to recent job loss.
-</assessment>
-
-<PHQ8_symptoms>
-<little_interest_or_pleasure>
-Participant expresses decreased interest in activities.
-Frequency: Several days a week
-</little_interest_or_pleasure>
-<feeling_tired_little_energy>
-Reports significant fatigue.
-Frequency: Nearly every day
-</feeling_tired_little_energy>
-</PHQ8_symptoms>
-
-<social_factors>
-Lives with partner and two children. Reports strained relationship.
-Currently unemployed, previously worked in tech.
-</social_factors>
-
-<biological_factors>
-Family history of depression. No current medications reported.
-Reports history of anxiety in college.
-</biological_factors>
-
-<risk_factors>
-Expresses passive suicidal ideation. No active plan reported.
-Recent job loss appears to be primary stressor.
-</risk_factors>
-
-<exact_quotes>
-- "I don't really enjoy things anymore."
-- "I'm always tired, can't seem to get enough sleep."
-- "Things have been tense at home."
-- "My mother had depression."
-- "Sometimes I think it would be easier if I just didn't wake up."
-</exact_quotes>
-"""
-
 
 SAMPLE_TRANSCRIPT_TEXT = """Ellie: How are you feeling today?
 Participant: Not great, honestly. I don't really enjoy things anymore.
@@ -81,14 +40,36 @@ class TestQualitativeAssessmentAgent:
     """Tests for QualitativeAssessmentAgent."""
 
     @pytest.fixture
-    def sample_llm_response(self) -> str:
-        """Sample LLM response with all XML tags."""
-        return SAMPLE_LLM_RESPONSE
+    def mock_qualitative_output(self) -> QualitativeOutput:
+        """Create valid QualitativeOutput for mocking."""
+        return QualitativeOutput(
+            assessment="Patient shows moderate depression symptoms with evident sleep disturbances.",
+            phq8_symptoms="Reports feeling down, low energy, and significant fatigue.",
+            social_factors="Lives with partner. Reports strained relationship.",
+            biological_factors="Family history of depression mentioned.",
+            risk_factors="Expresses passive ideation. No active plan.",
+            exact_quotes=[
+                "I don't really enjoy things anymore.",
+                "I'm always tired, can't seem to get enough sleep.",
+                "Things have been tense at home.",
+            ],
+        )
 
     @pytest.fixture
-    def mock_client(self, sample_llm_response: str) -> MockLLMClient:
-        """Create mock LLM client with sample response."""
-        return MockLLMClient(chat_responses=[sample_llm_response])
+    def mock_agent_factory(
+        self, mock_qualitative_output: QualitativeOutput
+    ) -> Generator[AsyncMock, None, None]:
+        """Patch create_qualitative_agent to return a mock agent."""
+        mock_agent = AsyncMock(spec_set=Agent)
+        mock_agent.run.return_value = AsyncMock(output=mock_qualitative_output)
+
+        patcher = patch(
+            "ai_psychiatrist.agents.pydantic_agents.create_qualitative_agent",
+            return_value=mock_agent,
+        )
+        mock = patcher.start()
+        yield mock
+        patcher.stop()
 
     @pytest.fixture
     def sample_transcript(self) -> Transcript:
@@ -99,13 +80,17 @@ class TestQualitativeAssessmentAgent:
         )
 
     @pytest.mark.asyncio
+    @pytest.mark.usefixtures("mock_agent_factory")
     async def test_assess_returns_all_domains(
         self,
-        mock_client: MockLLMClient,
         sample_transcript: Transcript,
     ) -> None:
         """Assessment should include all required domains."""
-        agent = QualitativeAssessmentAgent(llm_client=mock_client)
+        agent = QualitativeAssessmentAgent(
+            llm_client=MockLLMClient(),
+            pydantic_ai_settings=PydanticAISettings(enabled=True),
+            ollama_base_url="http://mock",
+        )
         result = await agent.assess(sample_transcript)
 
         assert isinstance(result, QualitativeAssessment)
@@ -117,156 +102,50 @@ class TestQualitativeAssessmentAgent:
         assert result.participant_id == 123
 
     @pytest.mark.asyncio
+    @pytest.mark.usefixtures("mock_agent_factory")
     async def test_assess_extracts_quotes(
         self,
-        mock_client: MockLLMClient,
         sample_transcript: Transcript,
     ) -> None:
-        """Assessment should extract supporting quotes."""
-        agent = QualitativeAssessmentAgent(llm_client=mock_client)
+        """Assessment should contain supporting quotes from Pydantic AI output."""
+        agent = QualitativeAssessmentAgent(
+            llm_client=MockLLMClient(),
+            pydantic_ai_settings=PydanticAISettings(enabled=True),
+            ollama_base_url="http://mock",
+        )
         result = await agent.assess(sample_transcript)
 
         assert len(result.supporting_quotes) > 0
         assert any("tired" in q.lower() for q in result.supporting_quotes)
 
     @pytest.mark.asyncio
-    async def test_assess_extracts_inline_quotes_when_no_exact_quotes(
+    async def test_assess_calls_pydantic_agent(
         self,
+        mock_agent_factory: AsyncMock,
         sample_transcript: Transcript,
     ) -> None:
-        """Should extract quotes embedded in domain text."""
-        response = """
-<assessment>
-Participant reports feeling "empty and hopeless".
-</assessment>
-<PHQ8_symptoms>
-Sleep issues: "I can't sleep most nights."
-</PHQ8_symptoms>
-<social_factors>
-No major changes reported.
-</social_factors>
-<biological_factors>
-No family history mentioned.
-</biological_factors>
-<risk_factors>
-None noted.
-</risk_factors>
-"""
-        client = MockLLMClient(chat_responses=[response])
-        agent = QualitativeAssessmentAgent(llm_client=client)
-        result = await agent.assess(sample_transcript)
-
-        assert "empty and hopeless" in result.supporting_quotes
-        assert any("can't sleep" in q for q in result.supporting_quotes)
-
-    @pytest.mark.asyncio
-    async def test_assess_sends_correct_prompt(
-        self,
-        mock_client: MockLLMClient,
-        sample_transcript: Transcript,
-    ) -> None:
-        """Assessment should send transcript in prompt."""
-        agent = QualitativeAssessmentAgent(llm_client=mock_client)
+        """Assessment should call the Pydantic AI agent."""
+        agent = QualitativeAssessmentAgent(
+            llm_client=MockLLMClient(),
+            pydantic_ai_settings=PydanticAISettings(enabled=True),
+            ollama_base_url="http://mock",
+        )
         await agent.assess(sample_transcript)
 
-        assert mock_client.chat_call_count == 1
-        request = mock_client.chat_requests[0]
-        # User message should contain transcript
-        user_msg = next(m for m in request.messages if m.role == "user")
-        assert sample_transcript.text in user_msg.content
+        mock_agent_factory.assert_called_once()
 
     @pytest.mark.asyncio
-    async def test_assess_includes_system_prompt(
+    async def test_refine_calls_pydantic_agent(
         self,
-        mock_client: MockLLMClient,
+        mock_agent_factory: AsyncMock,
         sample_transcript: Transcript,
     ) -> None:
-        """Assessment should include system prompt."""
-        agent = QualitativeAssessmentAgent(llm_client=mock_client)
-        await agent.assess(sample_transcript)
-
-        request = mock_client.chat_requests[0]
-        system_msgs = [m for m in request.messages if m.role == "system"]
-        assert len(system_msgs) == 1
-        assert "psychiatrist" in system_msgs[0].content.lower()
-
-    @pytest.mark.asyncio
-    async def test_assess_handles_partial_response(
-        self,
-        sample_transcript: Transcript,
-    ) -> None:
-        """Should handle response with missing tags."""
-        partial_response = """
-<assessment>
-Brief assessment only.
-</assessment>
-<risk_factors>
-Some risk noted.
-</risk_factors>
-"""
-        client = MockLLMClient(chat_responses=[partial_response])
-        agent = QualitativeAssessmentAgent(llm_client=client)
-        result = await agent.assess(sample_transcript)
-
-        assert result.overall == "Brief assessment only."
-        assert result.risk_factors == "Some risk noted."
-        # Missing tags should have defaults
-        assert result.phq8_symptoms == "Not assessed"
-        assert result.social_factors == "Not assessed"
-        assert result.biological_factors == "Not assessed"
-
-    @pytest.mark.asyncio
-    async def test_assess_handles_empty_response(
-        self,
-        sample_transcript: Transcript,
-    ) -> None:
-        """Should handle empty LLM response."""
-        client = MockLLMClient(chat_responses=[""])
-        agent = QualitativeAssessmentAgent(llm_client=client)
-        result = await agent.assess(sample_transcript)
-
-        assert result.overall == "Assessment not generated"
-        assert result.participant_id == 123
-
-    @pytest.mark.asyncio
-    async def test_assess_handles_malformed_xml(
-        self,
-        sample_transcript: Transcript,
-    ) -> None:
-        """Should handle malformed XML gracefully."""
-        # Malformed response with missing closing tags
-        malformed = """
-Some preamble text...
-<assessment>
-Valid assessment here.
-</assessment>
-<PHQ8_symptoms>
-Symptoms without proper closing
-<social_factors>
-Nested unclosed tags
-"""
-        client = MockLLMClient(chat_responses=[malformed])
-        agent = QualitativeAssessmentAgent(llm_client=client)
-        result = await agent.assess(sample_transcript)
-
-        # Extract what we can, defaults for what we can't
-        assert result.overall == "Valid assessment here."
-        # PHQ8_symptoms not closed, so empty
-        assert result.phq8_symptoms == "Not assessed"
-        assert result.social_factors == "Not assessed"
-        assert result.participant_id == 123
-
-    @pytest.mark.asyncio
-    async def test_refine_sends_feedback_in_prompt(
-        self,
-        mock_client: MockLLMClient,
-        sample_transcript: Transcript,
-    ) -> None:
-        """Refinement should include feedback in prompt."""
-        # Need two responses: one for assess, one for refine
-        mock_client.add_chat_response(SAMPLE_LLM_RESPONSE)
-
-        agent = QualitativeAssessmentAgent(llm_client=mock_client)
+        """Refinement should call the Pydantic AI agent."""
+        agent = QualitativeAssessmentAgent(
+            llm_client=MockLLMClient(),
+            pydantic_ai_settings=PydanticAISettings(enabled=True),
+            ollama_base_url="http://mock",
+        )
         initial = await agent.assess(sample_transcript)
 
         feedback = {
@@ -275,41 +154,22 @@ Nested unclosed tags
         }
         await agent.refine(initial, feedback, sample_transcript)
 
-        assert mock_client.chat_call_count == 2
-        refine_request = mock_client.chat_requests[1]
-        user_msg = next(m for m in refine_request.messages if m.role == "user")
-
-        assert "Missing analysis of sleep symptoms" in user_msg.content
-        assert "Need more quotes" in user_msg.content
-        assert "COMPLETENESS" in user_msg.content
-        assert "EVIDENCE" in user_msg.content
+        # Agent should be called twice (assess + refine)
+        mock_agent = mock_agent_factory.return_value
+        assert mock_agent.run.call_count == 2
 
     @pytest.mark.asyncio
-    async def test_refine_includes_original_assessment(
-        self,
-        mock_client: MockLLMClient,
-        sample_transcript: Transcript,
-    ) -> None:
-        """Refinement should include original assessment."""
-        mock_client.add_chat_response(SAMPLE_LLM_RESPONSE)
-
-        agent = QualitativeAssessmentAgent(llm_client=mock_client)
-        initial = await agent.assess(sample_transcript)
-
-        await agent.refine(initial, {"test": "feedback"}, sample_transcript)
-
-        refine_request = mock_client.chat_requests[1]
-        user_msg = next(m for m in refine_request.messages if m.role == "user")
-        assert initial.overall in user_msg.content
-
-    @pytest.mark.asyncio
+    @pytest.mark.usefixtures("mock_agent_factory")
     async def test_full_text_property(
         self,
-        mock_client: MockLLMClient,
         sample_transcript: Transcript,
     ) -> None:
         """Assessment full_text should contain all sections."""
-        agent = QualitativeAssessmentAgent(llm_client=mock_client)
+        agent = QualitativeAssessmentAgent(
+            llm_client=MockLLMClient(),
+            pydantic_ai_settings=PydanticAISettings(enabled=True),
+            ollama_base_url="http://mock",
+        )
         result = await agent.assess(sample_transcript)
 
         full_text = result.full_text
@@ -352,6 +212,84 @@ Nested unclosed tags
         assert mock_agent.run.call_args.kwargs["model_settings"]["timeout"] == 123.0
         assert result.overall == "Test Assessment"
         assert result.phq8_symptoms == "Test Symptoms"
+
+    @pytest.mark.asyncio
+    async def test_pydantic_ai_failure_raises(
+        self,
+        sample_transcript: Transcript,
+    ) -> None:
+        """Should raise ValueError when Pydantic AI call fails."""
+        mock_agent = AsyncMock(spec_set=Agent)
+        mock_agent.run.side_effect = RuntimeError("LLM timeout")
+
+        with patch(
+            "ai_psychiatrist.agents.pydantic_agents.create_qualitative_agent",
+            return_value=mock_agent,
+        ):
+            agent = QualitativeAssessmentAgent(
+                llm_client=MockLLMClient(),
+                pydantic_ai_settings=PydanticAISettings(enabled=True),
+                ollama_base_url="http://localhost:11434",
+            )
+            with pytest.raises(ValueError, match="Pydantic AI assessment failed"):
+                await agent.assess(sample_transcript)
+
+    @pytest.mark.asyncio
+    async def test_refine_failure_raises(
+        self,
+        sample_transcript: Transcript,
+    ) -> None:
+        """Should raise ValueError when Pydantic AI refinement fails."""
+        mock_output = QualitativeOutput(
+            assessment="Test",
+            phq8_symptoms="Test",
+            social_factors="Test",
+            biological_factors="Test",
+            risk_factors="Test",
+            exact_quotes=[],
+        )
+        mock_agent = AsyncMock(spec_set=Agent)
+        # First call succeeds (assess), second fails (refine)
+        mock_agent.run.side_effect = [
+            AsyncMock(output=mock_output),
+            RuntimeError("Refinement failed"),
+        ]
+
+        with patch(
+            "ai_psychiatrist.agents.pydantic_agents.create_qualitative_agent",
+            return_value=mock_agent,
+        ):
+            agent = QualitativeAssessmentAgent(
+                llm_client=MockLLMClient(),
+                pydantic_ai_settings=PydanticAISettings(enabled=True),
+                ollama_base_url="http://localhost:11434",
+            )
+            initial = await agent.assess(sample_transcript)
+
+            with pytest.raises(ValueError, match="Pydantic AI refinement failed"):
+                await agent.refine(initial, {"test": "feedback"}, sample_transcript)
+
+    def test_init_without_ollama_url_raises(self) -> None:
+        """Should raise ValueError when Pydantic AI enabled but no ollama_base_url."""
+        with pytest.raises(ValueError, match="ollama_base_url"):
+            QualitativeAssessmentAgent(
+                llm_client=MockLLMClient(),
+                pydantic_ai_settings=PydanticAISettings(enabled=True),
+                ollama_base_url=None,
+            )
+
+    @pytest.mark.asyncio
+    async def test_assess_without_agent_raises(self) -> None:
+        """Should raise ValueError when agent not initialized."""
+        # Create agent with Pydantic AI disabled
+        agent = QualitativeAssessmentAgent(
+            llm_client=MockLLMClient(),
+            pydantic_ai_settings=PydanticAISettings(enabled=False),
+        )
+        transcript = Transcript(participant_id=1, text="Test")
+
+        with pytest.raises(ValueError, match="Pydantic AI agent not initialized"):
+            await agent.assess(transcript)
 
 
 class TestQualitativePrompts:
@@ -429,28 +367,3 @@ class TestAgentProtocol:
         """MockLLMClient should implement SimpleChatClient protocol."""
         client = MockLLMClient()
         assert isinstance(client, SimpleChatClient)
-
-    @pytest.mark.asyncio
-    async def test_agent_works_with_protocol(self) -> None:
-        """Agent should work with any SimpleChatClient implementation."""
-
-        class CustomClient:
-            """Custom chat client for testing."""
-
-            async def simple_chat(
-                self,
-                user_prompt: str,  # noqa: ARG002
-                system_prompt: str = "",  # noqa: ARG002
-                model: str | None = None,  # noqa: ARG002
-                temperature: float = 0.0,  # noqa: ARG002
-            ) -> str:
-                return "<assessment>Custom response</assessment>"
-
-        client = CustomClient()
-        assert isinstance(client, SimpleChatClient)
-
-        agent = QualitativeAssessmentAgent(llm_client=client)
-        transcript = Transcript(participant_id=1, text="Test")
-        result = await agent.assess(transcript)
-
-        assert result.overall == "Custom response"

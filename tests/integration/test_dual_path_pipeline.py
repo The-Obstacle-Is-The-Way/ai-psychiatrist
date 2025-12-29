@@ -17,14 +17,22 @@ Test Flow:
 
 from __future__ import annotations
 
-import json
+from typing import TYPE_CHECKING
+from unittest.mock import AsyncMock, patch
 
 import pytest
+from pydantic_ai import Agent
 
 from ai_psychiatrist.agents.judge import JudgeAgent
+from ai_psychiatrist.agents.output_models import (
+    EvidenceOutput,
+    JudgeMetricOutput,
+    QualitativeOutput,
+    QuantitativeOutput,
+)
 from ai_psychiatrist.agents.qualitative import QualitativeAssessmentAgent
 from ai_psychiatrist.agents.quantitative import QuantitativeAssessmentAgent
-from ai_psychiatrist.config import FeedbackLoopSettings
+from ai_psychiatrist.config import FeedbackLoopSettings, PydanticAISettings
 from ai_psychiatrist.domain.entities import (
     PHQ8Assessment,
     QualitativeAssessment,
@@ -34,6 +42,9 @@ from ai_psychiatrist.domain.entities import (
 from ai_psychiatrist.domain.enums import AssessmentMode, PHQ8Item, SeverityLevel
 from ai_psychiatrist.services.feedback_loop import FeedbackLoopService
 from tests.fixtures.mock_llm import MockLLMClient
+
+if TYPE_CHECKING:
+    from collections.abc import Generator
 
 # Sample transcript representing a DAIC-WOZ interview
 SAMPLE_DAIC_TRANSCRIPT = """Ellie: Hello, my name is Ellie. I'm here to learn about you. I'll ask a few questions to get us started.
@@ -63,95 +74,151 @@ Ellie: Is there anything else you'd like to share?
 Participant: No, that's about it. Just tired of feeling this way."""
 
 
-# Sample qualitative assessment response
-SAMPLE_QUALITATIVE_RESPONSE = """
-<assessment>
-The participant presents with multiple symptoms consistent with moderate depression.
-Key concerns include anhedonia, sleep disturbances, fatigue, decreased appetite,
-negative self-perception, concentration difficulties, and depressed mood.
-</assessment>
-
-<PHQ8_symptoms>
-- Anhedonia: "I don't really enjoy things anymore" - Several days
-- Sleep issues: "I can't fall asleep most nights" - Nearly every day
-- Fatigue: "I'm always tired" - Nearly every day
-- Appetite changes: "I've lost some weight" - More than half days
-- Negative self-view: "I feel like a failure" - Several days
-- Concentration: "My memory is shot" - More than half days
-- Depressed mood: "Feeling pretty down lately" - More than half days
-</PHQ8_symptoms>
-
-<social_factors>
-No specific social factors mentioned in this transcript.
-</social_factors>
-
-<biological_factors>
-Sleep disturbance patterns suggest possible circadian rhythm disruption.
-</biological_factors>
-
-<risk_factors>
-Expression of hopelessness noted: "Things seem pretty hopeless sometimes"
-No active suicidal ideation reported.
-</risk_factors>
-
-<exact_quotes>
-- "I don't really enjoy things anymore"
-- "I'm always tired"
-- "I can't fall asleep most nights"
-- "I've lost some weight"
-- "I feel like a failure sometimes"
-- "My memory is shot"
-- "Feeling pretty down lately"
-</exact_quotes>
-"""
-
-# Sample judge high score response
-SAMPLE_JUDGE_HIGH_RESPONSE = """Explanation: The assessment is thorough, specific, and well-supported by evidence.
-Score: 5"""
-
-# Sample quantitative evidence response
-SAMPLE_QUANT_EVIDENCE_RESPONSE = json.dumps(
-    {
-        "PHQ8_NoInterest": [
-            "I don't really enjoy things anymore.",
-            "Activities that used to be fun just feel like a chore now.",
+# Sample Pydantic AI outputs
+def make_qualitative_output() -> QualitativeOutput:
+    """Create sample QualitativeOutput for mocking."""
+    return QualitativeOutput(
+        assessment="The participant presents with multiple symptoms consistent with moderate depression.",
+        phq8_symptoms=(
+            "Anhedonia: clear loss of interest. "
+            "Sleep issues: trouble falling asleep. "
+            "Fatigue: constant tiredness reported. "
+        ),
+        social_factors="No specific social factors mentioned.",
+        biological_factors="Sleep disturbance patterns suggest possible circadian rhythm disruption.",
+        risk_factors="Expression of hopelessness noted. No active suicidal ideation.",
+        exact_quotes=[
+            "I don't really enjoy things anymore",
+            "I'm always tired",
+            "I can't fall asleep most nights",
         ],
-        "PHQ8_Depressed": ["Feeling pretty down lately.", "Things seem pretty hopeless sometimes."],
-        "PHQ8_Sleep": [
-            "I can't fall asleep most nights.",
-            "Even when I sleep, I wake up exhausted.",
-        ],
-        "PHQ8_Tired": ["I'm always tired."],
-        "PHQ8_Appetite": ["I've lost some weight.", "Don't really feel like eating most days."],
-        "PHQ8_Failure": ["I feel like a failure sometimes.", "Like I'm letting everyone down."],
-        "PHQ8_Concentrating": [
-            "My memory is shot.",
-            "I forgot what I was doing multiple times today.",
-            "Can't focus on anything.",
-        ],
-        "PHQ8_Moving": [],
-    }
-)
-
-# Sample quantitative scoring response
-SAMPLE_QUANT_SCORING_RESPONSE = """<thinking>
-Analyzing each PHQ-8 item based on transcript evidence...
-</thinking>
-
-<answer>
-{
-    "PHQ8_NoInterest": {"evidence": "I don't really enjoy things anymore", "reason": "Clear statement of anhedonia", "score": 2},
-    "PHQ8_Depressed": {"evidence": "Feeling pretty down lately", "reason": "Reports depressed mood and hopelessness", "score": 2},
-    "PHQ8_Sleep": {"evidence": "I can't fall asleep most nights", "reason": "Significant sleep disturbance", "score": 3},
-    "PHQ8_Tired": {"evidence": "I'm always tired", "reason": "Constant fatigue reported", "score": 3},
-    "PHQ8_Appetite": {"evidence": "I've lost some weight", "reason": "Appetite changes with weight loss", "score": 2},
-    "PHQ8_Failure": {"evidence": "I feel like a failure sometimes", "reason": "Negative self-perception", "score": 1},
-    "PHQ8_Concentrating": {"evidence": "My memory is shot", "reason": "Clear concentration difficulties", "score": 2},
-    "PHQ8_Moving": {"evidence": "No relevant evidence found", "reason": "Psychomotor changes not discussed", "score": "N/A"}
-}
-</answer>"""
+    )
 
 
+def make_judge_output_high() -> JudgeMetricOutput:
+    """Create high-score JudgeMetricOutput."""
+    return JudgeMetricOutput(score=5, explanation="The assessment is thorough and well-supported.")
+
+
+def make_quantitative_output() -> QuantitativeOutput:
+    """Create sample QuantitativeOutput for mocking."""
+    return QuantitativeOutput(
+        PHQ8_NoInterest=EvidenceOutput(
+            evidence="I don't really enjoy things anymore", reason="Clear anhedonia", score=2
+        ),
+        PHQ8_Depressed=EvidenceOutput(
+            evidence="Feeling pretty down lately", reason="Depressed mood", score=2
+        ),
+        PHQ8_Sleep=EvidenceOutput(
+            evidence="I can't fall asleep most nights", reason="Sleep disturbance", score=3
+        ),
+        PHQ8_Tired=EvidenceOutput(evidence="I'm always tired", reason="Fatigue", score=3),
+        PHQ8_Appetite=EvidenceOutput(
+            evidence="I've lost some weight", reason="Appetite changes", score=2
+        ),
+        PHQ8_Failure=EvidenceOutput(
+            evidence="I feel like a failure", reason="Negative self-perception", score=1
+        ),
+        PHQ8_Concentrating=EvidenceOutput(
+            evidence="My memory is shot", reason="Concentration difficulties", score=2
+        ),
+        PHQ8_Moving=EvidenceOutput(evidence="None", reason="Not discussed", score=None),
+    )
+
+
+def make_minimal_quantitative_output() -> QuantitativeOutput:
+    """Create minimal score QuantitativeOutput."""
+    return QuantitativeOutput(
+        PHQ8_NoInterest=EvidenceOutput(evidence="test", reason="test", score=0),
+        PHQ8_Depressed=EvidenceOutput(evidence="test", reason="test", score=0),
+        PHQ8_Sleep=EvidenceOutput(evidence="test", reason="test", score=0),
+        PHQ8_Tired=EvidenceOutput(evidence="test", reason="test", score=0),
+        PHQ8_Appetite=EvidenceOutput(evidence="test", reason="test", score=0),
+        PHQ8_Failure=EvidenceOutput(evidence="test", reason="test", score=0),
+        PHQ8_Concentrating=EvidenceOutput(evidence="test", reason="test", score=0),
+        PHQ8_Moving=EvidenceOutput(evidence="test", reason="test", score=0),
+    )
+
+
+def make_mild_quantitative_output() -> QuantitativeOutput:
+    """Create mild severity QuantitativeOutput (total=7)."""
+    return QuantitativeOutput(
+        PHQ8_NoInterest=EvidenceOutput(evidence="test", reason="test", score=1),
+        PHQ8_Depressed=EvidenceOutput(evidence="test", reason="test", score=1),
+        PHQ8_Sleep=EvidenceOutput(evidence="test", reason="test", score=1),
+        PHQ8_Tired=EvidenceOutput(evidence="test", reason="test", score=1),
+        PHQ8_Appetite=EvidenceOutput(evidence="test", reason="test", score=1),
+        PHQ8_Failure=EvidenceOutput(evidence="test", reason="test", score=1),
+        PHQ8_Concentrating=EvidenceOutput(evidence="test", reason="test", score=1),
+        PHQ8_Moving=EvidenceOutput(evidence="test", reason="test", score=0),
+    )
+
+
+def make_moderate_quantitative_output() -> QuantitativeOutput:
+    """Create moderate severity QuantitativeOutput (total=10)."""
+    return QuantitativeOutput(
+        PHQ8_NoInterest=EvidenceOutput(evidence="test", reason="test", score=2),
+        PHQ8_Depressed=EvidenceOutput(evidence="test", reason="test", score=2),
+        PHQ8_Sleep=EvidenceOutput(evidence="test", reason="test", score=2),
+        PHQ8_Tired=EvidenceOutput(evidence="test", reason="test", score=2),
+        PHQ8_Appetite=EvidenceOutput(evidence="test", reason="test", score=1),
+        PHQ8_Failure=EvidenceOutput(evidence="test", reason="test", score=1),
+        PHQ8_Concentrating=EvidenceOutput(evidence="test", reason="test", score=0),
+        PHQ8_Moving=EvidenceOutput(evidence="test", reason="test", score=0),
+    )
+
+
+def make_severe_quantitative_output() -> QuantitativeOutput:
+    """Create severe QuantitativeOutput (total=24)."""
+    return QuantitativeOutput(
+        PHQ8_NoInterest=EvidenceOutput(evidence="test", reason="test", score=3),
+        PHQ8_Depressed=EvidenceOutput(evidence="test", reason="test", score=3),
+        PHQ8_Sleep=EvidenceOutput(evidence="test", reason="test", score=3),
+        PHQ8_Tired=EvidenceOutput(evidence="test", reason="test", score=3),
+        PHQ8_Appetite=EvidenceOutput(evidence="test", reason="test", score=3),
+        PHQ8_Failure=EvidenceOutput(evidence="test", reason="test", score=3),
+        PHQ8_Concentrating=EvidenceOutput(evidence="test", reason="test", score=3),
+        PHQ8_Moving=EvidenceOutput(evidence="test", reason="test", score=3),
+    )
+
+
+@pytest.fixture
+def mock_qualitative_agent() -> Generator[AsyncMock, None, None]:
+    """Patch create_qualitative_agent to return a mock."""
+    mock_agent = AsyncMock(spec_set=Agent)
+    mock_agent.run.return_value = AsyncMock(output=make_qualitative_output())
+    with patch(
+        "ai_psychiatrist.agents.pydantic_agents.create_qualitative_agent",
+        return_value=mock_agent,
+    ):
+        yield mock_agent
+
+
+@pytest.fixture
+def mock_judge_agent() -> Generator[AsyncMock, None, None]:
+    """Patch create_judge_metric_agent to return a mock."""
+    mock_agent = AsyncMock(spec_set=Agent)
+    mock_agent.run.return_value = AsyncMock(output=make_judge_output_high())
+    with patch(
+        "ai_psychiatrist.agents.pydantic_agents.create_judge_metric_agent",
+        return_value=mock_agent,
+    ):
+        yield mock_agent
+
+
+@pytest.fixture
+def mock_quantitative_agent() -> Generator[AsyncMock, None, None]:
+    """Patch create_quantitative_agent to return a mock."""
+    mock_agent = AsyncMock(spec_set=Agent)
+    mock_agent.run.return_value = AsyncMock(output=make_quantitative_output())
+    with patch(
+        "ai_psychiatrist.agents.pydantic_agents.create_quantitative_agent",
+        return_value=mock_agent,
+    ):
+        yield mock_agent
+
+
+@pytest.mark.usefixtures("mock_qualitative_agent", "mock_judge_agent", "mock_quantitative_agent")
 class TestDualPathPipeline:
     """Integration tests for the dual-path assessment pipeline."""
 
@@ -164,37 +231,27 @@ class TestDualPathPipeline:
         )
 
     @pytest.fixture
-    def qualitative_mock_client(self) -> MockLLMClient:
-        """Create mock client for qualitative path."""
-        return MockLLMClient(
-            chat_responses=[
-                SAMPLE_QUALITATIVE_RESPONSE,  # Assess
-                SAMPLE_JUDGE_HIGH_RESPONSE,  # Judge Metric 1
-                SAMPLE_JUDGE_HIGH_RESPONSE,  # Judge Metric 2
-                SAMPLE_JUDGE_HIGH_RESPONSE,  # Judge Metric 3
-                SAMPLE_JUDGE_HIGH_RESPONSE,  # Judge Metric 4
-            ]
-        )
-
-    @pytest.fixture
-    def quantitative_mock_client(self) -> MockLLMClient:
-        """Create mock client for quantitative path."""
-        return MockLLMClient(
-            chat_responses=[
-                SAMPLE_QUANT_EVIDENCE_RESPONSE,  # Evidence extraction
-                SAMPLE_QUANT_SCORING_RESPONSE,  # PHQ-8 scoring
-            ]
-        )
+    def mock_client(self) -> MockLLMClient:
+        """Create mock LLM client."""
+        return MockLLMClient()
 
     @pytest.mark.asyncio
     async def test_qualitative_path_produces_valid_assessment(
         self,
-        qualitative_mock_client: MockLLMClient,
+        mock_client: MockLLMClient,
         sample_transcript: Transcript,
     ) -> None:
         """Qualitative path should produce complete assessment."""
-        qual_agent = QualitativeAssessmentAgent(qualitative_mock_client)
-        judge_agent = JudgeAgent(qualitative_mock_client)
+        qual_agent = QualitativeAssessmentAgent(
+            mock_client,
+            pydantic_ai_settings=PydanticAISettings(enabled=True),
+            ollama_base_url="http://mock",
+        )
+        judge_agent = JudgeAgent(
+            mock_client,
+            pydantic_ai_settings=PydanticAISettings(enabled=True),
+            ollama_base_url="http://mock",
+        )
 
         settings = FeedbackLoopSettings(
             enabled=True,
@@ -219,13 +276,15 @@ class TestDualPathPipeline:
     @pytest.mark.asyncio
     async def test_quantitative_path_produces_valid_assessment(
         self,
-        quantitative_mock_client: MockLLMClient,
+        mock_client: MockLLMClient,
         sample_transcript: Transcript,
     ) -> None:
         """Quantitative path should produce PHQ-8 scores."""
         quant_agent = QuantitativeAssessmentAgent(
-            llm_client=quantitative_mock_client,
+            llm_client=mock_client,
             mode=AssessmentMode.ZERO_SHOT,
+            pydantic_ai_settings=PydanticAISettings(enabled=True),
+            ollama_base_url="http://mock",
         )
 
         assessment = await quant_agent.assess(sample_transcript)
@@ -247,21 +306,30 @@ class TestDualPathPipeline:
     @pytest.mark.asyncio
     async def test_dual_path_runs_independently(
         self,
-        qualitative_mock_client: MockLLMClient,
-        quantitative_mock_client: MockLLMClient,
+        mock_client: MockLLMClient,
         sample_transcript: Transcript,
     ) -> None:
         """Both paths should run independently and produce valid outputs."""
         # Qualitative path
-        qual_agent = QualitativeAssessmentAgent(qualitative_mock_client)
-        judge_agent = JudgeAgent(qualitative_mock_client)
+        qual_agent = QualitativeAssessmentAgent(
+            mock_client,
+            pydantic_ai_settings=PydanticAISettings(enabled=True),
+            ollama_base_url="http://mock",
+        )
+        judge_agent = JudgeAgent(
+            mock_client,
+            pydantic_ai_settings=PydanticAISettings(enabled=True),
+            ollama_base_url="http://mock",
+        )
         settings = FeedbackLoopSettings(enabled=True, max_iterations=1, score_threshold=3)
         qual_service = FeedbackLoopService(qual_agent, judge_agent, settings)
 
         # Quantitative path
         quant_agent = QuantitativeAssessmentAgent(
-            llm_client=quantitative_mock_client,
+            llm_client=mock_client,
             mode=AssessmentMode.ZERO_SHOT,
+            pydantic_ai_settings=PydanticAISettings(enabled=True),
+            ollama_base_url="http://mock",
         )
 
         # Run both paths
@@ -278,13 +346,15 @@ class TestDualPathPipeline:
     @pytest.mark.asyncio
     async def test_quantitative_total_score_calculation(
         self,
-        quantitative_mock_client: MockLLMClient,
+        mock_client: MockLLMClient,
         sample_transcript: Transcript,
     ) -> None:
         """Quantitative path should calculate correct total score."""
         quant_agent = QuantitativeAssessmentAgent(
-            llm_client=quantitative_mock_client,
+            llm_client=mock_client,
             mode=AssessmentMode.ZERO_SHOT,
+            pydantic_ai_settings=PydanticAISettings(enabled=True),
+            ollama_base_url="http://mock",
         )
 
         assessment = await quant_agent.assess(sample_transcript)
@@ -298,13 +368,15 @@ class TestDualPathPipeline:
     @pytest.mark.asyncio
     async def test_quantitative_na_count(
         self,
-        quantitative_mock_client: MockLLMClient,
+        mock_client: MockLLMClient,
         sample_transcript: Transcript,
     ) -> None:
         """Quantitative path should track N/A counts correctly."""
         quant_agent = QuantitativeAssessmentAgent(
-            llm_client=quantitative_mock_client,
+            llm_client=mock_client,
             mode=AssessmentMode.ZERO_SHOT,
+            pydantic_ai_settings=PydanticAISettings(enabled=True),
+            ollama_base_url="http://mock",
         )
 
         assessment = await quant_agent.assess(sample_transcript)
@@ -316,21 +388,30 @@ class TestDualPathPipeline:
     @pytest.mark.asyncio
     async def test_outputs_ready_for_meta_review(
         self,
-        qualitative_mock_client: MockLLMClient,
-        quantitative_mock_client: MockLLMClient,
+        mock_client: MockLLMClient,
         sample_transcript: Transcript,
     ) -> None:
         """Both path outputs should have data needed for meta-review."""
         # Qualitative path
-        qual_agent = QualitativeAssessmentAgent(qualitative_mock_client)
-        judge_agent = JudgeAgent(qualitative_mock_client)
+        qual_agent = QualitativeAssessmentAgent(
+            mock_client,
+            pydantic_ai_settings=PydanticAISettings(enabled=True),
+            ollama_base_url="http://mock",
+        )
+        judge_agent = JudgeAgent(
+            mock_client,
+            pydantic_ai_settings=PydanticAISettings(enabled=True),
+            ollama_base_url="http://mock",
+        )
         settings = FeedbackLoopSettings(enabled=True, max_iterations=1, score_threshold=3)
         qual_service = FeedbackLoopService(qual_agent, judge_agent, settings)
 
         # Quantitative path
         quant_agent = QuantitativeAssessmentAgent(
-            llm_client=quantitative_mock_client,
+            llm_client=mock_client,
             mode=AssessmentMode.ZERO_SHOT,
+            pydantic_ai_settings=PydanticAISettings(enabled=True),
+            ollama_base_url="http://mock",
         )
 
         # Run both
@@ -355,6 +436,7 @@ class TestDualPathPipeline:
             assert item_assessment.reason is not None
 
 
+@pytest.mark.usefixtures("mock_qualitative_agent", "mock_judge_agent", "mock_quantitative_agent")
 class TestCrossPathConsistency:
     """Tests for cross-path consistency checks from Spec 09.5."""
 
@@ -366,31 +448,32 @@ class TestCrossPathConsistency:
             text=SAMPLE_DAIC_TRANSCRIPT,
         )
 
+    @pytest.fixture
+    def mock_client(self) -> MockLLMClient:
+        """Create mock LLM client."""
+        return MockLLMClient()
+
     @pytest.mark.asyncio
     async def test_both_paths_cover_all_symptoms(
         self,
+        mock_client: MockLLMClient,
         sample_transcript: Transcript,
     ) -> None:
         """Both paths should cover all 8 PHQ-8 symptoms."""
         # Qualitative path covers symptoms via PHQ8_symptoms field
-        qual_client = MockLLMClient(
-            chat_responses=[
-                SAMPLE_QUALITATIVE_RESPONSE,
-                SAMPLE_JUDGE_HIGH_RESPONSE,
-                SAMPLE_JUDGE_HIGH_RESPONSE,
-                SAMPLE_JUDGE_HIGH_RESPONSE,
-                SAMPLE_JUDGE_HIGH_RESPONSE,
-            ]
+        qual_agent = QualitativeAssessmentAgent(
+            mock_client,
+            pydantic_ai_settings=PydanticAISettings(enabled=True),
+            ollama_base_url="http://mock",
         )
-        qual_agent = QualitativeAssessmentAgent(qual_client)
         qual_result = await qual_agent.assess(sample_transcript)
 
         # Quantitative path covers all 8 explicitly
-        quant_client = MockLLMClient(
-            chat_responses=[SAMPLE_QUANT_EVIDENCE_RESPONSE, SAMPLE_QUANT_SCORING_RESPONSE]
-        )
         quant_agent = QuantitativeAssessmentAgent(
-            llm_client=quant_client, mode=AssessmentMode.ZERO_SHOT
+            llm_client=mock_client,
+            mode=AssessmentMode.ZERO_SHOT,
+            pydantic_ai_settings=PydanticAISettings(enabled=True),
+            ollama_base_url="http://mock",
         )
         quant_result = await quant_agent.assess(sample_transcript)
 
@@ -411,37 +494,31 @@ class TestCrossPathConsistency:
     @pytest.mark.asyncio
     async def test_no_shared_state_between_paths(
         self,
+        mock_client: MockLLMClient,
         sample_transcript: Transcript,
+        mock_qualitative_agent: AsyncMock,
+        mock_quantitative_agent: AsyncMock,
     ) -> None:
-        """Paths should not share state (independent LLM clients)."""
-        qual_client = MockLLMClient(
-            chat_responses=[
-                SAMPLE_QUALITATIVE_RESPONSE,
-                SAMPLE_JUDGE_HIGH_RESPONSE,
-                SAMPLE_JUDGE_HIGH_RESPONSE,
-                SAMPLE_JUDGE_HIGH_RESPONSE,
-                SAMPLE_JUDGE_HIGH_RESPONSE,
-            ]
+        """Paths should not share state (independent agents)."""
+        qual_agent = QualitativeAssessmentAgent(
+            mock_client,
+            pydantic_ai_settings=PydanticAISettings(enabled=True),
+            ollama_base_url="http://mock",
         )
-        quant_client = MockLLMClient(
-            chat_responses=[SAMPLE_QUANT_EVIDENCE_RESPONSE, SAMPLE_QUANT_SCORING_RESPONSE]
-        )
-
-        qual_agent = QualitativeAssessmentAgent(qual_client)
         quant_agent = QuantitativeAssessmentAgent(
-            llm_client=quant_client, mode=AssessmentMode.ZERO_SHOT
+            llm_client=mock_client,
+            mode=AssessmentMode.ZERO_SHOT,
+            pydantic_ai_settings=PydanticAISettings(enabled=True),
+            ollama_base_url="http://mock",
         )
 
         # Run both
         await qual_agent.assess(sample_transcript)
         await quant_agent.assess(sample_transcript)
 
-        # Verify call counts are independent
-        # Qualitative makes 1 call for assessment
-        assert qual_client.chat_call_count == 1
-
-        # Quantitative makes 2 calls (evidence + scoring)
-        assert quant_client.chat_call_count == 2
+        # Verify agents were called independently
+        mock_qualitative_agent.run.assert_called()
+        mock_quantitative_agent.run.assert_called()
 
 
 class TestSeverityMapping:
@@ -452,75 +529,100 @@ class TestSeverityMapping:
         """Create sample transcript."""
         return Transcript(participant_id=1, text="Test transcript content")
 
+    @pytest.fixture
+    def mock_client(self) -> MockLLMClient:
+        """Create mock LLM client."""
+        return MockLLMClient()
+
     @pytest.mark.asyncio
-    async def test_minimal_severity(self, sample_transcript: Transcript) -> None:
+    async def test_minimal_severity(
+        self, mock_client: MockLLMClient, sample_transcript: Transcript
+    ) -> None:
         """Total 0-4 should map to MINIMAL."""
-        scoring_response = json.dumps(
-            {
-                f"PHQ8_{item.value}": {"evidence": "test", "reason": "test", "score": 0}
-                for item in PHQ8Item.all_items()
-            }
-        )
-        client = MockLLMClient(chat_responses=["{}", scoring_response])
-        agent = QuantitativeAssessmentAgent(llm_client=client, mode=AssessmentMode.ZERO_SHOT)
-        result = await agent.assess(sample_transcript)
+        mock_agent = AsyncMock(spec_set=Agent)
+        mock_agent.run.return_value = AsyncMock(output=make_minimal_quantitative_output())
+
+        with patch(
+            "ai_psychiatrist.agents.pydantic_agents.create_quantitative_agent",
+            return_value=mock_agent,
+        ):
+            agent = QuantitativeAssessmentAgent(
+                llm_client=mock_client,
+                mode=AssessmentMode.ZERO_SHOT,
+                pydantic_ai_settings=PydanticAISettings(enabled=True),
+                ollama_base_url="http://mock",
+            )
+            result = await agent.assess(sample_transcript)
 
         assert result.total_score == 0
         assert result.severity == SeverityLevel.MINIMAL
 
     @pytest.mark.asyncio
-    async def test_mild_severity(self, sample_transcript: Transcript) -> None:
+    async def test_mild_severity(
+        self, mock_client: MockLLMClient, sample_transcript: Transcript
+    ) -> None:
         """Total 5-9 should map to MILD."""
-        # Create scores that sum to 7
-        scores = [1, 1, 1, 1, 1, 1, 1, 0]  # Sum = 7
-        scoring_data = {}
-        for i, item in enumerate(PHQ8Item.all_items()):
-            scoring_data[f"PHQ8_{item.value}"] = {
-                "evidence": "test",
-                "reason": "test",
-                "score": scores[i],
-            }
-        scoring_response = json.dumps(scoring_data)
-        client = MockLLMClient(chat_responses=["{}", scoring_response])
-        agent = QuantitativeAssessmentAgent(llm_client=client, mode=AssessmentMode.ZERO_SHOT)
-        result = await agent.assess(sample_transcript)
+        mock_agent = AsyncMock(spec_set=Agent)
+        mock_agent.run.return_value = AsyncMock(output=make_mild_quantitative_output())
+
+        with patch(
+            "ai_psychiatrist.agents.pydantic_agents.create_quantitative_agent",
+            return_value=mock_agent,
+        ):
+            agent = QuantitativeAssessmentAgent(
+                llm_client=mock_client,
+                mode=AssessmentMode.ZERO_SHOT,
+                pydantic_ai_settings=PydanticAISettings(enabled=True),
+                ollama_base_url="http://mock",
+            )
+            result = await agent.assess(sample_transcript)
 
         assert result.total_score == 7
         assert result.severity == SeverityLevel.MILD
 
     @pytest.mark.asyncio
-    async def test_moderate_severity_mdd_threshold(self, sample_transcript: Transcript) -> None:
+    async def test_moderate_severity_mdd_threshold(
+        self, mock_client: MockLLMClient, sample_transcript: Transcript
+    ) -> None:
         """Total 10-14 should map to MODERATE (MDD threshold)."""
-        # Create scores that sum to 10
-        scores = [2, 2, 2, 2, 1, 1, 0, 0]  # Sum = 10
-        scoring_data = {}
-        for i, item in enumerate(PHQ8Item.all_items()):
-            scoring_data[f"PHQ8_{item.value}"] = {
-                "evidence": "test",
-                "reason": "test",
-                "score": scores[i],
-            }
-        scoring_response = json.dumps(scoring_data)
-        client = MockLLMClient(chat_responses=["{}", scoring_response])
-        agent = QuantitativeAssessmentAgent(llm_client=client, mode=AssessmentMode.ZERO_SHOT)
-        result = await agent.assess(sample_transcript)
+        mock_agent = AsyncMock(spec_set=Agent)
+        mock_agent.run.return_value = AsyncMock(output=make_moderate_quantitative_output())
+
+        with patch(
+            "ai_psychiatrist.agents.pydantic_agents.create_quantitative_agent",
+            return_value=mock_agent,
+        ):
+            agent = QuantitativeAssessmentAgent(
+                llm_client=mock_client,
+                mode=AssessmentMode.ZERO_SHOT,
+                pydantic_ai_settings=PydanticAISettings(enabled=True),
+                ollama_base_url="http://mock",
+            )
+            result = await agent.assess(sample_transcript)
 
         assert result.total_score == 10
         assert result.severity == SeverityLevel.MODERATE
         assert result.severity.is_mdd  # MDD threshold check
 
     @pytest.mark.asyncio
-    async def test_severe_severity(self, sample_transcript: Transcript) -> None:
+    async def test_severe_severity(
+        self, mock_client: MockLLMClient, sample_transcript: Transcript
+    ) -> None:
         """Total 20-24 should map to SEVERE."""
-        scoring_response = json.dumps(
-            {
-                f"PHQ8_{item.value}": {"evidence": "test", "reason": "test", "score": 3}
-                for item in PHQ8Item.all_items()
-            }
-        )
-        client = MockLLMClient(chat_responses=["{}", scoring_response])
-        agent = QuantitativeAssessmentAgent(llm_client=client, mode=AssessmentMode.ZERO_SHOT)
-        result = await agent.assess(sample_transcript)
+        mock_agent = AsyncMock(spec_set=Agent)
+        mock_agent.run.return_value = AsyncMock(output=make_severe_quantitative_output())
+
+        with patch(
+            "ai_psychiatrist.agents.pydantic_agents.create_quantitative_agent",
+            return_value=mock_agent,
+        ):
+            agent = QuantitativeAssessmentAgent(
+                llm_client=mock_client,
+                mode=AssessmentMode.ZERO_SHOT,
+                pydantic_ai_settings=PydanticAISettings(enabled=True),
+                ollama_base_url="http://mock",
+            )
+            result = await agent.assess(sample_transcript)
 
         assert result.total_score == 24
         assert result.severity == SeverityLevel.SEVERE

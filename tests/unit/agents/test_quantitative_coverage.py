@@ -3,13 +3,21 @@
 from __future__ import annotations
 
 import json
+from typing import TYPE_CHECKING
+from unittest.mock import AsyncMock, patch
 
 import pytest
+from pydantic_ai import Agent
 
+if TYPE_CHECKING:
+    from collections.abc import Generator
+
+from ai_psychiatrist.agents.output_models import EvidenceOutput, QuantitativeOutput
 from ai_psychiatrist.agents.prompts.quantitative import DOMAIN_KEYWORDS
 from ai_psychiatrist.agents.quantitative import QuantitativeAssessmentAgent
+from ai_psychiatrist.config import PydanticAISettings
 from ai_psychiatrist.domain.entities import Transcript
-from ai_psychiatrist.domain.enums import AssessmentMode, PHQ8Item
+from ai_psychiatrist.domain.enums import AssessmentMode
 from tests.fixtures.mock_llm import MockLLMClient
 
 SAMPLE_EVIDENCE_RESPONSE = json.dumps({k: ["evidence"] for k in DOMAIN_KEYWORDS})
@@ -22,179 +30,84 @@ class TestQuantitativeCoverage:
     def transcript(self) -> Transcript:
         return Transcript(participant_id=1, text="Test transcript.")
 
-    @pytest.mark.asyncio
-    async def test_extract_evidence_json_error(self, transcript: Transcript) -> None:
-        """Test _extract_evidence handling of completely invalid JSON."""
-        # First response is invalid JSON for evidence
-        # Second response is valid scoring (to allow assess to finish)
-        scoring_response = json.dumps(
-            {k: {"evidence": "e", "reason": "r", "score": 0} for k in DOMAIN_KEYWORDS}
+    @pytest.fixture
+    def mock_quantitative_output(self) -> QuantitativeOutput:
+        """Create valid QuantitativeOutput for mocking."""
+        return QuantitativeOutput(
+            PHQ8_NoInterest=EvidenceOutput(evidence="e", reason="r", score=0),
+            PHQ8_Depressed=EvidenceOutput(evidence="e", reason="r", score=0),
+            PHQ8_Sleep=EvidenceOutput(evidence="e", reason="r", score=0),
+            PHQ8_Tired=EvidenceOutput(evidence="e", reason="r", score=0),
+            PHQ8_Appetite=EvidenceOutput(evidence="e", reason="r", score=0),
+            PHQ8_Failure=EvidenceOutput(evidence="e", reason="r", score=0),
+            PHQ8_Concentrating=EvidenceOutput(evidence="e", reason="r", score=0),
+            PHQ8_Moving=EvidenceOutput(evidence="e", reason="r", score=0),
         )
 
-        client = MockLLMClient(chat_responses=["NOT JSON AT ALL", scoring_response])
+    @pytest.fixture
+    def mock_agent_factory(
+        self, mock_quantitative_output: QuantitativeOutput
+    ) -> Generator[AsyncMock, None, None]:
+        """Patch create_quantitative_agent to return a mock agent."""
+        mock_agent = AsyncMock(spec_set=Agent)
+        mock_agent.run.return_value = AsyncMock(output=mock_quantitative_output)
 
-        agent = QuantitativeAssessmentAgent(client, mode=AssessmentMode.ZERO_SHOT)
+        patcher = patch(
+            "ai_psychiatrist.agents.pydantic_agents.create_quantitative_agent",
+            return_value=mock_agent,
+        )
+        mock = patcher.start()
+        yield mock
+        patcher.stop()
 
-        # This should log a warning and return empty dict, then backfill
+    @pytest.mark.asyncio
+    @pytest.mark.usefixtures("mock_agent_factory")
+    async def test_extract_evidence_json_error(self, transcript: Transcript) -> None:
+        """Test _extract_evidence handling of completely invalid JSON."""
+        # Evidence response is invalid JSON - should log warning and use empty dict
+        client = MockLLMClient(chat_responses=["NOT JSON AT ALL"])
+
+        agent = QuantitativeAssessmentAgent(
+            client,
+            mode=AssessmentMode.ZERO_SHOT,
+            pydantic_ai_settings=PydanticAISettings(enabled=True),
+            ollama_base_url="http://mock",
+        )
+
+        # This should log a warning for evidence parsing and still complete
         result = await agent.assess(transcript)
         assert result.total_score is not None
 
     @pytest.mark.asyncio
-    async def test_parse_response_answer_block_failure(self, transcript: Transcript) -> None:
-        """Test <answer> block with invalid JSON falls back to LLM repair."""
-        # Evidence response (valid)
-        evidence_resp = SAMPLE_EVIDENCE_RESPONSE
-
-        # Scoring response: Has <answer> tags but content is invalid JSON
-        # Strategy 1 (_strip_json_block) extracts content but JSON parsing fails
-        # This forces it to go to Strategy 2 (LLM Repair)
-        bad_answer_block = "<answer>{ invalid json </answer>"
-
-        # Repair response (valid)
-        repair_resp = json.dumps(
-            {k: {"evidence": "repaired", "reason": "r", "score": 1} for k in DOMAIN_KEYWORDS}
-        )
-
-        client = MockLLMClient(chat_responses=[evidence_resp, bad_answer_block, repair_resp])
-
-        agent = QuantitativeAssessmentAgent(client, mode=AssessmentMode.ZERO_SHOT)
-        result = await agent.assess(transcript)
-
-        # Should have used the repaired score
-        assert result.items[PHQ8Item.DEPRESSED].evidence == "repaired"
-        assert result.items[PHQ8Item.DEPRESSED].score == 1
-
-    @pytest.mark.asyncio
-    async def test_parse_response_llm_repair_failure(self, transcript: Transcript) -> None:
-        """Test LLM Repair (Strategy 2) failing falls back to empty skeleton."""
-        evidence_resp = SAMPLE_EVIDENCE_RESPONSE
-        # Initial response: completely broken
-        raw_resp = "COMPLETE GARBAGE"
-        # Repair response: ALSO broken
-        repair_resp = "STILL GARBAGE"
-
-        client = MockLLMClient(chat_responses=[evidence_resp, raw_resp, repair_resp])
-
-        agent = QuantitativeAssessmentAgent(client, mode=AssessmentMode.ZERO_SHOT)
-        result = await agent.assess(transcript)
-
-        # Should fall back to empty skeleton (Strategy 3)
-        assert result.items[PHQ8Item.DEPRESSED].score is None
-        assert result.items[PHQ8Item.DEPRESSED].evidence == "No relevant evidence found"
-
-    @pytest.mark.asyncio
-    async def test_parse_response_non_dict_json(self, transcript: Transcript) -> None:
-        """Non-dict JSON should fall back to LLM repair."""
-        evidence_resp = SAMPLE_EVIDENCE_RESPONSE
-        list_response = json.dumps([1, 2, 3])
-        repair_resp = json.dumps(
-            {k: {"evidence": "fixed", "reason": "r", "score": 1} for k in DOMAIN_KEYWORDS}
-        )
-
-        client = MockLLMClient(chat_responses=[evidence_resp, list_response, repair_resp])
-        agent = QuantitativeAssessmentAgent(client, mode=AssessmentMode.ZERO_SHOT)
-        result = await agent.assess(transcript)
-
-        assert result.items[PHQ8Item.DEPRESSED].score == 1
-        assert result.items[PHQ8Item.DEPRESSED].evidence == "fixed"
-
-    @pytest.mark.asyncio
-    async def test_validate_and_normalize_float_scores(self, transcript: Transcript) -> None:
-        """Test float score handling (e.g., 2.0 from JSON parsing)."""
-        evidence_resp = SAMPLE_EVIDENCE_RESPONSE
-
-        # JSON with float scores (JSON parsers may return floats)
-        float_scores = json.dumps(
-            {
-                "PHQ8_NoInterest": {"score": 2.0},  # float 2.0 -> 2
-                "PHQ8_Depressed": {"score": 0.0},  # float 0.0 -> 0
-                "PHQ8_Sleep": {"score": 3.0},  # float 3.0 -> 3
-                "PHQ8_Tired": {"score": 1.5},  # float 1.5 -> None (not whole number)
-                "PHQ8_Appetite": {"score": 4.0},  # float 4.0 -> None (out of bounds)
-                "PHQ8_Failure": {"score": -1.0},  # float -1.0 -> None (out of bounds)
-                "PHQ8_Concentrating": {"score": 1},  # int 1 -> 1
-                "PHQ8_Moving": {"score": "N/A"},  # str "N/A" -> None
-            }
-        )
-
-        client = MockLLMClient(chat_responses=[evidence_resp, float_scores])
-        agent = QuantitativeAssessmentAgent(client, mode=AssessmentMode.ZERO_SHOT)
-        result = await agent.assess(transcript)
-
-        assert result.items[PHQ8Item.NO_INTEREST].score == 2  # float 2.0 -> 2
-        assert result.items[PHQ8Item.DEPRESSED].score == 0  # float 0.0 -> 0
-        assert result.items[PHQ8Item.SLEEP].score == 3  # float 3.0 -> 3
-        assert result.items[PHQ8Item.TIRED].score is None  # float 1.5 -> None
-        assert result.items[PHQ8Item.APPETITE].score is None  # float 4.0 out of bounds
-        assert result.items[PHQ8Item.FAILURE].score is None  # float -1.0 out of bounds
-        assert result.items[PHQ8Item.CONCENTRATING].score == 1  # int 1 -> 1
-        assert result.items[PHQ8Item.MOVING].score is None  # str "N/A" -> None
-
-    @pytest.mark.asyncio
-    async def test_validate_and_normalize_score_types(self, transcript: Transcript) -> None:
-        """Test various score formats in _validate_and_normalize."""
-        evidence_resp = SAMPLE_EVIDENCE_RESPONSE
-
-        # JSON with mixed score types
-        mixed_scores = json.dumps(
-            {
-                "PHQ8_NoInterest": {"score": 3},  # int 3 -> 3
-                "PHQ8_Depressed": {"score": "2"},  # str "2" -> 2
-                "PHQ8_Sleep": {"score": "N/A"},  # str "N/A" -> None
-                "PHQ8_Tired": {"score": "n/a"},  # str "n/a" -> None (case insensitive)
-                "PHQ8_Appetite": {"score": "invalid"},  # str "invalid" -> None
-                "PHQ8_Failure": {"score": 4},  # int 4 -> None (out of bounds)
-                "PHQ8_Concentrating": {"score": -1},  # int -1 -> None (out of bounds)
-                "PHQ8_Moving": {"score": None},  # None -> None
-            }
-        )
-
-        client = MockLLMClient(chat_responses=[evidence_resp, mixed_scores])
-        agent = QuantitativeAssessmentAgent(client, mode=AssessmentMode.ZERO_SHOT)
-        result = await agent.assess(transcript)
-
-        assert result.items[PHQ8Item.NO_INTEREST].score == 3
-        assert result.items[PHQ8Item.DEPRESSED].score == 2
-        assert result.items[PHQ8Item.SLEEP].score is None
-        assert result.items[PHQ8Item.TIRED].score is None
-        assert result.items[PHQ8Item.APPETITE].score is None
-        assert result.items[PHQ8Item.FAILURE].score is None
-        assert result.items[PHQ8Item.CONCENTRATING].score is None
-        assert result.items[PHQ8Item.MOVING].score is None
-
-    @pytest.mark.asyncio
-    async def test_strip_json_block_variations(self, transcript: Transcript) -> None:
+    @pytest.mark.usefixtures("mock_agent_factory")
+    async def test_strip_json_block_variations(self) -> None:
         """Test _strip_json_block with different formats."""
+        client = MockLLMClient()
+        agent = QuantitativeAssessmentAgent(
+            client,
+            mode=AssessmentMode.ZERO_SHOT,
+            pydantic_ai_settings=PydanticAISettings(enabled=True),
+            ollama_base_url="http://mock",
+        )
 
         # 1. Markdown with "json" language identifier
         resp1 = """```json
 {"PHQ8_NoInterest": {"score": 1}}
 ```"""
+        assert agent._strip_json_block(resp1) == '{"PHQ8_NoInterest": {"score": 1}}'
+
         # 2. Markdown without language identifier
         resp2 = """```
 {"PHQ8_NoInterest": {"score": 2}}
 ```"""
+        assert agent._strip_json_block(resp2) == '{"PHQ8_NoInterest": {"score": 2}}'
+
         # 3. Block at very start
         resp3 = """```json{"PHQ8_NoInterest": {"score": 3}}```"""
+        assert agent._strip_json_block(resp3) == '{"PHQ8_NoInterest": {"score": 3}}'
 
-        client = MockLLMClient(
-            chat_responses=[
-                SAMPLE_EVIDENCE_RESPONSE,
-                resp1,
-                SAMPLE_EVIDENCE_RESPONSE,
-                resp2,
-                SAMPLE_EVIDENCE_RESPONSE,
-                resp3,
-            ]
-        )
-
-        agent = QuantitativeAssessmentAgent(client, mode=AssessmentMode.ZERO_SHOT)
-
-        res1 = await agent.assess(transcript)
-        assert res1.items[PHQ8Item.NO_INTEREST].score == 1
-
-        res2 = await agent.assess(transcript)
-        assert res2.items[PHQ8Item.NO_INTEREST].score == 2
-
-        res3 = await agent.assess(transcript)
-        assert res3.items[PHQ8Item.NO_INTEREST].score == 3
+        # 4. With <answer> tags
+        resp4 = """<answer>
+{"PHQ8_NoInterest": {"score": 4}}
+</answer>"""
+        assert agent._strip_json_block(resp4) == '{"PHQ8_NoInterest": {"score": 4}}'

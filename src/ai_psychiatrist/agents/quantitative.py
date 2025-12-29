@@ -110,8 +110,9 @@ class QuantitativeAssessmentAgent:
 
         if self._pydantic_ai.enabled:
             if not self._ollama_base_url:
-                logger.warning(
-                    "Pydantic AI enabled but no ollama_base_url provided; falling back to legacy",
+                raise ValueError(
+                    "Pydantic AI enabled but no ollama_base_url provided. "
+                    "Legacy fallback is disabled."
                 )
             else:
                 from ai_psychiatrist.agents.pydantic_agents import (  # noqa: PLC0415
@@ -204,7 +205,7 @@ class QuantitativeAssessmentAgent:
         model = get_model_name(self._model_settings, "quantitative")
         temperature = self._model_settings.temperature if self._model_settings else 0.0
 
-        parsed_items = await self._score_items(prompt=prompt, model=model, temperature=temperature)
+        parsed_items = await self._score_items(prompt=prompt, _model=model, temperature=temperature)
 
         # Step 5: Construct ItemAssessments with extended fields
         final_items = {}
@@ -276,41 +277,32 @@ class QuantitativeAssessmentAgent:
         self,
         *,
         prompt: str,
-        model: str | None,
+        _model: str | None,
         temperature: float,
     ) -> dict[PHQ8Item, ItemAssessment]:
         """Score transcript and return parsed per-item assessments."""
-        if self._scoring_agent is not None:
-            try:
-                timeout = self._pydantic_ai.timeout_seconds
-                result = await self._scoring_agent.run(
-                    prompt,
-                    model_settings={
-                        "temperature": temperature,
-                        **({"timeout": timeout} if timeout is not None else {}),
-                    },
-                )
-                return self._from_quantitative_output(result.output)
-            except asyncio.CancelledError:
-                raise
-            except Exception as e:
-                # Intentionally broad: Fallback for any Pydantic AI error
-                # (see docs/specs/21-broad-exception-handling.md)
-                logger.error(
-                    "Pydantic AI call failed during scoring; falling back to legacy",
-                    error=str(e),
-                )
+        if self._scoring_agent is None:
+            raise ValueError("Pydantic AI scoring agent not initialized")
 
-        raw_response = await self._llm.simple_chat(
-            user_prompt=prompt,
-            system_prompt=QUANTITATIVE_SYSTEM_PROMPT,
-            model=model,
-            temperature=temperature,
-        )
-
-        logger.debug("LLM scoring complete", response_length=len(raw_response))
-
-        return await self._parse_response(raw_response)
+        try:
+            timeout = self._pydantic_ai.timeout_seconds
+            result = await self._scoring_agent.run(
+                prompt,
+                model_settings={
+                    "temperature": temperature,
+                    **({"timeout": timeout} if timeout is not None else {}),
+                },
+            )
+            return self._from_quantitative_output(result.output)
+        except asyncio.CancelledError:
+            raise
+        except Exception as e:
+            # Fail fast
+            logger.error(
+                "Pydantic AI call failed during scoring",
+                error=str(e),
+            )
+            raise ValueError(f"Pydantic AI scoring failed: {e}") from e
 
     @staticmethod
     def _from_quantitative_output(output: QuantitativeOutput) -> dict[PHQ8Item, ItemAssessment]:
@@ -442,86 +434,6 @@ class QuantitativeAssessmentAgent:
 
         return out
 
-    async def _parse_response(self, raw: str) -> dict[PHQ8Item, ItemAssessment]:
-        """Parse JSON response with multi-level repair.
-
-        Strategies:
-        1. Clean and parse JSON directly (handles <answer> tags and markdown)
-        2. LLM repair for malformed JSON
-        3. Fallback to empty skeleton
-
-        Note: _strip_json_block already handles <answer> tag extraction via string
-        splitting, so a separate regex-based strategy is not needed.
-
-        Args:
-            raw: Raw LLM response text.
-
-        Returns:
-            Dictionary mapping PHQ8Item to ItemAssessment.
-        """
-        # Strategy 1: Clean and Parse (handles <answer> tags and markdown blocks)
-        try:
-            clean = self._strip_json_block(raw)
-            clean = self._tolerant_fixups(clean)
-            data = json.loads(clean)
-            if not isinstance(data, dict):
-                raise ValueError("Quantitative response JSON must be an object")
-            return self._validate_and_normalize(data)
-        except (json.JSONDecodeError, ValueError):
-            pass
-
-        # Strategy 2: LLM Repair
-        try:
-            repaired_json = await self._llm_repair(raw)
-            if repaired_json:
-                return self._validate_and_normalize(repaired_json)
-        except (json.JSONDecodeError, ValueError):
-            pass
-
-        # Strategy 3: Fallback to empty skeleton
-        logger.error("Failed to parse quantitative response after all attempts")
-        return self._validate_and_normalize({})
-
-    async def _llm_repair(self, malformed: str) -> dict[str, object] | None:
-        """Ask LLM to fix broken JSON.
-
-        Args:
-            malformed: Malformed JSON string.
-
-        Returns:
-            Parsed JSON dict or None if repair fails.
-        """
-        repair_prompt = (
-            "You will be given malformed JSON for a PHQ-8 result. "
-            "Output ONLY a valid JSON object with these EXACT keys:\n"
-            f"{', '.join(DOMAIN_KEYWORDS.keys())}\n"
-            'Each value must be an object: {"evidence": <string>, "reason": <string>, '
-            '"score": <int 0-3 or "N/A">}.\n'
-            "If something is missing or unclear, fill with "
-            '{"evidence": "No relevant evidence found", "reason": "Auto-repaired", '
-            '"score": "N/A"}.\n\n'
-            "Malformed JSON:\n"
-            f"{malformed}\n\n"
-            "Return only the fixed JSON. No prose, no markdown, no tags."
-        )
-        try:
-            # Use model settings if provided, with lower temperature for repair
-            model = get_model_name(self._model_settings, "quantitative")
-
-            fixed = await self._llm.simple_chat(
-                user_prompt=repair_prompt,
-                model=model,
-                temperature=0.0,  # Deterministic repair
-            )
-            clean = self._strip_json_block(fixed)
-            clean = self._tolerant_fixups(clean)
-            result: dict[str, object] = json.loads(clean)
-            if not isinstance(result, dict):
-                return None
-            return result
-        except (json.JSONDecodeError, ValueError):
-            return None
-
     def _strip_json_block(self, text: str) -> str:
         """Strip markdown code blocks and XML tags.
 
@@ -582,56 +494,6 @@ class QuantitativeAssessmentAgent:
         text = re.sub(r",\s*([}\]])", r"\1", text)
 
         return text
-
-    def _validate_and_normalize(self, data: dict[str, object]) -> dict[PHQ8Item, ItemAssessment]:
-        """Convert raw dict to typed ItemAssessment objects.
-
-        Args:
-            data: Parsed JSON dict with PHQ8 keys.
-
-        Returns:
-            Dictionary mapping PHQ8Item to validated ItemAssessment.
-        """
-        result: dict[PHQ8Item, ItemAssessment] = {}
-
-        for key, item_enum in PHQ8_KEY_MAP.items():
-            item_data = data.get(key, {})
-
-            if not isinstance(item_data, dict):
-                item_data = {}
-
-            # Extract fields with defaults
-            evidence = str(item_data.get("evidence", "No relevant evidence found"))
-            reason = str(item_data.get("reason", "Unable to assess"))
-
-            # Parse score (can be int, float, string "N/A", or None)
-            raw_score = item_data.get("score")
-            score: int | None = None
-
-            if raw_score is not None:
-                if isinstance(raw_score, int) and 0 <= raw_score <= 3:
-                    score = raw_score
-                elif isinstance(raw_score, float) and raw_score == int(raw_score):
-                    # Handle float scores like 2.0 from JSON parsing
-                    parsed = int(raw_score)
-                    if 0 <= parsed <= 3:
-                        score = parsed
-                elif isinstance(raw_score, str) and raw_score.upper() != "N/A":
-                    try:
-                        parsed = int(raw_score)
-                        if 0 <= parsed <= 3:
-                            score = parsed
-                    except ValueError:
-                        pass
-
-            result[item_enum] = ItemAssessment(
-                item=item_enum,
-                evidence=evidence,
-                reason=reason,
-                score=score,
-            )
-
-        return result
 
     def _determine_na_reason(
         self,

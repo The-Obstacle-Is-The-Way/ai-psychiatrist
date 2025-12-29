@@ -13,10 +13,14 @@ from __future__ import annotations
 
 import asyncio
 import json
+from typing import TYPE_CHECKING
 from unittest.mock import AsyncMock, patch
 
 import pytest
 from pydantic_ai import Agent
+
+if TYPE_CHECKING:
+    from collections.abc import Generator
 
 from ai_psychiatrist.agents.output_models import EvidenceOutput, QuantitativeOutput
 from ai_psychiatrist.agents.prompts.quantitative import (
@@ -30,7 +34,6 @@ from ai_psychiatrist.config import PydanticAISettings, QuantitativeSettings
 from ai_psychiatrist.domain.entities import PHQ8Assessment, Transcript
 from ai_psychiatrist.domain.enums import AssessmentMode, PHQ8Item, SeverityLevel
 from ai_psychiatrist.domain.value_objects import ItemAssessment
-from ai_psychiatrist.infrastructure.llm.responses import SimpleChatClient
 from tests.fixtures.mock_llm import MockLLMClient
 
 
@@ -108,20 +111,57 @@ class TestQuantitativeAssessmentAgent:
 
     @pytest.fixture
     def mock_client(self) -> MockLLMClient:
-        """Create mock LLM client with sample responses."""
-        return MockLLMClient(chat_responses=[SAMPLE_EVIDENCE_RESPONSE, SAMPLE_SCORING_RESPONSE])
+        """Create mock LLM client with sample responses for EVIDENCE extraction only."""
+        return MockLLMClient(chat_responses=[SAMPLE_EVIDENCE_RESPONSE])
+
+    @pytest.fixture
+    def mock_quantitative_output(self) -> QuantitativeOutput:
+        """Create valid QuantitativeOutput object."""
+        return QuantitativeOutput(
+            PHQ8_NoInterest=EvidenceOutput(evidence="test", reason="test", score=1),
+            PHQ8_Depressed=EvidenceOutput(evidence="test", reason="test", score=1),
+            PHQ8_Sleep=EvidenceOutput(evidence="test", reason="test", score=1),
+            PHQ8_Tired=EvidenceOutput(evidence="test", reason="test", score=1),
+            PHQ8_Appetite=EvidenceOutput(evidence="test", reason="test", score=None),  # N/A
+            PHQ8_Failure=EvidenceOutput(evidence="test", reason="test", score=1),
+            PHQ8_Concentrating=EvidenceOutput(evidence="test", reason="test", score=1),
+            PHQ8_Moving=EvidenceOutput(evidence="test", reason="test", score=None),  # N/A
+        )
+
+    @pytest.fixture
+    def mock_agent_factory(
+        self, mock_quantitative_output: QuantitativeOutput
+    ) -> Generator[AsyncMock, None, None]:
+        """Patch create_quantitative_agent to return a mock agent."""
+        mock_agent = AsyncMock(spec_set=Agent)
+        mock_agent.run.return_value = AsyncMock(output=mock_quantitative_output)
+
+        patcher = patch(
+            "ai_psychiatrist.agents.pydantic_agents.create_quantitative_agent",
+            return_value=mock_agent,
+        )
+        mock = patcher.start()
+        yield mock
+        patcher.stop()
+
+    def create_agent(
+        self, client: MockLLMClient, mode: AssessmentMode = AssessmentMode.ZERO_SHOT
+    ) -> QuantitativeAssessmentAgent:
+        """Helper to create agent with Pydantic AI enabled."""
+        return QuantitativeAssessmentAgent(
+            llm_client=client,
+            mode=mode,
+            pydantic_ai_settings=PydanticAISettings(enabled=True),
+            ollama_base_url="http://mock-ollama:11434",
+        )
 
     @pytest.mark.asyncio
+    @pytest.mark.usefixtures("mock_agent_factory")
     async def test_assess_returns_all_items(
-        self,
-        mock_client: MockLLMClient,
-        sample_transcript: Transcript,
+        self, mock_client: MockLLMClient, sample_transcript: Transcript
     ) -> None:
         """Assessment should include all 8 PHQ-8 items."""
-        agent = QuantitativeAssessmentAgent(
-            llm_client=mock_client,
-            mode=AssessmentMode.ZERO_SHOT,
-        )
+        agent = self.create_agent(mock_client)
         result = await agent.assess(sample_transcript)
 
         assert isinstance(result, PHQ8Assessment)
@@ -130,16 +170,12 @@ class TestQuantitativeAssessmentAgent:
             assert item in result.items
 
     @pytest.mark.asyncio
+    @pytest.mark.usefixtures("mock_agent_factory")
     async def test_assess_returns_valid_scores(
-        self,
-        mock_client: MockLLMClient,
-        sample_transcript: Transcript,
+        self, mock_client: MockLLMClient, sample_transcript: Transcript
     ) -> None:
         """Assessment should have valid scores (0-3 or None)."""
-        agent = QuantitativeAssessmentAgent(
-            llm_client=mock_client,
-            mode=AssessmentMode.ZERO_SHOT,
-        )
+        agent = self.create_agent(mock_client)
         result = await agent.assess(sample_transcript)
 
         for item, assessment in result.items.items():
@@ -149,78 +185,58 @@ class TestQuantitativeAssessmentAgent:
                 assert 0 <= assessment.score <= 3
 
     @pytest.mark.asyncio
+    @pytest.mark.usefixtures("mock_agent_factory")
     async def test_assess_sets_correct_participant_id(
-        self,
-        mock_client: MockLLMClient,
-        sample_transcript: Transcript,
+        self, mock_client: MockLLMClient, sample_transcript: Transcript
     ) -> None:
         """Assessment should have correct participant_id."""
-        agent = QuantitativeAssessmentAgent(
-            llm_client=mock_client,
-            mode=AssessmentMode.ZERO_SHOT,
-        )
+        agent = self.create_agent(mock_client)
         result = await agent.assess(sample_transcript)
 
         assert result.participant_id == 300
 
     @pytest.mark.asyncio
+    @pytest.mark.usefixtures("mock_agent_factory")
     async def test_assess_sets_correct_mode(
-        self,
-        mock_client: MockLLMClient,
-        sample_transcript: Transcript,
+        self, mock_client: MockLLMClient, sample_transcript: Transcript
     ) -> None:
         """Assessment should record the mode used."""
-        agent = QuantitativeAssessmentAgent(
-            llm_client=mock_client,
-            mode=AssessmentMode.ZERO_SHOT,
-        )
+        agent = self.create_agent(mock_client)
         result = await agent.assess(sample_transcript)
 
         assert result.mode == AssessmentMode.ZERO_SHOT
 
     @pytest.mark.asyncio
+    @pytest.mark.usefixtures("mock_agent_factory")
     async def test_assess_calculates_total_score(
-        self,
-        mock_client: MockLLMClient,
-        sample_transcript: Transcript,
+        self, mock_client: MockLLMClient, sample_transcript: Transcript
     ) -> None:
         """Assessment should calculate total score correctly."""
-        agent = QuantitativeAssessmentAgent(
-            llm_client=mock_client,
-            mode=AssessmentMode.ZERO_SHOT,
-        )
+        agent = self.create_agent(mock_client)
         result = await agent.assess(sample_transcript)
 
-        # N/A scores contribute 0 to total (sum = 10)
-        assert result.total_score == 10
+        # 6 items score 1, 2 items score None. Total = 6.
+        assert result.total_score == 6
 
     @pytest.mark.asyncio
+    @pytest.mark.usefixtures("mock_agent_factory")
     async def test_assess_determines_severity(
-        self,
-        mock_client: MockLLMClient,
-        sample_transcript: Transcript,
+        self, mock_client: MockLLMClient, sample_transcript: Transcript
     ) -> None:
         """Assessment should determine correct severity level."""
-        agent = QuantitativeAssessmentAgent(
-            llm_client=mock_client,
-            mode=AssessmentMode.ZERO_SHOT,
-        )
+        agent = self.create_agent(mock_client)
         result = await agent.assess(sample_transcript)
 
-        # Total score 10 = MODERATE severity
-        assert result.severity == SeverityLevel.MODERATE
+        # Total score 6 = MILD severity
+        assert result.severity == SeverityLevel.MILD
 
     @pytest.mark.asyncio
+    @pytest.mark.usefixtures("mock_agent_factory")
     async def test_assess_counts_na_items(
-        self,
-        mock_client: MockLLMClient,
-        sample_transcript: Transcript,
+        self, mock_client: MockLLMClient, sample_transcript: Transcript
     ) -> None:
         """Assessment should count N/A items correctly."""
-        agent = QuantitativeAssessmentAgent(
-            llm_client=mock_client,
-            mode=AssessmentMode.ZERO_SHOT,
-        )
+        agent = self.create_agent(mock_client)
         result = await agent.assess(sample_transcript)
 
         # 2 items have N/A (Appetite, Moving)
@@ -228,215 +244,47 @@ class TestQuantitativeAssessmentAgent:
         assert result.available_count == 6
 
     @pytest.mark.asyncio
+    @pytest.mark.usefixtures("mock_agent_factory")
     async def test_assess_includes_evidence(
-        self,
-        mock_client: MockLLMClient,
-        sample_transcript: Transcript,
+        self, mock_client: MockLLMClient, sample_transcript: Transcript
     ) -> None:
         """Assessment items should include evidence text."""
-        agent = QuantitativeAssessmentAgent(
-            llm_client=mock_client,
-            mode=AssessmentMode.ZERO_SHOT,
-        )
+        agent = self.create_agent(mock_client)
         result = await agent.assess(sample_transcript)
 
         for assessment in result.items.values():
-            assert assessment.evidence
+            assert assessment.evidence == "test"
             assert isinstance(assessment.evidence, str)
 
     @pytest.mark.asyncio
-    async def test_pydantic_ai_path_success(self, sample_transcript: Transcript) -> None:
-        """Should use Pydantic AI agent when enabled and configured."""
-        mock_output = QuantitativeOutput(
-            PHQ8_NoInterest=EvidenceOutput(evidence="test", reason="test", score=0),
-            PHQ8_Depressed=EvidenceOutput(evidence="test", reason="test", score=0),
-            PHQ8_Sleep=EvidenceOutput(evidence="test", reason="test", score=0),
-            PHQ8_Tired=EvidenceOutput(evidence="test", reason="test", score=0),
-            PHQ8_Appetite=EvidenceOutput(evidence="test", reason="test", score=0),
-            PHQ8_Failure=EvidenceOutput(evidence="test", reason="test", score=0),
-            PHQ8_Concentrating=EvidenceOutput(evidence="test", reason="test", score=0),
-            PHQ8_Moving=EvidenceOutput(evidence="test", reason="test", score=0),
-        )
-        mock_agent = AsyncMock(spec_set=Agent)
-        mock_agent.run.return_value = AsyncMock(output=mock_output)
+    async def test_score_items_propagates_cancel(
+        self,
+        sample_transcript: Transcript,
+        mock_agent_factory: AsyncMock,
+    ) -> None:
+        """Should propagate CancelledError without fallback."""
+        mock_agent = mock_agent_factory.return_value
+        mock_agent.run.side_effect = asyncio.CancelledError
 
-        with patch(
-            "ai_psychiatrist.agents.pydantic_agents.create_quantitative_agent",
-            return_value=mock_agent,
-        ) as mock_factory:
-            agent = QuantitativeAssessmentAgent(
-                llm_client=MockLLMClient(),
-                pydantic_ai_settings=PydanticAISettings(enabled=True, timeout_seconds=123.0),
-                ollama_base_url="http://localhost:11434",
-            )
-            result = await agent.assess(sample_transcript)
+        agent = self.create_agent(MockLLMClient(chat_responses=[SAMPLE_EVIDENCE_RESPONSE]))
 
-        mock_factory.assert_called_once()
-        mock_agent.run.assert_called_once()
-        assert mock_agent.run.call_args.kwargs["model_settings"]["timeout"] == 123.0
-        assert result.total_score == 0
-
-    @pytest.mark.asyncio
-    async def test_score_items_fallback_on_cancel(self, sample_transcript: Transcript) -> None:
-        """Should propagate CancelledError even if fallback logic exists."""
-        agent = QuantitativeAssessmentAgent(llm_client=MockLLMClient())
-        with (
-            patch.object(agent._llm, "simple_chat", side_effect=asyncio.CancelledError),
-            pytest.raises(asyncio.CancelledError),
-        ):
+        with pytest.raises(asyncio.CancelledError):
             await agent.assess(sample_transcript)
 
-
-@pytest.mark.unit
-class TestQuantitativeAgentParsing:
-    """Tests for JSON response parsing."""
-
-    @pytest.fixture
-    def sample_transcript(self) -> Transcript:
-        """Create sample transcript."""
-        return Transcript(participant_id=123, text=SAMPLE_TRANSCRIPT_TEXT)
-
     @pytest.mark.asyncio
-    async def test_parses_json_without_answer_tags(
+    async def test_raises_value_error_if_pydantic_ai_fails(
         self,
         sample_transcript: Transcript,
+        mock_agent_factory: AsyncMock,
     ) -> None:
-        """Should parse bare JSON without <answer> tags."""
-        bare_json = json.dumps(
-            {
-                "PHQ8_NoInterest": {"evidence": "test", "reason": "test", "score": 1},
-                "PHQ8_Depressed": {"evidence": "test", "reason": "test", "score": 0},
-                "PHQ8_Sleep": {"evidence": "test", "reason": "test", "score": "N/A"},
-                "PHQ8_Tired": {"evidence": "test", "reason": "test", "score": 2},
-                "PHQ8_Appetite": {"evidence": "test", "reason": "test", "score": 3},
-                "PHQ8_Failure": {"evidence": "test", "reason": "test", "score": "N/A"},
-                "PHQ8_Concentrating": {"evidence": "test", "reason": "test", "score": 1},
-                "PHQ8_Moving": {"evidence": "test", "reason": "test", "score": 0},
-            }
-        )
-        client = MockLLMClient(chat_responses=[SAMPLE_EVIDENCE_RESPONSE, bare_json])
-        agent = QuantitativeAssessmentAgent(llm_client=client, mode=AssessmentMode.ZERO_SHOT)
-        result = await agent.assess(sample_transcript)
+        """Should raise ValueError if Pydantic AI fails (fail fast)."""
+        mock_agent = mock_agent_factory.return_value
+        mock_agent.run.side_effect = RuntimeError("Something went wrong")
 
-        assert result.items[PHQ8Item.NO_INTEREST].score == 1
-        assert result.items[PHQ8Item.SLEEP].score is None
+        agent = self.create_agent(MockLLMClient(chat_responses=[SAMPLE_EVIDENCE_RESPONSE]))
 
-    @pytest.mark.asyncio
-    async def test_parses_json_with_markdown_code_block(
-        self,
-        sample_transcript: Transcript,
-    ) -> None:
-        """Should parse JSON wrapped in markdown code block."""
-        markdown_json = """Some text here...
-```json
-{
-    "PHQ8_NoInterest": {"evidence": "test", "reason": "test", "score": 2},
-    "PHQ8_Depressed": {"evidence": "test", "reason": "test", "score": 1},
-    "PHQ8_Sleep": {"evidence": "test", "reason": "test", "score": 0},
-    "PHQ8_Tired": {"evidence": "test", "reason": "test", "score": 3},
-    "PHQ8_Appetite": {"evidence": "test", "reason": "test", "score": "N/A"},
-    "PHQ8_Failure": {"evidence": "test", "reason": "test", "score": 1},
-    "PHQ8_Concentrating": {"evidence": "test", "reason": "test", "score": 2},
-    "PHQ8_Moving": {"evidence": "test", "reason": "test", "score": "N/A"}
-}
-```"""
-        client = MockLLMClient(chat_responses=[SAMPLE_EVIDENCE_RESPONSE, markdown_json])
-        agent = QuantitativeAssessmentAgent(llm_client=client, mode=AssessmentMode.ZERO_SHOT)
-        result = await agent.assess(sample_transcript)
-
-        assert result.items[PHQ8Item.NO_INTEREST].score == 2
-
-    @pytest.mark.asyncio
-    async def test_handles_trailing_commas(
-        self,
-        sample_transcript: Transcript,
-    ) -> None:
-        """Should handle JSON with trailing commas."""
-        json_with_trailing_comma = """{
-    "PHQ8_NoInterest": {"evidence": "test", "reason": "test", "score": 1,},
-    "PHQ8_Depressed": {"evidence": "test", "reason": "test", "score": 0},
-    "PHQ8_Sleep": {"evidence": "test", "reason": "test", "score": 0},
-    "PHQ8_Tired": {"evidence": "test", "reason": "test", "score": 0},
-    "PHQ8_Appetite": {"evidence": "test", "reason": "test", "score": 0},
-    "PHQ8_Failure": {"evidence": "test", "reason": "test", "score": 0},
-    "PHQ8_Concentrating": {"evidence": "test", "reason": "test", "score": 0},
-    "PHQ8_Moving": {"evidence": "test", "reason": "test", "score": 0},
-}"""
-        client = MockLLMClient(chat_responses=[SAMPLE_EVIDENCE_RESPONSE, json_with_trailing_comma])
-        agent = QuantitativeAssessmentAgent(llm_client=client, mode=AssessmentMode.ZERO_SHOT)
-        result = await agent.assess(sample_transcript)
-
-        assert result.items[PHQ8Item.NO_INTEREST].score == 1
-
-    @pytest.mark.asyncio
-    async def test_handles_smart_quotes(
-        self,
-        sample_transcript: Transcript,
-    ) -> None:
-        """Should handle JSON with smart quotes."""
-        json_with_smart_quotes = _to_smart_quotes(
-            json.dumps(
-                {
-                    "PHQ8_NoInterest": {"evidence": "test", "reason": "test", "score": 1},
-                    "PHQ8_Depressed": {"evidence": "test", "reason": "test", "score": 0},
-                    "PHQ8_Sleep": {"evidence": "test", "reason": "test", "score": 0},
-                    "PHQ8_Tired": {"evidence": "test", "reason": "test", "score": 0},
-                    "PHQ8_Appetite": {"evidence": "test", "reason": "test", "score": 0},
-                    "PHQ8_Failure": {"evidence": "test", "reason": "test", "score": 0},
-                    "PHQ8_Concentrating": {"evidence": "test", "reason": "test", "score": 0},
-                    "PHQ8_Moving": {"evidence": "test", "reason": "test", "score": 0},
-                }
-            )
-        )
-        client = MockLLMClient(chat_responses=[SAMPLE_EVIDENCE_RESPONSE, json_with_smart_quotes])
-        agent = QuantitativeAssessmentAgent(llm_client=client, mode=AssessmentMode.ZERO_SHOT)
-        result = await agent.assess(sample_transcript)
-
-        assert result.items[PHQ8Item.NO_INTEREST].score == 1
-
-    @pytest.mark.asyncio
-    async def test_handles_missing_items_with_defaults(
-        self,
-        sample_transcript: Transcript,
-    ) -> None:
-        """Should fill missing items with N/A."""
-        partial_json = json.dumps(
-            {
-                "PHQ8_NoInterest": {"evidence": "test", "reason": "test", "score": 2},
-                # Missing all other items
-            }
-        )
-        client = MockLLMClient(chat_responses=[SAMPLE_EVIDENCE_RESPONSE, partial_json])
-        agent = QuantitativeAssessmentAgent(llm_client=client, mode=AssessmentMode.ZERO_SHOT)
-        result = await agent.assess(sample_transcript)
-
-        assert result.items[PHQ8Item.NO_INTEREST].score == 2
-        # All missing items should have default values
-        assert result.items[PHQ8Item.DEPRESSED].score is None
-        assert result.items[PHQ8Item.DEPRESSED].evidence == "No relevant evidence found"
-
-    @pytest.mark.asyncio
-    async def test_falls_back_to_empty_on_malformed_json(
-        self,
-        sample_transcript: Transcript,
-    ) -> None:
-        """Should return empty skeleton when JSON is completely broken."""
-        # Mock client that returns garbage for both evidence and scoring,
-        # plus the repair attempt
-        client = MockLLMClient(
-            chat_responses=[
-                "garbage evidence",
-                "this is not json at all {{{",
-                "repair also failed ]][[",
-            ]
-        )
-        agent = QuantitativeAssessmentAgent(llm_client=client, mode=AssessmentMode.ZERO_SHOT)
-        result = await agent.assess(sample_transcript)
-
-        # Should have all 8 items with N/A scores
-        assert len(result.items) == 8
-        for item in result.items.values():
-            assert item.score is None
+        with pytest.raises(ValueError, match="Pydantic AI scoring failed"):
+            await agent.assess(sample_transcript)
 
 
 @pytest.mark.unit
@@ -456,25 +304,59 @@ Ellie: How is your concentration?
 Participant: I have trouble focusing on anything. Can't think straight.""",
         )
 
-    @pytest.mark.asyncio
-    async def test_backfill_adds_missed_evidence(
-        self,
-        sample_transcript: Transcript,
-    ) -> None:
-        """Keyword backfill should add evidence when LLM misses it."""
-        # LLM returns empty evidence
-        empty_evidence = json.dumps({k: [] for k in DOMAIN_KEYWORDS})
-        scoring_response = json.dumps(
-            {k: {"evidence": "test", "reason": "test", "score": 0} for k in DOMAIN_KEYWORDS}
+    @pytest.fixture
+    def mock_quantitative_output(self) -> QuantitativeOutput:
+        """Create valid QuantitativeOutput object with 0 scores."""
+        return QuantitativeOutput(
+            PHQ8_NoInterest=EvidenceOutput(evidence="test", reason="test", score=0),
+            PHQ8_Depressed=EvidenceOutput(evidence="test", reason="test", score=0),
+            PHQ8_Sleep=EvidenceOutput(evidence="test", reason="test", score=0),
+            PHQ8_Tired=EvidenceOutput(evidence="test", reason="test", score=0),
+            PHQ8_Appetite=EvidenceOutput(evidence="test", reason="test", score=0),
+            PHQ8_Failure=EvidenceOutput(evidence="test", reason="test", score=0),
+            PHQ8_Concentrating=EvidenceOutput(evidence="test", reason="test", score=0),
+            PHQ8_Moving=EvidenceOutput(evidence="test", reason="test", score=0),
         )
-        client = MockLLMClient(chat_responses=[empty_evidence, scoring_response])
-        # Explicitly enable backfill (default is OFF for paper parity)
-        settings = QuantitativeSettings(enable_keyword_backfill=True)
-        agent = QuantitativeAssessmentAgent(
+
+    @pytest.fixture
+    def mock_agent_factory(
+        self, mock_quantitative_output: QuantitativeOutput
+    ) -> Generator[AsyncMock, None, None]:
+        """Patch create_quantitative_agent to return a mock agent."""
+        mock_agent = AsyncMock(spec_set=Agent)
+        mock_agent.run.return_value = AsyncMock(output=mock_quantitative_output)
+
+        patcher = patch(
+            "ai_psychiatrist.agents.pydantic_agents.create_quantitative_agent",
+            return_value=mock_agent,
+        )
+        mock = patcher.start()
+        yield mock
+        patcher.stop()
+
+    def create_agent(
+        self, client: MockLLMClient, settings: QuantitativeSettings
+    ) -> QuantitativeAssessmentAgent:
+        """Helper to create agent with Pydantic AI enabled."""
+        return QuantitativeAssessmentAgent(
             llm_client=client,
             mode=AssessmentMode.ZERO_SHOT,
             quantitative_settings=settings,
+            pydantic_ai_settings=PydanticAISettings(enabled=True),
+            ollama_base_url="http://mock-ollama:11434",
         )
+
+    @pytest.mark.asyncio
+    @pytest.mark.usefixtures("mock_agent_factory")
+    async def test_backfill_adds_missed_evidence(self, sample_transcript: Transcript) -> None:
+        """Keyword backfill should add evidence when LLM misses it."""
+        # LLM returns empty evidence for Step 1
+        empty_evidence = json.dumps({k: [] for k in DOMAIN_KEYWORDS})
+        client = MockLLMClient(chat_responses=[empty_evidence])
+
+        # Explicitly enable backfill (default is OFF for paper parity)
+        settings = QuantitativeSettings(enable_keyword_backfill=True)
+        agent = self.create_agent(client, settings)
 
         # Call assess to trigger full pipeline including backfill
         assessment = await agent.assess(sample_transcript)
@@ -586,43 +468,6 @@ class TestDomainKeywords:
 
 
 @pytest.mark.unit
-class TestAgentProtocol:
-    """Tests for SimpleChatClient protocol compatibility."""
-
-    def test_mock_client_implements_protocol(self) -> None:
-        """MockLLMClient should implement SimpleChatClient protocol."""
-        client = MockLLMClient()
-        assert isinstance(client, SimpleChatClient)
-
-    @pytest.mark.asyncio
-    async def test_agent_works_with_protocol(self) -> None:
-        """Agent should work with any SimpleChatClient implementation."""
-
-        class CustomClient:
-            """Custom chat client for testing."""
-
-            async def simple_chat(
-                self,
-                user_prompt: str,  # noqa: ARG002
-                system_prompt: str = "",  # noqa: ARG002
-                model: str | None = None,  # noqa: ARG002
-                temperature: float = 0.0,  # noqa: ARG002
-            ) -> str:
-                return json.dumps(
-                    {k: {"evidence": "test", "reason": "test", "score": 1} for k in DOMAIN_KEYWORDS}
-                )
-
-        client = CustomClient()
-        assert isinstance(client, SimpleChatClient)
-
-        agent = QuantitativeAssessmentAgent(llm_client=client, mode=AssessmentMode.ZERO_SHOT)
-        transcript = Transcript(participant_id=1, text="Test content")
-        result = await agent.assess(transcript)
-
-        assert result.total_score == 8  # All 8 items scored 1
-
-
-@pytest.mark.unit
 class TestFewShotMode:
     """Tests for few-shot mode functionality."""
 
@@ -631,18 +476,56 @@ class TestFewShotMode:
         """Create sample transcript."""
         return Transcript(participant_id=789, text=SAMPLE_TRANSCRIPT_TEXT)
 
+    @pytest.fixture
+    def mock_quantitative_output(self) -> QuantitativeOutput:
+        """Create valid QuantitativeOutput object."""
+        return QuantitativeOutput(
+            PHQ8_NoInterest=EvidenceOutput(evidence="test", reason="test", score=1),
+            PHQ8_Depressed=EvidenceOutput(evidence="test", reason="test", score=1),
+            PHQ8_Sleep=EvidenceOutput(evidence="test", reason="test", score=1),
+            PHQ8_Tired=EvidenceOutput(evidence="test", reason="test", score=1),
+            PHQ8_Appetite=EvidenceOutput(evidence="test", reason="test", score=1),
+            PHQ8_Failure=EvidenceOutput(evidence="test", reason="test", score=1),
+            PHQ8_Concentrating=EvidenceOutput(evidence="test", reason="test", score=1),
+            PHQ8_Moving=EvidenceOutput(evidence="test", reason="test", score=1),
+        )
+
+    @pytest.fixture
+    def mock_agent_factory(
+        self, mock_quantitative_output: QuantitativeOutput
+    ) -> Generator[AsyncMock, None, None]:
+        """Patch create_quantitative_agent to return a mock agent."""
+        mock_agent = AsyncMock(spec_set=Agent)
+        mock_agent.run.return_value = AsyncMock(output=mock_quantitative_output)
+
+        patcher = patch(
+            "ai_psychiatrist.agents.pydantic_agents.create_quantitative_agent",
+            return_value=mock_agent,
+        )
+        mock = patcher.start()
+        yield mock
+        patcher.stop()
+
+    def create_agent(
+        self, client: MockLLMClient, mode: AssessmentMode, embedding_service: None = None
+    ) -> QuantitativeAssessmentAgent:
+        return QuantitativeAssessmentAgent(
+            llm_client=client,
+            embedding_service=embedding_service,
+            mode=mode,
+            pydantic_ai_settings=PydanticAISettings(enabled=True),
+            ollama_base_url="http://mock-ollama:11434",
+        )
+
     @pytest.mark.asyncio
+    @pytest.mark.usefixtures("mock_agent_factory")
     async def test_few_shot_without_embedding_service_works(
-        self,
-        sample_transcript: Transcript,
+        self, sample_transcript: Transcript
     ) -> None:
         """Few-shot mode without embedding service should still work (no references)."""
-        client = MockLLMClient(chat_responses=[SAMPLE_EVIDENCE_RESPONSE, SAMPLE_SCORING_RESPONSE])
-        agent = QuantitativeAssessmentAgent(
-            llm_client=client,
-            embedding_service=None,
-            mode=AssessmentMode.FEW_SHOT,
-        )
+        client = MockLLMClient(chat_responses=[SAMPLE_EVIDENCE_RESPONSE])
+        agent = self.create_agent(client, AssessmentMode.FEW_SHOT, embedding_service=None)
+
         result = await agent.assess(sample_transcript)
 
         # Should complete but without reference examples
@@ -650,17 +533,14 @@ class TestFewShotMode:
         assert len(result.items) == 8
 
     @pytest.mark.asyncio
+    @pytest.mark.usefixtures("mock_agent_factory")
     async def test_zero_shot_does_not_require_embedding_service(
-        self,
-        sample_transcript: Transcript,
+        self, sample_transcript: Transcript
     ) -> None:
         """Zero-shot mode should work without embedding service."""
-        client = MockLLMClient(chat_responses=[SAMPLE_EVIDENCE_RESPONSE, SAMPLE_SCORING_RESPONSE])
-        agent = QuantitativeAssessmentAgent(
-            llm_client=client,
-            embedding_service=None,
-            mode=AssessmentMode.ZERO_SHOT,
-        )
+        client = MockLLMClient(chat_responses=[SAMPLE_EVIDENCE_RESPONSE])
+        agent = self.create_agent(client, AssessmentMode.ZERO_SHOT, embedding_service=None)
+
         result = await agent.assess(sample_transcript)
 
         assert result.mode == AssessmentMode.ZERO_SHOT

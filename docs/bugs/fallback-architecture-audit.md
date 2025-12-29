@@ -2,6 +2,8 @@
 
 > **DEPRECATED**: This document has been superseded by `/PYDANTIC_AI_FALLBACK_ARCHITECTURE.md` (root level).
 > See that document for the authoritative analysis.
+>
+> **NOTE (2025-12-29)**: Legacy fallback paths for structured outputs were removed (see `/REMOVE_LEGACY_SPEC.md`). This document is historical.
 
 **Date**: 2025-12-27
 **Status**: SUPERSEDED - See `/PYDANTIC_AI_FALLBACK_ARCHITECTURE.md`
@@ -21,7 +23,7 @@ Both independent investigations converged on the same findings:
 
 4. **The real research risk is unrecorded pipeline divergence.** Per-participant path differences (Pydantic AI vs legacy vs repair ladder) can cause run-to-run drift.
 
-5. **Timeouts ARE configurable.** Pydantic AI accepts `model_settings={"timeout": ...}`. We just don't pass it today.
+5. **Timeouts ARE configurable.** Pydantic AI accepts `model_settings={"timeout": ...}` and we now pass it (BUG-027).
 
 ---
 

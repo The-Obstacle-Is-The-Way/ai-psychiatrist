@@ -25,10 +25,6 @@ from ai_psychiatrist.domain.entities import (
     Transcript,
 )
 from ai_psychiatrist.domain.enums import PHQ8Item, SeverityLevel
-from ai_psychiatrist.infrastructure.llm.responses import (
-    SimpleChatClient,
-    extract_xml_tags,
-)
 from ai_psychiatrist.infrastructure.logging import get_logger
 
 if TYPE_CHECKING:
@@ -36,6 +32,7 @@ if TYPE_CHECKING:
 
     from ai_psychiatrist.agents.output_models import MetaReviewOutput
     from ai_psychiatrist.config import ModelSettings
+    from ai_psychiatrist.infrastructure.llm.responses import SimpleChatClient
 
 logger = get_logger(__name__)
 
@@ -75,20 +72,20 @@ class MetaReviewAgent:
 
         if self._pydantic_ai.enabled:
             if not self._ollama_base_url:
-                logger.warning(
-                    "Pydantic AI enabled but no ollama_base_url provided; falling back to legacy",
+                raise ValueError(
+                    "Pydantic AI enabled but no ollama_base_url provided. "
+                    "Legacy fallback is disabled."
                 )
-            else:
-                from ai_psychiatrist.agents.pydantic_agents import (  # noqa: PLC0415
-                    create_meta_review_agent,
-                )
+            from ai_psychiatrist.agents.pydantic_agents import (  # noqa: PLC0415
+                create_meta_review_agent,
+            )
 
-                self._review_agent = create_meta_review_agent(
-                    model_name=get_model_name(model_settings, "meta_review"),
-                    base_url=self._ollama_base_url,
-                    retries=self._pydantic_ai.retries,
-                    system_prompt=META_REVIEW_SYSTEM_PROMPT,
-                )
+            self._review_agent = create_meta_review_agent(
+                model_name=get_model_name(model_settings, "meta_review"),
+                base_url=self._ollama_base_url,
+                retries=self._pydantic_ai.retries,
+                system_prompt=META_REVIEW_SYSTEM_PROMPT,
+            )
 
     async def review(
         self,
@@ -113,6 +110,9 @@ class MetaReviewAgent:
             phq8_na_count=quantitative.na_count,
         )
 
+        if self._review_agent is None:
+            raise ValueError("Pydantic AI review agent not initialized")
+
         # Format quantitative scores for prompt
         quant_text = self._format_quantitative(quantitative)
 
@@ -126,69 +126,43 @@ class MetaReviewAgent:
         )
 
         # Get model and sampling params from settings
-        model = get_model_name(self._model_settings, "meta_review")
         temperature = self._model_settings.temperature if self._model_settings else 0.0
 
-        if self._review_agent is not None:
-            try:
-                timeout = self._pydantic_ai.timeout_seconds
-                result = await self._review_agent.run(
-                    prompt,
-                    model_settings={
-                        "temperature": temperature,
-                        **({"timeout": timeout} if timeout is not None else {}),
-                    },
-                )
-                output = result.output
-                severity = SeverityLevel(output.severity)
-                explanation = output.explanation.strip()
-                logger.info(
-                    "Meta-review complete",
-                    participant_id=transcript.participant_id,
-                    severity=severity.name,
-                    is_mdd=severity.is_mdd,
-                )
-                return MetaReview(
-                    severity=severity,
-                    explanation=explanation,
-                    quantitative_assessment_id=quantitative.id,
-                    qualitative_assessment_id=qualitative.id,
-                    participant_id=transcript.participant_id,
-                )
-            except asyncio.CancelledError:
-                raise
-            except Exception as e:
-                # Intentionally broad: Fallback for any Pydantic AI error
-                # (see docs/specs/21-broad-exception-handling.md)
-                logger.error(
-                    "Pydantic AI call failed during meta-review; falling back to legacy",
-                    participant_id=transcript.participant_id,
-                    error=str(e),
-                )
-
-        response = await self._llm.simple_chat(
-            user_prompt=prompt,
-            system_prompt=META_REVIEW_SYSTEM_PROMPT,
-            model=model,
-            temperature=temperature,
-        )
-
-        severity, explanation = self._parse_response(response, quantitative)
-
-        logger.info(
-            "Meta-review complete",
-            participant_id=transcript.participant_id,
-            severity=severity.name,
-            is_mdd=severity.is_mdd,
-        )
-
-        return MetaReview(
-            severity=severity,
-            explanation=explanation,
-            quantitative_assessment_id=quantitative.id,
-            qualitative_assessment_id=qualitative.id,
-            participant_id=transcript.participant_id,
-        )
+        try:
+            timeout = self._pydantic_ai.timeout_seconds
+            result = await self._review_agent.run(
+                prompt,
+                model_settings={
+                    "temperature": temperature,
+                    **({"timeout": timeout} if timeout is not None else {}),
+                },
+            )
+            output = result.output
+            severity = SeverityLevel(output.severity)
+            explanation = output.explanation.strip()
+            logger.info(
+                "Meta-review complete",
+                participant_id=transcript.participant_id,
+                severity=severity.name,
+                is_mdd=severity.is_mdd,
+            )
+            return MetaReview(
+                severity=severity,
+                explanation=explanation,
+                quantitative_assessment_id=quantitative.id,
+                qualitative_assessment_id=qualitative.id,
+                participant_id=transcript.participant_id,
+            )
+        except asyncio.CancelledError:
+            raise
+        except Exception as e:
+            # Fail fast - no legacy fallback
+            logger.error(
+                "Pydantic AI call failed during meta-review",
+                participant_id=transcript.participant_id,
+                error=str(e),
+            )
+            raise ValueError(f"Pydantic AI meta-review failed: {e}") from e
 
     def _format_quantitative(self, assessment: PHQ8Assessment) -> str:
         """Format PHQ-8 scores for prompt.
@@ -213,41 +187,3 @@ class MetaReviewAgent:
                 lines.append(f"<{key_lower}_explanation>{reason}</{key_lower}_explanation>")
 
         return "\n".join(lines)
-
-    def _parse_response(
-        self,
-        raw: str,
-        quantitative: PHQ8Assessment,
-    ) -> tuple[SeverityLevel, str]:
-        """Parse severity and explanation from LLM response.
-
-        Args:
-            raw: Raw LLM response text.
-            quantitative: Quantitative assessment for fallback.
-
-        Returns:
-            Tuple of (severity level, explanation text).
-        """
-        tags = extract_xml_tags(raw, ["severity", "explanation"])
-
-        # Parse severity with fallback
-        severity_str = tags.get("severity", "").strip()
-        try:
-            severity_int = int(severity_str)
-            # Clamp to valid range 0-4
-            severity = SeverityLevel(max(0, min(4, severity_int)))
-        except (ValueError, TypeError):
-            # Fall back to quantitative-derived severity
-            logger.warning(
-                "Failed to parse severity from response, using quantitative fallback",
-                raw_severity=severity_str[:50] if severity_str else "empty",
-            )
-            severity = quantitative.severity
-
-        # Get explanation, fallback to raw response if not tagged
-        explanation = tags.get("explanation", "").strip()
-        if not explanation:
-            # Try to extract meaningful content from raw response
-            explanation = raw.strip()
-
-        return severity, explanation
