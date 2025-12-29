@@ -1,25 +1,25 @@
 # Pydantic AI Fallback Architecture: Deep Analysis
 
-> **Status**: COMPREHENSIVE AUDIT COMPLETE (Single Source of Truth)
-> **Date**: 2025-12-28
+> **Status**: SSOT (Updated post-`REMOVE_LEGACY_SPEC.md`)
+> **Date**: 2025-12-29
 > **Supersedes**: `docs/bugs/fallback-architecture-audit.md`
-> **Scope**: Why we keep seeing "Exceeded maximum retries for output validation" and what to do about it
+> **Scope**: Historical analysis of the removed fallback + current Pydantic AI-only behavior
 
 ---
 
 ## Executive Summary
 
-**The error you keep seeing is NOT a bug—it's working as designed.** But the design has a flaw: the fallback mechanism is often useless and sometimes harmful.
+**The error you keep seeing is NOT a bug—it's working as designed.** Historically, the system attempted a "legacy fallback" after Pydantic AI failures. That fallback has now been removed for all structured-output agent calls (see `REMOVE_LEGACY_SPEC.md`).
 
 Both independent investigations converged on the same findings:
 
-1. **The fallback does NOT switch models.** Both paths call the same LLM (Gemma 3 27B) via Ollama. The difference is the Python wrapper layer and parsing/repair behavior.
+1. **The fallback did NOT switch models.** Both paths called the same LLM (Gemma 3 27B) via Ollama. The difference was the Python wrapper layer and parsing/repair behavior.
 
-2. **The fallback is backward compatibility cruft.** Legacy code existed before Pydantic AI. The fallback was kept "just in case" but is rarely helpful.
+2. **The fallback was backward compatibility cruft.** Legacy code existed before Pydantic AI. The fallback was kept "just in case" but was rarely helpful.
 
-3. **For timeouts (the common failure), the fallback is USELESS.** It calls the same overloaded LLM and will also timeout, wasting time.
+3. **For timeouts (the common failure), fallback was USELESS.** It called the same overloaded LLM and also timed out, wasting time.
 
-4. **The real research risk is unrecorded pipeline divergence.** Per-participant path differences (Pydantic AI vs legacy vs repair ladder) can cause run-to-run drift.
+4. **The real research risk was unrecorded pipeline divergence.** Per-participant path differences (Pydantic AI vs legacy vs repair ladder) could cause run-to-run drift.
 
 5. **Timeouts ARE configurable.** Pydantic AI accepts `model_settings={"timeout": ...}` and we now pass it (BUG-027).
 
@@ -29,7 +29,7 @@ Both independent investigations converged on the same findings:
 
 ```text
 Exceeded maximum retries (3) for output validation for: ...
-Pydantic AI call failed during scoring; falling back to legacy
+Pydantic AI scoring failed: ...
 ```
 
 ### What's Actually Happening
@@ -37,16 +37,24 @@ Pydantic AI call failed during scoring; falling back to legacy
 1. Pydantic AI tries to get structured output from the LLM
 2. LLM returns malformed/incomplete response (validation fails)
 3. Pydantic AI retries 3 times (per `PydanticAISettings.retries`)
-4. All retries fail → exception caught → fallback to legacy parsing
-5. Legacy parsing attempts the same LLM call with different wrapper
+4. All retries fail → `Agent.run(...)` raises
+5. Agent layer logs and raises (no legacy fallback)
 
 ### The Fundamental Problem
 
-**Both paths call the SAME LLM.** The fallback doesn't switch models—it just changes the Python wrapper layer. If the LLM is misbehaving (timeout, overloaded, bad output), the fallback will also fail.
+**Both paths called the SAME LLM.** The fallback didn't switch models—it just changed the Python wrapper layer. If the LLM was misbehaving (timeout, overloaded, bad output), the fallback also failed. This was a primary rationale for removing fallback.
 
 ---
 
-## Architecture Diagram
+## Current State (post-`REMOVE_LEGACY_SPEC.md`)
+
+- Structured-output calls use Pydantic AI only (quantitative scoring, qualitative assess/refine, judge, meta-review).
+- Misconfiguration is fail-fast: when Pydantic AI is enabled, `ollama_base_url` must be provided (no silent fallback).
+- If Pydantic AI raises (validation errors, timeouts, etc.), the agent method raises (no secondary "legacy" attempt).
+
+---
+
+## Historical Architecture Diagram (pre-`REMOVE_LEGACY_SPEC.md`)
 
 ```text
 ┌─────────────────────────────────────────────────────────────────────┐

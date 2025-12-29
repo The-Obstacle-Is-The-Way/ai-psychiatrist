@@ -1,7 +1,7 @@
 # Spec: Remove Legacy Fallback Architecture
 
-> **Status**: DRAFT (BREAKING)
-> **Date**: 2025-12-28
+> **Status**: IMPLEMENTED (BREAKING)
+> **Date**: 2025-12-29
 > **Goal**: Remove the legacy fallback path (and legacy primary path) for all **structured-output** agent calls, making Pydantic AI the only scoring/evaluation mechanism.
 
 ## Context

@@ -11,7 +11,6 @@ from ai_psychiatrist.agents import (
 )
 from ai_psychiatrist.domain.entities import Transcript
 from ai_psychiatrist.domain.enums import AssessmentMode, EvaluationMetric
-from ai_psychiatrist.infrastructure.llm.responses import extract_score_from_text
 
 if TYPE_CHECKING:
     from ai_psychiatrist.config import Settings
@@ -31,6 +30,8 @@ class TestAgentsRealOllama:
         agent = QualitativeAssessmentAgent(
             llm_client=ollama_client,
             model_settings=app_settings.model,
+            pydantic_ai_settings=app_settings.pydantic_ai,
+            ollama_base_url=app_settings.ollama.base_url,
         )
 
         transcript = Transcript(participant_id=999_999, text=sample_transcript)
@@ -52,10 +53,14 @@ class TestAgentsRealOllama:
         qual_agent = QualitativeAssessmentAgent(
             llm_client=ollama_client,
             model_settings=app_settings.model,
+            pydantic_ai_settings=app_settings.pydantic_ai,
+            ollama_base_url=app_settings.ollama.base_url,
         )
         judge = JudgeAgent(
             llm_client=ollama_client,
             model_settings=app_settings.model,
+            pydantic_ai_settings=app_settings.pydantic_ai,
+            ollama_base_url=app_settings.ollama.base_url,
         )
 
         transcript = Transcript(participant_id=999_999, text=sample_transcript)
@@ -65,7 +70,7 @@ class TestAgentsRealOllama:
         assert set(evaluation.scores.keys()) == set(EvaluationMetric.all_metrics())
         for score in evaluation.scores.values():
             assert 1 <= score.score <= 5
-            assert extract_score_from_text(score.explanation) is not None
+            assert score.explanation.strip()
 
     async def test_quantitative_agent_assess_real_ollama_has_some_numeric_scores(
         self,
@@ -78,6 +83,8 @@ class TestAgentsRealOllama:
             embedding_service=None,
             mode=AssessmentMode.ZERO_SHOT,
             model_settings=app_settings.model,
+            pydantic_ai_settings=app_settings.pydantic_ai,
+            ollama_base_url=app_settings.ollama.base_url,
         )
 
         transcript = Transcript(participant_id=999_999, text=sample_transcript)
