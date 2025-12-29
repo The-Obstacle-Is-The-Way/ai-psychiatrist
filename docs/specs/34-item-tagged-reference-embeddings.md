@@ -1,8 +1,10 @@
 # Spec 34: Item-Tagged Reference Embeddings (Index-Time Tagging + Retrieval-Time Filtering)
 
-> **STATUS: PLANNED (New method / paper divergence)**
+> **STATUS: IMPLEMENTED**
 >
-> This addresses “topic vs item” mismatch by restricting retrieval to chunks tagged as relevant to a PHQ-8 item.
+> This addresses "topic vs item" mismatch by restricting retrieval to chunks tagged as relevant to a PHQ-8 item.
+>
+> **Note**: Only `--tagger keyword` is implemented. LLM-based tagging (`--tagger llm`) is deferred to a future spec.
 
 ## Problem
 
@@ -65,8 +67,7 @@ Modify `scripts/generate_embeddings.py` to optionally write `{name}.tags.json` w
 
 - CLI flag: `--write-item-tags`
 - AND tagging backend is configured:
-  - `--tagger keyword` (deterministic baseline)
-  - `--tagger llm` (semantic; must be mocked in tests)
+  - `--tagger keyword` (deterministic baseline; the only implemented option today)
 
 #### Keyword Tagger (Deterministic Baseline)
 
@@ -86,7 +87,7 @@ parser.add_argument(
 )
 parser.add_argument(
     "--tagger",
-    choices=["keyword", "llm"],
+    choices=["keyword"],
     default="keyword",
     help="Chunk tagger backend (only used when --write-item-tags is set)",
 )
@@ -171,4 +172,4 @@ Copy/paste scaffolding guidance:
 ## Risks
 
 - Keyword tagger may under-tag (false negatives), harming retrieval recall.
-- LLM tagger may introduce variance; must run multiple seeds / multiple runs.
+- Future: LLM tagger may introduce variance; must run multiple seeds / multiple runs.
