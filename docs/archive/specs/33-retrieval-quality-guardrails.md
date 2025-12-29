@@ -1,8 +1,11 @@
 # Spec 33: Retrieval Quality Guardrails (Similarity Threshold + Context Budget)
 
-> **STATUS: PLANNED / EXPERIMENTAL (Not paper-parity)**
+> **STATUS: ✅ IMPLEMENTED (2025-12-29)**
 >
 > **Do not enable by default**. This changes the method vs the paper.
+>
+> **Reproduction note**: This spec intentionally breaks Spec 31’s character-for-character
+> notebook parity by switching the closing delimiter to proper XML (`</Reference Examples>`).
 
 ## Problem
 
@@ -16,7 +19,8 @@ Even with perfect paper-parity formatting (Spec 31), retrieval can still inject 
 
 1. Add an optional **minimum similarity threshold** for including a retrieved reference.
 2. Add an optional **context budget** for references to prevent prompt bloat.
-3. Defaults must preserve current behavior (no filtering, no budget).
+3. **Fix XML closing tag** to use proper `</Reference Examples>` syntax (per [Anthropic best practices](https://platform.claude.com/docs/en/build-with-claude/prompt-engineering/use-xml-tags)).
+4. Defaults must preserve current **retrieval selection** behavior (no filtering, no budget).
 
 ## Non-goals
 
@@ -33,6 +37,10 @@ Introduce a small post-retrieval pipeline:
 3. Enforce reference context budget (new)
 
 This should be implemented as a composable chain so additional filters/rerankers can be added without branching logic.
+
+**Implementation note (2025-12-29):** The current implementation uses simple sequential
+post-processing (straight-line `if` blocks). If additional stages are added (e.g., Spec 34+),
+consider refactoring into an explicit Strategy/CoR pipeline to avoid branching growth.
 
 ## Implementation
 
@@ -257,7 +265,31 @@ Add tests to `tests/unit/services/test_embedding.py`:
   - `EMBEDDING_MAX_REFERENCE_CHARS_PER_ITEM=800`
   - Compare paired AURC deltas.
 
+### XML Closing Tag Fix (Trivial)
+
+In `src/ai_psychiatrist/services/embedding.py`, in `ReferenceBundle.format_for_prompt()`:
+
+**Before** (paper-parity, weird):
+```python
+return "<Reference Examples>\n\n" + "\n\n".join(entries) + "\n\n<Reference Examples>"
+```
+
+**After** (proper XML):
+```python
+return "<Reference Examples>\n\n" + "\n\n".join(entries) + "\n\n</Reference Examples>"
+#                                                             ^ ADD SLASH
+```
+
+Also fix the empty case:
+```python
+return "<Reference Examples>\nNo valid evidence found\n</Reference Examples>"
+#                                                        ^ ADD SLASH
+```
+
+This is a 2-character change. No config needed - just fix it.
+
 ## Risks / Failure Modes
 
 - Thresholding may reduce coverage by removing references, potentially causing more N/A.
 - Budgeting may bias towards earlier items if later items systematically have longer chunks (measure per-item effects).
+- XML fix: theoretically could affect Gemma behavior, but proper XML is universally cleaner.

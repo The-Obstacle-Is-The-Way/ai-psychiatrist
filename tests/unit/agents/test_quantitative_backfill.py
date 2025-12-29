@@ -71,7 +71,6 @@ def create_agent(
     )
 
 
-@pytest.mark.unit
 async def test_backfill_disabled_no_enrichment(
     mock_llm_client: MockLLMClient,
     mock_agent_factory: AsyncMock,
@@ -111,7 +110,6 @@ async def test_backfill_disabled_no_enrichment(
     assert tired_item.keyword_evidence_count == 0
 
 
-@pytest.mark.unit
 async def test_backfill_enabled_adds_evidence(
     mock_llm_client: MockLLMClient,
     mock_agent_factory: AsyncMock,
@@ -136,7 +134,6 @@ async def test_backfill_enabled_adds_evidence(
     # na_reason is only set if score is None. Here mock output has score=0.
 
 
-@pytest.mark.unit
 async def test_na_reason_no_mention(
     mock_llm_client: MockLLMClient,
     mock_agent_factory: AsyncMock,
@@ -169,7 +166,6 @@ async def test_na_reason_no_mention(
     assert appetite_item.evidence_source is None
 
 
-@pytest.mark.unit
 async def test_track_na_reasons_disabled_does_not_populate_na_reason(
     mock_llm_client: MockLLMClient,
     mock_agent_factory: AsyncMock,
@@ -200,7 +196,6 @@ async def test_track_na_reasons_disabled_does_not_populate_na_reason(
     assert tired_item.na_reason is None
 
 
-@pytest.mark.unit
 async def test_na_reason_score_na_with_evidence_llm_only(
     mock_llm_client: MockLLMClient,
     mock_agent_factory: AsyncMock,
@@ -236,7 +231,6 @@ async def test_na_reason_score_na_with_evidence_llm_only(
     assert sleep_item.keyword_evidence_count == 0
 
 
-@pytest.mark.unit
 async def test_evidence_source_both_llm_and_keyword(
     mock_llm_client: MockLLMClient,
     mock_agent_factory: AsyncMock,
@@ -259,7 +253,6 @@ async def test_evidence_source_both_llm_and_keyword(
     assert tired_item.keyword_evidence_count > 0
 
 
-@pytest.mark.unit
 async def test_keyword_backfill_cap_respected(
     mock_llm_client: MockLLMClient,
     mock_agent_factory: AsyncMock,

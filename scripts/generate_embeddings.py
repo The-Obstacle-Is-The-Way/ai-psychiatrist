@@ -355,7 +355,10 @@ def prepare_config(args: argparse.Namespace, *, settings: Settings) -> Generatio
     # Determine output path
     if args.output:
         output_path = args.output
-    elif "embeddings_file" in embedding_settings.model_fields_set:
+    elif (
+        "embeddings_path" in data_settings.model_fields_set
+        or "embeddings_file" in embedding_settings.model_fields_set
+    ):
         output_path = resolve_reference_embeddings_path(data_settings, embedding_settings)
     else:
         filename = get_output_filename(

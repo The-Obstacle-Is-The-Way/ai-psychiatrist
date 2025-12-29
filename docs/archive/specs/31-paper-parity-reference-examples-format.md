@@ -1,8 +1,15 @@
 # Spec 31: Paper-Parity Few-Shot Reference Examples Format
 
-> **STATUS: READY (Implement Now)**
+> **STATUS: ✅ IMPLEMENTED (2025-12-28) → Archive**
 >
 > **Scope**: Fix paper-parity divergences in `ReferenceBundle.format_for_prompt()` only.
+>
+> **Result**: Few-shot AURC improved 10% (0.214 → 0.193). See `docs/results/run-history.md`.
+>
+> **NOTE (2025-12-29)**: Spec 33 intentionally changed the closing delimiter to proper XML
+> (`</Reference Examples>`). Current `ReferenceBundle.format_for_prompt()` is **not**
+> character-for-character identical to the notebook; this spec remains the notebook SSOT
+> reference for strict paper-parity formatting.
 
 ## Problem
 
@@ -13,7 +20,8 @@ Our few-shot prompt formatting currently diverges from the paper’s notebook im
 - We close with `</Reference Examples>` instead of the notebook’s (unusual) `<Reference Examples>` delimiter.
 - We emit per-item `"No valid evidence found"` blocks; notebook **skips empty items** and only emits the sentinel if *all* references are empty.
 
-This spec makes our formatting **character-for-character** match the notebook output.
+This spec defines the notebook’s **character-for-character** output. It was implemented on
+2025-12-28; the closing delimiter was later intentionally changed by Spec 33.
 
 ## Goals (Acceptance Criteria)
 

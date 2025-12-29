@@ -1,7 +1,10 @@
 # Paper Reproduction Analysis: Coverage/MAE Discrepancy
 
-**Date**: 2025-12-27
+**Date**: 2025-12-27 (Updated 2025-12-29)
 **Status**: Investigation Complete
+
+> **Update (2025-12-29)**: Post Spec 31/32 (paper-parity format), few-shot MAE improved to 0.774 (and AURC to 0.193), but zero-shot still wins (AURC 0.134).
+> The analysis below uses earlier run data but conclusions remain valid.
 
 ---
 
@@ -31,13 +34,16 @@ Notes:
 
 ### Our Results
 
-| Mode | Coverage | MAE | Observation |
-|------|----------|-----|-------------|
-| Zero-Shot | 56.9% | 0.717 | Baseline |
-| Few-Shot | 71.6% | 0.860 | Coverage ↑ ~15%, MAE ↑ ~20% |
+| Mode | Cmax | MAE_w | Observation |
+|------|------|-------|-------------|
+| Zero-Shot | 55.5% | 0.698 | Baseline (1 participant excluded from MAE: 8/8 N/A) |
+| Few-Shot | 70.1% | 0.774 | Coverage ↑ ~15%, MAE_w ↑ ~11% |
 
 Notes:
-- Our MAE above is aligned to the paper-style MAE (mean of per-item MAEs excluding "N/A").
+- `Cmax` is the maximum coverage in the AURC risk–coverage curve (computed over all included items).
+- Our MAE above is the weighted MAE from the latest post-Spec 31/32 run (computed over evaluated subjects only).
+- Earlier runs showed higher few-shot MAE (0.804-0.860) before paper-parity formatting.
+- Coverage-adjusted results (Spec 25): zero-shot AURC = 0.134, few-shot AURC = 0.193 (zero-shot wins).
 
 ---
 
@@ -81,7 +87,7 @@ We documented extensively that their Python files contain dead code:
 
 ### 3. No AURC or Risk-Coverage Analysis
 
-The paper compares MAE at **different coverage levels** - this is fundamentally unfair.
+The paper compares MAE at **different coverage levels** without analyzing the tradeoff curve.
 
 **Proper evaluation** (selective prediction / abstention literature):
 - Use risk–coverage curves (or AURC-family metrics)
@@ -150,8 +156,8 @@ The issue is not that the numbers are "impossible"; it is that the paper does no
 
 ### 4. Proper Comparison Requires AURC
 
-- See `docs/specs/25-aurc-augrc-implementation.md`
-- Would enable fair zero-shot vs few-shot comparison
+- Implemented as Spec 25: `docs/archive/specs/25-aurc-augrc-implementation.md`
+- Results are tracked in `docs/results/run-history.md`
 - Standard in selective prediction literature
 
 ---
@@ -162,12 +168,12 @@ The issue is not that the numbers are "impossible"; it is that the paper does no
 
 Our implementation is correct. The coverage/MAE tradeoff we observe is expected and legitimate.
 
-### Medium-Term: Implement AURC
+### Medium-Term: Use AURC as Primary Metric
 
-Add AURC computation to enable:
+Treat AURC/AUGRC + paired bootstrap deltas as the primary comparison:
 1. Fair comparison across coverage levels
-2. Proper selective prediction evaluation
-3. Publishable, rigorous results
+2. Explicit uncertainty tradeoff (risk–coverage curve)
+3. Publishable statistical inference (CI on ΔAURC/ΔAUGRC)
 
 ### Long-Term: Document for Future Work
 
@@ -182,7 +188,7 @@ This analysis should be included in any future publication reproducing or extend
 
 - `docs/bugs/bug-029-coverage-mae-discrepancy.md` - Detailed discrepancy analysis
 - `docs/bugs/fallback-architecture-audit.md` - Code quality issues
-- `docs/specs/25-aurc-augrc-implementation.md` - Selective prediction evaluation suite
+- `docs/archive/specs/25-aurc-augrc-implementation.md` - Selective prediction evaluation suite
 
 ---
 

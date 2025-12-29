@@ -40,11 +40,11 @@ class ReferenceBundle:
     def format_for_prompt(self) -> str:
         """Format references as prompt text (paper-parity).
 
-        Paper notebook behavior (cell 49f51ff5):
+        Paper notebook behavior (cell 49f51ff5) + Spec 33 XML fix:
         - Single unified <Reference Examples> block.
         - Each reference entry is labeled like: (PHQ8_Sleep Score: 2)
         - Items with no matches are omitted (no empty per-item blocks).
-        - Uses the same literal tag to open and close: <Reference Examples>
+        - Proper XML closing tag: </Reference Examples> (Spec 33 fix).
         """
         entries: list[str] = []
 
@@ -59,9 +59,9 @@ class ReferenceBundle:
                 )
 
         if entries:
-            return "<Reference Examples>\n\n" + "\n\n".join(entries) + "\n\n<Reference Examples>"
+            return "<Reference Examples>\n\n" + "\n\n".join(entries) + "\n\n</Reference Examples>"
 
-        return "<Reference Examples>\nNo valid evidence found\n<Reference Examples>"
+        return "<Reference Examples>\nNo valid evidence found\n</Reference Examples>"
 
 
 class EmbeddingService:
@@ -93,6 +93,11 @@ class EmbeddingService:
         self._min_chars = settings.min_evidence_chars
         self._model_settings = model_settings
         self._enable_retrieval_audit = settings.enable_retrieval_audit
+        # Retrieval quality guardrails (Spec 33, post-hoc improvements not in paper)
+        # - min_reference_similarity: Floor for filtering low-similarity (0.0 = disabled)
+        # - max_reference_chars_per_item: Character budget per item (0 = unlimited)
+        self._min_reference_similarity = settings.min_reference_similarity
+        self._max_reference_chars_per_item = settings.max_reference_chars_per_item
 
     async def embed_text(self, text: str) -> tuple[float, ...]:
         """Generate embedding for text.
@@ -277,7 +282,22 @@ class EmbeddingService:
             # Find similar chunks with this item's scores
             matches = self._compute_similarities(query_emb, item=item)
             matches.sort(key=lambda x: x.similarity, reverse=True)
+
+            if self._min_reference_similarity > 0.0:
+                matches = [m for m in matches if m.similarity >= self._min_reference_similarity]
+
             top_matches = matches[: self._top_k]
+
+            if self._max_reference_chars_per_item > 0:
+                budgeted: list[SimilarityMatch] = []
+                used = 0
+                for m in top_matches:
+                    cost = len(m.chunk.text)
+                    if used + cost > self._max_reference_chars_per_item:
+                        break
+                    budgeted.append(m)
+                    used += cost
+                top_matches = budgeted
 
             if self._enable_retrieval_audit:
                 evidence_key = f"PHQ8_{item.value}"

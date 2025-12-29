@@ -57,7 +57,7 @@ class TestReferenceBundle:
         bundle = ReferenceBundle(item_references={})
         assert (
             bundle.format_for_prompt()
-            == "<Reference Examples>\nNo valid evidence found\n<Reference Examples>"
+            == "<Reference Examples>\nNo valid evidence found\n</Reference Examples>"
         )
 
     def test_format_with_single_match(self) -> None:
@@ -71,10 +71,11 @@ class TestReferenceBundle:
         formatted = bundle.format_for_prompt()
 
         assert formatted.startswith("<Reference Examples>\n\n")
-        assert formatted.endswith("\n\n<Reference Examples>")
+        assert formatted.endswith("\n\n</Reference Examples>")
         assert "(PHQ8_NoInterest Score: 2)\nI can't enjoy anything anymore" in formatted
         assert "[NoInterest]" not in formatted
-        assert "</Reference Examples>" not in formatted
+        assert "<Reference Examples>" in formatted  # Opening tag
+        assert "</Reference Examples>" in formatted  # Closing tag
         assert "No valid evidence found" not in formatted
 
     def test_format_skips_none_score(self) -> None:
@@ -86,7 +87,7 @@ class TestReferenceBundle:
         bundle = ReferenceBundle(item_references={PHQ8Item.SLEEP: [match]})
         assert (
             bundle.format_for_prompt()
-            == "<Reference Examples>\nNo valid evidence found\n<Reference Examples>"
+            == "<Reference Examples>\nNo valid evidence found\n</Reference Examples>"
         )
 
     def test_format_multiple_items_preserves_order(self) -> None:
@@ -399,6 +400,112 @@ class TestEmbeddingService:
             chunk_preview=("aaa " * 100)[:160],
             chunk_chars=len("aaa " * 100),
         )
+
+    @pytest.mark.asyncio
+    async def test_reference_threshold_filters_low_similarity(
+        self,
+        mock_llm_client: MagicMock,
+        mock_reference_store: MagicMock,
+        monkeypatch: pytest.MonkeyPatch,
+    ) -> None:
+        settings = EmbeddingSettings(
+            dimension=256,
+            top_k_references=2,
+            min_evidence_chars=1,
+            min_reference_similarity=0.5,
+            max_reference_chars_per_item=0,
+        )
+        service = EmbeddingService(mock_llm_client, mock_reference_store, settings)
+
+        matches = [
+            SimilarityMatch(
+                chunk=TranscriptChunk(text="good", participant_id=1),
+                similarity=0.9,
+                reference_score=1,
+            ),
+            SimilarityMatch(
+                chunk=TranscriptChunk(text="bad", participant_id=2),
+                similarity=0.1,
+                reference_score=1,
+            ),
+        ]
+        monkeypatch.setattr(service, "_compute_similarities", MagicMock(return_value=matches))
+
+        bundle = await service.build_reference_bundle({PHQ8Item.SLEEP: ["evidence"]})
+        assert bundle.item_references[PHQ8Item.SLEEP] == [matches[0]]
+
+    @pytest.mark.asyncio
+    async def test_reference_budget_limits_included_matches(
+        self,
+        mock_llm_client: MagicMock,
+        mock_reference_store: MagicMock,
+        monkeypatch: pytest.MonkeyPatch,
+    ) -> None:
+        settings = EmbeddingSettings(
+            dimension=256,
+            top_k_references=3,
+            min_evidence_chars=1,
+            min_reference_similarity=0.0,
+            max_reference_chars_per_item=5,
+        )
+        service = EmbeddingService(mock_llm_client, mock_reference_store, settings)
+
+        matches = [
+            SimilarityMatch(
+                chunk=TranscriptChunk(text="12345", participant_id=1),
+                similarity=0.9,
+                reference_score=1,
+            ),
+            SimilarityMatch(
+                chunk=TranscriptChunk(text="12345", participant_id=2),
+                similarity=0.8,
+                reference_score=1,
+            ),
+        ]
+        monkeypatch.setattr(service, "_compute_similarities", MagicMock(return_value=matches))
+
+        bundle = await service.build_reference_bundle({PHQ8Item.SLEEP: ["evidence"]})
+        # Budget=5 keeps only the first chunk of length 5.
+        assert bundle.item_references[PHQ8Item.SLEEP] == [matches[0]]
+
+    @pytest.mark.asyncio
+    async def test_defaults_preserve_existing_selection(
+        self,
+        mock_llm_client: MagicMock,
+        mock_reference_store: MagicMock,
+        monkeypatch: pytest.MonkeyPatch,
+    ) -> None:
+        settings = EmbeddingSettings(
+            dimension=256,
+            top_k_references=2,
+            min_evidence_chars=1,
+            min_reference_similarity=0.0,
+            max_reference_chars_per_item=0,
+        )
+        service = EmbeddingService(mock_llm_client, mock_reference_store, settings)
+
+        # Deliberately unsorted: build_reference_bundle must sort desc and take top_k.
+        low = SimilarityMatch(
+            chunk=TranscriptChunk(text="low", participant_id=1),
+            similarity=0.2,
+            reference_score=1,
+        )
+        high = SimilarityMatch(
+            chunk=TranscriptChunk(text="high", participant_id=2),
+            similarity=0.9,
+            reference_score=1,
+        )
+        mid = SimilarityMatch(
+            chunk=TranscriptChunk(text="mid", participant_id=3),
+            similarity=0.5,
+            reference_score=1,
+        )
+        monkeypatch.setattr(
+            service, "_compute_similarities", MagicMock(return_value=[low, high, mid])
+        )
+
+        bundle = await service.build_reference_bundle({PHQ8Item.SLEEP: ["evidence"]})
+        assert bundle.item_references[PHQ8Item.SLEEP] == [high, mid]
 
 
 class TestReferenceStore:

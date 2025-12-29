@@ -1,36 +1,76 @@
 # Paper Reproduction Results
 
-**Last Updated**: 2025-12-28
-**Status**: Full AURC/AUGRC analysis complete with bootstrap CIs.
+**Last Updated**: 2025-12-29
+**Status**: Post Spec 31/32 (paper-parity format). AURC/AUGRC analysis complete.
+
+> **For complete run history**: See [run-history.md](./run-history.md) for comprehensive documentation of all runs, code changes, and statistical analyses.
 
 ---
 
 ## Executive Summary
 
-### AURC/AUGRC Analysis (Statistically Valid)
+### Current Baseline (Post Spec 31/32)
+
+Latest validated run with paper-parity reference format:
+
+| Mode | MAE_w | AURC | AUGRC | Cmax | N_eval (MAE) |
+|------|-------|------|-------|------|-------------|
+| **Zero-shot** | 0.698 | **0.134** | **0.037** | 55.5% | 40 |
+| Few-shot | 0.774 | 0.193 | 0.065 | 70.1% | 41 |
+
+**Run**: `both_paper-test_backfill-off_20251229_003543.json` (commit `7d54d98`)
+
+### AURC/AUGRC Analysis (Latest Run - Post Spec 31/32)
 
 | Mode | AURC | 95% CI | AUGRC | 95% CI | Cmax |
 |------|------|--------|-------|--------|------|
 | **Zero-shot** | **0.134** | [0.094, 0.176] | **0.037** | [0.024, 0.053] | 55.5% |
-| Few-shot | 0.214 | [0.160, 0.278] | 0.074 | [0.054, 0.098] | 71.9% |
+| Few-shot | 0.193 | [0.142, 0.244] | 0.065 | [0.043, 0.091] | 70.1% |
 
-**Key finding**: Zero-shot is **statistically significantly better** than few-shot (non-overlapping CIs).
+**Computed**: 2025-12-29 via `scripts/evaluate_selective_prediction.py`
+
+**Key finding**: Zero-shot is **statistically significantly better** than few-shot (paired bootstrap ΔAURC = +0.058 [0.016, 0.107], few-shot − zero-shot).
 
 ### Naive MAE Comparison (For Reference Only)
 
-| Mode | Our MAE | Paper MAE | Coverage | Note |
-|------|---------|-----------|----------|------|
-| Zero-shot | 0.640 | 0.796 | 55.5% | ⚠️ Different coverages |
-| Few-shot | 0.795 | 0.619 | 71.9% | ⚠️ Not comparable |
+| Mode | Our MAE | Paper MAE | Coverage (MAE eval) | Note |
+|------|---------|-----------|---------------------|------|
+| Zero-shot | 0.698 | 0.796 | 56.9% | ⚠️ Different coverages |
+| Few-shot | 0.774 | 0.619 | 70.1% | ⚠️ Not comparable |
 
-**WARNING**: MAE comparisons across different coverages are **statistically invalid**.
+**WARNING**: MAE comparisons across different coverages are **not coverage-adjusted**.
 See [Statistical Methodology](../reference/statistical-methodology-aurc-augrc.md) for details.
 
-**Bottom line**: When evaluated properly with AURC/AUGRC, **zero-shot outperforms few-shot** by ~37-50%.
+**Bottom line**: When evaluated properly with AURC/AUGRC, **zero-shot outperforms few-shot** by ~31% (AURC) / ~43% (AUGRC).
 
 ---
 
-## Validated Run: Zero-Shot (2025-12-26)
+## Run History Summary
+
+| Run | Date | Commit | Change | Zero-shot AURC | Few-shot AURC |
+|-----|------|--------|--------|----------------|---------------|
+| Latest | 2025-12-29 | `7d54d98` | Spec 31/32 paper-parity | **0.134** | 0.193 |
+| Previous | 2025-12-27 | `0a98662` | Pre-Spec 31/32 | 0.134 | 0.214 |
+
+| Run | Date | Commit | Change | Zero-shot AUGRC | Few-shot AUGRC |
+|-----|------|--------|--------|-----------------|----------------|
+| Latest | 2025-12-29 | `7d54d98` | Spec 31/32 paper-parity | **0.037** | 0.065 |
+| Previous | 2025-12-27 | `0a98662` | Pre-Spec 31/32 | 0.037 | 0.074 |
+
+**Spec 31/32 Impact**:
+- Few-shot AURC: 0.214 → 0.193 (**-10%**, better)
+- Few-shot AUGRC: 0.074 → 0.065 (**-12%**, better)
+- Zero-shot: unchanged (doesn't use reference examples)
+
+**Note**: AURC/AUGRC are the valid metrics (lower = better). MAE comparisons across different coverages are not coverage-adjusted.
+
+For complete analysis, see [run-history.md](./run-history.md).
+
+---
+
+## Historical Runs (Archived)
+
+### Validated Run: Zero-Shot (2025-12-26)
 
 ### Run Metadata
 
@@ -60,7 +100,7 @@ See [Statistical Methodology](../reference/statistical-methodology-aurc-augrc.md
 | **Item MAE (by item)** | **0.717** | Primary metric for paper comparison |
 | Item MAE (weighted) | 0.698 | Weighted by item coverage |
 | Item MAE (by subject) | 0.640 | Averaged per-subject first |
-| Coverage | 56.9% | Items with predictions (vs N/A) |
+| Coverage (MAE eval) | 56.9% | Items with predictions (vs N/A) |
 | Evaluated | 40/41 | 1 excluded (all N/A) |
 | Runtime | 82 min | M1 Max 64GB |
 
@@ -122,7 +162,7 @@ See [Statistical Methodology](../reference/statistical-methodology-aurc-augrc.md
 | **Item MAE (by item)** | **0.860** | Primary metric for paper comparison |
 | Item MAE (weighted) | 0.852 | Weighted by item coverage |
 | Item MAE (by subject) | 0.831 | Averaged per-subject first |
-| Coverage | 71.6% | Items with predictions (vs N/A) |
+| Coverage (MAE eval) | 71.6% | Items with predictions (vs N/A) |
 | Evaluated | 40/41 | 1 failed (timeout) |
 | Runtime | 128 min | M1 Max 64GB |
 
@@ -138,64 +178,6 @@ See [Statistical Methodology](../reference/statistical-methodology-aurc-augrc.md
 | Failure | 0.83 | 72.5% | 11 |
 | Concentrating | 1.17 | 57.5% | 17 |
 | Moving | 0.42 | 47.5% | 21 |
-
----
-
-## AURC/AUGRC Analysis (2025-12-28)
-
-### Why AURC/AUGRC Instead of MAE?
-
-The paper compared MAE values at different coverage levels - this is **statistically invalid**.
-
-When a model can abstain (return N/A), comparing raw MAE is like comparing:
-- A surgeon who only takes easy cases (low mortality)
-- A surgeon who takes hard cases (higher mortality)
-
-The second isn't worse - they're just not refusing difficult patients.
-
-**AURC/AUGRC integrate over the entire risk-coverage curve**, providing a fair comparison regardless of coverage differences.
-
-### Latest Run (2025-12-28)
-
-| Metric | Zero-Shot | Few-Shot | Winner |
-|--------|-----------|----------|--------|
-| Success Rate | 41/41 (100%) | 40/41 (98%) | Zero-shot |
-| Cmax (Coverage) | 55.5% [47-64%] | 71.9% [63-80%] | Few-shot |
-| **AURC** | **0.134** [0.09-0.18] | 0.214 [0.16-0.28] | **Zero-shot** |
-| **AUGRC** | **0.037** [0.02-0.05] | 0.074 [0.05-0.10] | **Zero-shot** |
-
-### Statistical Significance
-
-The 95% bootstrap CIs **do not overlap**:
-- Zero-shot AURC: [0.094, 0.176]
-- Few-shot AURC: [0.160, 0.278]
-
-This indicates a **statistically significant difference** at α=0.05.
-
-### Interpretation
-
-Zero-shot is better calibrated:
-- When it's confident, it's usually right
-- Few-shot is **overconfident** - it predicts more but with worse accuracy
-
-### Open Question: Why Does Zero-Shot Win?
-
-This is counterintuitive. Few-shot has more information (reference examples), so it *should* be better. Possible explanations:
-
-1. **Reference example quality**: Few-shot examples may not be representative
-2. **Embedding mismatch**: Similarity search returning poor matches
-3. **Overconfidence**: Few-shot predicts when it should abstain
-4. **Model behavior**: Gemma3 may work better in pure zero-shot mode
-
-**Further investigation needed.**
-
-### Metrics Files
-
-| File | Description |
-|------|-------------|
-| `few_shot_paper_backfill-off_20251228_024244.json` | Raw output with item_signals |
-| `selective_prediction_metrics_20251228T133513Z.json` | Zero-shot AURC metrics |
-| `selective_prediction_metrics_20251228T133532Z.json` | Few-shot AURC metrics |
 
 ---
 
@@ -230,7 +212,9 @@ See `docs/models/model-registry.md` for full configuration details.
 | Metric | Ours | Paper | Delta |
 |--------|------|-------|-------|
 | Item MAE | 0.717 | 0.796 | **-0.079 (10% better)** |
-| Coverage | 56.9% | ~50% | +6.9% |
+| Coverage (MAE eval) | 56.9% | ~50% | +6.9% |
+
+Note: In selective prediction metrics, `Cmax` is 55.5% because PID 339 contributes 0/8 coverage.
 
 **Interpretation**: Our zero-shot MAE is **better than the paper's zero-shot baseline**. This could be due to:
 1. QAT quantization performing well for this task
