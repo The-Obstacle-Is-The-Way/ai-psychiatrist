@@ -1,7 +1,11 @@
 # BUG-030: Our Coverage is Significantly Higher Than Paper's
 
-**Status**: Open - Investigation Pending
-**Severity**: Medium (Potential implementation issue)
+> **📦 ARCHIVED**: 2025-12-30
+> **Resolution**: Covered by BUG-029 investigation - higher coverage is due to model behavioral variance, not a bug.
+> **Action Taken**: None required - see BUG-029 for full analysis.
+
+**Status**: ✅ CLOSED - Superseded by BUG-029
+**Severity**: N/A (Not a bug)
 **Discovered**: 2025-12-27
 **Component**: Quantitative Assessment Pipeline
 

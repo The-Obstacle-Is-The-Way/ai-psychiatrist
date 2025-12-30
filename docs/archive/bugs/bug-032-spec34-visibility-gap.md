@@ -1,6 +1,10 @@
 # BUG-032: Spec 34 Item Tag Filter Not Displayed in Run Configuration
 
-**Status**: ✅ IMPLEMENTED (2025-12-30)
+> **📦 ARCHIVED**: 2025-12-30
+> **Resolution**: Implemented - `reproduce_results.py` now displays all Spec 33/34 settings.
+> **Action Taken**: Added config display for Item Tag Filter, Min Reference Similarity, etc.
+
+**Status**: ✅ CLOSED - Implemented (2025-12-30)
 **Severity**: Low (UX/Observability)
 **Found**: 2025-12-29
 **Spec**: 34 (Item-Tagged Reference Embeddings)

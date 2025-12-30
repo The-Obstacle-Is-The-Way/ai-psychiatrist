@@ -1,6 +1,14 @@
 # BUG-031: Few-Shot Retrieval Issues
 
-**Status**: OPEN - Awaiting Senior Review
+> **📦 ARCHIVED**: 2025-12-30
+> **Resolution**: Core issues addressed by Specs 31-34.
+> - **Spec 31**: Fixed format divergences (unified `<Reference Examples>` block, inline domain labels)
+> - **Spec 32**: Added retrieval diagnostics logging
+> - **Spec 33**: Added retrieval quality guardrails
+> - **Spec 34**: Added item-tagged reference embeddings
+> **Action Taken**: Implementation complete. Remaining ideas tracked in Spec 35/36.
+
+**Status**: ✅ CLOSED - Resolved by Specs 31-34
 **Severity**: HIGH - Potential contributor to zero-shot outperforming few-shot
 **Discovered**: 2025-12-28
 **Related**: [Investigation Document](../brainstorming/investigation-zero-shot-beats-few-shot.md)
