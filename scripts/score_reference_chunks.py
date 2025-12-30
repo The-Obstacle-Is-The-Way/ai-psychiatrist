@@ -258,7 +258,7 @@ async def main_async(args: argparse.Namespace) -> int:
 
             p_scores = await process_participant(client, pid, chunks, config)
             scores_data[pid] = p_scores
-            total_processed += len(chunks)
+            total_processed += len(p_scores)
 
             # Simple flush to disk every participant? No, atomic write at end is safer.
 

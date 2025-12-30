@@ -15,7 +15,7 @@ PHQ8_ITEM_KEYS: tuple[str, ...] = (
     "PHQ8_Moving",
 )
 
-PHQ8_ITEM_KEY_SET = set(PHQ8_ITEM_KEYS)
+PHQ8_ITEM_KEY_SET: frozenset[str] = frozenset(PHQ8_ITEM_KEYS)
 
 CHUNK_SCORING_PROMPT_TEMPLATE = """\
 You are labeling a single transcript chunk for PHQ-8 item frequency evidence.

@@ -56,15 +56,7 @@ async def lifespan(app: FastAPI) -> AsyncIterator[None]:
         # Spec 36: Reference Validation
         reference_validator = None
         if settings.embedding.enable_reference_validation:
-            if not settings.embedding.validation_model:
-                # Fallback to quantitative/judge model or require explicit setting?
-                # Spec says: EmbeddingSettings.validation_model: str
-                # If empty, we should probably warn or fail.
-                # Let's fallback to judge model for now or just fail if strict.
-                pass
-
-            # Using judge model as safe default if not specified,
-            # though spec implies validation_model should be set.
+            # Use judge model as safe default if validation_model not specified
             val_model = settings.embedding.validation_model or settings.model.judge_model
             reference_validator = LLMReferenceValidator(chat_client, val_model)
 
