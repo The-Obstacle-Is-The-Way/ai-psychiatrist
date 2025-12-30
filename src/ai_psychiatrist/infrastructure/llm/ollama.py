@@ -9,6 +9,7 @@ Paper Reference:
 
 from __future__ import annotations
 
+import asyncio
 import math
 from typing import TYPE_CHECKING, Any
 
@@ -24,6 +25,8 @@ from ai_psychiatrist.infrastructure.llm.protocols import (
     ChatMessage,
     ChatRequest,
     ChatResponse,
+    EmbeddingBatchRequest,
+    EmbeddingBatchResponse,
     EmbeddingRequest,
     EmbeddingResponse,
 )
@@ -285,6 +288,33 @@ class OllamaClient:
             embedding=normalized,
             model=data.get("model", request.model),
         )
+
+    async def embed_batch(self, request: EmbeddingBatchRequest) -> EmbeddingBatchResponse:
+        """Generate embeddings for multiple texts.
+
+        Ollama does not support true batching for embeddings, so this is a correctness fallback
+        that sequentially calls `embed(...)` with an overall timeout.
+        """
+        if not request.texts:
+            return EmbeddingBatchResponse(embeddings=[], model=request.model)
+
+        try:
+            async with asyncio.timeout(request.timeout_seconds):
+                embeddings: list[tuple[float, ...]] = []
+                for text in request.texts:
+                    resp = await self.embed(
+                        EmbeddingRequest(
+                            text=text,
+                            model=request.model,
+                            dimension=request.dimension,
+                            timeout_seconds=request.timeout_seconds,
+                        )
+                    )
+                    embeddings.append(resp.embedding)
+        except TimeoutError as e:
+            raise LLMTimeoutError(request.timeout_seconds) from e
+
+        return EmbeddingBatchResponse(embeddings=embeddings, model=request.model)
 
     async def simple_chat(
         self,

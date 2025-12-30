@@ -4,7 +4,7 @@ from __future__ import annotations
 
 import json
 from typing import TYPE_CHECKING, Any
-from unittest.mock import MagicMock
+from unittest.mock import AsyncMock, MagicMock
 
 import numpy as np
 import pandas as pd
@@ -17,6 +17,7 @@ from ai_psychiatrist.domain.exceptions import (
     EmbeddingDimensionMismatchError,
 )
 from ai_psychiatrist.domain.value_objects import SimilarityMatch, TranscriptChunk
+from ai_psychiatrist.infrastructure.llm.protocols import EmbeddingBatchResponse
 from ai_psychiatrist.services import embedding as embedding_service_module
 from ai_psychiatrist.services.embedding import EmbeddingService, ReferenceBundle
 from ai_psychiatrist.services.reference_store import PHQ8_COLUMN_MAP, ReferenceStore
@@ -24,6 +25,11 @@ from tests.fixtures.mock_llm import MockLLMClient
 
 if TYPE_CHECKING:
     from pathlib import Path
+
+    from ai_psychiatrist.services.reference_validation import (
+        Decision,
+        ReferenceValidationRequest,
+    )
 
 
 def _create_npz_embeddings(
@@ -343,6 +349,41 @@ class TestEmbeddingService:
         bundle = await service.build_reference_bundle(evidence)
 
         assert len(bundle.item_references.get(PHQ8Item.NO_INTEREST, [])) == 0
+
+    @pytest.mark.asyncio
+    async def test_build_reference_bundle_uses_embed_batch_once(
+        self,
+        monkeypatch: pytest.MonkeyPatch,
+    ) -> None:
+        llm_client = MagicMock()
+        llm_client.embed = AsyncMock()
+        llm_client.embed_batch = AsyncMock(
+            return_value=EmbeddingBatchResponse(
+                embeddings=[(1.0, 0.0), (0.0, 1.0)],
+                model="mock",
+            )
+        )
+
+        reference_store = MagicMock(spec=ReferenceStore)
+        settings = EmbeddingSettings(
+            dimension=2,
+            enable_batch_query_embedding=True,
+            query_embed_timeout_seconds=999,
+        )
+
+        service = EmbeddingService(llm_client, reference_store, settings)
+        monkeypatch.setattr(service, "_compute_similarities", MagicMock(return_value=[]))
+        monkeypatch.setattr(service, "_validate_matches", AsyncMock(return_value=[]))
+
+        evidence = {
+            PHQ8Item.SLEEP: ["I cannot sleep at night."],
+            PHQ8Item.TIRED: ["I feel exhausted most days."],
+        }
+
+        _ = await service.build_reference_bundle(evidence)
+
+        llm_client.embed_batch.assert_awaited_once()
+        llm_client.embed.assert_not_awaited()
 
     @pytest.mark.asyncio
     async def test_build_reference_bundle_logs_audit_when_enabled(
@@ -1036,6 +1077,77 @@ class TestItemTaggedFiltering:
 class TestReferenceStoreTags:
     """Tests for loading and validating tags in ReferenceStore."""
 
+    def test_tags_not_loaded_when_filter_disabled(self, tmp_path: Path) -> None:
+        """When enable_item_tag_filter=False, tags file should not be touched."""
+        transcripts_dir = tmp_path / "transcripts"
+        transcripts_dir.mkdir(parents=True, exist_ok=True)
+        embeddings_path = tmp_path / "embeddings.npz"
+
+        raw_data = {"100": [("chunk1", [1.0, 0.0])]}
+        _create_npz_embeddings(embeddings_path, raw_data)
+
+        # Invalid tags file should not matter when feature is disabled.
+        embeddings_path.with_suffix(".tags.json").write_text("INVALID JSON {{{")
+
+        data_settings = DataSettings(
+            base_dir=tmp_path,
+            transcripts_dir=transcripts_dir,
+            embeddings_path=embeddings_path,
+        )
+        embed_settings = EmbeddingSettings(dimension=2, enable_item_tag_filter=False)
+
+        store = ReferenceStore(data_settings, embed_settings)
+        store._load_embeddings()
+
+        assert store._tags == {}
+
+    def test_tags_crash_when_filter_enabled_and_missing(self, tmp_path: Path) -> None:
+        """When enable_item_tag_filter=True and tags missing, must crash."""
+        transcripts_dir = tmp_path / "transcripts"
+        transcripts_dir.mkdir(parents=True, exist_ok=True)
+        embeddings_path = tmp_path / "embeddings.npz"
+
+        raw_data = {"100": [("chunk1", [1.0, 0.0])]}
+        _create_npz_embeddings(embeddings_path, raw_data)
+
+        # No .tags.json created.
+
+        data_settings = DataSettings(
+            base_dir=tmp_path,
+            transcripts_dir=transcripts_dir,
+            embeddings_path=embeddings_path,
+        )
+        embed_settings = EmbeddingSettings(dimension=2, enable_item_tag_filter=True)
+
+        store = ReferenceStore(data_settings, embed_settings)
+
+        with pytest.raises(EmbeddingArtifactMismatchError, match="tags file missing"):
+            store._load_embeddings()
+
+    def test_tags_crash_when_filter_enabled_and_invalid(self, tmp_path: Path) -> None:
+        """When enable_item_tag_filter=True and tags invalid, must crash."""
+        transcripts_dir = tmp_path / "transcripts"
+        transcripts_dir.mkdir(parents=True, exist_ok=True)
+        embeddings_path = tmp_path / "embeddings.npz"
+
+        raw_data = {"100": [("chunk1", [1.0, 0.0])]}
+        _create_npz_embeddings(embeddings_path, raw_data)
+
+        # Invalid schema: top-level must be an object mapping pid -> per-chunk tag lists.
+        embeddings_path.with_suffix(".tags.json").write_text(json.dumps(["bad"]))
+
+        data_settings = DataSettings(
+            base_dir=tmp_path,
+            transcripts_dir=transcripts_dir,
+            embeddings_path=embeddings_path,
+        )
+        embed_settings = EmbeddingSettings(dimension=2, enable_item_tag_filter=True)
+
+        store = ReferenceStore(data_settings, embed_settings)
+
+        with pytest.raises(EmbeddingArtifactMismatchError, match="Invalid tags schema"):
+            store._load_embeddings()
+
     def test_load_tags_and_validate_length(self, tmp_path: Path) -> None:
         """Should load tags and validate lengths against texts."""
         transcripts_dir = tmp_path / "transcripts"
@@ -1057,7 +1169,7 @@ class TestReferenceStoreTags:
             transcripts_dir=transcripts_dir,
             embeddings_path=embeddings_path,
         )
-        embed_settings = EmbeddingSettings(dimension=2)
+        embed_settings = EmbeddingSettings(dimension=2, enable_item_tag_filter=True)
 
         store = ReferenceStore(data_settings, embed_settings)
         store._load_embeddings()  # Trigger load
@@ -1087,7 +1199,7 @@ class TestReferenceStoreTags:
             transcripts_dir=transcripts_dir,
             embeddings_path=embeddings_path,
         )
-        embed_settings = EmbeddingSettings(dimension=2)
+        embed_settings = EmbeddingSettings(dimension=2, enable_item_tag_filter=True)
 
         store = ReferenceStore(data_settings, embed_settings)
 
@@ -1095,7 +1207,7 @@ class TestReferenceStoreTags:
             store._load_embeddings()
 
     def test_missing_tags_file_is_handled(self, tmp_path: Path) -> None:
-        """Should handle missing tags file gracefully (return empty)."""
+        """When enable_item_tag_filter=False, missing tags file should not matter."""
         transcripts_dir = tmp_path / "transcripts"
         transcripts_dir.mkdir(parents=True, exist_ok=True)
         embeddings_path = tmp_path / "embeddings.npz"
@@ -1116,3 +1228,198 @@ class TestReferenceStoreTags:
         store._load_embeddings()
 
         assert store.get_participant_tags(100) == []
+
+
+class TestReferenceScoreSource:
+    """Tests for Spec 35: Offline Chunk-Level PHQ-8 Scoring integration."""
+
+    @pytest.fixture
+    def mock_llm_client(self) -> MockLLMClient:
+        return MockLLMClient()
+
+    @pytest.fixture
+    def mock_store(self) -> MagicMock:
+        store = MagicMock(spec=ReferenceStore)
+        # 2 participants, 1 chunk each
+        store.get_all_embeddings.return_value = {
+            100: [("chunk100", [1.0] * 256)],
+            101: [("chunk101", [1.0] * 256)],
+        }
+        # Default participant scores
+        store.get_score.side_effect = lambda pid, _: 1 if pid == 100 else 2
+
+        # Chunk scores
+        store.has_chunk_scores.return_value = True
+        store.get_chunk_score.side_effect = lambda pid, _idx, _item: (
+            3 if pid == 100 else 0  # Different from participant scores
+        )
+
+        return store
+
+    @pytest.mark.asyncio
+    async def test_reference_score_source_participant_is_default(
+        self,
+        mock_llm_client: MagicMock,
+        mock_store: MagicMock,
+    ) -> None:
+        """With default settings, must use participant-level score."""
+        settings = EmbeddingSettings(dimension=256)
+        # Verify default
+        assert settings.reference_score_source == "participant"
+
+        service = EmbeddingService(mock_llm_client, mock_store, settings)
+
+        # Query matches everything
+        matches = await service.find_similar_chunks(tuple([1.0] * 256))
+
+        # Should use get_score (participant level)
+        # 100 -> 1, 101 -> 2
+        scores = {m.chunk.participant_id: m.reference_score for m in matches}
+        assert scores[100] == 1
+        assert scores[101] == 2
+
+    @pytest.mark.asyncio
+    async def test_reference_score_source_chunk_requires_sidecar(
+        self,
+        mock_llm_client: MagicMock,
+        mock_store: MagicMock,
+    ) -> None:
+        """With reference_score_source="chunk", missing sidecar raises ValueError."""
+        mock_store.has_chunk_scores.return_value = False
+
+        settings = EmbeddingSettings(
+            dimension=256,
+            reference_score_source="chunk",
+        )
+
+        with pytest.raises(ValueError, match="reference_score_source='chunk' requires"):
+            EmbeddingService(mock_llm_client, mock_store, settings)
+
+    @pytest.mark.asyncio
+    async def test_reference_score_source_chunk_uses_chunk_score(
+        self,
+        mock_llm_client: MagicMock,
+        mock_store: MagicMock,
+    ) -> None:
+        """With reference_score_source="chunk", must use chunk-level score."""
+        settings = EmbeddingSettings(
+            dimension=256,
+            reference_score_source="chunk",
+        )
+
+        service = EmbeddingService(mock_llm_client, mock_store, settings)
+
+        matches = await service.find_similar_chunks(tuple([1.0] * 256))
+
+        # Should use get_chunk_score
+        # 100 -> 3, 101 -> 0 (from mock side_effect)
+        scores = {m.chunk.participant_id: m.reference_score for m in matches}
+        assert scores[100] == 3
+        assert scores[101] == 0
+
+
+class TestReferenceValidation:
+    """Tests for Spec 36: CRAG-Style Reference Validation."""
+
+    @pytest.fixture
+    def mock_llm_client(self) -> MockLLMClient:
+        return MockLLMClient()
+
+    @pytest.fixture
+    def mock_store(self) -> MagicMock:
+        store = MagicMock(spec=ReferenceStore)
+        store.get_all_embeddings.return_value = {}
+        return store
+
+    @pytest.mark.asyncio
+    async def test_validation_disabled_keeps_all_top_matches(
+        self,
+        mock_llm_client: MagicMock,
+        mock_store: MagicMock,
+        monkeypatch: pytest.MonkeyPatch,
+    ) -> None:
+        """If validation is disabled (default), all matches are kept."""
+        settings = EmbeddingSettings(dimension=256)
+        service = EmbeddingService(mock_llm_client, mock_store, settings)
+
+        # Mock matches
+        matches = [
+            SimilarityMatch(TranscriptChunk("good", 1), 0.9, 1),
+            SimilarityMatch(TranscriptChunk("bad", 2), 0.8, 1),
+        ]
+        monkeypatch.setattr(service, "_compute_similarities", MagicMock(return_value=matches))
+
+        # Build bundle
+        bundle = await service.build_reference_bundle({PHQ8Item.SLEEP: ["evidence"]})
+
+        # Expect all matches
+        assert len(bundle.item_references[PHQ8Item.SLEEP]) == 2
+
+    @pytest.mark.asyncio
+    async def test_validation_rejects_drops_reference(
+        self,
+        mock_llm_client: MagicMock,
+        mock_store: MagicMock,
+        monkeypatch: pytest.MonkeyPatch,
+    ) -> None:
+        """If validator rejects a reference, it is dropped."""
+        settings = EmbeddingSettings(
+            dimension=256,
+            enable_reference_validation=True,  # Although mostly controlled by injection
+        )
+
+        # Create mock validator
+        mock_validator = MagicMock()
+
+        async def fake_validate(request: ReferenceValidationRequest) -> Decision:
+            if "bad" in request.reference_text:
+                return "reject"
+            return "accept"
+
+        mock_validator.validate.side_effect = fake_validate
+
+        service = EmbeddingService(
+            mock_llm_client, mock_store, settings, reference_validator=mock_validator
+        )
+
+        matches = [
+            SimilarityMatch(TranscriptChunk("good", 1), 0.9, 1),
+            SimilarityMatch(TranscriptChunk("bad", 2), 0.8, 1),
+        ]
+        monkeypatch.setattr(service, "_compute_similarities", MagicMock(return_value=matches))
+
+        bundle = await service.build_reference_bundle({PHQ8Item.SLEEP: ["evidence"]})
+
+        # "bad" should be dropped
+        refs = bundle.item_references[PHQ8Item.SLEEP]
+        assert len(refs) == 1
+        assert refs[0].chunk.text == "good"
+        assert mock_validator.validate.call_count == 2
+
+    @pytest.mark.asyncio
+    async def test_validation_all_rejected_results_in_empty_item(
+        self,
+        mock_llm_client: MagicMock,
+        mock_store: MagicMock,
+        monkeypatch: pytest.MonkeyPatch,
+    ) -> None:
+        """If all references rejected, item list is empty."""
+        settings = EmbeddingSettings(dimension=256)
+
+        mock_validator = MagicMock()
+
+        async def reject_all(request: ReferenceValidationRequest) -> Decision:
+            return "reject"
+
+        mock_validator.validate.side_effect = reject_all
+
+        service = EmbeddingService(
+            mock_llm_client, mock_store, settings, reference_validator=mock_validator
+        )
+
+        matches = [SimilarityMatch(TranscriptChunk("bad", 1), 0.9, 1)]
+        monkeypatch.setattr(service, "_compute_similarities", MagicMock(return_value=matches))
+
+        bundle = await service.build_reference_bundle({PHQ8Item.SLEEP: ["evidence"]})
+
+        assert len(bundle.item_references[PHQ8Item.SLEEP]) == 0

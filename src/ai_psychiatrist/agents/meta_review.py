@@ -161,8 +161,11 @@ class MetaReviewAgent:
                 "Pydantic AI call failed during meta-review",
                 participant_id=transcript.participant_id,
                 error=str(e),
+                error_type=type(e).__name__,
+                prompt_chars=len(prompt),
+                temperature=temperature,
             )
-            raise ValueError(f"Pydantic AI meta-review failed: {e}") from e
+            raise
 
     def _format_quantitative(self, assessment: PHQ8Assessment) -> str:
         """Format PHQ-8 scores for prompt.

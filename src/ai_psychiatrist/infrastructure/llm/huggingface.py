@@ -24,6 +24,8 @@ from ai_psychiatrist.infrastructure.llm.protocols import (
     ChatMessage,
     ChatRequest,
     ChatResponse,
+    EmbeddingBatchRequest,
+    EmbeddingBatchResponse,
     EmbeddingRequest,
     EmbeddingResponse,
 )
@@ -154,6 +156,36 @@ class HuggingFaceClient:
 
         return EmbeddingResponse(
             embedding=embedding,
+            model=model_id,
+        )
+
+    async def embed_batch(self, request: EmbeddingBatchRequest) -> EmbeddingBatchResponse:
+        model_id = resolve_model_name(request.model, LLMBackend.HUGGINGFACE)
+        model = await self._get_embedding_model(model_id)
+
+        if not request.texts:
+            return EmbeddingBatchResponse(embeddings=[], model=model_id)
+
+        async def _embed_async() -> list[tuple[float, ...]]:
+            return await asyncio.to_thread(
+                self._encode_embedding_batch,
+                model=model,
+                texts=list(request.texts),
+            )
+
+        try:
+            embeddings = await asyncio.wait_for(_embed_async(), timeout=request.timeout_seconds)
+        except TimeoutError as e:
+            raise LLMTimeoutError(request.timeout_seconds) from e
+        except (RuntimeError, ValueError, OSError, TypeError) as e:
+            logger.error("HuggingFace embed_batch failed", model=model_id, error=str(e))
+            raise LLMError(f"HuggingFace batch embedding failed: {e}") from e
+
+        if request.dimension is not None:
+            embeddings = [emb[: request.dimension] for emb in embeddings]
+
+        return EmbeddingBatchResponse(
+            embeddings=embeddings,
             model=model_id,
         )
 
@@ -379,3 +411,9 @@ class HuggingFaceClient:
         encoded = model.encode([text], normalize_embeddings=True)
         vec = encoded[0].tolist()
         return tuple(vec)
+
+    @staticmethod
+    def _encode_embedding_batch(*, model: Any, texts: list[str]) -> list[tuple[float, ...]]:
+        """Encode a batch of texts to L2-normalized embedding vectors."""
+        encoded = model.encode(texts, normalize_embeddings=True)
+        return [tuple(row.tolist()) for row in encoded]

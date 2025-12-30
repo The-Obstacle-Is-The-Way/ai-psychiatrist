@@ -248,7 +248,7 @@ Loads and parses DAIC-WOZ format transcripts.
 
 #### ReferenceStore (`src/ai_psychiatrist/services/reference_store.py`)
 
-Manages pre-computed reference embeddings (NPZ format with JSON sidecar).
+Manages pre-computed reference embeddings (NPZ format with JSON sidecar + optional `.tags.json` item tags sidecar).
 
 ---
 

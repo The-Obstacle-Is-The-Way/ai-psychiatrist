@@ -1,6 +1,14 @@
 # BUG-031: Few-Shot Retrieval Issues
 
-**Status**: OPEN - Awaiting Senior Review
+> **📦 ARCHIVED**: 2025-12-30
+> **Resolution**: Core issues addressed by Specs 31-34.
+> - **Spec 31**: Fixed format divergences (unified `<Reference Examples>` block, inline domain labels)
+> - **Spec 32**: Added retrieval diagnostics logging
+> - **Spec 33**: Added retrieval quality guardrails
+> - **Spec 34**: Added item-tagged reference embeddings
+> **Action Taken**: Implementation complete. Remaining ideas tracked in Spec 35/36.
+
+**Status**: ✅ CLOSED - Resolved by Specs 31-34
 **Severity**: HIGH - Potential contributor to zero-shot outperforming few-shot
 **Discovered**: 2025-12-28
 **Related**: [Investigation Document](../brainstorming/investigation-zero-shot-beats-few-shot.md)
@@ -493,7 +501,7 @@ Update `ReferenceBundle.format_for_prompt()` in `embedding.py:40-70`:
 
 ## ✅ ADDED (Senior Review): Implementation-Ready Spec for Fix 1 (Paper Parity)
 
-**Canonical spec**: `docs/specs/31-paper-parity-reference-examples-format.md` (this section should match it).
+**Canonical spec**: `docs/archive/specs/31-paper-parity-reference-examples-format.md` (this section should match it).
 
 This section is intentionally **copy/paste-able** and contains the exact behavior required to match the paper notebook.
 
@@ -735,7 +743,7 @@ class TestReferenceBundle:
 
 This is a legitimate research direction, but it requires a separate design spec (new artifact formats + new indexing pipeline + evaluation protocol). Keeping it here as a “Fix” is misleading.
 
-**Action**: Implement only from a dedicated spec (now tracked as `docs/specs/34-item-tagged-reference-embeddings.md`).
+**Action**: Implement only from a dedicated spec (now tracked as `docs/archive/specs/34-item-tagged-reference-embeddings.md`).
 
 **Why**: A developer should not attempt this based only on BUG-031.
 
@@ -760,9 +768,9 @@ When generating embeddings, tag chunks with which PHQ-8 items they address:
 
 **Priority**: DEFER (new-method research; high circularity risk)
 
-**Status**: NOT IMPLEMENTATION-READY in this document.
+**Status**: Implemented as a new-method experiment (not paper-parity).
 
-**Tracking spec**: `docs/specs/35-offline-chunk-level-phq8-scoring.md`
+**Spec**: `docs/archive/specs/35-offline-chunk-level-phq8-scoring.md`
 
 This is not a “bug fix” or “paper parity” change. It requires:
 - a new labeling pipeline,
@@ -836,7 +844,7 @@ This is a **known problem in RAG** with established solutions.
 
 ### Solution 1: CRAG (Corrective RAG)
 
-**Tracking spec**: `docs/specs/36-crag-reference-validation.md`
+**Tracking spec**: `docs/archive/specs/36-crag-reference-validation.md`
 
 From [LangChain CRAG](https://langchain-ai.github.io/langgraph/tutorials/rag/langgraph_crag/):
 > "The evaluator is a language model responsible for classifying a retrieved text as correct, incorrect, or ambiguous."
@@ -903,7 +911,7 @@ Best of both worlds:
 
 **Effort**: Low | **Impact**: Enables empirical verification
 
-✅ ADDED (Senior Review): Implementation spec is now canonicalized in `docs/specs/32-few-shot-retrieval-diagnostics.md`.
+✅ ADDED (Senior Review): Implementation spec is now canonicalized in `docs/archive/specs/32-few-shot-retrieval-diagnostics.md`.
 
 - **File**: `src/ai_psychiatrist/services/embedding.py`
 - **Function**: `EmbeddingService.build_reference_bundle` (around `src/ai_psychiatrist/services/embedding.py:238`)
@@ -940,8 +948,8 @@ Then manually audit a stratified sample to verify if retrieved chunks are actual
 **Priority**: DEFER (not needed for parity ablation)
 
 **Related specs**:
-- `docs/specs/33-retrieval-quality-guardrails.md` (similarity threshold + context budget)
-- `docs/specs/34-item-tagged-reference-embeddings.md` (index-time item tags)
+- `docs/archive/specs/33-retrieval-quality-guardrails.md` (similarity threshold + context budget)
+- `docs/archive/specs/34-item-tagged-reference-embeddings.md` (index-time item tags)
 
 This could be a non-circular improvement, but it is **not implementation-ready** here because it requires explicit decisions:
 - which keyword source (LLM evidence vs `DOMAIN_KEYWORDS` vs curated list),

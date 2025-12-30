@@ -80,6 +80,27 @@ class TestQualitativeAssessmentAgent:
         )
 
     @pytest.mark.asyncio
+    async def test_pydantic_agent_run_error_not_masked(
+        self,
+        sample_transcript: Transcript,
+    ) -> None:
+        """Exceptions from Pydantic AI should not be converted to ValueError (Spec 39)."""
+        mock_agent = AsyncMock(spec_set=Agent)
+        mock_agent.run.side_effect = RuntimeError("boom")
+
+        with patch(
+            "ai_psychiatrist.agents.pydantic_agents.create_qualitative_agent",
+            return_value=mock_agent,
+        ):
+            agent = QualitativeAssessmentAgent(
+                llm_client=MockLLMClient(),
+                pydantic_ai_settings=PydanticAISettings(enabled=True),
+                ollama_base_url="http://mock",
+            )
+            with pytest.raises(RuntimeError, match="boom"):
+                await agent.assess(sample_transcript)
+
+    @pytest.mark.asyncio
     @pytest.mark.usefixtures("mock_agent_factory")
     async def test_assess_returns_all_domains(
         self,
@@ -218,7 +239,7 @@ class TestQualitativeAssessmentAgent:
         self,
         sample_transcript: Transcript,
     ) -> None:
-        """Should raise ValueError when Pydantic AI call fails."""
+        """Should preserve the original exception type when Pydantic AI fails (Spec 39)."""
         mock_agent = AsyncMock(spec_set=Agent)
         mock_agent.run.side_effect = RuntimeError("LLM timeout")
 
@@ -231,7 +252,7 @@ class TestQualitativeAssessmentAgent:
                 pydantic_ai_settings=PydanticAISettings(enabled=True),
                 ollama_base_url="http://localhost:11434",
             )
-            with pytest.raises(ValueError, match="Pydantic AI assessment failed"):
+            with pytest.raises(RuntimeError, match="LLM timeout"):
                 await agent.assess(sample_transcript)
 
     @pytest.mark.asyncio
@@ -239,7 +260,7 @@ class TestQualitativeAssessmentAgent:
         self,
         sample_transcript: Transcript,
     ) -> None:
-        """Should raise ValueError when Pydantic AI refinement fails."""
+        """Should preserve the original exception type when refinement fails (Spec 39)."""
         mock_output = QualitativeOutput(
             assessment="Test",
             phq8_symptoms="Test",
@@ -266,7 +287,7 @@ class TestQualitativeAssessmentAgent:
             )
             initial = await agent.assess(sample_transcript)
 
-            with pytest.raises(ValueError, match="Pydantic AI refinement failed"):
+            with pytest.raises(RuntimeError, match="Refinement failed"):
                 await agent.refine(initial, {"test": "feedback"}, sample_transcript)
 
     def test_init_without_ollama_url_raises(self) -> None:

@@ -149,6 +149,8 @@ See: `docs/reference/statistical-methodology-aurc-augrc.md`
 - Metrics files: `selective_prediction_metrics_20251229T231237Z.json` (zero-shot), `selective_prediction_metrics_20251229T231302Z.json` (few-shot)
 - Paired comparison (overlap N=40 due to one zero-shot failure): `selective_prediction_metrics_20251229T233314Z.json` (ΔAURC = +0.058 [0.010, 0.109], few-shot − zero-shot)
 
+**Note on comparability**: The paired comparison recomputes both modes on the overlap only (N=40). On that overlap, few-shot is slightly worse than the single-mode table above (AURC ≈ 0.196, AUGRC ≈ 0.060) because the dropped participant only affects the paired analysis, not the standalone few-shot evaluation.
+
 **Note**: This was a pre-merge development snapshot. The fully merged Spec 33 + Spec 34 codebase has not been rerun yet.
 
 ---
@@ -270,6 +272,7 @@ uv run python scripts/evaluate_selective_prediction.py \
 
 ```bash
 uv run python scripts/generate_embeddings.py --split paper-train
+# Optional (Spec 34): add `--write-item-tags` to generate a `.tags.json` sidecar for item-tag filtering, then set `EMBEDDING_ENABLE_ITEM_TAG_FILTER=true` for runs.
 ```
 
 ---
@@ -292,5 +295,5 @@ uv run python scripts/generate_embeddings.py --split paper-train
 - Spec 31 (format): `docs/archive/specs/31-paper-parity-reference-examples-format.md`
 - Spec 32 (audit): `docs/archive/specs/32-few-shot-retrieval-diagnostics.md`
 - Spec 33 (guardrails): `docs/archive/specs/33-retrieval-quality-guardrails.md`
-- Spec 34 (item tagging): `docs/specs/34-item-tagged-reference-embeddings.md`
+- Spec 34 (item tagging): `docs/archive/specs/34-item-tagged-reference-embeddings.md`
 - Paper analysis: `docs/paper-reproduction-analysis.md`

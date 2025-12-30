@@ -188,7 +188,7 @@ To use Ollama instead: `EMBEDDING_BACKEND=ollama` (will use `qwen3-embedding:8b`
 
 | Setting | Default | Purpose |
 |---------|---------|---------|
-| `EMBEDDING_EMBEDDINGS_FILE` | `huggingface_qwen3_8b_paper_train` | Selects `{DATA_BASE_DIR}/embeddings/{name}.npz` (+ `.json`, optional `.meta.json`) |
+| `EMBEDDING_EMBEDDINGS_FILE` | `huggingface_qwen3_8b_paper_train` | Selects `{DATA_BASE_DIR}/embeddings/{name}.npz` (+ `.json`, optional `.meta.json`, optional `.tags.json`) |
 | `DATA_EMBEDDINGS_PATH` | `data/embeddings/huggingface_qwen3_8b_paper_train.npz` | Full-path override (takes precedence over `EMBEDDING_EMBEDDINGS_FILE`) |
 
 ---
@@ -198,7 +198,7 @@ To use Ollama instead: `EMBEDDING_BACKEND=ollama` (will use `qwen3-embedding:8b`
 ### 1. Data Prep (Once)
 
 Script: `scripts/generate_embeddings.py`
-Output: `data/embeddings/{backend}_{model_slug}_{split_slug}.npz` (+ `.json`, `.meta.json`)
+Output: `data/embeddings/{backend}_{model_slug}_{split_slug}.npz` (+ `.json`, `.meta.json`, optional `.tags.json`)
 
 Generates reference embeddings for training set transcripts. Run once before few-shot mode.
 

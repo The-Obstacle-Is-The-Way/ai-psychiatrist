@@ -80,6 +80,7 @@ from ai_psychiatrist.services.experiment_tracking import (
     generate_output_filename,
     update_experiment_registry,
 )
+from ai_psychiatrist.services.reference_validation import LLMReferenceValidator
 
 if TYPE_CHECKING:
     from ai_psychiatrist.infrastructure.llm.protocols import EmbeddingClient
@@ -561,18 +562,65 @@ def print_run_configuration(*, settings: Settings, split: str) -> None:
     data_settings = settings.data
     model_settings = settings.model
     ollama_settings = settings.ollama
+    embedding_settings = settings.embedding
 
     embeddings_path = resolve_reference_embeddings_path(data_settings, settings.embedding)
+    tags_path = embeddings_path.with_suffix(".tags.json")
+    chunk_scores_path = embeddings_path.with_suffix(".chunk_scores.json")
+    chunk_scores_meta_path = embeddings_path.with_suffix(".chunk_scores.meta.json")
+
+    is_paper_reproduction = (
+        embedding_settings.reference_score_source == "participant"
+        and not embedding_settings.enable_item_tag_filter
+        and embedding_settings.min_reference_similarity == 0.0
+        and embedding_settings.max_reference_chars_per_item == 0
+        and not embedding_settings.enable_reference_validation
+    )
 
     print("=" * 60)
-    print("PAPER REPRODUCTION: Quantitative PHQ-8 Evaluation (Item-level MAE)")
+    if is_paper_reproduction:
+        print("PAPER REPRODUCTION: Quantitative PHQ-8 Evaluation (Item-level MAE)")
+    else:
+        print("EXPERIMENT: Quantitative PHQ-8 Evaluation (NOT paper-parity)")
     print("=" * 60)
     print(f"  Ollama: {ollama_settings.base_url}")
     print(f"  Quantitative Model: {model_settings.quantitative_model}")
     print(f"  Embedding Model: {model_settings.embedding_model}")
     print(f"  Embeddings Artifact: {embeddings_path}")
+    print(f"  Tags Sidecar: {tags_path} ({'FOUND' if tags_path.exists() else 'MISSING'})")
+    print(
+        f"  Chunk Scores Sidecar: {chunk_scores_path} "
+        f"({'FOUND' if chunk_scores_path.exists() else 'MISSING'})"
+    )
+    print(
+        f"  Chunk Scores Metadata: {chunk_scores_meta_path} "
+        f"({'FOUND' if chunk_scores_meta_path.exists() else 'MISSING'})"
+    )
     print(f"  Data Directory: {data_settings.base_dir}")
     print(f"  Split: {split}")
+    print(f"  Embedding Dim: {embedding_settings.dimension}")
+    print(f"  Chunking: size={embedding_settings.chunk_size} step={embedding_settings.chunk_step}")
+    print(f"  Top-k References: {embedding_settings.top_k_references}")
+    print(f"  Min Evidence Chars: {embedding_settings.min_evidence_chars}")
+    print(f"  Reference Score Source: {embedding_settings.reference_score_source}")
+    print(
+        "  Allow Chunk Scores Prompt Hash Mismatch: "
+        f"{embedding_settings.allow_chunk_scores_prompt_hash_mismatch}"
+    )
+    print(f"  Item Tag Filter: {embedding_settings.enable_item_tag_filter}")
+    print(f"  Retrieval Audit: {embedding_settings.enable_retrieval_audit}")
+    print(f"  Min Reference Similarity: {embedding_settings.min_reference_similarity}")
+    print(f"  Max Reference Chars Per Item: {embedding_settings.max_reference_chars_per_item}")
+    print(f"  Reference Validation: {embedding_settings.enable_reference_validation}")
+    if embedding_settings.enable_reference_validation:
+        val_model = embedding_settings.validation_model or model_settings.judge_model
+        print(f"    - Validation Model: {val_model}")
+        print(
+            f"    - Max Accepted Refs Per Item: {embedding_settings.validation_max_refs_per_item}"
+        )
+
+    if not is_paper_reproduction:
+        print("  NOTE: Non-paper settings are enabled; do not compare as reproduction baseline.")
     print("=" * 60)
 
 
@@ -623,6 +671,7 @@ def init_embedding_service(
     embedding_settings: EmbeddingSettings,
     model_settings: ModelSettings,
     embedding_client: EmbeddingClient,
+    chat_client: OllamaClient,  # Added for validator
 ) -> EmbeddingService | None:
     """Initialize embedding service for few-shot mode (or return None)."""
     if args.zero_shot_only:
@@ -643,11 +692,19 @@ def init_embedding_service(
         embedding_backend_settings=embedding_backend_settings,
         model_settings=model_settings,
     )
+
+    # Spec 36: Reference Validation
+    reference_validator = None
+    if embedding_settings.enable_reference_validation:
+        val_model = embedding_settings.validation_model or model_settings.judge_model
+        reference_validator = LLMReferenceValidator(chat_client, val_model)
+
     return EmbeddingService(
         llm_client=embedding_client,
         reference_store=reference_store,
         settings=embedding_settings,
         model_settings=model_settings,
+        reference_validator=reference_validator,
     )
 
 
@@ -822,6 +879,7 @@ async def main_async(args: argparse.Namespace) -> int:
                     embedding_settings=embedding_settings,
                     model_settings=model_settings,
                     embedding_client=embedding_client,
+                    chat_client=ollama_client,
                 )
             except FileNotFoundError as e:
                 print(f"\nERROR: {e}")

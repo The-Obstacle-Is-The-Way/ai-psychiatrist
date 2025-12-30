@@ -1,6 +1,10 @@
 # BUG-029: Coverage/MAE Discrepancy vs Paper
 
-**Status**: Investigation Complete - Not a Bug
+> **📦 ARCHIVED**: 2025-12-30
+> **Resolution**: Investigation concluded this is expected LLM behavioral variance, not a code defect.
+> **Action Taken**: None required - documented as expected behavior difference.
+
+**Status**: ✅ CLOSED - Not a Bug
 **Severity**: N/A (Behavioral difference, not defect)
 **Discovered**: 2025-12-27
 **Component**: Quantitative Assessment Pipeline

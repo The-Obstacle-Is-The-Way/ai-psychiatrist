@@ -258,6 +258,16 @@ class EmbeddingSettings(BaseSettings):
         default=8,
         description="Minimum characters for valid evidence",
     )
+    enable_batch_query_embedding: bool = Field(
+        default=True,
+        description="Use one batch query embedding call per participant (Spec 37).",
+    )
+    query_embed_timeout_seconds: int = Field(
+        default=300,
+        ge=30,
+        le=3600,
+        description="Timeout for query embedding (single or batch) in seconds (Spec 37).",
+    )
     embeddings_file: str = Field(
         default="huggingface_qwen3_8b_paper_train",
         description="Reference embeddings basename (no extension)",
@@ -280,6 +290,33 @@ class EmbeddingSettings(BaseSettings):
     enable_item_tag_filter: bool = Field(
         default=False,
         description="Enable filtering reference chunks by PHQ-8 item tags.",
+    )
+    reference_score_source: Literal["participant", "chunk"] = Field(
+        default="participant",
+        description=(
+            "Source of PHQ-8 scores for retrieved chunks "
+            "(participant-level or chunk-level estimate)."
+        ),
+    )
+    allow_chunk_scores_prompt_hash_mismatch: bool = Field(
+        default=False,
+        description=(
+            "Allow loading chunk scores when the scorer prompt hash differs or metadata is missing "
+            "(unsafe; Spec 35 circularity control bypass)."
+        ),
+    )
+    enable_reference_validation: bool = Field(
+        default=False,
+        description="Enable CRAG-style runtime validation of retrieved references (Spec 36).",
+    )
+    validation_model: str = Field(
+        default="",
+        description="Model to use for reference validation (required if validation enabled).",
+    )
+    validation_max_refs_per_item: int = Field(
+        default=2,
+        ge=1,
+        description="Maximum accepted references to keep per item after validation.",
     )
 
 
@@ -434,7 +471,24 @@ def resolve_reference_embeddings_path(
     if "embeddings_path" in data_settings.model_fields_set:
         return data_settings.embeddings_path
 
-    candidate = Path(embedding_settings.embeddings_file)
+    return resolve_reference_embeddings_path_from_embeddings_file(
+        base_dir=data_settings.base_dir,
+        embeddings_file=embedding_settings.embeddings_file,
+    )
+
+
+def resolve_reference_embeddings_path_from_embeddings_file(
+    *,
+    base_dir: Path,
+    embeddings_file: str,
+) -> Path:
+    """Resolve an embeddings NPZ path from an `embeddings_file` string.
+
+    This mirrors `EMBEDDING_EMBEDDINGS_FILE` resolution logic without consulting
+    `DATA_EMBEDDINGS_PATH` precedence (useful for CLI tools that accept an explicit
+    embeddings file argument).
+    """
+    candidate = Path(embeddings_file)
 
     # Absolute paths are used as-is (ensure .npz suffix).
     if candidate.is_absolute():
@@ -442,11 +496,11 @@ def resolve_reference_embeddings_path(
 
     # Relative paths with directories are resolved under the data base dir.
     if candidate.parent != Path():
-        resolved = data_settings.base_dir / candidate
+        resolved = base_dir / candidate
         return resolved if resolved.suffix == ".npz" else resolved.with_suffix(".npz")
 
     # Basename-only: resolve under the embeddings directory.
-    return (data_settings.base_dir / "embeddings" / candidate.name).with_suffix(".npz")
+    return (base_dir / "embeddings" / candidate.name).with_suffix(".npz")
 
 
 class LoggingSettings(BaseSettings):

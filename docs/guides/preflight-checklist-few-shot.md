@@ -212,16 +212,18 @@ If only some chunks are mismatched, retrieval quality degrades. Always validate 
   **Default embedding artifact**: `huggingface_qwen3_8b_paper_train.npz` (FP16, recommended)
   **Alternative**: `paper_reference_embeddings.npz` (Ollama Q4_K_M, paper-parity)
 
-  If missing, generate (takes ~65 min for 58 participants):
-  ```bash
-  # Generate HuggingFace FP16 embeddings (recommended)
-  uv run python scripts/generate_embeddings.py --split paper-train
-  # Output: data/embeddings/huggingface_qwen3_8b_paper_train.npz
+	  If missing, generate (takes ~65 min for 58 participants):
+	  ```bash
+	  # Generate HuggingFace FP16 embeddings (recommended)
+	  uv run python scripts/generate_embeddings.py --split paper-train
+	  # Output: data/embeddings/huggingface_qwen3_8b_paper_train.npz
+	  # Optional (Spec 34): also write per-chunk PHQ-8 item tags sidecar
+	  # uv run python scripts/generate_embeddings.py --split paper-train --write-item-tags
 
-  # Or generate Ollama embeddings (paper-parity)
-  EMBEDDING_BACKEND=ollama uv run python scripts/generate_embeddings.py --split paper-train
-  # Output: data/embeddings/ollama_qwen3_8b_paper_train.npz
-  ```
+	  # Or generate Ollama embeddings (paper-parity)
+	  EMBEDDING_BACKEND=ollama uv run python scripts/generate_embeddings.py --split paper-train
+	  # Output: data/embeddings/ollama_qwen3_8b_paper_train.npz
+	  ```
 
 ### 4.2 Verify Embedding Integrity
 
@@ -265,11 +267,26 @@ If only some chunks are mismatched, retrieval quality degrades. Always validate 
 
 ### 4.3 Sidecar File Check
 
-- [ ] **JSON sidecar exists** (for chunk text):
+- [ ] **JSON sidecar exists** (for chunk text) and (optional) tags sidecar:
   ```bash
-  ls -lh data/embeddings/*embeddings.json
-  # Should show matching JSON file for NPZ
+  uv run python -c "
+  from ai_psychiatrist.config import get_settings, resolve_reference_embeddings_path
+
+  s = get_settings()
+  npz = resolve_reference_embeddings_path(s.data, s.embedding)
+  paths = [
+      ('json', npz.with_suffix('.json')),
+      ('meta', npz.with_suffix('.meta.json')),
+      ('tags', npz.with_suffix('.tags.json')),
+  ]
+  print(f'NPZ: {npz}')
+  for name, path in paths:
+      status = 'OK' if path.exists() else 'MISSING'
+      print(f'{name}: {path.name} ({status})')
+  "
   ```
+
+- `.tags.json` is only required if you set `EMBEDDING_ENABLE_ITEM_TAG_FILTER=true`; otherwise it is ignored.
 
 ---
 

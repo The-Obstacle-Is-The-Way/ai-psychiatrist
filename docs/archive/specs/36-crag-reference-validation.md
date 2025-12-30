@@ -1,8 +1,15 @@
 # Spec 36: CRAG-Style Runtime Reference Validation (New Method)
 
-> **STATUS: PLANNED (High runtime cost; variance controls required)**
->
-> This adds a post-retrieval evaluator to reject irrelevant/contradictory references.
+| Field | Value |
+|-------|-------|
+| **Status** | IMPLEMENTED ✅ |
+| **Default** | OFF |
+| **Implemented In** | `2822894` (2025-12-30) |
+| **Notes** | High runtime cost; variance controls required |
+
+This adds a post-retrieval evaluator to reject irrelevant/contradictory references.
+
+**Important follow-up**: The initial implementation contained a fail-safe `"unsure"` fallback on exceptions. For research reproduction, this is considered a silent fallback (BUG-037) and is corrected by Spec 38 (fail-fast when enabled).
 
 ## Problem
 
@@ -100,7 +107,7 @@ class ReferenceValidator(Protocol):
 Implementations:
 
 - `NoOpReferenceValidator`: always returns `"accept"`.
-- `LLMReferenceValidator`: uses a `ChatClient` to produce the strict JSON decision.
+- `LLMReferenceValidator`: uses a `SimpleChatClient` (`simple_chat`) to produce the strict JSON decision.
 
 ### EmbeddingService Wiring (Dependency Injection)
 
@@ -110,7 +117,6 @@ Update `EmbeddingService.__init__` to accept an optional validator:
 def __init__(..., reference_validator: ReferenceValidator | None = None, ...) -> None:
     ...
     self._reference_validator = reference_validator or NoOpReferenceValidator()
-    self._enable_reference_validation = settings.enable_reference_validation
     self._validation_max_refs_per_item = settings.validation_max_refs_per_item
 ```
 
@@ -151,6 +157,9 @@ Copy/paste test guidance:
 - Add a fake validator that returns `reject` for a specific `participant_id` or chunk text.
 - Patch `_compute_similarities` to return deterministic matches.
 - Assert that `bundle.item_references[item]` contains only accepted matches.
+
+Implemented tests live in:
+- `tests/unit/services/test_embedding.py` (`class TestReferenceValidation`)
 
 ## Verification
 

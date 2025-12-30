@@ -32,6 +32,7 @@ from ai_psychiatrist.infrastructure.llm.factory import create_embedding_client
 from ai_psychiatrist.infrastructure.llm.responses import SimpleChatClient
 from ai_psychiatrist.services import EmbeddingService, ReferenceStore, TranscriptService
 from ai_psychiatrist.services.feedback_loop import FeedbackLoopService
+from ai_psychiatrist.services.reference_validation import LLMReferenceValidator
 
 
 @asynccontextmanager
@@ -52,12 +53,20 @@ async def lifespan(app: FastAPI) -> AsyncIterator[None]:
 
         app.state.transcript_service = TranscriptService(settings.data)
 
+        # Spec 36: Reference Validation
+        reference_validator = None
+        if settings.embedding.enable_reference_validation:
+            # Use judge model as safe default if validation_model not specified
+            val_model = settings.embedding.validation_model or settings.model.judge_model
+            reference_validator = LLMReferenceValidator(chat_client, val_model)
+
         reference_store = ReferenceStore(settings.data, settings.embedding)
         app.state.embedding_service = EmbeddingService(
             llm_client=embedding_client,
             reference_store=reference_store,
             settings=settings.embedding,
             model_settings=app.state.model_settings,
+            reference_validator=reference_validator,
         )
 
         qual_agent = QualitativeAssessmentAgent(

@@ -1,7 +1,7 @@
 # Embeddings and Few-Shot Learning: A Plain-Language Guide
 
 **Audience**: Clinicians and non-CS folks who want to understand the "magic"
-**Last Updated**: 2025-12-26
+**Last Updated**: 2025-12-29
 
 ---
 
@@ -224,7 +224,115 @@ A patient might have severe sleep problems but mild appetite issues. Using overa
 
 ---
 
-## Part 7: When It Doesn't Help
+## Part 7: The Item Tagging Problem (Spec 34)
+
+### The Problem: Topic vs. Item Mismatch
+
+Embedding similarity finds chunks that are **semantically similar** overall, but similarity doesn't guarantee the chunk is about the **same PHQ-8 item**.
+
+**Example of the problem:**
+
+You're scoring Sleep for a new patient. Your extracted evidence is:
+> "I can't sleep, I'm up all night worrying"
+
+The embedding search might return:
+> Reference 1: "I worry constantly about money" (high similarity - both mention worry)
+> Reference 2: "I toss and turn at night" (moderate similarity - about sleep)
+
+The first reference is semantically similar (both express anxiety/worry), but it's tagged with PHQ8_Failure or PHQ8_Concentrating—not PHQ8_Sleep. Using it as a few-shot example for Sleep could confuse the model.
+
+### The Solution: Item Tagging
+
+We now tag each reference chunk with which PHQ-8 items it actually discusses:
+
+```
+BEFORE (untagged):
+┌─────────────────────────────────────────────┐
+│ Chunk: "I worry constantly about money"     │
+│ Embedding: [0.45, 0.82, ...]                │
+│ PHQ8 scores: (participant-level only)       │
+└─────────────────────────────────────────────┘
+
+AFTER (tagged):
+┌─────────────────────────────────────────────┐
+│ Chunk: "I worry constantly about money"     │
+│ Embedding: [0.45, 0.82, ...]                │
+│ PHQ8 scores: (participant-level only)       │
+│ Tags: ["PHQ8_Failure", "PHQ8_Concentrating"]│  ← NEW
+└─────────────────────────────────────────────┘
+```
+
+### How Tagging Works
+
+At **index time** (when embeddings are generated):
+1. Each chunk is analyzed for PHQ-8-related keywords
+2. Keywords are matched against a clinically-validated dictionary (`phq8_keywords.yaml`)
+3. Matching items are stored in a `.tags.json` sidecar file
+
+At **retrieval time** (when scoring a new patient):
+1. If item tag filtering is enabled (`EMBEDDING_ENABLE_ITEM_TAG_FILTER=true`)
+2. When retrieving references for PHQ8_Sleep, only chunks tagged with `PHQ8_Sleep` are considered
+3. This eliminates semantically-similar-but-wrong-item references
+
+### Visual Example
+
+```
+RETRIEVING REFERENCES FOR PHQ8_Sleep (with filtering)
+
+New Evidence: "I can't sleep, I'm up all night"
+                    │
+                    ▼ Search with item filter
+                    │
+    ┌───────────────┼───────────────────────────────┐
+    │               │                               │
+    ▼               ▼                               ▼
+Chunk A          Chunk B                         Chunk C
+"I worry about   "I toss and turn               "Up every night
+ money"           at night"                      can't sleep"
+Tags: [Failure]  Tags: [Sleep]                  Tags: [Sleep]
+                    │                               │
+    ✗ FILTERED      ▼                               ▼
+    (no Sleep tag)  ✓ INCLUDED                      ✓ INCLUDED
+```
+
+### The Artifacts
+
+Item tagging creates a new sidecar file alongside embeddings:
+
+| File | Contents |
+|------|----------|
+| `{name}.npz` | Embedding vectors (unchanged) |
+| `{name}.json` | Chunk text (unchanged) |
+| `{name}.meta.json` | Generation metadata (unchanged) |
+| `{name}.tags.json` | **NEW**: Per-chunk PHQ-8 item tags |
+
+The `.tags.json` format:
+```json
+{
+  "303": [
+    ["PHQ8_Sleep", "PHQ8_Tired"],
+    [],
+    ["PHQ8_Depressed"]
+  ],
+  "304": []
+}
+```
+
+### Why This Matters
+
+Without item tagging, few-shot retrieval can inject noise:
+- High-similarity chunks about the wrong symptom
+- Calibration examples that confuse rather than help
+
+With item tagging, references are both:
+1. **Semantically similar** (embedding-based)
+2. **Topically relevant** (item-tagged)
+
+This should improve few-shot accuracy by ensuring examples are truly about the symptom being scored.
+
+---
+
+## Part 8: When It Doesn't Help
 
 ### The Appetite Problem
 

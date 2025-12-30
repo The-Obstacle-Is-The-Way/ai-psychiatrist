@@ -155,6 +155,24 @@ class TestQuantitativeAssessmentAgent:
         )
 
     @pytest.mark.asyncio
+    async def test_pydantic_agent_run_error_not_masked(
+        self,
+        mock_client: MockLLMClient,
+        sample_transcript: Transcript,
+    ) -> None:
+        """Exceptions from Pydantic AI should not be converted to ValueError (Spec 39)."""
+        mock_agent = AsyncMock(spec_set=Agent)
+        mock_agent.run.side_effect = RuntimeError("boom")
+
+        with patch(
+            "ai_psychiatrist.agents.pydantic_agents.create_quantitative_agent",
+            return_value=mock_agent,
+        ):
+            agent = self.create_agent(mock_client)
+            with pytest.raises(RuntimeError, match="boom"):
+                await agent.assess(sample_transcript)
+
+    @pytest.mark.asyncio
     @pytest.mark.usefixtures("mock_agent_factory")
     async def test_assess_returns_all_items(
         self, mock_client: MockLLMClient, sample_transcript: Transcript
@@ -271,18 +289,18 @@ class TestQuantitativeAssessmentAgent:
             await agent.assess(sample_transcript)
 
     @pytest.mark.asyncio
-    async def test_raises_value_error_if_pydantic_ai_fails(
+    async def test_pydantic_ai_failure_preserves_exception_type(
         self,
         sample_transcript: Transcript,
         mock_agent_factory: AsyncMock,
     ) -> None:
-        """Should raise ValueError if Pydantic AI fails (fail fast)."""
+        """Should preserve the original exception type if Pydantic AI fails (Spec 39)."""
         mock_agent = mock_agent_factory.return_value
         mock_agent.run.side_effect = RuntimeError("Something went wrong")
 
         agent = self.create_agent(MockLLMClient(chat_responses=[SAMPLE_EVIDENCE_RESPONSE]))
 
-        with pytest.raises(ValueError, match="Pydantic AI scoring failed"):
+        with pytest.raises(RuntimeError, match="Something went wrong"):
             await agent.assess(sample_transcript)
 
 

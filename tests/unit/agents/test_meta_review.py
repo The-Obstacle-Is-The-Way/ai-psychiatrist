@@ -91,6 +91,34 @@ class TestMetaReviewAgent:
         patcher.stop()
 
     @pytest.mark.asyncio
+    async def test_pydantic_agent_run_error_not_masked(
+        self,
+        sample_transcript: Transcript,
+        sample_qualitative: QualitativeAssessment,
+        sample_quantitative: PHQ8Assessment,
+    ) -> None:
+        """Exceptions from Pydantic AI should not be converted to ValueError (Spec 39)."""
+        mock_agent = AsyncMock(spec_set=Agent)
+        mock_agent.run.side_effect = RuntimeError("boom")
+
+        with patch(
+            "ai_psychiatrist.agents.pydantic_agents.create_meta_review_agent",
+            return_value=mock_agent,
+        ):
+            agent = MetaReviewAgent(
+                llm_client=MockLLMClient(),
+                pydantic_ai_settings=PydanticAISettings(enabled=True),
+                ollama_base_url="http://mock",
+            )
+
+            with pytest.raises(RuntimeError, match="boom"):
+                await agent.review(
+                    transcript=sample_transcript,
+                    qualitative=sample_qualitative,
+                    quantitative=sample_quantitative,
+                )
+
+    @pytest.mark.asyncio
     @pytest.mark.usefixtures("mock_agent_factory")
     async def test_review_returns_meta_review(
         self,
@@ -283,7 +311,7 @@ class TestMetaReviewAgent:
         sample_qualitative: QualitativeAssessment,
         sample_quantitative: PHQ8Assessment,
     ) -> None:
-        """Should raise ValueError when Pydantic AI call fails."""
+        """Should preserve the original exception type when Pydantic AI fails (Spec 39)."""
         mock_agent = AsyncMock(spec_set=Agent)
         mock_agent.run.side_effect = RuntimeError("LLM timeout")
 
@@ -296,7 +324,7 @@ class TestMetaReviewAgent:
                 pydantic_ai_settings=PydanticAISettings(enabled=True),
                 ollama_base_url="http://localhost:11434",
             )
-            with pytest.raises(ValueError, match="Pydantic AI meta-review failed"):
+            with pytest.raises(RuntimeError, match="LLM timeout"):
                 await agent.review(
                     transcript=sample_transcript,
                     qualitative=sample_qualitative,

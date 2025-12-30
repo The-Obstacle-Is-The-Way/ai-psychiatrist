@@ -264,12 +264,16 @@ make dev
 ollama pull gemma3:27b-it-qat
 ollama pull qwen3-embedding:8b
 
-# 3. Create paper splits (58/43/41)
-uv run python scripts/create_paper_split.py --verify
+	# 3. Create paper splits (58/43/41)
+	uv run python scripts/create_paper_split.py --verify
 
-# 4. Generate reference embeddings for few-shot (optional, ~65 min)
-uv run python scripts/generate_embeddings.py --split paper-train
-```
+	# 4. Generate reference embeddings for few-shot (optional, ~65 min)
+	uv run python scripts/generate_embeddings.py --split paper-train
+
+	# Optional (Spec 34): write per-chunk PHQ-8 item tags sidecar for item-filtered retrieval
+	# uv run python scripts/generate_embeddings.py --split paper-train --write-item-tags
+	# Enable at runtime: EMBEDDING_ENABLE_ITEM_TAG_FILTER=true uv run python scripts/reproduce_results.py --split paper --few-shot-only
+	```
 
 ### Run Evaluation
 

@@ -170,8 +170,11 @@ class JudgeAgent:
                 "Pydantic AI call failed during metric evaluation",
                 metric=metric.value,
                 error=str(e),
+                error_type=type(e).__name__,
+                prompt_chars=len(prompt),
+                temperature=temperature,
             )
-            raise ValueError(f"Pydantic AI evaluation failed for {metric.value}: {e}") from e
+            raise
 
     def get_feedback_for_low_scores(
         self,
