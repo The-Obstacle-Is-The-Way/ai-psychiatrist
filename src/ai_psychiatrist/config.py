@@ -281,6 +281,26 @@ class EmbeddingSettings(BaseSettings):
         default=False,
         description="Enable filtering reference chunks by PHQ-8 item tags.",
     )
+    reference_score_source: Literal["participant", "chunk"] = Field(
+        default="participant",
+        description=(
+            "Source of PHQ-8 scores for retrieved chunks "
+            "(participant-level or chunk-level estimate)."
+        ),
+    )
+    enable_reference_validation: bool = Field(
+        default=False,
+        description="Enable CRAG-style runtime validation of retrieved references (Spec 36).",
+    )
+    validation_model: str = Field(
+        default="",
+        description="Model to use for reference validation (required if validation enabled).",
+    )
+    validation_max_refs_per_item: int = Field(
+        default=2,
+        ge=1,
+        description="Maximum accepted references to keep per item after validation.",
+    )
 
 
 class FeedbackLoopSettings(BaseSettings):

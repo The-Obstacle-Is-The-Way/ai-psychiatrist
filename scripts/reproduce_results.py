@@ -80,6 +80,7 @@ from ai_psychiatrist.services.experiment_tracking import (
     generate_output_filename,
     update_experiment_registry,
 )
+from ai_psychiatrist.services.reference_validation import LLMReferenceValidator
 
 if TYPE_CHECKING:
     from ai_psychiatrist.infrastructure.llm.protocols import EmbeddingClient
@@ -634,6 +635,7 @@ def init_embedding_service(
     embedding_settings: EmbeddingSettings,
     model_settings: ModelSettings,
     embedding_client: EmbeddingClient,
+    chat_client: OllamaClient,  # Added for validator
 ) -> EmbeddingService | None:
     """Initialize embedding service for few-shot mode (or return None)."""
     if args.zero_shot_only:
@@ -654,11 +656,19 @@ def init_embedding_service(
         embedding_backend_settings=embedding_backend_settings,
         model_settings=model_settings,
     )
+
+    # Spec 36: Reference Validation
+    reference_validator = None
+    if embedding_settings.enable_reference_validation:
+        val_model = embedding_settings.validation_model or model_settings.judge_model
+        reference_validator = LLMReferenceValidator(chat_client, val_model)
+
     return EmbeddingService(
         llm_client=embedding_client,
         reference_store=reference_store,
         settings=embedding_settings,
         model_settings=model_settings,
+        reference_validator=reference_validator,
     )
 
 
@@ -833,6 +843,7 @@ async def main_async(args: argparse.Namespace) -> int:
                     embedding_settings=embedding_settings,
                     model_settings=model_settings,
                     embedding_client=embedding_client,
+                    chat_client=ollama_client,
                 )
             except FileNotFoundError as e:
                 print(f"\nERROR: {e}")
