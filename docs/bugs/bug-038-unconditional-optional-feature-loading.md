@@ -12,7 +12,7 @@
 
 ## Summary
 
-Optional features (tag filtering, chunk scores) are loaded and validated unconditionally during `ReferenceStore` initialization, even when the feature is disabled. This:
+Optional feature **tag filtering** is loaded and validated unconditionally during `ReferenceStore` embedding load, even when the feature is disabled. This:
 1. Wastes resources loading unused data
 2. Can crash the system on validation errors for disabled features
 3. Violates the principle that disabled features should be invisible
@@ -24,10 +24,9 @@ Optional features (tag filtering, chunk scores) are loaded and validated uncondi
 **File**: `src/ai_psychiatrist/services/reference_store.py:877`
 
 ```python
-def _load_embeddings(self) -> None:
+def _load_embeddings(self) -> dict[int, list[tuple[str, list[float]]]]:
     # ... load embeddings ...
     self._load_tags(texts_data)  # ALWAYS called, regardless of enable_item_tag_filter
-    self._load_chunk_scores()    # ALWAYS called, regardless of reference_score_source
 ```
 
 The loading methods are called unconditionally. Whether the feature is enabled is checked later during retrieval, but by then the damage is done:
@@ -80,18 +79,9 @@ else:
 
 ### Chunk Scores Loading (Always Called)
 
-```python
-# reference_store.py:878
-self._load_chunk_scores()
-```
-
-Same issue. Should be:
-```python
-if self._embedding_settings.reference_score_source == "chunk":
-    self._load_chunk_scores()
-else:
-    self._chunk_scores = {}  # Skip entirely
-```
+Chunk scores are **not** loaded in `_load_embeddings()` today. They are loaded lazily via:
+- `ReferenceStore.has_chunk_scores()` → `ReferenceStore._load_chunk_scores()`
+- `ReferenceStore.get_chunk_score()` → `ReferenceStore._load_chunk_scores()`
 
 ---
 
@@ -100,7 +90,7 @@ else:
 ### Principle: Skip What's Not Needed
 
 ```python
-def _load_embeddings(self) -> None:
+def _load_embeddings(self) -> dict[int, list[tuple[str, list[float]]]]:
     # ... load embeddings ...
 
     # Only load tags if tag filtering is enabled
@@ -109,13 +99,6 @@ def _load_embeddings(self) -> None:
     else:
         self._tags = {}
         logger.debug("Tag filtering disabled, skipping tag loading")
-
-    # Only load chunk scores if using chunk-level scoring
-    if self._embedding_settings.reference_score_source == "chunk":
-        self._load_chunk_scores()
-    else:
-        self._chunk_scores = {}
-        logger.debug("Chunk scoring disabled, skipping chunk score loading")
 ```
 
 ### No Silent Fallbacks in Loading Methods
@@ -145,5 +128,3 @@ After fix:
 - [ ] `enable_item_tag_filter=False` → `_load_tags()` not called
 - [ ] `enable_item_tag_filter=False` with corrupt tags file → No crash (file not touched)
 - [ ] `enable_item_tag_filter=True` with corrupt tags file → CRASH (feature enabled but broken)
-- [ ] `reference_score_source=participant` → `_load_chunk_scores()` not called
-- [ ] `reference_score_source=chunk` with missing file → CRASH (feature enabled but broken)

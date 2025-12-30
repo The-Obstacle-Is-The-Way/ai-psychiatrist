@@ -57,7 +57,7 @@ QuantitativeAssessmentAgent.assess()
 ### Key Files
 - `src/ai_psychiatrist/services/embedding.py:121-151` - `EmbeddingService.embed_text()` (does not pass `timeout_seconds`)
 - `src/ai_psychiatrist/infrastructure/llm/protocols.py:104-134` - `EmbeddingRequest.timeout_seconds: int = 120` (hard-coded default)
-- `src/ai_psychiatrist/infrastructure/llm/huggingface.py:121-149` - `HuggingFaceClient.embed()` timeout enforcement (`asyncio.wait_for`)
+- `src/ai_psychiatrist/infrastructure/llm/huggingface.py:133-151` - `HuggingFaceClient.embed()` timeout enforcement (`asyncio.wait_for`)
 - `src/ai_psychiatrist/config.py:59-70` - `HuggingFaceSettings.default_embed_timeout` (NOTE: **not** used by this failing code path)
 
 ### Configuration

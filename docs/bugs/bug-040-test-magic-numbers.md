@@ -68,7 +68,7 @@ def test_mismatched_tags_length_raises(self, tmp_path: Path) -> None:
 
 This test EXPECTS the exception to be raised. If we implement "graceful degradation" (which is wrong anyway), this test breaks.
 
-**Correct Approach**: Keep the test, because the behavior SHOULD crash when `enable_item_tag_filter=True` and tags are invalid.
+**Correct Approach**: Keep the crash behavior when `enable_item_tag_filter=True` and tags are invalid, but update the test to explicitly set `enable_item_tag_filter=True` (because Spec 38 will stop loading tags when the feature is disabled).
 
 ---
 
@@ -145,7 +145,7 @@ def embedding_settings() -> EmbeddingSettings:
 ## Priority
 
 **Before Spec 37/38**: Must update tests that will break:
-1. `test_mismatched_tags_length_raises` - keep as-is (correct behavior)
+1. `test_mismatched_tags_length_raises` - update to set `enable_item_tag_filter=True` (still correct behavior)
 2. Add `MockLLMClient.embed_batch()` method
 3. Add new tests for batch embedding
 

@@ -22,7 +22,7 @@ All four agent classes catch `Exception` and convert it to `ValueError`, losing 
 
 ### Pattern (All 4 Agents)
 
-**QuantitativeAssessmentAgent** (`agents/quantitative.py:297-300`)
+**QuantitativeAssessmentAgent** (`src/ai_psychiatrist/agents/quantitative.py:297-305`)
 ```python
 except asyncio.CancelledError:
     raise
@@ -31,7 +31,7 @@ except Exception as e:
     raise ValueError(f"Pydantic AI scoring failed: {e}") from e
 ```
 
-**QualitativeAssessmentAgent** (`agents/qualitative.py:146-149`, `205-208`)
+**QualitativeAssessmentAgent** (`src/ai_psychiatrist/agents/qualitative.py:146-154`, `205-213`)
 ```python
 except asyncio.CancelledError:
     raise
@@ -40,14 +40,14 @@ except Exception as e:
     raise ValueError(f"Pydantic AI assessment failed: {e}") from e
 ```
 
-**JudgeAgent** (`agents/judge.py:165-168`)
+**JudgeAgent** (`src/ai_psychiatrist/agents/judge.py:165-174`)
 ```python
 except Exception as e:
     logger.error("Pydantic AI call failed", error=str(e), ...)
     raise ValueError(f"Pydantic AI evaluation failed: {e}") from e
 ```
 
-**MetaReviewAgent** (`agents/meta_review.py:156-159`)
+**MetaReviewAgent** (`src/ai_psychiatrist/agents/meta_review.py:156-165`)
 ```python
 except Exception as e:
     logger.error("Pydantic AI call failed", error=str(e), ...)
@@ -62,13 +62,13 @@ except Exception as e:
 
 ```python
 # Original exception
-LLMTimeoutError(timeout_seconds=120)
+RuntimeError("boom")
 
 # After catching and converting
-ValueError("Pydantic AI scoring failed: LLM request timed out after 120s")
+ValueError("Pydantic AI scoring failed: boom")
 ```
 
-Callers cannot check `isinstance(e, LLMTimeoutError)` because it's now a `ValueError`.
+Callers cannot check `isinstance(e, RuntimeError)` (or any other specific exception class) because it's now a `ValueError`.
 
 ### 2. Can't Implement Targeted Handling
 
@@ -144,7 +144,6 @@ This preserves the exception chain while adding context.
 
 ## Related
 
-- BUG-033: Timeouts are hard to handle because they're converted to ValueError
 - BUG-037: Silent fallbacks (a different type of exception masking)
 
 ---

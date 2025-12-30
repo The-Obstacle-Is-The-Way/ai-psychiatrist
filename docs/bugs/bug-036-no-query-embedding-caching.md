@@ -61,7 +61,14 @@ async def build_reference_bundle(self, evidence_dict: dict[PHQ8Item, list[str]])
 ```python
 # Proposed change to build_reference_bundle()
 all_texts = ["\n".join(evidence_dict.get(item, [])) for item in PHQ8Item.all_items()]
-all_embeddings = await self._llm_client.embed_batch(all_texts, model=model)
+batch_request = EmbeddingBatchRequest(
+    texts=all_texts,
+    model=model,
+    dimension=self._dimension,
+    timeout_seconds=self._query_embed_timeout_seconds,
+)
+batch_response = await self._llm_client.embed_batch(batch_request)
+all_embeddings = batch_response.embeddings
 ```
 
 Requires:

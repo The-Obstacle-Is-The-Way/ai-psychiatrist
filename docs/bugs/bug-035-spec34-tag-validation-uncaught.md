@@ -13,7 +13,7 @@
 
 `_load_tags()` is called unconditionally from `ReferenceStore._load_embeddings()`, regardless of whether `enable_item_tag_filter` is True or False. This causes:
 
-1. **When disabled**: Invalid tags file crashes the system even though the feature is off
+1. **When disabled**: *Schema/validation* errors in `.tags.json` crash the system even though the feature is off
 2. **When enabled**: Any validation error crashes (this is CORRECT behavior for research)
 
 The problem is specifically case #1 - a disabled feature should not touch its resources.
@@ -25,7 +25,7 @@ The problem is specifically case #1 - a disabled feature should not touch its re
 **File**: `src/ai_psychiatrist/services/reference_store.py:877`
 
 ```python
-def _load_embeddings(self) -> None:
+def _load_embeddings(self) -> dict[int, list[tuple[str, list[float]]]]:
     # ... load embeddings ...
     self._load_tags(texts_data)  # ALWAYS called, even when enable_item_tag_filter=False
 ```
@@ -36,7 +36,7 @@ def _load_embeddings(self) -> None:
 
 ```
 1. User sets enable_item_tag_filter=False (doesn't want tag filtering)
-2. Tags file exists but has invalid data
+2. Tags file exists and parses as JSON, but fails schema/validation (e.g., tag count mismatch)
 3. _load_tags() is called anyway
 4. EmbeddingArtifactMismatchError raised
 5. System CRASHES
@@ -83,7 +83,7 @@ This is **wrong** for research reproduction. If a user enables tag filtering and
 
 The test `test_mismatched_tags_length_raises` expects the exception to be raised. This is **correct behavior** when `enable_item_tag_filter=True`.
 
-The test should remain as-is. The fix is to make loading conditional, not to suppress errors.
+However, today the test constructs `EmbeddingSettings(dimension=2)` (defaults to `enable_item_tag_filter=False`) and still crashes because `_load_tags()` is called unconditionally. After Spec 38 is implemented, this test must be updated to set `enable_item_tag_filter=True` explicitly (so it continues to test the enabled/strict path).
 
 ---
 

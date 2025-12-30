@@ -33,25 +33,20 @@ except Exception as e:
     raise ValueError(f"Pydantic AI scoring failed: {e}") from e
 ```
 
-**Problem**: `LLMTimeoutError` becomes `ValueError`. Callers cannot use `isinstance()` to handle different error types.
+**Problem**: any error type (timeouts, HTTP errors, parsing errors, etc.) becomes `ValueError`. Callers cannot use `isinstance()` checks for targeted handling, and debugging loses the original exception class.
 
 ---
 
 ## Correct Pattern
 
-### Option A: Re-raise Domain Exceptions Unchanged (Recommended)
+### Option A: Re-raise Exceptions Unchanged (Recommended)
 
 ```python
 except asyncio.CancelledError:
     raise
-except (LLMError, EmbeddingError, DomainError) as e:
-    # Log and re-raise domain exceptions unchanged
+except Exception as e:
     logger.error("Agent failed", error=str(e), error_type=type(e).__name__)
     raise
-except Exception as e:
-    # Only convert truly unexpected exceptions
-    logger.error("Unexpected error in agent", error=str(e), error_type=type(e).__name__)
-    raise RuntimeError(f"Unexpected error in agent: {e}") from e
 ```
 
 ### Option B: Agent-Specific Exception Wrappers
@@ -84,7 +79,7 @@ except LLMError as e:
 
 **File**: `src/ai_psychiatrist/agents/quantitative.py`
 
-**Location**: Lines ~297-300
+**Location**: `_score_items()` exception handler (`src/ai_psychiatrist/agents/quantitative.py:297-305`)
 
 **Before**:
 ```python
@@ -99,29 +94,18 @@ except Exception as e:
 ```python
 except asyncio.CancelledError:
     raise
-except (LLMError, EmbeddingError, DomainError) as e:
-    logger.error(
-        "Scoring failed",
-        error=str(e),
-        error_type=type(e).__name__,
-        participant_id=transcript.participant_id,
-    )
-    raise
 except Exception as e:
     logger.error(
-        "Unexpected error during scoring",
+        "Pydantic AI call failed during scoring",
         error=str(e),
         error_type=type(e).__name__,
-        participant_id=transcript.participant_id,
+        prompt_chars=len(prompt),
+        temperature=temperature,
     )
-    raise RuntimeError(f"Unexpected error during scoring: {e}") from e
+    raise
 ```
 
-**Add import**:
-```python
-from ai_psychiatrist.infrastructure.llm.exceptions import LLMError
-from ai_psychiatrist.services.embedding import EmbeddingError  # if exists
-```
+No new imports required.
 
 ---
 
@@ -129,9 +113,11 @@ from ai_psychiatrist.services.embedding import EmbeddingError  # if exists
 
 **File**: `src/ai_psychiatrist/agents/qualitative.py`
 
-**Locations**: Lines ~146-149 and ~205-208
+**Locations**:
+- `assess()` exception handler (`src/ai_psychiatrist/agents/qualitative.py:146-154`)
+- `refine()` exception handler (`src/ai_psychiatrist/agents/qualitative.py:205-213`)
 
-Apply same pattern as Step 1.
+Replace `raise ValueError(...) from e` with `raise` (after logging), and include `error_type=type(e).__name__` in the log fields.
 
 ---
 
@@ -139,9 +125,9 @@ Apply same pattern as Step 1.
 
 **File**: `src/ai_psychiatrist/agents/judge.py`
 
-**Location**: Lines ~165-168
+**Location**: `evaluate_metric()` exception handler (`src/ai_psychiatrist/agents/judge.py:165-174`)
 
-Apply same pattern as Step 1.
+Replace `raise ValueError(...) from e` with `raise` (after logging), and include `error_type=type(e).__name__` in the log fields.
 
 ---
 
@@ -149,9 +135,9 @@ Apply same pattern as Step 1.
 
 **File**: `src/ai_psychiatrist/agents/meta_review.py`
 
-**Location**: Lines ~156-159
+**Location**: `review()` exception handler (`src/ai_psychiatrist/agents/meta_review.py:156-165`)
 
-Apply same pattern as Step 1.
+Replace `raise ValueError(...) from e` with `raise` (after logging), and include `error_type=type(e).__name__` in the log fields.
 
 ---
 
@@ -159,10 +145,9 @@ Apply same pattern as Step 1.
 
 After implementation:
 
-- [ ] `LLMTimeoutError` propagates as `LLMTimeoutError` (not wrapped)
-- [ ] `EmbeddingArtifactMismatchError` propagates with original type
-- [ ] Truly unexpected exceptions become `RuntimeError` (not `ValueError`)
-- [ ] Exception chain (`__cause__`) preserved for debugging
+- [ ] Exceptions raised by Pydantic AI calls propagate with original type (not converted to `ValueError`)
+- [ ] `asyncio.CancelledError` still propagates (no swallowing)
+- [ ] Logs include `error_type` for rapid diagnosis
 - [ ] All existing tests pass
 - [ ] Callers can use `isinstance()` for targeted handling
 
@@ -170,21 +155,24 @@ After implementation:
 
 ## Tests
 
-### Unit Test: Exception Types Preserved
+### Unit Tests: Exception Types Preserved
+
+Add one test per agent verifying that an exception raised by the underlying Pydantic AI agent is **not** converted to `ValueError`.
+
+Use the existing mocking pattern in each agent test module (they already patch `ai_psychiatrist.agents.pydantic_agents.create_*_agent`).
+
+**Examples (copy/paste patterns; adapt per agent):**
+
+- `tests/unit/agents/test_quantitative.py`: patch `create_quantitative_agent` so `mock_agent.run.side_effect = RuntimeError("boom")`, then assert `await agent.assess(...)` raises `RuntimeError`, not `ValueError`.
+- `tests/unit/agents/test_qualitative.py`: patch `create_qualitative_agent` so `mock_agent.run.side_effect = RuntimeError("boom")`, then assert `await agent.assess(...)` raises `RuntimeError`, not `ValueError`.
+- `tests/unit/agents/test_judge.py`: patch `create_judge_metric_agent` so `mock_agent.run.side_effect = RuntimeError("boom")`, then assert `await agent.evaluate_metric(...)` raises `RuntimeError`, not `ValueError`.
+- `tests/unit/agents/test_meta_review.py`: patch `create_meta_review_agent` so `mock_agent.run.side_effect = RuntimeError("boom")`, then assert `await agent.review(...)` raises `RuntimeError`, not `ValueError`.
 
 ```python
 @pytest.mark.asyncio
-async def test_timeout_error_not_masked() -> None:
-    """LLMTimeoutError should propagate unchanged, not as ValueError."""
-    agent = QuantitativeAssessmentAgent(...)
-
-    # Mock LLM to raise timeout
-    agent._llm_client.chat = AsyncMock(
-        side_effect=LLMTimeoutError(timeout_seconds=120)
-    )
-
-    with pytest.raises(LLMTimeoutError):  # NOT ValueError
-        await agent.assess(transcript)
+async def test_agent_run_error_not_masked(...) -> None:
+    """Exceptions from the Pydantic AI agent should not be converted to ValueError."""
+    ...
 ```
 
 ---

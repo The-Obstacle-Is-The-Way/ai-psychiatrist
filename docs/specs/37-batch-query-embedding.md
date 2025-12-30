@@ -36,7 +36,7 @@ This is not a “Gemma scoring timeout” problem — it is a **query embedding 
    - Files:
      - `src/ai_psychiatrist/infrastructure/llm/protocols.py:104` (`EmbeddingRequest.timeout_seconds: int = 120`)
      - `src/ai_psychiatrist/services/embedding.py:121` (missing timeout override)
-     - `src/ai_psychiatrist/infrastructure/llm/huggingface.py:121` (wait_for)
+     - `src/ai_psychiatrist/infrastructure/llm/huggingface.py:145` (wait_for)
 
 3. **Current configuration knob does not affect this path**.
    - `HF_DEFAULT_EMBED_TIMEOUT` only affects `HuggingFaceClient.simple_embed(...)`, but the service calls `embed(...)` directly.

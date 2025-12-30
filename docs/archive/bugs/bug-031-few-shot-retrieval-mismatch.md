@@ -844,7 +844,7 @@ This is a **known problem in RAG** with established solutions.
 
 ### Solution 1: CRAG (Corrective RAG)
 
-**Tracking spec**: `docs/specs/36-crag-reference-validation.md`
+**Tracking spec**: `docs/archive/specs/36-crag-reference-validation.md`
 
 From [LangChain CRAG](https://langchain-ai.github.io/langgraph/tutorials/rag/langgraph_crag/):
 > "The evaluator is a language model responsible for classifying a retrieved text as correct, incorrect, or ambiguous."

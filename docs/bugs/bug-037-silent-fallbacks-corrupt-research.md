@@ -3,8 +3,8 @@
 | Field | Value |
 |-------|-------|
 | **Status** | SPEC'd |
-| **Severity** | CRITICAL |
-| **Affects** | ALL modes (zero-shot, few-shot) |
+| **Severity** | HIGH |
+| **Affects** | Optional features (few-shot tag filtering + reference validation) |
 | **Introduced** | Original design |
 | **Discovered** | 2025-12-30 |
 | **Root Cause** | "Fail-safe" pattern misapplied to research reproduction |
@@ -85,7 +85,7 @@ except Exception as e:
 
 ---
 
-### 4. Ground Truth Score Parsing Silent Fallback
+### 4. Ground Truth Score Parsing Silent Fallback (Low Priority / Currently Unused)
 
 **File**: `src/ai_psychiatrist/services/ground_truth.py:134-138`
 
@@ -104,13 +104,15 @@ if "PHQ8_Score" in row.columns:
 
 **Impact**: Ground truth might be calculated differently than expected with no indication.
 
+**Note**: `GroundTruthService` is not currently used by the reproduction scripts (they load CSVs directly), so this is not on the hot path for Run 4. Keep it documented, but don’t block Spec 38 on it.
+
 **Correct Behavior**:
 - If PHQ8_Score column exists but parsing fails → **CRASH** or at minimum log an ERROR
 - Data corruption should be visible, not hidden
 
 ---
 
-### 5. Transcripts Directory Missing Returns Empty List
+### 5. Transcripts Directory Missing Returns Empty List (Low Priority / Not Used Today)
 
 **File**: `src/ai_psychiatrist/services/transcript.py:114-119`
 
@@ -128,7 +130,9 @@ if not self._transcripts_dir.exists():
 - Returns empty list
 - Script proceeds with 0 participants
 
-**Impact**: A misconfigured `DATA_TRANSCRIPTS_DIR` produces a "successful" run with 0 results instead of crashing.
+**Impact**: A misconfigured `DATA_TRANSCRIPTS_DIR` could produce a "successful" run with 0 results instead of crashing.
+
+**Note**: `TranscriptService.list_available_participants()` is not currently called by the reproduction scripts. Keep it documented, but don’t block Spec 38 on it.
 
 **Correct Behavior**:
 - If transcripts directory not found → **CRASH** with clear error about misconfiguration
@@ -164,15 +168,15 @@ The codebase has "fail-safe" patterns appropriate for a production web service, 
 | `reference_store.py:573-576` | Warn + empty dict | Crash if `enable_item_tag_filter=True` |
 | `reference_store.py:600-602` | Warn + empty dict | Crash if `enable_item_tag_filter=True` |
 | `reference_validation.py:84-86` | Return "unsure" | Crash if `enable_reference_validation=True` |
-| `ground_truth.py:134-138` | Silent pass | Log ERROR (don't crash, but visible) |
-| `transcript.py:114-119` | Warn + empty list | Crash |
+| `ground_truth.py:134-138` | Silent pass | Log ERROR (or crash; track separately) |
+| `transcript.py:114-119` | Warn + empty list | Crash (track separately) |
 
 ---
 
 ## Relationship to Other Bugs
 
 - **BUG-035**: Documents that `_load_tags()` is called unconditionally. Fix: Skip entirely if disabled.
-- **Spec 38 (proposed)**: Proposes "graceful degradation" - **THIS IS WRONG**. Should be revised to "skip if disabled, crash if enabled and fails".
+- **Spec 38 (current)**: Implements the correct "skip if disabled, crash if enabled and broken" behavior. The old "graceful degradation" draft is archived.
 
 ---
 

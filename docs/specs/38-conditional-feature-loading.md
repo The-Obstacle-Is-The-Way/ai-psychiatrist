@@ -48,19 +48,18 @@ The previous Spec 38 proposed "graceful degradation" - catching validation error
 
 **File**: `src/ai_psychiatrist/services/reference_store.py`
 
-**Location**: `_load_embeddings()` method
+**Location**: `_load_embeddings()` method (`src/ai_psychiatrist/services/reference_store.py:831`)
 
 **Before**:
 ```python
-def _load_embeddings(self) -> None:
+def _load_embeddings(self) -> dict[int, list[tuple[str, list[float]]]]:
     # ... load embeddings ...
     self._load_tags(texts_data)  # ALWAYS called
-    self._load_chunk_scores()    # ALWAYS called
 ```
 
 **After**:
 ```python
-def _load_embeddings(self) -> None:
+def _load_embeddings(self) -> dict[int, list[tuple[str, list[float]]]]:
     # ... load embeddings ...
 
     # Only load tags if tag filtering is enabled
@@ -69,13 +68,6 @@ def _load_embeddings(self) -> None:
     else:
         self._tags = {}
         logger.debug("Tag filtering disabled, skipping tag loading")
-
-    # Only load chunk scores if using chunk-level scoring
-    if self._embedding_settings.reference_score_source == "chunk":
-        self._load_chunk_scores()
-    else:
-        self._chunk_scores = {}
-        logger.debug("Chunk-level scoring disabled, skipping chunk score loading")
 ```
 
 ---
@@ -84,7 +76,7 @@ def _load_embeddings(self) -> None:
 
 **File**: `src/ai_psychiatrist/services/reference_store.py`
 
-**Location**: `_load_tags()` method
+**Location**: `_load_tags()` method (`src/ai_psychiatrist/services/reference_store.py:570`)
 
 **Before** (wrong - catches errors and falls back):
 ```python
@@ -150,22 +142,11 @@ def _load_tags(self, texts_data: dict[str, Any]) -> None:
 
 ---
 
-### Step 3 — Same Pattern for Chunk Scores
+### Step 3 — Remove _warn_missing_tags Helper
 
 **File**: `src/ai_psychiatrist/services/reference_store.py`
 
-**Location**: `_load_chunk_scores()` method
-
-Apply the same pattern:
-- Remove the `except (json.JSONDecodeError, OSError)` fallback
-- Missing file when `reference_score_source="chunk"` → crash
-- Validation errors → crash
-
----
-
-### Step 4 — Remove _warn_missing_tags Helper
-
-**File**: `src/ai_psychiatrist/services/reference_store.py`
+**Location**: `_warn_missing_tags()` (`src/ai_psychiatrist/services/reference_store.py:468`)
 
 The `_warn_missing_tags()` method is no longer needed. When feature is disabled, we skip loading entirely. When feature is enabled and file is missing, we crash.
 
@@ -177,13 +158,45 @@ def _warn_missing_tags(self, tags_path: Path) -> None:
 
 ---
 
+### Step 4 — Make Reference Validation Fail-Fast When Enabled
+
+**File**: `src/ai_psychiatrist/services/reference_validation.py`
+
+Reference validation is an optional feature (Spec 36). When enabled, it must either work correctly or crash. Returning `"unsure"` on exceptions is a silent fallback that changes run behavior (BUG-037).
+
+**Location**:
+- `LLMReferenceValidator.validate()` (`src/ai_psychiatrist/services/reference_validation.py:71-87`)
+- `LLMReferenceValidator._parse_decision()` (`src/ai_psychiatrist/services/reference_validation.py:108-128`)
+
+**Before** (wrong - catches all exceptions and returns `"unsure"`):
+```python
+try:
+    response = await self._client.simple_chat(...)
+    return self._parse_decision(response)
+except Exception as e:
+    logger.warning("Reference validation failed", error=str(e))
+    return "unsure"
+```
+
+**After** (correct - crash if broken):
+- Remove the broad `except Exception` fallback.
+- If the model returns invalid JSON (or missing/invalid `"decision"`), raise `LLMResponseParseError` (do not silently return `"unsure"`).
+
+Rationale: if the user enabled reference validation, a run with silently-disabled (or silently-rejecting) validation is scientifically corrupted.
+
+---
+
 ## Tests
 
 ### Keep Existing Crash Test
 
 **File**: `tests/unit/services/test_embedding.py`
 
-The test `test_mismatched_tags_length_raises` is **CORRECT** - it expects the system to crash on validation errors. Keep it.
+The test `test_mismatched_tags_length_raises` is **CORRECT** - it expects the system to crash on validation errors when `enable_item_tag_filter=True`.
+
+**Required update** (once Spec 38 is implemented): explicitly set `EmbeddingSettings(enable_item_tag_filter=True, ...)` in:
+- `test_load_tags_and_validate_length`
+- `test_mismatched_tags_length_raises`
 
 ### Add New Tests
 
@@ -246,15 +259,30 @@ def test_tags_crash_when_filter_enabled_and_missing(self, tmp_path: Path) -> Non
 
 ---
 
+### Add Validator Tests (Reference Validation)
+
+**File**: `tests/unit/services/test_reference_validation.py` (new)
+
+Add unit tests for `LLMReferenceValidator`:
+
+1. **Exceptions propagate (no silent fallback)**:
+   - Mock `SimpleChatClient.simple_chat` to raise `RuntimeError("boom")`
+   - Assert `await validator.validate(...)` raises `RuntimeError` (not `"unsure"`)
+
+2. **Invalid JSON crashes**:
+   - Mock `SimpleChatClient.simple_chat` to return `"not json"`
+   - Assert `await validator.validate(...)` raises `LLMResponseParseError`
+
+---
+
 ## Verification Criteria
 
 - [ ] `enable_item_tag_filter=False` → `_load_tags()` not called, no file I/O
 - [ ] `enable_item_tag_filter=False` with corrupt/missing tags → No crash
 - [ ] `enable_item_tag_filter=True` with missing tags → CRASH with clear error
 - [ ] `enable_item_tag_filter=True` with invalid tags → CRASH with clear error
-- [ ] `reference_score_source=participant` → `_load_chunk_scores()` not called
-- [ ] `reference_score_source=chunk` with missing file → CRASH with clear error
 - [ ] Existing test `test_mismatched_tags_length_raises` still passes
+- [ ] With reference validation enabled, any validator failure raises (no `"unsure"` fallback)
 
 ---
 
