@@ -2,18 +2,22 @@
 
 | Field | Value |
 |-------|-------|
-| **Status** | OPEN |
+| **Status** | SPEC'd |
 | **Severity** | HIGH |
 | **Affects** | few_shot mode performance |
 | **Introduced** | Original design |
 | **Discovered** | 2025-12-30 |
+| **Solution** | [Spec 37: Batch Query Embedding](../specs/37-batch-query-embedding.md) |
+
+> **Note**: Batch embedding (Spec 37) provides 8x reduction in embedding calls.
+> LRU caching for repeated evidence text is a future enhancement tracked separately.
 
 ## Summary
 
 Query embeddings (for evidence text) are computed fresh for every PHQ-8 item during quantitative assessment. There is no caching mechanism, leading to:
-- 8 separate embedding calls per transcript (one per PHQ-8 item)
+- Up to 8 separate embedding calls per transcript (one per PHQ-8 item **that has evidence**)
 - Repeated work when evidence text is similar across items
-- Runtime latency that contributes to BUG-033 timeouts
+- Runtime latency that contributes to BUG-033 timeouts (query embeddings use the `EmbeddingRequest.timeout_seconds = 120` default unless explicitly overridden)
 
 ## Current Architecture
 
@@ -45,7 +49,7 @@ async def build_reference_bundle(self, evidence_dict: dict[PHQ8Item, list[str]])
 
 | Metric | Current | With Caching |
 |--------|---------|--------------|
-| Embedding calls per transcript | 8 | 1 (batch) |
+| Embedding calls per transcript | Up to 8 | 1 (batch) |
 | Cache hits on repeated evidence | 0% | ~30-50% (estimated) |
 | Cold start overhead | Every call | First call only |
 
@@ -105,16 +109,10 @@ async def warm_up_embedding_model():
 
 ## 2025 Best Practices
 
-From web research:
-1. **Semantic caching**: Store + retrieve by semantic similarity (threshold 0.8+)
-2. **Matryoshka embeddings**: Two-stage retrieval (256-dim → 1536-dim)
-3. **Cache layers**: In-memory → Redis → Disk
-4. **TTL expiration**: Prevent stale cache entries
-
-References:
-- [Mastering Embedding Caching 2025](https://sparkco.ai/blog/mastering-embedding-caching-advanced-techniques-for-2025)
-- [10 Cache Layers for RAG](https://medium.com/@Praxen/10-cache-layers-that-make-rag-feel-instant-42a9c360a1dc)
-- [Fine-tuning for Semantic Caching](https://cfp.pydata.org/virginia2025/talk/XEBBH7/)
+Cross-checked sources (Dec 2025):
+1. **Batch embeddings** are the primary lever when your backend supports vectorized encoding (`SentenceTransformer.encode(sentences=[...], batch_size=...)`): https://www.sbert.net/
+2. **Timeouts**: `asyncio.wait_for(...)` is the standard mechanism, but canceling a `to_thread`-spawned CPU task is not instantaneous — so reducing call count (batching) and avoiding repeated work (caching) are the durable fixes: https://docs.python.org/3/library/asyncio-task.html#asyncio.wait_for
+3. **Semantic caching** exists (e.g., GPTCache) but adds complexity/variance; deterministic caching by exact-text hash is usually the first step for reproducibility pipelines: https://github.com/zilliztech/GPTCache
 
 ## Implementation Priority
 

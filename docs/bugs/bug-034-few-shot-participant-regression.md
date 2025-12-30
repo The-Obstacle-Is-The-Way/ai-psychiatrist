@@ -2,15 +2,19 @@
 
 | Field | Value |
 |-------|-------|
-| **Status** | OPEN |
+| **Status** | SPEC'd |
 | **Severity** | CRITICAL |
 | **Affects** | few_shot mode |
 | **Introduced** | Between commits 5e62455 and be35e35 |
 | **Discovered** | 2025-12-30 |
+| **Root Cause** | BUG-033 (embedding timeouts) |
+| **Solution** | [Spec 37: Batch Query Embedding](../specs/37-batch-query-embedding.md) |
 
 ## Summary
 
 Few-shot mode participant success rate dropped from 41/41 (100%) to 32/41 (78%) after recent refactoring. All 9 failures were LLM timeout errors at 120 seconds.
+
+**Adversarial note**: Run 4 (`77a2bdb8`) was recorded with `git_dirty=true` in the output JSON, so the exact code state is not perfectly identified by the commit hash alone. Treat the regression as “observed in the workspace state at the time”, not conclusively attributable to `be35e35` until a clean rerun is captured.
 
 ## Impact
 
@@ -42,7 +46,9 @@ Note: Transcript sizes are normal range. Larger transcripts (e.g., 314 @ 25.1 KB
 ## Root Cause Analysis
 
 ### Primary Cause: Runtime Embedding Timeouts (BUG-033)
-The HuggingFace embedding client has a 120-second timeout that is too short.
+Few-shot mode triggers **runtime query embeddings** (embedding backend = HuggingFace in Run 4). Those queries time out at **120s** because `EmbeddingService.embed_text()` constructs `EmbeddingRequest(...)` without overriding `timeout_seconds`, so it uses the hard-coded `EmbeddingRequest.timeout_seconds = 120` default (see BUG-033 for code-level details).
+
+This is *not* fixed by setting `HF_DEFAULT_EMBED_TIMEOUT`, because the failing path does not use `HuggingFaceClient.simple_embed(...)`.
 
 ### Contributing Factors
 
@@ -80,7 +86,7 @@ scripts/generate_embeddings.py                   # +116 lines
 ## Fix
 
 ### Immediate
-Set `HF_DEFAULT_EMBED_TIMEOUT=300` in `.env`
+There is no env-only fix today because the timeout is a dataclass default. Mitigation requires code change (Spec 37).
 
 ### Long-term
 Implement batch embedding to reduce API calls (see BUG-033 for details)

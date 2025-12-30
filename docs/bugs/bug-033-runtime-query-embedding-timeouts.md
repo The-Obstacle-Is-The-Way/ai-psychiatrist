@@ -2,11 +2,12 @@
 
 | Field | Value |
 |-------|-------|
-| **Status** | OPEN |
+| **Status** | SPEC'd |
 | **Severity** | CRITICAL |
 | **Affects** | few_shot mode |
 | **Introduced** | Unknown (design issue) |
 | **Discovered** | 2025-12-30 |
+| **Solution** | [Spec 37: Batch Query Embedding](../specs/37-batch-query-embedding.md) |
 
 ## Summary
 
@@ -14,10 +15,14 @@ HuggingFace query embeddings timeout after 120 seconds during few-shot assessmen
 
 ## Root Cause
 
-The `EmbeddingService.embed_text()` function generates embeddings **at runtime** for evidence text during `build_reference_bundle()`. HuggingFace backend has a 120-second default timeout that is too short for:
-- Large combined evidence text
-- First-call model loading overhead
-- CPU-bound embedding computation
+The `EmbeddingService.embed_text()` function generates embeddings **at runtime** for evidence text during `build_reference_bundle()`. The timeout that is firing is **not** `HF_DEFAULT_EMBED_TIMEOUT` (HuggingFaceSettings); it is the hard-coded default on `EmbeddingRequest.timeout_seconds`.
+
+Concretely:
+- `EmbeddingService.embed_text()` constructs `EmbeddingRequest(...)` **without** setting `timeout_seconds` (so it uses the dataclass default).
+- `EmbeddingRequest.timeout_seconds` defaults to **120 seconds**.
+- `HuggingFaceClient.embed()` enforces the timeout via `asyncio.wait_for(..., timeout=request.timeout_seconds)`.
+
+This creates an effectively “hard-coded 120s embed timeout” for query embeddings, which is too short for the HuggingFace/SentenceTransformers backend on slower machines and/or longer evidence strings.
 
 ## Evidence
 
@@ -46,32 +51,32 @@ QuantitativeAssessmentAgent.assess()
   → EmbeddingService.build_reference_bundle()
       → EmbeddingService.embed_text()
           → HuggingFaceClient.embed()
-              → asyncio.wait_for(..., timeout=120)  # TIMEOUT HERE
+              → asyncio.wait_for(..., timeout=request.timeout_seconds)  # 120s default
 ```
 
 ### Key Files
-- `src/ai_psychiatrist/services/embedding.py:121-151` - `embed_text()`
-- `src/ai_psychiatrist/infrastructure/llm/huggingface.py:145-147` - timeout enforcement
-- `src/ai_psychiatrist/config.py:63-66` - `default_embed_timeout=120`
+- `src/ai_psychiatrist/services/embedding.py:121-151` - `EmbeddingService.embed_text()` (does not pass `timeout_seconds`)
+- `src/ai_psychiatrist/infrastructure/llm/protocols.py:104-134` - `EmbeddingRequest.timeout_seconds: int = 120` (hard-coded default)
+- `src/ai_psychiatrist/infrastructure/llm/huggingface.py:121-149` - `HuggingFaceClient.embed()` timeout enforcement (`asyncio.wait_for`)
+- `src/ai_psychiatrist/config.py:59-70` - `HuggingFaceSettings.default_embed_timeout` (NOTE: **not** used by this failing code path)
 
 ### Configuration
 ```python
-# In config.py
-class HuggingFaceSettings(BaseSettings):
-    default_embed_timeout: int = Field(
-        default=120,  # TOO SHORT
-        description="Default timeout for embedding requests",
-    )
+# NOTE: This does NOT affect the failing path.
+# HF_DEFAULT_EMBED_TIMEOUT only applies to HuggingFaceClient.simple_embed(...),
+# but EmbeddingService.embed_text() calls HuggingFaceClient.embed(...) directly
+# and relies on EmbeddingRequest.timeout_seconds default (120s).
+#
+# In other words: setting HF_DEFAULT_EMBED_TIMEOUT will not fix this bug.
 ```
 
 ## Immediate Fix
 
-Increase the embedding timeout in `.env`:
-```bash
-HF_DEFAULT_EMBED_TIMEOUT=300  # 5 minutes
-# or
-HF_DEFAULT_EMBED_TIMEOUT=600  # 10 minutes for slow machines
-```
+There is currently **no env-only fix** because query embedding timeout is not wired to config; it is the `EmbeddingRequest` dataclass default (120s).
+
+Short-term mitigation requires code change (covered by Spec 37):
+- Add a configurable query embedding timeout and pass it into `EmbeddingRequest(timeout_seconds=...)`, or
+- Stop making 8 sequential per-item calls by batching (Spec 37).
 
 ## Long-Term Solutions
 
@@ -97,15 +102,10 @@ Use `asyncio.TaskGroup` for concurrent embedding:
 
 ## 2025 Best Practices
 
-From web search:
-- **Semantic caching** with similarity threshold (0.8+)
-- **Matryoshka embeddings** for two-stage retrieval
-- **Layered caching** architecture (in-memory + Redis + disk)
-- **TTL expiration** for cache freshness
-
-Sources:
-- [Mastering Embedding Caching 2025](https://sparkco.ai/blog/mastering-embedding-caching-advanced-techniques-for-2025)
-- [Semantic LLM Caching](https://www.marktechpost.com/2025/11/11/how-to-reduce-cost-and-latency-of-your-rag-application-using-semantic-llm-caching/)
+Cross-checked sources (Dec 2025):
+- SentenceTransformers supports true batch embedding via `SentenceTransformer.encode(..., batch_size=..., normalize_embeddings=...)` which is the right primitive for Spec 37: https://www.sbert.net/
+- Python timeouts are typically implemented with `asyncio.wait_for(...)` (what we do today), but cancellation does **not** stop CPU-bound `to_thread` work immediately — so reducing the number of embedding calls matters: https://docs.python.org/3/library/asyncio-task.html#asyncio.wait_for
+- For retry/backoff patterns (when timeouts are transient), Tenacity is a common reference implementation: https://tenacity.readthedocs.io/
 
 ## Related
 

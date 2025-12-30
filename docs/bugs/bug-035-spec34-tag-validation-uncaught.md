@@ -2,15 +2,18 @@
 
 | Field | Value |
 |-------|-------|
-| **Status** | OPEN |
+| **Status** | SPEC'd |
 | **Severity** | CRITICAL |
-| **Affects** | ReferenceStore with `enable_item_tag_filter=True` |
+| **Affects** | ReferenceStore tag sidecar loading (even when `enable_item_tag_filter=False`) |
 | **Introduced** | Commit ab5647e (Spec 34) |
 | **Discovered** | 2025-12-30 |
+| **Solution** | [Spec 38: Graceful Degradation](../specs/38-embedding-graceful-degradation.md) |
 
 ## Summary
 
-The `_load_tags()` method raises `EmbeddingArtifactMismatchError` during validation but only catches `(json.JSONDecodeError, OSError)` in its except clause. When `enable_item_tag_filter=True` and tags have ANY validation error, the system crashes with no fallback.
+The `_load_tags()` method raises `EmbeddingArtifactMismatchError` during validation but only catches `(json.JSONDecodeError, OSError)` in its except clause. Any validation error (schema mismatch, wrong lengths, unknown tags, etc.) will crash initialization when the `.tags.json` file exists.
+
+**Important scope clarification**: `_load_tags()` is called unconditionally from `ReferenceStore._load_embeddings()` (not gated on `enable_item_tag_filter`). So an invalid `.tags.json` can crash the system even when tag filtering is disabled — which is worse than the original write-up implied.
 
 ## Root Cause
 
@@ -65,11 +68,11 @@ _load_tags() raises EmbeddingArtifactMismatchError
 
 ## Impact
 
-When `enable_item_tag_filter=True`:
-- System cannot start if tags file has ANY validation error
-- No fallback to unfiltered retrieval
-- 0% participant success rate
-- Total system failure
+When the `.tags.json` sidecar exists but is invalid:
+- `ReferenceStore._load_embeddings()` fails (startup failure for scripts/services that initialize it early).
+- The failure happens **before** any retrieval, so it can look like “the whole system is broken”.
+
+When `enable_item_tag_filter=True`, this is particularly bad because the intended behavior is already “fallback to unfiltered” when the tags sidecar is missing; invalid tags should not be *worse* than missing tags.
 
 ## Comparison to Similar Code
 
@@ -91,12 +94,10 @@ def _load_tags(self, texts_data: dict[str, Any]) -> None:
     try:
         # ... validation ...
     except EmbeddingArtifactMismatchError as e:
-        if self._embedding_settings.enable_item_tag_filter:
-            # Fall back to unfiltered retrieval
-            logger.warning("Tag validation failed, falling back to unfiltered", error=str(e))
-            self._tags = {}
-        else:
-            raise  # Re-raise if filtering was required
+        # Spec 38 should define the exact semantics, but the key requirement is:
+        # never crash the system due to optional sidecar metadata.
+        logger.warning("Tag validation failed; disabling tag filtering", error=str(e))
+        self._tags = {}
 ```
 
 ## Test Gap
@@ -107,7 +108,8 @@ with pytest.raises(EmbeddingArtifactMismatchError, match="Tag count mismatch"):
     store._load_embeddings()
 ```
 
-This passes because the exception IS raised, but doesn't test graceful handling.
+This passes because the exception IS raised, but it encodes the current (undesirable) behavior.
+Spec 38 should update tests to prove **degraded fallback** behavior instead of crash behavior.
 
 ## Verification
 
