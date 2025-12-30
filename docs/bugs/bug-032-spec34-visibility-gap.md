@@ -1,6 +1,6 @@
 # BUG-032: Spec 34 Item Tag Filter Not Displayed in Run Configuration
 
-**Status**: OPEN
+**Status**: ✅ IMPLEMENTED (2025-12-30)
 **Severity**: Low (UX/Observability)
 **Found**: 2025-12-29
 **Spec**: 34 (Item-Tagged Reference Embeddings)
@@ -48,6 +48,13 @@ Also consider adding Spec 33 guardrail settings for completeness:
 ```python
 print(f"  Min Reference Similarity: {settings.embedding.min_reference_similarity}")
 ```
+
+✅ Implemented (2025-12-30): `scripts/reproduce_results.py` now prints:
+- `Tags Sidecar: <path> (FOUND|MISSING)`
+- `Embedding Dim`, `Chunking`, `Top-k References`, `Min Evidence Chars`
+- `Item Tag Filter`, `Retrieval Audit`, `Min Reference Similarity`, `Max Reference Chars Per Item`
+
+✅ Unit test added: `tests/unit/scripts/test_reproduce_results.py`
 
 ## Verification
 

@@ -561,8 +561,10 @@ def print_run_configuration(*, settings: Settings, split: str) -> None:
     data_settings = settings.data
     model_settings = settings.model
     ollama_settings = settings.ollama
+    embedding_settings = settings.embedding
 
     embeddings_path = resolve_reference_embeddings_path(data_settings, settings.embedding)
+    tags_path = embeddings_path.with_suffix(".tags.json")
 
     print("=" * 60)
     print("PAPER REPRODUCTION: Quantitative PHQ-8 Evaluation (Item-level MAE)")
@@ -571,8 +573,17 @@ def print_run_configuration(*, settings: Settings, split: str) -> None:
     print(f"  Quantitative Model: {model_settings.quantitative_model}")
     print(f"  Embedding Model: {model_settings.embedding_model}")
     print(f"  Embeddings Artifact: {embeddings_path}")
+    print(f"  Tags Sidecar: {tags_path} ({'FOUND' if tags_path.exists() else 'MISSING'})")
     print(f"  Data Directory: {data_settings.base_dir}")
     print(f"  Split: {split}")
+    print(f"  Embedding Dim: {embedding_settings.dimension}")
+    print(f"  Chunking: size={embedding_settings.chunk_size} step={embedding_settings.chunk_step}")
+    print(f"  Top-k References: {embedding_settings.top_k_references}")
+    print(f"  Min Evidence Chars: {embedding_settings.min_evidence_chars}")
+    print(f"  Item Tag Filter: {embedding_settings.enable_item_tag_filter}")
+    print(f"  Retrieval Audit: {embedding_settings.enable_retrieval_audit}")
+    print(f"  Min Reference Similarity: {embedding_settings.min_reference_similarity}")
+    print(f"  Max Reference Chars Per Item: {embedding_settings.max_reference_chars_per_item}")
     print("=" * 60)
 
 
