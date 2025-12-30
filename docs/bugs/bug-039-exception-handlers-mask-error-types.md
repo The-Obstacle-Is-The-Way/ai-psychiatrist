@@ -2,12 +2,12 @@
 
 | Field | Value |
 |-------|-------|
-| **Status** | DEFERRED |
+| **Status** | SPEC'd |
 | **Severity** | MEDIUM |
 | **Affects** | All agents, debugging |
 | **Introduced** | Original design |
 | **Discovered** | 2025-12-30 |
-| **Priority** | Low (does not corrupt results, affects debugging only) |
+| **Solution** | [Spec 39: Preserve Exception Types](../specs/39-preserve-exception-types.md) |
 
 ## Summary
 

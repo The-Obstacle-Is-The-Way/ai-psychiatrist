@@ -4,8 +4,9 @@ Implementation-ready (or implementation-planned) specifications for changes that
 
 ## Ready to Implement
 
-- **Spec 37**: [Batch Query Embedding](./37-batch-query-embedding.md) — 8x reduction in API calls, fixes BUG-033/034/036
+- **Spec 37**: [Batch Query Embedding](./37-batch-query-embedding.md) — 8x reduction in API calls, fixes BUG-033/034/036/041
 - **Spec 38**: [Conditional Feature Loading](./38-conditional-feature-loading.md) — skip-if-disabled, crash-if-broken (fixes BUG-035, BUG-037, BUG-038)
+- **Spec 39**: [Preserve Exception Types](./39-preserve-exception-types.md) — stop masking errors (fixes BUG-039)
 - **Spec 36**: [CRAG-style Reference Validation](./36-crag-reference-validation.md) — new method; cost + variance controls required
 
 ## Archived (Implemented)
