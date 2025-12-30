@@ -310,11 +310,11 @@ The `.tags.json` format:
 ```json
 {
   "303": [
-    ["PHQ8_Sleep", "PHQ8_Tired"],   // chunk 0
-    [],                              // chunk 1 (no PHQ-8 keywords)
-    ["PHQ8_Depressed"]               // chunk 2
+    ["PHQ8_Sleep", "PHQ8_Tired"],
+    [],
+    ["PHQ8_Depressed"]
   ],
-  "304": [...]
+  "304": []
 }
 ```
 

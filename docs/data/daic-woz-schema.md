@@ -273,7 +273,8 @@ The paper creates a custom 58/43/41 split from the 142 labeled participants:
   from the paper’s ground truth IDs in `docs/data/paper-split-registry.md` (default), or can
   generate an algorithmic seeded split with `--mode algorithmic`.
 - `scripts/generate_embeddings.py --split paper-train` generates
-  `data/embeddings/{backend}_{model_slug}_paper_train.{npz,json,meta.json}` by default, or use
+  `data/embeddings/{backend}_{model_slug}_paper_train.{npz,json,meta.json}` by default (and an
+  optional `.tags.json` sidecar if `--write-item-tags` is set), or use
   `--output data/embeddings/paper_reference_embeddings.npz` for the legacy filename.
 - `scripts/reproduce_results.py --split paper` evaluates on the 41-participant paper test set and
   computes **item-level MAE** excluding N/A, matching the paper’s metric definition.
@@ -289,8 +290,10 @@ data/embeddings/
 ├── paper_reference_embeddings.npz   # NumPy compressed archive
 ├── paper_reference_embeddings.json  # Text sidecar (participant IDs, chunks)
 ├── paper_reference_embeddings.meta.json  # Optional: provenance metadata
+├── paper_reference_embeddings.tags.json  # Optional: per-chunk PHQ-8 item tags (Spec 34)
 ├── reference_embeddings.npz         # Optional: AVEC train knowledge base
-└── reference_embeddings.json
+├── reference_embeddings.json
+└── reference_embeddings.tags.json   # Optional: per-chunk PHQ-8 item tags (Spec 34)
 ```
 
 ### NPZ Format

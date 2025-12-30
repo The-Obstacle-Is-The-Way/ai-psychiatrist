@@ -143,6 +143,7 @@ uv run python scripts/create_paper_split.py --verify
 uv run python scripts/generate_embeddings.py --split paper-train
 # Or Ollama (paper-parity naming):
 # EMBEDDING_BACKEND=ollama uv run python scripts/generate_embeddings.py --split paper-train
+# Optional (Spec 34, not paper-parity): add `--write-item-tags` to generate a `.tags.json` sidecar for item-tag filtering, then set `EMBEDDING_ENABLE_ITEM_TAG_FILTER=true` for runs.
 
 # 4. Run reproduction (Pydantic AI enabled by default)
 uv run python scripts/reproduce_results.py --split paper --few-shot-only

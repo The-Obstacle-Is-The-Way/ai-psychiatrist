@@ -69,11 +69,11 @@ When generated with `--write-item-tags`, the `.tags.json` sidecar contains per-c
 ```json
 {
   "303": [
-    ["PHQ8_Sleep", "PHQ8_Tired"],   // chunk 0 mentions sleep/fatigue
-    [],                              // chunk 1 has no PHQ-8 keywords
-    ["PHQ8_Depressed"]               // chunk 2 mentions depression
+    ["PHQ8_Sleep", "PHQ8_Tired"],
+    [],
+    ["PHQ8_Depressed"]
   ],
-  "304": [...]
+  "304": []
 }
 ```
 

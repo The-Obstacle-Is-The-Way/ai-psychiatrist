@@ -184,6 +184,8 @@ uv run python scripts/generate_embeddings.py
 
 Creates `data/embeddings/{backend}_{model}_{split}.npz` plus `.json` and `.meta.json` by default.
 
+Optional (Spec 34): add `--write-item-tags` to also write a `.tags.json` sidecar for per-item retrieval filtering (enable with `EMBEDDING_ENABLE_ITEM_TAG_FILTER=true`).
+
 ### 3. Assess a Participant
 
 ```bash

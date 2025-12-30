@@ -272,6 +272,7 @@ uv run python scripts/evaluate_selective_prediction.py \
 
 ```bash
 uv run python scripts/generate_embeddings.py --split paper-train
+# Optional (Spec 34): add `--write-item-tags` to generate a `.tags.json` sidecar for item-tag filtering, then set `EMBEDDING_ENABLE_ITEM_TAG_FILTER=true` for runs.
 ```
 
 ---

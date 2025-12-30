@@ -158,10 +158,17 @@ Few-shot retrieval configuration.
 | `EMBEDDING_TOP_K_REFERENCES` | int | `2` | Appendix D (optimal) |
 | `EMBEDDING_MIN_EVIDENCE_CHARS` | int | `8` | Minimum text for embedding |
 | `EMBEDDING_EMBEDDINGS_FILE` | string | `huggingface_qwen3_8b_paper_train` | Reference embeddings basename (no extension), resolved under `{DATA_BASE_DIR}/embeddings/` |
+| `EMBEDDING_ENABLE_RETRIEVAL_AUDIT` | bool | `false` | Spec 32 (retrieval audit logging) |
+| `EMBEDDING_MIN_REFERENCE_SIMILARITY` | float | `0.0` | Spec 33 (drop low-similarity references; 0 disables) |
+| `EMBEDDING_MAX_REFERENCE_CHARS_PER_ITEM` | int | `0` | Spec 33 (per-item reference context budget; 0 disables) |
+| `EMBEDDING_ENABLE_ITEM_TAG_FILTER` | bool | `false` | Spec 34 (filter refs by item tags; requires `{name}.tags.json`) |
 
 **Note on artifact naming**: `scripts/generate_embeddings.py` defaults to writing a namespaced artifact like
 `data/embeddings/{backend}_{model_slug}_{split}.npz`. After generating, set `EMBEDDING_EMBEDDINGS_FILE` to that basename
 (or pass `--output` to write to `paper_reference_embeddings.npz`).
+
+**Optional item tags (Spec 34)**: `scripts/generate_embeddings.py --write-item-tags` writes a sibling `{name}.tags.json`
+sidecar. At runtime, enable tag-based filtering with `EMBEDDING_ENABLE_ITEM_TAG_FILTER=true`.
 
 **Paper optimization results (Appendix D):**
 - Embedding dimension 4096 performed best among the tested dimensions (64, 256, 1024, 4096)
@@ -221,20 +228,21 @@ File path configuration.
 
 **Directory structure expected:**
 ```text
-data/
-├── transcripts/
-│   ├── 300_P/
-│   │   └── 300_TRANSCRIPT.csv
-│   └── .../
-├── embeddings/
-│   ├── huggingface_qwen3_8b_paper_train.npz         # default reference knowledge base (paper-train)
-│   ├── huggingface_qwen3_8b_paper_train.json
-│   ├── huggingface_qwen3_8b_paper_train.meta.json   # provenance metadata (backend/model/dim/chunking)
-│   ├── paper_reference_embeddings.npz               # legacy/compat filename (paper-train)
-│   ├── paper_reference_embeddings.json
-│   └── paper_reference_embeddings.meta.json         # provenance metadata (legacy/compat)
-├── train_split_Depression_AVEC2017.csv
-└── dev_split_Depression_AVEC2017.csv
+	data/
+	├── transcripts/
+	│   ├── 300_P/
+	│   │   └── 300_TRANSCRIPT.csv
+	│   └── .../
+	├── embeddings/
+	│   ├── huggingface_qwen3_8b_paper_train.npz         # default reference knowledge base (paper-train)
+	│   ├── huggingface_qwen3_8b_paper_train.json
+	│   ├── huggingface_qwen3_8b_paper_train.meta.json   # provenance metadata (backend/model/dim/chunking)
+	│   ├── huggingface_qwen3_8b_paper_train.tags.json   # optional per-chunk PHQ-8 item tags (Spec 34)
+	│   ├── paper_reference_embeddings.npz               # legacy/compat filename (paper-train)
+	│   ├── paper_reference_embeddings.json
+	│   └── paper_reference_embeddings.meta.json         # provenance metadata (legacy/compat)
+	├── train_split_Depression_AVEC2017.csv
+	└── dev_split_Depression_AVEC2017.csv
 ```
 
 **Example:**
