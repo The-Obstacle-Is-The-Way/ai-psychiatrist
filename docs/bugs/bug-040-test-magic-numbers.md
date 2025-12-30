@@ -2,11 +2,12 @@
 
 | Field | Value |
 |-------|-------|
-| **Status** | OPEN |
+| **Status** | SPEC'd |
 | **Severity** | MEDIUM |
 | **Affects** | Test suite maintainability |
 | **Introduced** | Original design |
 | **Discovered** | 2025-12-30 |
+| **Solution** | [Spec 37](../specs/37-batch-query-embedding.md) + [Spec 38](../specs/38-conditional-feature-loading.md) (tests fixed during implementation) |
 
 ## Summary
 
