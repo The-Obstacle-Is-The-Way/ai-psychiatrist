@@ -760,9 +760,9 @@ When generating embeddings, tag chunks with which PHQ-8 items they address:
 
 **Priority**: DEFER (new-method research; high circularity risk)
 
-**Status**: NOT IMPLEMENTATION-READY in this document.
+**Status**: Implemented as a new-method experiment (not paper-parity).
 
-**Tracking spec**: `docs/specs/35-offline-chunk-level-phq8-scoring.md`
+**Spec**: `docs/archive/specs/35-offline-chunk-level-phq8-scoring.md`
 
 This is not a “bug fix” or “paper parity” change. It requires:
 - a new labeling pipeline,

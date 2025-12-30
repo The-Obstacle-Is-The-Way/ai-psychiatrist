@@ -3,6 +3,7 @@
 import hashlib
 import json
 from pathlib import Path
+from typing import cast
 from unittest.mock import MagicMock, patch
 
 import pytest
@@ -19,6 +20,7 @@ from ai_psychiatrist.domain.enums import PHQ8Item
 from ai_psychiatrist.domain.exceptions import (
     EmbeddingArtifactMismatchError,
 )
+from ai_psychiatrist.services.chunk_scoring import PHQ8_ITEM_KEYS, chunk_scoring_prompt_hash
 from ai_psychiatrist.services.reference_store import ReferenceStore
 
 
@@ -521,6 +523,12 @@ class TestReferenceStoreMetadata:
 class TestChunkScoring:
     """Tests for Spec 35: Offline Chunk-Level PHQ-8 Scoring."""
 
+    @staticmethod
+    def _make_score_map(**overrides: int | None) -> dict[str, int | None]:
+        base = cast("dict[str, int | None]", dict.fromkeys(PHQ8_ITEM_KEYS, None))
+        base.update(overrides)
+        return base
+
     def test_has_chunk_scores_false_when_missing(self, tmp_path: Path) -> None:
         """Should return False when chunk scores sidecar is missing."""
         transcripts_dir = tmp_path / "transcripts"
@@ -562,12 +570,16 @@ class TestChunkScoring:
         # 2. Create .chunk_scores.json
         chunk_scores = {
             "100": [
-                {"PHQ8_NoInterest": 2, "PHQ8_Depressed": None},
-                {"PHQ8_NoInterest": 0, "PHQ8_Depressed": 3},
+                self._make_score_map(PHQ8_NoInterest=2, PHQ8_Depressed=None),
+                self._make_score_map(PHQ8_NoInterest=0, PHQ8_Depressed=3),
             ]
         }
         embeddings_path.with_suffix(".chunk_scores.json").write_text(
             json.dumps(chunk_scores), encoding="utf-8"
+        )
+        embeddings_path.with_suffix(".chunk_scores.meta.json").write_text(
+            json.dumps({"prompt_hash": chunk_scoring_prompt_hash()}),
+            encoding="utf-8",
         )
 
         data_settings = DataSettings(
@@ -593,7 +605,7 @@ class TestChunkScoring:
         assert store.get_chunk_score(100, 1, PHQ8Item.NO_INTEREST) == 0
         assert store.get_chunk_score(100, 1, PHQ8Item.DEPRESSED) == 3
 
-        # Check missing keys return None
+        # Null values return None
         assert store.get_chunk_score(100, 0, PHQ8Item.SLEEP) is None
 
     def test_chunk_scores_validation_rejects_invalid_keys(self, tmp_path: Path) -> None:
@@ -608,11 +620,18 @@ class TestChunkScoring:
         # Invalid key "PHQ8_Invalid"
         chunk_scores = {
             "100": [
-                {"PHQ8_Invalid": 2},
+                {
+                    **self._make_score_map(PHQ8_NoInterest=2),
+                    "PHQ8_Invalid": 2,
+                },
             ]
         }
         embeddings_path.with_suffix(".chunk_scores.json").write_text(
             json.dumps(chunk_scores), encoding="utf-8"
+        )
+        embeddings_path.with_suffix(".chunk_scores.meta.json").write_text(
+            json.dumps({"prompt_hash": chunk_scoring_prompt_hash()}),
+            encoding="utf-8",
         )
 
         data_settings = DataSettings(
@@ -626,7 +645,7 @@ class TestChunkScoring:
         store._embeddings = {100: [("c1", [1.0, 0.0])]}
 
         # Should raise error during load (accessed via has_chunk_scores or get_chunk_score)
-        with pytest.raises(EmbeddingArtifactMismatchError, match="Invalid PHQ-8 item key"):
+        with pytest.raises(EmbeddingArtifactMismatchError, match="Invalid chunk score keys"):
             store.has_chunk_scores()
 
     def test_chunk_scores_validation_rejects_length_mismatch(self, tmp_path: Path) -> None:
@@ -647,6 +666,10 @@ class TestChunkScoring:
         embeddings_path.with_suffix(".chunk_scores.json").write_text(
             json.dumps(chunk_scores), encoding="utf-8"
         )
+        embeddings_path.with_suffix(".chunk_scores.meta.json").write_text(
+            json.dumps({"prompt_hash": chunk_scoring_prompt_hash()}),
+            encoding="utf-8",
+        )
 
         data_settings = DataSettings(
             base_dir=tmp_path,
@@ -660,3 +683,67 @@ class TestChunkScoring:
 
         with pytest.raises(EmbeddingArtifactMismatchError, match="Chunk count mismatch"):
             store.has_chunk_scores()
+
+    def test_chunk_scores_prompt_hash_mismatch_raises_by_default(self, tmp_path: Path) -> None:
+        """Should refuse to load chunk scores when prompt hash mismatches (Spec 35 protocol lock)."""
+        transcripts_dir = tmp_path / "transcripts"
+        transcripts_dir.mkdir(parents=True, exist_ok=True)
+        embeddings_path = tmp_path / "embeddings.npz"
+
+        embeddings_path.with_suffix(".json").write_text('{"100": ["c1"]}', encoding="utf-8")
+        embeddings_path.touch()
+
+        chunk_scores = {"100": [self._make_score_map(PHQ8_NoInterest=2)]}
+        embeddings_path.with_suffix(".chunk_scores.json").write_text(
+            json.dumps(chunk_scores), encoding="utf-8"
+        )
+        embeddings_path.with_suffix(".chunk_scores.meta.json").write_text(
+            json.dumps({"prompt_hash": "deadbeefdead"}),
+            encoding="utf-8",
+        )
+
+        data_settings = DataSettings(
+            base_dir=tmp_path,
+            transcripts_dir=transcripts_dir,
+            embeddings_path=embeddings_path,
+        )
+        embed_settings = EmbeddingSettings(dimension=2)
+
+        store = ReferenceStore(data_settings, embed_settings)
+        store._embeddings = {100: [("c1", [1.0, 0.0])]}
+
+        with pytest.raises(EmbeddingArtifactMismatchError, match="prompt hash mismatch"):
+            store.has_chunk_scores()
+
+    def test_chunk_scores_prompt_hash_mismatch_can_be_overridden(self, tmp_path: Path) -> None:
+        """Override flag allows loading chunk scores even when prompt hash differs."""
+        transcripts_dir = tmp_path / "transcripts"
+        transcripts_dir.mkdir(parents=True, exist_ok=True)
+        embeddings_path = tmp_path / "embeddings.npz"
+
+        embeddings_path.with_suffix(".json").write_text('{"100": ["c1"]}', encoding="utf-8")
+        embeddings_path.touch()
+
+        chunk_scores = {"100": [self._make_score_map(PHQ8_NoInterest=2)]}
+        embeddings_path.with_suffix(".chunk_scores.json").write_text(
+            json.dumps(chunk_scores), encoding="utf-8"
+        )
+        embeddings_path.with_suffix(".chunk_scores.meta.json").write_text(
+            json.dumps({"prompt_hash": "deadbeefdead"}),
+            encoding="utf-8",
+        )
+
+        data_settings = DataSettings(
+            base_dir=tmp_path,
+            transcripts_dir=transcripts_dir,
+            embeddings_path=embeddings_path,
+        )
+        embed_settings = EmbeddingSettings(
+            dimension=2,
+            allow_chunk_scores_prompt_hash_mismatch=True,
+        )
+
+        store = ReferenceStore(data_settings, embed_settings)
+        store._embeddings = {100: [("c1", [1.0, 0.0])]}
+
+        assert store.has_chunk_scores() is True

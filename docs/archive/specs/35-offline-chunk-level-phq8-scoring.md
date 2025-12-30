@@ -1,8 +1,11 @@
 # Spec 35: Offline Chunk-Level PHQ-8 Scoring (New Method)
 
-> **STATUS: PLANNED (High risk; do not mix with reproduction claims)**
+> **STATUS: ✅ IMPLEMENTED (2025-12-30)**
 >
 > This replaces participant-level score attachment with per-chunk score estimates.
+>
+> **Not paper-parity**: runs with `reference_score_source="chunk"` must be labeled as an experiment,
+> not a paper reproduction baseline.
 
 ## Problem
 
@@ -59,6 +62,7 @@ Inputs:
 - `--embeddings-file <name-or-path>` (same semantics as `EMBEDDING_EMBEDDINGS_FILE`)
 - `--scorer-backend <ollama|huggingface|...>` (reuse existing LLM client infra)
 - `--scorer-model <model>` (must be configurable)
+- `--allow-same-model` (override; **unsafe** — allows scorer model to equal the assessment model)
 
 Outputs:
 
@@ -78,6 +82,9 @@ The scorer must:
 - Return strict JSON only (no prose).
 
 Prompt template (single chunk → all 8 items at once):
+
+**SSOT**: `src/ai_psychiatrist/services/chunk_scoring.py`
+(`CHUNK_SCORING_PROMPT_TEMPLATE` + `chunk_scoring_prompt_hash()`).
 
 ```text
 You are labeling a single transcript chunk for PHQ-8 item frequency evidence.
@@ -110,7 +117,8 @@ Parsing:
 
 ## Circularity Controls (Required)
 
-1. **Disjoint model**: default scorer model must not equal the assessment model.
+1. **Disjoint model**: scorer model must not equal the assessment model (enforced by default;
+   override requires `--allow-same-model`).
 2. **Temperature=0** (determinism).
 3. **Protocol lock**: store prompt hash; refuse to load scores if prompt hash differs (unless override flag set).
 4. **Reporting**: outputs must clearly label runs as “chunk-score method”, not reproduction.
@@ -120,13 +128,19 @@ Parsing:
 Add setting:
 
 - `EmbeddingSettings.reference_score_source: Literal[\"participant\", \"chunk\"] = \"participant\"` (env: `EMBEDDING_REFERENCE_SCORE_SOURCE`)
+- `EmbeddingSettings.allow_chunk_scores_prompt_hash_mismatch: bool = False`
+  - Env: `EMBEDDING_ALLOW_CHUNK_SCORES_PROMPT_HASH_MISMATCH`
+  - **Unsafe**: allows loading chunk scores when `.chunk_scores.meta.json` is missing or the prompt hash mismatches.
 
 ### Files to Change
 
 - `src/ai_psychiatrist/config.py` (`EmbeddingSettings`)
-- `src/ai_psychiatrist/services/reference_store.py` (load chunk scores sidecar + `get_chunk_score`)
+- `src/ai_psychiatrist/services/chunk_scoring.py` (prompt SSOT + prompt hash)
+- `src/ai_psychiatrist/services/reference_store.py` (load/validate `.chunk_scores.json` + protocol lock via `.chunk_scores.meta.json`)
 - `src/ai_psychiatrist/services/embedding.py` (use chunk score when enabled; requires chunk index)
-- `tests/unit/services/test_embedding.py` or new `tests/unit/services/test_reference_store.py`
+- `scripts/score_reference_chunks.py` (index-time scorer; protocol lock metadata)
+- `scripts/reproduce_results.py` (prints `reference_score_source` and labels non-paper runs as experiments)
+- `tests/unit/services/test_embedding.py` + `tests/unit/services/test_reference_store.py`
 
 ### ReferenceStore API (Exact)
 
@@ -142,7 +156,8 @@ def _get_chunk_scores_path(self) -> Path:
 - Loader + validator that enforces:
   - same participant IDs as texts sidecar
   - per-participant list length equals chunk count
-  - keys are `PHQ8_*`, values are `0..3` or `None`
+  - keys are exactly the 8 `PHQ8_*` strings, values are `0..3` or `None`
+  - `.chunk_scores.meta.json` exists and `prompt_hash` matches `chunk_scoring_prompt_hash()` unless override enabled
 
 - Public method:
 
@@ -191,10 +206,15 @@ Store `reference_score=score` in the `SimilarityMatch` as today.
 3. `test_reference_score_source_chunk_requires_sidecar`
    - With `reference_score_source="chunk"` and no sidecar, EmbeddingService init must raise.
 
+Additional safety tests (recommended):
+
+- Prompt hash mismatch must fail closed (unless override enabled).
+- Invalid key sets and length mismatches must raise `EmbeddingArtifactMismatchError`.
+
 ## Verification
 
 - Generate chunk scores on paper-train references.
-- Run reproduction as a “new method” experiment; compare paired AURC deltas.
+- Run as a “new method” experiment (NOT paper reproduction); compare paired AURC deltas.
 - Audit whether chunk-score examples look semantically aligned.
 
 ## Risks

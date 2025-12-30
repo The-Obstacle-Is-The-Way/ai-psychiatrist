@@ -23,7 +23,6 @@ from __future__ import annotations
 
 import argparse
 import asyncio
-import hashlib
 import json
 import sys
 from dataclasses import dataclass
@@ -39,10 +38,15 @@ from ai_psychiatrist.config import (
     LoggingSettings,
     Settings,
     get_settings,
+    resolve_reference_embeddings_path_from_embeddings_file,
 )
-from ai_psychiatrist.domain.enums import PHQ8Item
 from ai_psychiatrist.infrastructure.llm.factory import create_llm_client
 from ai_psychiatrist.infrastructure.logging import get_logger, setup_logging
+from ai_psychiatrist.services.chunk_scoring import (
+    PHQ8_ITEM_KEY_SET,
+    chunk_scoring_prompt_hash,
+    render_chunk_scoring_prompt,
+)
 
 if TYPE_CHECKING:
     from ai_psychiatrist.infrastructure.llm.responses import SimpleChatClient
@@ -74,32 +78,6 @@ class ScoringResult:
     errors: int
 
 
-SCORING_PROMPT_TEMPLATE = """\
-You are labeling a single transcript chunk for PHQ-8 item frequency evidence.
-
-Task:
-- For each PHQ-8 item key below, output an integer 0-3 if the chunk \
-explicitly supports that frequency.
-- If the chunk does not mention the symptom or frequency is unclear, \
-output null.
-- Do not guess or infer beyond the text.
-
-Keys (must be present exactly):
-PHQ8_NoInterest, PHQ8_Depressed, PHQ8_Sleep, PHQ8_Tired,
-PHQ8_Appetite, PHQ8_Failure, PHQ8_Concentrating, PHQ8_Moving
-
-Chunk:
-{chunk_text}
-
-Return JSON only in this exact shape:
-{
-  "PHQ8_NoInterest": 0|1|2|3|null,
-  "PHQ8_Depressed": 0|1|2|3|null,
-  ...
-}
-"""
-
-
 async def score_chunk(
     client: SimpleChatClient,
     chunk_text: str,
@@ -107,7 +85,7 @@ async def score_chunk(
     temperature: float,
 ) -> dict[str, int | None] | None:
     """Score a single chunk using the LLM."""
-    prompt = SCORING_PROMPT_TEMPLATE.format(chunk_text=chunk_text)
+    prompt = render_chunk_scoring_prompt(chunk_text=chunk_text)
 
     try:
         response = await client.simple_chat(
@@ -117,41 +95,38 @@ async def score_chunk(
             temperature=temperature,
         )
 
-        # Clean markdown code blocks if present
         content = response.strip()
-        if content.startswith("```json"):
-            content = content[7:]
-        if content.startswith("```"):
-            content = content[3:]
-        if content.endswith("```"):
-            content = content[:-3]
-        content = content.strip()
-
         data = json.loads(content)
 
         if not isinstance(data, dict):
             logger.warning("Scorer output is not a dict", content=content[:50])
             return None
 
-        # Validate schema
-        valid_keys = {f"PHQ8_{item.value}" for item in PHQ8Item}
+        key_set = set(data)
+        if key_set != PHQ8_ITEM_KEY_SET:
+            missing = sorted(PHQ8_ITEM_KEY_SET - key_set)
+            extra = sorted(key_set - PHQ8_ITEM_KEY_SET)
+            logger.warning(
+                "Scorer output has invalid key set",
+                missing=missing[:3],
+                extra=extra[:3],
+                content=content[:50],
+            )
+            return None
+
         validated: dict[str, int | None] = {}
-
-        for key in valid_keys:
-            if key not in data:
-                # Missing key -> treat as failure to follow schema
-                logger.warning(f"Scorer output missing key {key}", content=content[:50])
-                return None
-
+        for key in PHQ8_ITEM_KEY_SET:
             val = data[key]
             if val is None:
                 validated[key] = None
-            elif isinstance(val, int) and 0 <= val <= 3:
-                validated[key] = val
-            else:
-                # Invalid value -> schema violation
-                logger.warning(f"Invalid value for {key}: {val}", content=content[:50])
+                continue
+
+            # Reject bool explicitly (bool is a subclass of int).
+            if isinstance(val, bool) or not isinstance(val, int) or not (0 <= val <= 3):
+                logger.warning("Invalid value for key", key=key, value=val)
                 return None
+
+            validated[key] = val
 
         return validated
 
@@ -182,7 +157,10 @@ async def process_participant(
 
         if score_map is None:
             # Fallback: all nulls
-            score_map = {f"PHQ8_{item.value}": None for item in PHQ8Item}
+            score_map = cast(
+                "dict[str, int | None]",
+                dict.fromkeys(PHQ8_ITEM_KEY_SET, None),
+            )
 
         results.append(score_map)
 
@@ -191,29 +169,10 @@ async def process_participant(
 
 def prepare_config(args: argparse.Namespace, settings: Settings) -> ScoringConfig:
     """Prepare configuration."""
-    # Resolve embeddings path
-    # If args.embeddings_file looks like a path, use it.
-    # Otherwise try to resolve via settings helper.
-
-    # Temporarily patch settings with arg value to use resolver logic
-    # or just replicate it.
-
-    candidate = Path(args.embeddings_file)
-    if candidate.exists() or candidate.is_absolute():
-        embeddings_path = candidate
-    else:
-        # Resolve relative to data dir
-        embeddings_path = settings.data.base_dir / "embeddings" / candidate
-        if not embeddings_path.suffix:
-            embeddings_path = embeddings_path.with_suffix(".npz")
-
-    if not embeddings_path.exists():
-        # Try appending .npz if missing
-        if not embeddings_path.suffix and embeddings_path.with_suffix(".npz").exists():
-            embeddings_path = embeddings_path.with_suffix(".npz")
-        else:
-            # Fallback to resolver if name provided
-            pass  # Already handled roughly above
+    embeddings_path = resolve_reference_embeddings_path_from_embeddings_file(
+        base_dir=settings.data.base_dir,
+        embeddings_file=args.embeddings_file,
+    )
 
     if not embeddings_path.exists():
         raise FileNotFoundError(f"Embeddings file not found: {embeddings_path}")
@@ -266,6 +225,14 @@ async def main_async(args: argparse.Namespace) -> int:
         print("\n[DRY RUN] Config valid. Exiting.")
         return 0
 
+    if not args.allow_same_model and config.scorer_model == settings.model.quantitative_model:
+        print(
+            "\nERROR: scorer model matches quantitative assessment model "
+            "(Spec 35 circularity risk)."
+        )
+        print("Set a different --scorer-model, or pass --allow-same-model to override.")
+        return 2
+
     # Load texts
     with config.texts_path.open("r", encoding="utf-8") as f:
         texts_data = json.load(f)
@@ -308,7 +275,7 @@ async def main_async(args: argparse.Namespace) -> int:
         "scorer_model": config.scorer_model,
         "scorer_backend": config.scorer_backend.value,
         "temperature": config.temperature,
-        "prompt_hash": hashlib.sha256(SCORING_PROMPT_TEMPLATE.encode("utf-8")).hexdigest()[:12],
+        "prompt_hash": chunk_scoring_prompt_hash(),
         "generated_at": datetime.now(UTC).isoformat(),
         "source_embeddings": config.embeddings_path.name,
         "total_chunks": total_processed,
@@ -339,6 +306,14 @@ def main() -> int:
         "--scorer-model",
         required=True,
         help="Model name (e.g. llama3:8b)",
+    )
+    parser.add_argument(
+        "--allow-same-model",
+        action="store_true",
+        help=(
+            "Allow using the same model as the quantitative assessment model "
+            "(unsafe; enables circularity)."
+        ),
     )
     parser.add_argument(
         "--dry-run",

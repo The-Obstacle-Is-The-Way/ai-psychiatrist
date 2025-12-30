@@ -29,6 +29,7 @@ from ai_psychiatrist.domain.exceptions import (
 )
 from ai_psychiatrist.infrastructure.llm.model_aliases import resolve_model_name
 from ai_psychiatrist.infrastructure.logging import get_logger
+from ai_psychiatrist.services.chunk_scoring import PHQ8_ITEM_KEY_SET, chunk_scoring_prompt_hash
 
 if TYPE_CHECKING:
     from pathlib import Path
@@ -124,6 +125,10 @@ class ReferenceStore:
     def _get_chunk_scores_path(self) -> Path:
         """Get path to the JSON sidecar file containing chunk scores."""
         return self._embeddings_path.with_suffix(".chunk_scores.json")
+
+    def _get_chunk_scores_meta_path(self) -> Path:
+        """Get path to the JSON metadata sidecar for chunk scores."""
+        return self._embeddings_path.with_suffix(".chunk_scores.meta.json")
 
     def _calculate_split_hash(self, split: str) -> str | None:
         """Calculate hash of the split CSV referenced by an embeddings artifact (if available)."""
@@ -375,21 +380,32 @@ class ReferenceStore:
         skipped_chunks = 0
         total_chunks = 0
         actual_dim_sample = 0
+        require_alignment = (
+            self._embedding_settings.enable_item_tag_filter
+            or self._embedding_settings.reference_score_source == "chunk"
+        )
 
         for pid_str, texts in texts_data.items():
             pid_int = int(pid_str)
             emb_key = f"emb_{pid_int}"
 
             if emb_key not in npz_data:
-                logger.warning(
-                    "No embeddings found for participant",
-                    participant_id=pid_int,
-                )
+                if require_alignment:
+                    raise EmbeddingArtifactMismatchError(
+                        f"Missing embeddings for participant {pid_int} "
+                        "(required for aligned sidecars)"
+                    )
+                logger.warning("No embeddings found for participant", participant_id=pid_int)
                 continue
 
             embeddings = npz_data[emb_key]
 
             if len(texts) != len(embeddings):
+                if require_alignment:
+                    raise EmbeddingArtifactMismatchError(
+                        f"Text/embedding count mismatch for participant {pid_int}: "
+                        f"texts={len(texts)}, embeddings={len(embeddings)}"
+                    )
                 logger.warning(
                     "Text/embedding count mismatch",
                     participant_id=pid_int,
@@ -409,6 +425,11 @@ class ReferenceStore:
 
                 # Validate dimension
                 if emb_len < self._dimension:
+                    if require_alignment:
+                        raise EmbeddingDimensionMismatchError(
+                            expected=self._dimension,
+                            actual=emb_len,
+                        )
                     skipped_chunks += 1
                     logger.warning(
                         "Skipping embedding with insufficient dimension",
@@ -580,6 +601,99 @@ class ReferenceStore:
             logger.warning("Failed to load tags file", path=str(tags_path), error=str(e))
             self._tags = {}
 
+    def _raise_or_warn_chunk_scores_provenance(self, message: str) -> None:
+        if self._embedding_settings.allow_chunk_scores_prompt_hash_mismatch:
+            logger.warning(message)
+            return
+        raise EmbeddingArtifactMismatchError(message)
+
+    def _validate_chunk_scores_prompt_hash(self) -> None:
+        meta_path = self._get_chunk_scores_meta_path()
+        if not meta_path.exists():
+            self._raise_or_warn_chunk_scores_provenance(
+                f"Chunk scores metadata missing: {meta_path.name}"
+            )
+            return
+
+        with meta_path.open("r", encoding="utf-8") as f:
+            meta = json.load(f)
+        if not isinstance(meta, dict):
+            raise EmbeddingArtifactMismatchError(
+                f"Invalid chunk scores metadata in {meta_path.name}: expected object"
+            )
+
+        stored_hash = meta.get("prompt_hash")
+        expected_hash = chunk_scoring_prompt_hash()
+        if stored_hash != expected_hash:
+            self._raise_or_warn_chunk_scores_provenance(
+                "Chunk scores prompt hash mismatch "
+                f"(artifact={stored_hash!r}, expected={expected_hash!r})"
+            )
+
+    def _validate_chunk_scores_participant_ids(
+        self,
+        raw_data: dict[str, Any],
+        *,
+        scores_path: Path,
+    ) -> None:
+        if self._embeddings is None:
+            raise RuntimeError("Embeddings must be loaded before validating chunk scores")
+
+        expected_pids = {str(pid) for pid in self._embeddings}
+        data_pids = set(raw_data)
+
+        missing_pids = expected_pids - data_pids
+        if missing_pids:
+            missing_preview = ", ".join(sorted(missing_pids)[:5])
+            raise EmbeddingArtifactMismatchError(
+                f"Missing chunk scores for participants in {scores_path.name}: {missing_preview}"
+            )
+
+        extra_pids = data_pids - expected_pids
+        if extra_pids:
+            extra_preview = ", ".join(sorted(extra_pids)[:5])
+            raise EmbeddingArtifactMismatchError(
+                f"Extra participants present in {scores_path.name}: {extra_preview}"
+            )
+
+    @staticmethod
+    def _validate_chunk_score_map(
+        *,
+        pid: int,
+        chunk_idx: int,
+        raw_map: Any,
+        valid_keys: set[str],
+    ) -> dict[str, int | None]:
+        if not isinstance(raw_map, dict):
+            raise EmbeddingArtifactMismatchError(
+                f"Invalid score map for {pid} chunk {chunk_idx}: expected object"
+            )
+
+        key_set = set(raw_map)
+        if key_set != valid_keys:
+            missing = sorted(valid_keys - key_set)
+            extra = sorted(key_set - valid_keys)
+            raise EmbeddingArtifactMismatchError(
+                f"Invalid chunk score keys for {pid} chunk {chunk_idx}: "
+                f"missing={missing[:3]}, extra={extra[:3]}"
+            )
+
+        validated_map: dict[str, int | None] = {}
+        for key in valid_keys:
+            val = raw_map[key]
+            if val is None:
+                validated_map[key] = None
+                continue
+
+            # Reject bool explicitly (bool is a subclass of int).
+            if isinstance(val, bool) or not isinstance(val, int) or not (0 <= val <= 3):
+                raise EmbeddingArtifactMismatchError(
+                    f"Invalid value for {pid} chunk {chunk_idx} key {key}: {val!r}"
+                )
+            validated_map[key] = val
+
+        return validated_map
+
     def _validate_chunk_scores_data(
         self,
         raw_data: dict[str, Any],
@@ -589,12 +703,22 @@ class ReferenceStore:
         if self._embeddings is None:
             raise RuntimeError("Embeddings must be loaded before validating chunk scores")
 
+        scores_path = self._get_chunk_scores_path()
+        self._validate_chunk_scores_participant_ids(raw_data, scores_path=scores_path)
+
         validated_scores: dict[int, list[dict[str, int | None]]] = {}
 
         for pid_str, chunks_data in raw_data.items():
-            pid = int(pid_str)
+            try:
+                pid = int(pid_str)
+            except ValueError as e:
+                raise EmbeddingArtifactMismatchError(
+                    f"Invalid participant id in {scores_path.name}: {pid_str!r}"
+                ) from e
             if pid not in self._embeddings:
-                continue
+                raise EmbeddingArtifactMismatchError(
+                    f"Chunk scores include unknown participant {pid}"
+                )
 
             expected_count = len(self._embeddings[pid])
             if not isinstance(chunks_data, list):
@@ -610,18 +734,14 @@ class ReferenceStore:
 
             validated_participant_scores: list[dict[str, int | None]] = []
             for idx, chunk_score_map in enumerate(chunks_data):
-                if not isinstance(chunk_score_map, dict):
-                    raise EmbeddingArtifactMismatchError(
-                        f"Invalid score map for {pid} chunk {idx}: expected object"
+                validated_participant_scores.append(
+                    self._validate_chunk_score_map(
+                        pid=pid,
+                        chunk_idx=idx,
+                        raw_map=chunk_score_map,
+                        valid_keys=valid_keys,
                     )
-
-                for key in chunk_score_map:
-                    if key not in valid_keys:
-                        raise EmbeddingArtifactMismatchError(
-                            f"Invalid PHQ-8 item key '{key}' for {pid} chunk {idx}"
-                        )
-
-                validated_participant_scores.append(chunk_score_map)
+                )
 
             validated_scores[pid] = validated_participant_scores
 
@@ -642,6 +762,8 @@ class ReferenceStore:
             self._load_embeddings()
 
         try:
+            self._validate_chunk_scores_prompt_hash()
+
             with scores_path.open("r", encoding="utf-8") as f:
                 raw_data = json.load(f)
 
@@ -650,8 +772,7 @@ class ReferenceStore:
                     f"Invalid chunk scores schema in {scores_path.name}: expected object"
                 )
 
-            valid_keys = {f"PHQ8_{item.value}" for item in PHQ8Item}
-            self._chunk_scores = self._validate_chunk_scores_data(raw_data, valid_keys)
+            self._chunk_scores = self._validate_chunk_scores_data(raw_data, set(PHQ8_ITEM_KEY_SET))
             logger.info("Chunk scores loaded", participants=len(self._chunk_scores))
 
         except (json.JSONDecodeError, OSError) as e:

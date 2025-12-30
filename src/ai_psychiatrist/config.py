@@ -288,6 +288,13 @@ class EmbeddingSettings(BaseSettings):
             "(participant-level or chunk-level estimate)."
         ),
     )
+    allow_chunk_scores_prompt_hash_mismatch: bool = Field(
+        default=False,
+        description=(
+            "Allow loading chunk scores when the scorer prompt hash differs or metadata is missing "
+            "(unsafe; Spec 35 circularity control bypass)."
+        ),
+    )
     enable_reference_validation: bool = Field(
         default=False,
         description="Enable CRAG-style runtime validation of retrieved references (Spec 36).",
@@ -454,7 +461,24 @@ def resolve_reference_embeddings_path(
     if "embeddings_path" in data_settings.model_fields_set:
         return data_settings.embeddings_path
 
-    candidate = Path(embedding_settings.embeddings_file)
+    return resolve_reference_embeddings_path_from_embeddings_file(
+        base_dir=data_settings.base_dir,
+        embeddings_file=embedding_settings.embeddings_file,
+    )
+
+
+def resolve_reference_embeddings_path_from_embeddings_file(
+    *,
+    base_dir: Path,
+    embeddings_file: str,
+) -> Path:
+    """Resolve an embeddings NPZ path from an `embeddings_file` string.
+
+    This mirrors `EMBEDDING_EMBEDDINGS_FILE` resolution logic without consulting
+    `DATA_EMBEDDINGS_PATH` precedence (useful for CLI tools that accept an explicit
+    embeddings file argument).
+    """
+    candidate = Path(embeddings_file)
 
     # Absolute paths are used as-is (ensure .npz suffix).
     if candidate.is_absolute():
@@ -462,11 +486,11 @@ def resolve_reference_embeddings_path(
 
     # Relative paths with directories are resolved under the data base dir.
     if candidate.parent != Path():
-        resolved = data_settings.base_dir / candidate
+        resolved = base_dir / candidate
         return resolved if resolved.suffix == ".npz" else resolved.with_suffix(".npz")
 
     # Basename-only: resolve under the embeddings directory.
-    return (data_settings.base_dir / "embeddings" / candidate.name).with_suffix(".npz")
+    return (base_dir / "embeddings" / candidate.name).with_suffix(".npz")
 
 
 class LoggingSettings(BaseSettings):
