@@ -36,22 +36,43 @@ def _parse_daic_woz_transcript(self, path: Path) -> str:
 
 **Source**: [Burdisso et al., ACL ClinicalNLP 2024](https://aclanthology.org/2024.clinicalnlp-1.8/)
 
-| Model Input | F1 Score |
-|-------------|----------|
-| **Interviewer prompts ONLY** | 0.88 |
-| **Participant responses ONLY** | 0.85 |
+| Model | Input | F1 Score |
+|-------|-------|----------|
+| P-longBERT | Participant only | 0.72 |
+| E-longBERT | Ellie only | 0.84 |
+| P-GCN | Participant only | 0.85 |
+| E-GCN | Ellie only | 0.88 |
+| Ensemble (P-GCN + E-GCN) | Both models combined | 0.90 |
 
-**Critical finding**: Interviewer-only models *outperform* participant-only because they exploit targeted questions like "have you been diagnosed with depression?" as shortcuts.
+**Critical finding**: Interviewer-only models *outperform* participant-only because they exploit targeted follow-up probing questions as shortcuts. Notably, the paper explicitly states that "Have you been diagnosed with depression?" is **NOT** a shortcut—the model disregards it. Instead, models exploit the **follow-up questions** that probe deeper into mental health history:
+- "what got you to seek help"
+- "do you still go to therapy now"
+- "why did you stop"
+- "how has seeing a therapist affected you"
+- "do you have disturbing thoughts"
 
-> *"Models using interviewer's prompts learn to focus on a specific region of the interviews... rather than learning to characterize the language and behavior that are genuinely indicative of the patient's mental health condition."*
+> *"models using interviewer's prompts learn to focus on a specific region of the interviews, where questions about past experiences with mental health issues are asked, and use them as discriminative shortcuts to detect depressed participants."* (Abstract)
 
-### 2.2 Prevalence of This Error
+### 2.2 Why Participant-Only Scores Lower (But Is More Valid)
+
+The paper's heatmap analysis reveals:
+
+- **E-GCN (Ellie only)**: Focuses on **a single segment** appearing "after halfway through interviews" - where Ellie asks about mental health history
+- **P-GCN (Participant only)**: Distributes attention **across the entire interview**
+
+**Interpretation**: Participant-only models learn **genuine clinical signals** distributed throughout conversation. Ellie-only models learn a **shortcut** - one specific region where targeted mental health questions are asked.
+
+The 0.90 F1 for "both" is an **ensemble of two models**, not proof that including Ellie helps a single model. It's combining a biased shortcut learner with a genuine signal learner.
+
+**Conclusion**: Lower F1 for participant-only reflects **harder, more valid learning** - not worse performance. The model must learn actual depression markers rather than exploiting interviewer protocol.
+
+### 2.3 Prevalence of This Error
 
 **Source**: [MDPI Applied Sciences 2025](https://www.mdpi.com/2076-3417/16/1/422)
 
 **42.4% of DAIC-WOZ studies** include interviewer utterances without justification - a documented methodological pitfall.
 
-### 2.3 Known Dataset Issues
+### 2.4 Known Dataset Issues
 
 | Interview ID | Issue | Recommended Action |
 |--------------|-------|-------------------|
@@ -118,17 +139,50 @@ The prompts DO explicitly identify speaker roles, suggesting intentional inclusi
 
 **Ellie's questions** = interviewer protocol, NOT patient data.
 
-### The Fundamental Problem
+### The Fundamental Problem (Leaky Signal)
 
 When we embed chunks like:
-```
-Ellie: have you been diagnosed with depression
-Participant: yes i was diagnosed three years ago
-Ellie: i see
-Ellie: how long ago was that
+
+```text
+Ellie: what got you to seek help
+Participant: uh i was just missing a lot of school
+Ellie: do you still go to therapy now
+Participant: no i haven't gone to therapy
+Ellie: why did you stop
+Participant: i didn't feel it was helping me at all
 ```
 
-The embedding captures "diagnosed with depression" from Ellie's question - NOT from the patient's clinical presentation. This is a **leaky signal**.
+The embedding captures Ellie's **follow-up probing questions** about therapy history—questions that only appear when participants indicate prior mental health treatment. This is a **leaky signal**.
+
+**Note**: The paper explicitly shows that "Have you been diagnosed with depression?" is NOT a shortcut—models disregard it. The shortcuts are the **follow-up probing questions** that come after, which indicate Ellie detected something worth exploring.
+
+**The logic models learn**:
+
+```text
+IF "do you still go to therapy now" or "why did you stop" appears in transcript
+THEN predict depression (because these questions only get asked to certain participants)
+```
+
+That's not clinical assessment—that's pattern matching on interviewer protocol.
+
+### Why This Matters for Embeddings Specifically
+
+When we do similarity search, the embedding vector captures Ellie's probing questions ("therapy", "seek help", "why did you stop") semantically. We may retrieve chunks dominated by **interviewer follow-up patterns** rather than chunks where the patient *expresses* depressive symptoms.
+
+**The embedding layer cannot distinguish**:
+- "Ellie asked follow-up questions about therapy" (interviewer protocol revealing prior assessment)
+- "Patient discussed their therapy experience" (clinical signal)
+
+Both encode similarly in vector space. The leaky signal exists at the retrieval layer, even if the LLM can distinguish speaker roles in the prompt.
+
+### Practical Implications
+
+If we remove Ellie:
+
+1. **Chunks get denser** - 8 lines of pure patient signal, not 4
+2. **Embeddings become purer** - No interviewer protocol patterns
+3. **Retrieval improves** - Forced to find actual symptom expressions
+4. **Coverage might improve** - Less noise, clearer evidence extraction
 
 ### Psychiatrist Perspective
 
@@ -219,15 +273,44 @@ chunk_preview="mm\ni try not to get angry um\nbecause i have a really bad temper
 
 ---
 
-## 11. Open Questions
+## 11. Counter-Arguments (Why LLMs Might Be Different)
+
+The one argument FOR keeping Ellie: LLMs understand "Ellie: are you depressed?" is a question, not a patient statement. The prompts explicitly say who's who.
+
+**BUT**: This doesn't help at the **embedding/retrieval layer**. Embeddings don't semantically distinguish "Ellie asked about X" from "Patient said X". The leaky signal exists in the vector space before the LLM ever sees the retrieved examples.
+
+This is the key insight: even if the LLM can distinguish speakers in the final prompt, the retrieval step has already been corrupted by interviewer content.
+
+---
+
+## 12. Verdict: Remove Ellie
+
+**Source of truth**: The 2024 ACL ClinicalNLP paper ([Burdisso et al.](https://aclanthology.org/2024.clinicalnlp-1.8/)) is the most rigorous recent analysis. Their conclusion is unambiguous:
+
+> *"More broadly, our findings underline the need for caution when incorporating interviewers' prompts into mental health diagnostic models. Interviewers often strategically adapt their questioning to probe for potential symptoms. As a result, models may learn to exploit these targeted prompts as discriminative shortcuts, rather than learning to characterize the language and behavior that are truly indicative of mental health conditions."* (Section 6: Conclusions)
+
+The paper authors likely didn't address this explicitly because:
+
+1. They may not have known about the 2024 bias research (it's recent)
+2. They may have assumed LLM semantic understanding handles it
+3. It wasn't their research focus (they focused on multi-agent architecture)
+
+**From first principles + research evidence + clinical perspective: participant-only is the correct approach.**
+
+---
+
+## 13. Open Questions
 
 1. Did the original paper authors intentionally include Ellie, or was this an oversight?
-2. Does LLM semantic understanding mitigate the shortcut problem?
+2. Does LLM semantic understanding mitigate the shortcut problem at inference time?
 3. Would regenerating embeddings with participant-only chunks improve retrieval?
 4. Should we also remove disfluencies (um, uh, mhm)?
+5. Do the known problematic interviews (373, 444, 451, 458, 480) affect current results?
 
 ---
 
 ## Notes
 
 *This investigation was prompted by noticing the paper doesn't explicitly address speaker filtering, and discovering 2024 research that strongly recommends against including interviewer utterances.*
+
+*Related GitHub Issue: [#79 - Interviewer utterance inclusion may introduce retrieval bias](https://github.com/The-Obstacle-Is-The-Way/ai-psychiatrist/issues/79)*
