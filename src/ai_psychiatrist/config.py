@@ -258,6 +258,16 @@ class EmbeddingSettings(BaseSettings):
         default=8,
         description="Minimum characters for valid evidence",
     )
+    enable_batch_query_embedding: bool = Field(
+        default=True,
+        description="Use one batch query embedding call per participant (Spec 37).",
+    )
+    query_embed_timeout_seconds: int = Field(
+        default=300,
+        ge=30,
+        le=3600,
+        description="Timeout for query embedding (single or batch) in seconds (Spec 37).",
+    )
     embeddings_file: str = Field(
         default="huggingface_qwen3_8b_paper_train",
         description="Reference embeddings basename (no extension)",

@@ -69,6 +69,33 @@ class TestJudgeAgent:
         )
 
     @pytest.mark.asyncio
+    async def test_pydantic_agent_run_error_not_masked(
+        self,
+        sample_assessment: QualitativeAssessment,
+        sample_transcript: Transcript,
+    ) -> None:
+        """Exceptions from Pydantic AI should not be converted to ValueError (Spec 39)."""
+        mock_agent = AsyncMock(spec_set=Agent)
+        mock_agent.run.side_effect = RuntimeError("boom")
+
+        with patch(
+            "ai_psychiatrist.agents.pydantic_agents.create_judge_metric_agent",
+            return_value=mock_agent,
+        ):
+            agent = JudgeAgent(
+                llm_client=MockLLMClient(),
+                pydantic_ai_settings=PydanticAISettings(enabled=True),
+                ollama_base_url="http://mock",
+            )
+
+            with pytest.raises(RuntimeError, match="boom"):
+                await agent._evaluate_metric(
+                    metric=EvaluationMetric.COHERENCE,
+                    transcript=sample_transcript.text,
+                    assessment=sample_assessment.full_text,
+                )
+
+    @pytest.mark.asyncio
     @pytest.mark.usefixtures("mock_agent_factory")
     async def test_evaluate_all_metrics(
         self,
@@ -266,7 +293,7 @@ class TestJudgeAgent:
         sample_assessment: QualitativeAssessment,
         sample_transcript: Transcript,
     ) -> None:
-        """Should raise ValueError when Pydantic AI call fails."""
+        """Should preserve the original exception type when Pydantic AI fails (Spec 39)."""
         mock_agent = AsyncMock(spec_set=Agent)
         mock_agent.run.side_effect = RuntimeError("LLM timeout")
 
@@ -279,7 +306,7 @@ class TestJudgeAgent:
                 pydantic_ai_settings=PydanticAISettings(enabled=True),
                 ollama_base_url="http://localhost:11434",
             )
-            with pytest.raises(ValueError, match="Pydantic AI evaluation failed"):
+            with pytest.raises(RuntimeError, match="LLM timeout"):
                 await agent.evaluate(sample_assessment, sample_transcript)
 
     def test_init_without_ollama_url_raises(self) -> None:

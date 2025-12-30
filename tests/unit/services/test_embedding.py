@@ -4,7 +4,7 @@ from __future__ import annotations
 
 import json
 from typing import TYPE_CHECKING, Any
-from unittest.mock import MagicMock
+from unittest.mock import AsyncMock, MagicMock
 
 import numpy as np
 import pandas as pd
@@ -17,6 +17,7 @@ from ai_psychiatrist.domain.exceptions import (
     EmbeddingDimensionMismatchError,
 )
 from ai_psychiatrist.domain.value_objects import SimilarityMatch, TranscriptChunk
+from ai_psychiatrist.infrastructure.llm.protocols import EmbeddingBatchResponse
 from ai_psychiatrist.services import embedding as embedding_service_module
 from ai_psychiatrist.services.embedding import EmbeddingService, ReferenceBundle
 from ai_psychiatrist.services.reference_store import PHQ8_COLUMN_MAP, ReferenceStore
@@ -348,6 +349,41 @@ class TestEmbeddingService:
         bundle = await service.build_reference_bundle(evidence)
 
         assert len(bundle.item_references.get(PHQ8Item.NO_INTEREST, [])) == 0
+
+    @pytest.mark.asyncio
+    async def test_build_reference_bundle_uses_embed_batch_once(
+        self,
+        monkeypatch: pytest.MonkeyPatch,
+    ) -> None:
+        llm_client = MagicMock()
+        llm_client.embed = AsyncMock()
+        llm_client.embed_batch = AsyncMock(
+            return_value=EmbeddingBatchResponse(
+                embeddings=[(1.0, 0.0), (0.0, 1.0)],
+                model="mock",
+            )
+        )
+
+        reference_store = MagicMock(spec=ReferenceStore)
+        settings = EmbeddingSettings(
+            dimension=2,
+            enable_batch_query_embedding=True,
+            query_embed_timeout_seconds=999,
+        )
+
+        service = EmbeddingService(llm_client, reference_store, settings)
+        monkeypatch.setattr(service, "_compute_similarities", MagicMock(return_value=[]))
+        monkeypatch.setattr(service, "_validate_matches", AsyncMock(return_value=[]))
+
+        evidence = {
+            PHQ8Item.SLEEP: ["I cannot sleep at night."],
+            PHQ8Item.TIRED: ["I feel exhausted most days."],
+        }
+
+        _ = await service.build_reference_bundle(evidence)
+
+        llm_client.embed_batch.assert_awaited_once()
+        llm_client.embed.assert_not_awaited()
 
     @pytest.mark.asyncio
     async def test_build_reference_bundle_logs_audit_when_enabled(
@@ -1041,6 +1077,77 @@ class TestItemTaggedFiltering:
 class TestReferenceStoreTags:
     """Tests for loading and validating tags in ReferenceStore."""
 
+    def test_tags_not_loaded_when_filter_disabled(self, tmp_path: Path) -> None:
+        """When enable_item_tag_filter=False, tags file should not be touched."""
+        transcripts_dir = tmp_path / "transcripts"
+        transcripts_dir.mkdir(parents=True, exist_ok=True)
+        embeddings_path = tmp_path / "embeddings.npz"
+
+        raw_data = {"100": [("chunk1", [1.0, 0.0])]}
+        _create_npz_embeddings(embeddings_path, raw_data)
+
+        # Invalid tags file should not matter when feature is disabled.
+        embeddings_path.with_suffix(".tags.json").write_text("INVALID JSON {{{")
+
+        data_settings = DataSettings(
+            base_dir=tmp_path,
+            transcripts_dir=transcripts_dir,
+            embeddings_path=embeddings_path,
+        )
+        embed_settings = EmbeddingSettings(dimension=2, enable_item_tag_filter=False)
+
+        store = ReferenceStore(data_settings, embed_settings)
+        store._load_embeddings()
+
+        assert store._tags == {}
+
+    def test_tags_crash_when_filter_enabled_and_missing(self, tmp_path: Path) -> None:
+        """When enable_item_tag_filter=True and tags missing, must crash."""
+        transcripts_dir = tmp_path / "transcripts"
+        transcripts_dir.mkdir(parents=True, exist_ok=True)
+        embeddings_path = tmp_path / "embeddings.npz"
+
+        raw_data = {"100": [("chunk1", [1.0, 0.0])]}
+        _create_npz_embeddings(embeddings_path, raw_data)
+
+        # No .tags.json created.
+
+        data_settings = DataSettings(
+            base_dir=tmp_path,
+            transcripts_dir=transcripts_dir,
+            embeddings_path=embeddings_path,
+        )
+        embed_settings = EmbeddingSettings(dimension=2, enable_item_tag_filter=True)
+
+        store = ReferenceStore(data_settings, embed_settings)
+
+        with pytest.raises(EmbeddingArtifactMismatchError, match="tags file missing"):
+            store._load_embeddings()
+
+    def test_tags_crash_when_filter_enabled_and_invalid(self, tmp_path: Path) -> None:
+        """When enable_item_tag_filter=True and tags invalid, must crash."""
+        transcripts_dir = tmp_path / "transcripts"
+        transcripts_dir.mkdir(parents=True, exist_ok=True)
+        embeddings_path = tmp_path / "embeddings.npz"
+
+        raw_data = {"100": [("chunk1", [1.0, 0.0])]}
+        _create_npz_embeddings(embeddings_path, raw_data)
+
+        # Invalid schema: top-level must be an object mapping pid -> per-chunk tag lists.
+        embeddings_path.with_suffix(".tags.json").write_text(json.dumps(["bad"]))
+
+        data_settings = DataSettings(
+            base_dir=tmp_path,
+            transcripts_dir=transcripts_dir,
+            embeddings_path=embeddings_path,
+        )
+        embed_settings = EmbeddingSettings(dimension=2, enable_item_tag_filter=True)
+
+        store = ReferenceStore(data_settings, embed_settings)
+
+        with pytest.raises(EmbeddingArtifactMismatchError, match="Invalid tags schema"):
+            store._load_embeddings()
+
     def test_load_tags_and_validate_length(self, tmp_path: Path) -> None:
         """Should load tags and validate lengths against texts."""
         transcripts_dir = tmp_path / "transcripts"
@@ -1062,7 +1169,7 @@ class TestReferenceStoreTags:
             transcripts_dir=transcripts_dir,
             embeddings_path=embeddings_path,
         )
-        embed_settings = EmbeddingSettings(dimension=2)
+        embed_settings = EmbeddingSettings(dimension=2, enable_item_tag_filter=True)
 
         store = ReferenceStore(data_settings, embed_settings)
         store._load_embeddings()  # Trigger load
@@ -1092,7 +1199,7 @@ class TestReferenceStoreTags:
             transcripts_dir=transcripts_dir,
             embeddings_path=embeddings_path,
         )
-        embed_settings = EmbeddingSettings(dimension=2)
+        embed_settings = EmbeddingSettings(dimension=2, enable_item_tag_filter=True)
 
         store = ReferenceStore(data_settings, embed_settings)
 
@@ -1100,7 +1207,7 @@ class TestReferenceStoreTags:
             store._load_embeddings()
 
     def test_missing_tags_file_is_handled(self, tmp_path: Path) -> None:
-        """Should handle missing tags file gracefully (return empty)."""
+        """When enable_item_tag_filter=False, missing tags file should not matter."""
         transcripts_dir = tmp_path / "transcripts"
         transcripts_dir.mkdir(parents=True, exist_ok=True)
         embeddings_path = tmp_path / "embeddings.npz"

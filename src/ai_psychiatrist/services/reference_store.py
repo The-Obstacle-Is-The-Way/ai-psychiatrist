@@ -465,15 +465,6 @@ class ReferenceStore:
 
         return normalized
 
-    def _warn_missing_tags(self, tags_path: Path) -> None:
-        """Warn once when tag filtering is enabled but tags are missing."""
-        if self._embedding_settings.enable_item_tag_filter:
-            logger.warning(
-                "Item tag filtering enabled but tags sidecar missing; "
-                "falling back to unfiltered retrieval",
-                path=str(tags_path),
-            )
-
     @staticmethod
     def _validate_tags_top_level(
         tags_data: Any,
@@ -568,38 +559,39 @@ class ReferenceStore:
         return participant_tags
 
     def _load_tags(self, texts_data: dict[str, Any]) -> None:
-        """Load and validate item tags sidecar."""
+        """Load and validate item tags sidecar.
+
+        Called only when enable_item_tag_filter=True.
+        Raises on any error (no silent fallbacks).
+        """
         tags_path = self._get_tags_path()
         if not tags_path.exists():
-            self._warn_missing_tags(tags_path)
-            self._tags = {}
-            return
+            raise EmbeddingArtifactMismatchError(
+                f"Tag filtering enabled but tags file missing: {tags_path}. "
+                "Either disable tag filtering (EMBEDDING_ENABLE_ITEM_TAG_FILTER=false) "
+                "or regenerate embeddings with tags."
+            )
 
-        try:
-            with tags_path.open("r", encoding="utf-8") as f:
-                tags_data = json.load(f)
+        with tags_path.open("r", encoding="utf-8") as f:
+            tags_data = json.load(f)
 
-            tags_data = self._validate_tags_top_level(tags_data, texts_data, tags_path)
+        tags_data = self._validate_tags_top_level(tags_data, texts_data, tags_path)
 
-            # Validate tags integrity against texts
-            valid_tags = {f"PHQ8_{item.value}" for item in PHQ8Item}
-            validated_tags: dict[int, list[list[str]]] = {}
-            for pid_str, texts in texts_data.items():
-                pid = int(pid_str)
-                validated_tags[pid] = self._validate_participant_tags(
-                    pid=pid,
-                    raw_p_tags=tags_data[pid_str],
-                    expected_len=len(texts),
-                    tags_path=tags_path,
-                    valid_tags=valid_tags,
-                )
+        # Validate tags integrity against texts
+        valid_tags = {f"PHQ8_{item.value}" for item in PHQ8Item}
+        validated_tags: dict[int, list[list[str]]] = {}
+        for pid_str, texts in texts_data.items():
+            pid = int(pid_str)
+            validated_tags[pid] = self._validate_participant_tags(
+                pid=pid,
+                raw_p_tags=tags_data[pid_str],
+                expected_len=len(texts),
+                tags_path=tags_path,
+                valid_tags=valid_tags,
+            )
 
-            self._tags = validated_tags
-            logger.info("Item tags loaded", participants=len(self._tags))
-
-        except (json.JSONDecodeError, OSError) as e:
-            logger.warning("Failed to load tags file", path=str(tags_path), error=str(e))
-            self._tags = {}
+        self._tags = validated_tags
+        logger.info("Item tags loaded", participants=len(self._tags))
 
     def _raise_or_warn_chunk_scores_provenance(self, message: str) -> None:
         if self._embedding_settings.allow_chunk_scores_prompt_hash_mismatch:
@@ -873,8 +865,12 @@ class ReferenceStore:
         texts_data = self._load_texts_json(paths.json)
         npz_data = np.load(paths.npz, allow_pickle=False)
 
-        # Load item tags if present (Spec 34)
-        self._load_tags(texts_data)
+        # Spec 38: Skip-if-disabled, crash-if-broken.
+        if self._embedding_settings.enable_item_tag_filter:
+            self._load_tags(texts_data)
+        else:
+            self._tags = {}
+            logger.debug("Tag filtering disabled, skipping tag loading")
 
         try:
             normalized = self._combine_and_normalize(texts_data, npz_data)

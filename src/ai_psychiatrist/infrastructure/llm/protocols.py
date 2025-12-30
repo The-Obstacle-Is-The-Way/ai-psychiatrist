@@ -158,6 +158,36 @@ class EmbeddingResponse:
         object.__setattr__(self, "dimension", len(self.embedding))
 
 
+@dataclass(frozen=True, slots=True)
+class EmbeddingBatchRequest:
+    """Request for embedding multiple texts in one operation."""
+
+    texts: Sequence[str]
+    model: str
+    dimension: int | None = None
+    timeout_seconds: int = 300
+
+    def __post_init__(self) -> None:
+        if not self.texts:
+            return
+        if not self.model:
+            raise ValueError("Model cannot be empty")
+        if self.dimension is not None and self.dimension < 1:
+            raise ValueError(f"dimension {self.dimension} must be >= 1")
+        if self.timeout_seconds < 1:
+            raise ValueError(f"timeout_seconds {self.timeout_seconds} must be >= 1")
+        if any(not t for t in self.texts):
+            raise ValueError("texts cannot contain empty strings")
+
+
+@dataclass(frozen=True, slots=True)
+class EmbeddingBatchResponse:
+    """Response from a batch embedding request."""
+
+    embeddings: list[tuple[float, ...]]
+    model: str
+
+
 @runtime_checkable
 class ChatClient(Protocol):
     """Protocol for chat completion clients.
@@ -209,6 +239,14 @@ class EmbeddingClient(Protocol):
         Raises:
             LLMError: If request fails.
             LLMTimeoutError: If request times out.
+        """
+        ...
+
+    @abstractmethod
+    async def embed_batch(self, request: EmbeddingBatchRequest) -> EmbeddingBatchResponse:
+        """Generate embeddings for multiple texts.
+
+        Must return embeddings in the same order as request.texts.
         """
         ...
 

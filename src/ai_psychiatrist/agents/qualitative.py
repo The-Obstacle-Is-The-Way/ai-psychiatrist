@@ -150,8 +150,12 @@ class QualitativeAssessmentAgent:
             logger.error(
                 "Pydantic AI call failed during assessment",
                 error=str(e),
+                error_type=type(e).__name__,
+                participant_id=transcript.participant_id,
+                prompt_chars=len(user_prompt),
+                temperature=temperature,
             )
-            raise ValueError(f"Pydantic AI assessment failed: {e}") from e
+            raise
 
     async def refine(
         self,
@@ -209,8 +213,12 @@ class QualitativeAssessmentAgent:
             logger.error(
                 "Pydantic AI call failed during refinement",
                 error=str(e),
+                error_type=type(e).__name__,
+                participant_id=transcript.participant_id,
+                prompt_chars=len(user_prompt),
+                temperature=temperature,
             )
-            raise ValueError(f"Pydantic AI refinement failed: {e}") from e
+            raise
 
     def _from_qualitative_output(
         self,

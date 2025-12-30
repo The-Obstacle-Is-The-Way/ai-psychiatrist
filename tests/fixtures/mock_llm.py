@@ -25,6 +25,8 @@ from ai_psychiatrist.infrastructure.llm.protocols import (
     ChatMessage,
     ChatRequest,
     ChatResponse,
+    EmbeddingBatchRequest,
+    EmbeddingBatchResponse,
     EmbeddingRequest,
     EmbeddingResponse,
 )
@@ -72,8 +74,10 @@ class MockLLMClient:
         self._embedding_function = embedding_function
         self._chat_call_count = 0
         self._embedding_call_count = 0
+        self._embedding_batch_call_count = 0
         self._chat_requests: list[ChatRequest] = []
         self._embedding_requests: list[EmbeddingRequest] = []
+        self._embedding_batch_requests: list[EmbeddingBatchRequest] = []
 
     @property
     def chat_call_count(self) -> int:
@@ -86,6 +90,11 @@ class MockLLMClient:
         return self._embedding_call_count
 
     @property
+    def embedding_batch_call_count(self) -> int:
+        """Number of batch embedding calls made."""
+        return self._embedding_batch_call_count
+
+    @property
     def chat_requests(self) -> list[ChatRequest]:
         """List of chat requests received."""
         return self._chat_requests.copy()
@@ -94,6 +103,11 @@ class MockLLMClient:
     def embedding_requests(self) -> list[EmbeddingRequest]:
         """List of embedding requests received."""
         return self._embedding_requests.copy()
+
+    @property
+    def embedding_batch_requests(self) -> list[EmbeddingBatchRequest]:
+        """List of batch embedding requests received."""
+        return self._embedding_batch_requests.copy()
 
     def add_chat_response(self, response: str | ChatResponse) -> None:
         """Add a chat response to the queue.
@@ -149,6 +163,25 @@ class MockLLMClient:
             embedding=embedding,
             model=request.model,
         )
+
+    async def embed_batch(self, request: EmbeddingBatchRequest) -> EmbeddingBatchResponse:
+        """Return mock batch embedding response (sequential fallback)."""
+        self._embedding_batch_requests.append(request)
+        self._embedding_batch_call_count += 1
+
+        embeddings: list[tuple[float, ...]] = []
+        for text in request.texts:
+            resp = await self.embed(
+                EmbeddingRequest(
+                    text=text,
+                    model=request.model,
+                    dimension=request.dimension,
+                    timeout_seconds=request.timeout_seconds,
+                )
+            )
+            embeddings.append(resp.embedding)
+
+        return EmbeddingBatchResponse(embeddings=embeddings, model=request.model)
 
     async def simple_chat(
         self,

@@ -157,6 +157,7 @@ python_version = "3.11"
 strict = true
 warn_return_any = true
 warn_unused_configs = true
+exclude = "(^_reference/|^_legacy/|^site/|^htmlcov/|^\\.venv/|^\\.uv-cache/)"
 disallow_untyped_defs = true
 disallow_incomplete_defs = true
 check_untyped_defs = true

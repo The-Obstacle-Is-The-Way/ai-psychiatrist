@@ -17,7 +17,7 @@ from ai_psychiatrist.config import get_model_name
 from ai_psychiatrist.domain.enums import PHQ8Item
 from ai_psychiatrist.domain.exceptions import EmbeddingDimensionMismatchError
 from ai_psychiatrist.domain.value_objects import EmbeddedChunk, SimilarityMatch, TranscriptChunk
-from ai_psychiatrist.infrastructure.llm.protocols import EmbeddingRequest
+from ai_psychiatrist.infrastructure.llm.protocols import EmbeddingBatchRequest, EmbeddingRequest
 from ai_psychiatrist.infrastructure.logging import get_logger
 from ai_psychiatrist.services.reference_validation import (
     NoOpReferenceValidator,
@@ -98,6 +98,8 @@ class EmbeddingService:
         self._dimension = settings.dimension
         self._top_k = settings.top_k_references
         self._min_chars = settings.min_evidence_chars
+        self._enable_batch_query_embedding = settings.enable_batch_query_embedding
+        self._query_embed_timeout_seconds = settings.query_embed_timeout_seconds
         self._model_settings = model_settings
         self._enable_retrieval_audit = settings.enable_retrieval_audit
 
@@ -138,6 +140,7 @@ class EmbeddingService:
                 text=text,
                 model=model,
                 dimension=self._dimension,
+                timeout_seconds=self._query_embed_timeout_seconds,
             )
         )
         embedding = response.embedding
@@ -315,6 +318,46 @@ class EmbeddingService:
 
         return validated_matches
 
+    async def _retrieve_item_references(
+        self,
+        *,
+        item: PHQ8Item,
+        evidence_text: str,
+        query_emb: tuple[float, ...],
+    ) -> list[SimilarityMatch]:
+        matches = self._compute_similarities(query_emb, item=item)
+        matches.sort(key=lambda x: x.similarity, reverse=True)
+
+        if self._min_reference_similarity > 0.0:
+            matches = [m for m in matches if m.similarity >= self._min_reference_similarity]
+
+        top_matches = matches[: self._top_k]
+        final_matches = await self._validate_matches(top_matches, item, evidence_text)
+
+        if self._enable_retrieval_audit:
+            evidence_key = f"PHQ8_{item.value}"
+            for rank, match in enumerate(final_matches, start=1):
+                logger.info(
+                    "retrieved_reference",
+                    item=item.value,
+                    evidence_key=evidence_key,
+                    rank=rank,
+                    similarity=match.similarity,
+                    participant_id=match.chunk.participant_id,
+                    reference_score=match.reference_score,
+                    chunk_preview=match.chunk.text[:160],
+                    chunk_chars=len(match.chunk.text),
+                )
+
+        logger.debug(
+            "Found references for item",
+            item=item.value,
+            match_count=len(final_matches),
+            top_similarity=final_matches[0].similarity if final_matches else 0,
+        )
+
+        return final_matches
+
     async def build_reference_bundle(
         self,
         evidence_dict: dict[PHQ8Item, list[str]],
@@ -336,63 +379,35 @@ class EmbeddingService:
             items_with_evidence=sum(1 for v in evidence_dict.values() if v),
         )
 
-        item_references: dict[PHQ8Item, list[SimilarityMatch]] = {}
+        item_references: dict[PHQ8Item, list[SimilarityMatch]] = {
+            item: [] for item in PHQ8Item.all_items()
+        }
 
-        for item in PHQ8Item.all_items():
-            evidence_quotes = evidence_dict.get(item, [])
+        item_texts = [
+            (item, "\n".join(evidence_dict.get(item, []))) for item in PHQ8Item.all_items()
+        ]
+        item_texts = [(item, text) for item, text in item_texts if len(text) >= self._min_chars]
 
-            if not evidence_quotes:
-                item_references[item] = []
-                continue
+        if not item_texts:
+            return ReferenceBundle(item_references=item_references)
 
-            # Concatenate evidence for embedding
-            combined_text = "\n".join(evidence_quotes)
+        model = get_model_name(self._model_settings, "embedding")
+        if self._enable_batch_query_embedding:
+            batch_request = EmbeddingBatchRequest(
+                texts=[text for _, text in item_texts],
+                model=model,
+                dimension=self._dimension,
+                timeout_seconds=self._query_embed_timeout_seconds,
+            )
+            embeddings = (await self._llm_client.embed_batch(batch_request)).embeddings
+        else:
+            embeddings = [await self.embed_text(text) for _, text in item_texts]
 
-            if len(combined_text) < self._min_chars:
-                item_references[item] = []
-                continue
-
-            # Get embedding and find similar with item-specific scores
-            query_emb = await self.embed_text(combined_text)
-
-            if not query_emb:
-                item_references[item] = []
-                continue
-
-            # Find similar chunks with this item's scores
-            matches = self._compute_similarities(query_emb, item=item)
-            matches.sort(key=lambda x: x.similarity, reverse=True)
-
-            if self._min_reference_similarity > 0.0:
-                matches = [m for m in matches if m.similarity >= self._min_reference_similarity]
-
-            top_matches = matches[: self._top_k]
-
-            # Apply validation and budgeting
-            final_matches = await self._validate_matches(top_matches, item, combined_text)
-
-            if self._enable_retrieval_audit:
-                evidence_key = f"PHQ8_{item.value}"
-                for rank, match in enumerate(final_matches, start=1):
-                    logger.info(
-                        "retrieved_reference",
-                        item=item.value,
-                        evidence_key=evidence_key,
-                        rank=rank,
-                        similarity=match.similarity,
-                        participant_id=match.chunk.participant_id,
-                        reference_score=match.reference_score,
-                        chunk_preview=match.chunk.text[:160],
-                        chunk_chars=len(match.chunk.text),
-                    )
-
-            item_references[item] = final_matches
-
-            logger.debug(
-                "Found references for item",
-                item=item.value,
-                match_count=len(final_matches),
-                top_similarity=final_matches[0].similarity if final_matches else 0,
+        for (item, evidence_text), query_emb in zip(item_texts, embeddings, strict=True):
+            item_references[item] = await self._retrieve_item_references(
+                item=item,
+                evidence_text=evidence_text,
+                query_emb=query_emb,
             )
 
         return ReferenceBundle(item_references=item_references)

@@ -9,8 +9,9 @@ from __future__ import annotations
 
 import json
 from dataclasses import dataclass
-from typing import TYPE_CHECKING, Literal, Protocol
+from typing import TYPE_CHECKING, Literal, Protocol, cast
 
+from ai_psychiatrist.domain.exceptions import LLMResponseParseError
 from ai_psychiatrist.infrastructure.logging import get_logger
 
 if TYPE_CHECKING:
@@ -72,18 +73,13 @@ class LLMReferenceValidator:
         """Validate reference using LLM."""
         prompt = self._build_prompt(request)
 
-        try:
-            response = await self._client.simple_chat(
-                user_prompt=prompt,
-                system_prompt="You are a strict data validator. Output JSON only.",
-                model=self._model,
-                temperature=0.0,  # Deterministic
-            )
-
-            return self._parse_decision(response)
-        except Exception as e:
-            logger.warning("Reference validation failed", error=str(e))
-            return "unsure"  # Fail safe -> treated as reject by default logic
+        response = await self._client.simple_chat(
+            user_prompt=prompt,
+            system_prompt="You are a strict data validator. Output JSON only.",
+            model=self._model,
+            temperature=0.0,  # Deterministic
+        )
+        return self._parse_decision(response)
 
     def _build_prompt(self, request: ReferenceValidationRequest) -> str:
         """Build validation prompt."""
@@ -106,7 +102,12 @@ Return JSON only:
 """
 
     def _parse_decision(self, response: str) -> Decision:
-        """Parse LLM response."""
+        """Parse LLM response.
+
+        Raises:
+            LLMResponseParseError: If the response is not valid JSON or does not include a valid
+                "decision" field.
+        """
         try:
             content = response.strip()
             if content.startswith("```json"):
@@ -118,11 +119,17 @@ Return JSON only:
             content = content.strip()
 
             data = json.loads(content)
-            decision = data.get("decision")
+        except json.JSONDecodeError as e:
+            raise LLMResponseParseError(response, str(e)) from e
 
-            if decision in ("accept", "reject", "unsure"):
-                return decision  # type: ignore
+        if not isinstance(data, dict):
+            raise LLMResponseParseError(
+                response,
+                f"Expected JSON object, got {type(data).__name__}",
+            )
 
-            return "unsure"
-        except json.JSONDecodeError:
-            return "unsure"
+        decision = data.get("decision")
+        if decision in ("accept", "reject", "unsure"):
+            return cast("Decision", decision)
+
+        raise LLMResponseParseError(response, f"Invalid decision: {decision!r}")

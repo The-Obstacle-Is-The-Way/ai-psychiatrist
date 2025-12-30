@@ -30,6 +30,7 @@ from ai_psychiatrist.infrastructure.llm.ollama import OllamaClient
 from ai_psychiatrist.infrastructure.llm.protocols import (
     ChatMessage,
     ChatRequest,
+    EmbeddingBatchRequest,
     EmbeddingRequest,
 )
 
@@ -128,3 +129,30 @@ class TestHuggingFaceClientMissingDeps:
 
         with pytest.raises(MissingHuggingFaceDependenciesError, match="optional dependencies"):
             await client.embed(request)
+
+    @pytest.mark.asyncio
+    async def test_embed_batch_raises_when_deps_missing(
+        self, monkeypatch: pytest.MonkeyPatch
+    ) -> None:
+        """Should raise MissingHuggingFaceDependenciesError when deps unavailable."""
+
+        def _missing(_name: str) -> Any:
+            raise ModuleNotFoundError(_name)
+
+        importlib_mod = cast("Any", hf_mod).importlib
+        monkeypatch.setattr(importlib_mod, "import_module", _missing)
+
+        client = HuggingFaceClient(
+            backend_settings=BackendSettings(backend=LLMBackend.HUGGINGFACE),
+            model_settings=ModelSettings(),
+            huggingface_settings=HuggingFaceSettings(),
+        )
+
+        request = EmbeddingBatchRequest(
+            texts=["hello"],
+            model="qwen3-embedding:8b",
+            timeout_seconds=1,
+        )
+
+        with pytest.raises(MissingHuggingFaceDependenciesError, match="optional dependencies"):
+            await client.embed_batch(request)

@@ -297,12 +297,14 @@ class QuantitativeAssessmentAgent:
         except asyncio.CancelledError:
             raise
         except Exception as e:
-            # Fail fast
             logger.error(
                 "Pydantic AI call failed during scoring",
                 error=str(e),
+                error_type=type(e).__name__,
+                prompt_chars=len(prompt),
+                temperature=temperature,
             )
-            raise ValueError(f"Pydantic AI scoring failed: {e}") from e
+            raise
 
     @staticmethod
     def _from_quantitative_output(output: QuantitativeOutput) -> dict[PHQ8Item, ItemAssessment]:
