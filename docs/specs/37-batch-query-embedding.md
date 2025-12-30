@@ -4,7 +4,7 @@
 |-------|-------|
 | **Status** | READY |
 | **Priority** | HIGH |
-| **Addresses** | BUG-033 (timeouts), BUG-034 (participant regression), BUG-036 (no caching) |
+| **Addresses** | BUG-033 (timeouts), BUG-034 (participant regression), BUG-036 (no caching), BUG-041 (MockLLMClient) |
 | **Effort** | 1–2 days |
 | **Impact** | 1 query-embedding op/participant; removes hard-coded 120s failure mode |
 
