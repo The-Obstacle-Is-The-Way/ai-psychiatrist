@@ -2,7 +2,7 @@
 
 | Field | Value |
 |-------|-------|
-| **Status** | SPEC'd |
+| **Status** | FIXED |
 | **Severity** | CRITICAL |
 | **Affects** | few_shot mode |
 | **Introduced** | Unknown (design issue) |

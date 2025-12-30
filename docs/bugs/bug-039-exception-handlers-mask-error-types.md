@@ -2,7 +2,7 @@
 
 | Field | Value |
 |-------|-------|
-| **Status** | SPEC'd |
+| **Status** | FIXED |
 | **Severity** | MEDIUM |
 | **Affects** | All agents, debugging |
 | **Introduced** | Original design |

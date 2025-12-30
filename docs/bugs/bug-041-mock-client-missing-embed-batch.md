@@ -2,7 +2,7 @@
 
 | Field | Value |
 |-------|-------|
-| **Status** | SPEC'd |
+| **Status** | FIXED |
 | **Severity** | HIGH (Blocks Spec 37) |
 | **Affects** | Test suite |
 | **Introduced** | N/A (missing implementation) |

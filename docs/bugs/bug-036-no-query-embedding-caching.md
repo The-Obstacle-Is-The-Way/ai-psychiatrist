@@ -2,7 +2,7 @@
 
 | Field | Value |
 |-------|-------|
-| **Status** | SPEC'd |
+| **Status** | FIXED |
 | **Severity** | HIGH |
 | **Affects** | few_shot mode performance |
 | **Introduced** | Original design |

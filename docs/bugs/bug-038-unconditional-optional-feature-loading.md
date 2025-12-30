@@ -2,7 +2,7 @@
 
 | Field | Value |
 |-------|-------|
-| **Status** | SPEC'd |
+| **Status** | FIXED |
 | **Severity** | HIGH |
 | **Affects** | Startup, initialization |
 | **Introduced** | Spec 34 (ab5647e) |

@@ -2,7 +2,7 @@
 
 | Field | Value |
 |-------|-------|
-| **Status** | SPEC'd |
+| **Status** | FIXED |
 | **Severity** | CRITICAL |
 | **Affects** | few_shot mode |
 | **Introduced** | Between commits 5e62455 and be35e35 |

@@ -2,7 +2,7 @@
 
 | Field | Value |
 |-------|-------|
-| **Status** | SPEC'd |
+| **Status** | FIXED |
 | **Severity** | MEDIUM |
 | **Affects** | Test suite maintainability |
 | **Introduced** | Original design |

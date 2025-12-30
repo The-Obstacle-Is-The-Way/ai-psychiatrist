@@ -2,7 +2,7 @@
 
 | Field | Value |
 |-------|-------|
-| **Status** | SPEC'd |
+| **Status** | FIXED |
 | **Severity** | HIGH |
 | **Affects** | ReferenceStore initialization |
 | **Introduced** | Commit ab5647e (Spec 34) |

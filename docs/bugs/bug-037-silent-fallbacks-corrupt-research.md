@@ -2,7 +2,7 @@
 
 | Field | Value |
 |-------|-------|
-| **Status** | SPEC'd |
+| **Status** | FIXED |
 | **Severity** | HIGH |
 | **Affects** | Optional features (few-shot tag filtering + reference validation) |
 | **Introduced** | Original design |
