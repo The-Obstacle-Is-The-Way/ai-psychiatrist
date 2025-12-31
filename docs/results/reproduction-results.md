@@ -1,7 +1,7 @@
 # Paper Reproduction Results
 
-**Last Updated**: 2025-12-29
-**Status**: Baseline is Post Spec 31/32 (paper-parity format). Spec 33/34 rerun pending.
+**Last Updated**: 2025-12-30
+**Status**: Spec 33+34 tested (Run 5). No improvement. Waiting on Spec 35 scorer model decision.
 
 > **For complete run history**: See [run-history.md](./run-history.md) for comprehensive documentation of all runs, code changes, and statistical analyses.
 
@@ -51,18 +51,22 @@ See [Statistical Methodology](../reference/statistical-methodology-aurc-augrc.md
 
 | Run | Date | Commit | Change | Zero-shot AURC | Few-shot AURC |
 |-----|------|--------|--------|----------------|---------------|
-| Latest | 2025-12-29 | `7d54d98` | Spec 31/32 paper-parity | **0.134** | 0.193 |
-| Previous | 2025-12-27 | `0a98662` | Pre-Spec 31/32 | 0.134 | 0.214 |
+| **Run 5** | 2025-12-30 | `36995f0` | Spec 33+34 | 0.138 | **0.213** (worse) |
+| Run 3 | 2025-12-29 | `7d54d98` | Spec 31/32 paper-parity | **0.134** | 0.193 |
+| Run 2 | 2025-12-27 | `0a98662` | Pre-Spec 31/32 | 0.134 | 0.214 |
 
 | Run | Date | Commit | Change | Zero-shot AUGRC | Few-shot AUGRC |
 |-----|------|--------|--------|-----------------|----------------|
-| Latest | 2025-12-29 | `7d54d98` | Spec 31/32 paper-parity | **0.037** | 0.065 |
-| Previous | 2025-12-27 | `0a98662` | Pre-Spec 31/32 | 0.037 | 0.074 |
+| **Run 5** | 2025-12-30 | `36995f0` | Spec 33+34 | 0.039 | **0.073** (worse) |
+| Run 3 | 2025-12-29 | `7d54d98` | Spec 31/32 paper-parity | **0.037** | 0.065 |
+| Run 2 | 2025-12-27 | `0a98662` | Pre-Spec 31/32 | 0.037 | 0.074 |
 
-**Spec 31/32 Impact**:
-- Few-shot AURC: 0.214 → 0.193 (**-10%**, better)
-- Few-shot AUGRC: 0.074 → 0.065 (**-12%**, better)
-- Zero-shot: unchanged (doesn't use reference examples)
+**Run 5 (Spec 33+34) Impact**:
+- Few-shot AURC: 0.193 → 0.213 (**+10%**, worse)
+- Few-shot AUGRC: 0.065 → 0.073 (**+12%**, worse)
+- Zero-shot: essentially unchanged (~3% variance)
+
+**Conclusion**: Domain filtering (Spec 34) and quality guardrails (Spec 33) did NOT help. The fundamental problem is chunk-level scoring - see `HYPOTHESIS-FEWSHOT-DESIGN-FLAW.md`.
 
 **Note**: AURC/AUGRC are the valid metrics (lower = better). MAE comparisons across different coverages are not coverage-adjusted.
 
@@ -302,9 +306,11 @@ uv run python scripts/reproduce_results.py --split paper
 
 1. [x] ~~Complete few-shot evaluation~~ (Done 2025-12-28)
 2. [x] ~~Compare with paper using AURC/AUGRC~~ (Done - zero-shot wins)
-3. [ ] **Investigate why zero-shot beats few-shot** (counterintuitive result)
-4. [ ] Investigate PID 339 transcript to understand 8/8 N/A
-5. [ ] Analyze few-shot reference quality and embedding matches
+3. [x] ~~Investigate why zero-shot beats few-shot~~ (See `HYPOTHESIS-FEWSHOT-DESIGN-FLAW.md`)
+4. [x] ~~Run Spec 33+34 ablation~~ (Run 5 - no improvement)
+5. [ ] **Resolve Spec 35 scorer model decision** (see `PROBLEM-SPEC35-SCORER-MODEL-GAP.md`)
+6. [ ] Generate chunk scores (~4-9 hours)
+7. [ ] Run Spec 35+36 ablation
 
 ---
 

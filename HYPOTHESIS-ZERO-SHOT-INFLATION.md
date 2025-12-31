@@ -76,7 +76,7 @@ Participant: i was feeling really down and couldn't sleep
 **Key Insight**: Ellie asks DIRECT questions about PHQ-8 symptoms:
 - "What are you like when you don't get enough sleep?" → PHQ8_Sleep
 - "Do you have trouble concentrating?" → PHQ8_Concentrating
-- "Have you been diagnosed with depression?" → PHQ8_Depressed
+- "Have you been diagnosed with depression?" / therapy-history follow-ups → confounding *mental health history* cues
 
 ---
 
@@ -95,6 +95,16 @@ Participant: i was feeling really down and couldn't sleep
 **Implication for Us**: Our zero-shot prompt gives the LLM access to these same shortcuts.
 
 ---
+
+## What The Current Code Actually Does
+
+This is not hypothetical — it’s the default pipeline today:
+
+- Transcripts include **all speakers** (no participant-only filtering): `src/ai_psychiatrist/services/transcript.py`
+- The quantitative scorer sees the full transcript inside `<transcript>...</transcript>` tags: `src/ai_psychiatrist/agents/prompts/quantitative.py`
+
+So “participant-only zero-shot” is a deliberate experimental condition we must implement explicitly (e.g., by
+filtering transcript lines where the speaker is `"Participant"`).
 
 ## What We Already Documented
 

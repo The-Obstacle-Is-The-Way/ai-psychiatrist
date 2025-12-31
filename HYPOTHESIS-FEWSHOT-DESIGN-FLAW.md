@@ -15,7 +15,10 @@ The paper's few-shot implementation has a **fundamental design flaw**: participa
 2. **Explainability** (grounded, auditable reasoning vs. hallucinated CoT)
 3. **Reproducibility** (same retrieval = same explanation)
 
-The solution is Spec 35 + 36, which we've already designed.
+**Status check (codebase)**:
+- Spec 34 (item-tag filtering), Spec 35 (chunk-level scoring), and Spec 36 (CRAG-style validation) are **implemented**.
+- Spec 35 is still **operationally blocked** until we pick a disjoint scorer model and generate the
+  `<embeddings>.chunk_scores.json` sidecar (see `PROBLEM-SPEC35-SCORER-MODEL-GAP.md`).
 
 ---
 
@@ -58,12 +61,26 @@ Line 195-202: CHUNK 95 (maybe discusses sleep)
 
 #### The Flaw: Score Assignment
 
-From `reference_store.py:976-1002`:
+From `src/ai_psychiatrist/services/reference_store.py:976` (paper-parity `reference_score_source="participant"`):
 ```python
 def get_score(self, participant_id: int, item: PHQ8Item) -> int | None:
+    df = self._load_scores()
+    if df.empty:
+        return None
+
     row = df[df["Participant_ID"] == participant_id]
+
+    if row.empty:
+        return None
+
     col_name = PHQ8_COLUMN_MAP.get(item)  # e.g., "PHQ8_Sleep"
-    return int(row[col_name].iloc[0])     # Returns participant's overall score
+    if col_name is None or col_name not in row.columns:
+        return None
+
+    try:
+        return int(row[col_name].iloc[0])  # Participant-level item score
+    except (ValueError, TypeError):
+        return None
 ```
 
 **EVERY chunk from a participant gets the SAME score**, regardless of content.
@@ -100,8 +117,8 @@ Both chunks get the SAME score because it's the participant's overall score, not
 
 | Approach | Result | Source |
 |----------|--------|--------|
-| Naive Few-Shot | 78.90% F1 | RED paper |
-| RAG with filtering | **90.00% F1** | RED paper |
+| Naive RAG | 78.90% F1 | RED paper (depression detection) |
+| RAG + Judge/Filtering | **90.00% F1** | RED paper (depression detection) |
 
 Key 2025 papers:
 - [RED: Personalized RAG for Depression](https://arxiv.org/html/2503.01315) - Symptom-aligned retrieval + Judge module
@@ -114,9 +131,14 @@ Key 2025 papers:
 |------|--------------|-------|
 | **Spec 34** | Tag chunks with relevant PHQ-8 items at index time | Only retrieve Sleep-tagged chunks for Sleep queries |
 | **Spec 35** | Score each chunk individually via LLM | Chunks get accurate, content-based scores |
-| **Spec 36** | Validate relevance at query time (CRAG) | Reject irrelevant chunks before use |
+| **Spec 36** | Validate references at query time (CRAG-style) | Reject irrelevant/contradictory chunks before use (does not create new scores) |
 
-**Together = Modern CRAG (2025 best practice)**
+**Together = CRAG-style RAG pipeline**
+
+Important nuance:
+- Spec 36 is a *filter* (relevance/contradiction checking) and cannot magically make a participant-level
+  `reference_score` correct for a chunk.
+- The only automated fix for the score/label mismatch is Spec 35 (or human-curated chunk scores).
 
 ```
 Naive Few-Shot (paper)           = Naive RAG
@@ -205,12 +227,12 @@ The paper's methodology retrieves by **topic similarity** but labels by **partic
 ## Recommendations
 
 ### Immediate
-1. **Enable Spec 36** for current runs (CRAG validation)
+1. **Enable Spec 36** as an ablation if runtime budget allows (it’s a filter, not a relabeler)
 2. **Run participant-only** as the true baseline
 3. **Compare**: Zero-shot (participant-only) vs Few-shot + Spec 36
 
 ### Future
-1. **Enable Spec 35** for chunk-level scoring
+1. **Enable Spec 35** for chunk-level scoring (requires scorer model + sidecar generation)
 2. **Full CRAG pipeline**: Spec 34 + 35 + 36
 3. **Consider**: Is the LLM overhead worth it vs zero-shot?
 
