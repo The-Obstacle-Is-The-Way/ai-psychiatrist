@@ -10,7 +10,7 @@
 
 Investigation identified divergences between our implementation and the paper's notebook.
 
-See **[BUG-031: Few-Shot Retrieval Issues](../bugs/bug-031-few-shot-retrieval-mismatch.md)** for full analysis.
+See **[BUG-031: Few-Shot Retrieval Issues](../archive/bugs/bug-031-few-shot-retrieval-mismatch.md)** for full analysis.
 
 ### Verified Divergences
 
