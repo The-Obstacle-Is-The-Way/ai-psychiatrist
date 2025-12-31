@@ -1,16 +1,31 @@
 """Unit tests for scripts/generate_embeddings.py fail-fast behavior (Spec 40)."""
 
+import json
+from pathlib import Path
+from types import SimpleNamespace
+from typing import Any
 from unittest.mock import AsyncMock, MagicMock
 
 import pytest
 
 # Import path is set up in conftest
+from scripts import generate_embeddings as generate_embeddings_module
 from scripts.generate_embeddings import (
     EXIT_FAILURE,
     EXIT_PARTIAL,
     EXIT_SUCCESS,
     EmbeddingGenerationError,
+    GenerationConfig,
+    GenerationResult,
     process_participant,
+    save_embeddings,
+)
+
+from ai_psychiatrist.config import (
+    DataSettings,
+    EmbeddingBackendSettings,
+    EmbeddingSettings,
+    ModelSettings,
 )
 
 
@@ -280,3 +295,92 @@ class TestEmbeddingGenerationError:
                 raise EmbeddingGenerationError("wrapped", participant_id=100) from e
         except EmbeddingGenerationError as wrapped:
             assert wrapped.__cause__ is original
+
+
+def _make_generation_config(tmp_path: Path, *, write_item_tags: bool) -> GenerationConfig:
+    base_dir = tmp_path / "data"
+    base_dir.mkdir()
+    transcripts_dir = base_dir / "transcripts"
+    transcripts_dir.mkdir()
+
+    return GenerationConfig(
+        data_settings=DataSettings(base_dir=base_dir, transcripts_dir=transcripts_dir),
+        embedding_settings=EmbeddingSettings(),
+        backend_settings=EmbeddingBackendSettings(),
+        model_settings=ModelSettings(),
+        chunk_size=8,
+        step_size=2,
+        dimension=3,
+        min_chars=10,
+        model="qwen3-embedding:8b",
+        resolved_model="qwen3-embedding:8b",
+        output_path=tmp_path / "out.npz",
+        split="paper-train",
+        dry_run=False,
+        write_item_tags=write_item_tags,
+        tagger_type="keyword",
+        keywords_path=tmp_path / "keywords.yaml",
+        allow_partial=False,
+    )
+
+
+class TestSaveEmbeddingsAtomicWrites:
+    def test_save_embeddings_leaves_no_temp_files(self, tmp_path: Path) -> None:
+        config = _make_generation_config(tmp_path, write_item_tags=True)
+        result = GenerationResult(
+            embeddings={1: [("chunk", [0.1, 0.2, 0.3])]},
+            tags={1: [["PHQ8_Sleep"]]},
+            total_chunks=1,
+        )
+
+        save_embeddings(result, config)
+
+        assert config.output_path.exists()
+        assert config.output_path.with_suffix(".json").exists()
+        assert config.output_path.with_suffix(".meta.json").exists()
+        assert config.output_path.with_suffix(".tags.json").exists()
+
+        assert not config.output_path.with_suffix(".tmp.npz").exists()
+        assert not config.output_path.with_suffix(".tmp.json").exists()
+        assert not config.output_path.with_suffix(".tmp.meta.json").exists()
+        assert not config.output_path.with_suffix(".tmp.tags.json").exists()
+
+    def test_save_embeddings_cleans_temp_files_on_write_failure(
+        self,
+        tmp_path: Path,
+        monkeypatch: pytest.MonkeyPatch,
+    ) -> None:
+        config = _make_generation_config(tmp_path, write_item_tags=True)
+        result = GenerationResult(
+            embeddings={1: [("chunk", [0.1, 0.2, 0.3])]},
+            tags={1: [["PHQ8_Sleep"]]},
+            total_chunks=1,
+        )
+
+        original_dump = json.dump
+        call_count = 0
+
+        def flaky_dump(obj: Any, fp: Any, *args: Any, **kwargs: Any) -> None:
+            nonlocal call_count
+            call_count += 1
+            if call_count == 2:
+                raise RuntimeError("boom")
+            original_dump(obj, fp, *args, **kwargs)
+
+        monkeypatch.setattr(
+            generate_embeddings_module,
+            "json",
+            SimpleNamespace(dump=flaky_dump),
+        )
+        with pytest.raises(RuntimeError, match="boom"):
+            save_embeddings(result, config)
+
+        assert not config.output_path.exists()
+        assert not config.output_path.with_suffix(".json").exists()
+        assert not config.output_path.with_suffix(".meta.json").exists()
+        assert not config.output_path.with_suffix(".tags.json").exists()
+
+        assert not config.output_path.with_suffix(".tmp.npz").exists()
+        assert not config.output_path.with_suffix(".tmp.json").exists()
+        assert not config.output_path.with_suffix(".tmp.meta.json").exists()
+        assert not config.output_path.with_suffix(".tmp.tags.json").exists()

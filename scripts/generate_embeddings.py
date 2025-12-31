@@ -686,26 +686,23 @@ def save_embeddings(  # noqa: PLR0915
     if config.write_item_tags:
         print(f"Saving item tags to {tags_path}...")
 
-    # Collect all temp files created (for cleanup on failure)
-    created_temps: list[Path] = []
+    temp_paths = [tmp_npz_path, tmp_json_path, tmp_meta_path]
+    if config.write_item_tags:
+        temp_paths.append(tmp_tags_path)
 
     try:
         # Write all temp files first
         np.savez_compressed(str(tmp_npz_path), **npz_arrays)
-        created_temps.append(tmp_npz_path)
 
         with tmp_json_path.open("w", encoding="utf-8") as f:
             json.dump(json_texts, f, indent=2)
-        created_temps.append(tmp_json_path)
 
         with tmp_meta_path.open("w", encoding="utf-8") as f:
             json.dump(metadata, f, indent=2)
-        created_temps.append(tmp_meta_path)
 
         if config.write_item_tags:
             with tmp_tags_path.open("w", encoding="utf-8") as f:
                 json.dump(json_tags, f, indent=2)
-            created_temps.append(tmp_tags_path)
 
         # All writes succeeded - atomically rename temp → final
         tmp_npz_path.replace(npz_path)
@@ -716,7 +713,7 @@ def save_embeddings(  # noqa: PLR0915
 
     except Exception:
         # Clean up any temp files created
-        for tmp_path in created_temps:
+        for tmp_path in temp_paths:
             with contextlib.suppress(OSError):
                 tmp_path.unlink(missing_ok=True)
         raise
