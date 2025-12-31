@@ -11,6 +11,8 @@ from ai_psychiatrist.config import DataSettings
 from ai_psychiatrist.domain.enums import PHQ8Item
 from ai_psychiatrist.services.ground_truth import GroundTruthService
 
+pytestmark = pytest.mark.unit
+
 
 def _make_data_settings(train_csv: Path, dev_csv: Path | None = None) -> DataSettings:
     """Create DataSettings for GroundTruthService tests."""

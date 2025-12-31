@@ -12,6 +12,8 @@ from ai_psychiatrist.domain.entities import Transcript
 from ai_psychiatrist.domain.exceptions import EmptyTranscriptError, TranscriptError
 from ai_psychiatrist.services.transcript import TranscriptService
 
+pytestmark = pytest.mark.unit
+
 
 def _make_data_settings(transcripts_dir: Path, base_dir: Path | None = None) -> DataSettings:
     """Create DataSettings for tests (avoid relying on local filesystem layout)."""

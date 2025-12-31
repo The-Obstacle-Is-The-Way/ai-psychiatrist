@@ -299,10 +299,10 @@ Timeout is appropriate for most transcripts (87% success rate). Failures occur o
 
 For users with concurrent GPU workloads or larger transcripts:
 ```bash
-OLLAMA_TIMEOUT_SECONDS=300  # or 360 for very large transcripts
+OLLAMA_TIMEOUT_SECONDS=600  # default; increase (e.g. 3600) for very large transcripts / slow hardware
 ```
 
-Timeout behavior is environmental and workload-dependent. The current default is 300s, but very
+Timeout behavior is environmental and workload-dependent. The current default is 600s, but very
 long transcripts may still require a higher value.
 
 ---
@@ -486,7 +486,7 @@ uv run python scripts/reproduce_results.py --split paper --few-shot-only
 |------|---------|
 | `scripts/reproduce_results.py` | Batch evaluation script |
 | `docs/results/reproduction-results.md` | Results documentation |
-| `docs/bugs/bug-018-reproduction-friction.md` | This file |
+| `docs/archive/bugs/bug-018-reproduction-friction.md` | This file |
 | `data/outputs/reproduction_results_*.json` | Raw results |
 
 ---
@@ -595,7 +595,7 @@ keywords are in `src/ai_psychiatrist/resources/phq8_keywords.yaml`.
 
 | Item | Status | Notes |
 |------|--------|-------|
-| Paper splits | ✅ Exist | 58/43/41 counts match paper; membership not published (see `docs/bugs/gap-001-paper-unspecified-parameters.md`) |
+| Paper splits | ✅ Exist | 58/43/41 counts match paper; membership not published (see `docs/archive/bugs/gap-001-paper-unspecified-parameters.md`) |
 | AVEC embeddings | ✅ Exist | `reference_embeddings.npz` (107 participants) |
 | Paper embeddings | ⚠️ Missing | Had to generate with `--split paper-train` |
 | Transcripts | ✅ Exist | 189 participant folders (plus directory entries) |

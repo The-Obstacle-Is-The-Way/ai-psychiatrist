@@ -82,7 +82,7 @@ Configuration is managed via environment variables and `.env`.
 *   **Key Parameters:**
     *   `EMBEDDING_DIMENSION`: 4096 (Paper Appendix D).
     *   `FEEDBACK_SCORE_THRESHOLD`: 3 (Paper Section 2.3.1).
-    *   `OLLAMA_TIMEOUT_SECONDS`: 300 (for large transcripts).
+    *   `OLLAMA_TIMEOUT_SECONDS`: 600 (for large transcripts).
 
 ## Key Files
 *   `server.py`: Entry point for the FastAPI application.
@@ -119,4 +119,4 @@ python scripts/score_reference_chunks.py \
 python scripts/reproduce_results.py --mode both --split paper-test
 ```
 
-**Note**: `--allow-same-model` is acceptable per 2025 research (SELF-ICL, ACL findings). Ablate with MedGemma if desired.
+**Note**: Use `--allow-same-model` only if you explicitly want a same-model baseline; otherwise prefer a disjoint scorer model for defensibility. Ablate against MedGemma/disjoint models if feasible.

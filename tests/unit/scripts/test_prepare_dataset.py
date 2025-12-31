@@ -12,6 +12,8 @@ import pytest
 if TYPE_CHECKING:
     from collections.abc import Callable
 
+pytestmark = pytest.mark.unit
+
 
 class ExtractTranscriptsFn(Protocol):
     """Callable type for extract_transcripts (supports keyword args)."""

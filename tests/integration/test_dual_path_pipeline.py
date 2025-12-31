@@ -46,6 +46,8 @@ from tests.fixtures.mock_llm import MockLLMClient
 if TYPE_CHECKING:
     from collections.abc import Generator
 
+pytestmark = pytest.mark.integration
+
 # Sample transcript representing a DAIC-WOZ interview
 SAMPLE_DAIC_TRANSCRIPT = """Ellie: Hello, my name is Ellie. I'm here to learn about you. I'll ask a few questions to get us started.
 

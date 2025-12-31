@@ -36,6 +36,8 @@ from ai_psychiatrist.domain.enums import AssessmentMode, PHQ8Item, SeverityLevel
 from ai_psychiatrist.domain.value_objects import ItemAssessment
 from tests.fixtures.mock_llm import MockLLMClient
 
+pytestmark = pytest.mark.unit
+
 
 def _to_smart_quotes(text: str) -> str:
     """Convert ASCII quotes to smart quotes for parsing tests."""

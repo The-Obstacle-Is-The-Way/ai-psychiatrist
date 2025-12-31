@@ -15,6 +15,8 @@ from ai_psychiatrist.infrastructure.llm.protocols import (
     EmbeddingResponse,
 )
 
+pytestmark = pytest.mark.unit
+
 
 class TestChatMessage:
     """Tests for ChatMessage value object."""

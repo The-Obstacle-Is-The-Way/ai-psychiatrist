@@ -2,7 +2,7 @@
 
 Quick reference for all implemented features and how to enable them.
 
-**Last Updated**: 2025-12-30
+**Last Updated**: 2025-12-31
 
 ---
 
@@ -254,25 +254,31 @@ EMBEDDING_ENABLE_REFERENCE_VALIDATION=true
 
 ## Recommended Research Workflow
 
-1. **Baseline Run** (paper-parity):
+1. **Baseline Run** (paper-method baseline):
    ```bash
-   # Zero-shot + few-shot with Spec 33+34
+   # Use the "Paper-method baseline config" above, then run:
    uv run python scripts/reproduce_results.py --split paper-test
    ```
 
-2. **Ablation A** (add chunk scoring):
+2. **Patched Baseline** (retrieval-only improvements):
+   ```bash
+   # Enable Spec 33+34 in your .env (see "Patched reproduction baseline config" above), then:
+   uv run python scripts/reproduce_results.py --split paper-test
+   ```
+
+3. **Ablation A** (add chunk scoring):
    ```bash
    EMBEDDING_REFERENCE_SCORE_SOURCE=chunk \
      uv run python scripts/reproduce_results.py --split paper-test
    ```
 
-3. **Ablation B** (add CRAG validation):
+4. **Ablation B** (add CRAG validation):
    ```bash
    EMBEDDING_ENABLE_REFERENCE_VALIDATION=true \
      uv run python scripts/reproduce_results.py --split paper-test
    ```
 
-4. **Full Stack** (all features):
+5. **Full Stack** (all features):
    ```bash
    EMBEDDING_REFERENCE_SCORE_SOURCE=chunk \
    EMBEDDING_ENABLE_REFERENCE_VALIDATION=true \

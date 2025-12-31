@@ -268,7 +268,7 @@ def load_combined_data(data_dir: Path) -> pd.DataFrame:
         raise ValueError(
             f"Missing PHQ-8 item values for participants: {affected}. "
             f"Run 'uv run python scripts/patch_missing_phq8_values.py --apply' to fix. "
-            f"See docs/bugs/bug-025-missing-phq8-ground-truth-paper-test.md"
+            f"See docs/archive/bugs/bug-025-missing-phq8-ground-truth-paper-test.md"
         )
 
     combined["PHQ8_Total"] = combined[item_cols].sum(axis=1).astype(int)

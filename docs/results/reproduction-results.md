@@ -1,7 +1,7 @@
 # Paper Reproduction Results
 
 **Last Updated**: 2025-12-30
-**Status**: Spec 33+34 tested (Run 5). No improvement. Waiting on Spec 35 scorer model decision.
+**Status**: Spec 33+34 tested (Run 5). No improvement. Spec 35 is implemented and ready once chunk scores are generated.
 
 > **For complete run history**: See [run-history.md](./run-history.md) for comprehensive documentation of all runs, code changes, and statistical analyses.
 
@@ -252,7 +252,7 @@ The model could not make any predictions for participant 339:
 
 Participant 319 was missing `PHQ8_Sleep` in the upstream AVEC2017 dataset. This was deterministically reconstructed to `2` based on the mathematical invariant `PHQ8_Score = sum(items)`.
 
-See: `docs/bugs/bug-025-missing-phq8-ground-truth-paper-test.md`
+See: `docs/archive/bugs/bug-025-missing-phq8-ground-truth-paper-test.md`
 
 ---
 
@@ -308,9 +308,9 @@ uv run python scripts/reproduce_results.py --split paper
 2. [x] ~~Compare with paper using AURC/AUGRC~~ (Done - zero-shot wins)
 3. [x] ~~Investigate why zero-shot beats few-shot~~ (See `HYPOTHESIS-FEWSHOT-DESIGN-FLAW.md`)
 4. [x] ~~Run Spec 33+34 ablation~~ (Run 5 - no improvement)
-5. [ ] **Resolve Spec 35 scorer model decision** (see `PROBLEM-SPEC35-SCORER-MODEL-GAP.md`)
-6. [ ] Generate chunk scores (~4-9 hours)
-7. [ ] Run Spec 35+36 ablation
+5. [ ] Generate chunk scores (Spec 35 preprocessing; see `PROBLEM-SPEC35-SCORER-MODEL-GAP.md`)
+6. [ ] Run Spec 35 ablation (chunk score source)
+7. [ ] Run Spec 35 + 36 ablation (CRAG validation)
 
 ---
 

@@ -4,6 +4,7 @@ from __future__ import annotations
 
 from typing import TYPE_CHECKING
 
+import pytest
 from scripts.reproduce_results import print_run_configuration
 
 from ai_psychiatrist.config import (
@@ -17,7 +18,7 @@ from ai_psychiatrist.config import (
 if TYPE_CHECKING:
     from pathlib import Path
 
-    import pytest
+pytestmark = pytest.mark.unit
 
 
 def test_print_run_configuration_displays_embedding_settings(

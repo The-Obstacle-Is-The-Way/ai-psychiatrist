@@ -11,6 +11,8 @@ from ai_psychiatrist.metrics.bootstrap import (
 )
 from ai_psychiatrist.metrics.selective_prediction import ItemPrediction, compute_cmax
 
+pytestmark = pytest.mark.unit
+
 
 @pytest.fixture
 def items_participant_1() -> list[ItemPrediction]:

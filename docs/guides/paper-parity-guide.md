@@ -2,7 +2,7 @@
 
 **Audience**: Researchers wanting to compare results with the paper
 **Related**: [SPEC-003](../archive/specs/SPEC-003-backfill-toggle.md) | [Backfill Explained](../concepts/backfill-explained.md) | [Reproduction Notes](../results/reproduction-results.md)
-**Last Updated**: 2025-12-26
+**Last Updated**: 2025-12-31
 
 ---
 
@@ -121,7 +121,7 @@ QUANTITATIVE_ENABLE_KEYWORD_BACKFILL=false  # Default - paper parity
 QUANTITATIVE_TRACK_NA_REASONS=true
 
 # Pydantic AI (Spec 13 - enabled by default since 2025-12-26)
-# Adds structured validation + automatic retries; falls back to legacy on failure
+# Adds structured validation + automatic retries; no legacy fallback (fail-fast on errors)
 PYDANTIC_AI_ENABLED=true
 PYDANTIC_AI_RETRIES=3
 ```

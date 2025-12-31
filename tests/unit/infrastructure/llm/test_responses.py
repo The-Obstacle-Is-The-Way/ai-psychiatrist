@@ -19,6 +19,8 @@ from ai_psychiatrist.infrastructure.llm.responses import (
 )
 from tests.fixtures.mock_llm import MockLLMClient
 
+pytestmark = pytest.mark.unit
+
 
 class TestExtractJson:
     """Tests for JSON extraction from LLM responses."""

@@ -242,5 +242,5 @@ one-line fix that significantly improves developer experience.
 ## References
 
 - GitHub Issue #54: ANSI escape codes in log files
-- BUG-025 doc (if created): docs/bugs/bug-025-ansi-escape-codes-in-log-files.md
+- BUG-025 doc (if created): docs/archive/bugs/bug-025-ansi-escape-codes-in-log-files.md
 - structlog ConsoleRenderer: https://www.structlog.org/en/stable/api.html#structlog.dev.ConsoleRenderer

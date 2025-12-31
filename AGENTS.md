@@ -76,4 +76,4 @@ python scripts/score_reference_chunks.py \
 python scripts/reproduce_results.py --mode both --split paper-test
 ```
 
-**Note**: `--allow-same-model` is acceptable per 2025 research (SELF-ICL, ACL findings). Ablate with MedGemma if desired.
+**Note**: Use `--allow-same-model` only if you explicitly want a same-model baseline; otherwise prefer a disjoint scorer model for defensibility. Ablate against MedGemma/disjoint models if feasible.

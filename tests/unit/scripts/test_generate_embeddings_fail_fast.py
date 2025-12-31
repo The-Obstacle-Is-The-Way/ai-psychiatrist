@@ -28,6 +28,8 @@ from ai_psychiatrist.config import (
     ModelSettings,
 )
 
+pytestmark = pytest.mark.unit
+
 
 class TestProcessParticipantStrictMode:
     """Tests for default strict mode (allow_partial=False)."""

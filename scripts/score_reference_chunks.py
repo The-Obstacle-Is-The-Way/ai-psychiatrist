@@ -40,7 +40,9 @@ from ai_psychiatrist.config import (
     get_settings,
     resolve_reference_embeddings_path_from_embeddings_file,
 )
+from ai_psychiatrist.domain.exceptions import LLMResponseParseError
 from ai_psychiatrist.infrastructure.llm.factory import create_llm_client
+from ai_psychiatrist.infrastructure.llm.responses import extract_json_from_response
 from ai_psychiatrist.infrastructure.logging import get_logger, setup_logging
 from ai_psychiatrist.services.chunk_scoring import (
     PHQ8_ITEM_KEY_SET,
@@ -78,7 +80,7 @@ class ScoringResult:
     errors: int
 
 
-async def score_chunk(
+async def score_chunk(  # noqa: PLR0911
     client: SimpleChatClient,
     chunk_text: str,
     model: str,
@@ -94,18 +96,29 @@ async def score_chunk(
             model=model,
             temperature=temperature,
         )
+    except Exception as e:
+        logger.warning(
+            "Scoring failed: LLM request error",
+            error=str(e),
+            error_type=type(e).__name__,
+            chunk_preview=chunk_text[:50],
+        )
+        return None
 
-        content = response.strip()
-        # Strip markdown code blocks if present (e.g., ```json ... ```)
-        if content.startswith("```"):
-            lines = content.split("\n")
-            # Remove first line (```json) and last line (```)
-            lines = lines[1:-1] if lines[-1].strip() == "```" else lines[1:]
-            content = "\n".join(lines).strip()
-        data = json.loads(content)
+    try:
+        data = extract_json_from_response(response)
+    except LLMResponseParseError as e:
+        logger.warning(
+            "Scoring failed: invalid JSON response",
+            error=str(e),
+            error_type=type(e).__name__,
+            chunk_preview=chunk_text[:50],
+        )
+        return None
 
+    try:
         if not isinstance(data, dict):
-            logger.warning("Scorer output is not a dict", content=content[:50])
+            logger.warning("Scorer output is not a dict", response_preview=response[:50])
             return None
 
         key_set = set(data)
@@ -116,7 +129,7 @@ async def score_chunk(
                 "Scorer output has invalid key set",
                 missing=missing[:3],
                 extra=extra[:3],
-                content=content[:50],
+                response_preview=response[:50],
             )
             return None
 
@@ -136,8 +149,13 @@ async def score_chunk(
 
         return validated
 
-    except (json.JSONDecodeError, Exception) as e:
-        logger.warning(f"Scoring failed: {e}", chunk_preview=chunk_text[:50])
+    except Exception as e:
+        logger.warning(
+            "Scoring failed",
+            error=str(e),
+            error_type=type(e).__name__,
+            chunk_preview=chunk_text[:50],
+        )
         return None
 
 

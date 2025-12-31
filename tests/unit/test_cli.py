@@ -5,6 +5,8 @@ import pytest
 import ai_psychiatrist
 from ai_psychiatrist.cli import main
 
+pytestmark = pytest.mark.unit
+
 
 class TestCLI:
     """Test CLI entry point."""

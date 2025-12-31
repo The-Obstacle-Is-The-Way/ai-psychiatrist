@@ -30,6 +30,8 @@ from ai_psychiatrist.domain.value_objects import (
     ItemAssessment,
 )
 
+pytestmark = pytest.mark.unit
+
 
 class TestTranscript:
     """Tests for Transcript entity."""

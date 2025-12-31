@@ -11,6 +11,8 @@ if TYPE_CHECKING:
     from ai_psychiatrist.config import Settings
     from ai_psychiatrist.infrastructure.llm import OllamaClient
 
+pytestmark = pytest.mark.e2e
+
 
 @pytest.mark.ollama
 @pytest.mark.slow

@@ -82,7 +82,7 @@ Environment-driven via `.env` (copy from `.env.example`). Key settings:
 | `EMBEDDING_DIMENSION` | 4096 | Appendix D (optimal) |
 | `EMBEDDING_TOP_K_REFERENCES` | 2 | Appendix D |
 | `FEEDBACK_SCORE_THRESHOLD` | 3 | Section 2.3.1 (score <4 triggers refinement) |
-| `OLLAMA_TIMEOUT_SECONDS` | 300 | Large transcripts need extended time |
+| `OLLAMA_TIMEOUT_SECONDS` | 600 | Large transcripts need extended time |
 
 Environment variable prefix: `OLLAMA_HOST=custom` sets `OllamaSettings.host`
 
@@ -124,7 +124,7 @@ python scripts/score_reference_chunks.py \
 EMBEDDING_REFERENCE_SCORE_SOURCE=chunk
 ```
 
-**Scorer Model Choice**: Using the same model (`--allow-same-model`) is practical and has research precedent (SELF-ICL, EMNLP 2023). Ablate with MedGemma or disjoint models if desired.
+**Scorer Model Choice**: Spec 35 defaults to a disjoint scorer for defensibility. Use `--allow-same-model` only if you explicitly want a same-model baseline, and ablate against a disjoint/MedGemma scorer if feasible.
 
 ### Running the Full Evaluation
 

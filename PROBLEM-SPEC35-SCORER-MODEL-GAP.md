@@ -209,7 +209,7 @@ Spec 36 is not “just tags again” — it can drop references that contradict 
 But it still cannot make participant-level `reference_score` valid for an arbitrary chunk.
 
 Running Spec 36 without Spec 35 = more LLM calls for (likely) incremental improvement.
-Treat it as an ablation while Spec 35 is blocked, not as an endpoint.
+Treat it as an ablation until you have generated chunk scores (Spec 35), not as an endpoint.
 
 **Conclusion**: Pick a Spec 35 scorer model next. If you have runtime budget, Spec 36 is still worth
-running as a *separate ablation* while Spec 35 is blocked.
+running as a *separate ablation* before/after chunk scoring is available.

@@ -17,10 +17,10 @@ The paper's few-shot implementation has a **fundamental design flaw**: participa
 
 **Status check (codebase)**:
 - Spec 34 (item-tag filtering), Spec 35 (chunk-level scoring), and Spec 36 (CRAG-style validation) are **implemented**.
-- Spec 35 is still **operationally blocked** until we pick a scorer model and generate the
-  `<embeddings>.chunk_scores.json` sidecar (see `PROBLEM-SPEC35-SCORER-MODEL-GAP.md`).
+- Spec 35 requires a one-time preprocessing step to generate the `<embeddings>.chunk_scores.json` sidecar
+  (see `PROBLEM-SPEC35-SCORER-MODEL-GAP.md`).
   - The spec defaults to a disjoint scorer model for defensibility.
-  - For practicality, the script supports `--allow-same-model` so we can ablate “same vs disjoint” empirically.
+  - The script supports `--allow-same-model` so we can ablate “same vs disjoint” empirically.
 
 ---
 

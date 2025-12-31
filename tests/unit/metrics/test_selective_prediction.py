@@ -19,6 +19,8 @@ from ai_psychiatrist.metrics.selective_prediction import (
     compute_risk_coverage_curve,
 )
 
+pytestmark = pytest.mark.unit
+
 
 @pytest.fixture
 def canonical_vectors_abs_loss() -> Sequence[ItemPrediction]:

@@ -72,7 +72,7 @@ figure is the coverage over all 142 participants.)
 
 ## Related
 
-- `docs/bugs/bug-029-coverage-mae-discrepancy.md` - Coverage/MAE analysis
+- `docs/archive/bugs/bug-029-coverage-mae-discrepancy.md` - Coverage/MAE analysis
 - `docs/paper-reproduction-analysis.md` - Comprehensive analysis
 - `docs/specs/25-aurc-augrc-implementation.md` - Selective prediction evaluation suite
 

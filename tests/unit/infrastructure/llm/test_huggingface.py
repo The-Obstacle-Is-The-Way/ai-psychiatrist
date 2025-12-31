@@ -34,6 +34,8 @@ from ai_psychiatrist.infrastructure.llm.protocols import (
     EmbeddingRequest,
 )
 
+pytestmark = pytest.mark.unit
+
 
 class TestModelAliases:
     """Tests for canonical model alias mapping."""

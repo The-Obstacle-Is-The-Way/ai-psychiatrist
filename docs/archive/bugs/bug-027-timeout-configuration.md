@@ -133,5 +133,5 @@ Step 3 was implemented in a flexible form:
 
 ## Related
 
-- `docs/bugs/fallback-architecture-audit.md` - Full architecture analysis
+- `docs/archive/bugs/fallback-architecture-audit.md` - Full architecture analysis
 - `docs/specs/21-broad-exception-handling.md` - Exception handling spec

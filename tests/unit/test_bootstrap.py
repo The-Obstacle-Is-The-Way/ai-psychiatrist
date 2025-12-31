@@ -9,6 +9,8 @@ import pytest
 import ai_psychiatrist
 from ai_psychiatrist import domain
 
+pytestmark = pytest.mark.unit
+
 
 class TestProjectStructure:
     """Test project structure is correct."""
