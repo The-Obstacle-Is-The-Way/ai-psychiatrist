@@ -159,9 +159,16 @@ Few-shot retrieval configuration.
 | `EMBEDDING_MIN_EVIDENCE_CHARS` | int | `8` | Minimum text for embedding |
 | `EMBEDDING_EMBEDDINGS_FILE` | string | `huggingface_qwen3_8b_paper_train` | Reference embeddings basename (no extension), resolved under `{DATA_BASE_DIR}/embeddings/` |
 | `EMBEDDING_ENABLE_RETRIEVAL_AUDIT` | bool | `false` | Spec 32 (retrieval audit logging) |
+| `EMBEDDING_ENABLE_BATCH_QUERY_EMBEDDING` | bool | `true` | Spec 37 (batch query embedding; performance-only) |
+| `EMBEDDING_QUERY_EMBED_TIMEOUT_SECONDS` | int | `300` | Spec 37 (query embedding timeout; stability-only) |
 | `EMBEDDING_MIN_REFERENCE_SIMILARITY` | float | `0.0` | Spec 33 (drop low-similarity references; 0 disables) |
 | `EMBEDDING_MAX_REFERENCE_CHARS_PER_ITEM` | int | `0` | Spec 33 (per-item reference context budget; 0 disables) |
 | `EMBEDDING_ENABLE_ITEM_TAG_FILTER` | bool | `false` | Spec 34 (filter refs by item tags; requires `{name}.tags.json`) |
+| `EMBEDDING_REFERENCE_SCORE_SOURCE` | string | `participant` | Spec 35: `participant` (paper-parity) or `chunk` (experimental) |
+| `EMBEDDING_ALLOW_CHUNK_SCORES_PROMPT_HASH_MISMATCH` | bool | `false` | Spec 35 circularity control bypass (unsafe) |
+| `EMBEDDING_ENABLE_REFERENCE_VALIDATION` | bool | `false` | Spec 36 (CRAG-style runtime validation; adds LLM calls) |
+| `EMBEDDING_VALIDATION_MODEL` | string | *(unset)* | Spec 36 validation model (defaults to `MODEL_JUDGE_MODEL` when unset) |
+| `EMBEDDING_VALIDATION_MAX_REFS_PER_ITEM` | int | `2` | Spec 36 max accepted refs per item after validation |
 
 **Note on artifact naming**: `scripts/generate_embeddings.py` defaults to writing a namespaced artifact like
 `data/embeddings/{backend}_{model_slug}_{split}.npz`. After generating, set `EMBEDDING_EMBEDDINGS_FILE` to that basename
@@ -169,6 +176,13 @@ Few-shot retrieval configuration.
 
 **Optional item tags (Spec 34)**: `scripts/generate_embeddings.py --write-item-tags` writes a sibling `{name}.tags.json`
 sidecar. At runtime, enable tag-based filtering with `EMBEDDING_ENABLE_ITEM_TAG_FILTER=true`.
+
+**Chunk-level scoring (Spec 35)**: By default, retrieved chunks carry the participant's overall PHQ-8 score. Set
+`EMBEDDING_REFERENCE_SCORE_SOURCE=chunk` to use per-chunk scores (requires `scripts/score_reference_chunks.py` output).
+**WARNING**: This is NOT paper-parity; label runs as "experimental".
+
+**CRAG validation (Spec 36)**: Set `EMBEDDING_ENABLE_REFERENCE_VALIDATION=true` to have the LLM validate each retrieved
+reference at runtime (CRAG-style). Adds latency but filters irrelevant references.
 
 **Paper optimization results (Appendix D):**
 - Embedding dimension 4096 performed best among the tested dimensions (64, 256, 1024, 4096)
@@ -357,7 +371,7 @@ Structured validation + automatic retries for agent outputs (Spec 13).
 
 **Notes:**
 - This preserves existing prompt formats (e.g., `<thinking>...</thinking>` + `<answer>...</answer>`) and adds validation after generation.
-- On repeated failure, the system falls back to legacy parsing (fail-soft), but will still log the issue.
+- Legacy parsing fallbacks are disabled (fail-fast research behavior). If `PYDANTIC_AI_ENABLED=false`, agents will raise because no legacy path exists.
 
 **Timeout Notes (BUG-027):**
 - Unset `PYDANTIC_AI_TIMEOUT_SECONDS` uses the pydantic_ai library default (600s).
