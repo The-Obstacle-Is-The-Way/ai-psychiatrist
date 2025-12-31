@@ -2,13 +2,13 @@
 
 | Field | Value |
 |-------|-------|
-| **Status** | NEW |
-| **Severity** | MEDIUM |
+| **Status** | SPEC WRITTEN |
+| **Severity** | HIGH |
 | **Affects** | `scripts/generate_embeddings.py` (artifact correctness) |
 | **Introduced** | Original design |
 | **Discovered** | 2025-12-30 |
 | **Root Cause** | Best-effort fallback pattern in a research pipeline |
-| **Solution** | TBD (spec required) |
+| **Solution** | **Spec 40: Fail-Fast Embedding Generation** (`docs/specs/40-fail-fast-embedding-generation.md`) |
 
 ## Summary
 
@@ -62,7 +62,10 @@ If this behavior is desired for production robustness, it must be behind an expl
 2. If any chunk fails to embed → **CRASH** (default behavior).
 3. If best-effort mode is needed:
    - Require explicit opt-in (`--allow-partial`)
-   - Emit a machine-readable summary (counts + participant IDs) and exit non-zero unless explicitly overridden.
+   - Emit a machine-readable summary (counts + participant IDs + skipped chunk count) via `{output}.partial.json`.
+   - Exit code **2** when skips occur (partial output).
+
+**Important**: A write failure must not leave a misleading “valid-looking” partial artifact on disk (use atomic temp→rename writes per Spec 40).
 
 ## Verification
 

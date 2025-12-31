@@ -2,7 +2,7 @@
 
 | Field | Value |
 |-------|-------|
-| **Status** | READY |
+| **Status** | COMPLETE |
 | **Priority** | MEDIUM |
 | **Addresses** | BUG-039 (exception handlers mask error types) |
 | **Effort** | ~2 hours |

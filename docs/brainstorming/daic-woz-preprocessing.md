@@ -8,7 +8,7 @@
 
 ## Executive Summary
 
-The codebase includes **both interviewer (Ellie) AND participant utterances** in transcripts with **no speaker filtering**. Recent research (2024) strongly recommends against this for depression detection, as models learn to exploit interviewer patterns rather than genuine clinical signals.
+The codebase includes **both interviewer (Ellie) AND participant utterances** in transcripts with **no speaker filtering**. Recent research (Burdisso et al., 2024) urges caution with interviewer prompts, showing models can exploit interviewer patterns rather than genuine clinical signals.
 
 **Key Question**: Should we filter to participant-only utterances, or does LLM semantic understanding make this unnecessary?
 
@@ -36,7 +36,7 @@ def _parse_daic_woz_transcript(self, path: Path) -> str:
 
 **Source**: [Burdisso et al., ACL ClinicalNLP 2024](https://aclanthology.org/2024.clinicalnlp-1.8/)
 
-| Model | Input | F1 Score |
+| Model | Input | Macro F1 (Avg) |
 |-------|-------|----------|
 | P-longBERT | Participant only | 0.72 |
 | E-longBERT | Ellie only | 0.84 |
@@ -44,7 +44,7 @@ def _parse_daic_woz_transcript(self, path: Path) -> str:
 | E-GCN | Ellie only | 0.88 |
 | Ensemble (P-GCN + E-GCN) | Both models combined | 0.90 |
 
-**Critical finding**: Interviewer-only models *outperform* participant-only because they exploit targeted follow-up probing questions as shortcuts. Notably, the paper explicitly states that "Have you been diagnosed with depression?" is **NOT** a shortcut—the model disregards it. Instead, models exploit the **follow-up questions** that probe deeper into mental health history:
+**Critical finding**: Interviewer-only models *outperform* participant-only because they exploit targeted follow-up probing questions as shortcuts. Notably, the paper explicitly shows (Fig. 2) that "Have you been diagnosed with depression?" is **not** part of the highlighted shortcut region—the model disregards it in that example. Instead, the discriminative region includes **follow-up questions** that probe deeper into mental health history:
 - "what got you to seek help"
 - "do you still go to therapy now"
 - "why did you stop"
@@ -154,7 +154,7 @@ Participant: i didn't feel it was helping me at all
 
 The embedding captures Ellie's **follow-up probing questions** about therapy history—questions that only appear when participants indicate prior mental health treatment. This is a **leaky signal**.
 
-**Note**: The paper explicitly shows that "Have you been diagnosed with depression?" is NOT a shortcut—models disregard it. The shortcuts are the **follow-up probing questions** that come after, which indicate Ellie detected something worth exploring.
+**Note**: The paper explicitly shows (Fig. 2) that "Have you been diagnosed with depression?" is not part of the highlighted shortcut region—the model disregards it in that example. The shortcut region is the **follow-up probing questions** that come after, which indicate Ellie detected something worth exploring.
 
 **The logic models learn**:
 
@@ -306,6 +306,22 @@ The paper authors likely didn't address this explicitly because:
 3. Would regenerating embeddings with participant-only chunks improve retrieval?
 4. Should we also remove disfluencies (um, uh, mhm)?
 5. Do the known problematic interviews (373, 444, 451, 458, 480) affect current results?
+
+---
+
+## 14. Recommendation (Research-Aligned Default)
+
+If the goal is **validity and generalization** (not just maximizing metrics on DAIC-WOZ), the safest default is:
+
+1. **Participant-only for embeddings/retrieval/indexing** (at minimum), since the retrieval layer can be biased by interviewer follow-up patterns before the LLM ever sees the prompt.
+2. Treat **both-speakers transcripts as a paper-parity baseline**, and explicitly label any gains as potentially influenced by interviewer-protocol leakage.
+3. If participant-only harms interpretability for short answers (e.g., "yes/no"), test a compromise variant:
+   - **Participant-only utterances + minimal question context**, e.g., include the immediately preceding Ellie prompt line for each participant response (Q/A context), while still excluding other interviewer content from indexing.
+
+This should be handled as an **ablation** and reported transparently:
+- Baseline: both speakers (status quo)
+- Variant A: participant-only
+- Variant B: participant-only + minimal question context
 
 ---
 
