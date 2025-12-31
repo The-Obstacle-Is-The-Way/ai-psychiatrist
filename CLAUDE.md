@@ -110,7 +110,7 @@ The few-shot pipeline has known methodological issues. See `HYPOTHESIS-FEWSHOT-D
 
 Spec 35 fixes the core flaw: participant-level scores assigned to arbitrary chunks.
 
-**Step 1: Generate chunk scores (one-time preprocessing)**
+#### Step 1: Generate chunk scores (one-time preprocessing)
 ```bash
 python scripts/score_reference_chunks.py \
   --embeddings-file ollama_qwen3_8b_paper_train \
@@ -119,7 +119,7 @@ python scripts/score_reference_chunks.py \
   --allow-same-model
 ```
 
-**Step 2: Enable in .env**
+#### Step 2: Enable in .env
 ```bash
 EMBEDDING_REFERENCE_SCORE_SOURCE=chunk
 ```

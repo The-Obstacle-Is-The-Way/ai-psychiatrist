@@ -42,7 +42,7 @@ The LLM can read Ellie's direct symptom questions as shortcuts. Per the Burdisso
 **YES - Design Flaw, Not Code Bug.**
 
 #### How PHQ-8 Works
-```
+```text
 PHQ-8 = 8 items (domains), each scored 0-3
 Total score = sum of all 8 items = 0-24
 
@@ -51,7 +51,7 @@ Items: NoInterest, Depressed, Sleep, Tired, Appetite, Failure, Concentrating, Mo
 
 #### How Chunks Are Created
 Transcripts are split into **8-line sliding windows** (step=2):
-```
+```text
 Participant 300's transcript:
 Line 1-8:   CHUNK 0 (may be about anything)
 Line 3-10:  CHUNK 1 (may be about anything)
@@ -89,7 +89,7 @@ def get_score(self, participant_id: int, item: PHQ8Item) -> int | None:
 
 #### Visual Example
 
-```
+```text
 Chunk 5 (about career goals):
 "Ellie: what's your dream job
 Participant: open a business
@@ -99,7 +99,7 @@ Participant: no"
 → Gets assigned: "PHQ8_Sleep Score: 2"  ← NOTHING ABOUT SLEEP!
 ```
 
-```
+```text
 Chunk 95 (actually about sleep):
 "Ellie: have you had trouble sleeping
 Participant: yes every night i lie awake"
@@ -142,7 +142,7 @@ Important nuance:
   `reference_score` correct for a chunk.
 - The only automated fix for the score/label mismatch is Spec 35 (or human-curated chunk scores).
 
-```
+```text
 Naive Few-Shot (paper)           = Naive RAG
    ↓ add Spec 34 (tag filter)    = Better RAG
    ↓ add Spec 35 (chunk scoring) = Even Better RAG

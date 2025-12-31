@@ -9,7 +9,7 @@
 > **Implemented**: 2025-12-26
 >
 > **Last Updated**: 2025-12-31
-
+>
 > **Note (2025-12-31)**: The repo now uses explicit, module-level `pytestmark = pytest.mark.unit|integration|e2e`
 > in each test module. The prior `pytest_collection_modifyitems` auto-marker hook was removed to keep
 > marker behavior visible and local to each test file.
