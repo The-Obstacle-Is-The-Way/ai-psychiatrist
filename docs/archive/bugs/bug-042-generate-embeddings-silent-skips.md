@@ -8,7 +8,7 @@
 | **Introduced** | Original design |
 | **Discovered** | 2025-12-30 |
 | **Root Cause** | Best-effort fallback pattern in a research pipeline |
-| **Solution** | **Spec 40: Fail-Fast Embedding Generation** (`docs/specs/40-fail-fast-embedding-generation.md`) |
+| **Solution** | **Spec 40: Fail-Fast Embedding Generation** (`docs/archive/specs/40-fail-fast-embedding-generation.md`) |
 
 ## Summary
 
