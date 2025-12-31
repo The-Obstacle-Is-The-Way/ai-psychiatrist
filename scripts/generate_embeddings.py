@@ -8,13 +8,23 @@ Output Format (NPZ + JSON sidecar):
     - {output_path}.npz: Embeddings as numpy arrays (key: "emb_{pid}")
     - {output_path}.json: Text chunks (key: str(pid) -> list[str])
     - {output_path}.meta.json: Provenance metadata
+    - {output_path}.tags.json: Item tags (if --write-item-tags)
+    - {output_path}.partial.json: Skip manifest (only in --allow-partial mode with skips)
 
 Usage:
-    # Generate embeddings (backend from env)
+    # Generate embeddings (strict mode - crash on any failure)
     python scripts/generate_embeddings.py
 
     # Override backend
     python scripts/generate_embeddings.py --backend huggingface
+
+    # Allow partial output for debugging (exit 2 if skips occur)
+    python scripts/generate_embeddings.py --allow-partial
+
+Exit Codes (Spec 40):
+    0 - Success (all participants and chunks processed)
+    1 - Failure (error in strict mode, or fatal error)
+    2 - Partial success (--allow-partial mode with skips)
 
 Paper Reference:
     - Section 2.4.2: Embedding-based few-shot prompting
@@ -25,11 +35,12 @@ from __future__ import annotations
 
 import argparse
 import asyncio
+import contextlib
 import hashlib
 import json
 import re
 import sys
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 from datetime import UTC, datetime
 from pathlib import Path
 from typing import TYPE_CHECKING, Any
@@ -53,7 +64,6 @@ from ai_psychiatrist.config import (
     resolve_reference_embeddings_path,
 )
 from ai_psychiatrist.domain.enums import PHQ8Item
-from ai_psychiatrist.domain.exceptions import DomainError
 from ai_psychiatrist.infrastructure.llm.factory import create_embedding_client
 from ai_psychiatrist.infrastructure.llm.model_aliases import resolve_model_name
 from ai_psychiatrist.infrastructure.llm.protocols import EmbeddingRequest
@@ -65,7 +75,26 @@ if TYPE_CHECKING:
 
 logger = get_logger(__name__)
 
+# Exit codes (Spec 40)
+EXIT_SUCCESS = 0
+EXIT_FAILURE = 1
+EXIT_PARTIAL = 2  # Partial success (some skips in --allow-partial mode)
+
 PAPER_SPLITS_DIRNAME = "paper_splits"
+
+
+class EmbeddingGenerationError(Exception):
+    """Raised when embedding generation fails in strict mode.
+
+    Attributes:
+        participant_id: The participant that failed.
+        chunk_index: The chunk that failed (None for participant-level failures).
+    """
+
+    def __init__(self, message: str, participant_id: int, *, chunk_index: int | None = None):
+        self.participant_id = participant_id
+        self.chunk_index = chunk_index
+        super().__init__(message)
 
 
 class KeywordTagger:
@@ -119,6 +148,8 @@ class GenerationConfig:
     write_item_tags: bool
     tagger_type: str
     keywords_path: Path
+    # Spec 40: Fail-fast mode (default strict)
+    allow_partial: bool = False
 
 
 @dataclass
@@ -128,6 +159,14 @@ class GenerationResult:
     embeddings: dict[int, list[tuple[str, list[float]]]]
     tags: dict[int, list[list[str]]]  # pid -> list of tags per chunk
     total_chunks: int
+    # Spec 40: Skip tracking for --allow-partial mode
+    skipped_participants: list[int] = field(default_factory=list)
+    total_skipped_chunks: int = 0
+
+    @property
+    def has_skips(self) -> bool:
+        """True if any participants or chunks were skipped."""
+        return len(self.skipped_participants) > 0 or self.total_skipped_chunks > 0
 
 
 def create_sliding_chunks(
@@ -283,7 +322,7 @@ def calculate_split_ids_hash(data_settings: DataSettings, split: str) -> str:
         return "error"
 
 
-async def process_participant(
+async def process_participant(  # noqa: PLR0912
     client: EmbeddingClient,
     transcript_service: TranscriptService,
     participant_id: int,
@@ -292,9 +331,13 @@ async def process_participant(
     chunk_size: int,
     step_size: int,
     min_chars: int,
+    *,
     tagger: KeywordTagger | None = None,
-) -> tuple[list[tuple[str, list[float]]], list[list[str]]]:
+    allow_partial: bool = False,
+) -> tuple[list[tuple[str, list[float]]], list[list[str]], int]:
     """Generate embeddings for all chunks of a participant's transcript.
+
+    Spec 40: Fail-fast by default, with optional --allow-partial mode.
 
     Args:
         client: Embedding client.
@@ -306,49 +349,106 @@ async def process_participant(
         step_size: Sliding window step.
         min_chars: Minimum characters for a chunk to be embedded.
         tagger: Optional tagger for generating item tags.
+        allow_partial: If True, skip failures instead of crashing.
 
     Returns:
         Tuple of:
         - List of (chunk_text, embedding) pairs.
         - List of tag lists (one per chunk).
+        - Number of skipped chunks.
+
+    Raises:
+        EmbeddingGenerationError: In strict mode (allow_partial=False), on any failure.
     """
+    skipped_chunks = 0
+
+    # Load transcript (fail-fast unless allow_partial)
     try:
         transcript = transcript_service.load_transcript(participant_id)
-    except (DomainError, ValueError, OSError) as e:
-        logger.warning(
-            "Failed to load transcript",
-            participant_id=participant_id,
-            error=str(e),
-        )
-        return [], []
-
-    chunks = create_sliding_chunks(transcript.text, chunk_size, step_size)
-    results: list[tuple[str, list[float]]] = []
-    chunk_tags: list[list[str]] = []
-
-    for chunk in chunks:
-        if len(chunk.strip()) < min_chars:
-            continue
-
-        try:
-            embedding = await generate_embedding(client, chunk, model, dimension)
-            results.append((chunk, embedding))
-
-            if tagger:
-                tags = tagger.tag_chunk(chunk)
-                chunk_tags.append(tags)
-            else:
-                chunk_tags.append([])
-
-        except (DomainError, ValueError, OSError) as e:
+    except Exception as e:
+        if allow_partial:
             logger.warning(
-                "Failed to embed chunk",
+                "Failed to load transcript (skipping participant)",
                 participant_id=participant_id,
                 error=str(e),
             )
+            return [], [], 0
+        raise EmbeddingGenerationError(
+            f"Failed to load transcript for participant {participant_id}: {e}",
+            participant_id=participant_id,
+        ) from e
+
+    # Create chunks
+    chunks = create_sliding_chunks(transcript.text, chunk_size, step_size)
+
+    # Empty transcript check (fail-fast unless allow_partial)
+    if not chunks:
+        if allow_partial:
+            logger.warning(
+                "No chunks produced for transcript (skipping participant)",
+                participant_id=participant_id,
+            )
+            return [], [], 0
+        raise EmbeddingGenerationError(
+            f"No chunks produced for participant {participant_id} (empty transcript)",
+            participant_id=participant_id,
+        )
+
+    results: list[tuple[str, list[float]]] = []
+    chunk_tags: list[list[str]] = []
+
+    for chunk_idx, chunk in enumerate(chunks):
+        if len(chunk.strip()) < min_chars:
             continue
 
-    return results, chunk_tags
+        # Embed chunk (fail-fast unless allow_partial)
+        try:
+            embedding = await generate_embedding(client, chunk, model, dimension)
+            results.append((chunk, embedding))
+        except Exception as e:
+            if allow_partial:
+                logger.warning(
+                    "Failed to embed chunk (skipping)",
+                    participant_id=participant_id,
+                    chunk_index=chunk_idx,
+                    error=str(e),
+                )
+                skipped_chunks += 1
+                continue
+            raise EmbeddingGenerationError(
+                f"Failed to embed chunk {chunk_idx} for participant {participant_id}: {e}",
+                participant_id=participant_id,
+                chunk_index=chunk_idx,
+            ) from e
+
+        # Tag chunk - ALWAYS fail-fast (tagging must be correct)
+        if tagger:
+            try:
+                tags = tagger.tag_chunk(chunk)
+            except Exception as e:
+                raise EmbeddingGenerationError(
+                    f"Failed to tag chunk {chunk_idx} for participant {participant_id}: {e}",
+                    participant_id=participant_id,
+                    chunk_index=chunk_idx,
+                ) from e
+            chunk_tags.append(tags)
+        else:
+            chunk_tags.append([])
+
+    # No embedded chunks check (fail-fast unless allow_partial)
+    if not results:
+        if allow_partial:
+            logger.warning(
+                "No chunks embedded for participant (skipping participant)",
+                participant_id=participant_id,
+            )
+            return [], [], skipped_chunks
+        raise EmbeddingGenerationError(
+            f"No chunks embedded for participant {participant_id}",
+            participant_id=participant_id,
+        )
+
+    return results, chunk_tags, skipped_chunks
 
 
 def slugify_model(model: str) -> str:
@@ -443,6 +543,7 @@ def prepare_config(args: argparse.Namespace, *, settings: Settings) -> Generatio
         write_item_tags=args.write_item_tags,
         tagger_type=args.tagger,
         keywords_path=keywords_path,
+        allow_partial=args.allow_partial,
     )
 
 
@@ -451,7 +552,10 @@ async def run_generation_loop(
     client: EmbeddingClient,
     transcript_service: TranscriptService,
 ) -> GenerationResult:
-    """Run the main generation loop."""
+    """Run the main generation loop.
+
+    Spec 40: Fail-fast by default, tracks skips in --allow-partial mode.
+    """
     # Get training participants only (avoid data leakage)
     try:
         participant_ids = get_participant_ids(config.data_settings, split=config.split)
@@ -478,12 +582,16 @@ async def run_generation_loop(
     all_tags: dict[int, list[list[str]]] = {}
     total_chunks = 0
 
+    # Spec 40: Track skips for partial mode
+    skipped_participants: list[int] = []
+    total_skipped_chunks = 0
+
     print(f"\nProcessing {len(participant_ids)} participants...")
     for idx, pid in enumerate(participant_ids, 1):
         if idx % 10 == 0 or idx == len(participant_ids):
             print(f"  Progress: {idx}/{len(participant_ids)} participants...")
 
-        results, chunk_tags = await process_participant(
+        results, chunk_tags, skipped_chunks = await process_participant(
             client,
             transcript_service,
             pid,
@@ -493,21 +601,36 @@ async def run_generation_loop(
             config.step_size,
             config.min_chars,
             tagger=tagger,
+            allow_partial=config.allow_partial,
         )
+
+        total_skipped_chunks += skipped_chunks
 
         if results:
             all_embeddings[pid] = results
             all_tags[pid] = chunk_tags
             total_chunks += len(results)
+        elif config.allow_partial:
+            # Only reachable in partial mode (strict mode would have crashed)
+            skipped_participants.append(pid)
 
-    return GenerationResult(embeddings=all_embeddings, tags=all_tags, total_chunks=total_chunks)
+    return GenerationResult(
+        embeddings=all_embeddings,
+        tags=all_tags,
+        total_chunks=total_chunks,
+        skipped_participants=skipped_participants,
+        total_skipped_chunks=total_skipped_chunks,
+    )
 
 
-def save_embeddings(
+def save_embeddings(  # noqa: PLR0915
     result: GenerationResult,
     config: GenerationConfig,
 ) -> None:
-    """Save embeddings, text chunks, and metadata."""
+    """Save embeddings, text chunks, and metadata.
+
+    Spec 40: Uses atomic temp→rename pattern to prevent half-artifacts.
+    """
     # Ensure output directory exists
     config.output_path.parent.mkdir(parents=True, exist_ok=True)
 
@@ -545,29 +668,61 @@ def save_embeddings(
         "split_ids_hash": calculate_split_ids_hash(config.data_settings, config.split),
     }
 
-    # Save files
+    # Final paths
+    npz_path = config.output_path
     json_path = config.output_path.with_suffix(".json")
     meta_path = config.output_path.with_suffix(".meta.json")
     tags_path = config.output_path.with_suffix(".tags.json")
 
-    print(f"\nSaving embeddings to {config.output_path}...")
+    # Temp paths for atomic writes (Spec 40)
+    tmp_npz_path = config.output_path.with_suffix(".tmp.npz")
+    tmp_json_path = config.output_path.with_suffix(".tmp.json")
+    tmp_meta_path = config.output_path.with_suffix(".tmp.meta.json")
+    tmp_tags_path = config.output_path.with_suffix(".tmp.tags.json")
+
+    print(f"\nSaving embeddings to {npz_path}...")
     print(f"Saving text chunks to {json_path}...")
     print(f"Saving metadata to {meta_path}...")
     if config.write_item_tags:
         print(f"Saving item tags to {tags_path}...")
 
-    np.savez_compressed(str(config.output_path), **npz_arrays)
-    with json_path.open("w") as f:
-        json.dump(json_texts, f, indent=2)
-    with meta_path.open("w") as f:
-        json.dump(metadata, f, indent=2)
+    # Collect all temp files created (for cleanup on failure)
+    created_temps: list[Path] = []
 
-    if config.write_item_tags:
-        with tags_path.open("w") as f:
-            json.dump(json_tags, f, indent=2)
+    try:
+        # Write all temp files first
+        np.savez_compressed(str(tmp_npz_path), **npz_arrays)
+        created_temps.append(tmp_npz_path)
+
+        with tmp_json_path.open("w", encoding="utf-8") as f:
+            json.dump(json_texts, f, indent=2)
+        created_temps.append(tmp_json_path)
+
+        with tmp_meta_path.open("w", encoding="utf-8") as f:
+            json.dump(metadata, f, indent=2)
+        created_temps.append(tmp_meta_path)
+
+        if config.write_item_tags:
+            with tmp_tags_path.open("w", encoding="utf-8") as f:
+                json.dump(json_tags, f, indent=2)
+            created_temps.append(tmp_tags_path)
+
+        # All writes succeeded - atomically rename temp → final
+        tmp_npz_path.replace(npz_path)
+        tmp_json_path.replace(json_path)
+        tmp_meta_path.replace(meta_path)
+        if config.write_item_tags:
+            tmp_tags_path.replace(tags_path)
+
+    except Exception:
+        # Clean up any temp files created
+        for tmp_path in created_temps:
+            with contextlib.suppress(OSError):
+                tmp_path.unlink(missing_ok=True)
+        raise
 
     # Summary
-    npz_size = config.output_path.stat().st_size / (1024 * 1024)
+    npz_size = npz_path.stat().st_size / (1024 * 1024)
     json_size = json_path.stat().st_size / (1024 * 1024)
 
     print("\n" + "=" * 60)
@@ -575,7 +730,7 @@ def save_embeddings(
     print("=" * 60)
     print(f"  Participants: {len(result.embeddings)}")
     print(f"  Total chunks: {result.total_chunks}")
-    print(f"  NPZ file: {config.output_path} ({npz_size:.2f} MB)")
+    print(f"  NPZ file: {npz_path} ({npz_size:.2f} MB)")
     print(f"  JSON file: {json_path} ({json_size:.2f} MB)")
     if config.write_item_tags:
         tags_size = tags_path.stat().st_size / (1024 * 1024)
@@ -583,8 +738,11 @@ def save_embeddings(
     print("=" * 60)
 
 
-async def main_async(args: argparse.Namespace) -> int:
-    """Async main entry point."""
+async def main_async(args: argparse.Namespace) -> int:  # noqa: PLR0915
+    """Async main entry point.
+
+    Spec 40: Fail-fast by default, with exit code 2 for partial output.
+    """
     setup_logging(LoggingSettings(level="INFO", format="console"))
 
     settings = get_settings()
@@ -605,25 +763,78 @@ async def main_async(args: argparse.Namespace) -> int:
     print(f"  Write Tags: {config.write_item_tags}")
     if config.write_item_tags:
         print(f"  Tagger: {config.tagger_type}")
+    mode_str = "PARTIAL (--allow-partial)" if config.allow_partial else "STRICT (fail-fast)"
+    print(f"  Mode: {mode_str}")
     print("=" * 60)
 
     if config.dry_run:
         print("\n[DRY RUN] Would generate embeddings with above settings.")
         print("[DRY RUN] No files will be created.")
-        return 0
+        return EXIT_SUCCESS
 
     transcript_service = TranscriptService(config.data_settings)
     client = create_embedding_client(settings)
 
+    result: GenerationResult | None = None
     try:
         result = await run_generation_loop(config, client, transcript_service)
+
+        # Spec 40: Check for complete failure (0 participants succeeded)
+        if not result.embeddings:
+            print(
+                "\nERROR: No embeddings generated (0 participants succeeded).",
+                file=sys.stderr,
+            )
+            return EXIT_FAILURE
+
         save_embeddings(result, config)
-    except FileNotFoundError:
-        return 1
+
+    except EmbeddingGenerationError as e:
+        # Spec 40: Fail-fast error in strict mode
+        print(f"\nERROR: {e}", file=sys.stderr)
+        print(f"  Participant: {e.participant_id}", file=sys.stderr)
+        if e.chunk_index is not None:
+            print(f"  Chunk index: {e.chunk_index}", file=sys.stderr)
+        print(
+            "\nHint: Use --allow-partial to skip failures and continue.",
+            file=sys.stderr,
+        )
+        return EXIT_FAILURE
+
+    except FileNotFoundError as e:
+        print(f"\nERROR: {e}", file=sys.stderr)
+        return EXIT_FAILURE
+
     finally:
         await client.close()
 
-    return 0
+    # Spec 40: Report skips in partial mode (after saving artifacts)
+    if config.allow_partial and result is not None and result.has_skips:
+        manifest_path = config.output_path.with_suffix(".partial.json")
+        manifest = {
+            "output_npz": str(config.output_path),
+            "skipped_participants": result.skipped_participants,
+            "skipped_participant_count": len(result.skipped_participants),
+            "skipped_chunks": result.total_skipped_chunks,
+        }
+        with manifest_path.open("w", encoding="utf-8") as f:
+            json.dump(manifest, f, indent=2)
+
+        print("\n" + "=" * 60)
+        print("WARNING: PARTIAL OUTPUT (some data was skipped)")
+        print("=" * 60)
+        if result.skipped_participants:
+            print(
+                f"  Skipped participants ({len(result.skipped_participants)}): "
+                f"{result.skipped_participants}"
+            )
+        if result.total_skipped_chunks > 0:
+            print(f"  Skipped chunks: {result.total_skipped_chunks}")
+        print(f"  Manifest: {manifest_path}")
+        print("\nThis artifact is INCOMPLETE. Do not use for final evaluation.")
+        return EXIT_PARTIAL
+
+    return EXIT_SUCCESS
 
 
 def main() -> int:
@@ -673,6 +884,12 @@ Environment Variables:
         "--dry-run",
         action="store_true",
         help="Show configuration without generating embeddings",
+    )
+    parser.add_argument(
+        "--allow-partial",
+        action="store_true",
+        default=False,
+        help="Allow partial output on failures (exit 2). Default: strict mode.",
     )
     parser.add_argument(
         "--write-item-tags",

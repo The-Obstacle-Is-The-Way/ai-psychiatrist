@@ -2,7 +2,7 @@
 
 | Field | Value |
 |-------|-------|
-| **Status** | SPEC WRITTEN |
+| **Status** | FIXED |
 | **Severity** | HIGH |
 | **Affects** | `scripts/generate_embeddings.py` (artifact correctness) |
 | **Introduced** | Original design |

@@ -2,7 +2,7 @@
 
 | Field | Value |
 |-------|-------|
-| **Status** | READY |
+| **Status** | IMPLEMENTED |
 | **Priority** | HIGH |
 | **Addresses** | BUG-042 (embedding generation silently skips participants/chunks) |
 | **Effort** | ~0.5 day |
