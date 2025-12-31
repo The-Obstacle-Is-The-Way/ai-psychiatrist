@@ -1,7 +1,7 @@
 # Problem: Spec 35 Scorer Model Not Specified
 
 **Date**: 2025-12-31
-**Status**: Blocking Spec 35 Deployment
+**Status**: ✅ Unblocked (run same-model baseline; ablate disjoint/MedGemma)
 **Severity**: Medium (spec gap, not code bug)
 
 ---
@@ -43,14 +43,19 @@ if not args.allow_same_model and config.scorer_model == settings.model.quantitat
 | `llama3.1:8b-instruct-q4_K_M` | Not pulled | YES (disjoint family, strong baseline) |
 | `qwen2.5:7b-instruct-q4_K_M` | Not pulled | YES (disjoint family, strong JSON compliance) |
 | `phi4:14b` | Not pulled | YES (disjoint family, higher quality but slower) |
+| `medgemma:27b` (official, HF) | Not downloaded | YES (HuggingFace only; text-only) |
 
 ---
 
 ## The Circularity Risk
 
-Why can't we just use `gemma3:27b-it-qat --allow-same-model`?
+There is **no training** here, so “circularity” is not gradient leakage. The real risk is:
 
-**Circular bias**: The scorer LLM labels chunks → those labels train/guide the assessment LLM → if they're the same model, we're teaching the model to predict its own predictions.
+- **Correlated bias**: if the scorer and assessor are the same model, the assessor is more likely to agree with the scorer’s labeling style.
+- **Metric inflation**: few-shot can look “better” because the examples match the model’s own priors, not because retrieval is more clinically valid.
+
+That’s why Spec 35 defaults to **disjoint** scorer and assessor models, but still provides
+`--allow-same-model` as an explicit, opt-in override for practicality.
 
 ---
 
@@ -87,20 +92,64 @@ python scripts/score_reference_chunks.py \
 **Pros**: No new model needed
 **Cons**: Full circularity risk, defeats the purpose of Spec 35
 
+### Option D: Use official MedGemma via HuggingFace (text-only)
+
+This uses **official weights** via Transformers (not an Ollama community upload).
+
+**Important**:
+- Use `medgemma:27b` → `google/medgemma-27b-text-it` (text generation).
+- Do **not** use `google/medgemma-27b-it` or `google/medgemma-4b-it` for this script;
+  those are **multimodal** (`Gemma3ForConditionalGeneration`) and are not supported by our
+  current HuggingFace chat client (`AutoModelForCausalLM`).
+
+Setup (one-time):
+1. Install HuggingFace deps: `pip install 'ai-psychiatrist[hf]'` (or `make dev-hf` if available)
+2. Accept model terms + login:
+   - https://huggingface.co/google/medgemma-27b-text-it
+   - `huggingface-cli login`
+
+Run:
+```bash
+python scripts/score_reference_chunks.py \
+  --embeddings-file huggingface_qwen3_8b_paper_train \
+  --scorer-backend huggingface \
+  --scorer-model medgemma:27b \
+  --limit 5
+```
+
+**Pros**: Medical tuning; best-aligned “clinical labeling” option; different fine-tune than `gemma3:*` (not paper-parity, but a defensible ablation).
+**Cons**: Very large model; may be slow or infeasible on Apple Silicon without aggressive quantization.
+
 ---
 
 ## Recommendation
 
-For research integrity, **Option B** is the only defensible default.
+Two-tier recommendation (be honest about constraints):
 
-**Recommended scorer model (default):** `qwen2.5:7b-instruct-q4_K_M`
-- Disjoint from the assessment model family (Gemma)
-- Strong instruction following + structured output tendencies (important because the script rejects
-  any output that is not *exactly* the expected JSON schema)
-- Fast enough to score ~6,837 chunks in a reasonable one-time job on Apple Silicon
+### If you can actually run official MedGemma
 
-**Backup choice:** `llama3.1:8b-instruct-q4_K_M`
-- Also disjoint, similar size class, widely used
+Use **Option D** (`--scorer-backend huggingface --scorer-model medgemma:27b`).
+This is the most defensible “clinical scorer” choice if runtime/hardware allow.
+
+### If you need a practical, local default (recommended for this Mac)
+
+Use **Option B** with a small disjoint model:
+
+- **Default**: `qwen2.5:7b-instruct-q4_K_M` (best JSON compliance tendencies)
+- **Backup**: `llama3.1:8b-instruct-q4_K_M`
+
+### Reality check: you can (and should) ablate
+
+If you’re unconvinced the disjoint-model requirement matters (reasonable), treat it as a **sensitivity analysis**:
+
+1. Generate chunk scores with the assessment model (explicitly opt in):
+   `--scorer-model gemma3:27b-it-qat --allow-same-model`
+2. Generate chunk scores with a disjoint scorer (or MedGemma if feasible).
+3. Run the exact same evaluation pipeline with each artifact and compare AURC/AUGRC/coverage.
+
+Important: `scripts/score_reference_chunks.py` writes to a fixed filename
+(`<embeddings>.chunk_scores.json`). To keep both versions:
+- Copy/rename the outputs after each run (including `.chunk_scores.meta.json`), then swap them back in before the evaluation run.
 
 If JSON compliance or score quality is poor with 7–8B models, consider `phi4:14b` (disjoint but slower).
 

@@ -123,6 +123,27 @@ Parsing:
 3. **Protocol lock**: store prompt hash; refuse to load scores if prompt hash differs (unless override flag set).
 4. **Reporting**: outputs must clearly label runs as “chunk-score method”, not reproduction.
 
+### Scorer Model Selection (Practical Guidance)
+
+This “disjoint model” rule is about **defensibility**, not “state leakage” (there is no training here).
+The actual risk is correlated bias: the same model may find its own labels more “natural” to use as few-shot examples.
+
+For research clarity, treat the scorer choice as an **ablation**:
+
+1. **Same-model baseline** (explicit opt-in):
+   - `--scorer-model gemma3:27b-it-qat --allow-same-model`
+2. **Disjoint scorer** (recommended sensitivity check):
+   - `--scorer-model qwen2.5:7b-instruct-q4_K_M` (or `llama3.1:8b-instruct-q4_K_M`)
+3. **MedGemma scorer** (optional, if feasible):
+   - `--scorer-backend huggingface --scorer-model medgemma:27b`
+   - Uses canonical `medgemma:27b` → resolves to `google/medgemma-27b-text-it`
+   - **Do not** use `google/medgemma-27b-it` / `google/medgemma-4b-it` directly here; those are multimodal
+     (`Gemma3ForConditionalGeneration`) and are not supported by our current HuggingFace chat client.
+
+Operational note: `scripts/score_reference_chunks.py` writes to a fixed filename
+(`<embeddings>.chunk_scores.json`). If you run multiple scorers, copy/rename the outputs (including
+`.chunk_scores.meta.json`) and swap them back in before each evaluation run.
+
 ## Runtime Integration
 
 Add setting:

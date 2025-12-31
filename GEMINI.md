@@ -88,3 +88,35 @@ Configuration is managed via environment variables and `.env`.
 *   `server.py`: Entry point for the FastAPI application.
 *   `CLAUDE.md`: Contains detailed instructions for AI coding assistants (highly relevant reference).
 *   `docs/specs/`: Implementation specifications.
+
+## Few-Shot RAG Pipeline (Specs 33-36)
+
+The few-shot methodology has a known flaw: participant-level PHQ-8 scores are assigned to arbitrary chunks regardless of content. See `HYPOTHESIS-FEWSHOT-DESIGN-FLAW.md`.
+
+### Spec Status
+
+| Spec | Description | Status |
+|------|-------------|--------|
+| 33 | Retrieval guardrails | Enabled |
+| 34 | Item-tag filtering | Enabled |
+| 35 | Chunk-level scoring | Ready (needs preprocessing) |
+| 36 | CRAG runtime validation | Disabled by default |
+
+### Production Run: Spec 35
+
+```bash
+# Step 1: Generate chunk scores (one-time)
+python scripts/score_reference_chunks.py \
+  --embeddings-file ollama_qwen3_8b_paper_train \
+  --scorer-backend ollama \
+  --scorer-model gemma3:27b-it-qat \
+  --allow-same-model
+
+# Step 2: Enable in .env
+# EMBEDDING_REFERENCE_SCORE_SOURCE=chunk
+
+# Step 3: Run evaluation
+python scripts/reproduce_results.py --mode both --split paper-test
+```
+
+**Note**: `--allow-same-model` is acceptable per 2025 research (SELF-ICL, ACL findings). Ablate with MedGemma if desired.
