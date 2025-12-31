@@ -1,223 +1,254 @@
-# Three Questions: Few-Shot Design Analysis
+# Hypothesis: Few-Shot Design Flaw (And How To Fix It)
 
 **Date**: 2025-12-30
-**Status**: Critical Design Investigation
+**Status**: Under Investigation
 **Origin**: First-principles analysis of few-shot methodology
 
 ---
 
-## Question 1: Can Zero-Shot "Cheat"?
+## Executive Summary
 
-### Answer: YES
+The paper's few-shot implementation has a **fundamental design flaw**: participant-level PHQ-8 scores are assigned to individual chunks regardless of chunk content. This creates noisy, misleading examples.
 
-**Evidence from code** (`quantitative.py:202`):
+**However**: Few-shot/RAG is NOT worthless. It provides:
+1. **Calibration for small models** (Gemma 27B needs examples; GPT-4 may not)
+2. **Explainability** (grounded, auditable reasoning vs. hallucinated CoT)
+3. **Reproducibility** (same retrieval = same explanation)
+
+The solution is Spec 35 + 36, which we've already designed.
+
+---
+
+## Three Questions Answered
+
+### Q1: Can Zero-Shot "Cheat"?
+
+**YES.** See `HYPOTHESIS-ZERO-SHOT-INFLATION.md` for full analysis.
+
+The LLM can read Ellie's direct symptom questions as shortcuts. Per the Burdisso paper:
+> "Models using interviewer's prompts learn to focus on a specific region of the interviews... and use them as discriminative shortcuts."
+
+**Location**: `_literature/markdown/daic-woz-prompts/daic-woz-prompts.md`
+
+---
+
+### Q2: Is Few-Shot Done Incorrectly?
+
+**YES - Design Flaw, Not Code Bug.**
+
+#### How PHQ-8 Works
+```
+PHQ-8 = 8 items (domains), each scored 0-3
+Total score = sum of all 8 items = 0-24
+
+Items: NoInterest, Depressed, Sleep, Tired, Appetite, Failure, Concentrating, Moving
+```
+
+#### How Chunks Are Created
+Transcripts are split into **8-line sliding windows** (step=2):
+```
+Participant 300's transcript:
+Line 1-8:   CHUNK 0 (may be about anything)
+Line 3-10:  CHUNK 1 (may be about anything)
+...
+Line 195-202: CHUNK 95 (maybe discusses sleep)
+```
+
+**Result**: ~100 chunks per participant, but only a FEW actually discuss any specific symptom.
+
+#### The Flaw: Score Assignment
+
+From `reference_store.py:976-1002`:
 ```python
-reference_text = ""  # Empty for zero-shot
-prompt = make_scoring_prompt(transcript.text, reference_text)
+def get_score(self, participant_id: int, item: PHQ8Item) -> int | None:
+    row = df[df["Participant_ID"] == participant_id]
+    col_name = PHQ8_COLUMN_MAP.get(item)  # e.g., "PHQ8_Sleep"
+    return int(row[col_name].iloc[0])     # Returns participant's overall score
 ```
 
-The LLM receives the **full DAIC-WOZ transcript** including:
-- Ellie's structured interview questions (probing PHQ-8 symptoms)
-- Participant's direct responses
+**EVERY chunk from a participant gets the SAME score**, regardless of content.
 
-**Example of "shortcut" available:**
+#### Visual Example
+
 ```
-Ellie: have you been diagnosed with depression
-Participant: yes i was diagnosed last year
-Ellie: can you tell me more about that    ← PROBING = SYMPTOM DETECTED
-Participant: i was feeling really down...
+Chunk 5 (about career goals):
+"Ellie: what's your dream job
+Participant: open a business
+Ellie: do you travel
+Participant: no"
+
+→ Gets assigned: "PHQ8_Sleep Score: 2"  ← NOTHING ABOUT SLEEP!
 ```
 
-**External Validation**: Burdisso et al. (2024) proved that models using Ellie's prompts achieve 0.88 F1 vs 0.85 F1 for participant-only. They achieved **0.90 F1 by intentionally exploiting this bias**.
+```
+Chunk 95 (actually about sleep):
+"Ellie: have you had trouble sleeping
+Participant: yes every night i lie awake"
 
-**Conclusion**: Zero-shot isn't "cheating" - it's using the interview as designed. But Ellie's structured questions provide discriminative shortcuts that make PHQ-8 prediction easier.
+→ Gets assigned: "PHQ8_Sleep Score: 2"  ← CORRECT
+```
+
+Both chunks get the SAME score because it's the participant's overall score, not the chunk's content.
 
 ---
 
-## Question 2: Is Few-Shot Done Incorrectly?
+### Q3: Is There A Better Approach?
 
-### Answer: YES - There's a Fundamental Design Flaw
+**YES - And We've Already Designed It.**
 
-### How Our Few-Shot Actually Works
+#### The 2025 Research Landscape
 
-1. **Extract evidence** from target participant's transcript
-2. **Embed evidence** for each PHQ-8 item
-3. **Retrieve similar CHUNKS** from reference embeddings
-4. **Assign participant-level scores** to those chunks
-5. **Format as reference examples**
+| Approach | Result | Source |
+|----------|--------|--------|
+| Naive Few-Shot | 78.90% F1 | RED paper |
+| RAG with filtering | **90.00% F1** | RED paper |
 
-### The Critical Flaw
+Key 2025 papers:
+- [RED: Personalized RAG for Depression](https://arxiv.org/html/2503.01315) - Symptom-aligned retrieval + Judge module
+- [Adaptive RAG for Mental Health](https://arxiv.org/html/2501.00982v1) - Questionnaire-grounded retrieval
+- [GPT-4 Clinical Depression](https://arxiv.org/html/2501.00199) - Zero-shot GPT-4 beats few-shot GPT-3.5
 
-**What gets retrieved**: 8-line sliding window chunks from OTHER participants
+#### Our Solution: Specs 34 + 35 + 36
 
-**What score gets assigned**: The OTHER participant's OVERALL PHQ-8 item score
+| Spec | What It Does | Fixes |
+|------|--------------|-------|
+| **Spec 34** | Tag chunks with relevant PHQ-8 items at index time | Only retrieve Sleep-tagged chunks for Sleep queries |
+| **Spec 35** | Score each chunk individually via LLM | Chunks get accurate, content-based scores |
+| **Spec 36** | Validate relevance at query time (CRAG) | Reject irrelevant chunks before use |
 
-**Result**: Completely irrelevant chunks get labeled with scores:
+**Together = Modern CRAG (2025 best practice)**
 
-```xml
-<Reference Examples>
-
-(PHQ8_Sleep Score: 2)
-Ellie: how are you doing today
-Participant: good
-Ellie: what's your dream job
-Participant: to open a business
-Ellie: do you travel a lot        ← NOTHING ABOUT SLEEP!
-Participant: no
-Ellie: why
-Participant: no specific reason
-
-</Reference Examples>
 ```
-
-This chunk has **NOTHING to do with sleep**, but gets labeled "Score: 2" because that participant happened to have a Sleep score of 2!
-
-### What FEW-SHOT SHOULD Look Like
-
-You correctly intuited this: examples should show **what different PHQ scores look like**:
-
-```xml
-<Reference Examples>
-
-(PHQ8_Sleep Score: 3 - Nearly Every Day)
-Participant: i can never sleep, maybe 2-3 hours a night
-Participant: i lie awake thinking about everything
-Participant: i'm exhausted all the time from not sleeping
-
-(PHQ8_Sleep Score: 0 - Not At All)
-Participant: i sleep great actually
-Participant: usually get 8 hours no problem
-Participant: sleep is the one thing i don't have issues with
-
-</Reference Examples>
+Naive Few-Shot (paper)           = Naive RAG
+   ↓ add Spec 34 (tag filter)    = Better RAG
+   ↓ add Spec 35 (chunk scoring) = Even Better RAG
+   ↓ add Spec 36 (validation)    = CRAG (2025 gold standard)
 ```
-
-### Is This The Paper's Design?
-
-**Yes** - this is exactly what Section 2.4.2 describes:
-- Sliding window chunks (N_chunk=8, step=2)
-- Cosine similarity retrieval
-- Participant-level score assignment
-
-But **the paper's design is flawed**. The chunks are:
-1. NOT symptom-specific (random 8-line windows)
-2. NOT score-representative (assigned participant-level scores)
-3. Retrieved by embedding similarity, not clinical relevance
-
-### Can This Be Fixed?
-
-**Spec 35** attempted to fix this with chunk-level scoring, but:
-- It scores ALL chunks with the participant's overall PHQ-8 score (per item)
-- The scorer prompt asks: "Would this evidence support score X for PHQ8_Sleep?"
-- This is backwards - we're asking if random chunks justify a predetermined score
-
-**What Would Actually Fix It**:
-
-1. **Symptom-Aware Chunking**: Chunk by question-answer pairs, not sliding windows
-2. **Clinical Relevance Filtering**: Only keep chunks that actually discuss the symptom
-3. **Full Transcript Examples**: Show "this is what a PHQ8 total 20 looks like" vs "this is what a 5 looks like"
-4. **Expert-Curated References**: Hand-pick clinically relevant examples per symptom
 
 ---
 
-## Question 3: Is Few-Shot Even The Right Approach?
+## Why Few-Shot Still Matters
 
-### Answer: 2025 Research Says NO - RAG is Better
+### Model Size Dependency
 
-**Web search results (December 2025) show clear trends:**
+| Model Size | Few-Shot Value | Reason |
+|------------|----------------|--------|
+| Small (Gemma 27B, local) | **HIGH** | Needs calibration examples |
+| Large (GPT-4, frontier) | Lower | Already has learned patterns |
 
-### RED: RAG for Depression Detection (arxiv 2503.01315)
+**From GitHub Issue #40**:
+> "Small models + RAG becomes a genuine value proposition... Consumer hardware deployment is essential [for resource-limited settings]."
 
-| Method | Macro F1 |
-|--------|----------|
-| Direct Prompting (naive LLM) | 78.90% |
-| Naive RAG | 84.39% |
-| **RED (with filtering + knowledge base)** | **90.00%** |
+### Explainability Value
 
-Key innovations:
-- **Adaptive Judge Module**: LLM decides when to stop retrieving
-- **Symptom-Aligned Retrieval**: Retrieve only snippets relevant to PHQ-8 aspects
-- **Knowledge Base Grounding**: Use psychological knowledge to filter noise
+**From GitHub Issue #39**:
 
-### Adaptive RAG for Mental Health (arxiv 2501.00982)
+| Property | Chain-of-Thought | RAG/CRAG |
+|----------|------------------|----------|
+| Reproducibility | Varies between runs | Fixed with same index |
+| Grounding | Generated rationalization | Anchored to real examples |
+| Verifiability | Cannot verify reasoning | Can examine retrieved examples |
+| Auditability | May change on re-run | Citable, stable |
 
-Key insight:
-> "Reframe prediction from direct text-to-diagnosis as correlating text and questionnaire items"
+> "RAG-based explainability provides something that chain-of-thought prompting fundamentally cannot — **grounded, verifiable clinical reasoning**."
 
-Instead of few-shot examples, they:
-- Retrieve relevant user posts for EACH questionnaire item
-- Generate item-level responses in zero-shot
-- Aggregate into final diagnosis
+---
 
-**Results**: Outperformed benchmarks (55% DCHR vs 45% best baseline) in completely unsupervised setting.
+## What CORRECT Few-Shot Would Look Like
 
-### GPT-4 Clinical Depression Study (arxiv 2501.00199)
+### Option A: Full Transcript Examples
+```xml
+<Reference Examples>
+This is a transcript of someone who scored PHQ8_Sleep = 3:
+[Full transcript showing clear severe sleep issues]
 
-- GPT-4 achieved F1 0.73 for depression classification
-- PHQ-8 estimates correlated strongly (r = 0.71) with true scores
-- **Zero-shot GPT-4 outperformed few-shot GPT-3.5**
+This is a transcript of someone who scored PHQ8_Sleep = 0:
+[Full transcript with no sleep issues mentioned]
+</Reference Examples>
+```
 
-### Key Takeaway from 2025 Literature
+### Option B: Curated Symptom-Specific Examples
+```xml
+<Reference Examples for PHQ8_Sleep>
+Score 3 (Nearly every day):
+"I haven't slept in days, maybe 2 hours a night if I'm lucky"
 
-**Few-shot with random chunks is OUTDATED**. Modern approaches use:
+Score 0 (Not at all):
+"I sleep great, 8 hours every night, no problems"
+</Reference Examples>
+```
 
-1. **Structured RAG**: Retrieve symptom-specific evidence, not random chunks
-2. **Filtering/Validation**: LLM judges to reject irrelevant retrievals (like our Spec 36!)
-3. **Questionnaire Grounding**: Predict item-by-item, not overall diagnosis
-4. **Zero-shot with good prompts**: Often beats naive few-shot
+### Option C: Spec 35 + 36 (Automated)
+- **Spec 35**: LLM scores each chunk ("What does THIS chunk suggest for Sleep?")
+- **Spec 36**: LLM validates ("Is this chunk about Sleep?")
+
+This is exactly what the RED paper calls "Judge module + symptom-aligned retrieval."
+
+**Trade-off**: More LLM calls, but fully automated and scalable.
+
+---
+
+## The Core Insight
+
+**Embedding similarity ≠ Clinical relevance**
+
+A chunk saying "I sleep fine" and "I can't sleep" are both about sleep. Both might be retrieved for a sleep query. But they describe opposite severities.
+
+The paper's methodology retrieves by **topic similarity** but labels by **participant severity**. These don't match at the chunk level.
+
+**Spec 35 + 36 fixes this** by:
+1. Scoring chunks based on their actual content (Spec 35)
+2. Validating relevance before use (Spec 36)
 
 ---
 
 ## Recommendations
 
-### Immediate Actions
+### Immediate
+1. **Enable Spec 36** for current runs (CRAG validation)
+2. **Run participant-only** as the true baseline
+3. **Compare**: Zero-shot (participant-only) vs Few-shot + Spec 36
 
-1. **Enable Spec 36** (CRAG validation) - it implements the "Judge Module" pattern
-2. **Consider disabling few-shot entirely** - zero-shot may be optimal for DAIC-WOZ
-3. **Run A/B test**: Zero-shot vs Few-shot with Spec 36 enabled
+### Future
+1. **Enable Spec 35** for chunk-level scoring
+2. **Full CRAG pipeline**: Spec 34 + 35 + 36
+3. **Consider**: Is the LLM overhead worth it vs zero-shot?
 
-### Architectural Changes (Future)
+### Experimental Matrix
 
-1. **Symptom-Aware Chunking**: Replace sliding windows with QA-pair extraction
-2. **Full Transcript RAG**: Instead of chunks, use complete interviews as examples
-3. **Expert-Curated Examples**: Hand-pick references per PHQ-8 item
-4. **Move to RED-style Architecture**: Adopt the filtering + knowledge base approach
+| Configuration | What It Tests |
+|---------------|---------------|
+| Zero-shot (full transcript) | Current baseline (inflated) |
+| Zero-shot (participant-only) | TRUE baseline |
+| Few-shot (current) | Broken implementation |
+| Few-shot + Spec 36 | CRAG (filtered) |
+| Few-shot + Spec 35 + 36 | Full CRAG (proper scores + filtering) |
 
-### Experimental Validation
+---
 
-1. Strip Ellie from transcripts - measure zero-shot performance drop
-2. Use hand-picked few-shot examples - measure if quality references help
-3. Analyze retrieval audit logs - measure clinical relevance of retrieved chunks
+## Related Documentation
+
+- `HYPOTHESIS-ZERO-SHOT-INFLATION.md` - Zero-shot analysis
+- `docs/brainstorming/daic-woz-preprocessing.md` - Ellie inclusion analysis
+- `docs/archive/specs/35-offline-chunk-level-phq8-scoring.md` - Spec 35
+- `docs/archive/specs/36-crag-reference-validation.md` - Spec 36
+- `_literature/markdown/daic-woz-prompts/daic-woz-prompts.md` - Burdisso paper
+- GitHub Issue #69 - Few-shot chunk/score mismatch
+- GitHub Issue #40 - Model size and local inference value
+- GitHub Issue #39 - RAG explainability value
 
 ---
 
 ## Conclusion
 
-**The few-shot implementation is not a code bug - it's a design flaw inherited from the paper.**
+1. **The paper's few-shot is flawed** - chunks get wrong scores
+2. **We've already designed the fix** - Spec 35 + 36 = CRAG
+3. **Few-shot still has value** for small models and explainability
+4. **Zero-shot baseline is inflated** by Ellie's shortcuts
+5. **TRUE baseline** = participant-only zero-shot
 
-The paper's methodology:
-- Uses random 8-line chunks
-- Assigns participant-level scores to irrelevant text
-- Retrieves by embedding similarity, not clinical relevance
-
-2025 research shows this is outdated. Modern approaches use:
-- Symptom-aligned retrieval
-- LLM-based filtering
-- Questionnaire grounding
-- Or just zero-shot with good prompts
-
-**Our zero-shot may actually be near-optimal because DAIC-WOZ's structured interview design gives the LLM direct access to PHQ-8-relevant evidence through Ellie's questions.**
+**The question isn't "few-shot vs zero-shot" - it's "broken few-shot vs proper CRAG vs participant-only zero-shot."**
 
 ---
 
-## Sources
-
-- [Explainable Depression Detection with Personalized RAG (RED)](https://arxiv.org/html/2503.01315)
-- [Adaptive RAG for Mental Health Screening](https://arxiv.org/html/2501.00982v1)
-- [GPT-4 on Clinical Depression Assessment](https://arxiv.org/html/2501.00199)
-- [Zero-Shot Strike: LLM Depression Detection](https://www.sciencedirect.com/science/article/abs/pii/S0885230824000469)
-- [DAIC-WOZ Prompt Bias (Burdisso et al.)](../_literature/markdown/daic-woz-prompts/daic-woz-prompts.md)
-
----
-
-*"The code may be right, but the behavior may be wrong."* - The insight that led to this investigation.
+*"The code may be right, but the behavior may be wrong."* - The insight that started this investigation.
