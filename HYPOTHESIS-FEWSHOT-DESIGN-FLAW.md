@@ -135,7 +135,7 @@ Key 2025 papers:
 | **Spec 35** | Score each chunk individually via LLM | Chunks get accurate, content-based scores |
 | **Spec 36** | Validate references at query time (CRAG-style) | Reject irrelevant/contradictory chunks before use (does not create new scores) |
 
-**Together = CRAG-style RAG pipeline**
+##### Together = CRAG-Style RAG Pipeline
 
 Important nuance:
 - Spec 36 is a *filter* (relevance/contradiction checking) and cannot magically make a participant-level
@@ -158,7 +158,7 @@ Naive Few-Shot (paper)           = Naive RAG
 | Model Size | Few-Shot Value | Reason |
 |------------|----------------|--------|
 | Small (Gemma 27B, local) | **HIGH** | Needs calibration examples |
-| Large (GPT-4, frontier) | Lower | Already has learned patterns |
+| Large (GPT-4, frontier) | Lower | Has already learned patterns |
 
 **From GitHub Issue #40**:
 > "Small models + RAG becomes a genuine value proposition... Consumer hardware deployment is essential [for resource-limited settings]."
@@ -206,7 +206,7 @@ Score 0 (Not at all):
 - **Spec 35**: LLM scores each chunk ("What does THIS chunk suggest for Sleep?")
 - **Spec 36**: LLM validates ("Is this chunk about Sleep?")
 
-This is exactly what the RED paper calls "Judge module + symptom-aligned retrieval."
+This matches what the RED paper calls "Judge module + symptom-aligned retrieval."
 
 **Trade-off**: More LLM calls, but fully automated and scalable.
 
@@ -214,7 +214,7 @@ This is exactly what the RED paper calls "Judge module + symptom-aligned retriev
 
 ## The Core Insight
 
-**Embedding similarity ≠ Clinical relevance**
+### Embedding Similarity ≠ Clinical Relevance
 
 A chunk saying "I sleep fine" and "I can't sleep" are both about sleep. Both might be retrieved for a sleep query. But they describe opposite severities.
 
@@ -271,7 +271,9 @@ The paper's methodology retrieves by **topic similarity** but labels by **partic
 4. **Zero-shot baseline is inflated** by Ellie's shortcuts
 5. **TRUE baseline** = participant-only zero-shot
 
-**The question isn't "few-shot vs zero-shot" - it's "broken few-shot vs proper CRAG vs participant-only zero-shot."**
+### The Real Question
+
+The question isn't "few-shot vs zero-shot" — it's "broken few-shot vs proper CRAG vs participant-only zero-shot."
 
 ---
 
