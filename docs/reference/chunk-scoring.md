@@ -103,7 +103,41 @@ By default, the script blocks using the same model as the quantitative assessmen
 - if `--scorer-model == MODEL_QUANTITATIVE_MODEL` it exits `2`
 - override with `--allow-same-model`
 
-This is about **research defensibility** (correlated bias), not “state leakage”. There is no training here; treat scorer choice as an ablation.
+This is about **research defensibility** (correlated bias), not "state leakage". There is no training here; treat scorer choice as an ablation.
+
+### Scorer Model Recommendations
+
+| Priority | Scorer Choice | Notes |
+|----------|---------------|-------|
+| 1 (ideal) | MedGemma via HuggingFace | Medical tuning, most defensible (requires HF deps) |
+| 2 (practical) | Different model family | e.g., `qwen2.5:7b-instruct-q4_K_M`, `llama3.1:8b-instruct-q4_K_M` |
+| 3 (baseline) | Same model with `--allow-same-model` | Explicit opt-in, ablate against disjoint |
+
+**MedGemma example** (if HuggingFace deps installed):
+```bash
+uv run python scripts/score_reference_chunks.py \
+  --embeddings-file huggingface_qwen3_8b_paper_train \
+  --scorer-backend huggingface \
+  --scorer-model medgemma:27b
+```
+
+**Disjoint model example** (practical default):
+```bash
+ollama pull qwen2.5:7b-instruct-q4_K_M
+uv run python scripts/score_reference_chunks.py \
+  --embeddings-file huggingface_qwen3_8b_paper_train \
+  --scorer-backend ollama \
+  --scorer-model qwen2.5:7b-instruct-q4_K_M
+```
+
+**Same model baseline** (for comparison):
+```bash
+uv run python scripts/score_reference_chunks.py \
+  --embeddings-file huggingface_qwen3_8b_paper_train \
+  --scorer-backend ollama \
+  --scorer-model gemma3:27b-it-qat \
+  --allow-same-model
+```
 
 ---
 
