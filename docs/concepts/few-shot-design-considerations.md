@@ -58,7 +58,7 @@ uv run python scripts/score_reference_chunks.py \
 EMBEDDING_REFERENCE_SCORE_SOURCE=chunk
 ```
 
-See `docs/reference/chunk-scoring.md` for full details.
+See `docs/data/chunk-scoring.md` for full details.
 
 ---
 
@@ -162,7 +162,7 @@ If the scorer and assessor are the same model:
 | 2 (practical) | Different model family (qwen2.5, llama3.1) | Truly disjoint |
 | 3 (baseline) | Same model with `--allow-same-model` | Explicit opt-in, ablate against disjoint |
 
-See `docs/reference/chunk-scoring.md` for generation commands.
+See `docs/data/chunk-scoring.md` for generation commands.
 
 ---
 
@@ -177,7 +177,7 @@ See `docs/reference/chunk-scoring.md` for generation commands.
 
 ## Related Documentation
 
-- [Chunk Scoring Reference](../reference/chunk-scoring.md) - Spec 35 details
+- [Chunk Scoring Reference](../data/chunk-scoring.md) - Spec 35 details
 - [Embeddings Explained](./embeddings-explained.md) - How retrieval works
 - [CRAG Validation Guide](../guides/crag-validation-guide.md) - Spec 36 details
 - [Item Tagging Setup](../guides/item-tagging-setup.md) - Spec 34 details

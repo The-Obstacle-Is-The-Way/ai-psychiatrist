@@ -63,7 +63,7 @@ See: `docs/guides/embedding-generation.md`.
 
 See:
 - `docs/reference/statistical-methodology-aurc-augrc.md` (why AURC/AUGRC)
-- `docs/reference/metrics-and-evaluation.md` (exact definitions + output schema)
+- `docs/statistics/metrics-and-evaluation.md` (exact definitions + output schema)
 
 ---
 
@@ -95,13 +95,13 @@ See: `docs/guides/preflight-checklist-few-shot.md`.
 
 ## Where To Go Next
 
-- Configuration: `docs/reference/configuration.md`
+- Configuration: `docs/configs/configuration.md`
 - Run output schema: `docs/reference/run-output-schema.md`
 - Few-shot prompt format: `docs/concepts/few-shot-prompt-format.md`
 - Batch query embedding: `docs/guides/batch-query-embedding.md`
 - Retrieval debugging: `docs/guides/debugging-retrieval-quality.md`
 - Item-tagging setup: `docs/guides/item-tagging-setup.md`
-- Chunk scoring setup + schema: `docs/reference/chunk-scoring.md`
+- Chunk scoring setup + schema: `docs/data/chunk-scoring.md`
 - CRAG validation guide: `docs/guides/crag-validation-guide.md`
 - Error-handling philosophy: `docs/concepts/error-handling.md`
 - Exception reference: `docs/reference/exceptions.md`

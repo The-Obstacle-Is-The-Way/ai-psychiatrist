@@ -35,7 +35,7 @@ When abstention/coverage differs across modes, raw MAE comparisons are invalid.
 
 See:
 - `docs/reference/statistical-methodology-aurc-augrc.md`
-- `docs/reference/metrics-and-evaluation.md`
+- `docs/statistics/metrics-and-evaluation.md`
 
 ---
 
@@ -74,7 +74,7 @@ Few-shot retrieval can only be meaningfully evaluated after chunk labels are cor
 - Enable with: `EMBEDDING_REFERENCE_SCORE_SOURCE=chunk`
 
 See:
-- `docs/reference/chunk-scoring.md`
+- `docs/data/chunk-scoring.md`
 - `docs/guides/crag-validation-guide.md` (Spec 36; optional after chunk scores exist)
 
 ---

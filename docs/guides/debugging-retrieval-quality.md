@@ -94,7 +94,7 @@ Optional but required when features are enabled:
 
 See:
 - `docs/guides/embedding-generation.md`
-- `docs/reference/chunk-scoring.md`
+- `docs/data/chunk-scoring.md`
 
 ---
 

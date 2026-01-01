@@ -45,10 +45,10 @@ AI Psychiatrist is an engineering-focused, reproducible implementation of a rese
 
 | Document | Description |
 |----------|-------------|
-| [Configuration](reference/configuration.md) | All configuration options |
+| [Configuration](configs/configuration.md) | All configuration options |
 | [Feature Reference](reference/features.md) | Implemented features + defaults (non-archive canonical) |
 | [Run Output Schema](reference/run-output-schema.md) | Output JSON + experiment registry format |
-| [API Endpoints](reference/api/endpoints.md) | REST API reference |
+| [API Endpoints](reference/api-endpoints.md) | REST API reference |
 | [Testing](reference/testing.md) | Markers, fixtures, and test-doubles policy |
 | [Glossary](reference/glossary.md) | Terms and definitions |
 
@@ -63,7 +63,7 @@ AI Psychiatrist is an engineering-focused, reproducible implementation of a rese
 | Document | Description |
 |----------|-------------|
 | [Future Architecture](concepts/future-architecture.md) | LangGraph integration roadmap (Pydantic AI is already integrated) |
-| [Spec 20: Keyword Fallback Improvements](specs/20-keyword-fallback-improvements.md) | Deferred — intentionally not implementing (see spec) |
+| [Spec 20: Keyword Fallback Improvements](archive/specs/20-keyword-fallback-improvements.md) | Deferred — intentionally not implementing (see spec) |
 
 ### Debugging / Reproduction
 

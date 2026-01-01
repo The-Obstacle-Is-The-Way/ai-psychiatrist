@@ -74,7 +74,7 @@ coverage/MAE depends on model weights/quantization, backend, and prompt behavior
 Run details and metric definitions live in:
 - `docs/results/run-history.md`
 - `docs/results/reproduction-results.md`
-- `docs/reference/metrics-and-evaluation.md`
+- `docs/statistics/metrics-and-evaluation.md`
 
 Interpretation: higher coverage often increases MAE because the model attempts more
 items (including harder-to-evidence symptoms). This is a general tradeoff; attributing
@@ -215,4 +215,4 @@ disabled vs enabled using the same split and model backend:
 - [clinical-understanding.md](./clinical-understanding.md) - How the system works
 - [reproduction-results.md](../results/reproduction-results.md) - Historical run notes (includes invalidated backfill-ON run)
 - [agent-sampling-registry.md](../reference/agent-sampling-registry.md) - Sampling parameters (paper leaves some unspecified)
-- [metrics-and-evaluation.md](../reference/metrics-and-evaluation.md) - Exact metric definitions + output schema
+- [metrics-and-evaluation.md](../statistics/metrics-and-evaluation.md) - Exact metric definitions + output schema

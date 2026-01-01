@@ -292,7 +292,7 @@ EMBEDDING_ENABLE_REFERENCE_VALIDATION=false
 
 - `POST-ABLATION-DEFAULTS.md` — When defaults will flip
 - `FEATURES.md` — Feature status and configuration
-- `docs/reference/configuration.md` — Full config reference
+- `docs/configs/configuration.md` — Full config reference
 - `.env.example` — Example configuration
 - `PROBLEM-HUGGINGFACE-CHUNK-SCORES-MISSING.md` — HuggingFace chunk scores gap
 - `PROBLEM-SPEC35-SCORER-MODEL-GAP.md` — Scorer model defensibility gap

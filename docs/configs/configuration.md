@@ -104,7 +104,7 @@ All agents use `temperature=0.0`. We do NOT set `top_k` or `top_p` because:
 2. Best practice: "use temperature only, not both" ([Anthropic](https://www.prompthub.us/blog/using-anthropic-best-practices-parameters-and-large-context-windows))
 3. Claude APIs error if you set both temp and top_p
 
-See [Agent Sampling Registry](./agent-sampling-registry.md) for full rationale with citations
+See [Agent Sampling Registry](../reference/agent-sampling-registry.md) for full rationale with citations
 
 **Model Options:**
 

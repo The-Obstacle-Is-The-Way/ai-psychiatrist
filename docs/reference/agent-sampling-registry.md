@@ -2,7 +2,7 @@
 
 **Purpose**: Single Source of Truth (SSOT) for all agent sampling parameters.
 **Last Updated**: 2026-01-01
-**Related**: [Configuration Reference](./configuration.md) | [GitHub Issue #46](https://github.com/The-Obstacle-Is-The-Way/ai-psychiatrist/issues/46)
+**Related**: [Configuration Reference](../configs/configuration.md) | [GitHub Issue #46](https://github.com/The-Obstacle-Is-The-Way/ai-psychiatrist/issues/46)
 
 ---
 
@@ -153,7 +153,7 @@ MODEL_TEMPERATURE=0.0
 ## References
 
 - [GitHub Issue #46](https://github.com/The-Obstacle-Is-The-Way/ai-psychiatrist/issues/46) - Full investigation
-- [Configuration Reference](./configuration.md)
+- [Configuration Reference](../configs/configuration.md)
 - [Med-PaLM - Nature Medicine](https://pmc.ncbi.nlm.nih.gov/articles/PMC11922739/)
 - [Temperature in Clinical AI - medRxiv 2025](https://www.medrxiv.org/content/10.1101/2025.06.04.25328288v1.full)
 - [Anthropic Best Practices - PromptHub](https://www.prompthub.us/blog/using-anthropic-best-practices-parameters-and-large-context-windows)

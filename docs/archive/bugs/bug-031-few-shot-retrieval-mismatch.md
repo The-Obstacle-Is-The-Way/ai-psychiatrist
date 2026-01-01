@@ -11,7 +11,7 @@
 **Status**: ✅ CLOSED - Resolved by Specs 31-34
 **Severity**: HIGH - Potential contributor to zero-shot outperforming few-shot
 **Discovered**: 2025-12-28
-**Related**: [Investigation Document](../../brainstorming/investigation-zero-shot-beats-few-shot.md)
+**Related**: [Investigation Document](../misc/investigation-zero-shot-beats-few-shot.md)
 
 ---
 

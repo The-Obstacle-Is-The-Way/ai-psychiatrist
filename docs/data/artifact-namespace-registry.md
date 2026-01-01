@@ -104,7 +104,7 @@ Chunk scoring produces per-chunk estimated PHQ-8 item scores aligned with `{outp
 - Values are `0..3` or `null`
 - `prompt_hash` matches the current scorer prompt (unless explicitly overridden as unsafe)
 
-See: `docs/reference/chunk-scoring.md`.
+See: `docs/data/chunk-scoring.md`.
 
 ### Partial Output Manifest (Spec 40)
 

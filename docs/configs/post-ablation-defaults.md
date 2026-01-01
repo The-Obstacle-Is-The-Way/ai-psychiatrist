@@ -313,7 +313,7 @@ EMBEDDING_MAX_REFERENCE_CHARS_PER_ITEM=500
 - `HYPOTHESIS-ZERO-SHOT-INFLATION.md` — Why zero-shot can "cheat"
 - `PROBLEM-SPEC35-SCORER-MODEL-GAP.md` — Scorer model selection for chunk scoring
 - `docs/reference/features.md` — Feature index + defaults (non-archive canonical)
-- `docs/reference/chunk-scoring.md` — Chunk scoring schema/workflow (Spec 35)
+- `docs/data/chunk-scoring.md` — Chunk scoring schema/workflow (Spec 35)
 - `docs/guides/item-tagging-setup.md` — Tagging setup + schema (Spec 34)
 - `docs/guides/debugging-retrieval-quality.md` — Diagnostics flow (Specs 32–36)
 

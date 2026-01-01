@@ -91,6 +91,6 @@ When adding a new setting:
 
 ## Related Docs
 
-- Configuration reference: `docs/reference/configuration.md`
+- Configuration reference: `docs/configs/configuration.md`
 - Feature index: `docs/reference/features.md`
 - Error-handling philosophy: `docs/concepts/error-handling.md`

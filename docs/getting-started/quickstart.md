@@ -248,4 +248,4 @@ The first request may take 30-60 seconds as models load into memory. Subsequent 
 
 - [Architecture](../concepts/architecture.md) - Understand system design
 - [Pipeline](../concepts/pipeline.md) - Learn how agents collaborate
-- [Configuration](../reference/configuration.md) - Customize settings
+- [Configuration](../configs/configuration.md) - Customize settings

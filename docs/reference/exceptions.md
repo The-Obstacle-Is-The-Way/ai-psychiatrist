@@ -69,4 +69,4 @@ When triaging failures, start by grouping by `error_type`.
 ## Related Docs
 
 - Error-handling philosophy: `docs/concepts/error-handling.md`
-- Configuration (timeouts, backends): `docs/reference/configuration.md`
+- Configuration (timeouts, backends): `docs/configs/configuration.md`

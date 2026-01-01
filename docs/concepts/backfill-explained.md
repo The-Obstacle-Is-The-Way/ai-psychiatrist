@@ -12,7 +12,7 @@
 > meaningless. See `HYPOTHESIS-FEWSHOT-DESIGN-FLAW.md` and `POST-ABLATION-DEFAULTS.md` for details.
 
 **Audience**: Researchers and developers wanting to understand the coverage-accuracy tradeoff
-**Related**: [Extraction Mechanism](./extraction-mechanism.md) | [Configuration Reference](../reference/configuration.md) | [Coverage Explained](./coverage-explained.md)
+**Related**: [Extraction Mechanism](./extraction-mechanism.md) | [Configuration Reference](../configs/configuration.md) | [Coverage Explained](./coverage-explained.md)
 **Last Updated**: 2026-01-01
 
 ---
@@ -430,4 +430,4 @@ Transcript → LLM Evidence Extraction
 
 - [Extraction Mechanism](./extraction-mechanism.md) - Full extraction pipeline
 - [Paper Parity Guide](../guides/paper-parity-guide.md) - How to reproduce paper results
-- [Configuration Reference](../reference/configuration.md) - All settings
+- [Configuration Reference](../configs/configuration.md) - All settings

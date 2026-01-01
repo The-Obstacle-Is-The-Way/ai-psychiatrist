@@ -378,4 +378,4 @@ For local reproduction runtime measurements, see `docs/results/reproduction-resu
 
 - [Architecture](architecture.md) - System design details
 - [PHQ-8](phq8.md) - Understanding the assessment scale
-- [Configuration](../reference/configuration.md) - All settings
+- [Configuration](../configs/configuration.md) - All settings

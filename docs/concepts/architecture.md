@@ -356,7 +356,7 @@ MODEL_QUANTITATIVE_MODEL=gemma3:27b
 EMBEDDING_TOP_K_REFERENCES=3
 ```
 
-See [Configuration Reference](../reference/configuration.md) for complete documentation.
+See [Configuration Reference](../configs/configuration.md) for complete documentation.
 
 ---
 
@@ -394,5 +394,5 @@ mock_agent.assess.return_value = ...  # Don't do this
 ## See Also
 
 - [Pipeline](pipeline.md) - How agents collaborate
-- [Configuration](../reference/configuration.md) - All settings
+- [Configuration](../configs/configuration.md) - All settings
 - [Feature Reference](../reference/features.md) - Implemented features + defaults
