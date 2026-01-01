@@ -37,8 +37,8 @@ AI Psychiatrist is an engineering-focused, reproducible implementation of a rese
 
 | Document | Description |
 |----------|-------------|
-| [Architecture](concepts/architecture.md) | System layers and design patterns |
-| [Pipeline](concepts/pipeline.md) | How the 4-agent pipeline works |
+| [Architecture](architecture/architecture.md) | System layers and design patterns |
+| [Pipeline](architecture/pipeline.md) | How the 4-agent pipeline works |
 | [PHQ-8](concepts/phq8.md) | Understanding PHQ-8 depression assessment |
 
 ### Reference
@@ -62,7 +62,7 @@ AI Psychiatrist is an engineering-focused, reproducible implementation of a rese
 
 | Document | Description |
 |----------|-------------|
-| [Future Architecture](concepts/future-architecture.md) | LangGraph integration roadmap (Pydantic AI is already integrated) |
+| [Future Architecture](architecture/future-architecture.md) | LangGraph integration roadmap (Pydantic AI is already integrated) |
 | [Spec 20: Keyword Fallback Improvements](archive/specs/20-keyword-fallback-improvements.md) | Deferred — intentionally not implementing (see spec) |
 
 ### Debugging / Reproduction

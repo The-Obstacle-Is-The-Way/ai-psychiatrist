@@ -68,7 +68,7 @@ The system makes **multiple LLM calls** per patient:
 #### Step 1: Evidence Extraction
 - LLM reads transcript
 - Outputs JSON with quotes for each PHQ-8 item
-- Sometimes this fails (malformed JSON) → falls back to empty evidence; optional keyword backfill (if enabled) can still add evidence
+- Sometimes this fails (malformed JSON) → falls back to empty evidence
 
 #### Step 2: Few-Shot Retrieval
 - Uses the extracted evidence to find **similar patients** from the training data
@@ -125,9 +125,7 @@ Interview Transcript
 ## Why We're Seeing What We're Seeing
 
 ### The JSON Parsing Warning
-When evidence extraction produces malformed output, the system falls back to an **empty evidence** dict for that participant.
-If keyword backfill is enabled, keyword matching can still add evidence; if backfill is disabled (paper-text parity default),
-more items may remain N/A.
+When evidence extraction produces malformed output, the system falls back to an **empty evidence** dict for that participant, resulting in more N/A items.
 
 ### Variable Coverage (50-100%)
 Coverage varies across participants and items. This depends on:
@@ -148,16 +146,12 @@ The paper excludes N/A items from MAE calculation. This is valid because:
 ### Potential Improvements
 
 1. **Better Evidence Extraction**
-   - Reduce malformed JSON rates via prompt tightening and/or an explicit repair step for evidence extraction
-   - Could improve coverage by reducing empty-evidence cases (and reducing reliance on keyword backfill when enabled)
+   - Reduce malformed JSON rates via prompt tightening and/or an explicit repair step
+   - Could improve coverage by reducing empty-evidence cases
 
 2. **Prompt Engineering**
    - Adjust how we ask the LLM to extract evidence
    - Be more explicit about valid output formats
-
-3. **Fallback Enhancement**
-   - When JSON fails, current keyword backfill only catches obvious mentions
-   - Could add more sophisticated symptom detection
 
 ### What the Results Will Tell Us
 
@@ -174,7 +168,7 @@ If our MAE is close to 0.619 with reasonable coverage, we've successfully reprod
 
 **In one sentence**: The system extracts symptom-related quotes from interviews, uses similar patient examples to calibrate, predicts 0-3 scores per PHQ-8 item (or N/A if insufficient evidence), and we measure accuracy via MAE on the items it actually predicted.
 
-**The friction we've hit**: Evidence extraction sometimes fails to parse, leading to lower coverage. The system still works via fallbacks, but there's room for improvement.
+**Known limitation**: Evidence extraction sometimes fails to parse, leading to lower coverage. There's room for improvement in prompt engineering and JSON parsing robustness.
 
 ---
 

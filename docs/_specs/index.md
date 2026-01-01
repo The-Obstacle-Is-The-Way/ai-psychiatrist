@@ -8,7 +8,7 @@ Implementation-ready (or implementation-planned) specifications for changes that
 
 ## Deferred
 
-- **Spec 20**: [Keyword Fallback Improvements (Deferred)](../archive/specs/20-keyword-fallback-improvements.md)
+- **Spec 20**: [Keyword Fallback Improvements (Deferred)](../_archive/specs/20-keyword-fallback-improvements.md)
 
 ## Archived (Implemented)
 

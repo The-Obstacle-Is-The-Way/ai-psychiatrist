@@ -32,16 +32,7 @@ This document explains how evidence extraction works, why it succeeds or fails, 
                               │
                               ▼
 ┌─────────────────────────────────────────────────────────────┐
-│              STEP 2: KEYWORD BACKFILL (Rule-Based)          │
-│                                                             │
-│  For any item with insufficient evidence:                   │
-│  Search transcript for keywords like "can't sleep",         │
-│  "exhausted", "hopeless" and add matching sentences.        │
-└─────────────────────────────────────────────────────────────┘
-                              │
-                              ▼
-┌─────────────────────────────────────────────────────────────┐
-│              STEP 3: SCORING (LLM)                          │
+│              STEP 2: SCORING (LLM)                          │
 │                                                             │
 │  For each item WITH evidence:                               │
 │    → Score 0-3 based on frequency/severity                  │
@@ -123,60 +114,7 @@ The LLM **semantically analyzes** the transcript:
 
 ---
 
-## Step 2: Keyword Backfill (Optional Rule-Based Safety Net)
-
-### Why We Need It
-
-LLM extraction isn't perfect. Sometimes it misses obvious evidence like "I'm exhausted" for the Tired domain.
-
-### How It Works
-
-From `src/ai_psychiatrist/agents/quantitative.py` (backfill helpers; gated by `QUANTITATIVE_ENABLE_KEYWORD_BACKFILL`):
-
-```python
-hits = self._find_keyword_hits(transcript, cap=cap)
-enriched = self._merge_evidence(llm_evidence, hits, cap=cap)
-```
-
-The real implementation uses a simple sentence splitter and caps the number of
-backfilled sentences per domain to keep prompts bounded. See
-[backfill-explained.md](./backfill-explained.md) for the full helper implementations.
-
-### The Keyword Lists
-
-From `src/ai_psychiatrist/resources/phq8_keywords.yaml`:
-
-| Domain | Example Keywords |
-|--------|------------------|
-| Sleep | "can't sleep", "insomnia", "wake up tired" |
-| Tired | "exhausted", "no energy", "feeling tired" |
-| Depressed | "hopeless", "crying", "feeling down" |
-| Appetite | "no appetite", "overeating", "lost weight" |
-
-### Why This Increases Coverage
-
-Without backfill:
-- LLM misses "I'm so tired" → Tired gets N/A
-
-With backfill:
-- LLM misses it, but "so tired" is a keyword (substring match)
-- Backfill finds "I'm so tired" → Tired gets evidence → Tired gets scored
-
-Keyword backfill can increase coverage relative to a pure LLM-only evidence
-extraction approach. The paper reports that **in ~50% of cases** the model was
-unable to provide a prediction due to insufficient evidence (Section 3.2).
-
-Backfill is **OFF by default** for paper-text parity (the paper methodology as written does not
-describe keyword backfill). Enabling backfill is deprecated and should be treated as a historical
-ablation only.
-
-Enable backfill to increase coverage:
-- Default (paper-text parity): `QUANTITATIVE_ENABLE_KEYWORD_BACKFILL=false`
-- Higher coverage: `QUANTITATIVE_ENABLE_KEYWORD_BACKFILL=true`
-
----
-
-## Step 3: Scoring (Back to the LLM)
+## Step 2: Scoring (Back to the LLM)
 
 ### What Happens
 
@@ -277,29 +215,19 @@ Note: The paper text does not specify exact sampling settings; the effects below
 | MedGemma 27B | Appendix F: lower MAE on the subset with available evidence, but fewer predictions overall (more abstention) |
 | Smaller models | Often less robust on nuance (heuristic) |
 
-### Keyword List Quality
-
-Better keywords → more backfill matches → higher coverage
-
-Our keyword list is hand-curated and includes collision-avoidance heuristics (for
-substring matching). It is not a substitute for clinical validation; treat it as a
-best-effort fallback mechanism. See `src/ai_psychiatrist/resources/phq8_keywords.yaml`.
-
 ---
 
 ## Summary: The Complete Picture
 
 1. **LLM reads transcript** and extracts quotes per symptom (semantic analysis)
-2. **Keyword backfill** catches what LLM missed (rule-based)
-3. **Evidence exists?**
+2. **Evidence exists?**
    - Yes → LLM scores it (0-3)
    - No → N/A
-4. **Coverage** = percentage of items that got scores instead of N/A
+3. **Coverage** = percentage of items that got scores instead of N/A
 
 **The key insight**: Extraction depends on:
 - Whether the symptom was discussed in the interview
 - How well the LLM recognizes relevant language
-- How comprehensive our keyword list is
 - Model parameters (temperature, model size)
 
 ---
@@ -308,9 +236,8 @@ best-effort fallback mechanism. See `src/ai_psychiatrist/resources/phq8_keywords
 
 | File | What It Does |
 |------|--------------|
-| `src/ai_psychiatrist/agents/quantitative.py` | Evidence extraction, keyword backfill, and scoring |
-| `src/ai_psychiatrist/agents/prompts/quantitative.py` | Prompt templates + keyword resource loader |
-| `src/ai_psychiatrist/resources/phq8_keywords.yaml` | Keyword lists (packaged resource) |
+| `src/ai_psychiatrist/agents/quantitative.py` | Evidence extraction and scoring |
+| `src/ai_psychiatrist/agents/prompts/quantitative.py` | Prompt templates |
 | `src/ai_psychiatrist/services/embedding.py` | Few-shot retrieval + similarity computation |
 
 ---

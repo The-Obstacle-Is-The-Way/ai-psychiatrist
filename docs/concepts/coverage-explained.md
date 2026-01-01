@@ -120,9 +120,7 @@ And:
 
 ### Our Approach
 
-We support both goals, and make the choice explicit:
-- **Paper-text parity / pure LLM measurement**: backfill OFF by default.
-- **Clinical utility**: enable keyword backfill to increase coverage.
+We prioritize **pure LLM measurement**—the system only scores items where the LLM found sufficient evidence. This matches the paper's methodology and provides a clean measure of model capability.
 
 ---
 
@@ -158,15 +156,10 @@ If the system skips hard items (where it would have made errors) and only predic
 ### 1. Evidence Extraction
 The LLM reads the transcript and extracts quotes for each PHQ-8 item. If it finds quotes, it can make a prediction.
 
-### 2. Keyword Backfill
-When enabled, keyword backfill searches for phrases like "can't sleep", "so tired", "no appetite" to find
-relevant sentences. This typically increases coverage, but it is optional and not always
-enabled (see `docs/concepts/backfill-explained.md`).
-
-### 3. Model Confidence
+### 2. Model Confidence
 The LLM decides when to say "N/A". Some models are more conservative than others.
 
-### 4. Transcript Richness
+### 3. Transcript Richness
 Longer, more detailed interviews → more evidence → higher coverage.
 
 ---
@@ -177,23 +170,11 @@ Paper Section 3.2 explicitly notes that **subjects without sufficient evidence w
 excluded**, and that in **~50% of cases** the model was unable to provide a prediction
 due to insufficient evidence.
 
-In this repository, coverage can be increased by enabling the optional
-rule-based keyword backfill step (`QuantitativeAssessmentAgent._find_keyword_hits` +
-`QuantitativeAssessmentAgent._merge_evidence`) that injects keyword-matched sentences
-when the initial LLM extraction misses evidence.
-
-Other plausible contributors include:
+Plausible contributors to coverage differences include:
 
 1. Prompt wording and parsing behavior differences
 2. Model weights and quantization differences (paper does not specify quantization)
 3. Backend/runtime differences (Ollama vs HuggingFace)
-
-To turn this from a hypothesis into a conclusion, run an ablation with backfill
-disabled vs enabled using the same split and model backend:
-- Default (paper-text parity): `QUANTITATIVE_ENABLE_KEYWORD_BACKFILL=false`
-- Higher coverage (deprecated): `QUANTITATIVE_ENABLE_KEYWORD_BACKFILL=true`
-
-> ⚠️ **Deprecated**: Keyword backfill is a historical ablation feature only. See [Backfill Explained](backfill-explained.md) for details.
 
 ---
 
@@ -213,6 +194,6 @@ disabled vs enabled using the same split and model backend:
 ## Related Documentation
 
 - [clinical-understanding.md](./clinical-understanding.md) - How the system works
-- [reproduction-results.md](../results/reproduction-results.md) - Historical run notes (includes invalidated backfill-ON run)
+- [reproduction-results.md](../results/reproduction-results.md) - Historical run notes
 - [agent-sampling-registry.md](../reference/agent-sampling-registry.md) - Sampling parameters (paper leaves some unspecified)
 - [metrics-and-evaluation.md](../statistics/metrics-and-evaluation.md) - Exact metric definitions + output schema
