@@ -429,8 +429,8 @@ uv run python scripts/evaluate_selective_prediction.py --input "$OUTPUT"
 | `docs/_specs/daic-woz-transcript-preprocessing.md` | Preprocessing spec (full detail) |
 | `docs/data/daic-woz-preprocessing.md` | User-facing guide |
 | `data/DATA_PROVENANCE.md` | Patched values documentation |
-| `CONFIGURATION-PHILOSOPHY.md` | Config design principles |
-| `POST-ABLATION-DEFAULTS.md` | Post-ablation config changes |
+| `docs/configs/configuration-philosophy.md` | Config design principles |
+| `docs/_archive/configs/post-ablation-defaults.md` | Post-ablation config changes (archived) |
 | `NEXT-STEPS.md` | (Superseded by this document) |
 
 ---

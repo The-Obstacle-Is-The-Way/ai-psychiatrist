@@ -14,12 +14,12 @@ Participant 339 consistently fails in zero-shot mode due to the LLM (Gemma 3 27B
 
 ## Error
 
-```
+```text
 json.decoder.JSONDecodeError: Expecting ',' delimiter: line 8 column 19 (char 404)
 ```
 
 Full trace:
-```
+```text
 pydantic_ai.exceptions.ModelRetry: Invalid JSON in <answer>: Expecting ',' delimiter: line 8 column 19 (char 404). Please ensure <answer> contains valid JSON.
 ...
 pydantic_ai.exceptions.UnexpectedModelBehavior: Exceeded maximum retries (3) for output validation

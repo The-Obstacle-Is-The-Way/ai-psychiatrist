@@ -345,10 +345,10 @@ Spec 31/32 improved few-shot by ~10%, proving formatting matters. But the gap to
 
 **Results**:
 
-| Mode | AURC | AUGRC | Cmax | N_included | Failed |
-|------|------|-------|------|------------|--------|
-| Zero-shot | 0.138 | 0.039 | 56.9% | 40 | 1 |
-| Few-shot | 0.151 | 0.048 | 65.9% | 41 | 0 |
+| Mode | AURC | AUGRC | Cmax | MAE_w | MAE_item | MAE_subj | N_included | Failed |
+|------|------|-------|------|-------|----------|----------|------------|--------|
+| Zero-shot | 0.138 | 0.039 | 56.9% | 0.698 | 0.717 | 0.640 | 40 | 1 |
+| Few-shot | 0.151 | 0.048 | 65.9% | 0.639 | 0.636 | 0.606 | 41 | 0 |
 
 **95% Bootstrap CIs** (10,000 resamples, participant-level):
 
