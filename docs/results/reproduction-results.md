@@ -71,7 +71,7 @@ uv run python scripts/evaluate_selective_prediction.py --input data/outputs/YOUR
 
 ## Spec 35 Chunk-Level Scoring (Now Enabled)
 
-Chunk-level scoring is **enabled by default** (`EMBEDDING_REFERENCE_SCORE_SOURCE=chunk`).
+Chunk-level scoring is enabled when `EMBEDDING_REFERENCE_SCORE_SOURCE=chunk` (default: `participant`).
 
 Generated artifacts:
 - `data/embeddings/ollama_qwen3_8b_paper_train.chunk_scores.json`
