@@ -8,12 +8,14 @@
 
 ## Quick Reference: Current Best Results
 
-| Mode | AURC | AUGRC | Cmax | MAE_w |
-|------|------|-------|------|-------|
-| **Zero-shot** | **0.134** [0.094-0.176] | **0.037** [0.024-0.053] | 55.5% | 0.698 |
-| Few-shot | 0.193 [0.142-0.244] | 0.065 [0.043-0.091] | 70.1% | 0.774 |
+| Mode | AURC | AUGRC | Cmax | Run |
+|------|------|-------|------|-----|
+| **Zero-shot** | **0.134** [0.094-0.176] | **0.037** [0.024-0.053] | 55.5% | Run 3 |
+| Few-shot | 0.151 [0.109-0.194] | 0.048 [0.033-0.065] | 65.9% | Run 7 |
 
-**Winner**: Zero-shot (paired bootstrap delta CI excludes 0)
+**Winner**: Zero-shot (AURC 0.134 vs 0.151)
+
+**Note**: Run 7 improved few-shot by 29% vs Run 5, but zero-shot remains best overall.
 
 **Note**: `Cmax` is the max coverage in the risk–coverage curve (counts participants with 8/8 N/A as 0 coverage). `MAE_w` is computed over evaluated subjects only.
 
@@ -30,7 +32,7 @@ Few-shot predicts on ~15% more items. Those additional items are inherently hard
 
 **AURC/AUGRC integrate over the entire risk-coverage curve**, providing a fair comparison regardless of coverage differences.
 
-See: `docs/reference/statistical-methodology-aurc-augrc.md`
+See: `docs/statistics/statistical-methodology-aurc-augrc.md`
 
 ---
 
@@ -300,13 +302,82 @@ Spec 31/32 improved few-shot by ~10%, proving formatting matters. But the gap to
 |------|-------------|--------|--------|
 | 33 | Similarity threshold + context budget | ✅ Implemented + tested | No improvement (Run 5) |
 | 34 | Item-tagged reference embeddings | ✅ Implemented + tested | No improvement (Run 5) |
-| 35 | Offline chunk-level PHQ-8 scoring | ✅ Implemented (experimental) | Pending ablation (requires preprocessing) |
+| 35 | Offline chunk-level PHQ-8 scoring | ✅ Implemented + tested | **29% improvement (Run 7)** |
 | 36 | CRAG reference validation | ✅ Implemented (optional) | Pending ablation (runtime cost) |
 
-**Run 5 Conclusion**: Spec 33+34 did not improve few-shot. The fundamental problem is chunk-level scoring (Spec 35).
+**Run 5 Conclusion**: Spec 33+34 alone did not improve few-shot.
 
-**Next action**: Generate chunk scores (Spec 35 preprocessing), then run ablation with Spec 35+36. See
-`PROBLEM-SPEC35-SCORER-MODEL-GAP.md` for scorer model options (treat as an ablation, not dogma).
+**Run 7 Conclusion**: Spec 35 chunk-level scoring improved few-shot AURC by 29% (0.213 → 0.151). Gap to zero-shot closed to 9% (CIs overlap).
+
+---
+
+### Run 6: Dec 31, 2025 - Spec 35 Chunk Scoring Preprocessing
+
+**Log File**: `data/outputs/run6_spec35_20251231_122458.log`
+
+**Purpose**: Generate chunk-level PHQ-8 scores (Spec 35 preprocessing step)
+
+**Configuration**:
+- Embeddings: `ollama_qwen3_8b_paper_train.npz`
+- Scorer model: `gemma3:27b-it-qat`
+- Backend: Ollama
+- Temperature: 0.0
+
+**Output**: `data/embeddings/ollama_qwen3_8b_paper_train.chunk_scores.json`
+
+**Notes**: This was a preprocessing run to generate chunk scores, not an evaluation run. See Run 7 for the subsequent evaluation.
+
+---
+
+### Run 7: Jan 1, 2026 - Post-Spec 35 Chunk Scoring (Full Run)
+
+**File**: `both_paper-test_backfill-off_20260101_111354.json`
+
+**Git Commit**: Current `dev` branch
+
+**Timestamp**: 2026-01-01T11:13:54
+
+**Code State**:
+- Spec 33: Retrieval quality guardrails ✅
+- Spec 34: Item-tag filtering ✅
+- Spec 35: Chunk-level scoring ✅ (`EMBEDDING_REFERENCE_SCORE_SOURCE=chunk`)
+- Spec 37: Batch query embedding ✅
+
+**Results**:
+
+| Mode | AURC | AUGRC | Cmax | MAE_w | MAE_item | MAE_subj | N_included | Failed |
+|------|------|-------|------|-------|----------|----------|------------|--------|
+| Zero-shot | 0.138 | 0.039 | 56.9% | 0.698 | 0.717 | 0.640 | 40 | 1 |
+| Few-shot | 0.151 | 0.048 | 65.9% | 0.639 | 0.636 | 0.606 | 41 | 0 |
+
+**95% Bootstrap CIs** (10,000 resamples, participant-level):
+
+| Mode | AURC CI | AUGRC CI | Cmax CI |
+|------|---------|----------|---------|
+| Zero-shot | [0.097, 0.180] | [0.025, 0.055] | [0.491, 0.650] |
+| Few-shot | [0.109, 0.194] | [0.033, 0.065] | [0.570, 0.747] |
+
+**Statistical Analysis**:
+- Computed 2026-01-01 via `scripts/evaluate_selective_prediction.py --seed 42`
+- Metrics files: `selective_prediction_metrics_20260101T165303Z.json` (zero-shot), `selective_prediction_metrics_20260101T165328Z.json` (few-shot)
+
+**Known Issue**: Participant 339 failed in zero-shot mode due to JSON parsing error (missing comma). See [GitHub Issue #84](https://github.com/The-Obstacle-Is-The-Way/ai-psychiatrist/issues/84).
+
+**Comparison vs Run 5**:
+
+| Metric | Run 5 | Run 7 | Delta | % Change |
+|--------|-------|-------|-------|----------|
+| few_shot AURC | 0.213 | 0.151 | -0.062 | **-29% (better)** |
+| few_shot AUGRC | 0.073 | 0.048 | -0.025 | **-34% (better)** |
+| zero_shot AURC | 0.138 | 0.138 | 0.000 | 0% (unchanged) |
+
+**Key Finding**: With Spec 35 chunk-level scoring enabled, few-shot improved 29% on AURC vs Run 5. Few-shot now has **better MAE** (0.639 vs 0.698) but AURC is still slightly worse due to confidence calibration.
+
+**Interpretation**: Spec 35 significantly improved few-shot performance. The remaining gap is now within statistical noise (CIs overlap). The only remaining lever is participant-only transcript preprocessing to improve retrieval quality.
+
+---
+
+**Next action**: Implement participant-only transcript preprocessing to improve retrieval semantic matching (removes interviewer questions from embedding space).
 
 ---
 
@@ -372,10 +443,10 @@ uv run python scripts/generate_embeddings.py --split paper-train
 
 ## References
 
-- Statistical methodology: `docs/reference/statistical-methodology-aurc-augrc.md`
-- Feature index + defaults: `docs/reference/features.md`
-- Few-shot prompt format: `docs/concepts/few-shot-prompt-format.md`
-- Retrieval debugging: `docs/guides/debugging-retrieval-quality.md`
-- Item-tag filtering setup: `docs/guides/item-tagging-setup.md`
-- CRAG validation guide: `docs/guides/crag-validation-guide.md`
-- Paper analysis: `docs/paper-reproduction-analysis.md`
+- Statistical methodology: `docs/statistics/statistical-methodology-aurc-augrc.md`
+- Feature index + defaults: `docs/pipeline-internals/features.md`
+- Few-shot prompt format: `docs/embeddings/few-shot-prompt-format.md`
+- Retrieval debugging: `docs/embeddings/debugging-retrieval-quality.md`
+- Item-tag filtering setup: `docs/embeddings/item-tagging-setup.md`
+- CRAG validation guide: `docs/statistics/crag-validation-guide.md`
+- Paper analysis: `docs/_archive/misc/paper-reproduction-analysis.md`

@@ -45,6 +45,37 @@ The script `scripts/create_paper_split.py` defaults to `--mode ground-truth`. Th
 
 ---
 
+## Transcript Artifacts
+
+### Raw (Extraction Output)
+
+`scripts/prepare_dataset.py` writes raw transcripts to:
+
+- `data/transcripts/{id}_P/{id}_TRANSCRIPT.csv`
+
+These are **not speaker-filtered** and may contain known DAIC-WOZ issues (interruptions, sync markers, missing Ellie transcripts).
+
+### Preprocessed Variants (Recommended for Bias-Aware Retrieval)
+
+`scripts/preprocess_daic_woz_transcripts.py` writes deterministic variants under:
+
+- `data/transcripts_preprocessed/{variant}/{id}_P/{id}_TRANSCRIPT.csv`
+
+Recommended variants:
+- `participant_only` (bias-aware retrieval default)
+- `both_speakers_clean` (clean baseline, keeps Ellie + Participant)
+- `participant_qa` (participant + minimal question context)
+
+Select a variant via:
+
+```bash
+DATA_TRANSCRIPTS_DIR=data/transcripts_preprocessed/participant_only
+```
+
+See: `docs/data/daic-woz-preprocessing.md`.
+
+---
+
 ## Embeddings Artifacts
 
 ### Legacy (Backward Compatible)
@@ -104,7 +135,7 @@ Chunk scoring produces per-chunk estimated PHQ-8 item scores aligned with `{outp
 - Values are `0..3` or `null`
 - `prompt_hash` matches the current scorer prompt (unless explicitly overridden as unsafe)
 
-See: `docs/reference/chunk-scoring.md`.
+See: `docs/data/chunk-scoring.md`.
 
 ### Partial Output Manifest (Spec 40)
 
@@ -168,7 +199,7 @@ If `{artifact}.meta.json` exists, `ReferenceStore` validates metadata (backend, 
 | `top_k` | — | Not set (irrelevant at temp=0) |
 | `top_p` | — | Not set (best practice: use temp only) |
 
-See [Agent Sampling Registry](../reference/agent-sampling-registry.md) for citations.
+See [Agent Sampling Registry](../configs/agent-sampling-registry.md) for citations.
 
 ### Model Precision Options
 
@@ -218,4 +249,4 @@ See [Model Registry](../models/model-registry.md#high-quality-setup-recommended-
 ## See Also
 
 - [data-splits-overview.md](./data-splits-overview.md) - Detailed split documentation
-- [agent-sampling-registry.md](../reference/agent-sampling-registry.md) - Sampling parameters (paper leaves some unspecified)
+- [Agent Sampling Registry](../configs/agent-sampling-registry.md) - Sampling parameters (paper leaves some unspecified)

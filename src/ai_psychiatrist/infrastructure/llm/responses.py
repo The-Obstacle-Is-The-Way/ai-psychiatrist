@@ -6,6 +6,7 @@ like markdown code blocks, smart quotes, and malformed JSON.
 
 from __future__ import annotations
 
+import hashlib
 import json
 import re
 from typing import Any, Protocol, runtime_checkable
@@ -14,6 +15,80 @@ from ai_psychiatrist.domain.exceptions import LLMResponseParseError
 from ai_psychiatrist.infrastructure.logging import get_logger
 
 logger = get_logger(__name__)
+
+
+_MISSING_COMMA_AFTER_PRIMITIVE_RE = re.compile(r'("|\d|true|false|null)\s*\n\s*"([^"]+)"\s*:')
+_MISSING_COMMA_AFTER_CONTAINER_RE = re.compile(r'([}\]])\s*\n\s*"([^"]+)"\s*:')
+_TRAILING_COMMA_RE = re.compile(r",\s*([}\]])")
+
+
+def _stable_text_hash(text: str) -> str:
+    """Return a short, stable hash for logging (no raw text)."""
+    return hashlib.sha256(text.encode("utf-8")).hexdigest()[:12]
+
+
+def tolerant_json_fixups(text: str) -> str:
+    """Apply tolerant fixups to common LLM JSON mistakes.
+
+    Repairs (in order):
+    1. Smart quotes → ASCII quotes
+    2. Zero-width spaces → removed
+    3. Missing commas between object entries → inserted
+    4. Trailing commas before } or ] → removed
+
+    Properties:
+    - Idempotent: fixups(fixups(x)) == fixups(x)
+    - No-op on clean JSON strings
+    - Conservative: only inserts commas at newline boundaries
+    """
+
+    applied_fixes: list[str] = []
+    fixed = text
+
+    # 1) Smart quotes → ASCII quotes
+    smart_quotes_fixed = (
+        fixed.replace("\u201c", '"')
+        .replace("\u201d", '"')
+        .replace("\u2018", "'")
+        .replace("\u2019", "'")
+    )
+    if smart_quotes_fixed != fixed:
+        applied_fixes.append("smart_quotes")
+        fixed = smart_quotes_fixed
+
+    # 2) Remove zero-width spaces
+    zero_width_fixed = fixed.replace("\u200b", "")
+    if zero_width_fixed != fixed:
+        applied_fixes.append("zero_width_spaces")
+        fixed = zero_width_fixed
+
+    # 3) Missing commas between object entries (newline-boundary only)
+    missing_commas_fixed = _MISSING_COMMA_AFTER_PRIMITIVE_RE.sub(r'\1,\n"\2":', fixed)
+    missing_commas_fixed = _MISSING_COMMA_AFTER_CONTAINER_RE.sub(
+        r'\1,\n"\2":', missing_commas_fixed
+    )
+    if missing_commas_fixed != fixed:
+        applied_fixes.append("missing_commas")
+        fixed = missing_commas_fixed
+
+    # 4) Remove trailing commas before } or ]
+    trailing_commas_fixed = _TRAILING_COMMA_RE.sub(r"\1", fixed)
+    if trailing_commas_fixed != fixed:
+        applied_fixes.append("trailing_commas")
+        fixed = trailing_commas_fixed
+
+    if applied_fixes:
+        logger.debug(
+            "Applied tolerant JSON fixups",
+            component="json_fixups",
+            applied_fixes=applied_fixes,
+            before_length=len(text),
+            after_length=len(fixed),
+            before_hash=_stable_text_hash(text),
+            after_hash=_stable_text_hash(fixed),
+        )
+
+    return fixed
 
 
 @runtime_checkable
@@ -57,8 +132,8 @@ def extract_json_from_response(raw: str) -> dict[str, Any]:
     # Strip markdown code blocks
     text = _strip_markdown_fences(text)
 
-    # Normalize quotes and fix trailing commas
-    text = _normalize_json_text(text)
+    # Apply tolerant fixups before extracting boundaries
+    text = tolerant_json_fixups(text)
 
     # Extract JSON object
     text = _extract_json_object(text)
@@ -133,17 +208,7 @@ def _strip_markdown_fences(text: str) -> str:
 
 def _normalize_json_text(text: str) -> str:
     """Normalize JSON text by fixing common issues."""
-    # Replace smart quotes
-    text = text.replace("\u201c", '"').replace("\u201d", '"')
-    text = text.replace("\u2018", "'").replace("\u2019", "'")
-
-    # Remove zero-width spaces
-    text = text.replace("\u200b", "")
-
-    # Remove trailing commas before } or ]
-    text = re.sub(r",\s*([}\]])", r"\1", text)
-
-    return text
+    return tolerant_json_fixups(text)
 
 
 def _extract_json_object(text: str) -> str:

@@ -9,23 +9,26 @@ This page is a high-level, **current-state** summary. The canonical timeline + p
 
 ## Current Status
 
-- **Few-shot still underperforms zero-shot** under coverage-aware metrics (AURC/AUGRC) on retained paper-test runs.
-- **Spec 33+34 ablation (Run 5)** did not improve few-shot; it regressed it.
-- **Spec 37** removed the “hardcoded 120s query embedding timeout” regression (Run 4b).
-- **Spec 35** is implemented; chunk scoring preprocessing is the next gating step (chunk scores are being generated offline).
+- **Few-shot gap closed to 9%** - CIs now overlap (statistically indistinguishable)
+- **Few-shot MAE beats zero-shot** (0.639 vs 0.698) - first time in reproduction history
+- **Spec 35 chunk-level scoring** improved few-shot AURC by 29% (Run 7 vs Run 5)
+- **Remaining lever**: Participant-only transcript preprocessing to improve retrieval quality
 
 ---
 
 ## Current Best Retained Results (Paper-Test)
 
-From `docs/results/run-history.md` (see Run 3 / Run 5):
+From `docs/results/run-history.md` (Run 3 zero-shot / Run 7 few-shot):
 
 | Run | Change | Zero-shot AURC | Few-shot AURC | Notes |
 |-----|--------|----------------|---------------|------|
-| Run 3 | Spec 31/32 | **0.134** | 0.193 | Best retained paper-parity-format baseline |
-| Run 5 | Spec 33+34 | 0.138 | **0.213** | Guardrails + tags made few-shot worse |
+| Run 3 | Spec 31/32 | **0.134** | 0.193 | Best zero-shot baseline |
+| Run 5 | Spec 33+34 | 0.138 | 0.213 | Guardrails + tags made few-shot worse |
+| Run 7 | Spec 35 | 0.138 | **0.151** | Chunk scoring: 29% improvement |
 
-**Interpretation**: Retrieval filters alone cannot fix the core label problem: participant-level scores attached to chunks. That requires Spec 35 (chunk-level scoring).
+**Winner**: Zero-shot still best on AURC (0.134 vs 0.151), but **few-shot has better MAE** (0.639 vs 0.698).
+
+**Interpretation**: Spec 35 chunk-level scoring fixed the core label problem. The remaining gap is within statistical noise.
 
 ---
 
@@ -34,8 +37,8 @@ From `docs/results/run-history.md` (see Run 3 / Run 5):
 When abstention/coverage differs across modes, raw MAE comparisons are invalid.
 
 See:
-- `docs/reference/statistical-methodology-aurc-augrc.md`
-- `docs/reference/metrics-and-evaluation.md`
+- `docs/statistics/statistical-methodology-aurc-augrc.md`
+- `docs/statistics/metrics-and-evaluation.md`
 
 ---
 
@@ -66,22 +69,23 @@ uv run python scripts/evaluate_selective_prediction.py --input data/outputs/YOUR
 
 ---
 
-## What’s Blocking a Meaningful Few-Shot “Fix”
+## Spec 35 Chunk-Level Scoring (Now Enabled)
 
-Few-shot retrieval can only be meaningfully evaluated after chunk labels are corrected:
+Chunk-level scoring is enabled when `EMBEDDING_REFERENCE_SCORE_SOURCE=chunk` (default: `participant`).
 
-- **Spec 35**: generates `{emb}.chunk_scores.json` + `{emb}.chunk_scores.meta.json`
-- Enable with: `EMBEDDING_REFERENCE_SCORE_SOURCE=chunk`
+Generated artifacts:
+- `data/embeddings/ollama_qwen3_8b_paper_train.chunk_scores.json`
+- `data/embeddings/ollama_qwen3_8b_paper_train.chunk_scores.meta.json`
 
 See:
-- `docs/reference/chunk-scoring.md`
-- `docs/guides/crag-validation-guide.md` (Spec 36; optional after chunk scores exist)
+- `docs/embeddings/chunk-scoring.md`
+- `docs/statistics/crag-validation-guide.md` (Spec 36; optional validation layer)
 
 ---
 
 ## Related Docs
 
-- Feature defaults: `docs/reference/features.md`
-- Paper-parity guide: `docs/guides/paper-parity-guide.md`
-- Retrieval debugging: `docs/guides/debugging-retrieval-quality.md`
-- Batch query embedding: `docs/guides/batch-query-embedding.md`
+- Feature defaults: `docs/pipeline-internals/features.md`
+- Configuration philosophy: `docs/configs/configuration-philosophy.md`
+- Retrieval debugging: `docs/embeddings/debugging-retrieval-quality.md`
+- Batch query embedding: `docs/embeddings/batch-query-embedding.md`

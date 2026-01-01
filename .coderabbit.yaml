@@ -1,0 +1,39 @@
+# CodeRabbit configuration
+# https://docs.coderabbit.ai/guides/configure-coderabbit
+
+language: en-US
+
+reviews:
+  # Skip archived documentation (just renames, no content changes)
+  path_filters:
+    - "!docs/_archive/**"
+
+  # High priority paths - focus review here
+  path_instructions:
+    - path: "src/**/*.py"
+      instructions: |
+        Focus on:
+        - Correctness of regex patterns in tolerant_json_fixups()
+        - Edge cases in JSON repair logic
+        - Type safety and error handling
+
+    - path: "scripts/*.py"
+      instructions: |
+        Focus on:
+        - CLI argument handling and validation
+        - File I/O safety (atomic writes, path validation)
+        - Edge case handling in preprocessing logic
+
+    - path: "tests/**/*.py"
+      instructions: |
+        Verify:
+        - Test coverage of edge cases
+        - Proper use of pytest markers
+        - No hardcoded paths or magic numbers
+
+  auto_review:
+    enabled: true
+    drafts: false
+
+chat:
+  auto_reply: true

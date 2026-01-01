@@ -87,19 +87,19 @@ curl -X POST http://localhost:8000/full_pipeline \
 | Document | Description |
 |----------|-------------|
 | [**Quickstart**](docs/getting-started/quickstart.md) | Get running in 5 minutes |
-| [**Architecture**](docs/concepts/architecture.md) | System design and layers |
-| [**Pipeline**](docs/concepts/pipeline.md) | How the 4-agent pipeline works |
-| [**PHQ-8**](docs/concepts/phq8.md) | Understanding depression assessment |
-| [**Configuration**](docs/reference/configuration.md) | All configuration options |
-| [**API Reference**](docs/reference/api/endpoints.md) | REST API documentation |
-| [**Glossary**](docs/reference/glossary.md) | Terms and definitions |
+| [**Architecture**](docs/architecture/architecture.md) | System design and layers |
+| [**Pipeline**](docs/architecture/pipeline.md) | How the 4-agent pipeline works |
+| [**PHQ-8**](docs/clinical/phq8.md) | Understanding depression assessment |
+| [**Configuration**](docs/configs/configuration.md) | All configuration options |
+| [**API Reference**](docs/developer/api-endpoints.md) | REST API documentation |
+| [**Glossary**](docs/clinical/glossary.md) | Terms and definitions |
 
 ### For Developers
 
 | Document | Description |
 |----------|-------------|
 | [**CLAUDE.md**](CLAUDE.md) | Development guidelines |
-| [**Specs**](docs/specs/index.md) | Specs index (implemented specs are distilled into canonical docs) |
+| [**Specs**](docs/_specs/index.md) | Specs index (implemented specs are distilled into canonical docs) |
 | [**Data Schema**](docs/data/daic-woz-schema.md) | Dataset format documentation |
 
 ---
@@ -191,7 +191,7 @@ FEEDBACK_SCORE_THRESHOLD=3
 # MODEL_QUANTITATIVE_MODEL=medgemma:27b
 ```
 
-See [Configuration Reference](docs/reference/configuration.md) for all options.
+See [Configuration Reference](docs/configs/configuration.md) for all options.
 
 ---
 

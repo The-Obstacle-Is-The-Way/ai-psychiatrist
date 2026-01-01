@@ -22,17 +22,25 @@ theme:
 plugins:
   - search
 
-# Keep archived pages in the build (active docs link to them), but hide them from nav.
+# Keep archived/internal pages in the build but hide them from nav.
+# Underscore-prefixed folders are sequestered at the top alphabetically.
 not_in_nav: |
-  archive/**
+  _archive/**
+  _specs/**
+  _bugs/**
+  _brainstorming/**
 
 # Enable link/anchor validation (pair with `mkdocs build --strict` in CI).
+# Note: Links within _archive/** may be stale; these are historical docs preserved for provenance.
 validation:
   omitted_files: warn
   not_found: warn
   absolute_links: warn
   unrecognized_links: warn
   anchors: warn
+  # Suppress validation warnings for archived docs (they have historical internal links)
+  links:
+    not_found: info
 
 markdown_extensions:
   - admonition

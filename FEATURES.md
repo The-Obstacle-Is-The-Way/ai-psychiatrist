@@ -73,8 +73,8 @@ EMBEDDING_MAX_REFERENCE_CHARS_PER_ITEM=500 # 0 = disabled
 ```
 
 **Docs**:
-- [`docs/reference/features.md`](docs/reference/features.md) (feature index)
-- [`docs/guides/debugging-retrieval-quality.md`](docs/guides/debugging-retrieval-quality.md) (how to interpret diagnostics)
+- [`docs/pipeline-internals/features.md`](docs/pipeline-internals/features.md) (feature index)
+- [`docs/embeddings/debugging-retrieval-quality.md`](docs/embeddings/debugging-retrieval-quality.md) (how to interpret diagnostics)
 
 ---
 
@@ -93,7 +93,7 @@ EMBEDDING_MAX_REFERENCE_CHARS_PER_ITEM=500 # 0 = disabled
 EMBEDDING_ENABLE_ITEM_TAG_FILTER=true
 ```
 
-**Docs**: [`docs/guides/item-tagging-setup.md`](docs/guides/item-tagging-setup.md)
+**Docs**: [`docs/embeddings/item-tagging-setup.md`](docs/embeddings/item-tagging-setup.md)
 
 ---
 
@@ -114,7 +114,7 @@ EMBEDDING_REFERENCE_SCORE_SOURCE=chunk  # default: "participant"
 
 **WARNING**: This is NOT paper-parity. Label runs as "experimental" in results.
 
-**Docs**: [`docs/reference/chunk-scoring.md`](docs/reference/chunk-scoring.md)
+**Docs**: [`docs/embeddings/chunk-scoring.md`](docs/embeddings/chunk-scoring.md)
 
 ---
 
@@ -134,7 +134,7 @@ EMBEDDING_ENABLE_REFERENCE_VALIDATION=true  # default: false
 
 **Trade-off**: Adds ~1 LLM call per reference (latency cost).
 
-**Docs**: [`docs/guides/crag-validation-guide.md`](docs/guides/crag-validation-guide.md)
+**Docs**: [`docs/statistics/crag-validation-guide.md`](docs/statistics/crag-validation-guide.md)
 
 ---
 
@@ -151,7 +151,7 @@ EMBEDDING_ENABLE_RETRIEVAL_AUDIT=true
 
 **Output**: Logs each retrieval with similarity scores, chunk text, and participant ID.
 
-**Docs**: [`docs/guides/debugging-retrieval-quality.md`](docs/guides/debugging-retrieval-quality.md)
+**Docs**: [`docs/embeddings/debugging-retrieval-quality.md`](docs/embeddings/debugging-retrieval-quality.md)
 
 ---
 
@@ -172,7 +172,7 @@ EMBEDDING_QUERY_EMBED_TIMEOUT_SECONDS=300
 
 **Impact**: 8x reduction in embedding API calls.
 
-**Docs**: [`docs/reference/features.md`](docs/reference/features.md)
+**Docs**: [`docs/pipeline-internals/features.md`](docs/pipeline-internals/features.md)
 
 ---
 
@@ -184,7 +184,7 @@ EMBEDDING_QUERY_EMBED_TIMEOUT_SECONDS=300
 - If a feature is **disabled**, do **no** file I/O for its artifacts.
 - If a feature is **enabled**, missing/invalid artifacts **crash** with a clear error.
 
-**Docs**: [`docs/concepts/error-handling.md`](docs/concepts/error-handling.md)
+**Docs**: [`docs/developer/error-handling.md`](docs/developer/error-handling.md)
 
 ---
 
@@ -195,8 +195,8 @@ EMBEDDING_QUERY_EMBED_TIMEOUT_SECONDS=300
 **Solution**: Log `error_type` and re-raise the original exception type.
 
 **Docs**:
-- [`docs/concepts/error-handling.md`](docs/concepts/error-handling.md)
-- [`docs/reference/exceptions.md`](docs/reference/exceptions.md)
+- [`docs/developer/error-handling.md`](docs/developer/error-handling.md)
+- [`docs/developer/exceptions.md`](docs/developer/exceptions.md)
 
 ---
 
@@ -220,7 +220,7 @@ python scripts/generate_embeddings.py --split paper-train --allow-partial
 - `1`: Failure (any error in strict mode)
 - `2`: Partial success (some skips in `--allow-partial` mode)
 
-**Docs**: [`docs/guides/embedding-generation.md`](docs/guides/embedding-generation.md)
+**Docs**: [`docs/embeddings/embedding-generation.md`](docs/embeddings/embedding-generation.md)
 
 ---
 
@@ -296,6 +296,6 @@ EMBEDDING_ENABLE_REFERENCE_VALIDATION=true
 
 ## See Also
 
-- [Configuration Reference](docs/reference/configuration.md) - All settings
+- [Configuration Reference](docs/configs/configuration.md) - All settings
 - [Run History](docs/results/run-history.md) - Previous ablation results
-- [Specs Index](docs/specs/index.md) - All specifications
+- [Specs Index](docs/_specs/index.md) - All specifications

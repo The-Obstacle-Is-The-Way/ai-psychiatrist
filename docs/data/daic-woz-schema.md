@@ -45,6 +45,13 @@ data/
 │   ├── 301_P/
 │   │   └── 301_TRANSCRIPT.csv
 │   └── .../
+├── transcripts_preprocessed/            # Optional: deterministic transcript variants
+│   ├── participant_only/                # Recommended for bias-aware retrieval
+│   │   ├── 300_P/300_TRANSCRIPT.csv
+│   │   └── ...
+│   ├── both_speakers_clean/             # Cleaned but keeps Ellie + Participant
+│   ├── participant_qa/                  # Participant + minimal question context
+│   └── ...
 ├── embeddings/                          # Pre-computed (Spec 08)
 │   ├── huggingface_qwen3_8b_paper_train.npz       # Default paper-train knowledge base (TRAIN=58)
 │   ├── huggingface_qwen3_8b_paper_train.json
@@ -77,6 +84,14 @@ class DataSettings(BaseSettings):
     train_csv: Path = Path("data/train_split_Depression_AVEC2017.csv")
     dev_csv: Path = Path("data/dev_split_Depression_AVEC2017.csv")
 ```
+
+To use a preprocessed transcript variant, set:
+
+```bash
+DATA_TRANSCRIPTS_DIR=data/transcripts_preprocessed/participant_only
+```
+
+See: `docs/data/daic-woz-preprocessing.md`.
 
 ---
 
@@ -443,6 +458,6 @@ When working with data, verify:
 
 ## See Also
 
-- [embedding-generation.md](../guides/embedding-generation.md) - Generating embeddings safely (fail-fast)
-- [embeddings-explained.md](../concepts/embeddings-explained.md) - Few-shot retrieval concepts
+- [Embedding generation](../embeddings/embedding-generation.md) - Generating embeddings safely (fail-fast)
+- [Embeddings explained](../embeddings/embeddings-explained.md) - Few-shot retrieval concepts
 - [Model Registry](../models/model-registry.md) - Embedding model options
