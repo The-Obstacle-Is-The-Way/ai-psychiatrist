@@ -1,7 +1,7 @@
 # Bugfix Meta Plan (BUG-004 through BUG-018)
 
 This document defines the order and grouping for fixing bugs identified in
-`docs/bugs/BUG-004` through `docs/bugs/BUG-018`. The goal is to prioritize
+`docs/archive/bugs/BUG-004` through `docs/archive/bugs/BUG-018`. The goal is to prioritize
 runtime correctness, paper fidelity, and integration stability while avoiding
 unnecessary work on legacy-only code until the modern pipeline is stable.
 

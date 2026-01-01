@@ -18,6 +18,8 @@ from ai_psychiatrist.domain.enums import EvaluationMetric
 from ai_psychiatrist.domain.value_objects import EvaluationScore
 from ai_psychiatrist.services.feedback_loop import FeedbackLoopResult, FeedbackLoopService
 
+pytestmark = pytest.mark.unit
+
 
 class TestFeedbackLoopService:
     """Tests for FeedbackLoopService."""

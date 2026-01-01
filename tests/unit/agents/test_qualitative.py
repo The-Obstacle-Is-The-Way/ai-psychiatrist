@@ -28,6 +28,8 @@ from ai_psychiatrist.domain.entities import QualitativeAssessment, Transcript
 from ai_psychiatrist.infrastructure.llm.responses import SimpleChatClient
 from tests.fixtures.mock_llm import MockLLMClient
 
+pytestmark = pytest.mark.unit
+
 SAMPLE_TRANSCRIPT_TEXT = """Ellie: How are you feeling today?
 Participant: Not great, honestly. I don't really enjoy things anymore.
 Ellie: Can you tell me more about that?

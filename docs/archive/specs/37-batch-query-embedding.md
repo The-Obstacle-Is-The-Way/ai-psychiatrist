@@ -2,7 +2,7 @@
 
 | Field | Value |
 |-------|-------|
-| **Status** | READY |
+| **Status** | COMPLETE |
 | **Priority** | HIGH |
 | **Addresses** | BUG-033 (timeouts), BUG-034 (participant regression), BUG-036 (no caching), BUG-041 (MockLLMClient) |
 | **Effort** | 1–2 days |

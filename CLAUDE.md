@@ -82,7 +82,7 @@ Environment-driven via `.env` (copy from `.env.example`). Key settings:
 | `EMBEDDING_DIMENSION` | 4096 | Appendix D (optimal) |
 | `EMBEDDING_TOP_K_REFERENCES` | 2 | Appendix D |
 | `FEEDBACK_SCORE_THRESHOLD` | 3 | Section 2.3.1 (score <4 triggers refinement) |
-| `OLLAMA_TIMEOUT_SECONDS` | 300 | Large transcripts need extended time |
+| `OLLAMA_TIMEOUT_SECONDS` | 600 | Large transcripts need extended time |
 
 Environment variable prefix: `OLLAMA_HOST=custom` sets `OllamaSettings.host`
 
@@ -92,6 +92,50 @@ Environment variable prefix: `OLLAMA_HOST=custom` sets `OllamaSettings.host`
 - **Test isolation**: `TESTING=1` env var prevents `.env` loading (set automatically in conftest)
 - **Mock clients**: `tests/fixtures/mock_llm.py` provides `MockLLMClient`, `MockEmbeddingClient`
 - **Real Ollama**: Set `AI_PSYCHIATRIST_OLLAMA_TESTS=1` to enable opt-in E2E tests
+
+## Few-Shot RAG Pipeline (Specs 33-36)
+
+The few-shot pipeline has known methodological issues. See `HYPOTHESIS-FEWSHOT-DESIGN-FLAW.md`.
+
+### Current Spec Status
+
+| Spec | Description | Status | Config |
+|------|-------------|--------|--------|
+| 33 | Retrieval guardrails (similarity threshold, char limits) | Enabled | `EMBEDDING_MIN_REFERENCE_SIMILARITY=0.3` |
+| 34 | Item-tag filtering | Enabled | `EMBEDDING_ENABLE_ITEM_TAG_FILTER=true` |
+| 35 | Chunk-level scoring | Implemented, needs preprocessing | See below |
+| 36 | CRAG runtime validation | Implemented, disabled | `EMBEDDING_ENABLE_REFERENCE_VALIDATION` |
+
+### Spec 35: Chunk Scoring (Production Run)
+
+Spec 35 fixes the core flaw: participant-level scores assigned to arbitrary chunks.
+
+#### Step 1: Generate chunk scores (one-time preprocessing)
+```bash
+python scripts/score_reference_chunks.py \
+  --embeddings-file ollama_qwen3_8b_paper_train \
+  --scorer-backend ollama \
+  --scorer-model gemma3:27b-it-qat \
+  --allow-same-model
+```
+
+#### Step 2: Enable in .env
+```bash
+EMBEDDING_REFERENCE_SCORE_SOURCE=chunk
+```
+
+**Scorer Model Choice**: Spec 35 defaults to a disjoint scorer for defensibility. Use `--allow-same-model` only if you explicitly want a same-model baseline, and ablate against a disjoint/MedGemma scorer if feasible.
+
+### Running the Full Evaluation
+
+```bash
+# In tmux for long runs:
+python scripts/reproduce_results.py \
+  --mode both \
+  --output-dir data/outputs \
+  --split paper-test \
+  2>&1 | tee data/outputs/run_$(date +%Y%m%d_%H%M%S).log
+```
 
 ## Important Notes
 

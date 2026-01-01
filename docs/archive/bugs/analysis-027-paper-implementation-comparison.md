@@ -42,7 +42,7 @@ It focuses on the quantitative PHQ‑8 pipeline because our reproduction diverge
 - Our few-shot MAE: **0.778** vs paper: **0.619**
 - Our item-level coverage: **69.2%** (over evaluated subjects) vs paper: **~50% of cases unable to provide a prediction** (denominator unclear)
 
-See also: `docs/bugs/investigation-026-reproduction-mae-divergence.md`.
+See also: `docs/archive/bugs/investigation-026-reproduction-mae-divergence.md`.
 
 ---
 

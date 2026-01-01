@@ -8,6 +8,8 @@ from ai_psychiatrist.domain.entities import Transcript
 from ai_psychiatrist.domain.value_objects import TranscriptChunk
 from ai_psychiatrist.services.chunking import TranscriptChunker
 
+pytestmark = pytest.mark.unit
+
 
 class TestTranscriptChunker:
     """Tests for transcript chunking."""

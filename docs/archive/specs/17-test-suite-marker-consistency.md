@@ -8,7 +8,11 @@
 >
 > **Implemented**: 2025-12-26
 >
-> **Last Updated**: 2025-12-26
+> **Last Updated**: 2025-12-31
+>
+> **Note (2025-12-31)**: The repo now uses explicit, module-level `pytestmark = pytest.mark.unit|integration|e2e`
+> in each test module. The prior `pytest_collection_modifyitems` auto-marker hook was removed to keep
+> marker behavior visible and local to each test file.
 
 ---
 
@@ -47,54 +51,27 @@ Before this spec was implemented, most tests were **not marked**, so marker-base
 
 ## Solution
 
-Automatically apply markers based on test location during collection.
+Apply markers so `pytest -m unit|integration|e2e` matches the directory structure.
 
-Implement in `tests/conftest.py` using `pytest_collection_modifyitems`.
-
-Important ordering detail:
-- pytest applies `-m ...` deselection in its own `pytest_collection_modifyitems` hook
-  (`_pytest/mark/__init__.py`), so our marker auto-application must run **first**.
-- Use `@pytest.hookimpl(tryfirst=True)` to guarantee our hook runs before deselection.
+Current implementation (preferred): explicit, module-level markers in each test module.
 
 ---
 
 ## Implementation
 
-### Step 1 — Auto-mark tests in `tests/conftest.py`
+### Module-level markers (current)
 
-Append this hook at the end of `tests/conftest.py`:
+Add `pytestmark` at module level, matching the directory:
 
 ```python
 import pytest
 
-
-@pytest.hookimpl(tryfirst=True)
-def pytest_collection_modifyitems(
-    config: pytest.Config,
-    items: list[pytest.Item],
-) -> None:
-    """Apply markers based on directory structure so Makefile targets behave correctly."""
-    for item in items:
-        # pytest uses pathlib.Path for `item.path` on modern versions; normalize for all OSes.
-        raw_path = getattr(item, "path", item.fspath)
-        path = str(raw_path).replace("\\", "/")
-
-        if "/tests/unit/" in path:
-            item.add_marker(pytest.mark.unit)
-        elif "/tests/integration/" in path:
-            item.add_marker(pytest.mark.integration)
-        elif "/tests/e2e/" in path:
-            item.add_marker(pytest.mark.e2e)
+pytestmark = pytest.mark.unit
 ```
 
-### Step 2 — Optional cleanup
+Use `pytest.mark.integration` under `tests/integration/` and `pytest.mark.e2e` under `tests/e2e/`.
 
-After Step 1 is verified, optionally remove redundant `@pytest.mark.unit` decorators from:
-- `tests/unit/agents/test_quantitative.py`
-- `tests/unit/agents/test_quantitative_backfill.py`
-- `tests/unit/infrastructure/llm/test_huggingface.py`
-
-Keep functional markers like `@pytest.mark.asyncio`.
+Keep functional markers like `@pytest.mark.asyncio`, `@pytest.mark.ollama`, and `@pytest.mark.slow`.
 
 ---
 

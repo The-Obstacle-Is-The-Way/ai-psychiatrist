@@ -6,7 +6,7 @@
 >
 > **Priority**: Medium (test coverage + mock hygiene)
 >
-> **Last Updated**: 2025-12-26
+> **Last Updated**: 2025-12-31
 
 ---
 
@@ -95,7 +95,8 @@ This meaningfully reduces the chance of “fossilized mocks” silently divergin
 The codebase has opt-in e2e tests that exercise real Ollama integration (agent-level checks and the FastAPI `/full_pipeline` endpoint):
 
 ```python
-@pytest.mark.e2e
+pytestmark = pytest.mark.e2e
+
 @pytest.mark.ollama
 @pytest.mark.slow
 class TestAgentsRealOllama:
@@ -145,7 +146,7 @@ Proper test isolation is implemented:
 - `TESTING=1` env var prevents `.env` loading in unit tests
 - 37 environment variables explicitly cleared
 - `get_settings.cache_clear()` ensures fresh config reads
-- Auto-marker hook applies `@pytest.mark.unit/integration/e2e` based on path
+- Tests are explicitly marked via module-level `pytestmark = pytest.mark.unit|integration|e2e`
 
 ### 7. Comprehensive Edge Case Coverage ✅
 
@@ -165,7 +166,9 @@ Tests cover:
 
 **Severity**: P1 (High)
 
-**What was wrong**: The core agents have a **dual-path** execution (legacy `simple_chat` vs Pydantic AI via `pydantic_ai.Agent`). Pydantic AI only activates when `ollama_base_url` is provided at construction time. Most unit/integration tests instantiated agents without `ollama_base_url`, which forced the legacy path even when Pydantic AI was enabled.
+**What was wrong (historical)**: The core agents originally had a legacy `simple_chat` execution path alongside Pydantic AI. This made it possible for tests (and even production misconfiguration) to run without exercising the Pydantic AI `.run(...)` path.
+
+**Current state**: Legacy fallback is disabled. When `pydantic_ai.enabled` is true, agents require `ollama_base_url` and raise immediately if it is missing. This enforces fail-fast research behavior and makes it impossible for tests to “accidentally” validate only the legacy path.
 
 **Fix implemented**: Offline unit tests now exercise the Pydantic AI `.run(...)` path for all core agents (no network required) by patching `create_*_agent()` factories and providing `ollama_base_url`:
 - `tests/unit/agents/test_quantitative.py` (`test_pydantic_ai_path_success`)
@@ -173,12 +176,15 @@ Tests cover:
 - `tests/unit/agents/test_meta_review.py` (`test_pydantic_ai_path_success`)
 - `tests/unit/agents/test_qualitative.py` (`test_pydantic_ai_path_success`)
 
-**Evidence** (representative; repeated across agents): when enabled but missing base URL, agents log and fall back:
+**Evidence** (representative; repeated across agents): when enabled but missing base URL, agents raise (no silent fallback):
 
 ```python
 if self._pydantic_ai.enabled:
     if not self._ollama_base_url:
-        logger.warning("Pydantic AI enabled but no ollama_base_url provided; falling back to legacy")
+        raise ValueError(
+            "Pydantic AI enabled but no ollama_base_url provided. "
+            "Legacy fallback is disabled."
+        )
     else:
         self._scoring_agent = create_quantitative_agent(...)
 ```

@@ -217,7 +217,7 @@ def load_item_ground_truth_csv(csv_path: Path) -> dict[int, dict[PHQ8Item, int]]
                 raise ValueError(
                     f"Missing ground truth for participant {participant_id} item {item.value}. "
                     f"Run 'uv run python scripts/patch_missing_phq8_values.py --apply' to fix. "
-                    f"See docs/bugs/bug-025-missing-phq8-ground-truth-paper-test.md"
+                    f"See docs/archive/bugs/bug-025-missing-phq8-ground-truth-paper-test.md"
                 )
             scores[item] = int(value)
         result[participant_id] = scores
@@ -607,6 +607,8 @@ def print_run_configuration(*, settings: Settings, split: str) -> None:
         "  Allow Chunk Scores Prompt Hash Mismatch: "
         f"{embedding_settings.allow_chunk_scores_prompt_hash_mismatch}"
     )
+    print(f"  Batch Query Embedding: {embedding_settings.enable_batch_query_embedding}")
+    print(f"  Query Embed Timeout (s): {embedding_settings.query_embed_timeout_seconds}")
     print(f"  Item Tag Filter: {embedding_settings.enable_item_tag_filter}")
     print(f"  Retrieval Audit: {embedding_settings.enable_retrieval_audit}")
     print(f"  Min Reference Similarity: {embedding_settings.min_reference_similarity}")

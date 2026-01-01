@@ -75,7 +75,7 @@ from tests.fixtures.mock_llm import MockLLMClient
 # from ai_psychiatrist.infrastructure.llm.mock import MockLLMClient
 ```
 
-See: `docs/bugs/BUG-001_MOCK_IN_PRODUCTION_PATH.md`
+See: `docs/archive/bugs/BUG-001_MOCK_IN_PRODUCTION_PATH.md`
 
 ## Implementation
 

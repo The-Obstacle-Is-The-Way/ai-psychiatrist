@@ -19,6 +19,8 @@ from ai_psychiatrist.domain.entities import Transcript
 from ai_psychiatrist.services.feedback_loop import FeedbackLoopService
 from tests.fixtures.mock_llm import MockLLMClient
 
+pytestmark = pytest.mark.integration
+
 
 def make_qualitative_output(is_refined: bool = False) -> QualitativeOutput:
     """Create a QualitativeOutput for mocking."""

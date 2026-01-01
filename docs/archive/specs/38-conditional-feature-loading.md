@@ -2,7 +2,7 @@
 
 | Field | Value |
 |-------|-------|
-| **Status** | READY |
+| **Status** | COMPLETE |
 | **Priority** | HIGH |
 | **Addresses** | BUG-035 (tag validation crash), BUG-037 (silent fallbacks), BUG-038 (unconditional loading) |
 | **Effort** | ~0.5 day |

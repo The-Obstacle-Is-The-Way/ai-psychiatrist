@@ -21,6 +21,8 @@ from ai_psychiatrist.infrastructure.llm.protocols import (
 )
 from tests.fixtures.mock_llm import MockLLMClient
 
+pytestmark = pytest.mark.unit
+
 
 class TestMockLLMClientChat:
     """Tests for MockLLMClient chat functionality."""

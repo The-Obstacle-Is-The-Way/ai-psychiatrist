@@ -13,8 +13,9 @@ from ai_psychiatrist.services.reference_validation import (
     ReferenceValidationRequest,
 )
 
+pytestmark = pytest.mark.unit
 
-@pytest.mark.unit
+
 class TestLLMReferenceValidator:
     @pytest.mark.asyncio
     async def test_exceptions_propagate(self) -> None:

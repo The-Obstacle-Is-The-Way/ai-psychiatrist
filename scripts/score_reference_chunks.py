@@ -40,7 +40,9 @@ from ai_psychiatrist.config import (
     get_settings,
     resolve_reference_embeddings_path_from_embeddings_file,
 )
+from ai_psychiatrist.domain.exceptions import LLMResponseParseError
 from ai_psychiatrist.infrastructure.llm.factory import create_llm_client
+from ai_psychiatrist.infrastructure.llm.responses import extract_json_from_response
 from ai_psychiatrist.infrastructure.logging import get_logger, setup_logging
 from ai_psychiatrist.services.chunk_scoring import (
     PHQ8_ITEM_KEY_SET,
@@ -78,7 +80,7 @@ class ScoringResult:
     errors: int
 
 
-async def score_chunk(
+async def score_chunk(  # noqa: PLR0911
     client: SimpleChatClient,
     chunk_text: str,
     model: str,
@@ -94,12 +96,29 @@ async def score_chunk(
             model=model,
             temperature=temperature,
         )
+    except Exception as e:
+        logger.warning(
+            "Scoring failed: LLM request error",
+            error=str(e),
+            error_type=type(e).__name__,
+            chunk_preview=chunk_text[:50],
+        )
+        return None
 
-        content = response.strip()
-        data = json.loads(content)
+    try:
+        data = extract_json_from_response(response)
+    except LLMResponseParseError as e:
+        logger.warning(
+            "Scoring failed: invalid JSON response",
+            error=str(e),
+            error_type=type(e).__name__,
+            chunk_preview=chunk_text[:50],
+        )
+        return None
 
+    try:
         if not isinstance(data, dict):
-            logger.warning("Scorer output is not a dict", content=content[:50])
+            logger.warning("Scorer output is not a dict", response_preview=response[:50])
             return None
 
         key_set = set(data)
@@ -110,7 +129,7 @@ async def score_chunk(
                 "Scorer output has invalid key set",
                 missing=missing[:3],
                 extra=extra[:3],
-                content=content[:50],
+                response_preview=response[:50],
             )
             return None
 
@@ -130,28 +149,34 @@ async def score_chunk(
 
         return validated
 
-    except (json.JSONDecodeError, Exception) as e:
-        logger.warning(f"Scoring failed: {e}", chunk_preview=chunk_text[:50])
+    except Exception as e:
+        logger.warning(
+            "Scoring failed",
+            error=str(e),
+            error_type=type(e).__name__,
+            chunk_preview=chunk_text[:50],
+        )
         return None
 
 
 async def process_participant(
     client: SimpleChatClient,
-    _participant_id: str,
+    participant_id: str,
     chunks: list[str],
     config: ScoringConfig,
 ) -> list[dict[str, int | None]]:
     """Process all chunks for a participant."""
     results: list[dict[str, int | None]] = []
+    total = len(chunks) if not config.limit else min(config.limit, len(chunks))
 
     # Process sequentially to avoid rate limits / context pollution
     for i, chunk in enumerate(chunks):
         if config.limit and i >= config.limit:
             break
 
-        # Skip empty/short chunks (consistent with embedding generation logic)
-        # Assuming chunks loaded from sidecar are already filtered/valid?
-        # Actually sidecar chunks match embeddings 1:1.
+        # Progress indicator every 10 chunks
+        if (i + 1) % 10 == 0 or i == 0:
+            print(f"  [{participant_id}] Chunk {i + 1}/{total}...", flush=True)
 
         score_map = await score_chunk(client, chunk, config.scorer_model, config.temperature)
 
@@ -210,16 +235,16 @@ async def main_async(args: argparse.Namespace) -> int:
         logger.error(str(e))
         return 1
 
-    print("=" * 60)
-    print("PHQ-8 CHUNK SCORER (Spec 35)")
-    print("=" * 60)
-    print(f"  Embeddings: {config.embeddings_path}")
-    print(f"  Texts: {config.texts_path}")
-    print(f"  Output: {config.output_path}")
-    print(f"  Backend: {config.scorer_backend.value}")
-    print(f"  Model: {config.scorer_model}")
-    print(f"  Temperature: {config.temperature}")
-    print("=" * 60)
+    print("=" * 60, flush=True)
+    print("PHQ-8 CHUNK SCORER (Spec 35)", flush=True)
+    print("=" * 60, flush=True)
+    print(f"  Embeddings: {config.embeddings_path}", flush=True)
+    print(f"  Texts: {config.texts_path}", flush=True)
+    print(f"  Output: {config.output_path}", flush=True)
+    print(f"  Backend: {config.scorer_backend.value}", flush=True)
+    print(f"  Model: {config.scorer_model}", flush=True)
+    print(f"  Temperature: {config.temperature}", flush=True)
+    print("=" * 60, flush=True)
 
     if config.dry_run:
         print("\n[DRY RUN] Config valid. Exiting.")
@@ -237,7 +262,7 @@ async def main_async(args: argparse.Namespace) -> int:
     with config.texts_path.open("r", encoding="utf-8") as f:
         texts_data = json.load(f)
 
-    print(f"\nLoaded {len(texts_data)} participants from sidecar.")
+    print(f"\nLoaded {len(texts_data)} participants from sidecar.", flush=True)
 
     # Init client - override backend to match scorer settings
     client_settings = settings.model_copy(deep=True)
@@ -254,7 +279,10 @@ async def main_async(args: argparse.Namespace) -> int:
         keys = sorted(texts_data.keys(), key=int)
         for i, pid in enumerate(keys, 1):
             chunks = texts_data[pid]
-            print(f"[{i}/{len(keys)}] Processing Participant {pid} ({len(chunks)} chunks)...")
+            print(
+                f"[{i}/{len(keys)}] Processing Participant {pid} ({len(chunks)} chunks)...",
+                flush=True,
+            )
 
             p_scores = await process_participant(client, pid, chunks, config)
             scores_data[pid] = p_scores

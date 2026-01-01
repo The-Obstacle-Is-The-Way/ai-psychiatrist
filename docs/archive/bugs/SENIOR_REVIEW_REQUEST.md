@@ -25,7 +25,7 @@ We attempted to reproduce a research paper's PHQ-8 depression assessment results
 ### Bug Documentation (Read First)
 
 ```
-docs/bugs/
+docs/archive/bugs/
 ├── BUG-018_REPRODUCTION_FRICTION.md   # Initial friction log (9 sub-bugs)
 ├── BUG-019_ROOT_CAUSE_ANALYSIS.md     # Deep root cause analysis
 ├── BUG-020_MODEL_CLARITY.md           # Model clarity + HuggingFace architecture spec
@@ -201,7 +201,7 @@ Or for full tree:
 ```bash
 ls -la
 tree -L 3 -I "__pycache__|.venv|.git|*.pyc" src/
-tree -L 2 docs/bugs/
+tree -L 2 docs/archive/bugs/
 ```
 
 ---

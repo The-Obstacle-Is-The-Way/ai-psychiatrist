@@ -23,6 +23,8 @@ from ai_psychiatrist.domain.enums import AssessmentMode, PHQ8Item, SeverityLevel
 from ai_psychiatrist.domain.value_objects import ItemAssessment
 from tests.fixtures.mock_llm import MockLLMClient
 
+pytestmark = pytest.mark.unit
+
 
 class TestMetaReviewAgent:
     """Tests for MetaReviewAgent."""

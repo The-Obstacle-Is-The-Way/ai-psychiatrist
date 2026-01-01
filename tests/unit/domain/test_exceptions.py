@@ -26,6 +26,8 @@ from ai_psychiatrist.domain.exceptions import (
     ValidationError,
 )
 
+pytestmark = pytest.mark.unit
+
 
 class TestExceptionHierarchy:
     """Tests for exception class hierarchy."""

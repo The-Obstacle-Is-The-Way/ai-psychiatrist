@@ -3,6 +3,7 @@
 import hashlib
 from pathlib import Path
 
+import pytest
 from scripts.generate_embeddings import (
     calculate_split_hash,
     calculate_split_ids_hash,
@@ -11,6 +12,8 @@ from scripts.generate_embeddings import (
 )
 
 from ai_psychiatrist.config import DataSettings
+
+pytestmark = pytest.mark.unit
 
 
 def _make_data_settings(tmp_path: Path) -> DataSettings:

@@ -2,7 +2,7 @@
 
 **Purpose**: Comprehensive record of all reproduction runs, code changes, and statistical analyses for posterity.
 
-**Last Updated**: 2025-12-29
+**Last Updated**: 2025-12-31
 
 ---
 
@@ -151,7 +151,87 @@ See: `docs/reference/statistical-methodology-aurc-augrc.md`
 
 **Note on comparability**: The paired comparison recomputes both modes on the overlap only (N=40). On that overlap, few-shot is slightly worse than the single-mode table above (AURC ≈ 0.196, AUGRC ≈ 0.060) because the dropped participant only affects the paired analysis, not the standalone few-shot evaluation.
 
-**Note**: This was a pre-merge development snapshot. The fully merged Spec 33 + Spec 34 codebase has not been rerun yet.
+**Note**: This was a pre-merge development snapshot. See Run 5 for the clean, post-merge Spec 33+34 ablation run.
+
+---
+
+### Run 4b: Dec 30, 2025 - Post-Spec 34 Regression (Query Embedding Timeouts)
+
+**File**: `both_paper_backfill-off_20251230_053108.json`
+
+**Git Commit**: `be35e35` (dirty)
+
+**Timestamp**: 2025-12-29T23:34:42
+
+**What went wrong**:
+- Few-shot had **9/41 failures (22%)**, all `"LLM request timed out after 120s"`.
+- Runtime roughly doubled vs the expected ~95 minutes.
+
+**Root cause (since fixed)**:
+- Spec 37 was required (batch query embedding + configurable query embedding timeout).
+
+**Results** (includes failures; do not treat as a valid baseline):
+
+| Mode | AURC | AUGRC | Cmax | MAE_w | N_included (AURC) | Failed |
+|------|------|-------|------|-------|-------------------|--------|
+| Zero-shot | 0.138 | 0.039 | 56.9% | 0.698 | 40 | 1 |
+| Few-shot | 0.163 | 0.037 | 53.5% | 0.745 | 32 | 9 |
+
+**95% Bootstrap CIs** (10,000 resamples, participant-level):
+
+| Mode | AURC CI | AUGRC CI | Cmax CI |
+|------|---------|----------|---------|
+| Zero-shot | [0.097, 0.180] | [0.025, 0.055] | [0.491, 0.650] |
+| Few-shot | [0.098, 0.217] | [0.020, 0.060] | [0.426, 0.648] |
+
+**Paired comparison** (overlap N=31 due to failures): ΔAURC = +0.037 [-0.028, +0.087] (few-shot − zero-shot).
+
+---
+
+### Run 5: Dec 30, 2025 - Post-Spec 33+34 (Full Ablation)
+
+**File**: `both_paper-test_backfill-off_20251230_230349.json`
+
+**Git Commit**: `36995f0` (clean)
+
+**Timestamp**: 2025-12-30T20:27:38
+
+**Code Changes (Spec 33+34)**:
+- Spec 33: Retrieval quality guardrails (min_similarity=0.3, max_chars_per_item=500)
+- Spec 34: Item-tag filtering (only retrieve domain-matched chunks)
+- Spec 35/36: NOT enabled (chunk scores file doesn't exist)
+
+**Results**:
+
+| Mode | AURC | AUGRC | Cmax | MAE_w | N_included |
+|------|------|-------|------|-------|------------|
+| Zero-shot | 0.138 | 0.039 | 56.9% | 0.698 | 40 |
+| Few-shot | 0.213 | 0.073 | 71.0% | 0.807 | 41 |
+
+**95% Bootstrap CIs** (10,000 resamples, participant-level):
+
+| Mode | AURC CI | AUGRC CI | Cmax CI |
+|------|---------|----------|---------|
+| Zero-shot | [0.097, 0.180] | [0.025, 0.055] | [0.491, 0.650] |
+| Few-shot | [0.153, 0.276] | [0.047, 0.103] | [0.610, 0.805] |
+
+**Statistical Analysis**:
+- Computed 2025-12-30 via `scripts/evaluate_selective_prediction.py --seed 42`
+- Metrics files: `selective_prediction_metrics_run5_zero_shot.json`, `selective_prediction_metrics_run5_few_shot.json`
+
+**Comparison vs Run 3 (Spec 31/32 baseline)**:
+
+| Metric | Run 3 | Run 5 | Delta | % Change |
+|--------|-------|-------|-------|----------|
+| few_shot AURC | 0.193 | 0.213 | +0.020 | **+10% (worse)** |
+| few_shot AUGRC | 0.065 | 0.073 | +0.008 | **+12% (worse)** |
+| zero_shot AURC | 0.134 | 0.138 | +0.004 | +3% (noise) |
+
+**Key Finding**: Spec 33+34 did NOT improve few-shot. Performance regressed ~10%.
+
+**Interpretation**: Domain filtering (Spec 34) and quality guardrails (Spec 33) cannot fix the fundamental chunk-scoring problem documented in `HYPOTHESIS-FEWSHOT-DESIGN-FLAW.md`. Chunks still have participant-level scores, not chunk-specific scores. Filtering by domain helps retrieval precision but doesn't fix the misleading score labels.
+
+**Conclusion**: Spec 35 (chunk-level scoring) is required before further ablations are meaningful.
 
 ---
 
@@ -218,14 +298,17 @@ Spec 31/32 improved few-shot by ~10%, proving formatting matters. But the gap to
 
 ### Specs 33-36: Retrieval Quality Fixes
 
-| Spec | Description | Status | Hypothesis |
-|------|-------------|--------|------------|
-| 33 | Similarity threshold + context budget | ✅ Implemented (merged) | Filter low-quality references |
-| 34 | Item-tagged reference embeddings | ✅ Implemented (not yet rerun) | Improve semantic matching |
-| 35 | Offline chunk-level PHQ-8 scoring | PLANNED | Better ground truth for retrieval |
-| 36 | CRAG reference validation | PLANNED | LLM-based relevance filtering |
+| Spec | Description | Status | Result |
+|------|-------------|--------|--------|
+| 33 | Similarity threshold + context budget | ✅ Implemented + tested | No improvement (Run 5) |
+| 34 | Item-tagged reference embeddings | ✅ Implemented + tested | No improvement (Run 5) |
+| 35 | Offline chunk-level PHQ-8 scoring | ✅ Implemented (experimental) | Pending ablation (requires preprocessing) |
+| 36 | CRAG reference validation | ✅ Implemented (optional) | Pending ablation (runtime cost) |
 
-**Next action**: Run a fresh ablation with the current merged codebase (Spec 33 + Spec 34) and update this run history.
+**Run 5 Conclusion**: Spec 33+34 did not improve few-shot. The fundamental problem is chunk-level scoring (Spec 35).
+
+**Next action**: Generate chunk scores (Spec 35 preprocessing), then run ablation with Spec 35+36. See
+`PROBLEM-SPEC35-SCORER-MODEL-GAP.md` for scorer model options (treat as an ablation, not dogma).
 
 ---
 

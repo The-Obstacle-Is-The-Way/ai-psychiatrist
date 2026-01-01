@@ -16,6 +16,8 @@ from ai_psychiatrist.infrastructure.llm.factory import (
 from ai_psychiatrist.infrastructure.llm.huggingface import HuggingFaceClient
 from ai_psychiatrist.infrastructure.llm.ollama import OllamaClient
 
+pytestmark = pytest.mark.unit
+
 
 @pytest.fixture
 def settings() -> Settings:

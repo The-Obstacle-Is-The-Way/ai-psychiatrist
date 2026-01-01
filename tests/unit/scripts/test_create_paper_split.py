@@ -10,6 +10,8 @@ from typing import Any, Protocol, cast
 import pandas as pd
 import pytest
 
+pytestmark = pytest.mark.unit
+
 
 class CreatePaperSplitModule(Protocol):
     """Type contract for scripts/create_paper_split.py loaded dynamically."""

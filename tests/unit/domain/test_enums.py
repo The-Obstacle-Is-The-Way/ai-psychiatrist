@@ -17,6 +17,8 @@ from ai_psychiatrist.domain.enums import (
     SeverityLevel,
 )
 
+pytestmark = pytest.mark.unit
+
 
 class TestNAReason:
     """Tests for NAReason enum."""

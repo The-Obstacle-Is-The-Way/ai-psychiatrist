@@ -19,6 +19,8 @@ from ai_psychiatrist.domain.entities import Transcript
 from ai_psychiatrist.domain.enums import NAReason, PHQ8Item
 from tests.fixtures.mock_llm import MockLLMClient
 
+pytestmark = pytest.mark.unit
+
 
 @pytest.fixture
 def mock_llm_client() -> MockLLMClient:

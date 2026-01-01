@@ -186,8 +186,8 @@ This analysis should be included in any future publication reproducing or extend
 
 ## Related Documents
 
-- `docs/bugs/bug-029-coverage-mae-discrepancy.md` - Detailed discrepancy analysis
-- `docs/bugs/fallback-architecture-audit.md` - Code quality issues
+- `docs/archive/bugs/bug-029-coverage-mae-discrepancy.md` - Detailed discrepancy analysis
+- `docs/archive/bugs/fallback-architecture-audit.md` - Code quality issues
 - `docs/archive/specs/25-aurc-augrc-implementation.md` - Selective prediction evaluation suite
 
 ---

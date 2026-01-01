@@ -20,8 +20,8 @@ initial LLM evidence extraction misses it.
 **Update (SSOT, 2025-12-24):** backfill is **not the whole story**. We observed **69.2% coverage
 with backfill OFF** (paper-text parity), so other differences (prompt formatting, parsing,
 model/runtime/quantization, evaluation denominator) also contribute. See:
-- `docs/bugs/analysis-027-paper-implementation-comparison.md`
-- `docs/bugs/investigation-026-reproduction-mae-divergence.md`
+- `docs/archive/bugs/analysis-027-paper-implementation-comparison.md`
+- `docs/archive/bugs/investigation-026-reproduction-mae-divergence.md`
 
 ---
 

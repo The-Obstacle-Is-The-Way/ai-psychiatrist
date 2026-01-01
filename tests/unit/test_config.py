@@ -28,6 +28,7 @@ from ai_psychiatrist.config import (
 )
 
 pytestmark = [
+    pytest.mark.unit,
     pytest.mark.filterwarnings("ignore:Data directory does not exist.*:UserWarning"),
     pytest.mark.filterwarnings("ignore:Few-shot enabled but embeddings not found.*:UserWarning"),
 ]

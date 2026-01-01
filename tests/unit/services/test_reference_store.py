@@ -23,6 +23,8 @@ from ai_psychiatrist.domain.exceptions import (
 from ai_psychiatrist.services.chunk_scoring import PHQ8_ITEM_KEYS, chunk_scoring_prompt_hash
 from ai_psychiatrist.services.reference_store import ReferenceStore
 
+pytestmark = pytest.mark.unit
+
 
 @pytest.fixture
 def data_settings(tmp_path: Path) -> DataSettings:

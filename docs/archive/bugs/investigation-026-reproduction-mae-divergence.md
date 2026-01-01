@@ -100,7 +100,7 @@ QUANTITATIVE_TRACK_NA_REASONS=true
 
 Notes:
 - The paper text does not specify sampling parameters (`temperature`, `top_k`, `top_p`), and this run’s provenance does not record them.
-- The paper repo unconditionally applies keyword backfill in its few-shot agent (see `docs/bugs/analysis-027-paper-implementation-comparison.md`), which diverges from the paper text.
+- The paper repo unconditionally applies keyword backfill in its few-shot agent (see `docs/archive/bugs/analysis-027-paper-implementation-comparison.md`), which diverges from the paper text.
 - The paper’s “~50% of cases unable to provide a prediction” is not directly comparable to our item-level coverage metric without aligning denominators.
 
 ---
@@ -353,7 +353,7 @@ The paper discusses insufficient evidence / missing extraction and retrieval iss
 | Factor | Impact | Evidence |
 |--------|--------|----------|
 | Coverage/abstention definition mismatch | **HIGH** | Paper denominator unclear; our coverage excludes “all N/A” subjects |
-| Prompt/reference formatting drift | **HIGH** | See `docs/bugs/analysis-027-paper-implementation-comparison.md` |
+| Prompt/reference formatting drift | **HIGH** | See `docs/archive/bugs/analysis-027-paper-implementation-comparison.md` |
 | Model/runtime/quantization differences | MEDIUM | Paper text emphasizes M3 Pro; repo contains A100 SLURM scripts; our `gemma3:27b` is Q4_K_M |
 | JSON parsing/repair behavior | LOW–MEDIUM | 2 evidence parse warnings; 2 scoring parse failures (all N/A) |
 | Stochastic variation | LOW–MEDIUM | Paper explicitly acknowledges run-to-run variance |

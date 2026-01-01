@@ -27,6 +27,8 @@ from ai_psychiatrist.infrastructure.llm.protocols import (
     LLMClient,
 )
 
+pytestmark = pytest.mark.unit
+
 
 @pytest.fixture
 def ollama_settings() -> OllamaSettings:

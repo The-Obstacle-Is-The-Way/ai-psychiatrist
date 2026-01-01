@@ -88,5 +88,5 @@ Example (local-only; `data/` is gitignored due to DAIC-WOZ licensing):
 
 - `docs/guides/preflight-checklist-few-shot.md`
 - `docs/guides/preflight-checklist-zero-shot.md`
-- `docs/bugs/bug-018-reproduction-friction.md`
-- `docs/bugs/investigation-026-reproduction-mae-divergence.md`
+- `docs/archive/bugs/bug-018-reproduction-friction.md`
+- `docs/archive/bugs/investigation-026-reproduction-mae-divergence.md`

@@ -18,6 +18,8 @@ from ai_psychiatrist.domain.value_objects import (
     TranscriptChunk,
 )
 
+pytestmark = pytest.mark.unit
+
 
 class TestTranscriptChunk:
     """Tests for TranscriptChunk value object."""

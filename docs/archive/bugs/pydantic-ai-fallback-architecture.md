@@ -2,7 +2,7 @@
 
 > **Status**: SSOT (Updated post-`REMOVE_LEGACY_SPEC.md`)
 > **Date**: 2025-12-29
-> **Supersedes**: `docs/bugs/fallback-architecture-audit.md`
+> **Supersedes**: `docs/archive/bugs/fallback-architecture-audit.md`
 > **Scope**: Historical analysis of the removed fallback + current Pydantic AI-only behavior
 
 ---
@@ -610,7 +610,7 @@ Based on 2025 best practices research:
 
 ## Document History
 
-- **2025-12-28**: Created as SSOT, incorporating `docs/bugs/fallback-architecture-audit.md`
+- **2025-12-28**: Created as SSOT, incorporating `docs/archive/bugs/fallback-architecture-audit.md`
 - **2025-12-28**: Added 2025 industry best practices section from web research
 - Verified line numbers against actual codebase
 - Added root cause analysis and LLM output problem section

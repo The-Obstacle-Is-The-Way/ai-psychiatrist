@@ -351,7 +351,7 @@ mkdocs gh-deploy  # Deploy to GitHub Pages
 
 All existing docs stay where they are:
 - `docs/specs/` - Implementation blueprints (internal)
-- `docs/bugs/` - Issue tracking (internal)
+- `docs/archive/bugs/` - Issue tracking (internal)
 - `docs/brainstorming/` - Future work (internal)
 - `docs/models/` - Model registry (becomes part of reference)
 
