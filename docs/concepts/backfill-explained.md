@@ -1,8 +1,19 @@
 # Keyword Backfill: The Safety Net for Evidence Extraction
 
+> **DEPRECATED FEATURE - DO NOT ENABLE**
+>
+> Keyword backfill is a flawed heuristic that inflates coverage metrics without
+> improving clinical validity. The feature matches keywords like "sleep" or "tired"
+> via simple substring matching, leading to false positives and misleading results.
+>
+> **This feature is retained for historical comparison only. Keep it OFF.**
+>
+> The original paper's methodology has fundamental issues that make "paper parity"
+> meaningless. See `HYPOTHESIS-FEWSHOT-DESIGN-FLAW.md` and `POST-ABLATION-DEFAULTS.md` for details.
+
 **Audience**: Researchers and developers wanting to understand the coverage-accuracy tradeoff
-**Related**: [SPEC-003](../archive/specs/SPEC-003-backfill-toggle.md) | [Coverage Investigation](../archive/bugs/coverage-investigation.md) | [Extraction Mechanism](./extraction-mechanism.md)
-**Last Updated**: 2025-12-26
+**Related**: [Extraction Mechanism](./extraction-mechanism.md) | [Configuration Reference](../reference/configuration.md) | [Coverage Explained](./coverage-explained.md)
+**Last Updated**: 2026-01-01
 
 ---
 
@@ -270,9 +281,9 @@ We don't know which approach produced the reported MAE of 0.619.
 We chose to measure **pure LLM capability** (backfill OFF) because:
 1. The paper doesn't describe keyword backfill as part of the methodology
 2. Scientific reproducibility should match documented methodology
-3. We can always enable backfill for clinical utility
+3. Backfill can still be enabled for historical ablations (not recommended for new work)
 
-**Backfill is OFF by default** per [SPEC-003](../archive/specs/SPEC-003-backfill-toggle.md).
+**Backfill is OFF by default** (`QUANTITATIVE_ENABLE_KEYWORD_BACKFILL=false`).
 
 ### Asking the Authors
 
@@ -287,23 +298,32 @@ To resolve this ambiguity, consider asking:
 
 ## When to Use Each Mode
 
-### Use Backfill OFF (Default) When:
-- Reproducing paper-text methodology (as written)
+### Use Backfill OFF (Default) — ALWAYS
+
+**This is the only recommended mode.** Backfill is deprecated.
+
 - Evaluating LLM capability
 - Running ablation studies
 - Comparing different LLM models
+- Production use
 
-### Use Backfill ON When:
-- Building a clinical decision support tool
-- Want maximum coverage
-- Prefer "some assessment" over "N/A"
-- Not comparing directly with paper metrics
+### Use Backfill ON — NEVER (Historical Only)
+
+**Do not enable backfill.** The feature is flawed:
+
+- Simple substring matching has no semantic understanding
+- Matches "I sleep great" for `PHQ8_Sleep` (false positive)
+- Inflates coverage without improving clinical validity
+- The original paper's methodology is not reproducible anyway
+
+If you need to enable backfill for a specific historical comparison, document
+the reason explicitly. This is not recommended for any new work.
 
 ---
 
 ## N/A Reason Tracking
 
-With [SPEC-003](../archive/specs/SPEC-003-backfill-toggle.md) implemented, each N/A result can include a deterministic reason (when enabled):
+When N/A reason tracking is enabled (`QUANTITATIVE_TRACK_NA_REASONS=true`), each N/A result can include a deterministic reason (independent of backfill):
 
 | Reason | Description |
 |--------|-------------|
@@ -328,9 +348,11 @@ Backfill is **OFF by default** (paper-text parity mode):
 # Default: paper-text parity mode (pure LLM)
 # QUANTITATIVE_ENABLE_KEYWORD_BACKFILL=false  # (this is the default)
 
-# Enable backfill for higher coverage
-QUANTITATIVE_ENABLE_KEYWORD_BACKFILL=true
+# Historical ablation only (deprecated):
+# QUANTITATIVE_ENABLE_KEYWORD_BACKFILL=true
 ```
+
+> ⚠️ **Deprecated**: Enabling backfill is not recommended. It was used for historical ablation studies only. Keep it OFF for all new runs.
 
 ---
 
@@ -340,7 +362,7 @@ QUANTITATIVE_ENABLE_KEYWORD_BACKFILL=true
 
 | Run | Mode | Coverage | Item MAE | Notes |
 |-----|------|----------|---------|-------|
-| 2025-12-24 (paper split, backfill OFF) | Paper-text parity | 69.2% (216/312) | 0.778 | Local output: `data/outputs/reproduction_results_20251224_003441.json` |
+| 2025-12-24 (paper split, backfill OFF) | Paper-text parity | 69.2% (216/312) | 0.778 | Historical run notes only; the JSON artifact is not tracked in this repo snapshot (older runners used different output naming) |
 | 2025-12-23 (historical, backfill ON) | Heuristic-augmented | 74.1% (243/328) | 0.757 | Recorded in `docs/results/reproduction-results.md` (no JSON artifact stored under `data/outputs/` in this repo snapshot) |
 
 ### Per-Item Impact
@@ -406,7 +428,6 @@ Transcript → LLM Evidence Extraction
 
 ## Related Documentation
 
-- [SPEC-003: Backfill Toggle](../archive/specs/SPEC-003-backfill-toggle.md) - Implementation specification
-- [Coverage Investigation](../archive/bugs/coverage-investigation.md) - Why our coverage differs
 - [Extraction Mechanism](./extraction-mechanism.md) - Full extraction pipeline
 - [Paper Parity Guide](../guides/paper-parity-guide.md) - How to reproduce paper results
+- [Configuration Reference](../reference/configuration.md) - All settings

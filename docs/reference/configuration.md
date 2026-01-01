@@ -72,7 +72,7 @@ Connection settings for the Ollama LLM server.
 **Timeout Notes:**
 - Default 600s may still timeout on very slow GPUs / long transcripts; use `3600` for research runs.
 - `OLLAMA_TIMEOUT_SECONDS` applies to the legacy Ollama client and (by default) syncs to the Pydantic AI path if `PYDANTIC_AI_TIMEOUT_SECONDS` is unset.
-- See [BUG-027](../archive/bugs/bug-027-timeout-configuration.md) for implementation details.
+- Timeout sync is implemented in `Settings.validate_consistency()` in `src/ai_psychiatrist/config.py`.
 
 **Example:**
 ```bash
@@ -167,7 +167,7 @@ Few-shot retrieval configuration.
 | `EMBEDDING_REFERENCE_SCORE_SOURCE` | string | `participant` | Spec 35: `participant` (paper-parity) or `chunk` (experimental) |
 | `EMBEDDING_ALLOW_CHUNK_SCORES_PROMPT_HASH_MISMATCH` | bool | `false` | Spec 35 circularity control bypass (unsafe) |
 | `EMBEDDING_ENABLE_REFERENCE_VALIDATION` | bool | `false` | Spec 36 (CRAG-style runtime validation; adds LLM calls) |
-| `EMBEDDING_VALIDATION_MODEL` | string | *(unset)* | Spec 36 validation model (defaults to `MODEL_JUDGE_MODEL` when unset) |
+| `EMBEDDING_VALIDATION_MODEL` | string | *(unset)* | Spec 36 validation model (if unset, runners fall back to `MODEL_JUDGE_MODEL`) |
 | `EMBEDDING_VALIDATION_MAX_REFS_PER_ITEM` | int | `2` | Spec 36 max accepted refs per item after validation |
 
 **Note on artifact naming**: `scripts/generate_embeddings.py` defaults to writing a namespaced artifact like
@@ -330,8 +330,7 @@ API_WORKERS=1
 
 ### Quantitative Assessment Settings
 
-These settings control the quantitative assessment behavior (implemented in
-[SPEC-003](../archive/specs/SPEC-003-backfill-toggle.md)):
+These settings control the quantitative assessment behavior (evidence extraction + scoring):
 
 | Variable | Type | Default | Description |
 |----------|------|---------|-------------|
@@ -341,7 +340,9 @@ These settings control the quantitative assessment behavior (implemented in
 
 **Default Behavior (Paper Parity):**
 
-Keyword backfill is **OFF by default** to match paper methodology (~50% coverage). Set `QUANTITATIVE_ENABLE_KEYWORD_BACKFILL=true` to enable higher coverage (~74%) at the cost of diverging from the paper.
+Keyword backfill is **OFF by default** to match paper methodology (~50% coverage).
+
+> ⚠️ **Deprecated**: Keyword backfill is a historical ablation feature. Enabling it is not recommended for new runs. See `POST-ABLATION-DEFAULTS.md` in the project root for rationale.
 
 See [Backfill Explained](../concepts/backfill-explained.md) for how it works and [Paper Parity Guide](../guides/paper-parity-guide.md) for reproduction guidance.
 

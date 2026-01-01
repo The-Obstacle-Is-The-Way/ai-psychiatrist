@@ -2,7 +2,7 @@
 
 **Purpose**: Comprehensive record of all reproduction runs, code changes, and statistical analyses for posterity.
 
-**Last Updated**: 2025-12-31
+**Last Updated**: 2026-01-01
 
 ---
 
@@ -38,9 +38,7 @@ See: `docs/reference/statistical-methodology-aurc-augrc.md`
 
 ### Run 1: Dec 26, 2025 - Initial Validated Runs
 
-**Files**:
-- `zero_shot_paper_backfill-off_20251226_201946.json`
-- `few_shot_paper_backfill-off_20251227_000125.json`
+**Artifacts**: Not retained in this repo snapshot (early outputs used different naming and were not committed). Treat this run as historical context only; later runs include stored JSON artifacts under `data/outputs/`.
 
 **Git Commits**: Various (`5b8f588`, `f6d2653`)
 
@@ -375,8 +373,9 @@ uv run python scripts/generate_embeddings.py --split paper-train
 ## References
 
 - Statistical methodology: `docs/reference/statistical-methodology-aurc-augrc.md`
-- Spec 31 (format): `docs/archive/specs/31-paper-parity-reference-examples-format.md`
-- Spec 32 (audit): `docs/archive/specs/32-few-shot-retrieval-diagnostics.md`
-- Spec 33 (guardrails): `docs/archive/specs/33-retrieval-quality-guardrails.md`
-- Spec 34 (item tagging): `docs/archive/specs/34-item-tagged-reference-embeddings.md`
+- Feature index + defaults: `docs/reference/features.md`
+- Few-shot prompt format: `docs/concepts/few-shot-prompt-format.md`
+- Retrieval debugging: `docs/guides/debugging-retrieval-quality.md`
+- Item-tag filtering setup: `docs/guides/item-tagging-setup.md`
+- CRAG validation guide: `docs/guides/crag-validation-guide.md`
 - Paper analysis: `docs/paper-reproduction-analysis.md`

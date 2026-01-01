@@ -12,7 +12,7 @@ Paper Reference:
 Test Double Location Policy (BUG-001):
     MockLLMClient is a TEST-ONLY artifact and lives in tests/fixtures/mock_llm.py.
     It MUST NOT be exported from this production module.
-    See: docs/archive/bugs/BUG-001_MOCK_IN_PRODUCTION_PATH.md
+    See: docs/reference/testing.md
 """
 
 from ai_psychiatrist.infrastructure.llm.factory import create_llm_client

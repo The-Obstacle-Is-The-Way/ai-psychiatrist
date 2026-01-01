@@ -219,4 +219,4 @@ From the paper (Section 2.4.2 and Appendix D):
 | Few-shot | 0.619 | With 2 similar examples per item |
 | Few-shot + MedGemma | 0.505 | Better MAE but fewer predictions |
 
-The few-shot approach reduced MAE by **22%** compared to zero-shot.
+The paper reports that few-shot reduced MAE by **22%** compared to zero-shot; reproduction results may differ depending on model/backend and retrieval configuration.

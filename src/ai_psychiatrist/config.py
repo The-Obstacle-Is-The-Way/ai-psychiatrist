@@ -360,7 +360,15 @@ class FeedbackLoopSettings(BaseSettings):
 class QuantitativeSettings(BaseSettings):
     """Quantitative assessment configuration.
 
-    Reference: SPEC-003 for backfill toggle and NA reason tracking.
+    DEPRECATED FEATURE WARNING:
+    Keyword backfill (`enable_keyword_backfill`) is a flawed heuristic that
+    inflates coverage metrics without improving clinical validity. The feature
+    matches keywords like "sleep" or "tired" without semantic understanding,
+    leading to false positives and misleading results.
+
+    DO NOT ENABLE keyword backfill. The feature is retained only for
+    historical comparison and ablation studies. The original paper's
+    methodology has fundamental issues (see HYPOTHESIS-FEWSHOT-DESIGN-FLAW.md).
     """
 
     model_config = SettingsConfigDict(
@@ -372,7 +380,7 @@ class QuantitativeSettings(BaseSettings):
 
     enable_keyword_backfill: bool = Field(
         default=False,
-        description="Enable keyword backfill when LLM misses evidence (paper parity: OFF)",
+        description="DEPRECATED: Do NOT enable. Flawed heuristic retained for ablation only.",
     )
     track_na_reasons: bool = Field(
         default=True,
@@ -382,7 +390,7 @@ class QuantitativeSettings(BaseSettings):
         default=3,
         ge=1,
         le=10,
-        description="Max keyword-matched sentences per domain",
+        description="DEPRECATED: Irrelevant since backfill should remain OFF.",
     )
 
 

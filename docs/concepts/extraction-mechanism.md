@@ -166,10 +166,9 @@ Keyword backfill can increase coverage relative to a pure LLM-only evidence
 extraction approach. The paper reports that **in ~50% of cases** the model was
 unable to provide a prediction due to insufficient evidence (Section 3.2).
 
-As of [SPEC-003](../archive/specs/SPEC-003-backfill-toggle.md), backfill is **OFF by default**
-for **paper-text parity** (paper methodology as written; keyword backfill is not described).
-The paper’s public repo does include keyword backfill in its few-shot agent (see
-`docs/archive/bugs/analysis-027-paper-implementation-comparison.md`).
+Backfill is **OFF by default** for paper-text parity (the paper methodology as written does not
+describe keyword backfill). Enabling backfill is deprecated and should be treated as a historical
+ablation only.
 
 Enable backfill to increase coverage:
 - Default (paper-text parity): `QUANTITATIVE_ENABLE_KEYWORD_BACKFILL=false`
@@ -250,10 +249,11 @@ Total scored items across all participants:
 Overall Coverage = (Total items with scores) / (Total participants × 8)
 ```
 
-For a concrete example run (including per-item counts and coverage), see
-`docs/archive/bugs/investigation-026-reproduction-mae-divergence.md` (current paper-text-parity run) and
-`docs/results/reproduction-results.md` (historical notes). Output artifacts are stored locally under
-`data/outputs/` (gitignored due to DAIC-WOZ licensing; not committed to repo).
+For concrete example runs (including per-item counts and coverage), see:
+- `docs/results/run-history.md`
+- `docs/results/reproduction-results.md`
+
+Output artifacts are stored locally under `data/outputs/` (gitignored due to DAIC-WOZ licensing; not committed to repo).
 
 ---
 
@@ -261,7 +261,7 @@ For a concrete example run (including per-item counts and coverage), see
 
 ### Temperature
 
-Note: The paper text does not specify exact sampling settings; the effects below are heuristics and can vary by model/backend. See `docs/archive/bugs/gap-001-paper-unspecified-parameters.md`.
+Note: The paper text does not specify exact sampling settings; the effects below are heuristics and can vary by model/backend. See `docs/reference/agent-sampling-registry.md`.
 
 | Value | Effect on Extraction |
 |-------|---------------------|

@@ -249,5 +249,5 @@ uv run python scripts/reproduce_results.py --split dev
 ## See Also
 
 - [daic-woz-schema.md](./daic-woz-schema.md) - Full dataset schema
-- [GAP-001](../archive/bugs/gap-001-paper-unspecified-parameters.md) - Paper-unspecified parameters
+- [agent-sampling-registry.md](../reference/agent-sampling-registry.md) - Sampling parameters (paper leaves some unspecified)
 - [reproduction-results.md](../results/reproduction-results.md) - Reproduction status

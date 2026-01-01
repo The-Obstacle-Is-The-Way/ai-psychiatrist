@@ -254,8 +254,8 @@ The paper's methodology retrieves by **topic similarity** but labels by **partic
 
 - `HYPOTHESIS-ZERO-SHOT-INFLATION.md` - Zero-shot analysis
 - `docs/brainstorming/daic-woz-preprocessing.md` - Ellie inclusion analysis
-- `docs/archive/specs/35-offline-chunk-level-phq8-scoring.md` - Spec 35
-- `docs/archive/specs/36-crag-reference-validation.md` - Spec 36
+- `docs/reference/chunk-scoring.md` - Chunk-level scoring (Spec 35)
+- `docs/guides/crag-validation-guide.md` - CRAG reference validation (Spec 36)
 - `_literature/markdown/daic-woz-prompts/daic-woz-prompts.md` - Burdisso paper
 - GitHub Issue #69 - Few-shot chunk/score mismatch
 - GitHub Issue #40 - Model size and local inference value

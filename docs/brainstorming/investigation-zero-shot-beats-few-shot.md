@@ -10,7 +10,9 @@
 
 Investigation identified divergences between our implementation and the paper's notebook.
 
-See **[BUG-031: Few-Shot Retrieval Issues](../archive/bugs/bug-031-few-shot-retrieval-mismatch.md)** for full analysis.
+Current (non-archive) references:
+- Few-shot prompt format: `docs/concepts/few-shot-prompt-format.md`
+- Retrieval debugging workflow: `docs/guides/debugging-retrieval-quality.md`
 
 ### Verified Divergences
 
@@ -53,7 +55,7 @@ This is the minimum, **implementation-ready** sequence to test whether the paper
 
 ### Step 1 — Apply Fix 1 (paper-parity reference formatting)
 
-Source of truth: `docs/archive/specs/31-paper-parity-reference-examples-format.md` (canonical spec).
+Source of truth: `docs/concepts/few-shot-prompt-format.md` (canonical, non-archive).
 
 Required edits:
 - `src/ai_psychiatrist/services/embedding.py` (`ReferenceBundle.format_for_prompt`)
@@ -175,10 +177,12 @@ A chunk saying "I sleep fine" and "I can't sleep at all" are BOTH about sleep. B
 ✅ ADDED (Senior Review): Implementation readiness note
 
 - The above are **research directions**, not paper-parity fixes.
-- Paper-parity implementation work is tracked in:
-  - `docs/archive/specs/31-paper-parity-reference-examples-format.md`
-  - `docs/archive/specs/32-few-shot-retrieval-diagnostics.md`
-- Any CRAG / chunk-scoring / re-indexing work must be implemented from dedicated specs (Specs 33-36 in `docs/archive/specs/` and `docs/specs/`), otherwise developers will be forced to guess formats + evaluation protocol.
+- Paper-parity formatting + retrieval diagnostics are now documented in canonical pages:
+  - `docs/concepts/few-shot-prompt-format.md`
+  - `docs/guides/debugging-retrieval-quality.md`
+- CRAG and chunk scoring are no longer “future work” here; see:
+  - `docs/guides/crag-validation-guide.md`
+  - `docs/reference/chunk-scoring.md`
 
 ### Recommended Architecture
 
@@ -438,9 +442,11 @@ NOT from this chunk's content!
 ## 5. Raw Data References
 
 ### Output Files
-- Zero-shot metrics: `data/outputs/selective_prediction_metrics_20251228T133513Z.json`
-- Few-shot metrics: `data/outputs/selective_prediction_metrics_20251228T133532Z.json`
-- Combined run: `data/outputs/few_shot_paper_backfill-off_20251228_024244.json`
+This document is historical. Specific output filenames in early investigations are not guaranteed to exist in the current repo snapshot.
+
+For retained artifacts, use:
+- `docs/results/run-history.md` (canonical filenames + commits)
+- `data/outputs/` (local artifacts)
 
 ### Key Logs to Check
 This repo does not reliably write logs to `logs/` by default during reproduction runs. Prefer console logs.
@@ -465,12 +471,12 @@ rg -n \"retrieved_reference|Found references for item|bundle_length|top_similari
 
 ### Divergences Found
 
-Investigation identified paper-parity divergences that may contribute to the performance gap:
+This investigation identified divergences that were later addressed by dedicated specs:
 
-1. **Score-Chunk Mismatch** (`embedding.py:199`): Paper methodology - correctly implemented
-2. **Format Mismatch** (`embedding.py:40-70`): 8 separate sections vs paper's 1 unified block
-3. **Missing Domain Labels** (`embedding.py:58-62`): `(Score: 2)` vs paper's `(PHQ8_Sleep Score: 2)`
-4. **Closing Tag**: `</Reference Examples>` vs paper's `<Reference Examples>`
+1. **Score–chunk mismatch** (paper design): addressed by Spec 35 (chunk-level scoring).
+2. **Format mismatch**: fixed by Spec 31 (unified `<Reference Examples>` block).
+3. **Missing domain labels**: fixed by Spec 31 (labels like `(PHQ8_Sleep Score: 2)`).
+4. **Closing tag mismatch**: Spec 33 intentionally switched to a proper XML closing tag (`</Reference Examples>`).
 
 ### Hypotheses Status
 

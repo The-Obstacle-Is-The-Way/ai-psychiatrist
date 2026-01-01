@@ -28,13 +28,16 @@ jobs:
           git config user.name github-actions[bot]
           git config user.email 41898282+github-actions[bot]@users.noreply.github.com
 
-      - uses: actions/setup-python@v6
+      - name: Install uv
+        uses: astral-sh/setup-uv@v7
         with:
+          version: "0.9.18"
           python-version: "3.11"
-          cache: pip  # Built-in pip caching (cleaner than ~/.cache)
+          enable-cache: true
+          cache-dependency-glob: "uv.lock"
 
-      - name: Install MkDocs Material
-        run: pip install mkdocs-material
+      - name: Install docs dependencies (locked)
+        run: uv sync --locked --extra docs
 
       - name: Deploy to GitHub Pages
-        run: mkdocs gh-deploy --force --strict
+        run: uv run mkdocs gh-deploy --force --strict

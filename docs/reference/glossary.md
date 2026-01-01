@@ -108,7 +108,7 @@ Four metrics used by the Judge Agent to evaluate qualitative assessments (1-5 Li
 
 **Zero-shot**: The LLM receives only the transcript and prompt, with no reference examples.
 
-**Few-shot**: The LLM receives similar transcript chunks from a reference database along with their known PHQ-8 scores. Achieves 22% lower MAE than zero-shot (0.619 vs 0.796).
+**Few-shot**: The LLM receives similar transcript chunks from a reference database along with their PHQ-8 scores. The paper reports a large MAE improvement vs zero-shot, but reproduction results can vary by model/backend and retrieval configuration; see `docs/results/reproduction-results.md`.
 
 ### Embeddings
 

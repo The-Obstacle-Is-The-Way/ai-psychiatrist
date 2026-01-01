@@ -17,7 +17,7 @@ Requirements:
     - Raw DAIC-WOZ downloads in downloads/participants/
     - Split CSVs in downloads/
 
-Spec Reference: docs/archive/specs/04A_DATA_ORGANIZATION.md
+See: docs/data/daic-woz-schema.md
 """
 
 from __future__ import annotations

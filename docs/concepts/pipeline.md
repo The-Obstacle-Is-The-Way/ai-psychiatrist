@@ -167,15 +167,23 @@ First, the agent extracts evidence quotes for each PHQ-8 item:
 
 **Keyword Backfill (Optional):** If enabled, keyword matching can supplement extraction when the
 LLM misses evidence. By default (paper-text parity), backfill is OFF; see
-`docs/concepts/backfill-explained.md` and `docs/archive/bugs/analysis-027-paper-implementation-comparison.md`.
+`docs/concepts/backfill-explained.md` for caveats and configuration.
 
 #### Few-Shot Reference Retrieval
 
 For each item with evidence:
 
-1. **Embed** the evidence text using qwen3-embedding:8b
-2. **Search** the reference store for similar chunks
-3. **Retrieve** top-k (default: 2) most similar references with known scores
+1. **Build per-item evidence text** (one string per PHQ-8 item)
+2. **Embed the evidence text** (Spec 37: batch query embedding is default; 1 embedding op per participant)
+3. **Search** the reference store for similar chunks
+4. **Apply retrieval post-processing** (all optional, configured via `EmbeddingSettings`):
+   - Spec 33: similarity threshold + per-item context budget
+   - Spec 34: item-tag filtering (requires `{emb}.tags.json`)
+   - Spec 35: chunk-level score attachment (requires `{emb}.chunk_scores.json`)
+   - Spec 36: CRAG reference validation (`accept`/`reject`)
+5. **Format the references** into a unified `<Reference Examples>` block (Spec 31 + Spec 33 XML fix)
+
+See: `docs/reference/features.md` and `docs/concepts/few-shot-prompt-format.md`.
 
 ```text
 Query: "i don't enjoy anything anymore, nothing seems fun"
@@ -216,10 +224,12 @@ The agent generates scores with reasoning:
 
 **Output:** `PHQ8Assessment` with all 8 item scores, total score (0-24), and severity level.
 
-**Paper Results:**
+**Paper-reported Results (not a guarantee of reproduction):**
 - Zero-shot MAE: 0.796
 - Few-shot MAE: 0.619 (22% lower item-level MAE vs zero-shot)
 - MedGemma few-shot MAE: 0.505 (Appendix F alternative; better MAE but fewer predictions overall)
+
+Note: these MAE values are **conditional on non-N/A items**. When coverages differ across modes, system-level comparisons should use coverage-aware selective prediction metrics (AURC/AUGRC); see `docs/reference/statistical-methodology-aurc-augrc.md`.
 
 ---
 

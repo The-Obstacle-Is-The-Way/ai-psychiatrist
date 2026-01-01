@@ -291,9 +291,13 @@ data/embeddings/
 ├── paper_reference_embeddings.json  # Text sidecar (participant IDs, chunks)
 ├── paper_reference_embeddings.meta.json  # Optional: provenance metadata
 ├── paper_reference_embeddings.tags.json  # Optional: per-chunk PHQ-8 item tags (Spec 34)
+├── paper_reference_embeddings.chunk_scores.json       # Optional: per-chunk PHQ-8 item scores (Spec 35)
+├── paper_reference_embeddings.chunk_scores.meta.json  # Optional: scorer provenance + prompt hash (Spec 35)
 ├── reference_embeddings.npz         # Optional: AVEC train knowledge base
 ├── reference_embeddings.json
-└── reference_embeddings.tags.json   # Optional: per-chunk PHQ-8 item tags (Spec 34)
+├── reference_embeddings.tags.json   # Optional: per-chunk PHQ-8 item tags (Spec 34)
+├── reference_embeddings.chunk_scores.json       # Optional: per-chunk PHQ-8 item scores (Spec 35)
+└── reference_embeddings.chunk_scores.meta.json  # Optional: scorer provenance + prompt hash (Spec 35)
 ```
 
 ### NPZ Format
@@ -416,7 +420,7 @@ class PHQ8Item(StrEnum):
 
 | Participant | Issue | Status | Reference |
 |-------------|-------|--------|-----------|
-| **487** | Corrupted transcript (AppleDouble file, not CSV) | Resolved ✓ | [BUG-022](../archive/bugs/bug-022-corrupted-transcript-487.md) |
+| **487** | Corrupted transcript (AppleDouble file, not CSV) | Resolved ✓ | Avoid AppleDouble files; re-download and re-extract cleanly |
 
 > **Note**: Issue was caused by macOS AppleDouble extraction, not source data. Re-download and careful extraction fixed it.
 
@@ -439,7 +443,6 @@ When working with data, verify:
 
 ## See Also
 
-- [Legacy Spec 04A: Data Organization](../archive/specs/04A_DATA_ORGANIZATION.md) - Data preparation details
-- [Legacy Spec 05: Transcript Service](../archive/specs/05_TRANSCRIPT_SERVICE.md) - Loading logic
-- [Legacy Spec 08: Embedding Service](../archive/specs/08_EMBEDDING_SERVICE.md) - Few-shot retrieval
+- [embedding-generation.md](../guides/embedding-generation.md) - Generating embeddings safely (fail-fast)
+- [embeddings-explained.md](../concepts/embeddings-explained.md) - Few-shot retrieval concepts
 - [Model Registry](../models/model-registry.md) - Embedding model options
