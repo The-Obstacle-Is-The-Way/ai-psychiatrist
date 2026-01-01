@@ -1,6 +1,6 @@
 # Spec 043: Deterministic JSON “Missing Comma” Repair (BUG-043)
 
-**Status**: Ready to implement
+**Status**: Implemented
 **Bug**: `docs/_bugs/bug-043-json-missing-comma-repair.md`
 **Primary affected code**: `src/ai_psychiatrist/agents/extractors.py`, `src/ai_psychiatrist/agents/quantitative.py`
 **Related utilities**: `src/ai_psychiatrist/infrastructure/llm/responses.py`

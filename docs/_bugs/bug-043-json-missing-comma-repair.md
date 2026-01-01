@@ -1,6 +1,6 @@
 # BUG-043: JSON Missing Comma Repair Needed
 
-**Status**: Open
+**Status**: Closed (Implemented)
 **Severity**: Low (affects ~2% of participants)
 **Discovered**: 2026-01-01
 **Affected Component**: `src/ai_psychiatrist/agents/extractors.py`
