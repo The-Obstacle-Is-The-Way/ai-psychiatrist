@@ -116,7 +116,7 @@ Environment-specific setup:
 | `OLLAMA_TIMEOUT_SECONDS` | `600` | Request timeout |
 | `PYDANTIC_AI_TIMEOUT_SECONDS` | (unset) | Timeout for Pydantic AI calls (unset = library default) |
 | `LLM_BACKEND` | `ollama` | Chat backend |
-| `EMBEDDING_BACKEND` | `huggingface` | Embedding backend |
+| `EMBEDDING_BACKEND` | `huggingface` | Embedding backend (see note below) |
 | `HF_DEFAULT_CHAT_TIMEOUT` | `180` | Default HuggingFace chat timeout (when `LLM_BACKEND=huggingface`) |
 | `HF_DEFAULT_EMBED_TIMEOUT` | `120` | Default HuggingFace embed timeout (when `EMBEDDING_BACKEND=huggingface`) |
 | `DATA_*` paths | `data/...` | Data locations |
@@ -124,6 +124,34 @@ Environment-specific setup:
 | `API_HOST`, `API_PORT` | `0.0.0.0:8000` | Server binding |
 
 **These are always configurable.** Infrastructure varies by deployment.
+
+---
+
+### 5a. EMBEDDING ARTIFACT SELECTION (Critical)
+
+**Problem Identified**: Embedding artifacts and chunk scores must be generated separately for each backend.
+HuggingFace embeddings (FP16) produce higher quality similarity scores than Ollama (Q4_K_M), but both
+require hours of preprocessing for chunk scores.
+
+| Embeddings File | Backend | Precision | Quality | Chunk Scores? |
+|-----------------|---------|-----------|---------|---------------|
+| `huggingface_qwen3_8b_paper_train` | HuggingFace | FP16 | **Higher** | See `PROBLEM-HUGGINGFACE-CHUNK-SCORES-MISSING.md` |
+| `ollama_qwen3_8b_paper_train` | Ollama | Q4_K_M | Lower | ✅ Generated |
+
+**Recommendation**:
+
+1. **For best quality**: Use HuggingFace embeddings (`EMBEDDING_BACKEND=huggingface`, `EMBEDDING_EMBEDDINGS_FILE=huggingface_qwen3_8b_paper_train`)
+2. **For accessibility**: Use Ollama if HuggingFace deps unavailable
+
+**Important**: `EMBEDDING_EMBEDDINGS_FILE` and `EMBEDDING_BACKEND` should be coherent:
+- HuggingFace backend → `huggingface_*` embeddings file
+- Ollama backend → `ollama_*` embeddings file
+
+Mixing backends with mismatched embeddings files is technically valid (the embeddings are pre-computed),
+but generates confusion about which artifact quality is being used.
+
+**Chunk Scores Dependency**: If `EMBEDDING_REFERENCE_SCORE_SOURCE=chunk`, the corresponding
+`.chunk_scores.json` file must exist for the selected embeddings file.
 
 ---
 
@@ -266,6 +294,8 @@ EMBEDDING_ENABLE_REFERENCE_VALIDATION=false
 - `FEATURES.md` — Feature status and configuration
 - `docs/reference/configuration.md` — Full config reference
 - `.env.example` — Example configuration
+- `PROBLEM-HUGGINGFACE-CHUNK-SCORES-MISSING.md` — HuggingFace chunk scores gap
+- `PROBLEM-SPEC35-SCORER-MODEL-GAP.md` — Scorer model defensibility gap
 
 ---
 

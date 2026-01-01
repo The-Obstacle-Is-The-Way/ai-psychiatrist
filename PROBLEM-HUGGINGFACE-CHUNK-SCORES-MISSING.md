@@ -1,0 +1,103 @@
+# PROBLEM: HuggingFace Chunk Scores Missing
+
+**Status**: OPEN
+**Priority**: HIGH
+**Date**: 2026-01-01
+
+## The Issue
+
+We ran chunk scoring (Spec 35) for hours on the **wrong embeddings**.
+
+### What We Have
+
+| Embeddings File | Precision | Quality | Chunk Scores? |
+|-----------------|-----------|---------|---------------|
+| `ollama_qwen3_8b_paper_train` | Q4_K_M | Lower | ✅ Yes (hours of compute) |
+| `huggingface_qwen3_8b_paper_train` | FP16 | **Higher** | ❌ **NO** |
+
+### Why This Matters
+
+1. **Documentation says HuggingFace is better**: `.env.example` explicitly states:
+   > "Default embedding backend is HuggingFace (FP16 precision) for better similarity scores."
+
+2. **Chunk scoring is the Spec 35 fix** for the core few-shot design flaw (participant-level scores assigned to arbitrary chunks).
+
+3. **We invested hours** generating chunk scores for the lower-quality embeddings.
+
+4. **To use chunk-level scoring with HuggingFace embeddings**, we need to run chunk scoring on `huggingface_qwen3_8b_paper_train` - which doesn't exist yet.
+
+## Current Configuration State
+
+### In `.env`:
+```bash
+EMBEDDING_BACKEND=ollama
+EMBEDDING_EMBEDDINGS_FILE=ollama_qwen3_8b_paper_train
+EMBEDDING_REFERENCE_SCORE_SOURCE=chunk
+```
+
+### What's Missing:
+- `huggingface_qwen3_8b_paper_train.chunk_scores.json`
+- `huggingface_qwen3_8b_paper_train.chunk_scores.meta.json`
+
+## Command to Generate HuggingFace Chunk Scores
+
+**WARNING: This takes HOURS. Do not run casually.**
+
+```bash
+python scripts/score_reference_chunks.py \
+  --embeddings-file huggingface_qwen3_8b_paper_train \
+  --scorer-backend ollama \
+  --scorer-model gemma3:27b-it-qat \
+  --allow-same-model
+```
+
+This will generate:
+- `data/embeddings/huggingface_qwen3_8b_paper_train.chunk_scores.json`
+- `data/embeddings/huggingface_qwen3_8b_paper_train.chunk_scores.meta.json`
+
+## Recommended Default Configuration
+
+After generating HuggingFace chunk scores, `.env` should use:
+
+```bash
+# Use the BETTER embeddings (FP16)
+EMBEDDING_BACKEND=huggingface  # or ollama if HF deps unavailable
+EMBEDDING_EMBEDDINGS_FILE=huggingface_qwen3_8b_paper_train
+EMBEDDING_REFERENCE_SCORE_SOURCE=chunk
+```
+
+## Configuration Philosophy Question
+
+**Should HuggingFace be the documented default?**
+
+Current state is confusing:
+- `.env.example` comments say HuggingFace is the default
+- But `EMBEDDING_BACKEND` is commented out (no explicit default shown)
+- User's `.env` has Ollama set explicitly
+
+Proposal:
+1. Make HuggingFace the **explicit default** in `.env.example`
+2. Document Ollama as the fallback for users without HuggingFace deps
+3. Generate chunk scores for HuggingFace embeddings
+4. Update `.env.example` to point to `huggingface_qwen3_8b_paper_train`
+
+## Immediate Decision Required
+
+**Option A**: Run reproduction with current Ollama chunk scores (faster, use what we have)
+- Pros: Hours already invested, can start now
+- Cons: Using lower-quality embeddings
+
+**Option B**: First generate HuggingFace chunk scores, then run reproduction
+- Pros: Using the better embeddings
+- Cons: More hours of compute before any results
+
+**Option C**: Run both in parallel (if machine can handle it)
+- Pros: Can compare results
+- Cons: Double the compute
+
+## Files Referenced
+
+- Ollama embeddings: `data/embeddings/ollama_qwen3_8b_paper_train.*`
+- HuggingFace embeddings: `data/embeddings/huggingface_qwen3_8b_paper_train.*`
+- Chunk scoring script: `scripts/score_reference_chunks.py`
+- Configuration: `.env`, `.env.example`
