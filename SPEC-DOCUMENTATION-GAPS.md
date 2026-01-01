@@ -18,7 +18,7 @@ Audited archived specs against canonical documentation. Goal: make `docs/` self-
 | **34** | Covered | Tagging workflow + schema now lives in `docs/guides/item-tagging-setup.md` | **YES** (if unreferenced) |
 | **35** | Covered | Chunk scoring setup + schema now lives in `docs/reference/chunk-scoring.md` | **YES** (if unreferenced) |
 | **36** | Covered | CRAG guide now lives in `docs/guides/crag-validation-guide.md` | **YES** (if unreferenced) |
-| **37** | Covered | Batch query embedding documented in `docs/reference/features.md` | **YES** (if unreferenced) |
+| **37** | Covered | Batch query embedding is documented in `docs/guides/batch-query-embedding.md` | **YES** (if unreferenced) |
 | **38** | Covered | Fail-fast semantics documented in `docs/concepts/error-handling.md` | **YES** (if unreferenced) |
 | **39** | Covered | Exception taxonomy documented in `docs/reference/exceptions.md` | **YES** (if unreferenced) |
 | **40** | Covered | Embedding generation guide now lives in `docs/guides/embedding-generation.md` | **YES** (if unreferenced) |
@@ -40,7 +40,7 @@ The following table documents where the *active* (non-archive) SSOT now lives.
 | 34 (Item tags) | `docs/guides/item-tagging-setup.md` | Schema + fail-fast semantics (Spec 38) |
 | 35 (Chunk scoring) | `docs/reference/chunk-scoring.md` | Schema + workflow; scorer is configurable |
 | 36 (CRAG validation) | `docs/guides/crag-validation-guide.md` | Fail-fast semantics (Spec 38) |
-| 37 (Batch query embedding) | `docs/reference/features.md` | Performance/stability; default ON in code |
+| 37 (Batch query embedding) | `docs/guides/batch-query-embedding.md` | Root cause + config + verification; default ON in code |
 | 38 (Conditional feature loading) | `docs/concepts/error-handling.md` | “skip-if-disabled, crash-if-broken” |
 | 39 (Preserve exception types) | `docs/concepts/error-handling.md`, `docs/reference/exceptions.md` | Do not wrap exceptions; preserve type |
 | 40 (Fail-fast embedding gen) | `docs/guides/embedding-generation.md` | Strict by default; partial is debug-only |

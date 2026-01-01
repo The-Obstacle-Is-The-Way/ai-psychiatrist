@@ -2,7 +2,7 @@
 
 **Purpose**: Comprehensive record of all reproduction runs, code changes, and statistical analyses for posterity.
 
-**Last Updated**: 2025-12-31
+**Last Updated**: 2026-01-01
 
 ---
 
@@ -38,9 +38,7 @@ See: `docs/reference/statistical-methodology-aurc-augrc.md`
 
 ### Run 1: Dec 26, 2025 - Initial Validated Runs
 
-**Files**:
-- `zero_shot_paper_backfill-off_20251226_201946.json`
-- `few_shot_paper_backfill-off_20251227_000125.json`
+**Artifacts**: Not retained in this repo snapshot (early outputs used different naming and were not committed). Treat this run as historical context only; later runs include stored JSON artifacts under `data/outputs/`.
 
 **Git Commits**: Various (`5b8f588`, `f6d2653`)
 

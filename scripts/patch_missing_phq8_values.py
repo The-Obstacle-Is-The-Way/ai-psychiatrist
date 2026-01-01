@@ -15,7 +15,7 @@ Usage:
     uv run python scripts/patch_missing_phq8_values.py --dry-run  # Preview changes
     uv run python scripts/patch_missing_phq8_values.py --apply    # Apply patches
 
-See: docs/archive/bugs/bug-025-missing-phq8-ground-truth-paper-test.md
+See: docs/guides/patch-missing-phq8-values.md
 """
 
 from __future__ import annotations

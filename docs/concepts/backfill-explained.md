@@ -360,7 +360,7 @@ QUANTITATIVE_ENABLE_KEYWORD_BACKFILL=true
 
 | Run | Mode | Coverage | Item MAE | Notes |
 |-----|------|----------|---------|-------|
-| 2025-12-24 (paper split, backfill OFF) | Paper-text parity | 69.2% (216/312) | 0.778 | Local output: `data/outputs/reproduction_results_20251224_003441.json` |
+| 2025-12-24 (paper split, backfill OFF) | Paper-text parity | 69.2% (216/312) | 0.778 | Historical run notes only; the JSON artifact is not tracked in this repo snapshot (older runners used different output naming) |
 | 2025-12-23 (historical, backfill ON) | Heuristic-augmented | 74.1% (243/328) | 0.757 | Recorded in `docs/results/reproduction-results.md` (no JSON artifact stored under `data/outputs/` in this repo snapshot) |
 
 ### Per-Item Impact

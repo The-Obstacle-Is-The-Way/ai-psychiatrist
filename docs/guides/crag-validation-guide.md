@@ -23,7 +23,7 @@ EMBEDDING_ENABLE_REFERENCE_VALIDATION=true
 Optional overrides:
 
 ```bash
-# Defaults to MODEL_JUDGE_MODEL if unset
+# If unset, runners fall back to MODEL_JUDGE_MODEL
 EMBEDDING_VALIDATION_MODEL=gemma3:27b-it-qat
 
 # Keep at most N accepted refs per item after validation

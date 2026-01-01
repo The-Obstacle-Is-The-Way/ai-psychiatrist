@@ -8,36 +8,46 @@
 
 ## Overview
 
-This guide explains how to run AI Psychiatrist in **paper parity mode** - configuration that matches the original research methodology as closely as possible.
+This guide explains how to run AI Psychiatrist in **paper parity mode** — configuration that matches the original paper’s methodology as closely as possible.
 
-**Good news**: The **default backfill behavior is paper parity** (keyword backfill OFF).
-For full paper-parity backends (pure Ollama), set `EMBEDDING_BACKEND=ollama` so runtime embeddings match the
-pre-computed reference artifact.
+Important framing:
+- “Paper parity” is about reproducing the **paper’s method**, even if that method is later shown to be flawed.
+- This repo’s recommended `.env.example` may enable additional correctness/reliability features. For paper parity, set the flags explicitly (see below).
 
 ---
 
-## Default Behavior (Paper Parity)
+## Paper Parity Configuration (Explicit)
 
-Out of the box, keyword backfill is **OFF** to match the paper methodology:
+Paper parity means:
+- keyword backfill OFF
+- few-shot references use **participant-level** labels (paper design)
+- retrieval uses no thresholds/budgets/tags/CRAG filters
+
+Set:
 
 ```bash
-# Default behavior - no configuration needed
-uv run python scripts/reproduce_results.py --split paper
+QUANTITATIVE_ENABLE_KEYWORD_BACKFILL=false
+
+EMBEDDING_REFERENCE_SCORE_SOURCE=participant
+EMBEDDING_ENABLE_ITEM_TAG_FILTER=false
+EMBEDDING_MIN_REFERENCE_SIMILARITY=0.0
+EMBEDDING_MAX_REFERENCE_CHARS_PER_ITEM=0
+EMBEDDING_ENABLE_REFERENCE_VALIDATION=false
 ```
 
-This produces results comparable to the paper:
-- Coverage: ~50% (paper reports ~50% abstention rate)
-- Pure LLM extraction (no keyword heuristics)
+Notes:
+- Spec 37 (batch query embedding + query timeout) may still be enabled by default; it is a performance/stability change and does not change retrieval semantics.
+- The prompt delimiter uses a proper XML closing tag (`</Reference Examples>`) instead of the notebook’s duplicate-open tag style; see `docs/concepts/few-shot-prompt-format.md`.
 
 ---
 
 ## Configuration Options
 
-### Paper Parity Mode (Default)
+### Keyword Backfill OFF (Paper Parity)
 
 ```bash
-# Already the default - backfill OFF
-QUANTITATIVE_ENABLE_KEYWORD_BACKFILL=false  # (this is the default)
+# Code default: backfill OFF
+QUANTITATIVE_ENABLE_KEYWORD_BACKFILL=false
 ```
 
 ### Higher Coverage Mode
@@ -46,7 +56,7 @@ Backfill is deprecated and is **not recommended** for new work. If you need a hi
 to match an older paper-code behavior, you can enable backfill explicitly:
 
 ```bash
-# Enable backfill for ~74% coverage
+# Enable backfill (deprecated; increases coverage but can inflate it incorrectly)
 QUANTITATIVE_ENABLE_KEYWORD_BACKFILL=true \
   uv run python scripts/reproduce_results.py --split paper
 ```
@@ -58,19 +68,17 @@ QUANTITATIVE_ENABLE_KEYWORD_BACKFILL=true \
 Compare backfill ON vs OFF:
 
 ```bash
-# Mode 1: Paper parity (backfill OFF - default)
+# Mode 1: Paper parity (backfill OFF)
 uv run python scripts/reproduce_results.py --split paper
-cp "$(ls -t data/outputs/reproduction_results_*.json | head -1)" results_backfill_off.json
 
 # Mode 2: Higher coverage (backfill ON)
 QUANTITATIVE_ENABLE_KEYWORD_BACKFILL=true \
   uv run python scripts/reproduce_results.py --split paper
-cp "$(ls -t data/outputs/reproduction_results_*.json | head -1)" results_backfill_on.json
 ```
 
 Notes:
-- `scripts/reproduce_results.py` always writes results to `data/outputs/reproduction_results_<timestamp>.json`.
-- The `cp "$(ls -t ... | head -1)" ...` pattern renames the most recent output for easier comparison.
+- `scripts/reproduce_results.py` prints the exact output path as: `Results saved to: ...`
+- Output filename format: `{mode}_{split}_backfill-{on,off}_{YYYYMMDD_HHMMSS}.json` (see `generate_output_filename()` in `src/ai_psychiatrist/services/experiment_tracking.py`).
 
 ---
 
@@ -94,6 +102,12 @@ Each N/A result now includes a reason for debugging:
 LLM_BACKEND=ollama
 EMBEDDING_BACKEND=ollama
 
+# Select a reference embeddings artifact generated with the same backend.
+# Recommended: use the modern, namespaced paper-train artifact:
+EMBEDDING_EMBEDDINGS_FILE=ollama_qwen3_8b_paper_train
+# Legacy alternative (if you generated/kept it):
+# EMBEDDING_EMBEDDINGS_FILE=paper_reference_embeddings
+
 # Model selection (Paper Section 2.2)
 # Note: Paper likely used BF16 weights; both Ollama variants are quantized.
 # Use gemma3:27b-it-qat for faster inference, or gemma3:27b for name parity.
@@ -108,6 +122,15 @@ EMBEDDING_DIMENSION=4096
 EMBEDDING_CHUNK_SIZE=8
 EMBEDDING_CHUNK_STEP=2
 EMBEDDING_TOP_K_REFERENCES=2
+EMBEDDING_MIN_EVIDENCE_CHARS=8
+
+# Few-shot retrieval must be set explicitly for paper parity (avoid non-paper filters):
+EMBEDDING_REFERENCE_SCORE_SOURCE=participant
+EMBEDDING_ENABLE_ITEM_TAG_FILTER=false
+EMBEDDING_MIN_REFERENCE_SIMILARITY=0.0
+EMBEDDING_MAX_REFERENCE_CHARS_PER_ITEM=0
+EMBEDDING_ENABLE_REFERENCE_VALIDATION=false
+EMBEDDING_ENABLE_RETRIEVAL_AUDIT=false
 
 # Sampling (Evidence-based clinical AI defaults)
 MODEL_TEMPERATURE=0.0
@@ -140,10 +163,14 @@ ollama pull qwen3-embedding:8b
 uv run python scripts/create_paper_split.py --verify
 
 # 3. Generate embeddings for training set
-# HuggingFace FP16 (recommended):
-uv run python scripts/generate_embeddings.py --split paper-train
-# Or Ollama (paper-parity naming):
-# EMBEDDING_BACKEND=ollama uv run python scripts/generate_embeddings.py --split paper-train
+# Generate embeddings with the SAME backend you will use at runtime.
+# For paper parity (Ollama embeddings):
+EMBEDDING_BACKEND=ollama uv run python scripts/generate_embeddings.py --split paper-train
+# Then ensure `EMBEDDING_EMBEDDINGS_FILE` points at the generated basename (e.g., `ollama_qwen3_8b_paper_train`).
+#
+# For higher-precision similarity (not paper-parity), you can generate HuggingFace embeddings instead:
+# uv run python scripts/generate_embeddings.py --split paper-train
+
 # Optional (Spec 34, not paper-parity): add `--write-item-tags` to generate a `.tags.json` sidecar for item-tag filtering, then set `EMBEDDING_ENABLE_ITEM_TAG_FILTER=true` for runs.
 
 # 4. Run reproduction (Pydantic AI enabled by default)

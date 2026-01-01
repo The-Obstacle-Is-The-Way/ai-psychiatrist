@@ -78,7 +78,7 @@ Symptom:
 Mitigations:
 - enable CRAG validation:
   - `EMBEDDING_ENABLE_REFERENCE_VALIDATION=true`
-  - optionally set `EMBEDDING_VALIDATION_MODEL` (defaults to `MODEL_JUDGE_MODEL` if unset)
+  - optionally set `EMBEDDING_VALIDATION_MODEL` (if unset, runners fall back to `MODEL_JUDGE_MODEL`)
 
 ---
 

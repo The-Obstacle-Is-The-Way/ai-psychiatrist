@@ -47,7 +47,9 @@ AI Psychiatrist is an engineering-focused, reproducible implementation of a rese
 |----------|-------------|
 | [Configuration](reference/configuration.md) | All configuration options |
 | [Feature Reference](reference/features.md) | Implemented features + defaults (non-archive canonical) |
+| [Run Output Schema](reference/run-output-schema.md) | Output JSON + experiment registry format |
 | [API Endpoints](reference/api/endpoints.md) | REST API reference |
+| [Testing](reference/testing.md) | Markers, fixtures, and test-doubles policy |
 | [Glossary](reference/glossary.md) | Terms and definitions |
 
 ### Data Documentation
@@ -70,6 +72,9 @@ AI Psychiatrist is an engineering-focused, reproducible implementation of a rese
 | [Run History](results/run-history.md) | Canonical history of reproduction runs |
 | [Reproduction Results](results/reproduction-results.md) | Current reproduction status + known issues |
 | [Retrieval Debugging](guides/debugging-retrieval-quality.md) | How to interpret retrieval logs and diagnose few-shot |
+| [Batch Query Embedding](guides/batch-query-embedding.md) | Query-embedding timeout fix (Spec 37) |
+| [Embedding Generation](guides/embedding-generation.md) | Fail-fast embedding artifacts + debug partial mode |
+| [Patch Missing PHQ-8 Values](guides/patch-missing-phq8-values.md) | Deterministic ground-truth repair for missing item cells |
 
 ---
 

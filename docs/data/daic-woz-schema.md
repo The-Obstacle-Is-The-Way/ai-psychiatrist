@@ -291,9 +291,13 @@ data/embeddings/
 ├── paper_reference_embeddings.json  # Text sidecar (participant IDs, chunks)
 ├── paper_reference_embeddings.meta.json  # Optional: provenance metadata
 ├── paper_reference_embeddings.tags.json  # Optional: per-chunk PHQ-8 item tags (Spec 34)
+├── paper_reference_embeddings.chunk_scores.json       # Optional: per-chunk PHQ-8 item scores (Spec 35)
+├── paper_reference_embeddings.chunk_scores.meta.json  # Optional: scorer provenance + prompt hash (Spec 35)
 ├── reference_embeddings.npz         # Optional: AVEC train knowledge base
 ├── reference_embeddings.json
-└── reference_embeddings.tags.json   # Optional: per-chunk PHQ-8 item tags (Spec 34)
+├── reference_embeddings.tags.json   # Optional: per-chunk PHQ-8 item tags (Spec 34)
+├── reference_embeddings.chunk_scores.json       # Optional: per-chunk PHQ-8 item scores (Spec 35)
+└── reference_embeddings.chunk_scores.meta.json  # Optional: scorer provenance + prompt hash (Spec 35)
 ```
 
 ### NPZ Format

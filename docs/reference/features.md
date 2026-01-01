@@ -96,7 +96,9 @@ See: `docs/guides/preflight-checklist-few-shot.md`.
 ## Where To Go Next
 
 - Configuration: `docs/reference/configuration.md`
+- Run output schema: `docs/reference/run-output-schema.md`
 - Few-shot prompt format: `docs/concepts/few-shot-prompt-format.md`
+- Batch query embedding: `docs/guides/batch-query-embedding.md`
 - Retrieval debugging: `docs/guides/debugging-retrieval-quality.md`
 - Item-tagging setup: `docs/guides/item-tagging-setup.md`
 - Chunk scoring setup + schema: `docs/reference/chunk-scoring.md`

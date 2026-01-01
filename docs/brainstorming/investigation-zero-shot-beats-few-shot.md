@@ -442,9 +442,11 @@ NOT from this chunk's content!
 ## 5. Raw Data References
 
 ### Output Files
-- Zero-shot metrics: `data/outputs/selective_prediction_metrics_20251228T133513Z.json`
-- Few-shot metrics: `data/outputs/selective_prediction_metrics_20251228T133532Z.json`
-- Combined run: `data/outputs/few_shot_paper_backfill-off_20251228_024244.json`
+This document is historical. Specific output filenames in early investigations are not guaranteed to exist in the current repo snapshot.
+
+For retained artifacts, use:
+- `docs/results/run-history.md` (canonical filenames + commits)
+- `data/outputs/` (local artifacts)
 
 ### Key Logs to Check
 This repo does not reliably write logs to `logs/` by default during reproduction runs. Prefer console logs.
@@ -469,12 +471,12 @@ rg -n \"retrieved_reference|Found references for item|bundle_length|top_similari
 
 ### Divergences Found
 
-Investigation identified paper-parity divergences that may contribute to the performance gap:
+This investigation identified divergences that were later addressed by dedicated specs:
 
-1. **Score-Chunk Mismatch** (`embedding.py:199`): Paper methodology - correctly implemented
-2. **Format Mismatch** (`embedding.py:40-70`): 8 separate sections vs paper's 1 unified block
-3. **Missing Domain Labels** (`embedding.py:58-62`): `(Score: 2)` vs paper's `(PHQ8_Sleep Score: 2)`
-4. **Closing Tag**: `</Reference Examples>` vs paper's `<Reference Examples>`
+1. **Score–chunk mismatch** (paper design): addressed by Spec 35 (chunk-level scoring).
+2. **Format mismatch**: fixed by Spec 31 (unified `<Reference Examples>` block).
+3. **Missing domain labels**: fixed by Spec 31 (labels like `(PHQ8_Sleep Score: 2)`).
+4. **Closing tag mismatch**: Spec 33 intentionally switched to a proper XML closing tag (`</Reference Examples>`).
 
 ### Hypotheses Status
 

@@ -167,7 +167,7 @@ Few-shot retrieval configuration.
 | `EMBEDDING_REFERENCE_SCORE_SOURCE` | string | `participant` | Spec 35: `participant` (paper-parity) or `chunk` (experimental) |
 | `EMBEDDING_ALLOW_CHUNK_SCORES_PROMPT_HASH_MISMATCH` | bool | `false` | Spec 35 circularity control bypass (unsafe) |
 | `EMBEDDING_ENABLE_REFERENCE_VALIDATION` | bool | `false` | Spec 36 (CRAG-style runtime validation; adds LLM calls) |
-| `EMBEDDING_VALIDATION_MODEL` | string | *(unset)* | Spec 36 validation model (defaults to `MODEL_JUDGE_MODEL` when unset) |
+| `EMBEDDING_VALIDATION_MODEL` | string | *(unset)* | Spec 36 validation model (if unset, runners fall back to `MODEL_JUDGE_MODEL`) |
 | `EMBEDDING_VALIDATION_MAX_REFS_PER_ITEM` | int | `2` | Spec 36 max accepted refs per item after validation |
 
 **Note on artifact naming**: `scripts/generate_embeddings.py` defaults to writing a namespaced artifact like

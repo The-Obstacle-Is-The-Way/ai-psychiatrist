@@ -61,6 +61,10 @@ The script `scripts/create_paper_split.py` defaults to `--mode ground-truth`. Th
 - `{output}.json` (text chunks)
 - `{output}.meta.json` (provenance metadata)
 - `{output}.tags.json` (optional, with `--write-item-tags` flag)
+- `{output}.partial.json` (debug-only, with `--allow-partial`; Spec 40)
+
+Additional optional sidecars (separate preprocessing steps):
+- `{output}.chunk_scores.json` + `{output}.chunk_scores.meta.json` (Spec 35; from `scripts/score_reference_chunks.py`)
 
 ### Item Tags Sidecar (Spec 34)
 
@@ -83,6 +87,30 @@ When generated with `--write-item-tags`, the `.tags.json` sidecar contains per-c
 - Participant IDs match the texts sidecar
 - Per-participant list length equals chunk count
 - Tag values are valid `PHQ8_*` strings
+
+### Chunk Scores Sidecar (Spec 35)
+
+Chunk scoring produces per-chunk estimated PHQ-8 item scores aligned with `{output}.json`:
+
+- `{output}.chunk_scores.json`
+- `{output}.chunk_scores.meta.json`
+
+**Purpose**: Enables chunk-level labels when `EMBEDDING_REFERENCE_SCORE_SOURCE=chunk`.
+
+**Validation**: `ReferenceStore` validates that:
+- Participant IDs match the embeddings/text sidecars exactly
+- Per-participant list length equals chunk count
+- Keys are exactly the 8 `PHQ8_*` strings
+- Values are `0..3` or `null`
+- `prompt_hash` matches the current scorer prompt (unless explicitly overridden as unsafe)
+
+See: `docs/reference/chunk-scoring.md`.
+
+### Partial Output Manifest (Spec 40)
+
+If embeddings are generated with `--allow-partial`, the script writes `{output}.partial.json` when skips occur.
+
+**Rule**: Partial artifacts are debug-only and must not be used for final evaluation.
 
 ### Embedding Auto-Selection Logic
 
@@ -157,9 +185,11 @@ See [Model Registry](../models/model-registry.md#high-quality-setup-recommended-
 
 | File Pattern | Purpose |
 |--------------|---------|
-| `data/outputs/reproduction_results_*.json` | Raw reproduction results |
-| `data/outputs/qualitative_*.json` | Qualitative assessment outputs |
-| `data/outputs/meta_review_*.json` | Meta-review outputs |
+| `data/outputs/{mode}_{split}_backfill-{on,off}_{YYYYMMDD_HHMMSS}.json` | Reproduction results with run + per-experiment provenance (from `scripts/reproduce_results.py`) |
+| `data/outputs/selective_prediction_metrics_*.json` | AURC/AUGRC + bootstrap CIs (from `scripts/evaluate_selective_prediction.py`) |
+| `data/outputs/RUN_LOG.md` | Human-maintained run history log (append-only) |
+| `data/outputs/*.log` | Console log captures for long runs / tmux sessions (optional) |
+| `data/experiments/registry.yaml` | Registry of run metadata + summary metrics (updated by `scripts/reproduce_results.py`) |
 
 ---
 
@@ -181,7 +211,7 @@ See [Model Registry](../models/model-registry.md#high-quality-setup-recommended-
 ### 3. Potential Improvements
 
 - [ ] Consider adding `avec_` prefix for symmetry
-- [ ] Add validation that correct embeddings exist before running
+- [x] Fail-fast if embeddings are missing (implemented in `scripts/reproduce_results.py`)
 
 ---
 
