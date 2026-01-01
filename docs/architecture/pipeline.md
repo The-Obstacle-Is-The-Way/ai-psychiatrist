@@ -165,9 +165,7 @@ First, the agent extracts evidence quotes for each PHQ-8 item:
 }
 ```
 
-**Keyword Backfill (Optional):** If enabled, keyword matching can supplement extraction when the
-LLM misses evidence. By default (paper-text parity), backfill is OFF; see
-`docs/concepts/backfill-explained.md` for caveats and configuration.
+**Note:** Keyword backfill is a deprecated feature that is OFF by default and not recommended for use.
 
 #### Few-Shot Reference Retrieval
 
@@ -376,6 +374,6 @@ For local reproduction runtime measurements, see `docs/results/reproduction-resu
 
 ## See Also
 
-- [Architecture](architecture.md) - System design details
-- [PHQ-8](phq8.md) - Understanding the assessment scale
+- [Architecture](./architecture.md) - System design details
+- [PHQ-8](../concepts/phq8.md) - Understanding the assessment scale
 - [Configuration](../configs/configuration.md) - All settings

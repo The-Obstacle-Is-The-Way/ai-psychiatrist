@@ -26,5 +26,5 @@ Implemented specs are distilled into canonical (non-archive) documentation under
 - Metrics definitions + output schema: [metrics-and-evaluation.md](../statistics/metrics-and-evaluation.md)
 - Configuration philosophy: [configuration-philosophy.md](../configs/configuration-philosophy.md)
 
-Historical spec texts remain in `docs/archive/specs/` for provenance, but the active documentation
+Historical spec texts remain in `docs/_archive/specs/` for provenance, but the active documentation
 should not require them.

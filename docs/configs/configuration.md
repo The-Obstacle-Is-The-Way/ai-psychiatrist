@@ -344,7 +344,7 @@ Keyword backfill is **OFF by default** to match paper methodology (~50% coverage
 
 > ⚠️ **Deprecated**: Keyword backfill is a historical ablation feature. Enabling it is not recommended for new runs. See `POST-ABLATION-DEFAULTS.md` in the project root for rationale.
 
-See [Backfill Explained](../concepts/backfill-explained.md) for how it works and [Paper Parity Guide](../guides/paper-parity-guide.md) for reproduction guidance.
+See [Paper Parity Guide](../guides/paper-parity-guide.md) for reproduction guidance.
 
 ---
 
@@ -477,5 +477,5 @@ OLLAMA_TIMEOUT_SECONDS=600
 ## See Also
 
 - [Quickstart](../getting-started/quickstart.md) - Initial setup
-- [Architecture](../concepts/architecture.md) - How settings are used
+- [Architecture](../architecture/architecture.md) - How settings are used
 - `.env.example` (repository root) - Environment template

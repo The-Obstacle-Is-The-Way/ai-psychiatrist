@@ -364,4 +364,4 @@ LLM inference can be slow, especially on first request when models are loading:
 
 - [Quickstart](../getting-started/quickstart.md) - Getting started
 - [Configuration](../configs/configuration.md) - API and model settings
-- [Pipeline](../concepts/pipeline.md) - Processing flow
+- [Pipeline](../architecture/pipeline.md) - Processing flow

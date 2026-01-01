@@ -422,6 +422,6 @@ uv add pydantic-ai langgraph
 
 ## See Also
 
-- [Architecture](../concepts/architecture.md) - Current system design
-- [Pipeline](../concepts/pipeline.md) - Current 4-agent pipeline
+- [Architecture](./architecture.md) - Current system design
+- [Pipeline](./pipeline.md) - Current 4-agent pipeline
 - [Configuration](../configs/configuration.md) - Settings reference

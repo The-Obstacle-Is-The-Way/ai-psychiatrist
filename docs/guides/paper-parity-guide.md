@@ -1,7 +1,7 @@
 # Paper Parity Guide: Reproducing the Original Research
 
 **Audience**: Researchers wanting to compare results with the paper
-**Related**: [Backfill Explained](../concepts/backfill-explained.md) | [Configuration Reference](../configs/configuration.md) | [Reproduction Notes](../results/reproduction-results.md)
+**Related**: [Configuration Reference](../configs/configuration.md) | [Reproduction Notes](../results/reproduction-results.md)
 **Last Updated**: 2026-01-01
 
 ---
@@ -206,6 +206,5 @@ See `docs/data/paper-split-registry.md` and `docs/data/paper-split-methodology.m
 - **Preflight Checklists** (run before every reproduction):
   - [Zero-Shot Preflight](./preflight-checklist-zero-shot.md) - Pre-run verification for zero-shot
   - [Few-Shot Preflight](./preflight-checklist-few-shot.md) - Pre-run verification for few-shot
-- [Backfill Explained](../concepts/backfill-explained.md) - How backfill works
 - [Reproduction Notes](../results/reproduction-results.md) - Current results
 - [Configuration Reference](../configs/configuration.md) - All settings

@@ -63,7 +63,7 @@ AI Psychiatrist is an engineering-focused, reproducible implementation of a rese
 | Document | Description |
 |----------|-------------|
 | [Future Architecture](architecture/future-architecture.md) | LangGraph integration roadmap (Pydantic AI is already integrated) |
-| [Spec 20: Keyword Fallback Improvements](archive/specs/20-keyword-fallback-improvements.md) | Deferred — intentionally not implementing (see spec) |
+| [Spec 20: Keyword Fallback Improvements](_archive/specs/20-keyword-fallback-improvements.md) | Deferred — intentionally not implementing (see spec) |
 
 ### Debugging / Reproduction
 
