@@ -1,7 +1,7 @@
 # Data Splits Overview
 
 **Purpose**: Definitive reference for all data split configurations
-**Last Updated**: 2025-12-26
+**Last Updated**: 2026-01-01
 **Tracked by**: [GitHub Issue #45](https://github.com/The-Obstacle-Is-The-Way/ai-psychiatrist/issues/45)
 
 This document explains the relationship between AVEC2017 competition splits, the paper's custom splits, and our implementation.
@@ -109,6 +109,23 @@ They:
 > "For PHQ-8 total scores with two participants, we put one in the validation set and one in the test set. For PHQ-8 total scores with one participant, we put that one participant in the training set."
 
 This ensures balanced distribution of severity levels across splits.
+
+### How We Obtained the Exact Split IDs
+
+The paper does not publish the exact participant IDs. We **reconstructed** them by extracting IDs from the paper authors' published output files in `_reference/analysis_output/`:
+
+| Source | Split | Count |
+|--------|-------|-------|
+| `quan_gemma_few_shot/TEST_analysis_output/*.jsonl` | TEST | 41 |
+| `quan_gemma_few_shot/VAL_analysis_output/*.jsonl` | VAL | 43 |
+| `quan_gemma_zero_shot.jsonl` minus TEST minus VAL | TRAIN | 58 |
+
+This reconstruction is **authoritative** because these are the actual IDs the paper used. The exact IDs are documented in [paper-split-registry.md](./paper-split-registry.md).
+
+We also verified the paper's stated heuristics against the reconstructed splits:
+- **Single-participant scores → TRAIN**: 2/2 verified (100%)
+- **Two-participant scores → 1 VAL + 1 TEST**: 4/4 verified (100%)
+- **Three-participant strata**: Sorted by ID, first→TRAIN, second→VAL, third→TEST (8/8 verified)
 
 ---
 

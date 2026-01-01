@@ -17,34 +17,62 @@ Not everything needs a flag. Flags add cognitive load and misconfiguration risk.
 
 - **SSOT for config names + code defaults**: `src/ai_psychiatrist/config.py`.
 - **Recommended runtime baseline**: `.env.example` (what most runs use once copied to `.env`).
-- When this doc says “default”, it should be read as:
+- When this doc says "default", it should be read as:
   - **Code default** = what happens with no `.env` overrides (or in tests where `.env` is ignored).
   - **Recommended `.env` baseline** = what we expect for normal research runs.
 
 ---
 
+## On "Paper Parity"
+
+**The paper's few-shot method (as described) introduces a fundamental label mismatch.**
+
+We initially aimed for "paper parity" — matching the paper's exact methodology. Through
+rigorous investigation, we discovered critical issues:
+
+1. **Participant-level scores attached to retrieved chunks**: In our "paper-parity" pipeline,
+   the score shown for a retrieved reference chunk is a **participant-level PHQ-8 item score**.
+   This creates label noise: a chunk about "career goals" can be shown as `(PHQ8_Sleep Score: 2)`
+   even if it contains no sleep evidence. This is not chunk-level ground truth.
+
+2. **Keyword backfill is a heuristic**: Keyword triggers ("sleep", "tired", etc.) can increase
+   apparent coverage but may introduce false positives and distort selective-prediction metrics.
+   It must remain OFF by default and be clearly labeled when used.
+
+3. **Reproducibility is ambiguous**: Despite extensive effort, we have not reproduced the
+   paper's headline improvements in our environment. This could be due to methodology gaps
+   (under-specified prompts, artifacts, split details) and/or implementation differences.
+
+**Our stance**: "Paper parity" is still useful as a **historical baseline**, but should not be
+the default behavior. We aim for **research-honest behavior**: minimize label noise, avoid
+silent heuristics, and fail fast when enabled features are broken.
+
+See `_archive/misc/HYPOTHESIS-FEWSHOT-DESIGN-FLAW.md` for the full analysis.
+
+---
+
 ## Configuration Categories
 
-### 1. ALWAYS-ON CORRECTNESS INVARIANTS (Do Not “Tune”)
+### 1. Always-On Correctness Invariants (Do Not "Tune")
 
-These are **correctness behaviors**. Some have knobs in the codebase, but treating them as “tunable”
+These are **correctness behaviors**. Some have knobs in the codebase, but treating them as "tunable"
 creates misconfiguration risk and can corrupt research runs.
 
 | Behavior | Where Enforced | Config Knob? | Notes |
 |----------|----------------|--------------|-------|
-| **Skip-if-disabled, crash-if-broken** (Spec 38) | `ReferenceStore` + `ReferenceValidation` | No (automatic) | Disabled feature → no file I/O; enabled feature → strict load + validate |
+| **Skip-if-disabled, crash-if-broken** (Spec 38) | `ReferenceStore` + `ReferenceValidation` | No (automatic) | Disabled feature = no file I/O; enabled feature = strict load + validate |
 | **Preserve exception types** (Spec 39) | Agents | No (automatic) | Log `error_type`, then `raise` to preserve the original exception |
 | **Fail-fast embedding generation** (Spec 40) | `scripts/generate_embeddings.py` | CLI (`--allow-partial`) | Strict-by-default; partial is for debugging only |
-| **Pydantic AI structured output** | Agents | Yes (`PYDANTIC_AI_ENABLED`) | Disabling is **not supported** (agents will raise; legacy fallback is intentionally removed) |
-| **Track N/A reasons** | Quantitative agent | Yes (`QUANTITATIVE_TRACK_NA_REASONS`) | Default ON; small runtime cost (keyword scan) but improves run diagnostics |
+| **Pydantic AI structured output** | Agents | Yes (`PYDANTIC_AI_ENABLED`) | Disabling is **not supported** (agents will raise; legacy fallback removed) |
+| **Track N/A reasons** | Quantitative agent | Yes (`QUANTITATIVE_TRACK_NA_REASONS`) | Default ON; small runtime cost but improves run diagnostics |
 
-**Rule**: if disabling a “correctness invariant” is possible, it must either:
+**Rule**: if disabling a "correctness invariant" is possible, it must either:
 - be clearly documented as **unsupported**, or
 - be restricted to a **debug-only** escape hatch (explicit, noisy, and off by default).
 
 ---
 
-### 2. POST-ABLATION DEFAULTS (Will Be Baked In)
+### 2. Post-Ablation Defaults (Will Be Baked In)
 
 After ablations complete, these become baked-in defaults:
 
@@ -58,13 +86,25 @@ After ablations complete, these become baked-in defaults:
 
 **Post-ablation**: These become defaults. Flags remain ONLY for paper-parity reproduction.
 
+#### Why CRAG (Spec 36) Should Be Default ON
+
+If our goal is **research-honest retrieval** (not paper-parity), reference validation is part of the
+"correct" pipeline:
+
+- Spec 34 (item tags) is a **static heuristic** and will miss symptom mentions that don't match keywords.
+- Spec 33 (similarity threshold/budget) is a **quality guardrail**, not a relevance proof.
+- Spec 35 fixes **label correctness**, but does not prevent "semantically similar but clinically irrelevant" chunks.
+- Spec 36 is the only layer that asks an LLM directly: "Is this reference actually about the target PHQ-8 item?"
+
+In this repo's research workflow (local Ollama, long-running ablations), **correctness outweighs latency**.
+
 ---
 
-### 3. TUNABLE HYPERPARAMETERS (Keep Configurable)
+### 3. Tunable Hyperparameters (Keep Configurable)
 
 Researchers should experiment with these. They affect results, not correctness.
 
-**Important**: Some “hyperparameters” are **index-time** and require regenerating artifacts.
+**Important**: Some "hyperparameters" are **index-time** and require regenerating artifacts.
 Changing them without regenerating embeddings/tags/chunk-scores will either crash or silently change
 the retrieval universe.
 
@@ -74,7 +114,7 @@ the retrieval universe.
 | `EMBEDDING_CHUNK_SIZE` | 8 | 8 | No | Requires regenerating `.npz` + sidecars |
 | `EMBEDDING_CHUNK_STEP` | 2 | 2 | No | Requires regenerating `.npz` + sidecars |
 | `EMBEDDING_TOP_K_REFERENCES` | 2 | 2 | Yes | Paper Appendix D chose `2`; can be tuned without reindex |
-| `EMBEDDING_ENABLE_BATCH_QUERY_EMBEDDING` | `true` | `true` | Yes | Spec 37 stability/perf default; disable only for debugging parity with older runs |
+| `EMBEDDING_ENABLE_BATCH_QUERY_EMBEDDING` | `true` | `true` | Yes | Spec 37 stability/perf default |
 | `EMBEDDING_QUERY_EMBED_TIMEOUT_SECONDS` | 300 | 300 | Yes | Stability knob (Spec 37) |
 | `EMBEDDING_ENABLE_RETRIEVAL_AUDIT` | `false` | `true` | Yes | Diagnostics only (Spec 32); recommended ON for research runs |
 | `EMBEDDING_MIN_REFERENCE_SIMILARITY` | 0.0 | 0.3 | Yes | Retrieval-time filter; safe to tune |
@@ -87,7 +127,7 @@ the retrieval universe.
 
 ---
 
-### 4. MODEL SELECTION (Always Configurable)
+### 4. Model Selection (Always Configurable)
 
 Users must be able to swap models:
 
@@ -98,14 +138,14 @@ Users must be able to swap models:
 | `MODEL_META_REVIEW_MODEL` | `gemma3:27b` | `gemma3:27b-it-qat` | Meta-review agent |
 | `MODEL_QUANTITATIVE_MODEL` | `gemma3:27b` | `gemma3:27b-it-qat` | Quantitative agent |
 | `MODEL_EMBEDDING_MODEL` | `qwen3-embedding:8b` | `qwen3-embedding:8b` | Embedding model |
-| `MODEL_TEMPERATURE` | `0.0` | `0.0` | Keep `0.0` for reproducibility; only change for explicit experiments |
+| `MODEL_TEMPERATURE` | `0.0` | `0.0` | Keep `0.0` for reproducibility |
 | `EMBEDDING_VALIDATION_MODEL` | `""` (falls back) | (unset) | Effective default is `MODEL_JUDGE_MODEL` when validation is enabled |
 
 **These are always configurable.** Different hardware = different models.
 
 ---
 
-### 5. INFRASTRUCTURE (Always Configurable)
+### 5. Infrastructure (Always Configurable)
 
 Environment-specific setup:
 
@@ -114,11 +154,11 @@ Environment-specific setup:
 | `OLLAMA_HOST` | `127.0.0.1` | Ollama server |
 | `OLLAMA_PORT` | `11434` | Ollama port |
 | `OLLAMA_TIMEOUT_SECONDS` | `600` | Request timeout |
-| `PYDANTIC_AI_TIMEOUT_SECONDS` | (unset) | Timeout for Pydantic AI calls (unset = library default) |
+| `PYDANTIC_AI_TIMEOUT_SECONDS` | (unset) | Timeout for Pydantic AI calls |
 | `LLM_BACKEND` | `ollama` | Chat backend |
-| `EMBEDDING_BACKEND` | `huggingface` | Embedding backend (see note below) |
-| `HF_DEFAULT_CHAT_TIMEOUT` | `180` | Default HuggingFace chat timeout (when `LLM_BACKEND=huggingface`) |
-| `HF_DEFAULT_EMBED_TIMEOUT` | `120` | Default HuggingFace embed timeout (when `EMBEDDING_BACKEND=huggingface`) |
+| `EMBEDDING_BACKEND` | `huggingface` | Embedding backend |
+| `HF_DEFAULT_CHAT_TIMEOUT` | `180` | HuggingFace chat timeout |
+| `HF_DEFAULT_EMBED_TIMEOUT` | `120` | HuggingFace embed timeout |
 | `DATA_*` paths | `data/...` | Data locations |
 | `LOG_LEVEL` | `INFO` | Logging verbosity |
 | `API_HOST`, `API_PORT` | `0.0.0.0:8000` | Server binding |
@@ -127,35 +167,31 @@ Environment-specific setup:
 
 ---
 
-### 5a. EMBEDDING ARTIFACT SELECTION (Critical)
+### 6. Embedding Artifact Selection (Critical)
 
 **Problem Identified**: Embedding artifacts and chunk scores must be generated separately for each backend.
-HuggingFace embeddings (FP16) produce higher quality similarity scores than Ollama (Q4_K_M), but both
-require hours of preprocessing for chunk scores.
+HuggingFace embeddings (FP16) produce higher quality similarity scores than Ollama (Q4_K_M).
 
-| Embeddings File | Backend | Precision | Quality | Chunk Scores? |
-|-----------------|---------|-----------|---------|---------------|
-| `huggingface_qwen3_8b_paper_train` | HuggingFace | FP16 | **Higher** | See `PROBLEM-HUGGINGFACE-CHUNK-SCORES-MISSING.md` |
-| `ollama_qwen3_8b_paper_train` | Ollama | Q4_K_M | Lower | ✅ Generated |
+| Embeddings File | Backend | Precision | Quality |
+|-----------------|---------|-----------|---------|
+| `huggingface_qwen3_8b_paper_train` | HuggingFace | FP16 | **Higher** |
+| `ollama_qwen3_8b_paper_train` | Ollama | Q4_K_M | Lower |
 
 **Recommendation**:
 
-1. **For best quality**: Use HuggingFace embeddings (`EMBEDDING_BACKEND=huggingface`, `EMBEDDING_EMBEDDINGS_FILE=huggingface_qwen3_8b_paper_train`)
+1. **For best quality**: Use HuggingFace embeddings (`EMBEDDING_BACKEND=huggingface`)
 2. **For accessibility**: Use Ollama if HuggingFace deps unavailable
 
 **Important**: `EMBEDDING_EMBEDDINGS_FILE` and `EMBEDDING_BACKEND` should be coherent:
 - HuggingFace backend → `huggingface_*` embeddings file
 - Ollama backend → `ollama_*` embeddings file
 
-Mixing backends with mismatched embeddings files is technically valid (the embeddings are pre-computed),
-but generates confusion about which artifact quality is being used.
-
 **Chunk Scores Dependency**: If `EMBEDDING_REFERENCE_SCORE_SOURCE=chunk`, the corresponding
 `.chunk_scores.json` file must exist for the selected embeddings file.
 
 ---
 
-### 6. DEPRECATED (Remove After Freeze)
+### 7. Deprecated (Remove After Freeze)
 
 These should NOT be used. Flags exist only for historical comparison:
 
@@ -168,7 +204,7 @@ These should NOT be used. Flags exist only for historical comparison:
 
 ---
 
-### 7. SAFETY OVERRIDES (Danger Zone)
+### 8. Safety Overrides (Danger Zone)
 
 These bypass safety checks. Require explicit acknowledgment:
 
@@ -245,7 +281,6 @@ reference_score_source: str = "chunk"  # Correct default
 
 ```bash
 # To run the full "correct" retrieval pipeline today, ensure these are set.
-# Note: `.env.example` already enables Spec 33/34 by default.
 EMBEDDING_REFERENCE_SCORE_SOURCE=chunk
 EMBEDDING_ENABLE_ITEM_TAG_FILTER=true
 EMBEDDING_MIN_REFERENCE_SIMILARITY=0.3
@@ -273,6 +308,62 @@ EMBEDDING_ENABLE_REFERENCE_VALIDATION=false
 
 ---
 
+## Post-Ablation Migration
+
+### Validation Gates (Before Consolidation)
+
+Do NOT consolidate defaults until all of these are verified:
+
+- [ ] **Spec 35 ablation complete**: Chunk scoring vs participant scoring comparison
+- [ ] **chunk_scores.json artifact exists**: Generated by `score_reference_chunks.py`
+- [ ] **No regressions**: Primary metrics (AURC/AUGRC + MAE + coverage) meet or beat baseline
+- [ ] **CI passes**: All tests green with new defaults
+
+### config.py Changes Required
+
+```python
+# === EmbeddingSettings ===
+
+# Spec 35: Chunk-level scoring (label-noise reduction)
+reference_score_source: Literal["participant", "chunk"] = Field(
+    default="chunk",  # CHANGED from "participant"
+)
+
+# Spec 34: Item-tag filtering
+enable_item_tag_filter: bool = Field(
+    default=True,  # CHANGED from False
+)
+
+# Spec 33: Retrieval quality guardrails
+min_reference_similarity: float = Field(
+    default=0.3,  # CHANGED from 0.0
+)
+
+max_reference_chars_per_item: int = Field(
+    default=500,  # CHANGED from 0
+)
+
+# Spec 36: CRAG-style runtime reference validation
+enable_reference_validation: bool = Field(
+    default=True,  # CHANGED from False
+)
+```
+
+### Artifact Requirements
+
+For the consolidated defaults to work, these artifacts MUST exist:
+
+| Artifact | Required For | Generated By |
+|----------|--------------|--------------|
+| `*.npz` | All few-shot | `generate_embeddings.py` |
+| `*.json` | All few-shot | `generate_embeddings.py` |
+| `*.meta.json` | All few-shot | `generate_embeddings.py` |
+| `*.tags.json` | Spec 34 | `generate_embeddings.py --write-item-tags` |
+| `*.chunk_scores.json` | Spec 35 | `score_reference_chunks.py` |
+| `*.chunk_scores.meta.json` | Spec 35 | `score_reference_chunks.py` |
+
+---
+
 ## Summary Table
 
 | Category | Example | Configurable? | Default |
@@ -281,7 +372,7 @@ EMBEDDING_ENABLE_REFERENCE_VALIDATION=false
 | **Post-ablation retrieval** | CRAG, chunk scores, tag filter | Yes (for now) | Will be ON |
 | **Performance/stability** | batch query embedding, timeouts | Yes | Default ON |
 | **Hyperparameters** | top_k, thresholds, feedback | Yes | Baseline values |
-| **Models** | quantitative_model | Yes | Code: `gemma3:27b` / `.env.example`: `gemma3:27b-it-qat` |
+| **Models** | quantitative_model | Yes | Code: `gemma3:27b` |
 | **Infrastructure** | OLLAMA_HOST | Yes | localhost |
 | **Deprecated** | keyword_backfill | No | Always OFF |
 | **Safety overrides** | allow_prompt_mismatch | Yes | Always OFF |
@@ -290,12 +381,9 @@ EMBEDDING_ENABLE_REFERENCE_VALIDATION=false
 
 ## Related Documentation
 
-- `POST-ABLATION-DEFAULTS.md` — When defaults will flip
-- `FEATURES.md` — Feature status and configuration
-- `docs/configs/configuration.md` — Full config reference
-- `.env.example` — Example configuration
-- `PROBLEM-HUGGINGFACE-CHUNK-SCORES-MISSING.md` — HuggingFace chunk scores gap
-- `PROBLEM-SPEC35-SCORER-MODEL-GAP.md` — Scorer model defensibility gap
+- [Configuration Reference](./configuration.md) — Full settings reference
+- `.env.example` (repository root) — Example configuration
+- `_archive/misc/HYPOTHESIS-FEWSHOT-DESIGN-FLAW.md` — Why participant-level scoring is broken
 
 ---
 
