@@ -4,6 +4,7 @@
 **Severity**: Low (affects ~2% of participants)
 **Discovered**: 2026-01-01
 **Affected Component**: `src/ai_psychiatrist/agents/extractors.py`
+**Spec**: `docs/_specs/spec-043-json-missing-comma-repair.md`
 
 ---
 

@@ -1,5 +1,7 @@
 # DAIC-WOZ Transcript Preprocessing (Bias-Aware, Deterministic)
 
+**Spec**: `docs/_specs/daic-woz-transcript-preprocessing.md`
+
 **Purpose**: Produce **clean, reproducible** DAIC-WOZ transcript variants (especially **participant-only**) without overwriting raw data, so that:
 
 - Few-shot retrieval embeddings are not biased by interviewer prompt patterns
