@@ -9,7 +9,7 @@
 DAIC-WOZ transcripts contain:
 
 1) **Interviewer prompt leakage**: Ellie’s prompts can leak protocol patterns into embedding-based retrieval, biasing few-shot selection before the LLM is prompted.
-2) **Known “mechanical” transcript issues**: e.g., interruption windows and a small number of missing Ellie transcript sessions.
+2) **Known "mechanical" transcript issues**: e.g., interruption windows and missing Ellie transcripts (sessions 451, 458, 480).
 3) **Potential integrity issues in split CSVs** (depending on upstream copy): missing PHQ-8 item cells and known label inconsistencies (e.g., `PHQ8_Binary` mismatch).
 
 We need a deterministic, reproducible preprocessing workflow that creates **collision-free transcript variants** without modifying raw data.

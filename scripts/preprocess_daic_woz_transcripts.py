@@ -348,9 +348,8 @@ class Manifest:
 
 
 def _write_manifest(manifest_path: Path, manifest: Manifest) -> None:
+    # asdict() recursively converts nested dataclasses
     payload: dict[str, Any] = asdict(manifest)
-    # Serialize dataclass items
-    payload["stats"] = [asdict(s) for s in manifest.stats]
     manifest_path.write_text(json.dumps(payload, indent=2), encoding="utf-8")
 
 
