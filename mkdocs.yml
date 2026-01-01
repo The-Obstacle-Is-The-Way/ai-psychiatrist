@@ -31,12 +31,16 @@ not_in_nav: |
   _brainstorming/**
 
 # Enable link/anchor validation (pair with `mkdocs build --strict` in CI).
+# Note: Links within _archive/** may be stale; these are historical docs preserved for provenance.
 validation:
   omitted_files: warn
   not_found: warn
   absolute_links: warn
   unrecognized_links: warn
   anchors: warn
+  # Suppress validation warnings for archived docs (they have historical internal links)
+  links:
+    not_found: info
 
 markdown_extensions:
   - admonition
