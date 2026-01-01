@@ -1,8 +1,20 @@
 # Keyword Backfill: The Safety Net for Evidence Extraction
 
+> **DEPRECATED FEATURE - DO NOT ENABLE**
+>
+> Keyword backfill is a flawed heuristic that inflates coverage metrics without
+> improving clinical validity. The feature matches keywords like "sleep" or "tired"
+> via simple substring matching, leading to false positives and misleading results.
+>
+> **This feature is retained for historical comparison only. Keep it OFF.**
+>
+> The original paper's methodology has fundamental issues that make "paper parity"
+> meaningless. See [`HYPOTHESIS-FEWSHOT-DESIGN-FLAW.md`](../../HYPOTHESIS-FEWSHOT-DESIGN-FLAW.md)
+> and [`POST-ABLATION-DEFAULTS.md`](../../POST-ABLATION-DEFAULTS.md) for details.
+
 **Audience**: Researchers and developers wanting to understand the coverage-accuracy tradeoff
 **Related**: [SPEC-003](../archive/specs/SPEC-003-backfill-toggle.md) | [Coverage Investigation](../archive/bugs/coverage-investigation.md) | [Extraction Mechanism](./extraction-mechanism.md)
-**Last Updated**: 2025-12-26
+**Last Updated**: 2025-12-31
 
 ---
 
@@ -287,17 +299,26 @@ To resolve this ambiguity, consider asking:
 
 ## When to Use Each Mode
 
-### Use Backfill OFF (Default) When:
-- Reproducing paper-text methodology (as written)
+### Use Backfill OFF (Default) — ALWAYS
+
+**This is the only recommended mode.** Backfill is deprecated.
+
 - Evaluating LLM capability
 - Running ablation studies
 - Comparing different LLM models
+- Production use
 
-### Use Backfill ON When:
-- Building a clinical decision support tool
-- Want maximum coverage
-- Prefer "some assessment" over "N/A"
-- Not comparing directly with paper metrics
+### Use Backfill ON — NEVER (Historical Only)
+
+**Do not enable backfill.** The feature is flawed:
+
+- Simple substring matching has no semantic understanding
+- Matches "I sleep great" for `PHQ8_Sleep` (false positive)
+- Inflates coverage without improving clinical validity
+- The original paper's methodology is not reproducible anyway
+
+If you need to enable backfill for a specific historical comparison, document
+the reason explicitly. This is not recommended for any new work.
 
 ---
 

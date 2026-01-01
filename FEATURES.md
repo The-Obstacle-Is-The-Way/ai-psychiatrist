@@ -4,6 +4,9 @@ Quick reference for all implemented features and how to enable them.
 
 **Last Updated**: 2025-12-31
 
+> **Post-Ablation Note**: After ablations complete, many "OFF" defaults will flip to "ON".
+> See [`POST-ABLATION-DEFAULTS.md`](POST-ABLATION-DEFAULTS.md) for the consolidation plan.
+
 ---
 
 ## Feature Status Overview
