@@ -74,7 +74,9 @@ src/ai_psychiatrist/
 
 ## Configuration
 
-Environment-driven via `.env` (copy from `.env.example`). Key settings:
+Environment-driven via `.env` (copy from `.env.example`). See `CONFIGURATION-PHILOSOPHY.md` for what should be configurable vs baked-in.
+
+Key settings:
 
 | Setting | Default | Paper Reference |
 |---------|---------|-----------------|

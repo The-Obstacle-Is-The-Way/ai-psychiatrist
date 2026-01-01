@@ -9,8 +9,7 @@
 > **This feature is retained for historical comparison only. Keep it OFF.**
 >
 > The original paper's methodology has fundamental issues that make "paper parity"
-> meaningless. See [`HYPOTHESIS-FEWSHOT-DESIGN-FLAW.md`](../../HYPOTHESIS-FEWSHOT-DESIGN-FLAW.md)
-> and [`POST-ABLATION-DEFAULTS.md`](../../POST-ABLATION-DEFAULTS.md) for details.
+> meaningless. See `HYPOTHESIS-FEWSHOT-DESIGN-FLAW.md` and `POST-ABLATION-DEFAULTS.md` for details.
 
 **Audience**: Researchers and developers wanting to understand the coverage-accuracy tradeoff
 **Related**: [SPEC-003](../archive/specs/SPEC-003-backfill-toggle.md) | [Coverage Investigation](../archive/bugs/coverage-investigation.md) | [Extraction Mechanism](./extraction-mechanism.md)

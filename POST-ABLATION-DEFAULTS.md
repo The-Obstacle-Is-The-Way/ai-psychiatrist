@@ -8,25 +8,27 @@
 
 ## Important: On "Paper Parity"
 
-**The original paper's methodology is fundamentally flawed and not reproducible.**
+**The paper’s few-shot method (as described) introduces a fundamental label mismatch.**
 
 We initially aimed for "paper parity" — matching the paper's exact methodology. Through
 rigorous investigation, we discovered critical issues:
 
-1. **Participant-level scoring applied to chunks**: The paper assigns a participant's
-   PHQ-8 score to ALL their transcript chunks, regardless of content. A chunk about
-   "career goals" gets labeled with "Sleep Score: 2" simply because that participant
-   had sleep issues. This is methodologically invalid.
+1. **Participant-level scores attached to retrieved chunks**: In our “paper-parity” pipeline,
+   the score shown for a retrieved reference chunk is a **participant-level PHQ-8 item score**.
+   This creates label noise: a chunk about “career goals” can be shown as `(PHQ8_Sleep Score: 2)`
+   even if it contains no sleep evidence. This is not chunk-level ground truth.
 
-2. **Keyword backfill is a flawed heuristic**: Matching keywords like "sleep" or "tired"
-   without semantic understanding leads to false positives and inflated coverage metrics.
+2. **Keyword backfill is a heuristic**: Keyword triggers (“sleep”, “tired”, etc.) can increase
+   apparent coverage but may introduce false positives and distort selective-prediction metrics.
+   It must remain OFF by default and be clearly labeled when used.
 
-3. **Results are not reproducible**: Despite extensive effort, we cannot reproduce the
-   paper's reported metrics. The methodology gaps make faithful reproduction impossible.
+3. **Reproducibility is ambiguous**: Despite extensive effort, we have not reproduced the
+   paper’s headline improvements in our environment. This could be due to methodology gaps
+   (under-specified prompts, artifacts, split details) and/or implementation differences.
 
-**Our stance**: We no longer aim for "paper parity." We aim for **correct behavior**.
-The fixes (Specs 33-40) address real methodological problems. They should be the default,
-not opt-in features.
+**Our stance**: “Paper parity” is still useful as a **historical baseline**, but should not be
+the default behavior. We aim for **research-honest behavior**: minimize label noise, avoid
+silent heuristics, and fail fast when enabled features are broken.
 
 See `HYPOTHESIS-FEWSHOT-DESIGN-FLAW.md` for the full analysis.
 
@@ -56,10 +58,22 @@ We've implemented Specs 33-40 as gated features for ablation purposes. Once vali
 | **39** | Preserve exception types | `true` | `true` (already correct) |
 | **40** | Fail-fast embedding generation | `true` | `true` (already correct) |
 
-**Why CRAG (Spec 36) must be enabled**: Even with item tags (Spec 34) and similarity
-thresholds (Spec 33), retrieved chunks can still be irrelevant or contradictory.
-CRAG validation is **essential for correct RAG behavior** — it rejects bad references
-at runtime. The computational cost is the price of correctness.
+### Why CRAG (Spec 36) Should Be Default ON (Post-Ablation)
+
+If our goal is **research-honest retrieval** (not paper-parity), reference validation is part of the
+“correct” pipeline:
+
+- Spec 34 (item tags) is a **static heuristic** and will miss symptom mentions that don’t match keywords.
+- Spec 33 (similarity threshold/budget) is a **quality guardrail**, not a relevance proof.
+- Spec 35 fixes **label correctness**, but does not prevent “semantically similar but clinically irrelevant” chunks.
+- Spec 36 is the only layer that asks an LLM directly: “Is this reference actually about the target PHQ-8 item?”
+
+In this repo’s research workflow (local Ollama, long-running ablations), **correctness outweighs latency**.
+Spec 38 ensures we remain research-honest: if validation is enabled and broken, we crash rather than silently
+continuing with unvalidated references.
+
+Note: the code already supports a safe default when `EMBEDDING_VALIDATION_MODEL` is not set: it falls back to
+`MODEL_JUDGE_MODEL` (see `server.py` and `scripts/reproduce_results.py`).
 
 ---
 
@@ -103,7 +117,7 @@ Chunk 95 (about sleep):
 ```python
 # === EmbeddingSettings ===
 
-# Spec 35: Chunk-level scoring (THE FIX)
+# Spec 35: Chunk-level scoring (label-noise reduction)
 reference_score_source: Literal["participant", "chunk"] = Field(
     default="chunk",  # CHANGED from "participant"
     description="Source of PHQ-8 scores for retrieved chunks.",
@@ -126,27 +140,36 @@ max_reference_chars_per_item: int = Field(
     description="Max total reference chunk chars per item.",
 )
 
-# Spec 36: CRAG reference validation (ESSENTIAL for correct RAG)
+# Spec 36: CRAG-style runtime reference validation
 enable_reference_validation: bool = Field(
     default=True,  # CHANGED from False
-    description="Enable CRAG-style runtime validation.",
+    description="Enable CRAG-style runtime validation of retrieved references (Spec 36).",
+)
+validation_model: str = Field(
+    default="",
+    description=(
+        "Model to use for reference validation. If blank, orchestrators fall back to MODEL_JUDGE_MODEL "
+        "(see server.py / scripts/reproduce_results.py)."
+    ),
 )
 ```
 
-### No More Opt-In Flags
+### Reduce the Flag Surface Area
 
-**All correctness features are now defaults.** The only remaining flag is for
-deprecated/broken features (keyword backfill) which should remain OFF.
+After consolidation, the **core retrieval quality fixes** (Specs 33–35) should not require
+users to remember multiple env vars for a “correct” run.
+
+CRAG validation (Spec 36) is part of the “correctness” pipeline and should be default ON post-ablation.
+Keep the flag only for targeted ablations / debugging (e.g., `EMBEDDING_ENABLE_REFERENCE_VALIDATION=false`).
 
 ### Deprecated Features (DO NOT ENABLE)
 
 ```python
-# Keyword backfill - DEPRECATED, flawed heuristic
-# Inflates coverage without improving clinical validity.
-# Retained for historical comparison only.
+# Keyword backfill (QuantitativeSettings) - DEPRECATED heuristic
+# Retained for historical comparison only; must remain OFF by default.
 enable_keyword_backfill: bool = Field(
-    default=False,  # NEVER enable - deprecated
-    description="DEPRECATED: Flawed heuristic, do not use.",
+    default=False,
+    description="DEPRECATED: Do NOT enable. Flawed heuristic retained for ablation only.",
 )
 ```
 
@@ -185,7 +208,7 @@ Do NOT consolidate until all of these are verified:
 
 - [ ] **Spec 35 ablation complete**: Run 7 (chunk scoring) vs Run 5/6 (participant scoring)
 - [ ] **chunk_scores.json artifact exists**: Generated by `score_reference_chunks.py`
-- [ ] **No regressions**: Total-score MAE ≤ paper-parity baseline
+- [ ] **No regressions**: Primary metrics (AURC/AUGRC + MAE + coverage) meet or beat baseline
 - [ ] **CI passes**: All tests green with new defaults
 
 ### Verification Commands
@@ -253,7 +276,8 @@ For the consolidated defaults to work, these artifacts MUST exist:
 | Artifact | Required For | Generated By |
 |----------|--------------|--------------|
 | `*.npz` | All few-shot | `generate_embeddings.py` |
-| `*.texts.json` | All few-shot | `generate_embeddings.py` |
+| `*.json` | All few-shot | `generate_embeddings.py` |
+| `*.meta.json` | All few-shot | `generate_embeddings.py` |
 | `*.tags.json` | Spec 34 | `generate_embeddings.py --write-item-tags` |
 | `*.chunk_scores.json` | Spec 35 | `score_reference_chunks.py` |
 | `*.chunk_scores.meta.json` | Spec 35 | `score_reference_chunks.py` |
