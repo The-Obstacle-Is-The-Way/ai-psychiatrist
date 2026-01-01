@@ -84,6 +84,7 @@ These issues are documented in the Bailey/Plumbley preprocessing tool (`_referen
 | 318, 321, 341, 362 | Transcript timing misaligned with audio | Only relevant if using audio; apply time shift correction |
 | 409 | Wrong `PHQ8_Binary` label (score=10 but binary=0) | Deterministic fix: set `PHQ8_Binary=1` when `PHQ8_Score>=10` |
 | All | Pre-interview chatter | Remove (not clinical) |
+| 342, 394, 398, 460 | Missing participant IDs | Expected gaps (absent from `data/transcripts/`) |
 
 ---
 
@@ -215,6 +216,7 @@ NOT on what questions the interviewer asked.
 #    - 373: [395, 428] seconds
 #    - 444: [286, 387] seconds
 # 4) Remove sync markers (e.g., <sync>, <synch>) and strip tokens containing < > [ ]
+#    Also removes placeholder/unknown tokens (e.g., 'xxx', 'xxxx') for classical feature extraction
 # 5) Fix known label bug: participant 409 has PHQ8_Score=10 but PHQ8_Binary=0 → should be 1
 #
 # NOTE: The tool does NOT explicitly remove disfluencies like "um"/"uh" by default.

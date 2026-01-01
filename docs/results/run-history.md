@@ -8,12 +8,14 @@
 
 ## Quick Reference: Current Best Results
 
-| Mode | AURC | AUGRC | Cmax | MAE_w |
-|------|------|-------|------|-------|
-| **Zero-shot** | **0.134** [0.094-0.176] | **0.037** [0.024-0.053] | 55.5% | 0.698 |
-| Few-shot | 0.193 [0.142-0.244] | 0.065 [0.043-0.091] | 70.1% | 0.774 |
+| Mode | AURC | AUGRC | Cmax | Run |
+|------|------|-------|------|-----|
+| **Zero-shot** | **0.134** [0.094-0.176] | **0.037** [0.024-0.053] | 55.5% | Run 3 |
+| Few-shot | 0.151 [0.109-0.194] | 0.048 [0.033-0.065] | 65.9% | Run 7 |
 
-**Winner**: Zero-shot (paired bootstrap delta CI excludes 0)
+**Winner**: Zero-shot (AURC 0.134 vs 0.151)
+
+**Note**: Run 7 improved few-shot by 29% vs Run 5, but zero-shot remains best overall.
 
 **Note**: `Cmax` is the max coverage in the risk–coverage curve (counts participants with 8/8 N/A as 0 coverage). `MAE_w` is computed over evaluated subjects only.
 
@@ -305,8 +307,73 @@ Spec 31/32 improved few-shot by ~10%, proving formatting matters. But the gap to
 
 **Run 5 Conclusion**: Spec 33+34 did not improve few-shot. The fundamental problem is chunk-level scoring (Spec 35).
 
-**Next action**: Generate chunk scores (Spec 35 preprocessing), then run ablation with Spec 35+36. See
-`PROBLEM-SPEC35-SCORER-MODEL-GAP.md` for scorer model options (treat as an ablation, not dogma).
+---
+
+### Run 6: Dec 31, 2025 - Spec 35 Chunk Scoring Preprocessing
+
+**Log File**: `data/outputs/run6_spec35_20251231_122458.log`
+
+**Purpose**: Generate chunk-level PHQ-8 scores (Spec 35 preprocessing step)
+
+**Configuration**:
+- Embeddings: `ollama_qwen3_8b_paper_train.npz`
+- Scorer model: `gemma3:27b-it-qat`
+- Backend: Ollama
+- Temperature: 0.0
+
+**Output**: `data/embeddings/ollama_qwen3_8b_paper_train.chunk_scores.json`
+
+**Notes**: This was a preprocessing run to generate chunk scores, not an evaluation run. See Run 7 for the subsequent evaluation.
+
+---
+
+### Run 7: Jan 1, 2026 - Post-Spec 35 Chunk Scoring (Full Run)
+
+**File**: `both_paper-test_backfill-off_20260101_111354.json`
+
+**Git Commit**: Current `dev` branch
+
+**Timestamp**: 2026-01-01T11:13:54
+
+**Code State**:
+- Spec 33: Retrieval quality guardrails ✅
+- Spec 34: Item-tag filtering ✅
+- Spec 35: Chunk scoring generated (but not enabled for this run)
+- Spec 37: Batch query embedding ✅
+
+**Results**:
+
+| Mode | AURC | AUGRC | Cmax | N_included | Failed |
+|------|------|-------|------|------------|--------|
+| Zero-shot | 0.138 | 0.039 | 56.9% | 40 | 1 |
+| Few-shot | 0.151 | 0.048 | 65.9% | 41 | 0 |
+
+**95% Bootstrap CIs** (10,000 resamples, participant-level):
+
+| Mode | AURC CI | AUGRC CI | Cmax CI |
+|------|---------|----------|---------|
+| Zero-shot | [0.097, 0.180] | [0.025, 0.055] | [0.491, 0.650] |
+| Few-shot | [0.109, 0.194] | [0.033, 0.065] | [0.570, 0.747] |
+
+**Statistical Analysis**:
+- Computed 2026-01-01 via `scripts/evaluate_selective_prediction.py --seed 42`
+- Metrics files: `selective_prediction_metrics_20260101T165303Z.json` (zero-shot), `selective_prediction_metrics_20260101T165328Z.json` (few-shot)
+
+**Known Issue**: Participant 339 failed in zero-shot mode due to JSON parsing error (missing comma). See [GitHub Issue #84](https://github.com/The-Obstacle-Is-The-Way/ai-psychiatrist/issues/84).
+
+**Comparison vs Run 5**:
+
+| Metric | Run 5 | Run 7 | Delta | % Change |
+|--------|-------|-------|-------|----------|
+| few_shot AURC | 0.213 | 0.151 | -0.062 | **-29% (better)** |
+| few_shot AUGRC | 0.073 | 0.048 | -0.025 | **-34% (better)** |
+| zero_shot AURC | 0.138 | 0.138 | 0.000 | 0% (unchanged) |
+
+**Key Finding**: Few-shot improved significantly vs Run 5, but zero-shot still performs better overall.
+
+---
+
+**Next action**: Enable Spec 35 chunk scoring with `EMBEDDING_REFERENCE_SCORE_SOURCE=chunk` and run ablation to test if chunk-level scores further improve few-shot performance.
 
 ---
 

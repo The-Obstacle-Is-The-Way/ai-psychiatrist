@@ -29,12 +29,13 @@ The Bailey/Plumbley preprocessing tool (mirrored in `_reference/daic_woz_process
 - Missing Ellie transcripts (451, 458, 480)
 - Audio timing misalignment (318, 321, 341, 362) — only relevant if using audio
 - A known `PHQ8_Binary` label bug (409)
+- Certain participant IDs are absent from DAIC-WOZ (e.g., 342, 394, 398, 460)
 
 ### 3) AVEC2017 split CSVs can contain deterministic integrity bugs
 
-This repo already includes deterministic repairs (see `data/DATA_PROVENANCE.md`), e.g.:
-- Missing PHQ-8 item cell reconstructable from `PHQ8_Score` (participant 319)
-- `PHQ8_Binary` inconsistency (participant 409)
+This repo includes deterministic integrity checks/repairs for common AVEC2017 CSV issues (see `scripts/patch_missing_phq8_values.py`), e.g.:
+- A single missing PHQ-8 item cell reconstructable from `PHQ8_Score` (observed in some upstream copies)
+- `PHQ8_Binary` inconsistency (e.g., participant 409 had `PHQ8_Score=10` but `PHQ8_Binary=0` upstream)
 
 ---
 
@@ -164,6 +165,8 @@ By default, do **not** delete nonverbal tags like `<laughter>` / `<sigh>` becaus
 
 If you want a “classical ML” style cleanup, make it an explicit variant/flag and ablate it.
 
+**Note on reference parity**: the Bailey/Plumbley tool removes placeholder/unknown tokens (e.g., `xxx`, `xxxx`) and strips tokens containing `< > [ ]` when building Word2Vec features. This repo’s preprocessing keeps nonverbal tags by default for LLM use; treat additional stripping as an explicit ablation.
+
 ---
 
 ## Ground Truth Integrity (PHQ-8 CSVs)
@@ -265,6 +268,11 @@ The script:
 - No output transcript is empty after preprocessing
 - Sessions 451/458/480 are handled without failure (no Ellie speaker present)
 - Sessions 373/444 have rows removed in the specified time windows
+- Input audit (optional): confirm expected speakers + known anomalies exist in `data/transcripts/`:
+  - `189` transcript files
+  - Only speakers: `Ellie`, `Participant`
+  - Missing Ellie sessions: `451`, `458`, `480`
+  - Interruption-window overlaps: `373` (5 rows), `444` (37 rows)
 
 ### Downstream consistency
 

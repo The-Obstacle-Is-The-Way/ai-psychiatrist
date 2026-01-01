@@ -25,6 +25,7 @@ Implemented specs are distilled into canonical (non-archive) documentation under
 - Exception taxonomy: [exceptions.md](../developer/exceptions.md)
 - Metrics definitions + output schema: [metrics-and-evaluation.md](../statistics/metrics-and-evaluation.md)
 - Configuration philosophy: [configuration-philosophy.md](../configs/configuration-philosophy.md)
+- DAIC-WOZ transcript preprocessing + variants: [daic-woz-preprocessing.md](../data/daic-woz-preprocessing.md)
 
 Historical spec texts remain in `docs/_archive/specs/` for provenance, but the active documentation
 should not require them.
