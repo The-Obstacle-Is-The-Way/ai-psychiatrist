@@ -31,6 +31,7 @@ from ai_psychiatrist.config import (
 from ai_psychiatrist.domain.entities import PHQ8Assessment, Transcript
 from ai_psychiatrist.domain.enums import AssessmentMode, NAReason, PHQ8Item
 from ai_psychiatrist.domain.value_objects import ItemAssessment
+from ai_psychiatrist.infrastructure.llm.responses import tolerant_json_fixups
 from ai_psychiatrist.infrastructure.logging import get_logger
 
 if TYPE_CHECKING:
@@ -347,7 +348,7 @@ class QuantitativeAssessmentAgent:
         # Parse JSON response with tolerant fixups (BUG-011: Apply repair before parsing)
         try:
             clean = self._strip_json_block(raw)
-            clean = self._tolerant_fixups(clean)
+            clean = tolerant_json_fixups(clean)
             obj = json.loads(clean)
         except (json.JSONDecodeError, ValueError):
             # BUG-011: Include response preview in warning to aid debugging
@@ -474,28 +475,6 @@ class QuantitativeAssessmentAgent:
             cleaned = cleaned[:-3].strip()
 
         return cleaned
-
-    def _tolerant_fixups(self, text: str) -> str:
-        """Fix common JSON syntax errors.
-
-        Args:
-            text: JSON string with potential errors.
-
-        Returns:
-            Fixed JSON string.
-        """
-        # Replace smart quotes
-        text = (
-            text.replace("\u201c", '"')
-            .replace("\u201d", '"')
-            .replace("\u2018", "'")
-            .replace("\u2019", "'")
-        )
-
-        # Remove trailing commas
-        text = re.sub(r",\s*([}\]])", r"\1", text)
-
-        return text
 
     def _determine_na_reason(
         self,

@@ -16,9 +16,12 @@ import sys
 from dataclasses import asdict, dataclass, field
 from datetime import UTC, datetime
 from pathlib import Path
-from typing import Any, Literal
+from typing import TYPE_CHECKING, Any, Literal
 
 import pandas as pd
+
+if TYPE_CHECKING:
+    from collections.abc import Sequence
 
 Variant = Literal["both_speakers_clean", "participant_only", "participant_qa"]
 
@@ -72,6 +75,94 @@ def _normalize_speaker(speaker: str) -> str:
     if lower == "participant":
         return "Participant"
     return s
+
+
+def normalize_speaker(speaker: str) -> str:
+    """Normalize and validate a speaker label.
+
+    Raises:
+        ValueError: If the speaker is not Ellie or Participant (case-insensitive).
+    """
+    normalized = _normalize_speaker(speaker)
+    if normalized not in ALLOWED_SPEAKERS:
+        raise ValueError(f"Unknown speaker: {speaker!r}")
+    return normalized
+
+
+def is_sync_marker(value: str) -> bool:
+    """Return True if value is a transcript sync marker."""
+    return _is_sync_marker(value)
+
+
+def is_in_interruption_window(participant_id: int, start_time: float, stop_time: float) -> bool:
+    """Return True if a row overlaps a known interruption window."""
+    window = INTERRUPTION_WINDOWS.get(participant_id)
+    if window is None:
+        return False
+    window_start, window_end = window
+    return start_time < window_end and stop_time > window_start
+
+
+def remove_preamble(df: pd.DataFrame, participant_id: int | None = None) -> pd.DataFrame:
+    """Remove pre-interview preamble rows.
+
+    If Ellie is present, drops rows before the first Ellie utterance. If Ellie is
+    absent, drops leading sync markers / empty rows until the first real utterance.
+    """
+    del participant_id  # Warnings are tracked in stats/manifest, not here.
+    if df.empty:
+        return df.copy()
+
+    has_ellie = bool((df["speaker"] == "Ellie").any())
+    cleaned, _ = _drop_pre_intro(df, has_ellie=has_ellie)
+    return cleaned
+
+
+def apply_variant_filter(df: pd.DataFrame, variant: Variant) -> pd.DataFrame:
+    """Apply the variant-specific speaker selection rule."""
+    cleaned, _ = _apply_variant(df, variant)
+    return cleaned
+
+
+def clean_transcript(df: pd.DataFrame, *, participant_id: int, variant: Variant) -> pd.DataFrame:
+    """Clean a transcript DataFrame according to deterministic rules."""
+    required_cols = {"start_time", "stop_time", "speaker", "value"}
+    missing_cols = required_cols - set(df.columns)
+    if missing_cols:
+        raise ValueError(f"Missing columns {sorted(missing_cols)}")
+
+    cleaned = df.copy()
+
+    # Drop rows with missing speaker/value
+    cleaned = cleaned.dropna(subset=["speaker", "value"]).copy()
+
+    # Validate and normalize speakers
+    cleaned["speaker"] = cleaned["speaker"].astype(str).map(_normalize_speaker)
+    unknown = sorted(set(cleaned["speaker"]) - ALLOWED_SPEAKERS)
+    if unknown:
+        raise ValueError(f"Unknown speakers: {unknown}")
+
+    # Validate timestamps (fail-fast)
+    try:
+        cleaned["start_time"] = pd.to_numeric(cleaned["start_time"], errors="raise")
+        cleaned["stop_time"] = pd.to_numeric(cleaned["stop_time"], errors="raise")
+    except Exception as e:  # pragma: no cover (defensive, data-dependent)
+        raise ValueError("Invalid start_time/stop_time values") from e
+
+    if bool((cleaned["stop_time"] < cleaned["start_time"]).any()):
+        raise ValueError("Found stop_time earlier than start_time")
+
+    has_ellie = bool((cleaned["speaker"] == "Ellie").any())
+
+    cleaned, _ = _drop_pre_intro(cleaned, has_ellie=has_ellie)
+    cleaned, _ = _drop_sync_markers(cleaned)
+    cleaned, _ = _drop_interruption_windows(cleaned, participant_id)
+    cleaned, _ = _apply_variant(cleaned, variant)
+
+    if not bool((cleaned["speaker"] == "Participant").any()):
+        raise ValueError("Transcript has no participant utterances after preprocessing")
+
+    return cleaned
 
 
 @dataclass
@@ -193,6 +284,12 @@ def preprocess_transcript(
     df = df.dropna(subset=["speaker", "value"]).copy()
     removed_missing_fields = int(before - len(df))
 
+    # Validate timestamps (fail-fast)
+    df["start_time"] = pd.to_numeric(df["start_time"], errors="raise")
+    df["stop_time"] = pd.to_numeric(df["stop_time"], errors="raise")
+    if bool((df["stop_time"] < df["start_time"]).any()):
+        raise ValueError(f"Found stop_time earlier than start_time in {transcript_path}")
+
     # Normalize speakers and validate.
     df["speaker"] = df["speaker"].astype(str).map(_normalize_speaker)
     unknown = sorted(set(df["speaker"]) - ALLOWED_SPEAKERS)
@@ -257,7 +354,7 @@ def _write_manifest(manifest_path: Path, manifest: Manifest) -> None:
     manifest_path.write_text(json.dumps(payload, indent=2), encoding="utf-8")
 
 
-def _parse_args() -> argparse.Namespace:
+def _parse_args(argv: Sequence[str] | None = None) -> argparse.Namespace:
     parser = argparse.ArgumentParser(
         description="Preprocess DAIC-WOZ transcripts into clean variants"
     )
@@ -289,7 +386,7 @@ def _parse_args() -> argparse.Namespace:
         action="store_true",
         help="Compute stats and validate, but do not write outputs",
     )
-    return parser.parse_args()
+    return parser.parse_args(argv)
 
 
 def _collect_transcripts(input_dir: Path) -> list[Path]:
@@ -377,8 +474,8 @@ def _print_summary(
         print(f"  Manifest: {output_dir / 'preprocess_manifest.json'}")
 
 
-def main() -> int:
-    args = _parse_args()
+def main(argv: Sequence[str] | None = None) -> int:
+    args = _parse_args(argv)
 
     input_dir: Path = args.input_dir
     output_dir: Path = args.output_dir
