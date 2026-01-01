@@ -2,7 +2,7 @@
 
 **Purpose**: Comprehensive pre-run verification for zero-shot paper reproduction
 **Last Updated**: 2025-12-27
-**Related**: [Few-Shot Checklist](./preflight-checklist-few-shot.md) | [Paper Parity Guide](./paper-parity-guide.md)
+**Related**: [Few-Shot Checklist](./preflight-checklist-few-shot.md) | [Configuration Reference](../configs/configuration.md)
 
 ---
 
@@ -399,5 +399,5 @@ If ALL items are checked:
 ## Related Documentation
 
 - [Few-Shot Preflight](./preflight-checklist-few-shot.md) - For few-shot runs (includes embedding setup)
-- [Paper Parity Guide](./paper-parity-guide.md) - Full paper methodology
+- [Configuration Philosophy](../configs/configuration-philosophy.md) - Why we've moved beyond paper parity
 - [Model Registry](../models/model-registry.md) - Model configuration and backend options

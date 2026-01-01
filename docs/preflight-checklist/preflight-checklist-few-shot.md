@@ -2,7 +2,7 @@
 
 **Purpose**: Comprehensive pre-run verification for few-shot paper reproduction
 **Last Updated**: 2025-12-27
-**Related**: [Zero-Shot Checklist](./preflight-checklist-zero-shot.md) | [Paper Parity Guide](./paper-parity-guide.md)
+**Related**: [Zero-Shot Checklist](./preflight-checklist-zero-shot.md) | [Configuration Reference](../configs/configuration.md)
 
 ---
 
@@ -701,5 +701,5 @@ uv run python scripts/reproduce_results.py --split paper
 ## Related Documentation
 
 - [Zero-Shot Preflight](./preflight-checklist-zero-shot.md) - Simpler, no embeddings
-- [Paper Parity Guide](./paper-parity-guide.md) - Full paper methodology
+- [Configuration Philosophy](../configs/configuration-philosophy.md) - Why we've moved beyond paper parity
 - [Model Registry](../models/model-registry.md) - Model configuration and backend options

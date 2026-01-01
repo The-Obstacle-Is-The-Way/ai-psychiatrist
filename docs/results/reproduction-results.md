@@ -82,6 +82,6 @@ See:
 ## Related Docs
 
 - Feature defaults: `docs/reference/features.md`
-- Paper-parity guide: `docs/guides/paper-parity-guide.md`
+- Configuration philosophy: `docs/configs/configuration-philosophy.md`
 - Retrieval debugging: `docs/guides/debugging-retrieval-quality.md`
 - Batch query embedding: `docs/guides/batch-query-embedding.md`

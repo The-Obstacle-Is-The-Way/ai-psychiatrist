@@ -344,7 +344,7 @@ Keyword backfill is **OFF by default** to match paper methodology (~50% coverage
 
 > ⚠️ **Deprecated**: Keyword backfill is a historical ablation feature. Enabling it is not recommended for new runs. See `POST-ABLATION-DEFAULTS.md` in the project root for rationale.
 
-See [Paper Parity Guide](../guides/paper-parity-guide.md) for reproduction guidance.
+See [Configuration Philosophy](./configuration-philosophy.md) for background on why paper-parity settings are deprecated.
 
 ---
 
