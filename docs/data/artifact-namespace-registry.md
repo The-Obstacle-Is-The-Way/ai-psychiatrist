@@ -45,6 +45,37 @@ The script `scripts/create_paper_split.py` defaults to `--mode ground-truth`. Th
 
 ---
 
+## Transcript Artifacts
+
+### Raw (Extraction Output)
+
+`scripts/prepare_dataset.py` writes raw transcripts to:
+
+- `data/transcripts/{id}_P/{id}_TRANSCRIPT.csv`
+
+These are **not speaker-filtered** and may contain known DAIC-WOZ issues (interruptions, sync markers, missing Ellie transcripts).
+
+### Preprocessed Variants (Recommended for Bias-Aware Retrieval)
+
+`scripts/preprocess_daic_woz_transcripts.py` writes deterministic variants under:
+
+- `data/transcripts_preprocessed/{variant}/{id}_P/{id}_TRANSCRIPT.csv`
+
+Recommended variants:
+- `participant_only` (bias-aware retrieval default)
+- `both_speakers_clean` (clean baseline, keeps Ellie + Participant)
+- `participant_qa` (participant + minimal question context)
+
+Select a variant via:
+
+```bash
+DATA_TRANSCRIPTS_DIR=data/transcripts_preprocessed/participant_only
+```
+
+See: `docs/data/daic-woz-preprocessing.md`.
+
+---
+
 ## Embeddings Artifacts
 
 ### Legacy (Backward Compatible)

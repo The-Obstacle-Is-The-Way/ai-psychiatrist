@@ -217,7 +217,7 @@ def load_item_ground_truth_csv(csv_path: Path) -> dict[int, dict[PHQ8Item, int]]
                 raise ValueError(
                     f"Missing ground truth for participant {participant_id} item {item.value}. "
                     f"Run 'uv run python scripts/patch_missing_phq8_values.py --apply' to fix. "
-                    "See docs/guides/patch-missing-phq8-values.md"
+                    "See docs/data/patch-missing-phq8-values.md"
                 )
             scores[item] = int(value)
         result[participant_id] = scores

@@ -26,7 +26,7 @@ def _parse_daic_woz_transcript(self, path: Path) -> str:
     return "\n".join(df["dialogue"].tolist())
 ```
 
-**Result**: Each transcript is ~50% Ellie, ~50% Participant. Nothing filtered.
+**Result**: Most transcripts include **both** Ellie + Participant utterances (proportions vary). In the current local dataset, **3 sessions** (451, 458, 480) contain **only participant** utterances due to missing virtual agent transcriptions. Nothing is speaker-filtered today.
 
 ---
 
@@ -74,10 +74,15 @@ The 0.90 F1 for "both" is an **ensemble of two models**, not proof that includin
 
 ### 2.4 Known Dataset Issues
 
+These issues are documented in the Bailey/Plumbley preprocessing tool (`_reference/daic_woz_process/config_files/config_process.py`) and are also present in our current `data/transcripts/`.
+
 | Interview ID | Issue | Recommended Action |
 |--------------|-------|-------------------|
-| 373, 444 | Long interruptions | Remove or segment |
+| 373 | Human enters room to fix Ellie (interruption) | Remove the interruption window (Bailey/Plumbley: 395–428s) |
+| 444 | Phone alarm interruption | Remove the interruption window (Bailey/Plumbley: 286–387s) |
 | 451, 458, 480 | Missing Ellie transcripts | Handle gracefully |
+| 318, 321, 341, 362 | Transcript timing misaligned with audio | Only relevant if using audio; apply time shift correction |
+| 409 | Wrong `PHQ8_Binary` label (score=10 but binary=0) | Deterministic fix: set `PHQ8_Binary=1` when `PHQ8_Score>=10` |
 | All | Pre-interview chatter | Remove (not clinical) |
 
 ---
@@ -197,18 +202,23 @@ NOT on what questions the interviewer asked.
 
 ## 6. Recommended Preprocessing
 
-**Standard practice** per [adbailey1/daic_woz_process](https://github.com/adbailey1/daic_woz_process):
+**Reference implementation**: Bailey/Plumbley preprocessing tool (mirrored in `_reference/daic_woz_process/`), primarily:
+
+- `_reference/daic_woz_process/utils/utilities.py::transcript_text_processing`
+- `_reference/daic_woz_process/config_files/config_process.py`
 
 ```python
-# Filter to participant only
-df = df[df['speaker'] == 'Participant']
-
-# Remove disfluencies (optional)
-DISFLUENCIES = {'um', 'uh', 'mhm', 'yeah', 'okay', 'mm'}
-df = df[~df['value'].str.strip().isin(DISFLUENCIES)]
-
-# Remove known problematic interviews
-EXCLUDE_IDS = {373, 444}  # Long interruptions
+# Sketch of the Bailey/Plumbley behavior (not exact code):
+# 1) Drop anything before Ellie starts (or, for missing-Ellie sessions 451/458/480, drop sync markers)
+# 2) Filter to participant-only utterances for text features
+# 3) Remove known interruption windows (drop affected participant utterances):
+#    - 373: [395, 428] seconds
+#    - 444: [286, 387] seconds
+# 4) Remove sync markers (e.g., <sync>, <synch>) and strip tokens containing < > [ ]
+# 5) Fix known label bug: participant 409 has PHQ8_Score=10 but PHQ8_Binary=0 → should be 1
+#
+# NOTE: The tool does NOT explicitly remove disfluencies like "um"/"uh" by default.
+# If we want that, it should be an explicit, separately ablated option.
 ```
 
 ---

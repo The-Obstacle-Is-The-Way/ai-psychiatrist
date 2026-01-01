@@ -29,52 +29,106 @@ AI Psychiatrist is an engineering-focused, reproducible implementation of a rese
 
 ### Getting Started
 
-| Document | Description | Time |
-|----------|-------------|------|
-| [Quickstart](getting-started/quickstart.md) | Get running in 5 minutes | 5 min |
+| Document | Description |
+|----------|-------------|
+| [Quickstart](getting-started/quickstart.md) | Get running in 5 minutes |
+| [Zero-Shot Preflight](preflight-checklist/preflight-checklist-zero-shot.md) | Pre-run verification for zero-shot reproduction |
+| [Few-Shot Preflight](preflight-checklist/preflight-checklist-few-shot.md) | Pre-run verification for few-shot reproduction |
 
-### Understanding the System
+### Architecture
 
 | Document | Description |
 |----------|-------------|
 | [Architecture](architecture/architecture.md) | System layers and design patterns |
 | [Pipeline](architecture/pipeline.md) | How the 4-agent pipeline works |
-| [PHQ-8](clinical/phq8.md) | Understanding PHQ-8 depression assessment |
+| [Future Architecture](architecture/future-architecture.md) | LangGraph integration roadmap |
 
-### Reference
+### Clinical Domain
 
 | Document | Description |
 |----------|-------------|
-| [Configuration](configs/configuration.md) | All configuration options |
-| [Feature Reference](pipeline-internals/features.md) | Implemented features + defaults (non-archive canonical) |
-| [Run Output Schema](results/run-output-schema.md) | Output JSON + experiment registry format |
-| [API Endpoints](developer/api-endpoints.md) | REST API reference |
-| [Testing](developer/testing.md) | Markers, fixtures, and test-doubles policy |
+| [PHQ-8](clinical/phq8.md) | Understanding PHQ-8 depression assessment |
+| [Clinical Understanding](clinical/clinical-understanding.md) | How the system works clinically |
 | [Glossary](clinical/glossary.md) | Terms and definitions |
 
-### Data Documentation
+### Configuration
+
+| Document | Description |
+|----------|-------------|
+| [Configuration Reference](configs/configuration.md) | All configuration options |
+| [Configuration Philosophy](configs/configuration-philosophy.md) | Why defaults are what they are |
+| [Agent Sampling Registry](configs/agent-sampling-registry.md) | Sampling parameters per agent |
+
+### Models
+
+| Document | Description |
+|----------|-------------|
+| [Model Registry](models/model-registry.md) | Supported models and backends |
+| [Model Wiring](models/model-wiring.md) | How agents connect to models |
+
+### Embeddings & Few-Shot
+
+| Document | Description |
+|----------|-------------|
+| [Embeddings Explained](embeddings/embeddings-explained.md) | Core embedding concepts |
+| [Embedding Generation](embeddings/embedding-generation.md) | Fail-fast embedding artifacts |
+| [Few-Shot Design Considerations](embeddings/few-shot-design-considerations.md) | Design rationale and tradeoffs |
+| [Few-Shot Prompt Format](embeddings/few-shot-prompt-format.md) | How reference examples are formatted |
+| [Chunk Scoring](embeddings/chunk-scoring.md) | Chunk-level PHQ-8 scoring (Spec 35) |
+| [Item Tagging Setup](embeddings/item-tagging-setup.md) | Item-tag filtering (Spec 34) |
+| [Retrieval Debugging](embeddings/debugging-retrieval-quality.md) | Interpret retrieval logs |
+| [Batch Query Embedding](embeddings/batch-query-embedding.md) | Query-embedding timeout fix (Spec 37) |
+
+### Data
 
 | Document | Description |
 |----------|-------------|
 | [DAIC-WOZ Schema](data/daic-woz-schema.md) | Dataset schema for development without data access |
+| [DAIC-WOZ Preprocessing](data/daic-woz-preprocessing.md) | Transcript cleaning + participant-only variants |
+| [Data Splits Overview](data/data-splits-overview.md) | AVEC2017 vs paper splits explained |
+| [Paper Split Registry](data/paper-split-registry.md) | Exact participant IDs for paper splits |
+| [Artifact Namespace Registry](data/artifact-namespace-registry.md) | Embedding artifact naming conventions |
+| [Patch Missing PHQ-8 Values](data/patch-missing-phq8-values.md) | Deterministic ground-truth repair |
 
-### Architecture Evolution
+### Pipeline Internals
 
 | Document | Description |
 |----------|-------------|
-| [Future Architecture](architecture/future-architecture.md) | LangGraph integration roadmap (Pydantic AI is already integrated) |
-| [Spec 20: Keyword Fallback Improvements](_archive/specs/20-keyword-fallback-improvements.md) | Deferred — intentionally not implementing (see spec) |
+| [Feature Reference](pipeline-internals/features.md) | Implemented features + defaults |
+| [Evidence Extraction](pipeline-internals/evidence-extraction.md) | How quotes are extracted from transcripts |
 
-### Debugging / Reproduction
+### Statistics & Evaluation
+
+| Document | Description |
+|----------|-------------|
+| [Metrics and Evaluation](statistics/metrics-and-evaluation.md) | Exact metric definitions |
+| [Coverage Explained](statistics/coverage.md) | What coverage means and why it matters |
+| [AURC/AUGRC Methodology](statistics/statistical-methodology-aurc-augrc.md) | Selective prediction metrics |
+| [CRAG Validation Guide](statistics/crag-validation-guide.md) | Reference validation (Spec 36) |
+
+### Results & Reproduction
 
 | Document | Description |
 |----------|-------------|
 | [Run History](results/run-history.md) | Canonical history of reproduction runs |
-| [Reproduction Results](results/reproduction-results.md) | Current reproduction status + known issues |
-| [Retrieval Debugging](embeddings/debugging-retrieval-quality.md) | How to interpret retrieval logs and diagnose few-shot |
-| [Batch Query Embedding](embeddings/batch-query-embedding.md) | Query-embedding timeout fix (Spec 37) |
-| [Embedding Generation](embeddings/embedding-generation.md) | Fail-fast embedding artifacts + debug partial mode |
-| [Patch Missing PHQ-8 Values](data/patch-missing-phq8-values.md) | Deterministic ground-truth repair for missing item cells |
+| [Reproduction Results](results/reproduction-results.md) | Current reproduction status |
+| [Run Output Schema](results/run-output-schema.md) | Output JSON format |
+
+### Developer Reference
+
+| Document | Description |
+|----------|-------------|
+| [API Endpoints](developer/api-endpoints.md) | REST API reference |
+| [Testing](developer/testing.md) | Markers, fixtures, and test-doubles policy |
+| [Error Handling](developer/error-handling.md) | Exception handling patterns |
+| [Exceptions](developer/exceptions.md) | Exception class hierarchy |
+| [Dependency Registry](developer/dependency-registry.md) | Third-party dependencies |
+
+### Archive
+
+| Document | Description |
+|----------|-------------|
+| [Spec 20: Keyword Fallback](_archive/specs/20-keyword-fallback-improvements.md) | Deferred — intentionally not implementing |
 
 ---
 
