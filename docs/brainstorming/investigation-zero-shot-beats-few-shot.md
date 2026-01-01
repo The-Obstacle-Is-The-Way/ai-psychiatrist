@@ -10,7 +10,9 @@
 
 Investigation identified divergences between our implementation and the paper's notebook.
 
-See **[BUG-031: Few-Shot Retrieval Issues](../archive/bugs/bug-031-few-shot-retrieval-mismatch.md)** for full analysis.
+Current (non-archive) references:
+- Few-shot prompt format: `docs/concepts/few-shot-prompt-format.md`
+- Retrieval debugging workflow: `docs/guides/debugging-retrieval-quality.md`
 
 ### Verified Divergences
 
@@ -53,7 +55,7 @@ This is the minimum, **implementation-ready** sequence to test whether the paper
 
 ### Step 1 — Apply Fix 1 (paper-parity reference formatting)
 
-Source of truth: `docs/archive/specs/31-paper-parity-reference-examples-format.md` (canonical spec).
+Source of truth: `docs/concepts/few-shot-prompt-format.md` (canonical, non-archive).
 
 Required edits:
 - `src/ai_psychiatrist/services/embedding.py` (`ReferenceBundle.format_for_prompt`)
@@ -175,10 +177,12 @@ A chunk saying "I sleep fine" and "I can't sleep at all" are BOTH about sleep. B
 ✅ ADDED (Senior Review): Implementation readiness note
 
 - The above are **research directions**, not paper-parity fixes.
-- Paper-parity implementation work is tracked in:
-  - `docs/archive/specs/31-paper-parity-reference-examples-format.md`
-  - `docs/archive/specs/32-few-shot-retrieval-diagnostics.md`
-- Any CRAG / chunk-scoring / re-indexing work must be implemented from dedicated specs (Specs 33-36 in `docs/archive/specs/` and `docs/specs/`), otherwise developers will be forced to guess formats + evaluation protocol.
+- Paper-parity formatting + retrieval diagnostics are now documented in canonical pages:
+  - `docs/concepts/few-shot-prompt-format.md`
+  - `docs/guides/debugging-retrieval-quality.md`
+- CRAG and chunk scoring are no longer “future work” here; see:
+  - `docs/guides/crag-validation-guide.md`
+  - `docs/reference/chunk-scoring.md`
 
 ### Recommended Architecture
 

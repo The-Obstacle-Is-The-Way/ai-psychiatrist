@@ -416,7 +416,7 @@ class PHQ8Item(StrEnum):
 
 | Participant | Issue | Status | Reference |
 |-------------|-------|--------|-----------|
-| **487** | Corrupted transcript (AppleDouble file, not CSV) | Resolved ✓ | [BUG-022](../archive/bugs/bug-022-corrupted-transcript-487.md) |
+| **487** | Corrupted transcript (AppleDouble file, not CSV) | Resolved ✓ | Avoid AppleDouble files; re-download and re-extract cleanly |
 
 > **Note**: Issue was caused by macOS AppleDouble extraction, not source data. Re-download and careful extraction fixed it.
 
@@ -439,7 +439,6 @@ When working with data, verify:
 
 ## See Also
 
-- [Legacy Spec 04A: Data Organization](../archive/specs/04A_DATA_ORGANIZATION.md) - Data preparation details
-- [Legacy Spec 05: Transcript Service](../archive/specs/05_TRANSCRIPT_SERVICE.md) - Loading logic
-- [Legacy Spec 08: Embedding Service](../archive/specs/08_EMBEDDING_SERVICE.md) - Few-shot retrieval
+- [embedding-generation.md](../guides/embedding-generation.md) - Generating embeddings safely (fail-fast)
+- [embeddings-explained.md](../concepts/embeddings-explained.md) - Few-shot retrieval concepts
 - [Model Registry](../models/model-registry.md) - Embedding model options

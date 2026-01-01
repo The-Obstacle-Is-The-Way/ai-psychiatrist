@@ -188,5 +188,4 @@ See [Model Registry](../models/model-registry.md#high-quality-setup-recommended-
 ## See Also
 
 - [data-splits-overview.md](./data-splits-overview.md) - Detailed split documentation
-- [GAP-001](../archive/bugs/gap-001-paper-unspecified-parameters.md) - Paper-unspecified parameters
-- [BUG-018](../archive/bugs/bug-018-reproduction-friction.md) - Reproduction friction log
+- [agent-sampling-registry.md](../reference/agent-sampling-registry.md) - Sampling parameters (paper leaves some unspecified)

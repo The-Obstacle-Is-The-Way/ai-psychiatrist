@@ -202,7 +202,7 @@ With examples, the LLM learns:
 | Zero-shot | 0.796 | No examples, LLM guesses |
 | Few-shot | 0.619 | 2 examples per item, calibrated |
 
-That is a **22% lower item-level MAE** vs zero-shot (0.796 → 0.619 in the paper).
+That is a **22% lower item-level MAE** vs zero-shot (paper-reported). In this repository, few-shot performance is sensitive to retrieval quality and can underperform zero-shot; see `docs/results/reproduction-results.md` and `docs/results/run-history.md`.
 
 ---
 
@@ -266,7 +266,7 @@ AFTER (tagged):
 
 At **index time** (when embeddings are generated):
 1. Each chunk is analyzed for PHQ-8-related keywords
-2. Keywords are matched against a clinically-validated dictionary (`phq8_keywords.yaml`)
+2. Keywords are matched against a curated keyword list (`phq8_keywords.yaml`)
 3. Matching items are stored in a `.tags.json` sidecar file
 
 At **retrieval time** (when scoring a new patient):
@@ -314,7 +314,7 @@ The `.tags.json` format:
     [],
     ["PHQ8_Depressed"]
   ],
-  "304": []
+  "304": [...]
 }
 ```
 
@@ -328,7 +328,7 @@ With item tagging, references are both:
 1. **Semantically similar** (embedding-based)
 2. **Topically relevant** (item-tagged)
 
-This should improve few-shot accuracy by ensuring examples are truly about the symptom being scored.
+Goal: reduce semantically-similar-but-wrong-item references. Whether this improves metrics depends on the model/run.
 
 ---
 
@@ -349,8 +349,7 @@ extraction step returns no appetite evidence, there’s nothing to embed/query, 
 returns no appetite examples.
 
 This often correlates with low appetite coverage (more N/A), but the two are not identical metrics.
-Appetite coverage varies by run/model; see `docs/archive/bugs/investigation-026-reproduction-mae-divergence.md`
-for a concrete paper-text-parity example run.
+Appetite coverage varies by run/model; see `docs/results/run-history.md` for concrete runs.
 
 ---
 
@@ -361,7 +360,7 @@ for a concrete paper-text-parity example run.
 3. **Similarity Search** = Find chunks with similar meaning to new evidence
 4. **Few-Shot** = Show the LLM similar examples before asking it to score
 
-**The key insight**: Instead of telling the LLM "here's what a 2 means," we SHOW it examples of 2s. This calibrates its judgment and improves accuracy by 22%.
+**The key insight**: Instead of telling the LLM "here's what a 2 means," we SHOW it examples of labeled chunks. The paper reports a large few-shot improvement, but in this repo few-shot performance depends heavily on retrieval quality (and can underperform zero-shot in some runs). See `docs/results/reproduction-results.md` and `docs/results/run-history.md`.
 
 ---
 

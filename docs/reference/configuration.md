@@ -72,7 +72,7 @@ Connection settings for the Ollama LLM server.
 **Timeout Notes:**
 - Default 600s may still timeout on very slow GPUs / long transcripts; use `3600` for research runs.
 - `OLLAMA_TIMEOUT_SECONDS` applies to the legacy Ollama client and (by default) syncs to the Pydantic AI path if `PYDANTIC_AI_TIMEOUT_SECONDS` is unset.
-- See [BUG-027](../archive/bugs/bug-027-timeout-configuration.md) for implementation details.
+- Timeout sync is implemented in `Settings.validate_consistency()` in `src/ai_psychiatrist/config.py`.
 
 **Example:**
 ```bash
@@ -330,8 +330,7 @@ API_WORKERS=1
 
 ### Quantitative Assessment Settings
 
-These settings control the quantitative assessment behavior (implemented in
-[SPEC-003](../archive/specs/SPEC-003-backfill-toggle.md)):
+These settings control the quantitative assessment behavior (evidence extraction + scoring):
 
 | Variable | Type | Default | Description |
 |----------|------|---------|-------------|

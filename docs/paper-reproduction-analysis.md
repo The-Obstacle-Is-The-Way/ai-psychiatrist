@@ -156,7 +156,7 @@ The issue is not that the numbers are "impossible"; it is that the paper does no
 
 ### 4. Proper Comparison Requires AURC
 
-- Implemented as Spec 25: `docs/archive/specs/25-aurc-augrc-implementation.md`
+- Exact metric definitions + schema: `docs/reference/metrics-and-evaluation.md`
 - Results are tracked in `docs/results/run-history.md`
 - Standard in selective prediction literature
 
@@ -186,9 +186,10 @@ This analysis should be included in any future publication reproducing or extend
 
 ## Related Documents
 
-- `docs/archive/bugs/bug-029-coverage-mae-discrepancy.md` - Detailed discrepancy analysis
-- `docs/archive/bugs/fallback-architecture-audit.md` - Code quality issues
-- `docs/archive/specs/25-aurc-augrc-implementation.md` - Selective prediction evaluation suite
+- Selective prediction methodology: `docs/reference/statistical-methodology-aurc-augrc.md`
+- Exact metric definitions + schema: `docs/reference/metrics-and-evaluation.md`
+- Run history: `docs/results/run-history.md`
+- Coverage concepts: `docs/concepts/coverage-explained.md`
 
 ---
 

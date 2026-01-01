@@ -1,8 +1,8 @@
 # Agent Sampling Parameter Registry
 
 **Purpose**: Single Source of Truth (SSOT) for all agent sampling parameters.
-**Last Updated**: 2025-12-26
-**Related**: [Configuration Reference](./configuration.md) | [GAP-001](../archive/bugs/gap-001-paper-unspecified-parameters.md) | [GitHub Issue #46](https://github.com/The-Obstacle-Is-The-Way/ai-psychiatrist/issues/46)
+**Last Updated**: 2026-01-01
+**Related**: [Configuration Reference](./configuration.md) | [GitHub Issue #46](https://github.com/The-Obstacle-Is-The-Way/ai-psychiatrist/issues/46)
 
 ---
 
@@ -153,7 +153,6 @@ MODEL_TEMPERATURE=0.0
 ## References
 
 - [GitHub Issue #46](https://github.com/The-Obstacle-Is-The-Way/ai-psychiatrist/issues/46) - Full investigation
-- [GAP-001: Paper Unspecified Parameters](../archive/bugs/gap-001-paper-unspecified-parameters.md)
 - [Configuration Reference](./configuration.md)
 - [Med-PaLM - Nature Medicine](https://pmc.ncbi.nlm.nih.gov/articles/PMC11922739/)
 - [Temperature in Clinical AI - medRxiv 2025](https://www.medrxiv.org/content/10.1101/2025.06.04.25328288v1.full)

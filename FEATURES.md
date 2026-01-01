@@ -2,7 +2,7 @@
 
 Quick reference for all implemented features and how to enable them.
 
-**Last Updated**: 2025-12-31
+**Last Updated**: 2026-01-01
 
 > **Post-Ablation Note**: After ablations complete, many "OFF" defaults will flip to "ON".
 > See [`POST-ABLATION-DEFAULTS.md`](POST-ABLATION-DEFAULTS.md) for the consolidation plan.
@@ -72,7 +72,9 @@ EMBEDDING_MIN_REFERENCE_SIMILARITY=0.3    # 0.0 = disabled
 EMBEDDING_MAX_REFERENCE_CHARS_PER_ITEM=500 # 0 = disabled
 ```
 
-**Spec**: [`docs/archive/specs/33-retrieval-quality-guardrails.md`](docs/archive/specs/33-retrieval-quality-guardrails.md)
+**Docs**:
+- [`docs/reference/features.md`](docs/reference/features.md) (feature index)
+- [`docs/guides/debugging-retrieval-quality.md`](docs/guides/debugging-retrieval-quality.md) (how to interpret diagnostics)
 
 ---
 
@@ -91,7 +93,7 @@ EMBEDDING_MAX_REFERENCE_CHARS_PER_ITEM=500 # 0 = disabled
 EMBEDDING_ENABLE_ITEM_TAG_FILTER=true
 ```
 
-**Spec**: [`docs/archive/specs/34-item-tagged-reference-embeddings.md`](docs/archive/specs/34-item-tagged-reference-embeddings.md)
+**Docs**: [`docs/guides/item-tagging-setup.md`](docs/guides/item-tagging-setup.md)
 
 ---
 
@@ -112,7 +114,7 @@ EMBEDDING_REFERENCE_SCORE_SOURCE=chunk  # default: "participant"
 
 **WARNING**: This is NOT paper-parity. Label runs as "experimental" in results.
 
-**Spec**: [`docs/archive/specs/35-offline-chunk-level-phq8-scoring.md`](docs/archive/specs/35-offline-chunk-level-phq8-scoring.md)
+**Docs**: [`docs/reference/chunk-scoring.md`](docs/reference/chunk-scoring.md)
 
 ---
 
@@ -132,7 +134,7 @@ EMBEDDING_ENABLE_REFERENCE_VALIDATION=true  # default: false
 
 **Trade-off**: Adds ~1 LLM call per reference (latency cost).
 
-**Spec**: [`docs/archive/specs/36-crag-reference-validation.md`](docs/archive/specs/36-crag-reference-validation.md)
+**Docs**: [`docs/guides/crag-validation-guide.md`](docs/guides/crag-validation-guide.md)
 
 ---
 
@@ -149,7 +151,7 @@ EMBEDDING_ENABLE_RETRIEVAL_AUDIT=true
 
 **Output**: Logs each retrieval with similarity scores, chunk text, and participant ID.
 
-**Spec**: [`docs/archive/specs/32-few-shot-retrieval-diagnostics.md`](docs/archive/specs/32-few-shot-retrieval-diagnostics.md)
+**Docs**: [`docs/guides/debugging-retrieval-quality.md`](docs/guides/debugging-retrieval-quality.md)
 
 ---
 
@@ -170,7 +172,7 @@ EMBEDDING_QUERY_EMBED_TIMEOUT_SECONDS=300
 
 **Impact**: 8x reduction in embedding API calls.
 
-**Spec**: [`docs/archive/specs/37-batch-query-embedding.md`](docs/archive/specs/37-batch-query-embedding.md)
+**Docs**: [`docs/reference/features.md`](docs/reference/features.md)
 
 ---
 
@@ -182,7 +184,7 @@ EMBEDDING_QUERY_EMBED_TIMEOUT_SECONDS=300
 - If a feature is **disabled**, do **no** file I/O for its artifacts.
 - If a feature is **enabled**, missing/invalid artifacts **crash** with a clear error.
 
-**Spec**: [`docs/archive/specs/38-conditional-feature-loading.md`](docs/archive/specs/38-conditional-feature-loading.md)
+**Docs**: [`docs/concepts/error-handling.md`](docs/concepts/error-handling.md)
 
 ---
 
@@ -192,7 +194,9 @@ EMBEDDING_QUERY_EMBED_TIMEOUT_SECONDS=300
 
 **Solution**: Log `error_type` and re-raise the original exception type.
 
-**Spec**: [`docs/archive/specs/39-preserve-exception-types.md`](docs/archive/specs/39-preserve-exception-types.md)
+**Docs**:
+- [`docs/concepts/error-handling.md`](docs/concepts/error-handling.md)
+- [`docs/reference/exceptions.md`](docs/reference/exceptions.md)
 
 ---
 
@@ -216,7 +220,7 @@ python scripts/generate_embeddings.py --split paper-train --allow-partial
 - `1`: Failure (any error in strict mode)
 - `2`: Partial success (some skips in `--allow-partial` mode)
 
-**Spec**: [`docs/archive/specs/40-fail-fast-embedding-generation.md`](docs/archive/specs/40-fail-fast-embedding-generation.md)
+**Docs**: [`docs/guides/embedding-generation.md`](docs/guides/embedding-generation.md)
 
 ---
 

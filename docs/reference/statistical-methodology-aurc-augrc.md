@@ -185,5 +185,5 @@ Confidence: llm
 
 ## Related Documentation
 
-- [Spec 25: AURC/AUGRC Implementation](../archive/specs/25-aurc-augrc-implementation.md) - Technical implementation details
+- Exact definitions + output schema: [metrics-and-evaluation.md](./metrics-and-evaluation.md)
 - Evaluation Script: `scripts/evaluate_selective_prediction.py` - CLI tool for computing metrics

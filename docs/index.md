@@ -13,8 +13,9 @@ AI Psychiatrist is an engineering-focused, reproducible implementation of a rese
 ### Key Features
 
 - **Four-Agent Pipeline**: Qualitative, Judge, Quantitative, and Meta-Review agents collaborate for comprehensive assessment
-- **Embedding-Based Few-Shot Learning**: 22% lower **item-level MAE** vs zero-shot (0.796 → 0.619, paper Section 3.2)
+- **Embedding-Based Few-Shot Retrieval**: Optional few-shot references; retrieval quality is controlled by guardrails, item-tag filtering, chunk-level score attachment, and CRAG validation (see results docs)
 - **Iterative Self-Refinement**: Judge agent feedback loop improves assessment quality
+- **Selective Prediction Evaluation**: AURC/AUGRC + bootstrap confidence intervals (coverage-aware evaluation)
 - **Engineering-Focused Architecture**: Clean architecture, type safety, structured logging, and comprehensive testing
 
 ### Paper Reference
@@ -45,6 +46,7 @@ AI Psychiatrist is an engineering-focused, reproducible implementation of a rese
 | Document | Description |
 |----------|-------------|
 | [Configuration](reference/configuration.md) | All configuration options |
+| [Feature Reference](reference/features.md) | Implemented features + defaults (non-archive canonical) |
 | [API Endpoints](reference/api/endpoints.md) | REST API reference |
 | [Glossary](reference/glossary.md) | Terms and definitions |
 
@@ -61,13 +63,13 @@ AI Psychiatrist is an engineering-focused, reproducible implementation of a rese
 | [Future Architecture](concepts/future-architecture.md) | LangGraph integration roadmap (Pydantic AI is already integrated) |
 | [Spec 20: Keyword Fallback Improvements](specs/20-keyword-fallback-improvements.md) | Deferred — intentionally not implementing (see spec) |
 
-### Archived Specs (Implemented)
+### Debugging / Reproduction
 
 | Document | Description |
 |----------|-------------|
-| [Spec 19: Test Suite Mock Audit](archive/specs/19-test-suite-mock-audit.md) | Test suite mock hygiene and contract coverage |
-| [Spec 18: Qualitative Agent Robustness](archive/specs/18-qualitative-agent-robustness.md) | Qualitative agent Pydantic AI hardening |
-| [Spec 17: Test Suite Marker Consistency](archive/specs/17-test-suite-marker-consistency.md) | Auto-apply test markers from directory structure |
+| [Run History](results/run-history.md) | Canonical history of reproduction runs |
+| [Reproduction Results](results/reproduction-results.md) | Current reproduction status + known issues |
+| [Retrieval Debugging](guides/debugging-retrieval-quality.md) | How to interpret retrieval logs and diagnose few-shot |
 
 ---
 

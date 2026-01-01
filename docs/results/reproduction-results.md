@@ -251,8 +251,7 @@ The model could not make any predictions for participant 339:
 ### BUG-025: Missing PHQ8_Sleep (Resolved)
 
 Participant 319 was missing `PHQ8_Sleep` in the upstream AVEC2017 dataset. This was deterministically reconstructed to `2` based on the mathematical invariant `PHQ8_Score = sum(items)`.
-
-See: `docs/archive/bugs/bug-025-missing-phq8-ground-truth-paper-test.md`
+This is implemented by `scripts/patch_missing_phq8_values.py`.
 
 ---
 

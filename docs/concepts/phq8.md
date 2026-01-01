@@ -215,6 +215,8 @@ The PHQ-8 items map to DSM-5 criteria:
 
 **MAE** = Mean Absolute Error between predicted and actual item scores.
 
+Note: the paper’s MAE is reported on the subset of items where the system produced a score (i.e., excludes N/A). When coverages differ, prefer coverage-aware selective prediction metrics (AURC/AUGRC); see `docs/reference/statistical-methodology-aurc-augrc.md`.
+
 ### Item-Specific Observations
 
 The paper notes that some items are harder to predict:

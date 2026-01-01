@@ -1,8 +1,8 @@
 # Paper Parity Guide: Reproducing the Original Research
 
 **Audience**: Researchers wanting to compare results with the paper
-**Related**: [SPEC-003](../archive/specs/SPEC-003-backfill-toggle.md) | [Backfill Explained](../concepts/backfill-explained.md) | [Reproduction Notes](../results/reproduction-results.md)
-**Last Updated**: 2025-12-31
+**Related**: [Backfill Explained](../concepts/backfill-explained.md) | [Configuration Reference](../reference/configuration.md) | [Reproduction Notes](../results/reproduction-results.md)
+**Last Updated**: 2026-01-01
 
 ---
 
@@ -10,7 +10,7 @@
 
 This guide explains how to run AI Psychiatrist in **paper parity mode** - configuration that matches the original research methodology as closely as possible.
 
-**Good news**: With SPEC-003 implemented, the **default backfill behavior is paper parity** (keyword backfill OFF).
+**Good news**: The **default backfill behavior is paper parity** (keyword backfill OFF).
 For full paper-parity backends (pure Ollama), set `EMBEDDING_BACKEND=ollama` so runtime embeddings match the
 pre-computed reference artifact.
 
@@ -42,7 +42,8 @@ QUANTITATIVE_ENABLE_KEYWORD_BACKFILL=false  # (this is the default)
 
 ### Higher Coverage Mode
 
-For clinical utility (more items assessed), enable backfill:
+Backfill is deprecated and is **not recommended** for new work. If you need a historical ablation
+to match an older paper-code behavior, you can enable backfill explicitly:
 
 ```bash
 # Enable backfill for ~74% coverage
@@ -178,9 +179,6 @@ See `docs/data/paper-split-registry.md` and `docs/data/paper-split-methodology.m
 - **Preflight Checklists** (run before every reproduction):
   - [Zero-Shot Preflight](./preflight-checklist-zero-shot.md) - Pre-run verification for zero-shot
   - [Few-Shot Preflight](./preflight-checklist-few-shot.md) - Pre-run verification for few-shot
-- [SPEC-003: Backfill Toggle](../archive/specs/SPEC-003-backfill-toggle.md) - Implementation spec
 - [Backfill Explained](../concepts/backfill-explained.md) - How backfill works
-- [Coverage Investigation](../archive/bugs/coverage-investigation.md) - Why metrics differ
 - [Reproduction Notes](../results/reproduction-results.md) - Current results
 - [Configuration Reference](../reference/configuration.md) - All settings
-- [BUG-018](../archive/bugs/bug-018-reproduction-friction.md) - Reproduction friction log

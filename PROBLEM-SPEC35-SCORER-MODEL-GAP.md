@@ -1,6 +1,6 @@
 # Problem: Spec 35 Scorer Model Not Specified
 
-**Date**: 2025-12-31
+**Date**: 2026-01-01
 **Status**: ✅ Unblocked (run same-model baseline; ablate disjoint/MedGemma)
 **Severity**: Medium (spec gap, not code bug)
 
@@ -10,7 +10,7 @@
 
 Spec 35 requires a "disjoint model" for chunk scoring to avoid circularity, but **we never specified which model to use**.
 
-From `docs/archive/specs/35-offline-chunk-level-phq8-scoring.md`:
+From `docs/reference/chunk-scoring.md`:
 
 ```
 ## Circularity Controls (Required)
@@ -189,7 +189,7 @@ python scripts/score_reference_chunks.py \
 
 ## Related
 
-- `docs/archive/specs/35-offline-chunk-level-phq8-scoring.md` - Spec 35
+- `docs/reference/chunk-scoring.md` - Chunk scoring doc (Spec 35)
 - `scripts/score_reference_chunks.py` - The scoring script
 - `HYPOTHESIS-FEWSHOT-DESIGN-FLAW.md` - Why this matters
 

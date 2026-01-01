@@ -99,7 +99,7 @@ curl -X POST http://localhost:8000/full_pipeline \
 | Document | Description |
 |----------|-------------|
 | [**CLAUDE.md**](CLAUDE.md) | Development guidelines |
-| [**Specs**](docs/archive/specs/00-overview.md) | Implementation specifications (archived) |
+| [**Specs**](docs/specs/index.md) | Specs index (implemented specs are distilled into canonical docs) |
 | [**Data Schema**](docs/data/daic-woz-schema.md) | Dataset format documentation |
 
 ---
@@ -124,7 +124,7 @@ ai-psychiatrist/
 │   ├── reference/        # API and config reference
 │   ├── data/             # Dataset documentation
 │   ├── specs/            # Active specs
-│   └── archive/specs/    # Archived specs
+│   └── archive/          # Historical artifacts (not required for active docs)
 └── data/                 # DAIC-WOZ dataset (gitignored)
 ```
 

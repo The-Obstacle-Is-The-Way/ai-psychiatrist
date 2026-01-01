@@ -312,9 +312,10 @@ EMBEDDING_MAX_REFERENCE_CHARS_PER_ITEM=500
 - `HYPOTHESIS-FEWSHOT-DESIGN-FLAW.md` — Why participant-level scoring is broken
 - `HYPOTHESIS-ZERO-SHOT-INFLATION.md` — Why zero-shot can "cheat"
 - `PROBLEM-SPEC35-SCORER-MODEL-GAP.md` — Scorer model selection for chunk scoring
-- `docs/archive/specs/35-offline-chunk-level-phq8-scoring.md` — Spec 35 details
-- `docs/archive/specs/34-item-tagged-reference-embeddings.md` — Spec 34 details
-- `docs/archive/specs/33-retrieval-quality-guardrails.md` — Spec 33 details
+- `docs/reference/features.md` — Feature index + defaults (non-archive canonical)
+- `docs/reference/chunk-scoring.md` — Chunk scoring schema/workflow (Spec 35)
+- `docs/guides/item-tagging-setup.md` — Tagging setup + schema (Spec 34)
+- `docs/guides/debugging-retrieval-quality.md` — Diagnostics flow (Specs 32–36)
 
 ---
 

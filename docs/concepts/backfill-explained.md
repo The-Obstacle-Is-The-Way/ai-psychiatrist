@@ -12,8 +12,8 @@
 > meaningless. See `HYPOTHESIS-FEWSHOT-DESIGN-FLAW.md` and `POST-ABLATION-DEFAULTS.md` for details.
 
 **Audience**: Researchers and developers wanting to understand the coverage-accuracy tradeoff
-**Related**: [SPEC-003](../archive/specs/SPEC-003-backfill-toggle.md) | [Coverage Investigation](../archive/bugs/coverage-investigation.md) | [Extraction Mechanism](./extraction-mechanism.md)
-**Last Updated**: 2025-12-31
+**Related**: [Extraction Mechanism](./extraction-mechanism.md) | [Configuration Reference](../reference/configuration.md) | [Coverage Explained](./coverage-explained.md)
+**Last Updated**: 2026-01-01
 
 ---
 
@@ -281,9 +281,9 @@ We don't know which approach produced the reported MAE of 0.619.
 We chose to measure **pure LLM capability** (backfill OFF) because:
 1. The paper doesn't describe keyword backfill as part of the methodology
 2. Scientific reproducibility should match documented methodology
-3. We can always enable backfill for clinical utility
+3. Backfill can still be enabled for historical ablations (not recommended for new work)
 
-**Backfill is OFF by default** per [SPEC-003](../archive/specs/SPEC-003-backfill-toggle.md).
+**Backfill is OFF by default** (`QUANTITATIVE_ENABLE_KEYWORD_BACKFILL=false`).
 
 ### Asking the Authors
 
@@ -323,7 +323,7 @@ the reason explicitly. This is not recommended for any new work.
 
 ## N/A Reason Tracking
 
-With [SPEC-003](../archive/specs/SPEC-003-backfill-toggle.md) implemented, each N/A result can include a deterministic reason (when enabled):
+When N/A reason tracking is enabled (`QUANTITATIVE_TRACK_NA_REASONS=true`), each N/A result can include a deterministic reason (independent of backfill):
 
 | Reason | Description |
 |--------|-------------|
@@ -426,7 +426,6 @@ Transcript → LLM Evidence Extraction
 
 ## Related Documentation
 
-- [SPEC-003: Backfill Toggle](../archive/specs/SPEC-003-backfill-toggle.md) - Implementation specification
-- [Coverage Investigation](../archive/bugs/coverage-investigation.md) - Why our coverage differs
 - [Extraction Mechanism](./extraction-mechanism.md) - Full extraction pipeline
 - [Paper Parity Guide](../guides/paper-parity-guide.md) - How to reproduce paper results
+- [Configuration Reference](../reference/configuration.md) - All settings

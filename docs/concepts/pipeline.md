@@ -167,7 +167,7 @@ First, the agent extracts evidence quotes for each PHQ-8 item:
 
 **Keyword Backfill (Optional):** If enabled, keyword matching can supplement extraction when the
 LLM misses evidence. By default (paper-text parity), backfill is OFF; see
-`docs/concepts/backfill-explained.md` and `docs/archive/bugs/analysis-027-paper-implementation-comparison.md`.
+`docs/concepts/backfill-explained.md` for caveats and configuration.
 
 #### Few-Shot Reference Retrieval
 
@@ -220,6 +220,8 @@ The agent generates scores with reasoning:
 - Zero-shot MAE: 0.796
 - Few-shot MAE: 0.619 (22% lower item-level MAE vs zero-shot)
 - MedGemma few-shot MAE: 0.505 (Appendix F alternative; better MAE but fewer predictions overall)
+
+Note: these MAE values are **conditional on non-N/A items**. When coverages differ across modes, system-level comparisons should use coverage-aware selective prediction metrics (AURC/AUGRC); see `docs/reference/statistical-methodology-aurc-augrc.md`.
 
 ---
 
