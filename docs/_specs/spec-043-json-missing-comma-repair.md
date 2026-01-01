@@ -111,6 +111,8 @@ text = re.sub(
 )
 ```
 
+**Note on `\d` vs `\d+`**: The pattern uses `\d` (single digit) intentionally. For a number like `123`, only the final `3` needs to match to anchor the repair. The preceding digits are not consumed or altered. Using `\d+` would work but is unnecessary.
+
 #### Pattern B (recommended): end-of-object/array followed by a new key
 
 Insert a comma between:
@@ -131,8 +133,19 @@ text = re.sub(
 ```
 
 Rationale:
+
 - Pattern A fixes the observed failure mode in BUG-043.
 - Pattern B covers the common nested-object case where the missing comma follows a `}` or `]`.
+
+**Edge case: patterns inside string values**
+
+These regexes could theoretically match content inside a JSON string value (e.g., `"description": "ends with 3\n\"next\": value"`). However:
+
+1. LLM-generated JSON rarely contains embedded JSON-like patterns in string values.
+2. The newline anchor (`\n`) makes false positives unlikely in practice.
+3. If this becomes an issue, a more sophisticated parser-based approach would be needed (out of scope for this spec).
+
+The conservative approach is acceptable given the observed failure mode.
 
 ### 3.3 Observability
 

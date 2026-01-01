@@ -93,16 +93,19 @@ This implementation is aligned with the widely used Bailey/Plumbley DAIC-WOZ pre
 
 From `_reference/daic_woz_process/config_files/config_process.py`:
 
-- **Interruption windows**:
+- **Interruption windows** (drop rows overlapping these time ranges):
   - `373`: `[395, 428]` seconds
   - `444`: `[286, 387]` seconds
-- **Missing Ellie transcripts** (participant-only transcripts):
+- **Missing Ellie transcripts** (participant-only transcripts exist):
   - `451`, `458`, `480`
-- **Audio-only misalignment** (text can still be used):
-  - `318`, `321`, `341`, `362`
+- **Audio-text misalignment offsets** (text is usable; offsets for audio sync):
+  - `318`: `34.319917` seconds
+  - `321`: `3.8379167` seconds
+  - `341`: `6.1892` seconds
+  - `362`: `16.8582` seconds
 - **Known label issue**:
   - `wrong_labels = {409: 1}` (`PHQ8_Binary` mismatch for score ≥ 10)
-- **Absent sessions**:
+- **Absent sessions** (no data at all):
   - `excluded_sessions = [342, 394, 398, 460]`
 
 ### 4.2 Local raw transcript audit expectations
@@ -193,13 +196,26 @@ Row/window overlap definition:
 row_start < window_end AND row_end > window_start
 ```
 
-### 6.6 Preserve nonverbal annotations (default)
+### 6.6 Preserve nonverbal annotations and original case (default)
 
 Do not delete tokens like `<laughter>` / `<sigh>` by default, because these can carry affective signal for LLM reasoning.
 
-Note on reference parity:
-- The Bailey/Plumbley tool strips placeholder/unknown tokens (e.g., `xxx`/`xxxx`) and removes tokens containing `< > [ ]` as part of a Word2Vec/classical feature pipeline.
-- In this repo, stripping is an explicit ablation; the default preprocessing preserves nonverbal tags for LLM use.
+Do not lowercase text. The reference tool lowercases all text (for Word2Vec), but LLMs can use case as a signal (e.g., "I'm REALLY tired" vs "i'm really tired").
+
+**Differences from reference tool (intentional)**:
+
+| Behavior               | Reference Tool     | This Spec (Default) | Rationale                              |
+|------------------------|--------------------|---------------------|----------------------------------------|
+| Lowercase text         | ✓ `.lower()`       | ✗ Preserve case     | LLM affective signal                   |
+| Strip `xxx`/`xxxx`     | ✓                  | ✗ Preserve          | Placeholder may indicate hesitation    |
+| Strip `< > [ ]` tokens | ✓ All such tokens  | ✗ Preserve          | `<laughter>` is affectively informative|
+
+The reference tool (`_reference/daic_woz_process/utils/utilities.py`, `remove_words_symbols()`) strips:
+
+- `words_to_remove = {'xxx', 'xxxx', ' ', '  ', '   ', '    ', '     '}`
+- Any token containing `symbols_to_remove = ['<', '>', '[', ']']`
+
+These behaviors are appropriate for Word2Vec/classical ML but not for LLM-based reasoning. If an ablation requires reference-parity stripping, implement it as a separate variant (`participant_only_stripped`).
 
 ## 7. Preprocessing CLI Contract
 
@@ -218,13 +234,16 @@ Provide a deterministic CLI at:
 - `--dry-run` to validate and compute stats without writing outputs
 
 Safety constraints:
+
 - Refuse to run if `--output-dir` resolves to the same path as `--input-dir`.
 
 Atomicity:
+
 - Write outputs to a staging directory (e.g., `output_dir.tmp`) and rename to `output_dir` only on success.
 - On failure, remove staging output to avoid partial/corrupt processed datasets.
 
 Audit output:
+
 - When writing outputs (non-dry-run), write `preprocess_manifest.json` containing:
   - counts (rows in/out)
   - per-file removals by category
@@ -248,8 +267,7 @@ Tooling:
 - `uv run python scripts/patch_missing_phq8_values.py --dry-run`
 - `uv run python scripts/patch_missing_phq8_values.py --apply`
 
-Doc:
-- `docs/data/patch-missing-phq8-values.md`
+Doc: `docs/data/patch-missing-phq8-values.md`
 
 ### 8.2 `PHQ8_Binary` consistency rule
 
@@ -259,8 +277,7 @@ Treat:
 PHQ8_Binary = 1 iff PHQ8_Score >= 10
 ```
 
-Known upstream issue to account for:
-- Participant `409` has been observed with `PHQ8_Score=10` but `PHQ8_Binary=0` in some copies.
+Known upstream issue to account for: Participant `409` has been observed with `PHQ8_Score=10` but `PHQ8_Binary=0` in some copies.
 
 ## 9. Collision-Free Artifact Workflow (Embeddings, Tags, Chunk Scores)
 
@@ -273,6 +290,7 @@ To avoid mixing artifacts from different transcript variants:
 5) Ensure `.tags.json` and `.chunk_scores.json` correspond to the same embeddings base name
 
 See:
+
 - `docs/data/artifact-namespace-registry.md`
 - `docs/embeddings/embedding-generation.md`
 
