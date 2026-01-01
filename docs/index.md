@@ -39,18 +39,18 @@ AI Psychiatrist is an engineering-focused, reproducible implementation of a rese
 |----------|-------------|
 | [Architecture](architecture/architecture.md) | System layers and design patterns |
 | [Pipeline](architecture/pipeline.md) | How the 4-agent pipeline works |
-| [PHQ-8](concepts/phq8.md) | Understanding PHQ-8 depression assessment |
+| [PHQ-8](clinical/phq8.md) | Understanding PHQ-8 depression assessment |
 
 ### Reference
 
 | Document | Description |
 |----------|-------------|
 | [Configuration](configs/configuration.md) | All configuration options |
-| [Feature Reference](reference/features.md) | Implemented features + defaults (non-archive canonical) |
-| [Run Output Schema](reference/run-output-schema.md) | Output JSON + experiment registry format |
-| [API Endpoints](reference/api-endpoints.md) | REST API reference |
-| [Testing](reference/testing.md) | Markers, fixtures, and test-doubles policy |
-| [Glossary](reference/glossary.md) | Terms and definitions |
+| [Feature Reference](pipeline-internals/features.md) | Implemented features + defaults (non-archive canonical) |
+| [Run Output Schema](results/run-output-schema.md) | Output JSON + experiment registry format |
+| [API Endpoints](developer/api-endpoints.md) | REST API reference |
+| [Testing](developer/testing.md) | Markers, fixtures, and test-doubles policy |
+| [Glossary](clinical/glossary.md) | Terms and definitions |
 
 ### Data Documentation
 
@@ -71,10 +71,10 @@ AI Psychiatrist is an engineering-focused, reproducible implementation of a rese
 |----------|-------------|
 | [Run History](results/run-history.md) | Canonical history of reproduction runs |
 | [Reproduction Results](results/reproduction-results.md) | Current reproduction status + known issues |
-| [Retrieval Debugging](guides/debugging-retrieval-quality.md) | How to interpret retrieval logs and diagnose few-shot |
-| [Batch Query Embedding](guides/batch-query-embedding.md) | Query-embedding timeout fix (Spec 37) |
-| [Embedding Generation](guides/embedding-generation.md) | Fail-fast embedding artifacts + debug partial mode |
-| [Patch Missing PHQ-8 Values](guides/patch-missing-phq8-values.md) | Deterministic ground-truth repair for missing item cells |
+| [Retrieval Debugging](embeddings/debugging-retrieval-quality.md) | How to interpret retrieval logs and diagnose few-shot |
+| [Batch Query Embedding](embeddings/batch-query-embedding.md) | Query-embedding timeout fix (Spec 37) |
+| [Embedding Generation](embeddings/embedding-generation.md) | Fail-fast embedding artifacts + debug partial mode |
+| [Patch Missing PHQ-8 Values](data/patch-missing-phq8-values.md) | Deterministic ground-truth repair for missing item cells |
 
 ---
 

@@ -30,7 +30,7 @@ Few-shot predicts on ~15% more items. Those additional items are inherently hard
 
 **AURC/AUGRC integrate over the entire risk-coverage curve**, providing a fair comparison regardless of coverage differences.
 
-See: `docs/reference/statistical-methodology-aurc-augrc.md`
+See: `docs/statistics/statistical-methodology-aurc-augrc.md`
 
 ---
 
@@ -372,10 +372,10 @@ uv run python scripts/generate_embeddings.py --split paper-train
 
 ## References
 
-- Statistical methodology: `docs/reference/statistical-methodology-aurc-augrc.md`
-- Feature index + defaults: `docs/reference/features.md`
-- Few-shot prompt format: `docs/concepts/few-shot-prompt-format.md`
-- Retrieval debugging: `docs/guides/debugging-retrieval-quality.md`
-- Item-tag filtering setup: `docs/guides/item-tagging-setup.md`
-- CRAG validation guide: `docs/guides/crag-validation-guide.md`
-- Paper analysis: `docs/paper-reproduction-analysis.md`
+- Statistical methodology: `docs/statistics/statistical-methodology-aurc-augrc.md`
+- Feature index + defaults: `docs/pipeline-internals/features.md`
+- Few-shot prompt format: `docs/embeddings/few-shot-prompt-format.md`
+- Retrieval debugging: `docs/embeddings/debugging-retrieval-quality.md`
+- Item-tag filtering setup: `docs/embeddings/item-tagging-setup.md`
+- CRAG validation guide: `docs/statistics/crag-validation-guide.md`
+- Paper analysis: `docs/_archive/misc/paper-reproduction-analysis.md`

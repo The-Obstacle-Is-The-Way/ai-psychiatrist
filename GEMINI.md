@@ -87,7 +87,7 @@ Configuration is managed via environment variables and `.env`.
 ## Key Files
 *   `server.py`: Entry point for the FastAPI application.
 *   `CLAUDE.md`: Contains detailed instructions for AI coding assistants (highly relevant reference).
-*   `docs/specs/`: Implementation specifications.
+*   `docs/_specs/`: Implementation specifications.
 
 ## Few-Shot RAG Pipeline (Specs 33-36)
 

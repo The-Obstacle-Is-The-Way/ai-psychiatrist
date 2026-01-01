@@ -7,7 +7,7 @@ This page documents the exception taxonomy used across the repo and how callers 
 
 SSOT:
 - `src/ai_psychiatrist/domain/exceptions.py`
-- `docs/concepts/error-handling.md` (philosophy)
+- [Error-handling philosophy](error-handling.md)
 
 ---
 
@@ -68,5 +68,5 @@ When triaging failures, start by grouping by `error_type`.
 
 ## Related Docs
 
-- Error-handling philosophy: `docs/concepts/error-handling.md`
-- Configuration (timeouts, backends): `docs/configs/configuration.md`
+- [Error-handling philosophy](error-handling.md)
+- [Configuration (timeouts, backends)](../configs/configuration.md)

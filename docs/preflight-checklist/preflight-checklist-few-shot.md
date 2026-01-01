@@ -105,7 +105,7 @@ Few-shot mode uses reference embeddings to retrieve similar transcript chunks as
 
 ### 2.3 Sampling Parameters
 
-**Reference**: GAP-001b/c, [Agent Sampling Registry](../reference/agent-sampling-registry.md)
+**Reference**: GAP-001b/c, [Agent Sampling Registry](../configs/agent-sampling-registry.md)
 
 - [ ] **Temperature is zero** (clinical AI best practice):
   ```bash

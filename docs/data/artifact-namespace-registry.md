@@ -168,7 +168,7 @@ If `{artifact}.meta.json` exists, `ReferenceStore` validates metadata (backend, 
 | `top_k` | — | Not set (irrelevant at temp=0) |
 | `top_p` | — | Not set (best practice: use temp only) |
 
-See [Agent Sampling Registry](../reference/agent-sampling-registry.md) for citations.
+See [Agent Sampling Registry](../configs/agent-sampling-registry.md) for citations.
 
 ### Model Precision Options
 
@@ -218,4 +218,4 @@ See [Model Registry](../models/model-registry.md#high-quality-setup-recommended-
 ## See Also
 
 - [data-splits-overview.md](./data-splits-overview.md) - Detailed split documentation
-- [agent-sampling-registry.md](../reference/agent-sampling-registry.md) - Sampling parameters (paper leaves some unspecified)
+- [Agent Sampling Registry](../configs/agent-sampling-registry.md) - Sampling parameters (paper leaves some unspecified)

@@ -105,5 +105,5 @@ Spec 37 is **not** a retrieval-quality fix. It does not change similarity, filte
 - reduce the chance of query embedding timeouts
 
 See also:
-- Retrieval debugging: `docs/guides/debugging-retrieval-quality.md`
-- Feature index: `docs/reference/features.md`
+- Retrieval debugging: `docs/embeddings/debugging-retrieval-quality.md`
+- Feature index: `docs/pipeline-internals/features.md`

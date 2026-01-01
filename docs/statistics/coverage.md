@@ -193,7 +193,7 @@ Plausible contributors to coverage differences include:
 
 ## Related Documentation
 
-- [clinical-understanding.md](./clinical-understanding.md) - How the system works
-- [reproduction-results.md](../results/reproduction-results.md) - Historical run notes
-- [agent-sampling-registry.md](../reference/agent-sampling-registry.md) - Sampling parameters (paper leaves some unspecified)
-- [metrics-and-evaluation.md](../statistics/metrics-and-evaluation.md) - Exact metric definitions + output schema
+- [Clinical Understanding](../clinical/clinical-understanding.md) - How the system works
+- [Reproduction Results](../results/reproduction-results.md) - Historical run notes
+- [Agent Sampling Registry](../configs/agent-sampling-registry.md) - Sampling parameters (paper leaves some unspecified)
+- [Metrics and Evaluation](metrics-and-evaluation.md) - Exact metric definitions + output schema

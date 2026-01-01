@@ -34,7 +34,7 @@ From `docs/results/run-history.md` (see Run 3 / Run 5):
 When abstention/coverage differs across modes, raw MAE comparisons are invalid.
 
 See:
-- `docs/reference/statistical-methodology-aurc-augrc.md`
+- `docs/statistics/statistical-methodology-aurc-augrc.md`
 - `docs/statistics/metrics-and-evaluation.md`
 
 ---
@@ -74,14 +74,14 @@ Few-shot retrieval can only be meaningfully evaluated after chunk labels are cor
 - Enable with: `EMBEDDING_REFERENCE_SCORE_SOURCE=chunk`
 
 See:
-- `docs/data/chunk-scoring.md`
-- `docs/guides/crag-validation-guide.md` (Spec 36; optional after chunk scores exist)
+- `docs/embeddings/chunk-scoring.md`
+- `docs/statistics/crag-validation-guide.md` (Spec 36; optional after chunk scores exist)
 
 ---
 
 ## Related Docs
 
-- Feature defaults: `docs/reference/features.md`
+- Feature defaults: `docs/pipeline-internals/features.md`
 - Configuration philosophy: `docs/configs/configuration-philosophy.md`
-- Retrieval debugging: `docs/guides/debugging-retrieval-quality.md`
-- Batch query embedding: `docs/guides/batch-query-embedding.md`
+- Retrieval debugging: `docs/embeddings/debugging-retrieval-quality.md`
+- Batch query embedding: `docs/embeddings/batch-query-embedding.md`

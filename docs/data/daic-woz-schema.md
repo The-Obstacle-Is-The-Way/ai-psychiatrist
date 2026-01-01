@@ -443,6 +443,6 @@ When working with data, verify:
 
 ## See Also
 
-- [embedding-generation.md](../guides/embedding-generation.md) - Generating embeddings safely (fail-fast)
-- [embeddings-explained.md](../concepts/embeddings-explained.md) - Few-shot retrieval concepts
+- [Embedding generation](../embeddings/embedding-generation.md) - Generating embeddings safely (fail-fast)
+- [Embeddings explained](../embeddings/embeddings-explained.md) - Few-shot retrieval concepts
 - [Model Registry](../models/model-registry.md) - Embedding model options

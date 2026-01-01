@@ -181,7 +181,7 @@ For each item with evidence:
    - Spec 36: CRAG reference validation (`accept`/`reject`)
 5. **Format the references** into a unified `<Reference Examples>` block (Spec 31 + Spec 33 XML fix)
 
-See: `docs/reference/features.md` and `docs/concepts/few-shot-prompt-format.md`.
+See: `docs/pipeline-internals/features.md` and `docs/embeddings/few-shot-prompt-format.md`.
 
 ```text
 Query: "i don't enjoy anything anymore, nothing seems fun"
@@ -227,7 +227,7 @@ The agent generates scores with reasoning:
 - Few-shot MAE: 0.619 (22% lower item-level MAE vs zero-shot)
 - MedGemma few-shot MAE: 0.505 (Appendix F alternative; better MAE but fewer predictions overall)
 
-Note: these MAE values are **conditional on non-N/A items**. When coverages differ across modes, system-level comparisons should use coverage-aware selective prediction metrics (AURC/AUGRC); see `docs/reference/statistical-methodology-aurc-augrc.md`.
+Note: these MAE values are **conditional on non-N/A items**. When coverages differ across modes, system-level comparisons should use coverage-aware selective prediction metrics (AURC/AUGRC); see `docs/statistics/statistical-methodology-aurc-augrc.md`.
 
 ---
 
@@ -375,5 +375,5 @@ For local reproduction runtime measurements, see `docs/results/reproduction-resu
 ## See Also
 
 - [Architecture](./architecture.md) - System design details
-- [PHQ-8](../concepts/phq8.md) - Understanding the assessment scale
+- [PHQ-8](../clinical/phq8.md) - Understanding the assessment scale
 - [Configuration](../configs/configuration.md) - All settings

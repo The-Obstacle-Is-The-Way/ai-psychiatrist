@@ -266,5 +266,5 @@ uv run python scripts/reproduce_results.py --split dev
 ## See Also
 
 - [daic-woz-schema.md](./daic-woz-schema.md) - Full dataset schema
-- [agent-sampling-registry.md](../reference/agent-sampling-registry.md) - Sampling parameters (paper leaves some unspecified)
+- [Agent Sampling Registry](../configs/agent-sampling-registry.md) - Sampling parameters (paper leaves some unspecified)
 - [reproduction-results.md](../results/reproduction-results.md) - Reproduction status

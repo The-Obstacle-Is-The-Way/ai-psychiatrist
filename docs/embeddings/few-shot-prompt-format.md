@@ -101,6 +101,6 @@ If you need strict notebook parity for historical comparison, treat that as a se
 
 ## Related Docs
 
-- Retrieval pipeline (conceptual): `docs/concepts/embeddings-explained.md`
-- Retrieval debugging: `docs/guides/debugging-retrieval-quality.md`
-- Feature index: `docs/reference/features.md`
+- [Embeddings and few-shot retrieval](embeddings-explained.md)
+- [Retrieval debugging](debugging-retrieval-quality.md)
+- [Feature reference](../pipeline-internals/features.md)

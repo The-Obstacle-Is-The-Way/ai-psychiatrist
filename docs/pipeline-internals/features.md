@@ -9,7 +9,7 @@ This page is the canonical, non-archive reference for implemented features that 
 - **evaluation metrics**
 - **fail-fast / reliability semantics**
 
-If `docs/archive/` disappeared tomorrow, this page (and the linked docs under `docs/`) should still be sufficient to run, debug, and interpret experiments.
+If `docs/_archive/` disappeared tomorrow, this page (and the linked docs under `docs/`) should still be sufficient to run, debug, and interpret experiments.
 
 ---
 
@@ -51,7 +51,7 @@ When this page says “default”, it refers to **code defaults** unless explici
 |---------|------|-------|----------|
 | Fail-fast embedding generation | 40 | `scripts/generate_embeddings.py` | Default strict mode crashes on missing/corrupt transcripts or embedding failures; `--allow-partial` is debug-only and exits `2` with a `{output}.partial.json` skip manifest |
 
-See: `docs/guides/embedding-generation.md`.
+See: [Embedding generation](../embeddings/embedding-generation.md).
 
 ---
 
@@ -62,8 +62,8 @@ See: `docs/guides/embedding-generation.md`.
 | Selective prediction metrics | 25 | `scripts/evaluate_selective_prediction.py`, `src/ai_psychiatrist/metrics/*` | Comparing MAE across different coverages is invalid; we report AURC/AUGRC + bootstrap CIs |
 
 See:
-- `docs/reference/statistical-methodology-aurc-augrc.md` (why AURC/AUGRC)
-- `docs/statistics/metrics-and-evaluation.md` (exact definitions + output schema)
+- [Statistical methodology (AURC/AUGRC)](../statistics/statistical-methodology-aurc-augrc.md) (why AURC/AUGRC)
+- [Metrics and evaluation](../statistics/metrics-and-evaluation.md) (exact definitions + output schema)
 
 ---
 
@@ -89,19 +89,19 @@ Goal: minimize known failure modes (label mismatch, wrong-item retrieval, irrele
 - `EMBEDDING_MAX_REFERENCE_CHARS_PER_ITEM=500`
 - `EMBEDDING_ENABLE_REFERENCE_VALIDATION=true`
 
-See: `docs/guides/preflight-checklist-few-shot.md`.
+See: [Preflight checklist (few-shot)](../preflight-checklist/preflight-checklist-few-shot.md).
 
 ---
 
 ## Where To Go Next
 
-- Configuration: `docs/configs/configuration.md`
-- Run output schema: `docs/reference/run-output-schema.md`
-- Few-shot prompt format: `docs/concepts/few-shot-prompt-format.md`
-- Batch query embedding: `docs/guides/batch-query-embedding.md`
-- Retrieval debugging: `docs/guides/debugging-retrieval-quality.md`
-- Item-tagging setup: `docs/guides/item-tagging-setup.md`
-- Chunk scoring setup + schema: `docs/data/chunk-scoring.md`
-- CRAG validation guide: `docs/guides/crag-validation-guide.md`
-- Error-handling philosophy: `docs/concepts/error-handling.md`
-- Exception reference: `docs/reference/exceptions.md`
+- [Configuration](../configs/configuration.md)
+- [Run output schema](../results/run-output-schema.md)
+- [Few-shot prompt format](../embeddings/few-shot-prompt-format.md)
+- [Batch query embedding](../embeddings/batch-query-embedding.md)
+- [Retrieval debugging](../embeddings/debugging-retrieval-quality.md)
+- [Item tagging setup](../embeddings/item-tagging-setup.md)
+- [Chunk scoring (Spec 35)](../embeddings/chunk-scoring.md)
+- [CRAG validation guide](../statistics/crag-validation-guide.md)
+- [Error-handling philosophy](../developer/error-handling.md)
+- [Exception reference](../developer/exceptions.md)

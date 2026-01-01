@@ -163,7 +163,7 @@ EMBEDDING_ALLOW_CHUNK_SCORES_PROMPT_HASH_MISMATCH=true
 
 References whose `reference_score` is `null` are omitted from the few-shot prompt formatting. This can reduce the number of examples surfaced for some items.
 
-See: `docs/concepts/few-shot-prompt-format.md`.
+See: `docs/embeddings/few-shot-prompt-format.md`.
 
 ---
 
@@ -182,6 +182,6 @@ If you need strict fail-fast chunk scoring, add it as a dedicated spec (mirrorin
 
 ## Related Docs
 
-- Embedding generation: `docs/guides/embedding-generation.md`
-- Item tags: `docs/guides/item-tagging-setup.md`
-- CRAG validation: `docs/guides/crag-validation-guide.md`
+- Embedding generation: `docs/embeddings/embedding-generation.md`
+- Item tags: `docs/embeddings/item-tagging-setup.md`
+- CRAG validation: `docs/statistics/crag-validation-guide.md`

@@ -66,11 +66,11 @@ When a run fails:
 2. Group by `error_type` in logs.
 3. Check whether the failure is “enabled feature broken” (should crash) vs “disabled feature” (should not touch files).
 
-See: `docs/guides/debugging-retrieval-quality.md`.
+See: [Retrieval debugging](../embeddings/debugging-retrieval-quality.md).
 
 ---
 
 ## Related Docs
 
-- Exception taxonomy: `docs/reference/exceptions.md`
-- Feature index: `docs/reference/features.md`
+- [Exception taxonomy](exceptions.md)
+- [Feature reference](../pipeline-internals/features.md)

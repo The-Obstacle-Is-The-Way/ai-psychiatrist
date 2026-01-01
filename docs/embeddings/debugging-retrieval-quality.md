@@ -93,8 +93,8 @@ Optional but required when features are enabled:
 - `{emb}.chunk_scores.json` + `{emb}.chunk_scores.meta.json` if `EMBEDDING_REFERENCE_SCORE_SOURCE=chunk`
 
 See:
-- `docs/guides/embedding-generation.md`
-- `docs/data/chunk-scoring.md`
+- `docs/embeddings/embedding-generation.md`
+- `docs/embeddings/chunk-scoring.md`
 
 ---
 
@@ -120,6 +120,6 @@ Use audit logs to disambiguate.
 
 ## Related Docs
 
-- Feature index: `docs/reference/features.md`
-- Few-shot prompt format: `docs/concepts/few-shot-prompt-format.md`
-- Error-handling philosophy: `docs/concepts/error-handling.md`
+- Feature index: `docs/pipeline-internals/features.md`
+- Few-shot prompt format: `docs/embeddings/few-shot-prompt-format.md`
+- Error-handling philosophy: `docs/developer/error-handling.md`

@@ -14,15 +14,15 @@ Implementation-ready (or implementation-planned) specifications for changes that
 
 Implemented specs are distilled into canonical (non-archive) documentation under `docs/`:
 
-- Feature index + defaults: [features.md](../reference/features.md)
-- Few-shot reference prompt format: [few-shot-prompt-format.md](../concepts/few-shot-prompt-format.md)
-- Retrieval debugging workflow: [debugging-retrieval-quality.md](../guides/debugging-retrieval-quality.md)
-- Item-tag filtering setup + schema: [item-tagging-setup.md](../guides/item-tagging-setup.md)
-- Chunk scoring setup + schema: [chunk-scoring.md](../data/chunk-scoring.md)
-- CRAG validation setup: [crag-validation-guide.md](../guides/crag-validation-guide.md)
-- Embedding generation (fail-fast + partial): [embedding-generation.md](../guides/embedding-generation.md)
-- Error handling philosophy: [error-handling.md](../concepts/error-handling.md)
-- Exception taxonomy: [exceptions.md](../reference/exceptions.md)
+- Feature index + defaults: [features.md](../pipeline-internals/features.md)
+- Few-shot reference prompt format: [few-shot-prompt-format.md](../embeddings/few-shot-prompt-format.md)
+- Retrieval debugging workflow: [debugging-retrieval-quality.md](../embeddings/debugging-retrieval-quality.md)
+- Item-tag filtering setup + schema: [item-tagging-setup.md](../embeddings/item-tagging-setup.md)
+- Chunk scoring setup + schema: [chunk-scoring.md](../embeddings/chunk-scoring.md)
+- CRAG validation setup: [crag-validation-guide.md](../statistics/crag-validation-guide.md)
+- Embedding generation (fail-fast + partial): [embedding-generation.md](../embeddings/embedding-generation.md)
+- Error handling philosophy: [error-handling.md](../developer/error-handling.md)
+- Exception taxonomy: [exceptions.md](../developer/exceptions.md)
 - Metrics definitions + output schema: [metrics-and-evaluation.md](../statistics/metrics-and-evaluation.md)
 - Configuration philosophy: [configuration-philosophy.md](../configs/configuration-philosophy.md)
 

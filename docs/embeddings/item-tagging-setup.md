@@ -72,5 +72,5 @@ Constraints:
 
 ## Related Docs
 
-- Embedding generation: `docs/guides/embedding-generation.md`
-- Retrieval debugging: `docs/guides/debugging-retrieval-quality.md`
+- Embedding generation: `docs/embeddings/embedding-generation.md`
+- Retrieval debugging: `docs/embeddings/debugging-retrieval-quality.md`

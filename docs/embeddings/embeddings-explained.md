@@ -379,6 +379,6 @@ Appetite coverage varies by run/model; see `docs/results/run-history.md` for con
 
 ## Related Documentation
 
-- [extraction-mechanism.md](./extraction-mechanism.md) - How evidence is found
-- [coverage-explained.md](./coverage-explained.md) - Why some items get N/A
-- [clinical-understanding.md](./clinical-understanding.md) - Clinical context
+- [Evidence extraction](../pipeline-internals/evidence-extraction.md) - How evidence is found
+- [Coverage explained](../statistics/coverage.md) - Why some items get N/A
+- [Clinical understanding](../clinical/clinical-understanding.md) - Clinical context

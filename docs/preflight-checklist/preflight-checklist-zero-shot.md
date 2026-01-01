@@ -76,7 +76,7 @@ Zero-shot mode uses NO reference embeddings - the model scores symptoms from tra
 
 ### 2.2 Sampling Parameters
 
-**Reference**: GAP-001b/c, [Agent Sampling Registry](../reference/agent-sampling-registry.md)
+**Reference**: GAP-001b/c, [Agent Sampling Registry](../configs/agent-sampling-registry.md)
 
 - [ ] **Temperature is zero** (clinical AI best practice):
   ```bash

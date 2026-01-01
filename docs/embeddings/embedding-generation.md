@@ -76,7 +76,7 @@ uv run python scripts/generate_embeddings.py --split paper-train --write-item-ta
 
 This writes `{name}.tags.json`.
 
-See: `docs/guides/item-tagging-setup.md`.
+See: `docs/embeddings/item-tagging-setup.md`.
 
 ---
 
@@ -98,5 +98,5 @@ ls -la data/embeddings/{name}.tags.json
 
 ## Related Docs
 
-- Few-shot preflight: `docs/guides/preflight-checklist-few-shot.md`
-- Feature index: `docs/reference/features.md`
+- Few-shot preflight: `docs/preflight-checklist/preflight-checklist-few-shot.md`
+- Feature index: `docs/pipeline-internals/features.md`

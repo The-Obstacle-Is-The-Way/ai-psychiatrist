@@ -199,7 +199,7 @@ Output artifacts are stored locally under `data/outputs/` (gitignored due to DAI
 
 ### Temperature
 
-Note: The paper text does not specify exact sampling settings; the effects below are heuristics and can vary by model/backend. See `docs/reference/agent-sampling-registry.md`.
+Note: The paper text does not specify exact sampling settings; the effects below are heuristics and can vary by model/backend. See [Agent Sampling Registry](../configs/agent-sampling-registry.md).
 
 | Value | Effect on Extraction |
 |-------|---------------------|
@@ -244,6 +244,6 @@ Note: The paper text does not specify exact sampling settings; the effects below
 
 ## Related Documentation
 
-- [coverage-explained.md](./coverage-explained.md) - Plain-language coverage explanation
-- [clinical-understanding.md](./clinical-understanding.md) - Clinical context
-- [phq8.md](./phq8.md) - PHQ-8 questionnaire details
+- [Coverage explained](../statistics/coverage.md) - Plain-language coverage explanation
+- [Clinical understanding](../clinical/clinical-understanding.md) - Clinical context
+- [PHQ-8](../clinical/phq8.md) - PHQ-8 questionnaire details

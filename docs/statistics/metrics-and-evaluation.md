@@ -234,5 +234,5 @@ uv run python scripts/evaluate_selective_prediction.py \
 
 ## Related Docs
 
-- Why AURC/AUGRC matter: `docs/reference/statistical-methodology-aurc-augrc.md`
+- Why AURC/AUGRC matter: `docs/statistics/statistical-methodology-aurc-augrc.md`
 - Run output format / provenance: `docs/results/run-history.md`

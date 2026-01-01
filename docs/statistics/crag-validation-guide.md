@@ -62,4 +62,4 @@ Use retrieval audit logs (Spec 32) to see:
 - which references survived CRAG filtering
 - similarities and reference scores
 
-See: `docs/guides/debugging-retrieval-quality.md`.
+See: `docs/embeddings/debugging-retrieval-quality.md`.
