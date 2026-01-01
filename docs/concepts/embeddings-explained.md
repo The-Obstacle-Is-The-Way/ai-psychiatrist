@@ -1,4 +1,4 @@
-# Embeddings and Few-Shot Learning: A Plain-Language Guide
+# Embeddings and Few-Shot Retrieval: A Plain-Language Guide
 
 **Audience**: Clinicians and non-CS folks who want to understand the "magic"
 **Last Updated**: 2025-12-29
@@ -9,7 +9,7 @@
 
 "How does the system find similar patients to help score new ones?"
 
-This document explains **embeddings** and **few-shot learning** without requiring any computer science background.
+This document explains **embeddings** and **few-shot retrieval** without requiring any computer science background.
 
 ---
 
@@ -131,7 +131,7 @@ REFERENCE STORE
 
 ---
 
-## Part 4: Few-Shot Learning
+## Part 4: Few-Shot Retrieval
 
 ### The Analogy: "Show, Don't Tell"
 

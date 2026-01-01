@@ -83,7 +83,7 @@ Note: the code already supports a safe default when `EMBEDDING_VALIDATION_MODEL`
 
 The paper's few-shot methodology has a **fundamental flaw** (see `HYPOTHESIS-FEWSHOT-DESIGN-FLAW.md`):
 
-```
+```text
 Participant 300 has PHQ8_Sleep = 2
 
 Chunk 5 (about career goals):

@@ -348,9 +348,11 @@ Backfill is **OFF by default** (paper-text parity mode):
 # Default: paper-text parity mode (pure LLM)
 # QUANTITATIVE_ENABLE_KEYWORD_BACKFILL=false  # (this is the default)
 
-# Enable backfill for higher coverage
-QUANTITATIVE_ENABLE_KEYWORD_BACKFILL=true
+# Historical ablation only (deprecated):
+# QUANTITATIVE_ENABLE_KEYWORD_BACKFILL=true
 ```
+
+> ⚠️ **Deprecated**: Enabling backfill is not recommended. It was used for historical ablation studies only. Keep it OFF for all new runs.
 
 ---
 

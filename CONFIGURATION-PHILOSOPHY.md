@@ -158,7 +158,7 @@ These bypass safety checks. Require explicit acknowledgment:
 
 When adding a new setting, ask:
 
-```
+```text
 1. Is this CORRECT BEHAVIOR vs BROKEN BEHAVIOR?
    → Correct = bake it in, no flag
    → Broken = require explicit opt-in (for legacy only)

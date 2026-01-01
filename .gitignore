@@ -226,3 +226,4 @@ data/*
 
 # External reference repos (local only)
 _reference/
+*.bak

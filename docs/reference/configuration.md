@@ -340,7 +340,9 @@ These settings control the quantitative assessment behavior (evidence extraction
 
 **Default Behavior (Paper Parity):**
 
-Keyword backfill is **OFF by default** to match paper methodology (~50% coverage). Set `QUANTITATIVE_ENABLE_KEYWORD_BACKFILL=true` to enable higher coverage (~74%) at the cost of diverging from the paper.
+Keyword backfill is **OFF by default** to match paper methodology (~50% coverage).
+
+> ⚠️ **Deprecated**: Keyword backfill is a historical ablation feature. Enabling it is not recommended for new runs. See `POST-ABLATION-DEFAULTS.md` in the project root for rationale.
 
 See [Backfill Explained](../concepts/backfill-explained.md) for how it works and [Paper Parity Guide](../guides/paper-parity-guide.md) for reproduction guidance.
 

@@ -191,7 +191,9 @@ Other plausible contributors include:
 To turn this from a hypothesis into a conclusion, run an ablation with backfill
 disabled vs enabled using the same split and model backend:
 - Default (paper-text parity): `QUANTITATIVE_ENABLE_KEYWORD_BACKFILL=false`
-- Higher coverage: `QUANTITATIVE_ENABLE_KEYWORD_BACKFILL=true`
+- Higher coverage (deprecated): `QUANTITATIVE_ENABLE_KEYWORD_BACKFILL=true`
+
+> ⚠️ **Deprecated**: Keyword backfill is a historical ablation feature only. See [Backfill Explained](backfill-explained.md) for details.
 
 ---
 
