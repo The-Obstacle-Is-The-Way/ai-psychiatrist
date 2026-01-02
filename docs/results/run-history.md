@@ -313,7 +313,7 @@ Spec 31/32 improved few-shot by ~10%, proving formatting matters. Retrieval qual
 
 **Run 7 Conclusion**: Spec 35 chunk-level scoring improved few-shot AURC by 29% (0.213 → 0.151). Gap to zero-shot closed to 9% (CIs overlap).
 
-**Run 8 Conclusion**: Participant-only transcript preprocessing reaches paper MAE_item parity, but reduces `Cmax` substantially; next work is improving coverage without losing the AURC gains.
+**Run 8 Conclusion**: Participant-only transcript preprocessing reaches paper MAE_item parity, but reduces `Cmax` substantially; next work is improving confidence signals for AURC/AUGRC (Spec 046: `docs/_specs/spec-046-selective-prediction-confidence-signals.md`) and then revisiting coverage.
 
 ---
 

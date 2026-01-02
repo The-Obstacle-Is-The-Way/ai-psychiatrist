@@ -4,7 +4,7 @@ Implementation-ready (or implementation-planned) specifications for changes that
 
 ## Ready to Implement
 
-- (none)
+- [Spec 046: Improve Selective Prediction Confidence Signals (AURC/AUGRC)](spec-046-selective-prediction-confidence-signals.md)
 
 ## Implemented (Active Specs)
 

@@ -8,7 +8,7 @@
 
 ## Executive Summary
 
-**The Problem**: In Run 8, few-shot prompting achieved better MAE (0.609 vs 0.776) than zero-shot, but AUGRC remained identical (0.031 for both modes). This means **few-shot improves prediction accuracy but doesn't improve the model's ability to know when to abstain**.
+**The Problem**: In Run 8, few-shot prompting achieved better MAE_item (0.609 vs 0.776) than zero-shot, but **selective prediction quality is statistically indistinguishable** between modes under the current confidence signal (evidence counts).
 
 **Root Cause**: Confidence is currently based on **evidence count** (number of quotes extracted by the LLM), which is independent of the few-shot retrieval system. The retrieval similarity scores (cosine similarity 0-1) are computed but **not used** as confidence signals.
 
@@ -25,7 +25,7 @@ Transcript
   ↓
 Evidence Extraction (LLM finds quotes per PHQ-8 item)
   ↓
-confidence = len(llm_evidence_quotes)  ← CURRENT SIGNAL
+confidence = llm_evidence_count (or llm + keyword evidence)  ← CURRENT SIGNAL
   ↓
 AUGRC computed by sorting predictions by confidence
 ```
@@ -56,91 +56,72 @@ sim = (1.0 + raw_cos) / 2.0  # Transform to [0, 1]
 
 This similarity is stored in `SimilarityMatch.similarity` but **never flows to confidence**.
 
-### 1.3 Run 8 Results (The Evidence)
+### 1.3 Run 8 Results (Ground Truth)
 
-| Mode | MAE_item | AURC | AUGRC | Cmax |
-|------|----------|------|-------|------|
-| Zero-shot | 0.776 | 0.141 | **0.031** | 48.8% |
-| Few-shot | 0.609 | 0.125 | **0.031** | 50.9% |
+Run 8 artifacts (SSOT):
+- `docs/results/run-history.md` (run narrative)
+- `data/outputs/selective_prediction_metrics_20260102T132843Z.json` (zero-shot)
+- `data/outputs/selective_prediction_metrics_20260102T132902Z.json` (few-shot)
+- `data/outputs/selective_prediction_metrics_20260102T132930Z_paired.json` (paired overlap N=40)
+
+**Single-mode selective prediction metrics** (`--loss abs_norm`, confidence=`llm`):
+
+| Mode | MAE_item | AURC_full | AUGRC_full | Cmax |
+|------|----------|----------:|-----------:|-----:|
+| Zero-shot | 0.776 | 0.141432 | 0.031276 | 48.78% |
+| Few-shot | 0.609 | 0.124751 | 0.030575 | 50.94% |
+
+**Paired comparison (overlap N=40, `--intersection-only`)**:
+- ΔAURC_full (few − zero) = `-0.0197` (CI95 `[-0.0529, +0.0139]`)
+- ΔAUGRC_full (few − zero) = `-0.0021` (CI95 `[-0.0127, +0.0079]`)
+
+Interpretation: differences are small relative to uncertainty; **confidence ranking quality does not materially change**.
 
 **Interpretation**:
 - MAE improved 21.5% with few-shot (0.776 → 0.609)
-- AUGRC is **identical** (0.031 for both)
-- Few-shot predicts better but doesn't "know" which predictions to trust more
+- AUGRC is effectively unchanged (overlapping CIs; paired ΔAUGRC CI includes 0)
+- Few-shot predicts better but does not meaningfully improve confidence ranking under the current signal
 
 ---
 
-## Part 2: 2025-2026 State-of-the-Art Techniques
+## Part 2: Candidate Techniques (Recent UQ + Selective Prediction Literature)
 
-### 2.1 LM-Polygraph Framework (TACL 2025)
+External web access is not available in this environment, so the specific paper links below are **not re-validated here**. Treat them as starting points for an external agent to verify.
 
-**Source**: [Benchmarking Uncertainty Quantification Methods for Large Language Models with LM-Polygraph](https://direct.mit.edu/tacl/article/doi/10.1162/tacl_a_00737)
+### 2.1 Retrieval-Grounded Signals (RAG-specific)
 
-Key findings from the benchmark:
-- **Semantic Entropy** outperforms naive entropy for text generation
-- **SAR (Shifting Attention to Relevance)** is consistently effective across tasks
-- **Normalization as calibration**: Transform raw uncertainty → expected quality metric
+Key idea: if the answer depends on retrieved context, the *quality of retrieval* is a strong confidence proxy.
 
-**Applicable Methods**:
-1. Token-level entropy (requires logit access)
-2. Self-consistency sampling (multiple LLM calls, aggregate agreement)
-3. Normalized confidence via binned calibration
+Signals that exist in this repo today (or can be added with low risk):
+- mean/max retrieval similarity per PHQ-8 item (already computed in few-shot)
+- reference score agreement / dispersion across retrieved examples (available when chunk scores are enabled)
+- reference validator pass/fail rate (Spec 36; optional)
 
-### 2.2 Semantic Entropy (Nature 2024, ACL 2025 Extensions)
+### 2.2 Post-Hoc Confidence Calibration (Black-box friendly)
 
-**Source**: [Detecting hallucinations in large language models using semantic entropy](https://www.nature.com/articles/s41586-024-07421-0)
+Key idea: treat confidence estimation as its own supervised problem.
+- Fit a calibrator on a held-out split (e.g., `paper-val`) mapping observable signals → probability of correctness.
+- Use the calibrated score as the ranking signal for the RC curve.
 
-**Concept**: Cluster responses by meaning, compute entropy over clusters. Low semantic entropy = high confidence in the meaning.
+Practical calibrators that are easy to ship and audit:
+- logistic regression / Platt scaling
+- isotonic regression (monotone, avoids “probability” assumptions)
 
-**2025 Extension - Beyond Semantic Entropy**:
-- [Beyond Semantic Entropy: Boosting LLM Uncertainty Quantification with Pairwise Semantic Similarity](https://aclanthology.org/2025.findings-acl.234/)
-- Addresses intra-cluster spread and inter-cluster distance
-- Better calibration for longer responses
+### 2.3 Disagreement-Based Uncertainty (Ensembles / Self-Consistency)
 
-**Applicability**: Would require multiple LLM samples per item (expensive but effective).
+Key idea: if multiple “independent” prompts disagree, uncertainty is higher.
 
-### 2.3 UniCR Framework (Risk-Controlled Refusal, 2025)
+Implementation options:
+- multiple prompt templates (deterministic) and compare predicted scores
+- multiple models (if available) and compare scores
 
-**Source**: [Trusted Uncertainty in Large Language Models: A Unified Framework for Confidence Calibration and Risk-Controlled Refusal](https://arxiv.org/html/2509.01455)
+Trade-off: higher runtime cost.
 
-**Components**:
-1. Multi-evidence uncertainty signals (retrieval quality + LLM confidence)
-2. Calibration head with temperature scaling
-3. Conformal Risk Control (CRC) for coverage guarantees
+### 2.4 Conformal Risk Control (Optional, Guarantees-focused)
 
-**Key Innovation**: Combines heterogeneous evidence into a single calibrated probability.
+Key idea: calibrate a thresholding rule with finite-sample guarantees (risk or coverage). This is most useful if we want to *choose an operating point* (e.g., “risk ≤ 0.2”) rather than optimize integrated area metrics.
 
-### 2.4 QuCo-RAG (Corpus-Based Uncertainty)
-
-**Source**: [QuCo-RAG: Quantifying Uncertainty from the Pre-training Corpus for Dynamic Retrieval-Augmented Generation](https://arxiv.org/html/2512.19134v1)
-
-**Key Insight**: LLM internal confidence (logits, token probability) is poorly calibrated. Corpus statistics provide better-grounded confidence.
-
-**For our system**: Retrieval similarity is a corpus-grounded signal that should improve calibration.
-
-### 2.5 Sufficient Context Detection (ICLR 2025)
-
-**Source**: [Deeper insights into retrieval augmented generation: The role of sufficient context](https://research.google/blog/deeper-insights-into-retrieval-augmented-generation-the-role-of-sufficient-context/)
-
-**Key Finding**: It's possible to know when an LLM has enough context to answer correctly.
-
-**Selective Generation**: Combines sufficient context signal + model's self-rated confidence for abstention decisions.
-
-### 2.6 Ensemble Methods (UQLM Toolkit, 2025)
-
-**Source**: [Uncertainty Quantification for Language Models: A Suite of Black-Box, White-Box, LLM Judge, and Ensemble Scorers](https://arxiv.org/html/2504.19254)
-
-**Tunable Ensemble**: Combine multiple confidence signals (evidence count, retrieval similarity, LLM verbalized confidence) with learned weights.
-
-**Key Result**: Tunable ensemble generally outperforms individual components.
-
-### 2.7 Temperature Scaling / Post-Hoc Calibration
-
-**Source**: [Calibrating Language Models With Adaptive Temperature Scaling](https://openreview.net/forum?id=BgfGqNpoMi)
-
-**Concept**: Learn a single temperature parameter to rescale logits, minimizing calibration error on held-out data.
-
-**Adaptive Temperature Scaling**: Predict temperature per token based on features.
+---
 
 ---
 
@@ -154,7 +135,7 @@ Key findings from the benchmark:
 
 **Current State**: Similarity computed but discarded after ranking.
 
-**Proposed Change**: Incorporate retrieval similarity into confidence.
+**Proposed Change**: Persist per-item retrieval similarity statistics into `item_signals`, and add a new confidence variant that uses them.
 
 ```python
 # Option A: Replace evidence count with average retrieval similarity
@@ -171,7 +152,7 @@ confidence = evidence_count * mean_similarity
 - `src/ai_psychiatrist/agents/quantitative.py:250-259` (store similarity in ItemAssessment)
 - `scripts/evaluate_selective_prediction.py:182-192` (parse new confidence)
 
-**Rationale**: Retrieval similarity is a corpus-grounded signal (QuCo-RAG finding). High similarity = retrieved examples are truly relevant = higher confidence in the prediction.
+**Rationale (first principles)**: if the retrieved examples are semantically close to the participant’s evidence, we expect the scoring prompt to be better grounded.
 
 ### 3.2 Short-Term: Add Verbalized Confidence Extraction
 
@@ -191,8 +172,6 @@ For each PHQ-8 item, provide:
 
 **Calibration Requirement**: LLM verbalized confidence is often overconfident. Apply temperature scaling or isotonic regression on a validation set.
 
-**Reference**: [Calibrating Verbalized Probabilities for Large Language Models](https://arxiv.org/html/2410.06707v1)
-
 ### 3.3 Medium-Term: Multi-Evidence Ensemble (UniCR-Style)
 
 **Effort**: High
@@ -203,8 +182,8 @@ For each PHQ-8 item, provide:
 
 **Input Signals**:
 1. `llm_evidence_count` (current)
-2. `mean_retrieval_similarity` (from few-shot)
-3. `max_retrieval_similarity` (best match quality)
+2. `retrieval_similarity_mean` (from few-shot)
+3. `retrieval_similarity_max` (best match quality)
 4. `reference_score_variance` (disagreement among retrieved examples)
 5. `llm_verbalized_confidence` (if extracted)
 
@@ -266,8 +245,9 @@ To validate any improvement, run the following ablations:
 
 ### Phase 1: Quick Win (Week 1)
 
-1. **Spec 40: Retrieval Similarity Confidence**
-   - Add `mean_retrieval_similarity` to `ItemAssessment`
+1. **Spec 046: Retrieval Similarity Confidence**
+   - See: `docs/_specs/spec-046-selective-prediction-confidence-signals.md`
+   - Add `retrieval_similarity_mean` to `ItemAssessment`
    - Update `evaluate_selective_prediction.py` to use it as confidence
    - Run ablation on paper-test split
    - Compare AUGRC vs baseline
@@ -276,7 +256,7 @@ To validate any improvement, run the following ablations:
 
 ### Phase 2: Verbalized Confidence (Week 2-3)
 
-1. **Spec 41: LLM Confidence Extraction**
+1. **Spec (proposed): LLM Confidence Extraction**
    - Modify quantitative scoring prompt to request confidence
    - Parse confidence from LLM output
    - Apply temperature scaling calibration
@@ -285,7 +265,7 @@ To validate any improvement, run the following ablations:
 
 ### Phase 3: Ensemble Calibration (Week 4+)
 
-1. **Spec 42: Multi-Signal Calibrator**
+1. **Spec (proposed): Multi-Signal Calibrator**
    - Train logistic regression on [evidence, similarity, verbalized] → correctness
    - Output calibrated probability as confidence
    - Evaluate on paper-test
@@ -294,19 +274,12 @@ To validate any improvement, run the following ablations:
 
 ## Part 6: Key References
 
-1. **LM-Polygraph Benchmark** (TACL 2025): [MIT Press](https://direct.mit.edu/tacl/article/doi/10.1162/tacl_a_00737)
-2. **Semantic Entropy** (Nature 2024): [Nature](https://www.nature.com/articles/s41586-024-07421-0)
-3. **Beyond Semantic Entropy** (ACL 2025): [ACL Anthology](https://aclanthology.org/2025.findings-acl.234/)
-4. **UniCR Framework** (2025): [arXiv](https://arxiv.org/abs/2509.01455)
-5. **QuCo-RAG** (2025): [arXiv](https://arxiv.org/abs/2512.19134)
-6. **Sufficient Context** (ICLR 2025): [Google Research Blog](https://research.google/blog/deeper-insights-into-retrieval-augmented-generation-the-role-of-sufficient-context/)
-7. **UQLM Toolkit** (2025): [arXiv](https://arxiv.org/abs/2504.19254)
-8. **Adaptive Temperature Scaling** (2024): [OpenReview](https://openreview.net/forum?id=BgfGqNpoMi)
-9. **Verbalized Probability Calibration** (2024): [arXiv](https://arxiv.org/abs/2410.06707)
-10. **KDD 2025 UQ Survey**: [ACM DL](https://dl.acm.org/doi/10.1145/3711896.3736569)
-11. **Why UE Methods Fall Short in RAG** (ACL 2025): [ACL Anthology](https://aclanthology.org/2025.findings-acl.852/) - Axiomatic analysis of UE deficiencies
-12. **AUGRC Definition** (Traub et al. 2024): [arXiv](https://arxiv.org/abs/2407.01032) - Foundational metric paper
-13. **AURC Population Characterization** (2024): [arXiv](https://arxiv.org/abs/2410.15361) - Theoretical foundations
+These are external links carried forward from earlier notes; **not revalidated offline**:
+
+1. **AUGRC definition / selective classification evaluation**: https://arxiv.org/abs/2407.01032
+2. **AURC population characterization**: https://arxiv.org/abs/2410.15361
+3. **LLM uncertainty baselines / semantic-entropy family**: https://www.nature.com/articles/s41586-024-07421-0
+4. **RAG uncertainty / retrieval sufficiency**: https://research.google/blog/deeper-insights-into-retrieval-augmented-generation-the-role-of-sufficient-context/
 
 ---
 
@@ -354,18 +327,7 @@ To validate any improvement, run the following ablations:
 
 ## Appendix B: Expected AUGRC Improvement Estimates
 
-Based on literature and our system characteristics:
-
-| Technique | Expected AUGRC Reduction | Confidence |
-|-----------|--------------------------|------------|
-| Retrieval similarity alone | 10-20% | Medium |
-| + Verbalized confidence | 20-40% | Medium-High |
-| + Multi-signal calibration | 30-50% | High |
-| + Semantic entropy | 40-60% | High (if affordable) |
-
-**Baseline**: AUGRC = 0.031 (Run 8)
-
-**Target**: AUGRC < 0.020 would represent a significant improvement in selective prediction quality.
+We do **not** have a defensible a-priori estimate for AUGRC gains without running ablations in this codebase. Treat improvement magnitude as an empirical question.
 
 ---
 

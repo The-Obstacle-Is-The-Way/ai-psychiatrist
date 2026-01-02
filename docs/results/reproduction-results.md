@@ -13,6 +13,7 @@ This page is a high-level, **current-state** summary. The canonical timeline + p
 - **Paper MAE_item parity achieved**: few-shot `0.609` vs paper `0.619`; zero-shot `0.776` vs paper `0.796`
 - **Selective prediction**: AURC/AUGRC are very similar between modes in Run 8 (paired ΔAURC CI overlaps 0), suggesting confidence/abstention quality is not materially different
 - **Tradeoff**: overall Cmax dropped to ~51% in Run 8 (vs ~66% in Run 7), indicating more abstention
+- **Next lever**: improve confidence signals for AURC/AUGRC (Spec 046: `docs/_specs/spec-046-selective-prediction-confidence-signals.md`)
 
 ---
 
