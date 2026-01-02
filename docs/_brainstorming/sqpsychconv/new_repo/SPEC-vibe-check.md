@@ -4,6 +4,7 @@
 **Version**: 1.0-draft
 **Date**: 2026-01-02
 **Status**: DRAFT - Awaiting Senior Review
+**Senior review prompt**: `docs/_brainstorming/sqpsychconv/new_repo/SENIOR-REVIEW-REQUEST-vibe-check.md`
 
 ---
 
@@ -27,11 +28,18 @@ Score SQPsychConv (2,090 synthetic therapy dialogues) with PHQ-8 labels using fr
 
 The system literally checks the "vibe" of therapy conversations to assess mental health severity. Also: it's memorable and the domain `vibe-check.ai` might be available.
 
+### Known Sharp Edges (Read First)
+
+- **SQPsychConv “train/test” splits may be identical** (observed in local exports for some variants). Treat HF splits as untrusted and implement a deterministic resplit based on `file_id`.
+- **DAIC-WOZ is evaluation-only**: it must not be redistributed, including derived artifacts (raw text, embeddings, etc.).
+- **LLM JSON failures can be deterministic at temperature=0**: do not rely on “retry until it parses” as the only mitigation.
+- **External facts drift** (pricing/model IDs/benchmarks): any time-sensitive values must be re-verified against provider SSOTs before implementation.
+
 ---
 
 ## 2. January 2026 Frontier Models
 
-### 2.1 Model Selection (Verified Jan 2026)
+### 2.1 Model Selection (Needs Re-Verification)
 
 | Role | Model | Model ID | Provider | Price (in/out per 1M) |
 |------|-------|----------|----------|----------------------|
@@ -468,9 +476,9 @@ workflow.add_conditional_edges(
 | Factor | PHQ-8 | PHQ-9 |
 |--------|-------|-------|
 | DAIC-WOZ alignment | Direct match (0-24 scale) | Scale mismatch (0-27) |
-| LLM safety refusals | None | 10-74% refusal rate on suicide items |
+| LLM safety refusals | Lower risk | Higher refusal risk for suicide-related content (varies by provider/policy) |
 | SQPsychConv coverage | N/A | Only 0.3% explicit mentions |
-| PHQ-9 correlation | r = 0.996 | Full scale |
+| PHQ-8/PHQ-9 total correlation | r = 0.996 | Total scores are near-equivalent |
 | Liability | Severity only | Suicide detection (high-stakes) |
 
 ### 6.2 PHQ-8 Items (0-3 Scale)
@@ -750,7 +758,7 @@ vibe-check/
 │       ├── preprocessing/
 │       │   ├── __init__.py
 │       │   ├── client_extractor.py   # Extract client utterances
-│       │   └── cleaner.py            # CJK removal, normalization
+│       │   └── cleaner.py            # Normalization + CJK detection (optional filtering)
 │       │
 │       └── export/
 │           ├── __init__.py
@@ -959,6 +967,7 @@ uv run python scripts/score_corpus.py \
 
 **Internal Sanity Checks**:
 
+- Record corpus integrity: `file_id` uniqueness, duplicate detection, and a deterministic split manifest (do not trust HF split names).
 - MDD dialogues should have higher mean PHQ-8 than control
 - Cronbach's α > 0.7 (internal consistency)
 - Arbitration rate < 30% (most items reach consensus)
@@ -1006,10 +1015,11 @@ uv run python scripts/evaluate_transfer.py \
 |------|------------|
 | **API rate limits** | `aiolimiter` + exponential backoff with jitter |
 | **Batch job crash** | LangGraph checkpointing; resume from exact node |
-| **Invalid JSON** | Pydantic validation + PydanticAI auto-retry |
+| **Invalid JSON** | Pydantic validation + *tolerant JSON repair* (do not rely on retries at `temperature=0`; see ai-psychiatrist BUG-043) |
 | **Model refuses** | "Clinical research assistant" role framing |
 | **Synthetic circularity** | Cross-vendor scorers; validate on DAIC-WOZ |
 | **Cost overrun** | Gemini 3 Flash is cheapest; batch API discounts |
+| **Redistribution/license risk** | Verify SQPsychConv license + policy for redistributing derived labels/embeddings; never ship DAIC-WOZ artifacts |
 
 ---
 
