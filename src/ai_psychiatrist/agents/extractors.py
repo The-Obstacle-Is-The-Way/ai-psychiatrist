@@ -24,6 +24,39 @@ from ai_psychiatrist.infrastructure.logging import get_logger
 logger = get_logger(__name__)
 
 
+_DEFAULT_QUANT_REASON = "Auto-filled: missing reason"
+_DEFAULT_QUANT_EVIDENCE = "No relevant evidence found"
+
+
+def _fill_missing_quantitative_fields(data: object) -> object:
+    """Fill non-critical missing fields in QuantitativeOutput payloads.
+
+    We treat `score` as critical (must be present and parseable), but allow LLMs to
+    occasionally omit `evidence`/`reason` while still producing a usable score.
+
+    This prevents deterministic failures in strict TextOutput validation when the
+    model returns valid JSON but misses a non-critical field.
+    """
+    if not isinstance(data, dict):
+        return data
+
+    fixed: dict[str, object] = dict(data)
+    for item_key in QuantitativeOutput.model_fields:
+        raw_item = fixed.get(item_key)
+        if not isinstance(raw_item, dict):
+            continue
+
+        if "reason" in raw_item and "evidence" in raw_item:
+            continue
+
+        patched_item: dict[str, object] = dict(raw_item)
+        patched_item.setdefault("evidence", _DEFAULT_QUANT_EVIDENCE)
+        patched_item.setdefault("reason", _DEFAULT_QUANT_REASON)
+        fixed[item_key] = patched_item
+
+    return fixed
+
+
 def _find_answer_json(text: str, *, allow_unwrapped_object: bool) -> str | None:
     """Find JSON inside <answer> tags, code fences, or (optionally) the first {...} block."""
     match = re.search(r"<answer>\s*(.*?)\s*</answer>", text, flags=re.DOTALL | re.IGNORECASE)
@@ -110,7 +143,7 @@ def extract_quantitative(text: str) -> QuantitativeOutput:
     try:
         json_str = tolerant_json_fixups(_extract_answer_json(text))
         data = json.loads(json_str)
-        return QuantitativeOutput.model_validate(data)
+        return QuantitativeOutput.model_validate(_fill_missing_quantitative_fields(data))
     except json.JSONDecodeError as e:
         raise ModelRetry(
             f"Invalid JSON in <answer>: {e}. Please ensure <answer> contains valid JSON."
