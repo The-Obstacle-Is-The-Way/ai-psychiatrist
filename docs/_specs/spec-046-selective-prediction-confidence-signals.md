@@ -22,9 +22,9 @@ In Run 8, few-shot substantially improves accuracy (MAE_item) but does not mater
 If we want to improve AURC/AUGRC (i.e., “know when we’re likely wrong”), we must improve the ranking signal used by the risk–coverage curve.
 
 Research basis (validated 2026-01-02):
-- UniCR (2025) explicitly targets “calibrated probability → risk-controlled refusal” and reports improvements in area under risk–coverage metrics: https://arxiv.org/abs/2509.01455
-- Sufficient Context (ICLR 2025) shows retrieval-augmented context can increase hallucinations when insufficient, motivating retrieval-aware abstention signals: https://arxiv.org/abs/2411.06037
-- ACL 2025 highlights that generic UE methods can fail in RAG and motivates retrieval-aware calibration functions: https://aclanthology.org/2025.findings-acl.852/
+- [UniCR (2025)](https://arxiv.org/abs/2509.01455) explicitly targets "calibrated probability → risk-controlled refusal" and reports improvements in area under risk–coverage metrics.
+- [Sufficient Context (ICLR 2025)](https://arxiv.org/abs/2411.06037) shows retrieval-augmented context can increase hallucinations when insufficient, motivating retrieval-aware abstention signals.
+- [Soudani et al. (ACL Findings 2025)](https://aclanthology.org/2025.findings-acl.852/) highlights that generic UE methods can fail in RAG and motivates retrieval-aware calibration functions.
 
 ## 1. Goals / Non-Goals
 

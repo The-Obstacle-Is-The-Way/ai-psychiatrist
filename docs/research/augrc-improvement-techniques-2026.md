@@ -293,7 +293,7 @@ All links below were validated as reachable on 2026-01-02:
 8. UniCR (2025): calibrated probability + conformal risk control for refusal: https://arxiv.org/abs/2509.01455
 9. QuCo-RAG (2025): corpus-grounded uncertainty signals for dynamic RAG: https://arxiv.org/abs/2512.19134
 10. UQLM toolkit paper (2025): black-box/white-box/judge/ensemble UQ: https://arxiv.org/abs/2504.19254
-11. Adaptive temperature scaling (OpenReview 2024): https://openreview.net/forum?id=BgfGqNpoMi
+11. Xie et al. (EMNLP 2024): Adaptive temperature scaling: https://arxiv.org/abs/2409.19817
 
 ---
 

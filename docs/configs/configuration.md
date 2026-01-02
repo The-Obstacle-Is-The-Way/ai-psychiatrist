@@ -175,6 +175,7 @@ Few-shot retrieval configuration.
 (or pass `--output` to write to `paper_reference_embeddings.npz`).
 
 **Recommended (participant-only pipeline)**: Use a transcript-variant-stamped artifacts to avoid collisions:
+
 ```bash
 DATA_TRANSCRIPTS_DIR=data/transcripts_participant_only
 EMBEDDING_EMBEDDINGS_FILE=huggingface_qwen3_8b_paper_train_participant_only

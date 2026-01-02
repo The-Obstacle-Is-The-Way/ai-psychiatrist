@@ -15,7 +15,6 @@ _No active specs._
 Implemented specs are distilled into canonical (non-archive) documentation under `docs/`:
 
 - Quantitative severity bounds (BUG-045): [spec](../_archive/specs/spec-045-quantitative-severity-bounds.md) → [PHQ-8 docs](../clinical/phq8.md#severity-bounds-partial-assessments)
-- DAIC-WOZ transcript preprocessing: [spec](../_archive/specs/daic-woz-transcript-preprocessing.md) → [user guide](../data/daic-woz-preprocessing.md)
 - Feature index + defaults: [features.md](../pipeline-internals/features.md)
 - Few-shot reference prompt format: [few-shot-prompt-format.md](../embeddings/few-shot-prompt-format.md)
 - Retrieval debugging workflow: [debugging-retrieval-quality.md](../embeddings/debugging-retrieval-quality.md)
@@ -28,7 +27,7 @@ Implemented specs are distilled into canonical (non-archive) documentation under
 - Metrics definitions + output schema: [metrics-and-evaluation.md](../statistics/metrics-and-evaluation.md)
 - Selective prediction confidence signals: [spec](spec-046-selective-prediction-confidence-signals.md) → [metrics docs](../statistics/metrics-and-evaluation.md#confidence-variants)
 - Configuration philosophy: [configuration-philosophy.md](../configs/configuration-philosophy.md)
-- DAIC-WOZ transcript preprocessing + variants: [daic-woz-preprocessing.md](../data/daic-woz-preprocessing.md)
+- DAIC-WOZ transcript preprocessing + variants: [spec](../_archive/specs/daic-woz-transcript-preprocessing.md) → [user guide](../data/daic-woz-preprocessing.md)
 
 Historical spec texts remain in `docs/_archive/specs/` for provenance, but the active documentation
 should not require them.

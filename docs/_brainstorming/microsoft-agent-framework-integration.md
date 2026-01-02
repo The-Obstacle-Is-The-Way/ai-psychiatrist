@@ -2,7 +2,7 @@
 
 **Date**: 2025-12-19
 **Status**: BRAINSTORMING
-**Reference**: https://github.com/microsoft/agent-framework
+**Reference**: [Microsoft Agent Framework](https://github.com/microsoft/agent-framework)
 
 ---
 
