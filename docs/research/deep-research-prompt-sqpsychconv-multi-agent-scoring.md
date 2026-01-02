@@ -116,12 +116,74 @@ Research whether these are more appropriate:
 - **Pro**: Simpler, higher inter-rater agreement expected
 - **Con**: Less granular, less useful for RAG retrieval
 
+#### Our Empirical Findings (January 2026): PHQ-8 vs PHQ-9 Feasibility
+
+We analyzed the SQPsychConv dataset to determine whether PHQ-9 (with suicidality item) is feasible:
+
+**Source Questionnaires Used in Generation**:
+
+The SQPsychConv dialogues were generated from Kircher et al. (2019) data using:
+- **BDI (Beck Depression Inventory)** - 21 items, including BDI9 (suicidality)
+- **HAM-D (Hamilton Depression Rating Scale)**
+- **HAM-A (Hamilton Anxiety Rating Scale)**
+
+**Suicidality Content IS Present, But Sparse**:
+
+We searched the qwq variant (2,090 dialogues per split) for suicidality-related content:
+
+| Search Pattern | Train Matches | Test Matches |
+|----------------|---------------|--------------|
+| `suicid\|kill myself\|end my life\|want to die\|better off dead` | 6 | 6 |
+| `vanish` (passive ideation) | 5 | 5 |
+
+**Examples found**:
+- Therapist: "I noticed you mentioned occasional guilt and fleeting thoughts about suicide"
+- Client: "I keep replaying past failures, wondering if anyone'd notice if I just vanished"
+- BDI9 item example: "Question BDI9: Answer: I don't think about doing anything to myself"
+
+**Critical Issues with PHQ-9 Item 9**:
+
+1. **Coverage too sparse**: Only ~0.3% of dialogues (6/2,090) contain explicit suicidality mentions
+2. **Not systematically probed**: The LLM therapist didn't consistently ask about suicidal thoughts
+3. **Inconsistent signal**: Some BDI9 answers indicate no ideation ("I don't think about doing anything to myself")
+4. **Score extraction unreliable**: Can't map free-text to PHQ-9 Item 9's 0-3 scale without generating unreliable labels
+
+**PHQ-8 vs PHQ-9 Decision Matrix**:
+
+| Factor | PHQ-8 | PHQ-9 |
+|--------|-------|-------|
+| DAIC-WOZ alignment | ✓ Compatible | ✗ Different scale (0-24 vs 0-27) |
+| Suicidality coverage | N/A | ✗ Only 0.3% explicit mentions |
+| Score reliability | Higher | Lower (item 9 unreliable) |
+| Clinical interpretability | Severity only | Severity + suicidality screen |
+| Liability concerns | Lower | Higher (suicide detection is high-stakes) |
+| Downstream benchmarking | ✓ Direct comparison possible | ✗ Requires score transformation |
+
+**Our Preliminary Recommendation: PHQ-8**
+
+Based on empirical analysis, PHQ-8 is more defensible because:
+1. **DAIC-WOZ benchmarking requires PHQ-8** for direct comparison
+2. **PHQ-9 Item 9 cannot be reliably scored** from dialogues where suicidality was rarely discussed
+3. **Liability is lower** for severity-only scoring
+
+**Alternative Hybrid Approach**:
+
+If suicidality detection is desired, consider:
+```
+Primary: PHQ-8 total (0-24) → severity classification
+Secondary: Suicidality flag (boolean) → from explicit mentions if present
+```
+
+This preserves DAIC-WOZ compatibility while still flagging high-risk content.
+
 **Key Research Questions**:
 
 1. Which self-report instrument is most reliably scored by LLMs from conversation text?
 2. Does PHQ-9 item 9 (suicidality) present insurmountable ethical/safety concerns for synthetic data?
 3. Is there literature on LLM-based scoring of specific depression instruments?
 4. Should we score multiple instruments and let downstream users choose?
+5. **NEW**: Is the hybrid PHQ-8 + suicidality flag approach clinically valid and useful?
+6. **NEW**: Are there better ways to handle sparse suicidality signal in synthetic therapy data?
 
 ### 3.2 Multi-Agent Architecture
 
