@@ -56,7 +56,7 @@ The paper's reference implementation (`_reference/ai_psychiatrist/`) demonstrate
 | Item tags (Spec 34) | `data/embeddings/...participant_only.tags.json` | 48 KB |
 | Chunk scores (Spec 35) | `data/embeddings/...participant_only.chunk_scores.json` | 1.1 MB |
 | Chunk scores meta | `data/embeddings/...participant_only.chunk_scores.meta.json` | 284 B |
-| Transcripts | `data/transcripts_participant_only/` | 190 dirs |
+| Transcripts | `data/transcripts_participant_only/` | 189 dirs |
 
 **Command**:
 
@@ -146,5 +146,3 @@ Before launching Run 9, request senior review of:
 4. All root documentation files (CLAUDE.md, AGENTS.md, GEMINI.md)
 
 ---
-
-*Delete this file after Run 9 is complete and documented.*

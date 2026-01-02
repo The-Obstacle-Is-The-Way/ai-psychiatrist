@@ -66,7 +66,7 @@ def _create_npz_embeddings(
 
 
 class TestReferenceBundle:
-    """Tests for ReferenceBundle (paper-parity formatting)."""
+    """Tests for ReferenceBundle (reference prompt formatting)."""
 
     def test_format_empty_bundle(self) -> None:
         bundle = ReferenceBundle(item_references={})
