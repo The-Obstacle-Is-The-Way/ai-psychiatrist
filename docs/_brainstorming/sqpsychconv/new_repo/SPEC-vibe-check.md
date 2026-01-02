@@ -32,6 +32,7 @@ The system literally checks the "vibe" of therapy conversations to assess mental
 
 - **SQPsychConv “train/test” splits may be identical** (observed in local exports for some variants). Treat HF splits as untrusted and implement a deterministic resplit based on `file_id`.
 - **DAIC-WOZ is evaluation-only**: it must not be redistributed, including derived artifacts (raw text, embeddings, etc.).
+- **No DAIC-WOZ egress**: do not send DAIC-WOZ transcripts to third-party APIs (OpenAI/Anthropic/Google). Keep DAIC-WOZ evaluation local-only (see Section 3.2).
 - **LLM JSON failures can be deterministic at temperature=0**: do not rely on “retry until it parses” as the only mitigation.
 - **External facts drift** (pricing/model IDs/benchmarks): any time-sensitive values must be re-verified against provider SSOTs before implementation.
 
@@ -130,25 +131,15 @@ The system literally checks the "vibe" of therapy conversations to assess mental
 
 ### 3.2 DAIC-WOZ EULA Restrictions
 
-**Critical**: DAIC-WOZ is restricted to academic/non-profit use. The EULA language is restrictive about redistribution and transfer of the dataset and derivatives.
+DAIC-WOZ is restricted to academic/non-profit use, and the safest interpretation is to treat it as **non-exportable**.
 
-**Legal Risk**: Uploading DAIC-WOZ transcripts to third-party APIs (OpenAI, Anthropic, Google) may constitute redistribution depending on:
-- Your institutional agreements with those vendors
-- Your interpretation of "transfer to third parties"
-- Data retention policies of the API providers
+**Policy (non-negotiable for this spec)**:
 
-**Compliance Modes**:
+- **Do not send DAIC-WOZ transcripts to third-party APIs** (OpenAI/Anthropic/Google).
+- The `vibe-check` **core labeling pipeline must not require DAIC-WOZ**. DAIC-WOZ data and derived artifacts must never be checked into the repo.
+- Any DAIC-WOZ evaluation happens **locally** (e.g., in `ai-psychiatrist` with Ollama/vLLM) and must avoid cloud logging/telemetry that could capture text.
 
-| Mode | Description | Phase 0 Validation |
-|------|-------------|-------------------|
-| **Mode A (Safe Default)** | Use local/on-prem models only for DAIC-WOZ | Ollama/vLLM with open-weight models |
-| **Mode B (With Counsel)** | Vendor APIs allowed with restrictions | Requires institutional review |
-
-**If Mode B is chosen, implement these safeguards**:
-- Disable LangSmith/vendor request logging for DAIC-WOZ runs
-- Disable transcript text in checkpoint DB (store only scores + metadata)
-- Set strict data retention (no persistent storage of transcripts in cloud)
-- Document consent from your institution's IRB/legal counsel
+If you later obtain explicit institutional/legal approval to process DAIC-WOZ with vendor APIs, that is a separate decision and requires a spec revision.
 
 ### 3.3 Logging & Observability Policy
 
@@ -1103,9 +1094,9 @@ vibe-check/
 │
 ├── scripts/
 │   ├── score_corpus.py               # Main CLI entry point
-│   ├── validate_on_daic_woz.py       # Phase 0: scorer competence
+│   ├── compute_diagnostics.py        # Phase 0: sanity diagnostics (no DAIC-WOZ)
 │   ├── generate_embeddings.py        # Create retrieval corpus
-│   └── evaluate_transfer.py          # Sim-to-real metrics
+│   └── evaluate_transfer.py          # Local-only sim-to-real metrics (no vendor APIs)
 │
 ├── tests/
 │   ├── conftest.py                   # Shared fixtures (mock clients, sample data)
@@ -1665,62 +1656,46 @@ class Settings(BaseSettings):
 
 ## 13. Validation Protocol
 
-### 12.1 Phase 0: Scorer Competence on DAIC-WOZ
+### 12.1 Phase 0: Labeler Sanity Checks (SQPsychConv-Only)
 
-**DAIC-WOZ Split Clarification**:
+This repo is designed to score **synthetic** data (SQPsychConv) with frontier APIs. To avoid DAIC-WOZ licensing/EULA violations, **Phase 0 must not require DAIC-WOZ** and must not send restricted transcripts to vendor APIs.
 
-The DAIC-WOZ dataset has multiple release contexts:
-- **AVEC Challenge**: Test set labels are withheld (blind evaluation for leaderboards)
-- **Research Dataset**: Full labels available for `train`, `dev`, and some releases include `test`
+**Goals (no ground truth required)**:
 
-This spec uses the **research dataset** with the following split strategy:
+- Validate end-to-end correctness: preprocessing → structured output → aggregation → checkpoint/resume → export.
+- Detect prompt/JSON/schema brittleness before paying for a full 2,090-dialogue run.
+- Produce diagnostics that make failures actionable (without storing transcript text in logs/artifacts).
 
-| Split | Purpose | Label Status |
-|-------|---------|--------------|
-| `paper-train` | Reference corpus (not used by vibe-check) | Available |
-| `paper-dev[:50%]` | **Threshold tuning** (arbitration, confidence) | Available |
-| `paper-dev[50%:]` | **Phase 0 scorer validation** | Available |
-| `paper-test` | **Phase 3 sim-to-real evaluation** (if labels available) | Check your dataset |
+**Procedure**:
 
-**Important**: If your DAIC-WOZ copy does not include `paper-test` labels, use `paper-dev[50%:]` for Phase 3 instead. Never tune on evaluation data.
+1. Run a small stratified sample (e.g., 50 dialogues) end-to-end.
+2. Compute internal diagnostics: agreement/entropy distributions, arbitration rate, condition separation (MDD > control), parse failure rate.
+3. Optionally run a clinician/human audit slice for calibration (recommended if you want any tuned thresholds without DAIC-WOZ).
 
-Before scoring SQPsychConv, prove the ensemble works on real data:
+Example:
 
 ```bash
-# Phase 0: Scorer validation (use dev[50%:] to avoid tuning leakage)
-uv run python scripts/validate_on_daic_woz.py \
-    --split paper-dev \
-    --split-slice "50%:" \
-    --dialogue-view client_qa \
-    --output data/outputs/scorer_validation.json
+uv run python scripts/score_corpus.py \
+    --input AIMH/SQPsychConv_qwq \
+    --limit 50 \
+    --output data/outputs/scored_sqpsychconv_smoke.jsonl
 ```
 
-**Success Criteria**:
+**Success Criteria** (sanity-only):
 
-| Metric | Target | Rationale |
-|--------|--------|-----------|
-| Total MAE | ≤ 3.0 | Transcript-only has limits |
-| Binary AUC | > 0.80 | Strong discrimination |
-| ICC(2,k) | ≥ 0.80 | High inter-model reliability |
-| Krippendorff's α | ≥ 0.70 | Ordinal agreement |
+- 0% unrecoverable parse failures after the JSON/structured-output fallback chain.
+- Checkpoint/resume works (kill the process mid-run; restart; no duplicates).
+- Arbitration rate is within an expected band (e.g., 10–30% on the smoke slice).
+- Directional validity: mean PHQ-8 total for `mdd` > `control`.
 
-### 12.1.1 Threshold Tuning (dev[:50%])
+### 12.1.1 Threshold Tuning (Optional, No DAIC-WOZ)
 
-Before Phase 0 validation, tune arbitration thresholds on a held-out slice:
+Because SQPsychConv has no public ground truth severity labels, avoid “tuning” arbitration/uncertainty thresholds on synthetic data in a way that could silently overfit to generator artifacts.
 
-```bash
-uv run python scripts/tune_thresholds.py \
-    --split paper-dev \
-    --split-slice ":50%" \
-    --output data/outputs/threshold_config.json
-```
+If tuning is required, prefer one of:
 
-This produces calibrated values for:
-- `max_posterior_threshold` (default 0.60)
-- `entropy_threshold` (default 1.2)
-- `clinical_ambiguity_range` (default [0.4, 0.6])
-
-**Freeze these thresholds before Phase 0 validation** to avoid data leakage.
+- **Human audit slice** (within SQPsychConv) with blinded clinician scoring.
+- **Downstream local-only evaluation** in `ai-psychiatrist` using DAIC-WOZ (no external egress), treating this as a separate integration project and decision.
 
 ### 12.2 Phase 1: Score SQPsychConv
 
@@ -1748,7 +1723,13 @@ uv run python scripts/generate_embeddings.py \
     --output data/outputs/embeddings/
 ```
 
-### 12.4 Phase 3: Sim-to-Real Evaluation
+### 12.4 Phase 3: Sim-to-Real Evaluation (Local-Only; No Vendor APIs)
+
+This phase uses DAIC-WOZ and must be executed in a local-only environment where transcripts never leave the machine/network that is authorized to hold them.
+
+`vibe-check` does not require DAIC-WOZ to function; treat this phase as a downstream integration run (recommended) that can be executed from `ai-psychiatrist` or an equivalent local evaluation harness.
+
+**Non-negotiable**: do not call OpenAI/Anthropic/Google APIs with DAIC-WOZ transcripts.
 
 ```bash
 uv run python scripts/evaluate_transfer.py \
