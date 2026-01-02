@@ -198,6 +198,19 @@ class TestPHQ8Assessment:
         assert assessment.total_score == 0
         assert assessment.na_count == 8
 
+    def test_total_score_bounds_with_partial_na(self) -> None:
+        """total_score bounds should reflect uncertainty when items are N/A."""
+        items: dict[PHQ8Item, ItemAssessment] = {}
+        for item in PHQ8Item.all_items():
+            score = 3 if item == PHQ8Item.DEPRESSED else None
+            items[item] = ItemAssessment(item=item, evidence="", reason="", score=score)
+
+        assessment = PHQ8Assessment(items=items, mode=AssessmentMode.ZERO_SHOT, participant_id=1)
+
+        assert assessment.min_total_score == 3
+        assert assessment.max_total_score == 3 + (7 * 3)
+        assert assessment.total_score_bounds == (3, 24)
+
     def test_severity_minimal(self) -> None:
         """severity should be MINIMAL for total 0-4."""
         items = {
@@ -205,6 +218,38 @@ class TestPHQ8Assessment:
             for item in PHQ8Item.all_items()
         }
         assessment = PHQ8Assessment(items=items, mode=AssessmentMode.ZERO_SHOT, participant_id=1)
+        assert assessment.severity == SeverityLevel.MINIMAL
+
+    def test_severity_is_none_when_bounds_span_multiple_bands(self) -> None:
+        """severity should be indeterminate when missing items could change the band."""
+        # 6 observed points with 2 unknown items (could add up to +6)
+        items: dict[PHQ8Item, ItemAssessment] = {}
+        for item in PHQ8Item.all_items():
+            score = None if item in {PHQ8Item.APPETITE, PHQ8Item.MOVING} else 1
+            items[item] = ItemAssessment(item=item, evidence="", reason="", score=score)
+
+        assessment = PHQ8Assessment(items=items, mode=AssessmentMode.ZERO_SHOT, participant_id=1)
+
+        assert assessment.min_total_score == 6
+        assert assessment.max_total_score == 12
+        assert assessment.severity is None
+        assert assessment.severity_lower_bound == SeverityLevel.MILD
+        assert assessment.severity_upper_bound == SeverityLevel.MODERATE
+
+    def test_severity_is_determinate_when_bounds_equal(self) -> None:
+        """severity should be defined when bounds collapse to a single band."""
+        # One missing item, but even if it were max (3), the total remains in the MINIMAL band (0-4).
+        items: dict[PHQ8Item, ItemAssessment] = {}
+        for item in PHQ8Item.all_items():
+            score = None if item == PHQ8Item.MOVING else 0
+            items[item] = ItemAssessment(item=item, evidence="", reason="", score=score)
+
+        assessment = PHQ8Assessment(items=items, mode=AssessmentMode.ZERO_SHOT, participant_id=1)
+
+        assert assessment.min_total_score == 0
+        assert assessment.max_total_score == 3
+        assert assessment.severity_lower_bound == SeverityLevel.MINIMAL
+        assert assessment.severity_upper_bound == SeverityLevel.MINIMAL
         assert assessment.severity == SeverityLevel.MINIMAL
 
     def test_severity_mild(self, complete_items: dict[PHQ8Item, ItemAssessment]) -> None:

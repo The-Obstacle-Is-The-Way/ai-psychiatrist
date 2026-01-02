@@ -264,11 +264,17 @@ class QuantitativeAssessmentAgent:
             participant_id=transcript.participant_id,
         )
 
+        severity = assessment.severity.name if assessment.severity is not None else None
+
         logger.info(
             "Quantitative assessment complete",
             participant_id=transcript.participant_id,
             total_score=assessment.total_score,
-            severity=assessment.severity.name,
+            total_score_min=assessment.min_total_score,
+            total_score_max=assessment.max_total_score,
+            severity=severity,
+            severity_lower_bound=assessment.severity_lower_bound.name,
+            severity_upper_bound=assessment.severity_upper_bound.name,
             na_count=assessment.na_count,
         )
 

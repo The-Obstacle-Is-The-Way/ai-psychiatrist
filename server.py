@@ -210,7 +210,11 @@ class QuantitativeResult(BaseModel):
     """Quantitative assessment result."""
 
     total_score: int
-    severity: str
+    total_score_min: int
+    total_score_max: int
+    severity: str | None
+    severity_lower_bound: str
+    severity_upper_bound: str
     na_count: int
     items: dict[str, dict[str, str | int | None]]
 
@@ -326,7 +330,11 @@ async def assess_quantitative(
 
     return QuantitativeResult(
         total_score=assessment.total_score,
-        severity=assessment.severity.name,
+        total_score_min=assessment.min_total_score,
+        total_score_max=assessment.max_total_score,
+        severity=assessment.severity.name if assessment.severity is not None else None,
+        severity_lower_bound=assessment.severity_lower_bound.name,
+        severity_upper_bound=assessment.severity_upper_bound.name,
         na_count=assessment.na_count,
         items={
             item.value: {
@@ -440,7 +448,11 @@ async def run_full_pipeline(
         mode=mode.value,
         quantitative=QuantitativeResult(
             total_score=quant_result.total_score,
-            severity=quant_result.severity.name,
+            total_score_min=quant_result.min_total_score,
+            total_score_max=quant_result.max_total_score,
+            severity=quant_result.severity.name if quant_result.severity is not None else None,
+            severity_lower_bound=quant_result.severity_lower_bound.name,
+            severity_upper_bound=quant_result.severity_upper_bound.name,
             na_count=quant_result.na_count,
             items={
                 item.value: {

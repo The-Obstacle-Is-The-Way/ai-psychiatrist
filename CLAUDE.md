@@ -139,6 +139,48 @@ python scripts/reproduce_results.py \
   2>&1 | tee data/outputs/run_$(date +%Y%m%d_%H%M%S).log
 ```
 
+## Evaluation Metrics (CRITICAL)
+
+**WARNING: The original paper's methodology is not reproducible. Our implementation fixes the flaws.**
+
+### Primary Metrics: AURC and AUGRC (NOT MAE)
+
+**You cannot compare MAE values at different coverage levels.** The paper had grossly different coverages between zero-shot and few-shot modes, making their MAE comparisons invalid.
+
+Use these coverage-aware metrics instead:
+
+| Metric | What It Measures | Lower = Better |
+|--------|------------------|----------------|
+| **AURC** | Area Under Risk-Coverage curve | ✓ |
+| **AUGRC** | Area Under Generalized Risk-Coverage curve (preferred) | ✓ |
+| **Cmax** | Maximum coverage (fraction of items with predictions) | Higher = more predictions |
+
+**Why AUGRC over AURC?** AURC puts excessive weight on high-confidence failures. AUGRC provides a holistic assessment of silent failure risk across all predictions. See [Traub et al. 2024](https://arxiv.org/html/2407.01032v1).
+
+### When MAE Is Acceptable
+
+MAE comparisons are ONLY valid when coverage is similar between conditions. If zero-shot and few-shot have ~50% coverage each, MAE becomes a reasonable secondary metric.
+
+### Running Selective Prediction Evaluation
+
+```bash
+# Compute AURC/AUGRC with bootstrap CIs
+python scripts/evaluate_selective_prediction.py \
+  --input data/outputs/<your_run>.json \
+  --mode few_shot \
+  --loss abs \
+  --bootstrap-resamples 1000
+```
+
+### Key Results (2026-01-02, Chunk Scoring + Participant-Only)
+
+| Mode | MAE_i | Coverage | AURC | AUGRC |
+|------|-------|----------|------|-------|
+| Zero-shot | 0.776 | 50.0% | 0.424 | 0.094 |
+| Few-shot | 0.609 | 50.9% | 0.374 | 0.092 |
+
+Coverage is now similar (~50%), so MAE comparisons are valid for this run.
+
 ## Important Notes
 
 - **Legacy code is archived**: `_legacy/`, `_literature/`, `_reference/` are not production code

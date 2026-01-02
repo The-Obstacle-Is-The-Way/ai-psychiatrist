@@ -77,3 +77,32 @@ python scripts/reproduce_results.py --mode both --split paper-test
 ```
 
 **Note**: Use `--allow-same-model` only if you explicitly want a same-model baseline; otherwise prefer a disjoint scorer model for defensibility. Ablate against MedGemma/disjoint models if feasible.
+
+## Evaluation Metrics (CRITICAL)
+
+**WARNING: The original paper's methodology is not reproducible. Our implementation fixes the flaws.**
+
+### Primary Metrics: AURC and AUGRC (NOT MAE)
+
+**You cannot compare MAE values at different coverage levels.** Use coverage-aware metrics:
+
+| Metric | What It Measures | Lower = Better |
+|--------|------------------|----------------|
+| **AURC** | Area Under Risk-Coverage curve | ✓ |
+| **AUGRC** | Area Under Generalized Risk-Coverage curve (preferred) | ✓ |
+| **Cmax** | Maximum coverage | Higher = more predictions |
+
+**Why AUGRC over AURC?** AURC puts excessive weight on high-confidence failures. AUGRC provides holistic silent failure risk assessment. See [Traub et al. 2024](https://arxiv.org/html/2407.01032v1).
+
+### When MAE Is Acceptable
+
+MAE comparisons are ONLY valid when coverage is similar between conditions.
+
+```bash
+# Compute AURC/AUGRC
+python scripts/evaluate_selective_prediction.py \
+  --input data/outputs/<your_run>.json \
+  --mode few_shot \
+  --loss abs \
+  --bootstrap-resamples 1000
+```

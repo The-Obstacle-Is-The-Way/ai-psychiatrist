@@ -1,8 +1,13 @@
-# PROBLEM: HuggingFace Chunk Scores Missing
+# BUG-044: HuggingFace Chunk Scores Missing (Wrong Embeddings Scored)
 
-**Status**: OPEN
-**Priority**: HIGH
-**Date**: 2026-01-01
+**Status**: OPEN (Mitigation in progress)
+**Severity**: P1 (High)
+**Discovered**: 2026-01-01
+
+## Update (2026-01-01)
+
+- Post participant-only preprocessing, the active HuggingFace embeddings are `huggingface_qwen3_8b_paper_train_participant_only.*`.
+- Chunk scoring for these embeddings is running and writes progress logs to `data/outputs/chunk_scoring_participant_only_20260101_183027.log`.
 
 ## The Issue
 
@@ -13,7 +18,7 @@ We ran chunk scoring (Spec 35) for hours on the **wrong embeddings**.
 | Embeddings File | Precision | Quality | Chunk Scores? |
 |-----------------|-----------|---------|---------------|
 | `ollama_qwen3_8b_paper_train` | Q4_K_M | Lower | ✅ Yes (hours of compute) |
-| `huggingface_qwen3_8b_paper_train` | FP16 | **Higher** | ❌ **NO** |
+| `huggingface_qwen3_8b_paper_train_participant_only` | FP16 | **Higher** | 🚧 In progress |
 
 ### Why This Matters
 
@@ -24,7 +29,7 @@ We ran chunk scoring (Spec 35) for hours on the **wrong embeddings**.
 
 3. **We invested hours** generating chunk scores for the lower-quality embeddings.
 
-4. **To use chunk-level scoring with HuggingFace embeddings**, we need to run chunk scoring on `huggingface_qwen3_8b_paper_train` - which doesn't exist yet.
+4. **To use chunk-level scoring with HuggingFace embeddings**, we need to run chunk scoring on `huggingface_qwen3_8b_paper_train_participant_only`.
 
 ## Current Configuration State
 
@@ -36,8 +41,8 @@ EMBEDDING_REFERENCE_SCORE_SOURCE=chunk
 ```
 
 ### What's Missing:
-- `huggingface_qwen3_8b_paper_train.chunk_scores.json`
-- `huggingface_qwen3_8b_paper_train.chunk_scores.meta.json`
+- `huggingface_qwen3_8b_paper_train_participant_only.chunk_scores.json`
+- `huggingface_qwen3_8b_paper_train_participant_only.chunk_scores.meta.json`
 
 ## Command to Generate HuggingFace Chunk Scores
 
@@ -45,15 +50,15 @@ EMBEDDING_REFERENCE_SCORE_SOURCE=chunk
 
 ```bash
 python scripts/score_reference_chunks.py \
-  --embeddings-file huggingface_qwen3_8b_paper_train \
+  --embeddings-file huggingface_qwen3_8b_paper_train_participant_only \
   --scorer-backend ollama \
   --scorer-model gemma3:27b-it-qat \
   --allow-same-model
 ```
 
 This will generate:
-- `data/embeddings/huggingface_qwen3_8b_paper_train.chunk_scores.json`
-- `data/embeddings/huggingface_qwen3_8b_paper_train.chunk_scores.meta.json`
+- `data/embeddings/huggingface_qwen3_8b_paper_train_participant_only.chunk_scores.json`
+- `data/embeddings/huggingface_qwen3_8b_paper_train_participant_only.chunk_scores.meta.json`
 
 ## Recommended Default Configuration
 
@@ -62,7 +67,7 @@ After generating HuggingFace chunk scores, `.env` should use:
 ```bash
 # Use the BETTER embeddings (FP16)
 EMBEDDING_BACKEND=huggingface  # or ollama if HF deps unavailable
-EMBEDDING_EMBEDDINGS_FILE=huggingface_qwen3_8b_paper_train
+EMBEDDING_EMBEDDINGS_FILE=huggingface_qwen3_8b_paper_train_participant_only
 EMBEDDING_REFERENCE_SCORE_SOURCE=chunk
 ```
 
@@ -79,7 +84,7 @@ Proposal:
 1. Make HuggingFace the **explicit default** in `.env.example`
 2. Document Ollama as the fallback for users without HuggingFace deps
 3. Generate chunk scores for HuggingFace embeddings
-4. Update `.env.example` to point to `huggingface_qwen3_8b_paper_train`
+4. Update `.env.example` to point to `huggingface_qwen3_8b_paper_train_participant_only`
 
 ## Immediate Decision Required
 
@@ -98,6 +103,6 @@ Proposal:
 ## Files Referenced
 
 - Ollama embeddings: `data/embeddings/ollama_qwen3_8b_paper_train.*`
-- HuggingFace embeddings: `data/embeddings/huggingface_qwen3_8b_paper_train.*`
+- HuggingFace embeddings: `data/embeddings/huggingface_qwen3_8b_paper_train_participant_only.*`
 - Chunk scoring script: `scripts/score_reference_chunks.py`
 - Configuration: `.env`, `.env.example`

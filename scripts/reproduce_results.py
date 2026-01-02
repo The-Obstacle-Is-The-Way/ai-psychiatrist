@@ -102,6 +102,11 @@ class EvaluationResult:
     predicted_items: dict[PHQ8Item, int | None] = field(default_factory=dict)
     ground_truth_total: int | None = None
     predicted_total: int | None = None
+    predicted_total_min: int | None = None
+    predicted_total_max: int | None = None
+    severity: str | None = None
+    severity_lower_bound: str | None = None
+    severity_upper_bound: str | None = None
 
     available_items: int = 0
     na_items: int = 0
@@ -155,6 +160,11 @@ class ExperimentResults:
                     "error": r.error,
                     "ground_truth_total": r.ground_truth_total,
                     "predicted_total": r.predicted_total,
+                    "predicted_total_min": r.predicted_total_min,
+                    "predicted_total_max": r.predicted_total_max,
+                    "severity": r.severity,
+                    "severity_lower_bound": r.severity_lower_bound,
+                    "severity_upper_bound": r.severity_upper_bound,
                     "available_items": r.available_items,
                     "na_items": r.na_items,
                     "mae_available": r.mae_available,
@@ -306,6 +316,11 @@ async def evaluate_participant(
             predicted_items=predicted_items,
             ground_truth_total=sum(ground_truth_items.values()),
             predicted_total=assessment.total_score,
+            predicted_total_min=assessment.min_total_score,
+            predicted_total_max=assessment.max_total_score,
+            severity=assessment.severity.name if assessment.severity is not None else None,
+            severity_lower_bound=assessment.severity_lower_bound.name,
+            severity_upper_bound=assessment.severity_upper_bound.name,
             available_items=assessment.available_count,
             na_items=assessment.na_count,
             mae_available=mae_available,

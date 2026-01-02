@@ -4,11 +4,12 @@ Implementation-ready (or implementation-planned) specifications for changes that
 
 ## Ready to Implement
 
-- **Spec 043**: [Deterministic JSON “Missing Comma” Repair (BUG-043)](spec-043-json-missing-comma-repair.md)
+- (none)
 
 ## Implemented (Active Specs)
 
 - [DAIC-WOZ Transcript Preprocessing (Bias-Aware, Deterministic Variants)](daic-woz-transcript-preprocessing.md)
+- [Quantitative Severity Bounds for Partial PHQ-8 (BUG-045)](spec-045-quantitative-severity-bounds.md)
 
 ## Deferred
 
