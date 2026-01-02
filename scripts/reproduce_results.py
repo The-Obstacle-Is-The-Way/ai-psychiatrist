@@ -588,7 +588,7 @@ def print_run_configuration(*, settings: Settings, split: str) -> None:
     chunk_scores_path = embeddings_path.with_suffix(".chunk_scores.json")
     chunk_scores_meta_path = embeddings_path.with_suffix(".chunk_scores.meta.json")
 
-    is_paper_reproduction = (
+    is_legacy_baseline = (
         embedding_settings.reference_score_source == "participant"
         and not embedding_settings.enable_item_tag_filter
         and embedding_settings.min_reference_similarity == 0.0
@@ -597,10 +597,10 @@ def print_run_configuration(*, settings: Settings, split: str) -> None:
     )
 
     print("=" * 60)
-    if is_paper_reproduction:
-        print("PAPER REPRODUCTION: Quantitative PHQ-8 Evaluation (Item-level MAE)")
+    if is_legacy_baseline:
+        print("LEGACY BASELINE: Quantitative PHQ-8 Evaluation (paper-derived settings)")
     else:
-        print("EXPERIMENT: Quantitative PHQ-8 Evaluation (NOT paper-parity)")
+        print("EVALUATION: Quantitative PHQ-8 Assessment (validated configuration)")
     print("=" * 60)
     print(f"  Ollama: {ollama_settings.base_url}")
     print(f"  Quantitative Model: {model_settings.quantitative_model}")
@@ -640,8 +640,8 @@ def print_run_configuration(*, settings: Settings, split: str) -> None:
             f"    - Max Accepted Refs Per Item: {embedding_settings.validation_max_refs_per_item}"
         )
 
-    if not is_paper_reproduction:
-        print("  NOTE: Non-paper settings are enabled; do not compare as reproduction baseline.")
+    if not is_legacy_baseline:
+        print("  NOTE: Non-legacy settings are enabled; do not interpret as the legacy baseline.")
     print("=" * 60)
 
 

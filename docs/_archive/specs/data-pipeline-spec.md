@@ -8,7 +8,7 @@
 
 ## Table of Contents
 
-1. [Current State (Verified via ls -la)](#1-current-state-verified-via-ls--la)
+1. [Current State (Verified via ls -la)](#1-current-state-verified-via-ls-la)
 2. [Target State (What We Need)](#2-target-state-what-we-need)
 3. [The Full Pipeline](#3-the-full-pipeline)
 4. [Archive Decisions](#4-archive-decisions)

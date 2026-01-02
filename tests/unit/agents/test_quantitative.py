@@ -374,7 +374,7 @@ Participant: I have trouble focusing on anything. Can't think straight.""",
         empty_evidence = json.dumps({k: [] for k in DOMAIN_KEYWORDS})
         client = MockLLMClient(chat_responses=[empty_evidence])
 
-        # Explicitly enable backfill (default is OFF for paper parity)
+        # Explicitly enable backfill (default is OFF for baseline defaults)
         settings = QuantitativeSettings(enable_keyword_backfill=True)
         agent = self.create_agent(client, settings)
 
