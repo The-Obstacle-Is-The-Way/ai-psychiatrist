@@ -43,10 +43,12 @@ The system literally checks the "vibe" of therapy conversations to assess mental
 
 | Role | Model | Model ID | Provider | Price (in/out per 1M) |
 |------|-------|----------|----------|----------------------|
-| **Juror A** | GPT-5.2 Thinking | `gpt-5.2` | OpenAI | $1.75 / $14.00 |
+| **Juror A** | GPT-5.2 Thinking | `gpt-5.2` | OpenAI | $1.25 / $10.00† |
 | **Juror B** | Claude Sonnet 4.5 | `claude-sonnet-4-5-20250929` | Anthropic | $3.00 / $15.00 |
 | **Juror C** | Gemini 3 Flash | `gemini-3-flash-preview` | Google | $0.50 / $3.00 |
-| **Judge** | Claude Opus 4.5 | `claude-opus-4-5-20251101` | Anthropic | $15.00 / $75.00 |
+| **Judge** | Claude Opus 4.5 | `claude-opus-4-5-20251101` | Anthropic | $5.00 / $25.00 |
+
+**†Hidden Reasoning Tokens Warning**: GPT-5.2 Thinking uses adaptive reasoning that generates hidden chain-of-thought tokens. These tokens are **billed as output tokens but not visible via the API**. Clinical assessments may consume 2,000+ hidden tokens per call. Budget accordingly (see Section 2.3).
 
 ### 2.2 Why These Models?
 
@@ -80,35 +82,130 @@ The system literally checks the "vibe" of therapy conversations to assess mental
 - Different family from majority jurors (avoids correlated errors)
 - Used sparingly - only for disagreements (~20% of items)
 
-### 2.3 Cost Estimate (Updated)
+### 2.3 Cost Estimate (Updated - Hidden Token Aware)
 
-| Component | Calculation | Cost |
-|-----------|-------------|------|
-| GPT-5.2 (2 runs × 2,090) | 4,180 calls × 2.5K tokens | ~$26 |
-| Sonnet 4.5 (2 runs × 2,090) | 4,180 calls × 2.5K tokens | ~$38 |
-| Gemini 3 Flash (2 runs × 2,090) | 4,180 calls × 2.5K tokens | ~$6 |
-| Opus 4.5 Judge (~20% arbitration) | ~830 calls × 3K tokens | ~$45 |
-| **Total (one pass)** | | **~$115** |
-| **With batch discounts (~50%)** | | **~$60** |
+**Important**: GPT-5.2 Thinking generates hidden reasoning tokens billed as output. The estimates below include a **3x multiplier** for GPT-5.2 output tokens to account for this.
+
+| Component | Calculation | Visible Tokens | Hidden Tokens Est. | Cost |
+|-----------|-------------|----------------|-------------------|------|
+| GPT-5.2 (2 runs × 2,090) | 4,180 calls | 2.5K in / 1K out | +2K hidden out | ~$105† |
+| Sonnet 4.5 (2 runs × 2,090) | 4,180 calls | 2.5K in / 1K out | N/A | ~$38 |
+| Gemini 3 Flash (2 runs × 2,090) | 4,180 calls | 2.5K in / 1K out | N/A | ~$6 |
+| Opus 4.5 Judge (~20% arbitration) | ~830 calls | 3K in / 1.5K out | N/A | ~$15 |
+| **Total (one pass)** | | | | **~$165** |
+| **With batch discounts (~50%)** | | | | **~$85** |
+
+†GPT-5.2 hidden token estimate: 2,000 reasoning tokens × $10/1M × 4,180 calls = ~$84 additional. Actual costs vary by task complexity—clinical assessments are reasoning-heavy.
+
+**Cost Savings Options**:
+- Prompt caching: up to 90% savings on repeated context
+- Batch API: 50% savings (OpenAI/Anthropic)
 
 ---
 
-## 3. Definitive Architectural Decisions
+## 3. Data Governance & Licensing Gates
+
+**This section is a hard gate. Do not proceed to implementation without resolving these items.**
+
+### 3.1 SQPsychConv License
+
+**Status**: CC BY 4.0 (per original paper; requires verification on HuggingFace dataset card)
+
+| Allowed | Restricted |
+|---------|------------|
+| Redistribution of text | N/A under CC BY 4.0 |
+| Derived labels (PHQ-8 scores) | N/A under CC BY 4.0 |
+| Derived embeddings | N/A under CC BY 4.0 |
+| Commercial use | N/A under CC BY 4.0 |
+
+**Action Required**: Verify license is explicitly stated on AIMH/SQPsychConv_qwq HuggingFace dataset card before production run. If license is absent/ambiguous, treat as "no redistribution" until clarified with dataset authors.
+
+### 3.2 DAIC-WOZ EULA Restrictions
+
+**Critical**: DAIC-WOZ is restricted to academic/non-profit use. The EULA language is restrictive about redistribution and transfer of the dataset and derivatives.
+
+**Legal Risk**: Uploading DAIC-WOZ transcripts to third-party APIs (OpenAI, Anthropic, Google) may constitute redistribution depending on:
+- Your institutional agreements with those vendors
+- Your interpretation of "transfer to third parties"
+- Data retention policies of the API providers
+
+**Compliance Modes**:
+
+| Mode | Description | Phase 0 Validation |
+|------|-------------|-------------------|
+| **Mode A (Safe Default)** | Use local/on-prem models only for DAIC-WOZ | Ollama/vLLM with open-weight models |
+| **Mode B (With Counsel)** | Vendor APIs allowed with restrictions | Requires institutional review |
+
+**If Mode B is chosen, implement these safeguards**:
+- Disable LangSmith/vendor request logging for DAIC-WOZ runs
+- Disable transcript text in checkpoint DB (store only scores + metadata)
+- Set strict data retention (no persistent storage of transcripts in cloud)
+- Document consent from your institution's IRB/legal counsel
+
+### 3.3 Logging & Observability Policy
+
+To avoid accidental transcript leakage:
+
+| Artifact | Allowed Content | Prohibited Content |
+|----------|-----------------|-------------------|
+| Checkpoint DB | File IDs, scores, entropy, status | Raw transcript text |
+| Exception traces | Stack traces, error codes | Transcript snippets |
+| LangSmith traces | Node timing, token counts | Prompt/response content |
+| Run manifests | Counts, aggregate stats | Individual utterances |
+| Job ledger | Status, attempts, error codes | Transcript excerpts |
+
+**Implementation**: Use a `SensitiveString` wrapper type that refuses to serialize to logs/JSON.
+
+### 3.4 Corpus Integrity (Trust No Split)
+
+**Problem**: SQPsychConv HuggingFace "train/test" splits may have 100% overlap (observed in local exports).
+
+**Solution**: Implement deterministic resplit based on `file_id`:
+
+```python
+import hashlib
+
+def compute_split(file_id: str) -> str:
+    """Deterministic split based on file_id hash."""
+    hash_val = int(hashlib.sha256(file_id.encode()).hexdigest(), 16)
+    bucket = hash_val % 10
+    if bucket < 8:
+        return "train"  # 80%
+    elif bucket < 9:
+        return "dev"    # 10%
+    else:
+        return "test"   # 10%
+```
+
+**Corpus Integrity Checks** (run before scoring):
+- `file_id` uniqueness: 0 duplicates allowed
+- Dialogue deduplication: SHA256 hash of `dialogue_clean`
+- Split leakage check: train ∩ test = ∅
+- Near-duplicate detection: MinHash/LSH for high-similarity pairs
+
+**Output**: `corpus_integrity_manifest.json` with counts + warnings (no transcript text).
+
+---
+
+## 4. Definitive Architectural Decisions
 
 | Decision | Choice | Rationale |
 |----------|--------|-----------|
 | **Scoring Metric** | PHQ-8 + self-harm boolean tag | DAIC-WOZ alignment; avoids PHQ-9 safety refusals |
-| **Framework** | LangGraph 1.0 | Production checkpointing, graph-based state, fault tolerance |
-| **Aggregation** | Distributional posterior | Principled uncertainty; better than mean/mode |
-| **Disagreement Threshold** | Range ≥ 2 per item | Simple, interpretable; catches real disagreements |
+| **Framework** | LangGraph 1.0 + PydanticAI | Production checkpointing, structured outputs, fault tolerance |
+| **Aggregation** | Posterior convolution (Section 7.2) | Principled uncertainty; credible intervals on total score |
+| **Disagreement Threshold** | Posterior-based + range fallback (Section 7.3) | Entropy/max-prob primary; range ≥ 2 as safety net |
 | **Runs per Model** | 2 runs × 3 models = 6 passes | Balances cost vs stability |
-| **Preprocessing** | Bias-aware dialogue views | Use **client-only** for embeddings/retrieval; use **client + minimal Q/A context** for scoring to avoid ambiguity while limiting prompt leakage |
-| **Checkpoint Storage** | SQLite (dev) / PostgreSQL (prod) | LangGraph native persistence |
-| **Structured Output** | Pydantic models inside LangGraph | Type-safe, validated responses |
+| **Embedding View** | `client_qa` (Section 5.3.1) | Avoids semantic void; acceptable therapist question context |
+| **Scoring View** | `client_qa` | Minimal Q/A context for short-answer interpretation |
+| **Checkpoint Storage** | SQLite (dev) / PostgreSQL (prod) | LangGraph native persistence + psycopg driver |
+| **Structured Output** | Provider-specific modes (Section 13) | JSON schema mode per provider; repair fallback chain |
+| **Concurrency** | Global semaphore (MAX=50) | Prevents file descriptor exhaustion |
+| **Job Tracking** | Job ledger (Section 14) | Idempotent restarts; error categorization |
 
 ---
 
-## 4. Deep Dive: LangGraph Architecture
+## 5. Deep Dive: LangGraph Architecture
 
 ### 4.1 Why LangGraph (Not PydanticAI Alone)
 
@@ -294,18 +391,32 @@ result = await app.ainvoke(initial_state, config=config)
 
 ### 4.4 Map-Reduce: Processing 2,090 Dialogues
 
+**Critical Infrastructure Note**: Even with `aiolimiter` for API rate limiting, Python's `asyncio` loop may attempt to open thousands of sockets/files simultaneously, hitting OS `ulimit` (often 1024) and causing `OSError: Too many open files`. Use a **global semaphore** to limit concurrent dialogues.
+
 ```python
+from asyncio import Semaphore
 from langgraph.constants import Send
+
+# Global concurrency limit
+MAX_CONCURRENT_DIALOGUES = 50  # Tune based on OS limits and API quotas
 
 class BatchState(TypedDict):
     dialogues: list[dict]  # [{file_id, dialogue}, ...]
     completed: Annotated[list[AggregatedPHQ8], operator.add]
 
+# Global semaphore for resource protection
+workflow_sem = Semaphore(MAX_CONCURRENT_DIALOGUES)
+
+async def score_single_wrapper(state: ScoringState) -> dict:
+    """Wrapper that enforces concurrency limit."""
+    async with workflow_sem:
+        return await score_single(state)
+
 def orchestrator_node(state: BatchState) -> list[Send]:
     """Fan out to process each dialogue independently."""
     return [
         Send(
-            "score_single",  # Target node (the subgraph)
+            "score_single",  # Target node (the subgraph with semaphore)
             {"file_id": d["file_id"], "dialogue": d["dialogue"]}
         )
         for d in state["dialogues"]
@@ -318,7 +429,7 @@ def collector_node(state: BatchState) -> dict:
 # Main graph
 batch_graph = StateGraph(BatchState)
 batch_graph.add_node("orchestrate", orchestrator_node)
-batch_graph.add_node("score_single", scoring_subgraph)  # The per-dialogue graph
+batch_graph.add_node("score_single", score_single_wrapper)  # Uses semaphore
 batch_graph.add_node("collect", collector_node)
 
 batch_graph.set_entry_point("orchestrate")
@@ -332,6 +443,7 @@ batch_graph.add_edge("score_single", "collect")
 2. **Independent checkpointing**: If dialogue 1,500 fails, 1,499 are already saved
 3. **Rate limiting**: LangGraph can throttle concurrent `Send()` calls
 4. **Retry granularity**: Retry just the failed dialogue, not the whole batch
+5. **Resource protection**: Combined with semaphore, prevents file descriptor exhaustion
 
 ### 4.5 Error Handling and Retries
 
@@ -371,7 +483,7 @@ workflow.add_conditional_edges(
 
 ---
 
-## 5. Complete System Architecture
+## 6. Complete System Architecture
 
 ### 5.1 High-Level Flow
 
@@ -482,15 +594,60 @@ This spec therefore standardizes **multiple deterministic dialogue views** and u
 For every input dialogue, preprocessing produces:
 
 - `dialogue_clean`: normalized speaker labels + whitespace (no semantic rewriting)
-- `client_only_text`: client/participant utterances only (best for embeddings/retrieval)
-- `client_qa_text`: client utterances plus the **single most recent** therapist prompt for each contiguous client block (best for scoring when short answers require question context)
+- `client_only_text`: client/participant utterances only (**WARNING: semantic void risk for embeddings**)
+- `client_qa_text`: client utterances plus the **single most recent** therapist prompt for each contiguous client block
+- `client_contextualized`: client utterances rewritten with question context embedded (see 5.3.1.1)
 
-Defaults:
+**Defaults (Updated Based on Senior Review)**:
 
-- **Embeddings/retrieval**: `client_only_text`
+- **Embeddings/retrieval**: `client_qa_text` (recommended) OR `client_contextualized` (best quality, higher cost)
 - **Scoring/jurors**: `client_qa_text`
 
-Rationale: This avoids the “context lobotomy” failure mode (e.g., scoring a bare “yes” with no question), while still minimizing interviewer-protocol leakage.
+**Rationale Change**: The original default of `client_only_text` for embeddings creates a **semantic void problem**:
+
+> *Therapist:* "How is your sleep?" → *Client:* "Terrible."
+> *Therapist:* "How is your relationship?" → *Client:* "Terrible."
+
+If you embed just "Terrible", the vector has no semantic connection to "Sleep" or "Relationship". Your retrieval system will fetch random complaints, not symptom-specific matches.
+
+**Tradeoff Analysis**:
+
+| View | Embedding Quality | Protocol Leakage Risk | Cost |
+|------|------------------|----------------------|------|
+| `client_only_text` | Poor (semantic void) | None | Free |
+| `client_qa_text` | Good | Low (question only) | Free |
+| `client_contextualized` | Best | None | ~$5 preprocessing |
+
+**Recommendation**: Use `client_qa_text` for embeddings. The therapist question context is necessary for semantic grounding, and the "protocol leakage" concern is less severe than semantic void. Reserve `client_only_text` for scoring prompts where you want to minimize prompt injection risk.
+
+#### 5.3.1.1 Contextualized Rewriting (Optional, Best Quality)
+
+For highest embedding quality, use a cheap model (Gemini Flash) to rewrite client responses with context:
+
+```python
+async def contextualize_utterance(
+    therapist_question: str,
+    client_response: str,
+    model: str = "gemini-3-flash-preview"
+) -> str:
+    """Rewrite client response with embedded context.
+
+    Example:
+        Input:  Q="How is your sleep?" A="Terrible"
+        Output: "The participant reports terrible sleep quality."
+    """
+    prompt = f"""Rewrite the client's response to include the question context.
+    Do NOT change the meaning. Do NOT add information not present.
+    Output ONLY the rewritten sentence.
+
+    Therapist: {therapist_question}
+    Client: {client_response}
+    Rewritten:"""
+
+    return await call_model(prompt, model)
+```
+
+**Cost**: ~$5 for 2,090 dialogues at ~1K tokens each with Gemini Flash ($0.50/1M in).
 
 Deterministic rule for `client_qa_text`:
 
@@ -544,7 +701,7 @@ References:
 
 ---
 
-## 6. Scoring Metric: PHQ-8 + Self-Harm Tag
+## 7. Scoring Metric: PHQ-8 + Self-Harm Tag
 
 ### 6.1 Why PHQ-8 (NOT PHQ-9)
 
@@ -602,7 +759,7 @@ Instead of PHQ-9 Item 9 (0-3), store a binary flag:
 
 ---
 
-## 7. Consensus Architecture
+## 8. Consensus Architecture
 
 ### 7.1 Distributional Aggregation (Not Simple Mean)
 
@@ -649,21 +806,104 @@ item_entropy = -sum(p * log(p) for p in posterior.values() if p > 0)  # 1.21
 
 The distributions are different! The first has clear consensus on 2-3, the second is dispersed. Entropy captures this.
 
-### 7.2 Disagreement Threshold
+### 7.2 Total-Score Posterior via Convolution
 
-Trigger Meta-Judge arbitration if ANY item has:
+**Problem**: Computing per-item posteriors then summarizing totals via mode/expected/std of juror totals can produce inconsistent results—item modes may sum to a total that isn't the most probable total.
 
-1. **Range ≥ 2**: e.g., votes `{0, 2, 2}` have range 2 → arbitrate
-2. **Insufficient evidence** flagged by ≥2 jurors
-3. **Total score std ≥ 2.0** across all juror reports
+**Solution**: Convolve item posteriors to get a proper total-score distribution.
 
-**Why range ≥ 2?**
+```python
+import numpy as np
+from scipy.signal import convolve
 
-- Range 1 (e.g., `{2, 3, 2}`) is natural variance between adjacent scores
-- Range 2 (e.g., `{1, 3, 2}`) indicates real disagreement about symptom presence
-- Range 3 (e.g., `{0, 3, 1}`) is extreme disagreement - definitely needs arbitration
+def compute_total_posterior(item_posteriors: list[np.ndarray]) -> np.ndarray:
+    """Convolve 8 item posteriors to get total-score distribution.
 
-### 7.3 Meta-Judge Prompt
+    Args:
+        item_posteriors: List of 8 arrays, each shape (4,) for scores 0-3
+
+    Returns:
+        Array of shape (25,) for total scores 0-24
+    """
+    # Start with first item
+    total_dist = item_posteriors[0]
+
+    # Convolve remaining items
+    for item_post in item_posteriors[1:]:
+        total_dist = convolve(total_dist, item_post)
+
+    return total_dist  # Shape (25,) for scores 0-24
+
+def compute_severity_bucket_probs(total_posterior: np.ndarray) -> dict[str, float]:
+    """Compute probability of each severity bucket."""
+    return {
+        "0-4 (minimal)": float(total_posterior[0:5].sum()),
+        "5-9 (mild)": float(total_posterior[5:10].sum()),
+        "10-14 (moderate)": float(total_posterior[10:15].sum()),
+        "15-19 (mod_severe)": float(total_posterior[15:20].sum()),
+        "20-24 (severe)": float(total_posterior[20:25].sum()),
+    }
+
+def compute_credible_interval(total_posterior: np.ndarray, alpha: float = 0.10) -> tuple[int, int]:
+    """Compute (1-alpha) credible interval for total score."""
+    cdf = np.cumsum(total_posterior)
+    lower = int(np.searchsorted(cdf, alpha / 2))
+    upper = int(np.searchsorted(cdf, 1 - alpha / 2))
+    return (lower, upper)
+```
+
+**Output Extensions**:
+
+- `total_posterior: dict[int, float]` — P(total=k) for k in 0..24
+- `total_ci_90: tuple[int, int]` — 90% credible interval
+- `severity_bucket_probs: dict[str, float]` — P(severity=bucket)
+
+### 7.3 Disagreement Threshold (Posterior-Based)
+
+**Primary Trigger** (posterior uncertainty):
+
+1. **Low max posterior**: `max(posterior[item]) < 0.60` → item is uncertain
+2. **High entropy**: `entropy(posterior[item]) > 1.2` → votes are dispersed
+3. **Clinical threshold ambiguity**: `P(item ∈ {2,3}) ∈ [0.4, 0.6]` → borderline clinical significance
+
+**Safety Net Trigger** (keep for interpretability):
+
+4. **Range ≥ 2**: e.g., votes `{0, 2, 2}` have range 2 → arbitrate
+5. **Insufficient evidence** flagged by ≥2 jurors
+6. **Total score std ≥ 2.0** across all juror reports
+
+**Trigger Logic**:
+
+```python
+def should_arbitrate(item_posterior: np.ndarray, votes: list[int]) -> bool:
+    """Determine if item needs arbitration."""
+    max_prob = item_posterior.max()
+    entropy_val = -np.sum(item_posterior * np.log(item_posterior + 1e-10))
+    clinical_prob = item_posterior[2] + item_posterior[3]  # P(score >= 2)
+
+    # Posterior-based (primary)
+    if max_prob < 0.60:
+        return True
+    if entropy_val > 1.2:
+        return True
+    if 0.4 <= clinical_prob <= 0.6:
+        return True
+
+    # Range-based (safety net)
+    if max(votes) - min(votes) >= 2:
+        return True
+
+    return False
+```
+
+**Why posterior-based arbitration?**
+
+- Range ≥ 2 is a blunt instrument—votes `[1, 2, 2, 2, 2, 3]` have range 2 but high consensus on 2
+- Max posterior < 0.60 catches cases where votes are dispersed even within adjacent scores
+- Entropy captures overall uncertainty, not just extremes
+- Clinical threshold check ensures we arbitrate when the clinical decision (PHQ-8 item ≥ 2 indicates symptom presence) is ambiguous
+
+### 7.4 Meta-Judge Prompt
 
 ```text
 You are a senior clinical psychologist arbitrating a disagreement between three AI scorers.
@@ -694,7 +934,7 @@ Respond in JSON:
 
 ---
 
-## 8. Data Schemas (Pydantic)
+## 9. Data Schemas (Pydantic)
 
 ### 8.1 Input Schema
 
@@ -765,15 +1005,19 @@ class AggregatedPHQ8(BaseModel):
     # Per-item aggregations
     items: dict[str, ItemAggregation]
 
-    # Total scores
+    # Total scores (updated with posterior convolution)
     total_mode: int = Field(ge=0, le=24)
     total_expected: float
     total_std: float
+    total_posterior: dict[int, float] = Field(default_factory=dict)  # P(total=k) for k in 0..24
+    total_ci_90: tuple[int, int] | None = None  # 90% credible interval
     severity_bucket: Literal["0-4", "5-9", "10-14", "15-19", "20-24"]
+    severity_bucket_probs: dict[str, float] = Field(default_factory=dict)  # P(severity=bucket)
 
     # Consensus metadata
     triggered_arbitration: bool
     arbitration_items: list[str] = Field(default_factory=list)
+    arbitration_reasons: dict[str, str] = Field(default_factory=dict)  # item -> reason
 
     # Safety
     mentions_self_harm: bool = False
@@ -790,7 +1034,7 @@ class AggregatedPHQ8(BaseModel):
 
 ---
 
-## 9. Repository Structure
+## 10. Repository Structure
 
 ```
 vibe-check/
@@ -884,7 +1128,7 @@ vibe-check/
 
 ---
 
-## 10. Developer Experience (2026 Best Practices)
+## 11. Developer Experience (2026 Best Practices)
 
 This section defines production-grade Python DevEx based on 2026 best practices with uv, ruff, mypy strict mode, and GitHub Actions.
 
@@ -915,6 +1159,8 @@ classifiers = [
 dependencies = [
     # Orchestration
     "langgraph>=1.0.0",
+    "langgraph-checkpoint-postgres>=2.0.0",  # For production checkpointing
+    "psycopg[binary,pool]>=3.2.0",           # REQUIRED for PostgresSaver
 
     # Agents (PydanticAI for structured outputs)
     "pydantic-ai>=1.0.0",
@@ -1295,7 +1541,7 @@ clean:
 
 ---
 
-## 11. Configuration
+## 12. Configuration
 
 ### 11.1 Environment Variables
 
@@ -1324,12 +1570,18 @@ ARBITRATION_TOTAL_STD_THRESHOLD=2.0
 DIRICHLET_ALPHA=0.5
 
 # ─────────────────────────────────────────────────────────────
-# Preprocessing (Dialogue Views)
+# Preprocessing (Dialogue Views) - Updated per Senior Review
 # ─────────────────────────────────────────────────────────────
 # What jurors see (default: preserve minimal question context for short answers)
 SCORING_DIALOGUE_VIEW=client_qa
-# What embeddings/indexing use (default: minimize therapist prompt leakage)
-EMBEDDING_DIALOGUE_VIEW=client_only
+# What embeddings/indexing use (CHANGED: client_qa to avoid semantic void)
+# Options: client_qa (recommended), client_contextualized (best quality, +$5)
+EMBEDDING_DIALOGUE_VIEW=client_qa
+
+# ─────────────────────────────────────────────────────────────
+# Concurrency Limits (Infrastructure)
+# ─────────────────────────────────────────────────────────────
+MAX_CONCURRENT_DIALOGUES=50
 
 # ─────────────────────────────────────────────────────────────
 # Rate Limiting (requests per minute)
@@ -1381,9 +1633,12 @@ class Settings(BaseSettings):
     arbitration_total_std_threshold: float = 2.0
     dirichlet_alpha: float = 0.5
 
-    # Preprocessing
+    # Preprocessing (updated per senior review - client_qa for embeddings)
     scoring_dialogue_view: Literal["client_qa", "client_only"] = "client_qa"
-    embedding_dialogue_view: Literal["client_only", "dialogue_clean"] = "client_only"
+    embedding_dialogue_view: Literal["client_qa", "client_contextualized", "client_only"] = "client_qa"
+
+    # Concurrency
+    max_concurrent_dialogues: int = 50
 
     # Rate limiting
     openai_rpm: int = 100
@@ -1400,15 +1655,34 @@ class Settings(BaseSettings):
 
 ---
 
-## 12. Validation Protocol
+## 13. Validation Protocol
 
 ### 12.1 Phase 0: Scorer Competence on DAIC-WOZ
+
+**DAIC-WOZ Split Clarification**:
+
+The DAIC-WOZ dataset has multiple release contexts:
+- **AVEC Challenge**: Test set labels are withheld (blind evaluation for leaderboards)
+- **Research Dataset**: Full labels available for `train`, `dev`, and some releases include `test`
+
+This spec uses the **research dataset** with the following split strategy:
+
+| Split | Purpose | Label Status |
+|-------|---------|--------------|
+| `paper-train` | Reference corpus (not used by vibe-check) | Available |
+| `paper-dev[:50%]` | **Threshold tuning** (arbitration, confidence) | Available |
+| `paper-dev[50%:]` | **Phase 0 scorer validation** | Available |
+| `paper-test` | **Phase 3 sim-to-real evaluation** (if labels available) | Check your dataset |
+
+**Important**: If your DAIC-WOZ copy does not include `paper-test` labels, use `paper-dev[50%:]` for Phase 3 instead. Never tune on evaluation data.
 
 Before scoring SQPsychConv, prove the ensemble works on real data:
 
 ```bash
+# Phase 0: Scorer validation (use dev[50%:] to avoid tuning leakage)
 uv run python scripts/validate_on_daic_woz.py \
     --split paper-dev \
+    --split-slice "50%:" \
     --dialogue-view client_qa \
     --output data/outputs/scorer_validation.json
 ```
@@ -1421,6 +1695,24 @@ uv run python scripts/validate_on_daic_woz.py \
 | Binary AUC | > 0.80 | Strong discrimination |
 | ICC(2,k) | ≥ 0.80 | High inter-model reliability |
 | Krippendorff's α | ≥ 0.70 | Ordinal agreement |
+
+### 12.1.1 Threshold Tuning (dev[:50%])
+
+Before Phase 0 validation, tune arbitration thresholds on a held-out slice:
+
+```bash
+uv run python scripts/tune_thresholds.py \
+    --split paper-dev \
+    --split-slice ":50%" \
+    --output data/outputs/threshold_config.json
+```
+
+This produces calibrated values for:
+- `max_posterior_threshold` (default 0.60)
+- `entropy_threshold` (default 1.2)
+- `clinical_ambiguity_range` (default [0.4, 0.6])
+
+**Freeze these thresholds before Phase 0 validation** to avoid data leakage.
 
 ### 12.2 Phase 1: Score SQPsychConv
 
@@ -1477,22 +1769,174 @@ uv run python scripts/evaluate_transfer.py \
 
 ---
 
-## 13. Risk Mitigation
+## 14. Structured Output Contract (Per Provider)
 
-| Risk | Mitigation |
-|------|------------|
-| **API rate limits** | `aiolimiter` + exponential backoff with jitter |
-| **Batch job crash** | LangGraph checkpointing; resume from exact node |
-| **Invalid JSON** | Pydantic validation + *tolerant JSON repair* (do not rely on retries at `temperature=0`; see ai-psychiatrist BUG-043) |
-| **Model refuses** | "Clinical research assistant" role framing |
-| **Prompt leakage (therapist protocol bias)** | Use bias-aware dialogue views (`client_only` for embeddings; `client_qa` for scoring); run required ablations |
-| **Synthetic circularity** | Cross-vendor scorers; validate on DAIC-WOZ |
-| **Cost overrun** | Gemini 3 Flash is cheapest; batch API discounts |
-| **Redistribution/license risk** | Verify SQPsychConv license + policy for redistributing derived labels/embeddings; never ship DAIC-WOZ artifacts |
+**Critical**: Do not rely on "JSON in plaintext" prompting. Use provider-specific structured output modes.
+
+### 13.1 Provider Contracts
+
+| Provider | Structured Output Mode | Fallback Strategy |
+|----------|----------------------|-------------------|
+| **OpenAI** | `response_format: { type: "json_schema", json_schema: {...} }` | JSON repair → fix-JSON reprompt |
+| **Anthropic** | Tool use with single-tool schema OR strict JSON mode | JSON repair → fix-JSON reprompt |
+| **Google** | `response_mime_type: "application/json"` + `response_schema` | JSON repair → fix-JSON reprompt |
+
+### 13.2 JSON Repair Fallback Chain
+
+Do not retry blindly at `temperature=0`—deterministic failures will repeat.
+
+```python
+from pydantic import ValidationError
+import json_repair  # e.g., json-repair library
+
+async def parse_with_fallback(
+    raw_response: str,
+    schema: type[BaseModel],
+    model_id: str,
+    max_repair_attempts: int = 2
+) -> BaseModel | None:
+    """Parse LLM response with fallback chain.
+
+    Returns:
+        Parsed model or None if all attempts fail.
+    """
+    # 1. Direct parse
+    try:
+        return schema.model_validate_json(raw_response)
+    except ValidationError:
+        pass
+
+    # 2. Tolerant JSON repair
+    try:
+        repaired = json_repair.repair_json(raw_response)
+        return schema.model_validate_json(repaired)
+    except (ValidationError, json.JSONDecodeError):
+        pass
+
+    # 3. Fix-JSON reprompt (include the invalid JSON)
+    for attempt in range(max_repair_attempts):
+        fix_prompt = f"""The following JSON is invalid. Fix it to match this schema:
+{schema.model_json_schema()}
+
+Invalid JSON:
+{raw_response}
+
+Return ONLY the corrected JSON, no explanation."""
+
+        fixed_response = await call_model(fix_prompt, model_id, temperature=0.1)
+        try:
+            return schema.model_validate_json(fixed_response)
+        except ValidationError:
+            continue
+
+    # 4. Fail closed
+    return None
+```
+
+### 13.3 Error Tracking
+
+Track parse failures by provider and error type:
+
+```python
+class ParseErrorStats(BaseModel):
+    provider: str
+    error_type: Literal["invalid_json", "schema_mismatch", "repair_failed"]
+    count: int
+    sample_error: str | None  # First error message (no transcript text)
+```
 
 ---
 
-## 14. Success Criteria Summary
+## 15. Job Ledger (Batch Operations)
+
+**Problem**: LangGraph checkpointing tracks graph state, but for 2,090-dialogue batches you also need a job-level view for:
+- Partial re-runs
+- Progress monitoring
+- Error analysis
+- Audit trails
+
+### 14.1 Job Ledger Schema
+
+```sql
+CREATE TABLE job_ledger (
+    id SERIAL PRIMARY KEY,
+    file_id VARCHAR(255) UNIQUE NOT NULL,
+    status VARCHAR(50) NOT NULL,  -- pending, running, succeeded, failed, skipped
+    attempts INT DEFAULT 0,
+    last_error_code VARCHAR(100),  -- rate_limit, parse_fail, refusal, timeout
+    started_at TIMESTAMP,
+    finished_at TIMESTAMP,
+    models_used JSONB,  -- {"gpt": "gpt-5.2", "claude": "...", ...}
+    prompt_hash VARCHAR(64),  -- SHA256 of prompt template
+    config_hash VARCHAR(64),  -- SHA256 of scoring config
+    created_at TIMESTAMP DEFAULT NOW(),
+    updated_at TIMESTAMP DEFAULT NOW()
+);
+
+-- Index for partial re-runs
+CREATE INDEX idx_job_ledger_status ON job_ledger(status);
+CREATE INDEX idx_job_ledger_error ON job_ledger(last_error_code);
+```
+
+### 14.2 Ledger Operations
+
+```python
+class JobLedger:
+    """Minimal job tracking for batch operations."""
+
+    async def mark_started(self, file_id: str, models: dict[str, str]) -> None:
+        """Mark job as running."""
+
+    async def mark_succeeded(self, file_id: str) -> None:
+        """Mark job as complete."""
+
+    async def mark_failed(self, file_id: str, error_code: str) -> None:
+        """Mark job as failed with error category."""
+
+    async def get_pending(self) -> list[str]:
+        """Get file_ids not yet processed."""
+
+    async def get_failed(self, error_code: str | None = None) -> list[str]:
+        """Get file_ids that failed, optionally filtered by error type."""
+
+    async def reset_failed(self, error_code: str | None = None) -> int:
+        """Reset failed jobs to pending for retry."""
+```
+
+### 14.3 Restart Semantics
+
+```bash
+# Resume from last checkpoint (LangGraph handles node-level state)
+uv run python scripts/score_corpus.py --resume
+
+# Retry only failed jobs
+uv run python scripts/score_corpus.py --retry-failed
+
+# Retry only rate-limited jobs (after waiting)
+uv run python scripts/score_corpus.py --retry-failed --error-code rate_limit
+```
+
+---
+
+## 16. Risk Mitigation
+
+| Risk | Mitigation |
+|------|------------|
+| **API rate limits** | `aiolimiter` + exponential backoff with jitter + global semaphore |
+| **Batch job crash** | LangGraph checkpointing + job ledger; resume from exact node |
+| **Invalid JSON** | Structured output modes + tolerant JSON repair + fix-JSON reprompt (Section 13) |
+| **Model refuses** | "Clinical research assistant" role framing; self-harm as separate stage |
+| **Prompt leakage (therapist protocol bias)** | Use bias-aware dialogue views (`client_qa` for embeddings; `client_qa` for scoring); run required ablations |
+| **Semantic void (embeddings)** | Use `client_qa` or `client_contextualized` for embeddings (Section 5.3.1) |
+| **Synthetic circularity** | Cross-vendor scorers; validate on DAIC-WOZ |
+| **Cost overrun** | Hidden token budget (Section 2.3); Gemini 3 Flash is cheapest; batch API discounts |
+| **Redistribution/license risk** | Data Governance section (Section 3) |
+| **File descriptor exhaustion** | Global semaphore (Section 4.4); MAX_CONCURRENT_DIALOGUES=50 |
+| **Hidden thinking tokens** | 3x budget multiplier for GPT-5.2 (Section 2.3) |
+
+---
+
+## 17. Success Criteria Summary
 
 | Criterion | Target |
 |-----------|--------|
@@ -1506,7 +1950,7 @@ uv run python scripts/evaluate_transfer.py \
 
 ---
 
-## 15. Next Steps
+## 18. Next Steps
 
 ### Immediate (Before Implementation)
 
@@ -1545,7 +1989,7 @@ uv run python scripts/evaluate_transfer.py \
 
 ---
 
-## 16. References
+## 19. References
 
 ### Research Papers
 
