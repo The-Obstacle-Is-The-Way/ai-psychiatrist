@@ -1,10 +1,21 @@
 # BUG-044: HuggingFace Chunk Scores Missing (Wrong Embeddings Scored)
 
-**Status**: OPEN (Mitigation in progress)
-**Severity**: P1 (High)
+**Status**: RESOLVED (2026-01-02)
+**Severity**: P1 (High; resolved)
 **Discovered**: 2026-01-01
 
-## Update (2026-01-01)
+## Update (2026-01-02)
+
+- Chunk scoring completed for participant-only HuggingFace embeddings:
+  - `data/embeddings/huggingface_qwen3_8b_paper_train_participant_only.chunk_scores.json`
+  - `data/embeddings/huggingface_qwen3_8b_paper_train_participant_only.chunk_scores.meta.json`
+- Reproduction runs now load these chunk scores at runtime (see `data/outputs/repro_post_preprocessing_20260101_183533.log`).
+- Defaults updated to point at participant-only artifacts:
+  - `.env.example`: `DATA_TRANSCRIPTS_DIR=data/transcripts_participant_only`
+  - `.env.example`: `EMBEDDING_EMBEDDINGS_FILE=huggingface_qwen3_8b_paper_train_participant_only`
+  - `.env.example`: `EMBEDDING_REFERENCE_SCORE_SOURCE=chunk`
+
+## Historical Update (2026-01-01)
 
 - Post participant-only preprocessing, the active HuggingFace embeddings are `huggingface_qwen3_8b_paper_train_participant_only.*`.
 - Chunk scoring for these embeddings is running and writes progress logs to `data/outputs/chunk_scoring_participant_only_20260101_183027.log`.
@@ -18,7 +29,7 @@ We ran chunk scoring (Spec 35) for hours on the **wrong embeddings**.
 | Embeddings File | Precision | Quality | Chunk Scores? |
 |-----------------|-----------|---------|---------------|
 | `ollama_qwen3_8b_paper_train` | Q4_K_M | Lower | ✅ Yes (hours of compute) |
-| `huggingface_qwen3_8b_paper_train_participant_only` | FP16 | **Higher** | 🚧 In progress |
+| `huggingface_qwen3_8b_paper_train_participant_only` | FP16 | **Higher** | ✅ Yes |
 
 ### Why This Matters
 
@@ -35,12 +46,13 @@ We ran chunk scoring (Spec 35) for hours on the **wrong embeddings**.
 
 ### In `.env`:
 ```bash
-EMBEDDING_BACKEND=ollama
-EMBEDDING_EMBEDDINGS_FILE=ollama_qwen3_8b_paper_train
+EMBEDDING_BACKEND=huggingface
+EMBEDDING_EMBEDDINGS_FILE=huggingface_qwen3_8b_paper_train_participant_only
 EMBEDDING_REFERENCE_SCORE_SOURCE=chunk
+DATA_TRANSCRIPTS_DIR=data/transcripts_participant_only
 ```
 
-### What's Missing:
+### Resolution Artifacts Present:
 - `huggingface_qwen3_8b_paper_train_participant_only.chunk_scores.json`
 - `huggingface_qwen3_8b_paper_train_participant_only.chunk_scores.meta.json`
 
@@ -99,6 +111,8 @@ Proposal:
 **Option C**: Run both in parallel (if machine can handle it)
 - Pros: Can compare results
 - Cons: Double the compute
+
+**Resolution**: Completed Option B and ran reproduction (see `docs/results/run-history.md` Run 8).
 
 ## Files Referenced
 

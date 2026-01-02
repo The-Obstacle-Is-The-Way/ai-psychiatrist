@@ -1,7 +1,7 @@
 # Chunk-Level Scoring (Spec 35) — Schema, Workflow, and Gotchas
 
 **Audience**: Researchers running few-shot experiments
-**Last Updated**: 2026-01-01
+**Last Updated**: 2026-01-02
 
 Chunk-level scores are a **new artifact** used when `EMBEDDING_REFERENCE_SCORE_SOURCE=chunk`. This replaces “participant-level score attached to every chunk” with a per-chunk estimated label.
 
@@ -27,7 +27,7 @@ For an embeddings artifact `{emb}.npz` (with `{emb}.json` sidecar), chunk scorin
 - `{emb}.chunk_scores.json`
 - `{emb}.chunk_scores.meta.json`
 
-Where `{emb}` is the resolved embeddings path without suffix (e.g., `data/embeddings/huggingface_qwen3_8b_paper_train`).
+Where `{emb}` is the resolved embeddings path without suffix (e.g., `data/embeddings/huggingface_qwen3_8b_paper_train_participant_only`).
 
 ---
 
@@ -75,7 +75,7 @@ Example:
   "temperature": 0.0,
   "prompt_hash": "...",
   "generated_at": "2025-12-31T00:00:00Z",
-  "source_embeddings": "huggingface_qwen3_8b_paper_train.npz",
+  "source_embeddings": "huggingface_qwen3_8b_paper_train_participant_only.npz",
   "total_chunks": 6837
 }
 ```
@@ -92,7 +92,7 @@ Run the scorer script:
 
 ```bash
 uv run python scripts/score_reference_chunks.py \
-  --embeddings-file huggingface_qwen3_8b_paper_train \
+  --embeddings-file huggingface_qwen3_8b_paper_train_participant_only \
   --scorer-backend ollama \
   --scorer-model gemma3:27b-it-qat
 ```
@@ -116,7 +116,7 @@ This is about **research defensibility** (correlated bias), not "state leakage".
 **MedGemma example** (if HuggingFace deps installed):
 ```bash
 uv run python scripts/score_reference_chunks.py \
-  --embeddings-file huggingface_qwen3_8b_paper_train \
+  --embeddings-file huggingface_qwen3_8b_paper_train_participant_only \
   --scorer-backend huggingface \
   --scorer-model medgemma:27b
 ```
@@ -125,7 +125,7 @@ uv run python scripts/score_reference_chunks.py \
 ```bash
 ollama pull qwen2.5:7b-instruct-q4_K_M
 uv run python scripts/score_reference_chunks.py \
-  --embeddings-file huggingface_qwen3_8b_paper_train \
+  --embeddings-file huggingface_qwen3_8b_paper_train_participant_only \
   --scorer-backend ollama \
   --scorer-model qwen2.5:7b-instruct-q4_K_M
 ```
@@ -133,7 +133,7 @@ uv run python scripts/score_reference_chunks.py \
 **Same model baseline** (for comparison):
 ```bash
 uv run python scripts/score_reference_chunks.py \
-  --embeddings-file huggingface_qwen3_8b_paper_train \
+  --embeddings-file huggingface_qwen3_8b_paper_train_participant_only \
   --scorer-backend ollama \
   --scorer-model gemma3:27b-it-qat \
   --allow-same-model

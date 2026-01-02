@@ -209,16 +209,19 @@ If only some chunks are mismatched, retrieval quality degrades. Always validate 
   ls -lh data/embeddings/*.npz
   ```
 
-  **Default embedding artifact**: `huggingface_qwen3_8b_paper_train.npz` (FP16, recommended)
+  **Default embedding artifact**: `huggingface_qwen3_8b_paper_train_participant_only.npz` (FP16, participant-only transcripts; recommended)
   **Alternative**: `paper_reference_embeddings.npz` (Ollama Q4_K_M, paper-parity)
 
 	  If missing, generate (takes ~65 min for 58 participants):
 	  ```bash
-	  # Generate HuggingFace FP16 embeddings (recommended)
-	  uv run python scripts/generate_embeddings.py --split paper-train
-	  # Output: data/embeddings/huggingface_qwen3_8b_paper_train.npz
+	  # Generate HuggingFace FP16 embeddings (recommended, collision-free naming)
+	  DATA_TRANSCRIPTS_DIR=data/transcripts_participant_only \
+	  uv run python scripts/generate_embeddings.py \
+	    --backend huggingface \
+	    --split paper-train \
+	    --output data/embeddings/huggingface_qwen3_8b_paper_train_participant_only.npz
 	  # Optional (Spec 34): also write per-chunk PHQ-8 item tags sidecar
-	  # uv run python scripts/generate_embeddings.py --split paper-train --write-item-tags
+	  # (recommended for retrieval): add --write-item-tags
 
 	  # Or generate Ollama embeddings (paper-parity)
 	  EMBEDDING_BACKEND=ollama uv run python scripts/generate_embeddings.py --split paper-train

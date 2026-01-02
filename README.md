@@ -16,7 +16,7 @@ AI Psychiatrist implements a research paper's methodology for automated depressi
 ### Key Features
 
 - **Four-Agent Pipeline**: Qualitative, Judge, Quantitative, and Meta-Review agents collaborate for comprehensive assessment
-- **Embedding-Based Few-Shot Learning**: 22% lower item-level MAE vs zero-shot (0.796 → 0.619, paper Section 3.2)
+- **Embedding-Based Few-Shot Learning**: Paper reports 22% lower item-level MAE vs zero-shot (0.796 → 0.619, Section 3.2); this repo tracks coverage-adjusted metrics (AURC/AUGRC/Cmax) in run artifacts
 - **Iterative Self-Refinement**: Judge agent feedback loop improves assessment quality
 - **Engineering-Focused**: Clean architecture, strict type checking, structured logging, 80%+ test coverage
 
@@ -93,6 +93,8 @@ curl -X POST http://localhost:8000/full_pipeline \
 | [**Configuration**](docs/configs/configuration.md) | All configuration options |
 | [**API Reference**](docs/developer/api-endpoints.md) | REST API documentation |
 | [**Glossary**](docs/clinical/glossary.md) | Terms and definitions |
+| [**Reproduction Results**](docs/results/reproduction-results.md) | Current-state reproduction summary |
+| [**Run History**](docs/results/run-history.md) | Canonical timeline + per-run statistics |
 
 ### For Developers
 
@@ -177,10 +179,15 @@ EMBEDDING_TOP_K_REFERENCES=2
 
 # Reference embeddings selection (NPZ + JSON sidecar)
 # Default: FP16 HuggingFace embeddings (paper-train)
-EMBEDDING_EMBEDDINGS_FILE=huggingface_qwen3_8b_paper_train
+EMBEDDING_EMBEDDINGS_FILE=huggingface_qwen3_8b_paper_train_participant_only
+# Transcript source must match how embeddings were built
+DATA_TRANSCRIPTS_DIR=data/transcripts_participant_only
 # Alternative: legacy Ollama embeddings (paper-train)
 # EMBEDDING_EMBEDDINGS_FILE=paper_reference_embeddings
 # DATA_EMBEDDINGS_PATH=/absolute/or/relative/path/to/artifact.npz  # full-path override
+
+# Chunk scoring (Spec 35; requires {name}.chunk_scores.json sidecar)
+EMBEDDING_REFERENCE_SCORE_SOURCE=chunk
 
 # Feedback loop (Section 2.3.1)
 FEEDBACK_MAX_ITERATIONS=10

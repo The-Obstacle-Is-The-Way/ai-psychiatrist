@@ -2,7 +2,7 @@
 
 **Purpose**: Comprehensive record of all reproduction runs, code changes, and statistical analyses for posterity.
 
-**Last Updated**: 2026-01-01
+**Last Updated**: 2026-01-02
 
 ---
 
@@ -11,11 +11,11 @@
 | Mode | AURC | AUGRC | Cmax | Run |
 |------|------|-------|------|-----|
 | **Zero-shot** | **0.134** [0.094-0.176] | **0.037** [0.024-0.053] | 55.5% | Run 3 |
-| Few-shot | 0.151 [0.109-0.194] | 0.048 [0.033-0.065] | 65.9% | Run 7 |
+| **Few-shot** | **0.125** [0.099-0.151] | **0.031** [0.022-0.041] | 50.9% | Run 8 |
 
-**Winner**: Zero-shot (AURC 0.134 vs 0.151)
+**Winner (lowest AURC)**: Few-shot (Run 8), but with substantially lower Cmax than earlier runs.
 
-**Note**: Run 7 improved few-shot by 29% vs Run 5, but zero-shot remains best overall.
+**Note**: Run 8 has much lower coverage ceiling (`Cmax` ~51%) than Run 7 (`Cmax` ~66%). Interpret AURC alongside Cmax.
 
 **Note**: `Cmax` is the max coverage in the risk–coverage curve (counts participants with 8/8 N/A as 0 coverage). `MAE_w` is computed over evaluated subjects only.
 
@@ -25,10 +25,10 @@
 
 **MAE comparisons are not coverage-adjusted when coverages differ.**
 
-- Zero-shot `Cmax`: 55.5%
-- Few-shot `Cmax`: 70.1%
+- Run 7 `Cmax`: zero-shot 56.9%, few-shot 65.9%
+- Run 8 `Cmax`: zero-shot 48.8%, few-shot 50.9%
 
-Few-shot predicts on ~15% more items. Those additional items are inherently harder cases that zero-shot abstained from. Comparing raw MAE is like comparing a surgeon who only takes easy cases vs one who takes hard cases.
+When one system predicts on more items, those additional items are inherently harder cases that another system abstained from. Comparing raw MAE without a coverage-adjusted metric is like comparing a surgeon who only takes easy cases vs one who takes hard cases.
 
 **AURC/AUGRC integrate over the entire risk-coverage curve**, providing a fair comparison regardless of coverage differences.
 
@@ -268,17 +268,21 @@ See: `docs/statistics/statistical-methodology-aurc-augrc.md`
 
 ## Key Findings
 
-### 1. Zero-Shot Beats Few-Shot (Counterintuitive)
+### 1. Few-Shot vs Zero-Shot (Paper Claim)
 
-The paper claims few-shot beats zero-shot. Our reproduction shows the opposite:
+The paper claims few-shot beats zero-shot (by item-level MAE).
 
-| Metric | Paper Claim | Our Result |
-|--------|-------------|------------|
-| Better mode | Few-shot | **Zero-shot** |
-| Few-shot MAE | 0.619 | 0.774 |
-| Zero-shot MAE | 0.796 | 0.698 |
+**Update (Run 8)**: With participant-only transcript preprocessing + chunk scoring enabled, few-shot matches the paper’s reported MAE_item and slightly beats it:
 
-**Possible explanations** (to be tested with Specs 33-36):
+| Metric | Paper (reported) | Run 8 (participant-only) |
+|--------|------------------|--------------------------|
+| Better mode (by MAE_item) | Few-shot | **Few-shot** |
+| Few-shot MAE_item | 0.619 | 0.609 |
+| Zero-shot MAE_item | 0.796 | 0.776 |
+
+**Note**: Earlier runs (Run 3 / Run 7) still showed zero-shot as better on AURC due to the confidence/coverage tradeoff; Run 8 changes the retrieval setting but lowers Cmax substantially.
+
+**Possible explanations** (partially addressed by Specs 33-35 and transcript preprocessing):
 1. Reference example quality issues
 2. Embedding similarity matches topic, not severity
 3. Low-similarity references inject noise
@@ -290,7 +294,7 @@ The paper compared MAE at different coverages without analyzing the risk–cover
 
 ### 3. Formatting Matters But Isn't Everything
 
-Spec 31/32 improved few-shot by ~10%, proving formatting matters. But the gap to zero-shot remains, suggesting retrieval quality is the bigger issue.
+Spec 31/32 improved few-shot by ~10%, proving formatting matters. Retrieval quality still dominates: chunk scoring (Spec 35) and participant-only transcripts (Run 8) substantially change outcomes, but coverage/confidence tradeoffs remain.
 
 ---
 
@@ -308,6 +312,8 @@ Spec 31/32 improved few-shot by ~10%, proving formatting matters. But the gap to
 **Run 5 Conclusion**: Spec 33+34 alone did not improve few-shot.
 
 **Run 7 Conclusion**: Spec 35 chunk-level scoring improved few-shot AURC by 29% (0.213 → 0.151). Gap to zero-shot closed to 9% (CIs overlap).
+
+**Run 8 Conclusion**: Participant-only transcript preprocessing reaches paper MAE_item parity, but reduces `Cmax` substantially; next work is improving coverage without losing the AURC gains.
 
 ---
 
@@ -373,11 +379,59 @@ Spec 31/32 improved few-shot by ~10%, proving formatting matters. But the gap to
 
 **Key Finding**: With Spec 35 chunk-level scoring enabled, few-shot improved 29% on AURC vs Run 5. Few-shot now has **better MAE** (0.639 vs 0.698) but AURC is still slightly worse due to confidence calibration.
 
-**Interpretation**: Spec 35 significantly improved few-shot performance. The remaining gap is now within statistical noise (CIs overlap). The only remaining lever is participant-only transcript preprocessing to improve retrieval quality.
+**Interpretation**: Spec 35 significantly improved few-shot performance. The remaining gap is now within statistical noise (CIs overlap). The next lever was participant-only transcript preprocessing (implemented in Run 8).
 
 ---
 
-**Next action**: Implement participant-only transcript preprocessing to improve retrieval semantic matching (removes interviewer questions from embedding space).
+### Run 8: Jan 2, 2026 - Participant-Only Transcript Preprocessing (Full Run)
+
+**File**: `both_paper-test_backfill-off_20260102_065249.json`
+
+**Log**: `repro_post_preprocessing_20260101_183533.log`
+
+**Run ID**: `19b42478`
+
+**Git Commit**: `1b48d7a` (dirty)
+
+**Timestamp**: 2026-01-02T04:22:43
+
+**Code State**:
+- Spec 33: Retrieval quality guardrails ✅
+- Spec 34: Item-tag filtering ✅
+- Spec 35: Chunk-level scoring ✅ (`EMBEDDING_REFERENCE_SCORE_SOURCE=chunk`)
+- Spec 37: Batch query embedding ✅
+- Transcript preprocessing: participant-only turns ✅ (`data/transcripts_participant_only/`)
+
+**Reference Artifacts**:
+- Few-shot embeddings: `data/embeddings/huggingface_qwen3_8b_paper_train_participant_only.npz`
+- Chunk scores sidecar: `data/embeddings/huggingface_qwen3_8b_paper_train_participant_only.chunk_scores.json` (loaded; train participants=58)
+
+**Results**:
+
+| Mode | AURC | AUGRC | Cmax | MAE_w | MAE_item | MAE_subj | N_included | Failed |
+|------|------|-------|------|-------|----------|----------|------------|--------|
+| Zero-shot | 0.141 | 0.031 | 48.8% | 0.744 | 0.776 | 0.736 | 41 | 0 |
+| Few-shot | 0.125 | 0.031 | 50.9% | 0.706 | 0.609 | 0.688 | 40 | 1 |
+
+**95% Bootstrap CIs** (10,000 resamples, participant-level):
+
+| Mode | AURC CI | AUGRC CI | Cmax CI |
+|------|---------|----------|---------|
+| Zero-shot | [0.108, 0.174] | [0.022, 0.043] | [0.412, 0.567] |
+| Few-shot | [0.099, 0.151] | [0.022, 0.041] | [0.447, 0.575] |
+
+**Statistical Analysis**:
+- Computed 2026-01-02 via `scripts/evaluate_selective_prediction.py --loss abs_norm --seed 42`
+- Metrics files: `selective_prediction_metrics_20260102T132843Z.json` (zero-shot), `selective_prediction_metrics_20260102T132902Z.json` (few-shot)
+- Paired comparison (overlap N=40; `--intersection-only`): `selective_prediction_metrics_20260102T132930Z_paired.json` (ΔAURC = -0.020 [-0.053, +0.014], few-shot − zero-shot)
+
+**Paper MAE comparison (MAE_item)**:
+- Zero-shot: `0.776` vs paper `0.796` (better)
+- Few-shot: `0.609` vs paper `0.619` (better)
+
+**Known Issues**:
+- Few-shot had 1/41 participant failure (PID 383): `Exceeded maximum retries (3) for output validation`.
+- Zero-shot excluded 1/41 participant from MAE aggregation due to 8/8 N/A (counted as 0 coverage for Cmax).
 
 ---
 

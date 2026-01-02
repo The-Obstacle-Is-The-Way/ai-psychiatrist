@@ -188,8 +188,8 @@ To use Ollama instead: `EMBEDDING_BACKEND=ollama` (will use `qwen3-embedding:8b`
 
 | Setting | Default | Purpose |
 |---------|---------|---------|
-| `EMBEDDING_EMBEDDINGS_FILE` | `huggingface_qwen3_8b_paper_train` | Selects `{DATA_BASE_DIR}/embeddings/{name}.npz` (+ `.json`, optional `.meta.json`, optional `.tags.json`) |
-| `DATA_EMBEDDINGS_PATH` | `data/embeddings/huggingface_qwen3_8b_paper_train.npz` | Full-path override (takes precedence over `EMBEDDING_EMBEDDINGS_FILE`) |
+| `EMBEDDING_EMBEDDINGS_FILE` | `huggingface_qwen3_8b_paper_train_participant_only` | Selects `{DATA_BASE_DIR}/embeddings/{name}.npz` (+ `.json`, optional `.meta.json`, optional `.tags.json`) |
+| `DATA_EMBEDDINGS_PATH` | `data/embeddings/huggingface_qwen3_8b_paper_train_participant_only.npz` | Full-path override (takes precedence over `EMBEDDING_EMBEDDINGS_FILE`) |
 
 ---
 

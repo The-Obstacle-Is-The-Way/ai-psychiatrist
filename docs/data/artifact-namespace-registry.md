@@ -12,9 +12,9 @@
 |--------|---------|---------|
 | (none) | AVEC2017 official splits | `reference_embeddings.npz` |
 | `paper_` | Paper-style custom splits | `paper_reference_embeddings.npz` |
-| `{backend}_...` | Embedding generator default output | `huggingface_qwen3_8b_paper_train.npz` |
+| `{backend}_...` | Embedding generator output | `huggingface_qwen3_8b_paper_train_participant_only.npz` |
 
-**Note**: `scripts/generate_embeddings.py` now defaults to `{backend}_{model_slug}_{split}.npz` naming and writes an optional `.meta.json`.
+**Note**: `scripts/generate_embeddings.py` defaults to `{backend}_{model_slug}_{split}.npz` naming and writes an optional `.meta.json`. For collision-free runs, include a transcript-variant suffix (e.g., `_participant_only`) in the output name.
 Legacy filenames like `paper_reference_embeddings.npz` are still supported (use `--output` to regenerate with a specific name).
 
 ---
@@ -59,7 +59,7 @@ These are **not speaker-filtered** and may contain known DAIC-WOZ issues (interr
 
 `scripts/preprocess_daic_woz_transcripts.py` writes deterministic variants under:
 
-- `data/transcripts_preprocessed/{variant}/{id}_P/{id}_TRANSCRIPT.csv`
+- `data/transcripts_{variant}/{id}_P/{id}_TRANSCRIPT.csv`
 
 Recommended variants:
 - `participant_only` (bias-aware retrieval default)
@@ -69,7 +69,7 @@ Recommended variants:
 Select a variant via:
 
 ```bash
-DATA_TRANSCRIPTS_DIR=data/transcripts_preprocessed/participant_only
+DATA_TRANSCRIPTS_DIR=data/transcripts_participant_only
 ```
 
 See: `docs/data/daic-woz-preprocessing.md`.

@@ -1,6 +1,6 @@
 # Paper Reproduction Results (Current Status)
 
-**Last Updated**: 2026-01-01
+**Last Updated**: 2026-01-02
 
 This page is a high-level, **current-state** summary. The canonical timeline + per-run statistics live in:
 - `docs/results/run-history.md`
@@ -9,24 +9,25 @@ This page is a high-level, **current-state** summary. The canonical timeline + p
 
 ## Current Status
 
-- **Few-shot gap closed to 9%** - CIs now overlap (statistically indistinguishable)
-- **Few-shot MAE beats zero-shot** (0.639 vs 0.698) - first time in reproduction history
-- **Spec 35 chunk-level scoring** improved few-shot AURC by 29% (Run 7 vs Run 5)
-- **Remaining lever**: Participant-only transcript preprocessing to improve retrieval quality
+- **Participant-only transcript preprocessing evaluated** (Run 8)
+- **Paper MAE_item parity achieved**: few-shot `0.609` vs paper `0.619`; zero-shot `0.776` vs paper `0.796`
+- **Selective prediction**: few-shot has lower AURC than zero-shot in Run 8 (paired ΔAURC CI overlaps 0)
+- **Tradeoff**: overall Cmax dropped to ~51% in Run 8 (vs ~66% in Run 7), indicating more abstention
 
 ---
 
 ## Current Best Retained Results (Paper-Test)
 
-From `docs/results/run-history.md` (Run 3 zero-shot / Run 7 few-shot):
+From `docs/results/run-history.md` (Run 3 / Run 7 / Run 8):
 
 | Run | Change | Zero-shot AURC | Few-shot AURC | Notes |
 |-----|--------|----------------|---------------|------|
 | Run 3 | Spec 31/32 | **0.134** | 0.193 | Best zero-shot baseline |
 | Run 5 | Spec 33+34 | 0.138 | 0.213 | Guardrails + tags made few-shot worse |
 | Run 7 | Spec 35 | 0.138 | **0.151** | Chunk scoring: 29% improvement |
+| Run 8 | Participant-only transcripts | 0.141 | **0.125** | Lower Cmax (~49% / ~51%) |
 
-**Winner**: Zero-shot still best on AURC (0.134 vs 0.151), but **few-shot has better MAE** (0.639 vs 0.698).
+**Interpretation**: Run 8 closes the remaining “participant-only preprocessing” lever, but does so by substantially lowering coverage. AURC/Cmax must be interpreted together.
 
 **Interpretation**: Spec 35 chunk-level scoring fixed the core label problem. The remaining gap is within statistical noise.
 
@@ -76,6 +77,8 @@ Chunk-level scoring is enabled when `EMBEDDING_REFERENCE_SCORE_SOURCE=chunk` (de
 Generated artifacts:
 - `data/embeddings/ollama_qwen3_8b_paper_train.chunk_scores.json`
 - `data/embeddings/ollama_qwen3_8b_paper_train.chunk_scores.meta.json`
+- `data/embeddings/huggingface_qwen3_8b_paper_train_participant_only.chunk_scores.json`
+- `data/embeddings/huggingface_qwen3_8b_paper_train_participant_only.chunk_scores.meta.json`
 
 See:
 - `docs/embeddings/chunk-scoring.md`

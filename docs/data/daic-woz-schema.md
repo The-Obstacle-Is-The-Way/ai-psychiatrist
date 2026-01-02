@@ -45,17 +45,15 @@ data/
 │   ├── 301_P/
 │   │   └── 301_TRANSCRIPT.csv
 │   └── .../
-├── transcripts_preprocessed/            # Optional: deterministic transcript variants
-│   ├── participant_only/                # Recommended for bias-aware retrieval
-│   │   ├── 300_P/300_TRANSCRIPT.csv
-│   │   └── ...
-│   ├── both_speakers_clean/             # Cleaned but keeps Ellie + Participant
-│   ├── participant_qa/                  # Participant + minimal question context
+├── transcripts_participant_only/        # Deterministic participant-only variant (recommended)
+│   ├── 300_P/300_TRANSCRIPT.csv
 │   └── ...
+├── transcripts_both_speakers_clean/     # Cleaned but keeps Ellie + Participant
+├── transcripts_participant_qa/          # Participant + minimal question context
 ├── embeddings/                          # Pre-computed (Spec 08)
-│   ├── huggingface_qwen3_8b_paper_train.npz       # Default paper-train knowledge base (TRAIN=58)
-│   ├── huggingface_qwen3_8b_paper_train.json
-│   ├── huggingface_qwen3_8b_paper_train.meta.json  # Provenance metadata
+│   ├── huggingface_qwen3_8b_paper_train_participant_only.npz       # Participant-only paper-train knowledge base (TRAIN=58)
+│   ├── huggingface_qwen3_8b_paper_train_participant_only.json
+│   ├── huggingface_qwen3_8b_paper_train_participant_only.meta.json  # Provenance metadata
 │   ├── paper_reference_embeddings.npz             # Optional legacy/compat filename (paper-train)
 │   ├── paper_reference_embeddings.json
 │   ├── paper_reference_embeddings.meta.json       # Optional provenance metadata
@@ -85,10 +83,12 @@ class DataSettings(BaseSettings):
     dev_csv: Path = Path("data/dev_split_Depression_AVEC2017.csv")
 ```
 
+Note: `.env.example` and `DATA-PIPELINE-SPEC.md` use participant-only artifacts (e.g., `huggingface_qwen3_8b_paper_train_participant_only.*`) via env overrides.
+
 To use a preprocessed transcript variant, set:
 
 ```bash
-DATA_TRANSCRIPTS_DIR=data/transcripts_preprocessed/participant_only
+DATA_TRANSCRIPTS_DIR=data/transcripts_participant_only
 ```
 
 See: `docs/data/daic-woz-preprocessing.md`.

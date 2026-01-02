@@ -174,6 +174,13 @@ Few-shot retrieval configuration.
 `data/embeddings/{backend}_{model_slug}_{split}.npz`. After generating, set `EMBEDDING_EMBEDDINGS_FILE` to that basename
 (or pass `--output` to write to `paper_reference_embeddings.npz`).
 
+**Recommended (participant-only pipeline)**: Use a transcript-variant-stamped artifacts to avoid collisions:
+```bash
+DATA_TRANSCRIPTS_DIR=data/transcripts_participant_only
+EMBEDDING_EMBEDDINGS_FILE=huggingface_qwen3_8b_paper_train_participant_only
+EMBEDDING_REFERENCE_SCORE_SOURCE=chunk
+```
+
 **Optional item tags (Spec 34)**: `scripts/generate_embeddings.py --write-item-tags` writes a sibling `{name}.tags.json`
 sidecar. At runtime, enable tag-based filtering with `EMBEDDING_ENABLE_ITEM_TAG_FILTER=true`.
 
@@ -235,7 +242,7 @@ File path configuration.
 | Variable | Type | Default | Description |
 |----------|------|---------|-------------|
 | `DATA_BASE_DIR` | path | `data` | Base data directory |
-| `DATA_TRANSCRIPTS_DIR` | path | `data/transcripts` | Transcript files |
+| `DATA_TRANSCRIPTS_DIR` | path | `data/transcripts` | Transcript files (raw or preprocessed variants) |
 | `DATA_EMBEDDINGS_PATH` | path | `data/embeddings/huggingface_qwen3_8b_paper_train.npz` | Full-path override for reference embeddings (takes precedence over `EMBEDDING_EMBEDDINGS_FILE`) |
 | `DATA_TRAIN_CSV` | path | `data/train_split_Depression_AVEC2017.csv` | Training ground truth |
 | `DATA_DEV_CSV` | path | `data/dev_split_Depression_AVEC2017.csv` | Development ground truth |
@@ -247,11 +254,16 @@ File path configuration.
 	│   ├── 300_P/
 	│   │   └── 300_TRANSCRIPT.csv
 	│   └── .../
+	├── transcripts_participant_only/                 # optional (recommended for retrieval/embeddings)
+	│   ├── 300_P/300_TRANSCRIPT.csv
+	│   └── ...
 	├── embeddings/
-	│   ├── huggingface_qwen3_8b_paper_train.npz         # default reference knowledge base (paper-train)
-	│   ├── huggingface_qwen3_8b_paper_train.json
-	│   ├── huggingface_qwen3_8b_paper_train.meta.json   # provenance metadata (backend/model/dim/chunking)
-	│   ├── huggingface_qwen3_8b_paper_train.tags.json   # optional per-chunk PHQ-8 item tags (Spec 34)
+	│   ├── huggingface_qwen3_8b_paper_train_participant_only.npz         # participant-only reference KB (paper-train)
+	│   ├── huggingface_qwen3_8b_paper_train_participant_only.json
+	│   ├── huggingface_qwen3_8b_paper_train_participant_only.meta.json   # provenance metadata (backend/model/dim/chunking)
+	│   ├── huggingface_qwen3_8b_paper_train_participant_only.tags.json   # optional per-chunk PHQ-8 item tags (Spec 34)
+	│   ├── huggingface_qwen3_8b_paper_train_participant_only.chunk_scores.json
+	│   ├── huggingface_qwen3_8b_paper_train_participant_only.chunk_scores.meta.json
 	│   ├── paper_reference_embeddings.npz               # legacy/compat filename (paper-train)
 	│   ├── paper_reference_embeddings.json
 	│   └── paper_reference_embeddings.meta.json         # provenance metadata (legacy/compat)

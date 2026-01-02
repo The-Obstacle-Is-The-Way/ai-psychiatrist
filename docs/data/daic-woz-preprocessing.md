@@ -68,21 +68,20 @@ Preprocessing produces a **new transcripts root** that still matches the expecte
 
 ```
 data/
-  transcripts_preprocessed/
-    participant_only/
-      300_P/300_TRANSCRIPT.csv
-      ...
-    both_speakers_clean/
-      300_P/300_TRANSCRIPT.csv
-      ...
-    participant_qa/
-      300_P/300_TRANSCRIPT.csv
-      ...
+  transcripts_participant_only/
+    300_P/300_TRANSCRIPT.csv
+    ...
+  transcripts_both_speakers_clean/
+    300_P/300_TRANSCRIPT.csv
+    ...
+  transcripts_participant_qa/
+    300_P/300_TRANSCRIPT.csv
+    ...
 ```
 
 Each variant is selectable via configuration:
 
-- `DATA_TRANSCRIPTS_DIR=data/transcripts_preprocessed/participant_only`
+- `DATA_TRANSCRIPTS_DIR=data/transcripts_participant_only`
 
 No code changes are required: `TranscriptService` already accepts a configurable `transcripts_dir`.
 
@@ -208,9 +207,9 @@ Known upstream issue:
 To avoid mixing artifacts from different transcript variants:
 
 1) Keep raw transcripts in `data/transcripts/`
-2) Generate a processed variant in `data/transcripts_preprocessed/<variant>/`
+2) Generate a processed variant in `data/transcripts_<variant>/`
 3) Point config to it:
-   - `DATA_TRANSCRIPTS_DIR=data/transcripts_preprocessed/<variant>`
+   - `DATA_TRANSCRIPTS_DIR=data/transcripts_<variant>`
 4) Generate embeddings with an explicit, variant-stamped name:
    - `uv run python scripts/generate_embeddings.py --split paper-train --output data/embeddings/<backend>_<model>_paper_train_<variant>.npz`
 5) Set:
@@ -235,19 +234,19 @@ Examples:
 # 1) Bias-aware variant for retrieval (recommended default)
 uv run python scripts/preprocess_daic_woz_transcripts.py \
   --variant participant_only \
-  --output-dir data/transcripts_preprocessed/participant_only \
+  --output-dir data/transcripts_participant_only \
   --overwrite
 
 # 2) Keep both speakers, but remove mechanical noise
 uv run python scripts/preprocess_daic_woz_transcripts.py \
   --variant both_speakers_clean \
-  --output-dir data/transcripts_preprocessed/both_speakers_clean \
+  --output-dir data/transcripts_both_speakers_clean \
   --overwrite
 
 # 3) Minimal Q/A context
 uv run python scripts/preprocess_daic_woz_transcripts.py \
   --variant participant_qa \
-  --output-dir data/transcripts_preprocessed/participant_qa \
+  --output-dir data/transcripts_participant_qa \
   --overwrite
 ```
 

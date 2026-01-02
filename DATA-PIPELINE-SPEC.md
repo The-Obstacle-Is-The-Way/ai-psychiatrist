@@ -1,7 +1,7 @@
 # Data Pipeline Specification
 
-**Date**: 2026-01-01
-**Status**: DRAFT (Awaiting Senior Approval)
+**Date**: 2026-01-02
+**Status**: ACTIVE (Executed 2026-01-02)
 **Purpose**: Define the complete data processing chain from raw transcripts to evaluation
 
 ---
@@ -25,10 +25,16 @@
 data/
 ├── DATA_PROVENANCE.md              # Documents patched values (319, 409)
 │
-├── transcripts/                    # Raw DAIC-WOZ transcripts
+├── transcripts/                    # Raw DAIC-WOZ transcripts (NEVER MODIFIED)
 │   ├── 300_P/300_TRANSCRIPT.csv    # 189 participant folders total
 │   ├── 301_P/301_TRANSCRIPT.csv
 │   └── ...
+│
+├── transcripts_participant_only/   # Preprocessed participant-only transcripts (bias-aware retrieval)
+│   ├── 300_P/300_TRANSCRIPT.csv
+│   ├── 301_P/301_TRANSCRIPT.csv
+│   ├── ...
+│   └── preprocess_manifest.json    # Audit trail (no transcript text)
 │
 ├── paper_splits/                   # Paper-defined train/val/test (from authors' outputs)
 │   ├── paper_split_train.csv       # 58 participants (reference pool for embeddings)
@@ -38,23 +44,15 @@ data/
 │
 ├── embeddings/                     # Pre-computed embeddings for few-shot
 │   ├── _archive/
-│   │   └── pre-spec-34-baseline/   # Archived before Spec 34 tagging
+│   │   └── pre-preprocessing-*/    # Archived raw-transcript embeddings + older runs
 │   │       ├── README.md
-│   │       ├── paper_reference_embeddings.{npz,json,meta.json}
-│   │       └── huggingface_qwen3_8b_paper_train.{npz,json,meta.json}
 │   │
-│   ├── huggingface_qwen3_8b_paper_train.npz       # 100 MB, FP16 precision
-│   ├── huggingface_qwen3_8b_paper_train.json      # Chunk texts
-│   ├── huggingface_qwen3_8b_paper_train.meta.json
-│   ├── huggingface_qwen3_8b_paper_train.tags.json # Item tags (Spec 34)
-│   │   (MISSING: huggingface chunk_scores.json)   # ❌ NOT GENERATED
-│   │
-│   ├── ollama_qwen3_8b_paper_train.npz            # 100 MB, Q4_K_M quant
-│   ├── ollama_qwen3_8b_paper_train.json
-│   ├── ollama_qwen3_8b_paper_train.meta.json
-│   ├── ollama_qwen3_8b_paper_train.tags.json
-│   ├── ollama_qwen3_8b_paper_train.chunk_scores.json      # ✅ Generated
-│   └── ollama_qwen3_8b_paper_train.chunk_scores.meta.json
+│   ├── huggingface_qwen3_8b_paper_train_participant_only.npz
+│   ├── huggingface_qwen3_8b_paper_train_participant_only.json
+│   ├── huggingface_qwen3_8b_paper_train_participant_only.meta.json
+│   ├── huggingface_qwen3_8b_paper_train_participant_only.tags.json
+│   ├── huggingface_qwen3_8b_paper_train_participant_only.chunk_scores.json
+│   └── huggingface_qwen3_8b_paper_train_participant_only.chunk_scores.meta.json
 │
 ├── outputs/                        # Reproduction run outputs
 │   ├── RUN_LOG.md                  # Run history documentation
@@ -83,16 +81,20 @@ data/
 | AVEC dev | 35 participants | Original dataset |
 | AVEC test | 47 participants | Has `full_test_split.csv` with labels |
 
-### 1.3 Critical Issue: All Embeddings from RAW Transcripts
+### 1.3 Critical Issue: Raw Transcripts Leak Protocol Patterns
 
-**Both embedding sets were generated from `data/transcripts/` (raw)**, which contain:
+Raw transcripts (`data/transcripts/`) contain:
 
 - **Ellie's prompts** → Interviewer protocol leakage in retrieval
 - **Sync markers** → `<sync>`, `[synch]`, etc.
 - **Pre-interview preamble** → Noise before interview starts
 - **Interruption windows** → 373: 395-428s, 444: 286-387s
 
-**The preprocessing script exists but has NOT been run yet.**
+Mitigation: participant-only preprocessing is now executed and produces `data/transcripts_participant_only/`, which is used for embedding generation and reproduction runs via:
+
+```bash
+DATA_TRANSCRIPTS_DIR=data/transcripts_participant_only
+```
 
 ### 1.4 Provenance Documentation
 
@@ -112,12 +114,11 @@ Both are mathematically verifiable, not imputations.
 ```
 data/
 ├── transcripts/                         # Raw (NEVER MODIFIED)
-└── transcripts_preprocessed/
-    └── participant_only/                # Preprocessed variant
-        ├── 300_P/300_TRANSCRIPT.csv
-        ├── 301_P/301_TRANSCRIPT.csv
-        ├── ...
-        └── preprocess_manifest.json     # Audit trail (no transcript text)
+└── transcripts_participant_only/         # Preprocessed participant-only variant
+    ├── 300_P/300_TRANSCRIPT.csv
+    ├── 301_P/301_TRANSCRIPT.csv
+    ├── ...
+    └── preprocess_manifest.json         # Audit trail (no transcript text)
 ```
 
 ### 2.2 New Embeddings (From Preprocessed Transcripts)
@@ -173,7 +174,7 @@ data/outputs/
 │  │ STEP 1: Preprocessing                                               │ │
 │  │ Script: scripts/preprocess_daic_woz_transcripts.py                  │ │
 │  │ Input:  data/transcripts/                                           │ │
-│  │ Output: data/transcripts_preprocessed/participant_only/             │ │
+│  │ Output: data/transcripts_participant_only/                          │ │
 │  │                                                                     │ │
 │  │ Removes:                                                            │ │
 │  │   ✗ Ellie utterances (interviewer prompt leakage)                   │ │
@@ -192,7 +193,7 @@ data/outputs/
 │  │ STEP 2: Set Configuration                                           │ │
 │  │                                                                     │ │
 │  │ .env:                                                               │ │
-│  │   DATA_TRANSCRIPTS_DIR=data/transcripts_preprocessed/participant_only│ │
+│  │   DATA_TRANSCRIPTS_DIR=data/transcripts_participant_only            │ │
 │  │                                                                     │ │
 │  │ This affects ALL downstream code:                                   │ │
 │  │   - TranscriptService.load_transcript()                             │ │
@@ -260,7 +261,7 @@ data/outputs/
 
 | Script | Purpose | Input | Output |
 |--------|---------|-------|--------|
-| `preprocess_daic_woz_transcripts.py` | Create preprocessed transcripts | `data/transcripts/` | `data/transcripts_preprocessed/{variant}/` |
+| `preprocess_daic_woz_transcripts.py` | Create preprocessed transcripts | `data/transcripts/` | `data/transcripts_{variant}/` |
 | `generate_embeddings.py` | Create embeddings + tags | Preprocessed transcripts | `*.npz`, `*.json`, `*.meta.json`, `*.tags.json` |
 | `score_reference_chunks.py` | Score each chunk via LLM | Embeddings | `*.chunk_scores.json`, `*.chunk_scores.meta.json` |
 | `reproduce_results.py` | Run PHQ-8 predictions | Transcripts + Embeddings | `both_paper-test_*.json` |
@@ -321,11 +322,11 @@ mv data/outputs/few_shot_*.json data/outputs/_archive/pre-preprocessing-v1/
 ```bash
 uv run python scripts/preprocess_daic_woz_transcripts.py \
   --input-dir data/transcripts \
-  --output-dir data/transcripts_preprocessed/participant_only \
+  --output-dir data/transcripts_participant_only \
   --variant participant_only
 
 # Verify
-cat data/transcripts_preprocessed/participant_only/preprocess_manifest.json | jq '.transcript_count'
+cat data/transcripts_participant_only/preprocess_manifest.json | jq '.transcript_count'
 # Expected: 189
 ```
 
@@ -338,7 +339,7 @@ cat data/transcripts_preprocessed/participant_only/preprocess_manifest.json | jq
 ### Phase 3: Generate HuggingFace Embeddings (~30-60 minutes)
 
 ```bash
-export DATA_TRANSCRIPTS_DIR=data/transcripts_preprocessed/participant_only
+export DATA_TRANSCRIPTS_DIR=data/transcripts_participant_only
 
 uv run python scripts/generate_embeddings.py \
   --backend huggingface \
@@ -352,7 +353,7 @@ uv run python scripts/generate_embeddings.py \
 
 ```bash
 tmux new-session -d -s chunk_scores "
-  export DATA_TRANSCRIPTS_DIR=data/transcripts_preprocessed/participant_only
+  export DATA_TRANSCRIPTS_DIR=data/transcripts_participant_only
   uv run python scripts/score_reference_chunks.py \
     --embeddings-file huggingface_qwen3_8b_paper_train_participant_only \
     --scorer-backend ollama \
@@ -366,7 +367,7 @@ tmux new-session -d -s chunk_scores "
 
 ```bash
 # .env (production config after preprocessing)
-DATA_TRANSCRIPTS_DIR=data/transcripts_preprocessed/participant_only
+DATA_TRANSCRIPTS_DIR=data/transcripts_participant_only
 EMBEDDING_EMBEDDINGS_FILE=huggingface_qwen3_8b_paper_train_participant_only
 EMBEDDING_REFERENCE_SCORE_SOURCE=chunk
 EMBEDDING_BACKEND=huggingface
@@ -446,5 +447,5 @@ uv run python scripts/evaluate_selective_prediction.py --input "$OUTPUT"
 ---
 
 *Document Author*: Claude Code
-*Date*: 2026-01-01
-*Status*: DRAFT - Awaiting Senior Approval
+*Date*: 2026-01-02
+*Status*: ACTIVE (Executed 2026-01-02)

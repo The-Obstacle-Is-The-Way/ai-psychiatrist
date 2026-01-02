@@ -1,46 +1,27 @@
 # Next Steps
 
-**Date**: 2026-01-01
+**Date**: 2026-01-02
 **Status**: ACTIVE
 **Hardware**: Apple M1 Max, 10 cores, 64 GB RAM
 
 ---
 
-## Immediate Priority: Generate HuggingFace Chunk Scores
+## Immediate Priority: Improve Coverage + Eliminate Failures (Run 8)
 
-### The Problem
+Run 8 (participant-only transcripts + chunk scoring) achieves paper MAE_item parity, but with a major tradeoff:
 
-We have two sets of embeddings:
+- Lower `Cmax` (~49–51% vs ~66% in Run 7), meaning substantially more abstention
+- 1/41 few-shot participant failure (PID 383: output validation retries exhausted)
 
-| Embeddings | Precision | Quality | Chunk Scores |
-|------------|-----------|---------|--------------|
-| `ollama_qwen3_8b_paper_train` | Q4_K_M | Lower | ✅ Generated |
-| `huggingface_qwen3_8b_paper_train` | FP16 | **Higher** | ❌ **MISSING** |
+Canonical stats and run provenance live in:
+- `docs/results/run-history.md`
+- `docs/results/reproduction-results.md`
 
-We ran hours of chunk scoring on the **lower-quality** Ollama embeddings.
-The better HuggingFace embeddings have no chunk scores.
+### Action Items
 
-See `PROBLEM-HUGGINGFACE-CHUNK-SCORES-MISSING.md` for full analysis.
-
-### The Command (DO NOT RUN DURING ACTIVE REPRODUCTION)
-
-```bash
-uv run python scripts/score_reference_chunks.py \
-  --embeddings-file huggingface_qwen3_8b_paper_train \
-  --scorer-backend ollama \
-  --scorer-model gemma3:27b-it-qat \
-  --allow-same-model
-```
-
-**Estimated time**: Several hours (58 participants, ~6800 chunks)
-
-### When to Run
-
-1. Wait for current reproduction run to finish (tmux `repro`)
-2. Then run in a new tmux session:
-   ```bash
-   tmux new-session -d -s hf_chunk_scores "uv run python scripts/score_reference_chunks.py --embeddings-file huggingface_qwen3_8b_paper_train --scorer-backend ollama --scorer-model gemma3:27b-it-qat --allow-same-model 2>&1 | tee data/outputs/hf_chunk_scoring_$(date +%Y%m%d_%H%M%S).log"
-   ```
+1. **Explain the coverage drop**: validate whether the abstention increase is coming from retrieval (similarity threshold) vs evidence extraction vs transcript content changes.
+2. **Evaluate `participant_qa`**: test whether adding minimal question context improves evidence availability without reintroducing “Ellie leakage” in retrieval.
+3. **Fix remaining failure mode(s)**: investigate PID 383 few-shot “output validation” failure; reduce deterministic failure cases (e.g., tolerant parsing) without loosening schema safety.
 
 ---
 
@@ -78,7 +59,7 @@ OLLAMA_PORT=11434
 
 # Embedding backend (HuggingFace recommended for quality)
 EMBEDDING_BACKEND=huggingface
-EMBEDDING_EMBEDDINGS_FILE=huggingface_qwen3_8b_paper_train
+EMBEDDING_EMBEDDINGS_FILE=huggingface_qwen3_8b_paper_train_participant_only
 
 # Models (Gemma 3 27B, paper-optimal)
 MODEL_EMBEDDING_MODEL=qwen3-embedding:8b
@@ -193,4 +174,4 @@ The LLM calls will compete for the same Ollama instance.
 
 ---
 
-*Last updated: 2026-01-01*
+*Last updated: 2026-01-02*
