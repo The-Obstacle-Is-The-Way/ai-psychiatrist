@@ -1,14 +1,27 @@
 # Repository Guidelines
 
+## Critical Context
+
+**IMPORTANT**: This is a **robust, independent implementation** that fixes severe methodological flaws in the original research paper (Greene et al.). Do NOT use "paper-parity" terminology.
+
+The original paper has documented failures:
+- **#81**: Participant-level PHQ-8 scores assigned to individual chunks (semantic mismatch)
+- **#69**: Few-shot retrieval attaches participant scores to arbitrary text chunks
+- **#66**: Paper uses invalid statistical comparison (MAE at different coverages)
+- **#47, #46**: Paper does not specify quantization or sampling parameters
+- **#45**: Paper uses undocumented custom split
+
+Our implementation fixes these issues. Use "baseline defaults" or "validated configuration" instead of "paper-parity".
+
 ## Project Structure
 
 - `src/ai_psychiatrist/`: Production package (agents, services, domain, infrastructure, config).
 - `server.py`: FastAPI app + orchestration endpoints (`/health`, `/assess/*`, `/full_pipeline`).
 - `scripts/`: Utilities (e.g., dataset prep, embeddings generation, reproduction helpers).
 - `tests/`: `unit/`, `integration/`, and `e2e/` tests (e2e is opt-in).
-- `docs/`: MkDocs documentation; `docs/archive/` contains historical artifacts.
+- `docs/`: MkDocs documentation; `docs/_archive/` contains historical artifacts.
 - `data/`: Local-only DAIC-WOZ artifacts (gitignored due to licensing).
-- `_legacy/`: Archived original research code/scripts (reference only; not part of the production package).
+- `_legacy/`, `_reference/`: Archived original research code (reference only; NOT production).
 
 ## Build, Test, and Development Commands
 
@@ -23,9 +36,24 @@ Use `uv` and the Makefile targets:
 E2E tests require a running Ollama instance:
 - `AI_PSYCHIATRIST_OLLAMA_TESTS=1 make test-e2e`
 
+## Configuration
+
+**CRITICAL**: Copy `.env.example` to `.env` before running evaluations. Code defaults are conservative baselines for testing only.
+
+### Recommended Settings (from .env.example)
+
+| Setting | Value | Purpose |
+|---------|-------|---------|
+| `EMBEDDING_REFERENCE_SCORE_SOURCE` | `chunk` | Use chunk-level scores (fixes core flaw) |
+| `EMBEDDING_ENABLE_ITEM_TAG_FILTER` | `true` | Filter refs by PHQ-8 item domain |
+| `EMBEDDING_MIN_REFERENCE_SIMILARITY` | `0.3` | Drop low-quality refs |
+| `EMBEDDING_MAX_REFERENCE_CHARS_PER_ITEM` | `500` | Limit ref context per item |
+| `DATA_TRANSCRIPTS_DIR` | `data/transcripts_participant_only` | Participant-only preprocessing |
+| `EMBEDDING_BACKEND` | `huggingface` | FP16 embeddings (better quality) |
+
 ## Coding Style & Naming
 
-- Format + lint: `ruff format` and `ruff check` (don’t hand-format).
+- Format + lint: `ruff format` and `ruff check` (don't hand-format).
 - Typing: `mypy` is strict across `src/`, `tests/`, and `scripts/`.
 - Prefer explicit names and small, single-purpose functions/classes.
 - Public interfaces live in `src/ai_psychiatrist/...`; avoid shipping test doubles in `src/`.
@@ -33,7 +61,7 @@ E2E tests require a running Ollama instance:
 ## Testing Guidelines
 
 - Framework: `pytest` with markers (`unit`, `integration`, `e2e`).
-- Add tests for behavior (not “smoke-only” calls). Prefer deterministic unit tests with mocks at I/O boundaries.
+- Add tests for behavior (not "smoke-only" calls). Prefer deterministic unit tests with mocks at I/O boundaries.
 - Keep coverage ≥ 80% (CI enforces).
 
 ## Commit & Pull Requests
@@ -46,9 +74,9 @@ E2E tests require a running Ollama instance:
 - Do not commit DAIC-WOZ data or secrets; configure via `.env` (see `.env.example`).
 - Prefer running commands via `uv run …` to ensure the repo's venv is used.
 
-## Few-Shot RAG Pipeline (Specs 33-36)
+## Few-Shot RAG Pipeline (Specs 33-46)
 
-The few-shot methodology has a known flaw: participant-level PHQ-8 scores are assigned to arbitrary chunks regardless of content. See `HYPOTHESIS-FEWSHOT-DESIGN-FLAW.md`.
+Our implementation fixes the original methodology's core flaw: participant-level PHQ-8 scores were assigned to arbitrary chunks.
 
 ### Spec Status
 
@@ -56,27 +84,18 @@ The few-shot methodology has a known flaw: participant-level PHQ-8 scores are as
 |------|-------------|--------|
 | 33 | Retrieval guardrails | Enabled (`EMBEDDING_MIN_REFERENCE_SIMILARITY=0.3`) |
 | 34 | Item-tag filtering | Enabled (`EMBEDDING_ENABLE_ITEM_TAG_FILTER=true`) |
-| 35 | Chunk-level scoring | Ready (needs preprocessing via `score_reference_chunks.py`) |
+| 35 | Chunk-level scoring | Enabled (`EMBEDDING_REFERENCE_SCORE_SOURCE=chunk`) |
 | 36 | CRAG runtime validation | Disabled by default (runtime cost) |
+| 46 | Retrieval similarity confidence signals | Implemented (new confidence variants) |
 
-### Production Run: Spec 35
+### Running the Full Evaluation
 
 ```bash
-# Step 1: Generate chunk scores (one-time)
-python scripts/score_reference_chunks.py \
-  --embeddings-file ollama_qwen3_8b_paper_train \
-  --scorer-backend ollama \
-  --scorer-model gemma3:27b-it-qat \
-  --allow-same-model
-
-# Step 2: Enable in .env
-# EMBEDDING_REFERENCE_SCORE_SOURCE=chunk
-
-# Step 3: Run evaluation
-python scripts/reproduce_results.py --mode both --split paper-test
+# In tmux for long runs (~2-3 hours):
+tmux new -s run9
+uv run python scripts/reproduce_results.py --split paper-test \
+  2>&1 | tee data/outputs/run9_$(date +%Y%m%d_%H%M%S).log
 ```
-
-**Note**: Use `--allow-same-model` only if you explicitly want a same-model baseline; otherwise prefer a disjoint scorer model for defensibility. Ablate against MedGemma/disjoint models if feasible.
 
 ## Evaluation Metrics (CRITICAL)
 
@@ -99,10 +118,10 @@ python scripts/reproduce_results.py --mode both --split paper-test
 MAE comparisons are ONLY valid when coverage is similar between conditions.
 
 ```bash
-# Compute AURC/AUGRC
-python scripts/evaluate_selective_prediction.py \
+# Compute AURC/AUGRC with new confidence signals
+uv run python scripts/evaluate_selective_prediction.py \
   --input data/outputs/<your_run>.json \
   --mode few_shot \
-  --loss abs \
+  --confidence hybrid_evidence_similarity \
   --bootstrap-resamples 1000
 ```

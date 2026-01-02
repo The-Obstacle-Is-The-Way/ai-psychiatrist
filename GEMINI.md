@@ -2,11 +2,24 @@
 
 This file provides context and guidance for Gemini when working with the `ai-psychiatrist` repository.
 
+## Critical Context
+
+**IMPORTANT**: This is a **robust, independent implementation** that fixes severe methodological flaws in the original research paper (Greene et al.). Do NOT use "paper-parity" terminology.
+
+The original paper has documented failures:
+- **#81**: Participant-level PHQ-8 scores assigned to individual chunks (semantic mismatch)
+- **#69**: Few-shot retrieval attaches participant scores to arbitrary text chunks
+- **#66**: Paper uses invalid statistical comparison (MAE at different coverages)
+- **#47, #46**: Paper does not specify quantization or sampling parameters
+- **#45**: Paper uses undocumented custom split
+
+Our implementation fixes these issues. Use "baseline defaults" or "validated configuration" instead of "paper-parity".
+
 ## Project Overview
 
 **Name:** `ai-psychiatrist`
 **Version:** 0.1.0
-**Purpose:** An LLM-based Multi-Agent System for Depression Assessment from Clinical Interviews. It is a production-grade, clean-room implementation of the methodology described in Greene et al. "AI Psychiatrist Assistant".
+**Purpose:** An LLM-based Multi-Agent System for Depression Assessment from Clinical Interviews. This is a production-grade implementation that fixes the methodology described in Greene et al.
 **Core Function:** Analyzes clinical interview transcripts to predict PHQ-8 depression scores and severity levels using a four-agent pipeline with iterative self-refinement.
 
 ## Technology Stack
@@ -64,6 +77,22 @@ Use `make` for most operations. The project relies on `uv` for dependency manage
 4.  **QuantitativeAssessmentAgent:** Predicts PHQ-8 scores (supports zero-shot and few-shot with embeddings).
 5.  **MetaReviewAgent:** Synthesizes all outputs into a final severity classification.
 
+## Configuration
+
+**CRITICAL**: Copy `.env.example` to `.env` before running evaluations. Code defaults are conservative baselines for testing only.
+
+### Recommended Settings (from .env.example)
+
+| Setting | Value | Purpose |
+|---------|-------|---------|
+| `EMBEDDING_REFERENCE_SCORE_SOURCE` | `chunk` | Use chunk-level scores (fixes core flaw) |
+| `EMBEDDING_ENABLE_ITEM_TAG_FILTER` | `true` | Filter refs by PHQ-8 item domain |
+| `EMBEDDING_MIN_REFERENCE_SIMILARITY` | `0.3` | Drop low-quality refs |
+| `EMBEDDING_MAX_REFERENCE_CHARS_PER_ITEM` | `500` | Limit ref context per item |
+| `DATA_TRANSCRIPTS_DIR` | `data/transcripts_participant_only` | Participant-only preprocessing |
+| `EMBEDDING_BACKEND` | `huggingface` | FP16 embeddings (better quality) |
+| `OLLAMA_TIMEOUT_SECONDS` | `600` | Large transcripts need extended time |
+
 ## Development Guidelines
 
 *   **Legacy Code:** **DO NOT** modify or depend on code in `_legacy/`, `_literature/`, or `_reference/`. These are archived.
@@ -74,24 +103,14 @@ Use `make` for most operations. The project relies on `uv` for dependency manage
     *   Respect the `TESTING=1` environment variable.
 *   **Logging:** Use the project's structured logging wrapper. Instantiate with `from ai_psychiatrist.infrastructure.logging import get_logger` then `logger = get_logger(__name__)`.
 
-## Configuration
-
-Configuration is managed via environment variables and `.env`.
-
-*   **Models:** Defaults are `gemma3:27b` (Qualitative/Quantitative) and `qwen3-embedding:8b` (Embeddings).
-*   **Key Parameters:**
-    *   `EMBEDDING_DIMENSION`: 4096 (Paper Appendix D).
-    *   `FEEDBACK_SCORE_THRESHOLD`: 3 (Paper Section 2.3.1).
-    *   `OLLAMA_TIMEOUT_SECONDS`: 600 (for large transcripts).
-
 ## Key Files
 *   `server.py`: Entry point for the FastAPI application.
 *   `CLAUDE.md`: Contains detailed instructions for AI coding assistants (highly relevant reference).
 *   `docs/_specs/`: Implementation specifications.
 
-## Few-Shot RAG Pipeline (Specs 33-36)
+## Few-Shot RAG Pipeline (Specs 33-46)
 
-The few-shot methodology has a known flaw: participant-level PHQ-8 scores are assigned to arbitrary chunks regardless of content. See `HYPOTHESIS-FEWSHOT-DESIGN-FLAW.md`.
+Our implementation fixes the original methodology's core flaw: participant-level PHQ-8 scores were assigned to arbitrary chunks.
 
 ### Spec Status
 
@@ -99,27 +118,18 @@ The few-shot methodology has a known flaw: participant-level PHQ-8 scores are as
 |------|-------------|--------|
 | 33 | Retrieval guardrails | Enabled |
 | 34 | Item-tag filtering | Enabled |
-| 35 | Chunk-level scoring | Ready (needs preprocessing) |
+| 35 | Chunk-level scoring | Enabled |
 | 36 | CRAG runtime validation | Disabled by default |
+| 46 | Retrieval similarity confidence signals | Implemented |
 
-### Production Run: Spec 35
+### Running the Full Evaluation
 
 ```bash
-# Step 1: Generate chunk scores (one-time)
-python scripts/score_reference_chunks.py \
-  --embeddings-file ollama_qwen3_8b_paper_train \
-  --scorer-backend ollama \
-  --scorer-model gemma3:27b-it-qat \
-  --allow-same-model
-
-# Step 2: Enable in .env
-# EMBEDDING_REFERENCE_SCORE_SOURCE=chunk
-
-# Step 3: Run evaluation
-python scripts/reproduce_results.py --mode both --split paper-test
+# In tmux for long runs (~2-3 hours):
+tmux new -s run9
+uv run python scripts/reproduce_results.py --split paper-test \
+  2>&1 | tee data/outputs/run9_$(date +%Y%m%d_%H%M%S).log
 ```
-
-**Note**: Use `--allow-same-model` only if you explicitly want a same-model baseline; otherwise prefer a disjoint scorer model for defensibility. Ablate against MedGemma/disjoint models if feasible.
 
 ## Evaluation Metrics (CRITICAL)
 
@@ -142,10 +152,10 @@ python scripts/reproduce_results.py --mode both --split paper-test
 MAE comparisons are ONLY valid when coverage is similar between conditions.
 
 ```bash
-# Compute AURC/AUGRC
-python scripts/evaluate_selective_prediction.py \
+# Compute AURC/AUGRC with new confidence signals
+uv run python scripts/evaluate_selective_prediction.py \
   --input data/outputs/<your_run>.json \
   --mode few_shot \
-  --loss abs \
+  --confidence hybrid_evidence_similarity \
   --bootstrap-resamples 1000
 ```
