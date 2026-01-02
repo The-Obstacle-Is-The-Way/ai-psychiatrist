@@ -22,30 +22,36 @@ This spec analyzes the feasibility of using the SQPsychConv synthetic therapy da
 | Severity Levels | Continuous/ordinal | **None** (classification only) |
 | Scale Type | Clinician-rated (HAMD) | No scale scores in data |
 
-**Critical Finding**: The SQPsychConv dataset (AIMH/SQPsychConv_qwq) contains only:
+**Critical Finding**: The SQPsychConv dataset (e.g., `AIMH/SQPsychConv_qwq`) contains:
 - `file_id`: Unique identifier (e.g., "active436", "control1328")
-- `condition`: Binary label ("mdd" or "control")
-- `dialogue`: Full therapy transcript (~35 turns, ~6k chars)
+- `condition`: Binary label (`mdd` or `control`)
+- `client_model`: Generator model identifier for the client role (e.g., `qwq_qwen`)
+- `therapist_model`: Generator model identifier for the therapist role (e.g., `qwq_qwen`)
+- `dialogue`: Full therapy transcript (mean ~5,953 chars; ~35 utterances on average)
 
 There are **no HAMD, BDI, or severity scores** in the downloadable dataset.
 
 ### 1.2 Dataset Statistics (Verified from Actual Data)
 
 ```
-Test set: 2,090 conversations
+Train split: 2,090 conversations
+  - control: 1,178 (56.4%)
+  - mdd: 912 (43.6%)
+
+Test split: 2,090 conversations
   - control: 1,178 (56.4%)
   - mdd: 912 (43.6%)
 
 Dialogue structure:
   - Length: 2,487–12,446 chars (mean ~5,953)
-  - Turns per dialogue: ~18 therapist + ~18 client turns
+  - Utterances per dialogue: ~35 on average (≈18 therapist + ≈18 client)
   - Format: "Therapist: ..." / "Client: ..." alternating
   - End markers: [/END] tags
 ```
 
 ### 1.3 Data Quality Issues
 
-**Chinese Character Code-Switching**: ~4,000 CJK characters found in dialogues.
+**Chinese Character Code-Switching**: 4,019 CJK characters found in dialogues (qwq variant; measured).
 The qwq_qwen model occasionally code-switches mid-sentence:
 
 ```

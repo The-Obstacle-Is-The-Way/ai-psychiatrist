@@ -42,18 +42,18 @@ Our existing `ai-psychiatrist` system achieves strong PHQ-8 prediction performan
 
 [SQPsychConv](https://arxiv.org/abs/2510.25384) is a synthetic therapy conversation dataset:
 
-- **2,090 patients** across 7 LLM variants (qwq, gemma, llama3.3, mistral, command, nemotron, qwen2.5)
-- **Binary labels only**: `mdd` (major depressive disorder) vs `control`
-- **NO severity scores** in the public release (HAMD/BDI scores were used for generation but stripped due to FOR2107 data governance)
-- **Rich symptom content**: PHQ-8-relevant keywords appear in 38-100% of MDD dialogues
-- **CBT-structured**: ~15-24 turns, dual-agent (therapist + client) generation
-- **Quality issues**: ~4,000 Chinese characters from code-switching in qwq variant
+- **Cohort size**: 2,090 underlying client profiles (1,178 control / 912 MDD) conditioned on structured questionnaire data (Kircher et al., 2019; not included in the public release)
+- **Generator variants**: 7 open-weight LLM variants (mistral, command, qwen2.5, llama3.3, nemotron, qwq, gemma) with separate releases (e.g., `AIMH/SQPsychConv_qwq`)
+- **Public labels only**: `mdd` (major depressive disorder) vs `control` (no HAMD/BDI severity scores in the public dataset release)
+- **Schema (HF qwq variant)**: `file_id`, `condition`, `client_model`, `therapist_model`, `dialogue`
+- **Dialogue structure (HF qwq variant; measured from local export)**: 2,487–12,446 chars (mean ~5,953) and ~35 utterances per dialogue on average (≈18 therapist + ≈18 client)
+- **Quality issue (HF qwq variant; measured)**: 4,019 CJK characters due to code-switching
 
 ### 2.3 The Opportunity
 
 If we can **LLM-score SQPsychConv dialogues with PHQ-8 labels**, we create:
 
-1. A **deployable reference corpus** (no licensing restrictions)
+1. A **deployable reference corpus** (no DAIC-WOZ restrictions; verify SQPsychConv license terms for redistribution)
 2. **Embeddings for RAG** that enable few-shot prediction on new transcripts
 3. **Benchmarking data** to validate against DAIC-WOZ ground truth
 4. A **novel scored dataset** contribution to the research community
@@ -94,13 +94,13 @@ Consider:
 
 **Question**: What multi-agent framework should we use?
 
-#### Option A: Microsoft Agent Framework (AutoGen)
+#### Option A: Microsoft Agent Framework
 
 **Pros**:
 - Production-grade orchestration (GroupChat, Sequential, Handoff patterns)
 - Built-in checkpointing for long-running scoring jobs
 - OpenTelemetry observability
-- Native support for multiple LLM backends
+- Multi-provider support (notably OpenAI/Azure; verify Anthropic/Gemini support and/or adapter effort)
 
 **Cons**:
 - Framework is in preview (`--pre`)
@@ -161,11 +161,11 @@ Consider:
 
 Based on the [DAIC-WOZ validity paper](attached), there are critical preprocessing concerns:
 
-1. **Chinese character code-switching**: The qwq variant contains ~4,000 CJK characters mid-sentence
+1. **Chinese character code-switching**: The qwq variant contains 4,019 CJK characters mid-sentence (measured in our local export)
    - Option: Filter affected dialogues OR use regex cleanup
 
 2. **Therapist prompt bias**: The validity paper shows models can exploit therapist prompts as shortcuts
-   - The second half of DAIC-WOZ interviews contains biased mental health questions
+   - Bias concentrates in specific prompt regions (e.g., mental-health-history question blocks)
    - SQPsychConv is CBT-structured, so bias patterns may differ
    - Recommendation: Score participant utterances only? Or full dialogue?
 
@@ -216,8 +216,9 @@ Please evaluate, refine, or redesign this proposed architecture:
 │  ┌─────────────────────────────────────────────────────────────────┐   │
 │  │                    Output Generation                             │   │
 │  ├─────────────────────────────────────────────────────────────────┤   │
-│  │  • scored_sqpsychconv.csv (file_id, condition, phq8_*, conf)    │   │
-│  │  • embeddings/*.npz (for RAG retrieval)                         │   │
+│  │  • scored_sqpsychconv.csv (file_id, condition, PHQ8_* scores,   │   │
+│  │    per-item evidence + confidence)                              │   │
+│  │  • <prefix>.npz + <prefix>.json (+ optional .tags/.meta)        │   │
 │  │  • validation_report.json (inter-model agreement stats)         │   │
 │  └─────────────────────────────────────────────────────────────────┘   │
 │                                                                         │
@@ -348,8 +349,8 @@ The new repository should produce:
 
 ### 6.2 Data Artifacts
 
-- [ ] `scored_sqpsychconv.csv`: Full scored dataset
-- [ ] `scored_sqpsychconv_embeddings.npz`: Vector embeddings
+- [ ] `scored_sqpsychconv.csv`: Full scored dataset (use ai-psychiatrist-compatible column names: `PHQ8_NoInterest`, `PHQ8_Depressed`, `PHQ8_Sleep`, `PHQ8_Tired`, `PHQ8_Appetite`, `PHQ8_Failure`, `PHQ8_Concentrating`, `PHQ8_Moving`)
+- [ ] Reference embeddings artifact compatible with ai-psychiatrist (NPZ + JSON sidecar; see `scripts/generate_embeddings.py`)
 - [ ] `scoring_metadata.json`: Model versions, timestamps, parameters
 - [ ] `validation_report.json`: Agreement statistics, confidence distributions
 
@@ -431,12 +432,15 @@ When presenting this prompt to the external research agent, attach:
 
 5. **Sample Data** (train_sample.csv, test_sample.csv)
    - Location: `data/sqpsychconv/`
-   - Purpose: Example dialogue structure and format
+   - Purpose: Local HF `AIMH/SQPsychConv_qwq` exports (2,090 rows per split) for schema + reproducibility (despite the `*_sample.csv` filenames)
 
 ### Optional Context
 
 6. **CLAUDE.md** (project conventions)
 7. **GitHub Issue #38** (original research proposal)
+8. **ai-psychiatrist Compatibility Contract** (recommended)
+   - `scripts/generate_embeddings.py` (embedding artifact format)
+   - `src/ai_psychiatrist/services/reference_store.py` (PHQ-8 column names + reference store expectations)
 
 ---
 
