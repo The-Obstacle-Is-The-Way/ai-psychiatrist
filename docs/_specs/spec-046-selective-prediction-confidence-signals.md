@@ -1,6 +1,6 @@
 # Spec 046: Improve Selective Prediction Confidence Signals (AURC/AUGRC)
 
-**Status**: Ready to implement
+**Status**: Ready to implement (not yet implemented)
 **Primary implementation**: `src/ai_psychiatrist/agents/quantitative.py`, `scripts/reproduce_results.py`, `scripts/evaluate_selective_prediction.py`
 **SSOT metric definitions**: `docs/statistics/metrics-and-evaluation.md`
 

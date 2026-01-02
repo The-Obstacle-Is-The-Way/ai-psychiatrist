@@ -3,6 +3,7 @@
 **Status**: Implemented
 **Primary implementation**: `src/ai_psychiatrist/domain/entities.py` (`PHQ8Assessment`)
 **Integration points**: `src/ai_psychiatrist/agents/quantitative.py`, `server.py`, `scripts/reproduce_results.py`
+**Verification**: `uv run pytest tests/ --tb=short` (2026-01-02)
 
 ## 0. Problem Statement
 

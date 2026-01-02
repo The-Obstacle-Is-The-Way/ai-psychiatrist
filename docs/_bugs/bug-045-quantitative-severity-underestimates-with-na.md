@@ -1,35 +1,51 @@
 # BUG-045: Quantitative Severity Underestimates When Items Are N/A
 
-**Status**: CLOSED
-**Severity**: P1 (High)
+**Status**: RESOLVED
+**Severity**: P1 (High; clinical interpretation risk)
 **Discovered**: 2026-01-02
-**Fixed**: 2026-01-02 (commit 5ae1d2a)
+**Fixed**: 2026-01-02
+**Spec**: `docs/_specs/spec-045-quantitative-severity-bounds.md`
+**Verification**: `uv run pytest tests/ --tb=short` (2026-01-02)
+
+---
+
+## Summary
+
+Historically, `PHQ8Assessment.severity` was derived from `total_score` where N/A (unknown) items were treated as `0`.
+This produced **misleadingly low single-label severities** for partial assessments.
+
+The system now reports:
+
+- **Total score bounds**: `min_total_score` (N/A→0) and `max_total_score` (N/A→3)
+- **Severity bounds**: `severity_lower_bound` and `severity_upper_bound`
+- A single `severity` label **only when determinate**; otherwise `severity=None`
 
 ## The Issue
 
-`PHQ8Assessment.total_score` treats **N/A** (unknown) item scores as **0**, and `PHQ8Assessment.severity`
-is derived from that total. This can surface **misleadingly low severity labels** whenever any PHQ-8
-items are unscored/unknown.
+This bug was that the domain model and API surfaced a single severity label derived from a lower-bound total score.
+When any items are unknown (`N/A`), the severity is **not identified**, only bounded.
 
 This is especially problematic because the quantitative prompt explicitly instructs the model to emit
 `N/A` rather than assume absence (score `0`) when there is insufficient evidence.
 
-This is not just a “display bug”: the API currently returns a single `severity` label in `/assess/quantitative`
+This is not just a “display bug”: the API used to return a single `severity` label in `/assess/quantitative`
 and `/full_pipeline`, which is easy to misinterpret as a confident classification.
 
 ## Code Evidence
 
-- `src/ai_psychiatrist/domain/value_objects.py`: `ItemAssessment.score_value` returns `0` when `score is None`.
-- `src/ai_psychiatrist/domain/entities.py`: `PHQ8Assessment.total_score` sums `score_value` across all items.
-- `src/ai_psychiatrist/domain/entities.py`: `PHQ8Assessment.severity` is computed from `total_score`.
-- `server.py`: `/assess/quantitative` and `/full_pipeline` return `QuantitativeResult.severity` and `total_score`
-  based on the above.
-- `src/ai_psychiatrist/agents/quantitative.py`: logs `severity=assessment.severity.name` alongside `na_count`.
+- Domain:
+  - `src/ai_psychiatrist/domain/entities.py`: adds `min_total_score`, `max_total_score`, and severity bounds.
+  - `src/ai_psychiatrist/domain/entities.py`: `PHQ8Assessment.severity` is now `SeverityLevel | None`.
+- API:
+  - `server.py`: returns `total_score_min`, `total_score_max`, `severity_lower_bound`, `severity_upper_bound`,
+    and nullable `severity`.
+- Reproduction outputs:
+  - `scripts/reproduce_results.py`: writes `predicted_total_min/max` and severity bounds to run artifacts.
 
-## Existing Test That Demonstrates the Bug
+## Regression Coverage
 
-- `tests/unit/agents/test_quantitative.py` currently expects `SeverityLevel.MILD` even when 2 PHQ-8 items are `N/A`.
-  This is the underestimation failure mode in unit-test form (min-total scoring treated as full-total severity).
+- `tests/unit/domain/test_entities.py`: validates score bounds and severity determinacy rules.
+- `tests/unit/agents/test_quantitative.py`: asserts partial assessments return `severity is None` and exposes bounds.
 
 ## Repro (Deterministic)
 
@@ -44,9 +60,12 @@ items = {
 }
 assessment = PHQ8Assessment(items=items, mode=AssessmentMode.ZERO_SHOT, participant_id=1)
 
-assert assessment.total_score == 3
 assert assessment.na_count == 7
-assert assessment.severity.name == "MINIMAL"  # Misleading: 7 items are unknown
+assert assessment.min_total_score == 3
+assert assessment.max_total_score == 24
+assert assessment.severity is None
+assert assessment.severity_lower_bound.name == "MINIMAL"
+assert assessment.severity_upper_bound.name == "SEVERE"
 ```
 
 ## Impact Scope
@@ -83,5 +102,4 @@ See implementation plan: `docs/_specs/spec-045-quantitative-severity-bounds.md`.
 ## Notes
 
 - This is an **interpretation/safety correctness bug**, not a parsing or infrastructure issue.
-- Any change here is likely to require updates to `server.py` response models and downstream scripts that
-  consume `total_score`/`severity`.
+  This is resolved by reporting bounds and only emitting a determinate `severity` label when valid.

@@ -3,6 +3,7 @@
 **Status**: Implemented
 **Primary implementation**: `scripts/preprocess_daic_woz_transcripts.py`
 **Integration points**: `src/ai_psychiatrist/config.py` (`DATA_TRANSCRIPTS_DIR`), `src/ai_psychiatrist/services/transcript.py`
+**Verification**: `uv run pytest tests/ --tb=short` (2026-01-02)
 
 ## 0. Problem Statement
 

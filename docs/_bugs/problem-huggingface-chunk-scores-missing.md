@@ -83,20 +83,16 @@ EMBEDDING_EMBEDDINGS_FILE=huggingface_qwen3_8b_paper_train_participant_only
 EMBEDDING_REFERENCE_SCORE_SOURCE=chunk
 ```
 
-## Configuration Philosophy Question
+## Resolution (Configuration Defaults)
 
-**Should HuggingFace be the documented default?**
+HuggingFace is now the **explicit default** in `.env.example`:
 
-Current state is confusing:
-- `.env.example` comments say HuggingFace is the default
-- But `EMBEDDING_BACKEND` is commented out (no explicit default shown)
-- User's `.env` has Ollama set explicitly
+- `DATA_TRANSCRIPTS_DIR=data/transcripts_participant_only`
+- `EMBEDDING_BACKEND=huggingface`
+- `EMBEDDING_EMBEDDINGS_FILE=huggingface_qwen3_8b_paper_train_participant_only`
+- `EMBEDDING_REFERENCE_SCORE_SOURCE=chunk`
 
-Proposal:
-1. Make HuggingFace the **explicit default** in `.env.example`
-2. Document Ollama as the fallback for users without HuggingFace deps
-3. Generate chunk scores for HuggingFace embeddings
-4. Update `.env.example` to point to `huggingface_qwen3_8b_paper_train_participant_only`
+Ollama remains a documented fallback via commented alternatives in `.env.example`.
 
 ## Immediate Decision Required
 
@@ -120,3 +116,8 @@ Proposal:
 - HuggingFace embeddings: `data/embeddings/huggingface_qwen3_8b_paper_train_participant_only.*`
 - Chunk scoring script: `scripts/score_reference_chunks.py`
 - Configuration: `.env`, `.env.example`
+
+## Verification
+
+- Chunk score sidecars exist for HuggingFace participant-only embeddings under `data/embeddings/`.
+- Full test suite passes: `uv run pytest tests/ --tb=short` (2026-01-02).
