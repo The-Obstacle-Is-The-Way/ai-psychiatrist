@@ -1,188 +1,79 @@
-# BUG-043: Pydantic AI Structured Output Bypasses Tolerant JSON Fixups
+# BUG-043: Deterministic Quantitative Scoring Failures from Malformed JSON
 
-**Status**: OPEN
-**Severity**: P2 (Medium - ~2.4% of participants affected)
-**Discovered**: 2026-01-01 (Run 7), 2026-01-02 (Run 8)
+**Status**: RESOLVED
+**Severity**: P2 (Medium — deterministic failure for specific participants)
+**Discovered**: 2026-01-01 / 2026-01-02
+**Fixed**: 2026-01-02
 **Related Issue**: [GitHub #84](https://github.com/The-Obstacle-Is-The-Way/ai-psychiatrist/issues/84)
 
 ---
 
 ## Summary
 
-The `tolerant_json_fixups()` function that repairs malformed LLM JSON (missing commas, smart quotes, etc.) is **correctly implemented** but **not applied** to the Pydantic AI structured output path used for PHQ-8 scoring.
+This bug was **not** caused by Pydantic AI “bypassing” tolerant JSON repair. The Pydantic AI scoring path uses `TextOutput(extract_quantitative)`, and `extract_quantitative()` already calls `tolerant_json_fixups()` before `json.loads()`.
+
+The actual issue was that the original fixups were **insufficient** for a real-world deterministic malformed-output variant:
+
+1. **Unescaped quotes inside string values** (common when the model quotes transcript excerpts) → `JSONDecodeError` that often looks like “missing comma”.
+2. **Stray comma-delimited string fragments** after a string value (e.g., `"evidence": "a", "b", ...`) → `JSONDecodeError: Expecting ':' delimiter`.
+3. **Missing non-critical fields** like `reason` in one item object → strict validation failure and deterministic retries.
 
 ---
 
-## Affected Runs
+## Evidence (Wiring)
 
-| Run | Participant | Mode | Error |
-|-----|-------------|------|-------|
-| Run 7 | 339 | zero-shot | `JSONDecodeError: Expecting ',' delimiter` |
-| Run 8 | 383 | few-shot | `JSONDecodeError: Expecting ',' delimiter` |
+The scoring agent is wired as:
 
----
+- `src/ai_psychiatrist/agents/pydantic_agents.py` uses `TextOutput(extract_quantitative)`
+- `src/ai_psychiatrist/agents/extractors.py#extract_quantitative` does:
+  - `_extract_answer_json(...)`
+  - `tolerant_json_fixups(...)`
+  - `json.loads(...)`
+  - `QuantitativeOutput.model_validate(...)`
 
-## Root Cause Analysis
-
-### The Fix That Already Exists
-
-`tolerant_json_fixups()` in `src/ai_psychiatrist/infrastructure/llm/responses.py:30-91` handles missing commas:
-
-```python
-# Lines 20-22: Regex patterns
-_MISSING_COMMA_AFTER_PRIMITIVE_RE = re.compile(r'("|\d|true|false|null)\s*\n\s*"([^"]+)"\s*:')
-_MISSING_COMMA_AFTER_CONTAINER_RE = re.compile(r'([}\]])\s*\n\s*"([^"]+)"\s*:')
-
-# Lines 65-72: Fix applied
-missing_commas_fixed = _MISSING_COMMA_AFTER_PRIMITIVE_RE.sub(r'\1,\n"\2":', fixed)
-missing_commas_fixed = _MISSING_COMMA_AFTER_CONTAINER_RE.sub(r'\1,\n"\2":', missing_commas_fixed)
-```
-
-### Where The Fix IS Applied
-
-**Evidence extraction** (`quantitative.py:354-358`) calls `tolerant_json_fixups()`:
-
-```python
-# quantitative.py:354-358
-clean = self._strip_json_block(raw)
-clean = tolerant_json_fixups(clean)  # ✅ Fix applied
-obj = json.loads(clean)
-```
-
-### Where The Fix IS NOT Applied
-
-**PHQ-8 scoring** (`quantitative.py:294-303`) uses Pydantic AI structured output:
-
-```python
-# quantitative.py:294-303
-result = await self._scoring_agent.run(
-    prompt,
-    model_settings={...},
-)
-return self._from_quantitative_output(result.output)  # ❌ Pydantic AI parses internally
-```
-
-Pydantic AI's internal JSON parsing:
-1. Receives raw LLM response
-2. Attempts to parse as JSON → **FAILS** (missing comma)
-3. Sends retry prompt to LLM: "Invalid JSON, please fix"
-4. LLM at temp=0 produces **identical malformed output**
-5. After 3 retries, raises `UnexpectedModelBehavior`
-
-**The failure loop:**
-```
-LLM → malformed JSON → Pydantic AI parse fails → retry → LLM (temp=0) → same malformed JSON → ...
-```
+So tolerant fixups were already on the structured-output path.
 
 ---
 
-## Why Pydantic AI Retries Don't Help
+## Root Cause (What Actually Failed)
 
-At `temperature=0.0`, the LLM is **deterministic**. Asking it to "fix the JSON" produces the exact same output because:
+For participant 383 (few-shot), the model produced valid-ish JSON *shape* but:
 
-1. The same prompt + transcript → same activations
-2. temp=0 → greedy decoding (most likely token always selected)
-3. No randomness to escape the malformed output
+- emitted **unescaped `\"`** in evidence excerpts (invalid JSON)
+- emitted **multiple quoted fragments** after `"evidence":` separated by commas (invalid object syntax)
+- omitted `PHQ8_Depressed.reason` entirely (valid JSON after repair, but invalid schema)
 
----
-
-## Proposed Fixes (Ranked by Effort/Risk)
-
-### Option A: Custom Result Validator (Recommended)
-
-Inject `tolerant_json_fixups()` into Pydantic AI's result validation pipeline:
-
-```python
-from pydantic_ai import Agent
-from pydantic_ai.result import ResultData
-
-class TolerantQuantitativeAgent(Agent):
-    def _validate_result(self, raw_text: str) -> ResultData:
-        # Apply tolerant fixups before standard validation
-        fixed_text = tolerant_json_fixups(raw_text)
-        return super()._validate_result(fixed_text)
-```
-
-**Effort**: Medium
-**Risk**: Low (additive, doesn't change core logic)
-
-### Option B: Pre-Processing Wrapper
-
-Wrap the LLM client to apply fixups to all responses:
-
-```python
-class TolerantLLMWrapper:
-    def __init__(self, wrapped_client):
-        self._client = wrapped_client
-
-    async def chat(self, *args, **kwargs) -> str:
-        response = await self._client.chat(*args, **kwargs)
-        return tolerant_json_fixups(response)
-```
-
-**Effort**: Low
-**Risk**: Medium (affects all LLM calls, may have unintended side effects)
-
-### Option C: Fallback to Manual Parsing
-
-If Pydantic AI structured output fails, fall back to manual `_score_items_fallback()`:
-
-```python
-async def _score_items(...):
-    try:
-        return await self._score_items_pydantic_ai(...)
-    except UnexpectedModelBehavior:
-        return await self._score_items_manual(...)  # Uses tolerant_json_fixups
-```
-
-**Effort**: High (duplicate scoring logic)
-**Risk**: Low (graceful degradation)
-
-### Option D: Increase Retry Temperature
-
-Add slight temperature on retries to escape deterministic failure:
-
-```python
-model_settings = {
-    "temperature": 0.0,
-    "retry_temperature": 0.1,  # Hypothetical Pydantic AI feature
-}
-```
-
-**Effort**: Depends on Pydantic AI support
-**Risk**: Medium (introduces non-determinism)
+Because `temperature=0.0`, Pydantic AI retries reproduced the same structural defects and failed after 3 attempts.
 
 ---
 
-## Immediate Workaround
+## Fix (Implemented)
 
-Currently, failed participants are simply skipped:
-- Run 7: 40/41 zero-shot success (PID 339 failed)
-- Run 8: 40/41 few-shot success (PID 383 failed)
+1. `src/ai_psychiatrist/infrastructure/llm/responses.py`
+   - `tolerant_json_fixups()` now additionally:
+     - Escapes unescaped quotes inside strings (`unescaped_quotes`)
+     - Joins stray comma-delimited string fragments in value position (`string_fragments`)
 
-This is acceptable for research runs (~2.4% failure rate) but should be fixed for production.
-
----
-
-## Files to Modify
-
-| File | Change |
-|------|--------|
-| `src/ai_psychiatrist/agents/quantitative.py` | Hook tolerant_json_fixups into Pydantic AI path |
-| `src/ai_psychiatrist/infrastructure/llm/responses.py` | Already has fix (no change needed) |
+2. `src/ai_psychiatrist/agents/extractors.py`
+   - `extract_quantitative()` now fills missing non-critical fields before Pydantic validation:
+     - `reason`: `"Auto-filled: missing reason"`
+     - `evidence`: `"No relevant evidence found"`
+   - `score` remains critical; invalid/missing scores still trigger `ModelRetry`.
 
 ---
 
-## Test Cases
+## Tests (Regression Coverage)
 
-1. Unit test: Verify `tolerant_json_fixups()` repairs missing commas ✅ (already works)
-2. Integration test: Verify Pydantic AI scoring path applies tolerant fixups ❌ (need to add)
-3. E2E test: Run participant 339/383 and verify success after fix
+- `tests/unit/infrastructure/llm/test_tolerant_json_fixups.py`
+  - Unescaped quotes repaired
+  - Leading accidental quotes repaired
+  - Stray string fragments joined
+- `tests/unit/agents/test_pydantic_ai_extractors.py`
+  - Missing `reason` is filled and validation succeeds
 
 ---
 
-## References
+## Verification
 
-- [Pydantic AI Result Validation](https://ai.pydantic.dev/results/)
-- GitHub Issue #84: Original bug report
-- Run 7/8 logs: `data/outputs/repro_post_preprocessing_20260101_183533.log`
+- `make ci` passes (ruff format/check, mypy, full pytest suite).
+- Manual reproduction: participant 383 (few-shot) no longer fails in the Pydantic AI path after repair.
