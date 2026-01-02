@@ -1,7 +1,7 @@
 # Model Wiring: Current State
 
 **Purpose**: Document exactly how models and backends are wired in the codebase.
-**Last Updated**: 2025-12-26
+**Last Updated**: 2026-01-02
 **Status**: Implemented. `LLM_BACKEND` for chat, `EMBEDDING_BACKEND` for embeddings.
 
 ---
@@ -15,7 +15,7 @@
 | **Embedding** | `EMBEDDING_BACKEND=huggingface` | `qwen3-embedding:8b` → `Qwen/Qwen3-Embedding-8B` | **FP16 (16-bit)** |
 
 **Key decisions:**
-- **Chat**: Ollama default (paper parity). MedGemma is hard toggle for quant agent.
+- **Chat**: Ollama default (validated baseline). MedGemma is a hard toggle for quant agent.
 - **Embedding**: HuggingFace default (better precision). Ollama is opt-out fallback.
 
 ### Default vs Hard Toggle (The Simple Version)
@@ -29,7 +29,7 @@
 | **Embeddings** | **HF** (`qwen3-embedding:8b` → `Qwen/Qwen3-Embedding-8B`) | Ollama (`qwen3-embedding:8b`) |
 
 **Why this mix?**
-- Ollama = local, no external deps, paper parity
+- Ollama = local, no external deps, good baseline
 - HF embeddings = FP16 quality matters for similarity scores
 - MedGemma = only available officially on HF (Ollama version is community upload)
 
@@ -288,14 +288,14 @@ def create_embedding_client(settings: Settings) -> EmbeddingClient:
 ### Scenario 1: Default (Recommended)
 
 ```bash
-# .env (defaults - better embeddings, paper-parity chat)
+# .env (validated baseline - better embeddings)
 LLM_BACKEND=ollama                # Chat: Ollama Q4_K_M
 EMBEDDING_BACKEND=huggingface     # Embed: HuggingFace FP16
 ```
 
 Requires: `pip install 'ai-psychiatrist[hf]'`
 
-### Scenario 2: Pure Ollama (Paper Parity, Lower Quality)
+### Scenario 2: Pure Ollama (Legacy Baseline, Lower-Quality Similarity)
 
 ```bash
 LLM_BACKEND=ollama
@@ -340,7 +340,7 @@ Everything FP16. Requires ~54GB VRAM for chat + ~16GB for embeddings.
 
 ```bash
 # .env (defaults)
-LLM_BACKEND=ollama                        # Chat: Ollama (paper parity)
+LLM_BACKEND=ollama                        # Chat: Ollama (baseline)
 EMBEDDING_BACKEND=huggingface             # Embedding: HuggingFace (better precision)
 MODEL_QUANTITATIVE_MODEL=gemma3:27b
 ```
@@ -372,7 +372,7 @@ If HF unavailable → **FAIL LOUDLY**. No silent substitution.
 | Decision | Reason |
 |----------|--------|
 | HF embeddings default | FP16 > Q4_K_M for similarity quality |
-| Ollama chat default | Paper parity (Section 2.3.5) |
+| Ollama chat default | Local baseline (Section 2.3.5) |
 | No runtime fallback | Reproducibility > convenience |
 | Precision validation | Prevent silent embedding mismatch |
 | Hard toggle for MedGemma | Different clinical behavior ≠ drop-in replacement |

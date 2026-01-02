@@ -1,6 +1,6 @@
 # Configuration Philosophy
 
-**Date**: 2026-01-01
+**Date**: 2026-01-02
 **Purpose**: Define what should be configurable vs baked-in defaults.
 
 ---
@@ -23,14 +23,14 @@ Not everything needs a flag. Flags add cognitive load and misconfiguration risk.
 
 ---
 
-## On "Paper Parity"
+## On the Legacy Baseline (Paper-Derived)
 
 **The paper's few-shot method (as described) introduces a fundamental label mismatch.**
 
-We initially aimed for "paper parity" — matching the paper's exact methodology. Through
+We initially aimed to match the paper's reported methodology. Through
 rigorous investigation, we discovered critical issues:
 
-1. **Participant-level scores attached to retrieved chunks**: In our "paper-parity" pipeline,
+1. **Participant-level scores attached to retrieved chunks**: In the legacy baseline pipeline,
    the score shown for a retrieved reference chunk is a **participant-level PHQ-8 item score**.
    This creates label noise: a chunk about "career goals" can be shown as `(PHQ8_Sleep Score: 2)`
    even if it contains no sleep evidence. This is not chunk-level ground truth.
@@ -43,7 +43,7 @@ rigorous investigation, we discovered critical issues:
    paper's headline improvements in our environment. This could be due to methodology gaps
    (under-specified prompts, artifacts, split details) and/or implementation differences.
 
-**Our stance**: "Paper parity" is still useful as a **historical baseline**, but should not be
+**Our stance**: the legacy baseline is still useful as a **historical baseline**, but should not be
 the default behavior. We aim for **research-honest behavior**: minimize label noise, avoid
 silent heuristics, and fail fast when enabled features are broken.
 
@@ -84,11 +84,11 @@ After ablations complete, these become baked-in defaults:
 | `EMBEDDING_MAX_REFERENCE_CHARS_PER_ITEM` | `0` | `500` | `500` | Prevents context bloat (Spec 33) |
 | `EMBEDDING_ENABLE_REFERENCE_VALIDATION` | `false` | `false` | `true` | CRAG validation to reject irrelevant references (Spec 36) |
 
-**Post-ablation**: These become defaults. Flags remain ONLY for paper-parity reproduction.
+**Post-ablation**: These become defaults. Flags remain ONLY for legacy baseline reproduction.
 
 #### Why CRAG (Spec 36) Should Be Default ON
 
-If our goal is **research-honest retrieval** (not paper-parity), reference validation is part of the
+If our goal is **research-honest retrieval** (not the legacy baseline), reference validation is part of the
 "correct" pipeline:
 
 - Spec 34 (item tags) is a **static heuristic** and will miss symptom mentions that don't match keywords.
@@ -270,7 +270,7 @@ enable_reference_validation: bool = False  # CRAG is "gold standard" but OFF?
 ```python
 # GOOD: Correct behavior, opt-out for legacy
 reference_score_source: str = "chunk"  # Correct default
-# To reproduce paper (broken): EMBEDDING_REFERENCE_SCORE_SOURCE=participant
+# Legacy baseline (paper-derived, known flawed): EMBEDDING_REFERENCE_SCORE_SOURCE=participant
 ```
 
 ---
