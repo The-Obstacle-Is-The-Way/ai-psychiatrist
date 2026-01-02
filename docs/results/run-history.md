@@ -429,6 +429,11 @@ Spec 31/32 improved few-shot by ~10%, proving formatting matters. Retrieval qual
 - Zero-shot: `0.776` vs paper `0.796` (better)
 - Few-shot: `0.609` vs paper `0.619` (better)
 
+**Interpretation (first principles)**:
+- **Accuracy vs abstention**: In Run 8, both modes abstain at similar rates (`Cmax` ~49% vs ~51%), so the large MAE_item gap (0.776 → 0.609) is less likely to be an artifact of one mode simply “skipping harder items”.
+- **Calibration unchanged**: AURC/AUGRC CIs overlap, and the paired ΔAURC CI includes 0. This suggests few-shot improves *scores on predicted items* but does not materially improve the model’s *ranking of confidence / abstention decisions*.
+- **Practical takeaway**: If the goal is “predict more items correctly”, retrieval helps; if the goal is “know when not to predict”, focus on evidence availability + confidence signals (e.g., evaluate `participant_qa`, tune thresholds, improve confidence estimation).
+
 **Known Issues**:
 - Few-shot had 1/41 participant failure (PID 383): `Exceeded maximum retries (3) for output validation`.
 - Zero-shot excluded 1/41 participant from MAE aggregation due to 8/8 N/A (counted as 0 coverage for Cmax).

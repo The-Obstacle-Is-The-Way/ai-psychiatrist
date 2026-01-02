@@ -11,7 +11,7 @@ This page is a high-level, **current-state** summary. The canonical timeline + p
 
 - **Participant-only transcript preprocessing evaluated** (Run 8)
 - **Paper MAE_item parity achieved**: few-shot `0.609` vs paper `0.619`; zero-shot `0.776` vs paper `0.796`
-- **Selective prediction**: few-shot has lower AURC than zero-shot in Run 8 (paired ΔAURC CI overlaps 0)
+- **Selective prediction**: AURC/AUGRC are very similar between modes in Run 8 (paired ΔAURC CI overlaps 0), suggesting confidence/abstention quality is not materially different
 - **Tradeoff**: overall Cmax dropped to ~51% in Run 8 (vs ~66% in Run 7), indicating more abstention
 
 ---
@@ -72,7 +72,7 @@ uv run python scripts/evaluate_selective_prediction.py --input data/outputs/YOUR
 
 ## Spec 35 Chunk-Level Scoring (Now Enabled)
 
-Chunk-level scoring is enabled when `EMBEDDING_REFERENCE_SCORE_SOURCE=chunk` (default: `participant`).
+Chunk-level scoring is enabled when `EMBEDDING_REFERENCE_SCORE_SOURCE=chunk` (code default: `participant`; `.env.example` uses `chunk` for the participant-only pipeline).
 
 Generated artifacts:
 - `data/embeddings/ollama_qwen3_8b_paper_train.chunk_scores.json`

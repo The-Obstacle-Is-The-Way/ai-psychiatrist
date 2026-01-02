@@ -1,39 +1,83 @@
+# yaml-language-server: $schema=https://coderabbit.ai/integrations/schema.v2.json
 # CodeRabbit configuration
 # https://docs.coderabbit.ai/guides/configure-coderabbit
 
 language: en-US
 
 reviews:
-  # Skip archived documentation (just renames, no content changes)
-  path_filters:
-    - "!docs/_archive/**"
+  profile: assertive
+  poem: false
+  in_progress_fortune: false
 
-  # High priority paths - focus review here
+  # Reduce review noise and context waste on generated artifacts.
+  path_filters:
+    - "!**/_archive/**"
+    - "!**/__pycache__/**"
+    - "!**/.pytest_cache/**"
+    - "!**/.mypy_cache/**"
+    - "!**/.ruff_cache/**"
+    - "!**/.uv-cache/**"
+    - "!**/*.egg-info/**"
+    - "!**/dist/**"
+    - "!**/build/**"
+    - "!**/htmlcov/**"
+    - "!**/site/**"
+    - "!**/.venv/**"
+    - "!**/venv/**"
+    - "!**/.coverage"
+    - "!**/.DS_Store"
+    - "!data/outputs/**"
+    - "!data/embeddings/**"
+    - "!data/transcripts*/**"
+
   path_instructions:
+    - path: "src/ai_psychiatrist/infrastructure/llm/responses.py"
+      instructions: |
+        Focus on:
+        - `tolerant_json_fixups()`: idempotence, conservativeness (newline-only comma insertion), and no-op on valid JSON
+        - JSON parsing robustness (narrow exceptions, clear errors, no silent corruption)
+        - Logging correctness (avoid emitting sensitive content)
+
+    - path: "src/ai_psychiatrist/agents/extractors.py"
+      instructions: |
+        Focus on:
+        - Centralized JSON repair usage (`tolerant_json_fixups()` is the single source of truth)
+        - No duplicated parsing/repair logic; prefer shared utilities
+        - Type safety and unit-testability
+
     - path: "src/**/*.py"
       instructions: |
         Focus on:
-        - Correctness of regex patterns in tolerant_json_fixups()
-        - Edge cases in JSON repair logic
-        - Type safety and error handling
+        - Correctness + maintainability (small functions, explicit names, minimal side effects)
+        - Strict typing compatibility (mypy) and ruff compliance
+        - No secrets or dataset artifacts committed; use `.env.example` and keep DAIC-WOZ data out of git
 
-    - path: "scripts/*.py"
+    - path: "scripts/**/*.py"
       instructions: |
         Focus on:
-        - CLI argument handling and validation
-        - File I/O safety (atomic writes, path validation)
-        - Edge case handling in preprocessing logic
+        - CLI UX and safety (clear help, validation, deterministic behavior, exit codes)
+        - File I/O safety (atomic writes, path validation, no in-place mutation of inputs)
+        - Reproducibility (logs capture run configuration; no hidden global state)
 
     - path: "tests/**/*.py"
       instructions: |
         Verify:
-        - Test coverage of edge cases
-        - Proper use of pytest markers
-        - No hardcoded paths or magic numbers
+        - Tests are deterministic and assert behavior (not smoke-only)
+        - Proper use of pytest markers/parametrize and tmp_path fixtures
+        - Coverage for edge cases and regressions
+
+    - path: "docs/results/**/*.md"
+      instructions: |
+        Focus on:
+        - Claims are traceable to artifacts (run_id + file paths) and do not rely on hand-copied numbers
+        - Related docs are updated consistently (run history, reproduction results, schema)
 
   auto_review:
     enabled: true
     drafts: false
+    auto_incremental_review: true
+    ignore_title_keywords: ["WIP", "DO NOT REVIEW", "DRAFT"]
+    labels: ["!wip", "!skip-review"]
 
 chat:
   auto_reply: true
