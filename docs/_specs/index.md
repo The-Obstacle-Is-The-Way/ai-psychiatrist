@@ -14,8 +14,8 @@ Implementation-ready (or implementation-planned) specifications for changes that
 
 Implemented specs are distilled into canonical (non-archive) documentation under `docs/`:
 
-- Quantitative severity bounds (BUG-045): [spec-045-quantitative-severity-bounds.md](../_archive/specs/spec-045-quantitative-severity-bounds.md)
-- DAIC-WOZ transcript preprocessing: [daic-woz-transcript-preprocessing.md](../_archive/specs/daic-woz-transcript-preprocessing.md)
+- Quantitative severity bounds (BUG-045): [spec](../_archive/specs/spec-045-quantitative-severity-bounds.md) → [PHQ-8 docs](../clinical/phq8.md#severity-bounds-partial-assessments)
+- DAIC-WOZ transcript preprocessing: [spec](../_archive/specs/daic-woz-transcript-preprocessing.md) → [user guide](../data/daic-woz-preprocessing.md)
 - Feature index + defaults: [features.md](../pipeline-internals/features.md)
 - Few-shot reference prompt format: [few-shot-prompt-format.md](../embeddings/few-shot-prompt-format.md)
 - Retrieval debugging workflow: [debugging-retrieval-quality.md](../embeddings/debugging-retrieval-quality.md)

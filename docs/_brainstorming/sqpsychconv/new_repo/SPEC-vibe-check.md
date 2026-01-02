@@ -102,7 +102,7 @@ The system literally checks the "vibe" of therapy conversations to assess mental
 | **Aggregation** | Distributional posterior | Principled uncertainty; better than mean/mode |
 | **Disagreement Threshold** | Range ≥ 2 per item | Simple, interpretable; catches real disagreements |
 | **Runs per Model** | 2 runs × 3 models = 6 passes | Balances cost vs stability |
-| **Preprocessing** | Client/Participant utterances only | Avoids therapist prompt bias |
+| **Preprocessing** | Bias-aware dialogue views | Use **client-only** for embeddings/retrieval; use **client + minimal Q/A context** for scoring to avoid ambiguity while limiting prompt leakage |
 | **Checkpoint Storage** | SQLite (dev) / PostgreSQL (prod) | LangGraph native persistence |
 | **Structured Output** | Pydantic models inside LangGraph | Type-safe, validated responses |
 
@@ -165,17 +165,18 @@ gemini_agent = Agent(
 # 3. LangGraph orchestrates them
 class ScoringState(TypedDict):
     file_id: str
-    client_text: str
+    dialogue: str
+    scoring_text: str
     jury_results: list[PHQ8Report]
     needs_arbitration: bool
-    final_output: AggregatedPHQ8
+    final_output: AggregatedPHQ8 | None
 
 async def jury_node(state: ScoringState) -> dict:
     """Run all three jurors in parallel using PydanticAI agents."""
     results = await asyncio.gather(
-        gpt_agent.run(state["client_text"]),
-        claude_agent.run(state["client_text"]),
-        gemini_agent.run(state["client_text"]),
+        gpt_agent.run(state["scoring_text"]),
+        claude_agent.run(state["scoring_text"]),
+        gemini_agent.run(state["scoring_text"]),
     )
     return {"jury_results": [r.output for r in results]}
 ```
@@ -191,7 +192,8 @@ import operator
 class ScoringState(TypedDict):
     # Identity
     file_id: str
-    client_text: str
+    dialogue: str
+    scoring_text: str
 
     # Accumulated results (operator.add allows multiple nodes to append)
     jury_results: Annotated[list[PHQ8Report], operator.add]
@@ -209,9 +211,9 @@ class ScoringState(TypedDict):
 
 ```python
 async def preprocess_node(state: ScoringState) -> dict:
-    """Extract client-only text from dialogue."""
-    client_text = extract_client_utterances(state["dialogue"])
-    return {"client_text": client_text}
+    """Build bias-aware text views from the raw dialogue."""
+    views = build_dialogue_views(state["dialogue"])
+    return {"scoring_text": views.client_qa_text}
 
 async def jury_node(state: ScoringState) -> dict:
     """Run 3 models × 2 runs = 6 scoring passes."""
@@ -381,7 +383,7 @@ workflow.add_conditional_edges(
 │  ┌──────────────┐      ┌──────────────┐      ┌────────────────────────────┐ │
 │  │ HuggingFace  │      │ Preprocess   │      │      CONSENSUS ENGINE      │ │
 │  │ SQPsychConv  │─────▶│ Extract      │─────▶│                            │ │
-│  │ 2,090 dlgs   │      │ Client Text  │      │  ┌─────┐ ┌─────┐ ┌─────┐   │ │
+│  │ 2,090 dlgs   │      │ Text Views   │      │  ┌─────┐ ┌─────┐ ┌─────┐   │ │
 │  └──────────────┘      └──────────────┘      │  │GPT  │ │Clau │ │Gemi │   │ │
 │                                              │  │5.2  │ │4.5  │ │3.0  │   │ │
 │                                              │  └──┬──┘ └──┬──┘ └──┬──┘   │ │
@@ -426,8 +428,8 @@ workflow.add_conditional_edges(
                              ▼
                     ┌─────────────────┐
                     │   preprocess    │
-                    │ Extract client  │
-                    │ text only       │
+                    │ Build dialogue  │
+                    │ text views      │
                     └────────┬────────┘
                              │
                              ▼
@@ -466,6 +468,79 @@ workflow.add_conditional_edges(
                     │  Save to DB     │
                     └─────────────────┘
 ```
+
+### 5.3 Preprocessing: Bias-Aware Dialogue Views
+
+**Problem**: In clinical interviews (and synthetic therapy dialogues), the therapist/interviewer contributes a strong *protocol prior*. For DAIC-WOZ in particular, research shows models can exploit interviewer prompts as a shortcut signal rather than learning patient-language indicators of depression severity.
+
+**Key insight**: Even if an LLM can distinguish speakers in the final prompt, **embeddings and retrieval cannot reliably disambiguate “therapist asked about X” from “client reported X.”** Speaker leakage at the embedding layer can corrupt few-shot selection before the scorer ever sees the examples.
+
+This spec therefore standardizes **multiple deterministic dialogue views** and uses them *intentionally* by stage.
+
+#### 5.3.1 Dialogue Views (Single Source of Truth)
+
+For every input dialogue, preprocessing produces:
+
+- `dialogue_clean`: normalized speaker labels + whitespace (no semantic rewriting)
+- `client_only_text`: client/participant utterances only (best for embeddings/retrieval)
+- `client_qa_text`: client utterances plus the **single most recent** therapist prompt for each contiguous client block (best for scoring when short answers require question context)
+
+Defaults:
+
+- **Embeddings/retrieval**: `client_only_text`
+- **Scoring/jurors**: `client_qa_text`
+
+Rationale: This avoids the “context lobotomy” failure mode (e.g., scoring a bare “yes” with no question), while still minimizing interviewer-protocol leakage.
+
+Deterministic rule for `client_qa_text`:
+
+- Keep every client utterance.
+- For each contiguous block of client utterances, include the immediately preceding therapist line **once** (do not repeat it before every client line).
+
+#### 5.3.2 First-Principles Example (Why Views Matter)
+
+Full dialogue:
+
+```
+Therapist: On a scale of 1-10, how hopeless have you felt?
+Client: About an 8.
+```
+
+- `client_only_text` → `About an 8.` (ambiguous; high hallucination risk)
+- `client_qa_text` → includes the therapist question, enabling correct interpretation.
+
+Juror prompts must still enforce: **score PHQ-8 based only on client statements**; therapist text is context, not evidence.
+
+#### 5.3.3 DAIC-WOZ Phase 0: Deterministic Transcript Hygiene
+
+Phase 0 validation must apply the same *mechanical* transcript corrections that the DAIC-WOZ preprocessing literature and reference tooling document, to avoid silently biasing evaluation.
+
+Minimum deterministic rules (parity with the Bailey/Plumbley DAIC-WOZ preprocessing tool and this repo’s implementation patterns):
+
+- Validate required schema (`start_time`, `stop_time`, `speaker`, `value`).
+- Normalize speakers (`ellie` → `Ellie`, `participant` → `Participant`).
+- Remove pre-interview preamble (rows before first Ellie utterance when Ellie exists).
+- Remove sync markers: `<sync>`, `<synch>`, `[sync]`, `[synch]`, `[syncing]`, `[synching]` (case/whitespace tolerant).
+- Remove known interruption windows:
+  - 373: `[395, 428]` seconds
+  - 444: `[286, 387]` seconds
+- Handle known “no Ellie transcript” sessions without failing (451/458/480).
+- Preserve nonverbal annotations (e.g., `<laughter>`) by default for LLM scoring; treat removal as an explicit ablation.
+
+Operational constraint:
+
+- Never overwrite raw transcripts; write processed variants to a new directory and record a **counts-only** manifest (no transcript text).
+
+#### 5.3.4 Required Ablations (Preprocessing Is Not “Set and Forget”)
+
+To avoid accidental benchmark gaming and to quantify the prompt-leakage tradeoff, Phase 0 and Phase 3 must include:
+
+- scoring view: `client_qa_text` vs `client_only_text`
+- embedding view: `client_only_text` vs `dialogue_clean` (expected to be worse; included as a sanity check)
+
+References:
+
+- Burdisso et al. (2024): interviewer prompt shortcut behavior in DAIC-WOZ.
 
 ---
 
@@ -757,7 +832,7 @@ vibe-check/
 │       │
 │       ├── preprocessing/
 │       │   ├── __init__.py
-│       │   ├── client_extractor.py   # Extract client utterances
+│       │   ├── client_extractor.py   # Build dialogue views (client_only, client_qa)
 │       │   └── cleaner.py            # Normalization + CJK detection (optional filtering)
 │       │
 │       └── export/
@@ -874,6 +949,14 @@ ARBITRATION_TOTAL_STD_THRESHOLD=2.0
 DIRICHLET_ALPHA=0.5
 
 # ─────────────────────────────────────────────────────────────
+# Preprocessing (Dialogue Views)
+# ─────────────────────────────────────────────────────────────
+# What jurors see (default: preserve minimal question context for short answers)
+SCORING_DIALOGUE_VIEW=client_qa
+# What embeddings/indexing use (default: minimize therapist prompt leakage)
+EMBEDDING_DIALOGUE_VIEW=client_only
+
+# ─────────────────────────────────────────────────────────────
 # Rate Limiting (requests per minute)
 # ─────────────────────────────────────────────────────────────
 OPENAI_RPM=100
@@ -896,6 +979,8 @@ PROMPT_VERSION=v1.0.0
 ### 11.2 Pydantic Settings
 
 ```python
+from typing import Literal
+
 from pydantic_settings import BaseSettings, SettingsConfigDict
 
 class Settings(BaseSettings):
@@ -921,6 +1006,10 @@ class Settings(BaseSettings):
     arbitration_total_std_threshold: float = 2.0
     dirichlet_alpha: float = 0.5
 
+    # Preprocessing
+    scoring_dialogue_view: Literal["client_qa", "client_only"] = "client_qa"
+    embedding_dialogue_view: Literal["client_only", "dialogue_clean"] = "client_only"
+
     # Rate limiting
     openai_rpm: int = 100
     anthropic_rpm: int = 60
@@ -945,6 +1034,7 @@ Before scoring SQPsychConv, prove the ensemble works on real data:
 ```bash
 uv run python scripts/validate_on_daic_woz.py \
     --split paper-dev \
+    --dialogue-view client_qa \
     --output data/outputs/scorer_validation.json
 ```
 
@@ -968,6 +1058,9 @@ uv run python scripts/score_corpus.py \
 **Internal Sanity Checks**:
 
 - Record corpus integrity: `file_id` uniqueness, duplicate detection, and a deterministic split manifest (do not trust HF split names).
+- Record dialogue-view diagnostics: empty/near-empty `client_only_text`, frequency of short/ambiguous answers (`yes/no/ok/8`) that require `client_qa_text` context.
+- Record speaker parsing integrity: unknown/missing role-prefix rate (must be 0 or explicitly warned + skipped).
+- Record text artifact stats: CJK character count per variant (detect by default; removal only via explicit ablation).
 - MDD dialogues should have higher mean PHQ-8 than control
 - Cronbach's α > 0.7 (internal consistency)
 - Arbitration rate < 30% (most items reach consensus)
@@ -995,7 +1088,7 @@ uv run python scripts/evaluate_transfer.py \
 | Configuration | Description |
 |---------------|-------------|
 | k ∈ {3, 5, 10, 20} | Number of retrieved exemplars |
-| participant-only vs full | Embedding strategy |
+| client_only vs dialogue_clean | Embedding strategy (prompt-leakage ablation) |
 | total_mode vs total_expected | Label to use |
 | low-entropy filter | Only retrieve confident exemplars |
 
@@ -1017,6 +1110,7 @@ uv run python scripts/evaluate_transfer.py \
 | **Batch job crash** | LangGraph checkpointing; resume from exact node |
 | **Invalid JSON** | Pydantic validation + *tolerant JSON repair* (do not rely on retries at `temperature=0`; see ai-psychiatrist BUG-043) |
 | **Model refuses** | "Clinical research assistant" role framing |
+| **Prompt leakage (therapist protocol bias)** | Use bias-aware dialogue views (`client_only` for embeddings; `client_qa` for scoring); run required ablations |
 | **Synthetic circularity** | Cross-vendor scorers; validate on DAIC-WOZ |
 | **Cost overrun** | Gemini 3 Flash is cheapest; batch API discounts |
 | **Redistribution/license risk** | Verify SQPsychConv license + policy for redistributing derived labels/embeddings; never ship DAIC-WOZ artifacts |
@@ -1050,7 +1144,7 @@ uv run python scripts/evaluate_transfer.py \
 
 1. [ ] Initialize repo with `uv init`
 2. [ ] Implement Pydantic schemas
-3. [ ] Implement preprocessing (client text extraction)
+3. [ ] Implement preprocessing (dialogue views: `client_only`, `client_qa`)
 4. [ ] Write unit tests for schemas
 
 ### Phase 2: Agents (3-5 days)
@@ -1084,6 +1178,7 @@ uv run python scripts/evaluate_transfer.py \
 - [Amazon CollabEval: Multi-agent LLM-as-Judge](https://www.amazon.science/publications/enhancing-llm-as-a-judge-via-multi-agent-collaboration)
 - [PHQ-8 vs PHQ-9 equivalency](https://stacks.cdc.gov/view/cdc/84248)
 - [SQPsychConv dataset](https://arxiv.org/abs/2510.25384)
+- [Burdiss[o] et al. (2024): Validity of therapist prompts in DAIC-WOZ](https://aclanthology.org/2024.clinicalnlp-1.8/)
 
 ### Model Announcements
 
