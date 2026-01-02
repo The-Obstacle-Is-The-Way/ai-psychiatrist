@@ -109,16 +109,24 @@ The system literally checks the "vibe" of therapy conversations to assess mental
 
 ### 3.1 SQPsychConv License
 
-**Status**: CC BY 4.0 (per original paper; requires verification on HuggingFace dataset card)
+**Status**: UNKNOWN - Requires author confirmation before redistribution
 
-| Allowed | Restricted |
-|---------|------------|
-| Redistribution of text | N/A under CC BY 4.0 |
-| Derived labels (PHQ-8 scores) | N/A under CC BY 4.0 |
-| Derived embeddings | N/A under CC BY 4.0 |
-| Commercial use | N/A under CC BY 4.0 |
+| What We Know | Source |
+|--------------|--------|
+| Paper is CC BY 4.0 | arXiv license metadata |
+| Project website is CC BY-SA 4.0 | sqpsych.github.io footer |
+| HuggingFace dataset card | **Empty** - no license displayed |
+| Paper text | Does not explicitly license the dataset |
 
-**Action Required**: Verify license is explicitly stated on AIMH/SQPsychConv_qwq HuggingFace dataset card before production run. If license is absent/ambiguous, treat as "no redistribution" until clarified with dataset authors.
+**Critical Distinction**: The arXiv paper being CC BY 4.0 does **not** mean the dataset is CC BY 4.0. The paper license covers the paper text, not the data artifacts.
+
+**Action Required** (Hard Gate):
+
+1. Check HuggingFace dataset card for explicit license before production run
+2. If license is absent: contact AIMH authors directly to confirm redistribution rights
+3. Until confirmed: treat as "research use only, no redistribution of derived artifacts"
+
+**Fallback Position**: If license remains unclear, the vibe-check corpus can still be used for internal validation but embeddings/labels cannot be publicly redistributed until licensing is resolved.
 
 ### 3.2 DAIC-WOZ EULA Restrictions
 
@@ -1930,7 +1938,7 @@ uv run python scripts/score_corpus.py --retry-failed --error-code rate_limit
 | **Semantic void (embeddings)** | Use `client_qa` or `client_contextualized` for embeddings (Section 5.3.1) |
 | **Synthetic circularity** | Cross-vendor scorers; validate on DAIC-WOZ |
 | **Cost overrun** | Hidden token budget (Section 2.3); Gemini 3 Flash is cheapest; batch API discounts |
-| **Redistribution/license risk** | Data Governance section (Section 3) |
+| **Redistribution/license risk** | Data Governance section (Section 3); SQPsychConv license UNKNOWN until author confirmation |
 | **File descriptor exhaustion** | Global semaphore (Section 4.4); MAX_CONCURRENT_DIALOGUES=50 |
 | **Hidden thinking tokens** | 3x budget multiplier for GPT-5.2 (Section 2.3) |
 
