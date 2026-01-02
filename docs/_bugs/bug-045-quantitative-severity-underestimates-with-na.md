@@ -1,8 +1,9 @@
 # BUG-045: Quantitative Severity Underestimates When Items Are N/A
 
-**Status**: OPEN
+**Status**: CLOSED
 **Severity**: P1 (High)
 **Discovered**: 2026-01-02
+**Fixed**: 2026-01-02 (commit 5ae1d2a)
 
 ## The Issue
 
