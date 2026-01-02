@@ -213,7 +213,7 @@ Update or add an integration test that:
 - Documentation updated:
   - `docs/statistics/metrics-and-evaluation.md`
   - `docs/results/run-output-schema.md`
-  - `docs/_specs/index.md` includes this spec under “Ready to Implement”
+  - `docs/_specs/index.md` lists this spec under “Archived (Implemented)”
 - Tests / lint / types pass:
   - `uv run pytest tests/ -v --tb=short`
   - `uv run ruff check`
