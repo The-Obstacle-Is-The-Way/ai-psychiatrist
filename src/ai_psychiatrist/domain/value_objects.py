@@ -166,6 +166,16 @@ class ItemAssessment:
     keyword_evidence_count: int = 0
     """Number of evidence items added from keyword hits (injected into scorer evidence)."""
 
+    # SPEC-046 extensions (selective prediction confidence signals)
+    retrieval_reference_count: int = 0
+    """Number of retrieved reference chunks used for prompt construction (0 if none)."""
+
+    retrieval_similarity_mean: float | None = None
+    """Mean similarity of retrieved reference chunks used for prompt construction, if any."""
+
+    retrieval_similarity_max: float | None = None
+    """Maximum similarity of retrieved reference chunks used for prompt construction, if any."""
+
     def __post_init__(self) -> None:
         """Validate score is within PHQ-8 range.
 

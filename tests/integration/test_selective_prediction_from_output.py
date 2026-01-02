@@ -26,7 +26,17 @@ def mock_output_json(tmp_path: Path) -> Path:
     # - AUGRC_full (abs) = 1/16
     gt_items = dict.fromkeys(item_keys, 0)
     pred_items = dict.fromkeys(item_keys, None)
-    signals = {k: {"llm_evidence_count": 0, "keyword_evidence_count": 0} for k in item_keys}
+    signals: dict[str, dict[str, int | float | None]] = {
+        k: {
+            "llm_evidence_count": 0,
+            "keyword_evidence_count": 0,
+            # Spec 046: retrieval-grounded confidence signals
+            "retrieval_reference_count": 0,
+            "retrieval_similarity_mean": None,
+            "retrieval_similarity_max": None,
+        }
+        for k in item_keys
+    }
 
     # Map the first three PHQ-8 items to the canonical structure.
     k0, k1, k2 = item_keys[0], item_keys[1], item_keys[2]
@@ -39,6 +49,15 @@ def mock_output_json(tmp_path: Path) -> Path:
     signals[k0]["llm_evidence_count"] = 2
     signals[k1]["llm_evidence_count"] = 2
     signals[k2]["llm_evidence_count"] = 1
+    signals[k0]["retrieval_reference_count"] = 2
+    signals[k1]["retrieval_reference_count"] = 2
+    signals[k2]["retrieval_reference_count"] = 2
+    signals[k0]["retrieval_similarity_mean"] = 0.9
+    signals[k1]["retrieval_similarity_mean"] = 0.9
+    signals[k2]["retrieval_similarity_mean"] = 0.1
+    signals[k0]["retrieval_similarity_max"] = 0.9
+    signals[k1]["retrieval_similarity_max"] = 0.9
+    signals[k2]["retrieval_similarity_max"] = 0.1
 
     data = {
         "run_metadata": {"run_id": "test_run", "git_commit": "abc"},
@@ -118,6 +137,39 @@ def test_evaluate_cli_runs(mock_output_json: Path) -> None:
     assert llm["aurc_at_c"]["value"] == pytest.approx(17 / 48)
     assert llm["augrc_at_c"]["used"] == pytest.approx(3 / 8)
     assert llm["augrc_at_c"]["value"] == pytest.approx(1 / 16)
+
+    # Spec 046: retrieval similarity confidence variant should also evaluate successfully.
+    cmd_retrieval = [
+        sys.executable,
+        "scripts/evaluate_selective_prediction.py",
+        "--input",
+        str(mock_output_json),
+        "--loss",
+        "abs",
+        "--confidence",
+        "retrieval_similarity_mean",
+        "--coverage-grid",
+        "0.25,0.50",
+        "--bootstrap-resamples",
+        "0",
+        "--output",
+        str(mock_output_json.parent / "metrics_retrieval.json"),
+    ]
+
+    result2 = subprocess.run(cmd_retrieval, check=False, capture_output=True, text=True)
+    assert result2.returncode == 0, f"Stderr: {result2.stderr}"
+
+    metrics_path2 = mock_output_json.parent / "metrics_retrieval.json"
+    assert metrics_path2.exists()
+
+    with metrics_path2.open() as f:
+        m2 = json.load(f)
+
+    assert "retrieval_similarity_mean" in m2["confidence_variants"]
+    retrieval = m2["confidence_variants"]["retrieval_similarity_mean"]
+    assert retrieval["cmax"] == pytest.approx(3 / 8)
+    assert retrieval["aurc_full"] == pytest.approx(17 / 48)
+    assert retrieval["augrc_full"] == pytest.approx(1 / 16)
 
     # MAE@coverage: target 0.25 is achievable (coverage_1=2/8), 0.50 is not.
     assert llm["mae_at_coverage"]["0.25"]["achieved"] == pytest.approx(2 / 8)

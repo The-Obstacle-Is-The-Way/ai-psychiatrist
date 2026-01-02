@@ -33,6 +33,7 @@ from ai_psychiatrist.domain.enums import AssessmentMode, NAReason, PHQ8Item
 from ai_psychiatrist.domain.value_objects import ItemAssessment
 from ai_psychiatrist.infrastructure.llm.responses import tolerant_json_fixups
 from ai_psychiatrist.infrastructure.logging import get_logger
+from ai_psychiatrist.services.embedding import ReferenceBundle, compute_retrieval_similarity_stats
 
 if TYPE_CHECKING:
     from pydantic_ai import Agent
@@ -190,13 +191,14 @@ class QuantitativeAssessmentAgent:
 
         # Step 2: Build references (few-shot only)
         reference_text = ""
+        reference_bundle: ReferenceBundle | None = None
         if self._mode == AssessmentMode.FEW_SHOT and self._embedding:
             # Convert string keys to PHQ8Item for embedding service
             evidence_for_embedding = {
                 PHQ8_KEY_MAP[k]: v for k, v in final_evidence.items() if k in PHQ8_KEY_MAP
             }
-            bundle = await self._embedding.build_reference_bundle(evidence_for_embedding)
-            reference_text = bundle.format_for_prompt()
+            reference_bundle = await self._embedding.build_reference_bundle(evidence_for_embedding)
+            reference_text = reference_bundle.format_for_prompt()
             logger.debug("Reference bundle built", bundle_length=len(reference_text))
 
         # Step 3: Score with LLM
@@ -247,6 +249,10 @@ class QuantitativeAssessmentAgent:
                 # This shouldn't happen usually unless LLM hallucinated evidence
                 evidence_source = "llm"
 
+            retrieval_stats = compute_retrieval_similarity_stats(
+                reference_bundle.item_references.get(phq_item, []) if reference_bundle else []
+            )
+
             final_items[phq_item] = ItemAssessment(
                 item=phq_item,
                 evidence=evidence,
@@ -256,6 +262,9 @@ class QuantitativeAssessmentAgent:
                 evidence_source=evidence_source,
                 llm_evidence_count=llm_counts.get(legacy_key, 0),
                 keyword_evidence_count=keyword_added_counts.get(legacy_key, 0),
+                retrieval_reference_count=retrieval_stats.retrieval_reference_count,
+                retrieval_similarity_mean=retrieval_stats.retrieval_similarity_mean,
+                retrieval_similarity_max=retrieval_stats.retrieval_similarity_max,
             )
 
         assessment = PHQ8Assessment(

@@ -42,6 +42,16 @@ DEFAULT_AREA_COVERAGE = 0.5
 DEFAULT_RESAMPLES = 10_000
 DEFAULT_SEED = 42
 
+CONFIDENCE_VARIANTS = {
+    "llm",
+    "total_evidence",
+    "retrieval_similarity_mean",
+    "retrieval_similarity_max",
+    "hybrid_evidence_similarity",
+}
+
+CONFIDENCE_DEFAULT_VARIANTS = ["llm", "total_evidence"]
+
 
 @dataclass
 class InputConfig:
@@ -122,6 +132,47 @@ def _require_contains_all_keys(
         raise ValueError(f"Participant {participant_id}: missing {field_name} keys: {missing}")
 
 
+def _require_key(
+    mapping: dict[str, Any],
+    key: str,
+    *,
+    participant_id: int,
+    item_key: str,
+    confidence_key: str,
+) -> Any:
+    if key not in mapping:
+        raise ValueError(
+            f"Participant {participant_id} item {item_key}: missing item_signals['{key}'] "
+            f"(required for confidence='{confidence_key}')."
+        )
+    return mapping[key]
+
+
+def _optional_float_signal(
+    mapping: dict[str, Any],
+    key: str,
+    *,
+    participant_id: int,
+    item_key: str,
+    confidence_key: str,
+) -> float | None:
+    value = _require_key(
+        mapping,
+        key,
+        participant_id=participant_id,
+        item_key=item_key,
+        confidence_key=confidence_key,
+    )
+    if value is None:
+        return None
+    if isinstance(value, (int, float)):
+        return float(value)
+    raise TypeError(
+        f"Participant {participant_id} item {item_key}: item_signals['{key}'] must be a number "
+        f"or null, got {type(value).__name__}."
+    )
+
+
 def parse_items(
     experiment: dict[str, Any], confidence_key: str
 ) -> tuple[list[ItemPrediction], set[int], set[int]]:
@@ -136,7 +187,7 @@ def parse_items(
     if not isinstance(results, list):
         raise TypeError(f"Experiment results must be a list, got {type(results).__name__}")
 
-    if confidence_key not in {"llm", "total_evidence"}:
+    if confidence_key not in CONFIDENCE_VARIANTS:
         raise ValueError(f"Unknown confidence_key: {confidence_key}")
 
     item_keys = [item.value for item in PHQ8Item.all_items()]
@@ -181,10 +232,44 @@ def parse_items(
             # Compute confidence
             if confidence_key == "llm":
                 conf = float(sig.get("llm_evidence_count", 0))
-            else:
+            elif confidence_key == "total_evidence":
                 conf = float(sig.get("llm_evidence_count", 0)) + float(
                     sig.get("keyword_evidence_count", 0)
                 )
+            elif confidence_key == "retrieval_similarity_mean":
+                s = _optional_float_signal(
+                    sig,
+                    "retrieval_similarity_mean",
+                    participant_id=pid,
+                    item_key=key,
+                    confidence_key=confidence_key,
+                )
+                conf = float(s) if s is not None else 0.0
+            elif confidence_key == "retrieval_similarity_max":
+                s = _optional_float_signal(
+                    sig,
+                    "retrieval_similarity_max",
+                    participant_id=pid,
+                    item_key=key,
+                    confidence_key=confidence_key,
+                )
+                conf = float(s) if s is not None else 0.0
+            else:
+                llm_count = float(sig.get("llm_evidence_count", 0))
+                e = min(llm_count, 3.0) / 3.0
+                e = max(0.0, min(1.0, e))
+
+                s = _optional_float_signal(
+                    sig,
+                    "retrieval_similarity_mean",
+                    participant_id=pid,
+                    item_key=key,
+                    confidence_key=confidence_key,
+                )
+                s_val = float(s) if s is not None else 0.0
+                s_val = max(0.0, min(1.0, s_val))
+
+                conf = 0.5 * e + 0.5 * s_val
 
             items.append(
                 ItemPrediction(
@@ -334,7 +419,12 @@ def main() -> int:  # noqa: PLR0912, PLR0915
         help="Mode selection for input (matched by position or broadcast)",
     )
     parser.add_argument("--loss", choices=["abs", "abs_norm"], default="abs_norm")
-    parser.add_argument("--confidence", choices=["llm", "total_evidence", "all"], default="all")
+    parser.add_argument(
+        "--confidence",
+        choices=[*sorted(CONFIDENCE_VARIANTS), "all"],
+        default="all",
+        help="Confidence variant for risk-coverage ranking.",
+    )
     parser.add_argument(
         "--coverage-grid",
         type=parse_coverage_grid,
@@ -486,7 +576,7 @@ def main() -> int:  # noqa: PLR0912, PLR0915
         pop_stats["items_total"] = len(analysis_pids) * 8
 
     # Process Confidence Variants
-    variants = ["llm", "total_evidence"] if args.confidence == "all" else [args.confidence]
+    variants = CONFIDENCE_DEFAULT_VARIANTS if args.confidence == "all" else [args.confidence]
 
     results_map = {}
     deltas_map = {}

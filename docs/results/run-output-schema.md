@@ -68,12 +68,13 @@ Per-mode aggregated metrics + per-participant results:
 - coverage (`prediction_coverage`)
 - per-item breakdowns
 - per-participant predictions
-- `item_signals` (Spec 25 confidence signals)
+- `item_signals` (Spec 25/046 confidence signals)
 
 For downstream AURC/AUGRC evaluation, `scripts/evaluate_selective_prediction.py` consumes:
 - per-participant `success`
 - per-item predictions
-- `item_signals` evidence counts
+- `item_signals` evidence counts (`llm_evidence_count`, `keyword_evidence_count`)
+- (Spec 046) retrieval stats (`retrieval_reference_count`, `retrieval_similarity_mean`, `retrieval_similarity_max`)
 
 ---
 

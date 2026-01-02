@@ -53,14 +53,35 @@ SSOT: `compute_cmax()` in `src/ai_psychiatrist/metrics/selective_prediction.py`.
 
 ## Confidence Variants
 
-`scripts/evaluate_selective_prediction.py` currently supports two confidence variants:
+`scripts/evaluate_selective_prediction.py` supports the following confidence variants:
 
 1. `llm`:
    - `confidence = llm_evidence_count`
 2. `total_evidence`:
    - `confidence = llm_evidence_count + keyword_evidence_count`
+3. `retrieval_similarity_mean` (Spec 046):
+   - `confidence = retrieval_similarity_mean if not null else 0.0`
+4. `retrieval_similarity_max` (Spec 046):
+   - `confidence = retrieval_similarity_max if not null else 0.0`
+5. `hybrid_evidence_similarity` (Spec 046):
+   - `e = min(llm_evidence_count, 3) / 3`
+   - `s = retrieval_similarity_mean if not null else 0.0`
+   - `confidence = 0.5 * e + 0.5 * s`
 
 These are derived from `item_signals` in the run output JSON.
+
+### Retrieval-Signal Availability (Spec 046)
+
+The retrieval-based confidence variants require the following per-item keys inside
+`item_signals`:
+- `retrieval_reference_count`
+- `retrieval_similarity_mean`
+- `retrieval_similarity_max`
+
+Run artifacts produced by older versions of `scripts/reproduce_results.py` will not
+contain these keys. In that case, `scripts/evaluate_selective_prediction.py` will raise
+a clear error if a retrieval-based confidence variant is requested (it will not silently
+substitute missing values).
 
 ---
 

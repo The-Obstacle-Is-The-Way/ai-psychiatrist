@@ -4,7 +4,7 @@ Implementation-ready (or implementation-planned) specifications for changes that
 
 ## Ready to Implement
 
-- [Spec 046: Improve Selective Prediction Confidence Signals (AURC/AUGRC)](spec-046-selective-prediction-confidence-signals.md)
+_No active specs._
 
 ## Deferred
 
@@ -26,6 +26,7 @@ Implemented specs are distilled into canonical (non-archive) documentation under
 - Error handling philosophy: [error-handling.md](../developer/error-handling.md)
 - Exception taxonomy: [exceptions.md](../developer/exceptions.md)
 - Metrics definitions + output schema: [metrics-and-evaluation.md](../statistics/metrics-and-evaluation.md)
+- Selective prediction confidence signals: [spec](spec-046-selective-prediction-confidence-signals.md) → [metrics docs](../statistics/metrics-and-evaluation.md#confidence-variants)
 - Configuration philosophy: [configuration-philosophy.md](../configs/configuration-philosophy.md)
 - DAIC-WOZ transcript preprocessing + variants: [daic-woz-preprocessing.md](../data/daic-woz-preprocessing.md)
 
