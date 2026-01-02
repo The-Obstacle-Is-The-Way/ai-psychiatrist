@@ -796,8 +796,16 @@ class AggregatedPHQ8(BaseModel):
 vibe-check/
 ├── README.md
 ├── pyproject.toml
+├── uv.lock                           # Lockfile for reproducibility
+├── .python-version                   # Python version pin (e.g., 3.11)
 ├── .env.example
+├── .pre-commit-config.yaml           # Pre-commit hooks (ruff + mypy)
+├── Makefile                          # Developer convenience commands
 ├── CLAUDE.md
+│
+├── .github/
+│   └── workflows/
+│       └── ci.yml                    # GitHub Actions CI workflow
 │
 ├── src/
 │   └── vibe_check/
@@ -848,6 +856,11 @@ vibe-check/
 │   └── evaluate_transfer.py          # Sim-to-real metrics
 │
 ├── tests/
+│   ├── conftest.py                   # Shared fixtures (mock clients, sample data)
+│   ├── fixtures/                     # Reusable test fixtures
+│   │   ├── __init__.py
+│   │   ├── mock_llm.py               # Mock LLM client
+│   │   └── sample_dialogues.py       # Sample test dialogues
 │   ├── unit/
 │   │   ├── test_aggregation.py
 │   │   ├── test_preprocessing.py
@@ -871,13 +884,33 @@ vibe-check/
 
 ---
 
-## 10. Dependencies
+## 10. Developer Experience (2026 Best Practices)
+
+This section defines production-grade Python DevEx based on 2026 best practices with uv, ruff, mypy strict mode, and GitHub Actions.
+
+### 10.1 Complete pyproject.toml
 
 ```toml
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
 [project]
 name = "vibe-check"
 version = "0.1.0"
+description = "Multi-agent PHQ-8 scoring for synthetic therapy dialogues"
+readme = "README.md"
+license = "MIT"
 requires-python = ">=3.11"
+authors = [{ name = "CLARITY-DIGITAL-TWIN" }]
+classifiers = [
+    "Development Status :: 4 - Beta",
+    "Intended Audience :: Science/Research",
+    "License :: OSI Approved :: MIT License",
+    "Programming Language :: Python :: 3.11",
+    "Programming Language :: Python :: 3.12",
+    "Topic :: Scientific/Engineering :: Artificial Intelligence",
+]
 
 dependencies = [
     # Orchestration
@@ -893,6 +926,7 @@ dependencies = [
 
     # Data
     "pydantic>=2.10.0",
+    "pydantic-settings>=2.7.0",
     "datasets>=3.0.0",
     "pandas>=2.2.0",
     "numpy>=2.0.0",
@@ -906,16 +940,357 @@ dependencies = [
     "aiolimiter>=1.2.0",
     "structlog>=25.0.0",
     "rich>=14.0.0",
+    "python-dotenv>=1.0.0",
 ]
 
 [project.optional-dependencies]
 dev = [
-    "pytest>=8.3.0",
-    "pytest-asyncio>=0.24.0",
-    "ruff>=0.9.0",
-    "mypy>=1.14.0",
-    "pre-commit>=4.0.0",
+    # Testing
+    "pytest>=8.3.5",
+    "pytest-asyncio>=0.25.0",
+    "pytest-cov>=7.0.0",
+    "pytest-xdist>=3.5.0",
+    "pytest-sugar>=1.0.0",
+    "httpx>=0.28.0",
+    "respx>=0.22.0",
+    # Linting & formatting
+    "ruff>=0.9.2",
+    # Type checking
+    "mypy>=1.15.0",
+    # Pre-commit
+    "pre-commit>=4.1.0",
 ]
+
+[project.scripts]
+vibe-check = "vibe_check.cli:main"
+
+# ─────────────────────────────────────────────────────────────
+# Ruff Configuration (linter + formatter)
+# ─────────────────────────────────────────────────────────────
+[tool.ruff]
+line-length = 100
+target-version = "py311"
+src = ["src", "tests", "scripts"]
+
+[tool.ruff.lint]
+select = [
+    "E",      # pycodestyle errors
+    "W",      # pycodestyle warnings
+    "F",      # Pyflakes
+    "I",      # isort
+    "B",      # flake8-bugbear
+    "C4",     # flake8-comprehensions
+    "UP",     # pyupgrade
+    "ARG",    # flake8-unused-arguments
+    "SIM",    # flake8-simplify
+    "TCH",    # flake8-type-checking
+    "PTH",    # flake8-use-pathlib
+    "RUF",    # Ruff-specific rules
+]
+ignore = [
+    "E501",   # line too long (handled by formatter)
+    "B008",   # function call in default argument (needed for FastAPI)
+]
+
+[tool.ruff.lint.isort]
+known-first-party = ["vibe_check"]
+
+[tool.ruff.format]
+quote-style = "double"
+indent-style = "space"
+skip-magic-trailing-comma = false
+
+# ─────────────────────────────────────────────────────────────
+# Mypy Configuration (strict mode)
+# ─────────────────────────────────────────────────────────────
+[tool.mypy]
+python_version = "3.11"
+strict = true
+warn_unused_ignores = true
+warn_redundant_casts = true
+warn_unreachable = true
+show_error_codes = true
+pretty = true
+
+# Per-module overrides for external libs
+[[tool.mypy.overrides]]
+module = [
+    "datasets.*",
+    "langgraph.*",
+    "langchain_openai.*",
+    "langchain_anthropic.*",
+    "langchain_google_genai.*",
+    "scipy.*",
+    "sklearn.*",
+]
+ignore_missing_imports = true
+
+# ─────────────────────────────────────────────────────────────
+# Pytest Configuration
+# ─────────────────────────────────────────────────────────────
+[tool.pytest.ini_options]
+minversion = "8.0"
+testpaths = ["tests"]
+asyncio_mode = "auto"
+asyncio_default_fixture_loop_scope = "function"
+addopts = [
+    "-v",
+    "--strict-markers",
+    "--strict-config",
+    "-ra",
+    "--tb=short",
+]
+markers = [
+    "unit: Unit tests (fast, no external deps)",
+    "integration: Integration tests (may use mocks)",
+    "e2e: End-to-end tests (requires API keys)",
+    "slow: Slow tests (>10s)",
+]
+filterwarnings = [
+    "ignore::DeprecationWarning:pydantic.*:",
+]
+
+# ─────────────────────────────────────────────────────────────
+# Coverage Configuration
+# ─────────────────────────────────────────────────────────────
+[tool.coverage.run]
+source = ["src/vibe_check"]
+branch = true
+parallel = true
+
+[tool.coverage.report]
+exclude_lines = [
+    "pragma: no cover",
+    "if TYPE_CHECKING:",
+    "if __name__ == .__main__.:",
+    "raise NotImplementedError",
+    "@abstractmethod",
+]
+fail_under = 80
+show_missing = true
+skip_covered = true
+
+[tool.coverage.html]
+directory = "htmlcov"
+```
+
+### 10.2 Pre-commit Configuration (.pre-commit-config.yaml)
+
+```yaml
+# .pre-commit-config.yaml
+# Modern Python pre-commit using uv + ruff (2026)
+# Install: uv run pre-commit install
+
+repos:
+  # ─────────────────────────────────────────────────────────────
+  # Basic file hygiene
+  # ─────────────────────────────────────────────────────────────
+  - repo: https://github.com/pre-commit/pre-commit-hooks
+    rev: v5.0.0
+    hooks:
+      - id: trailing-whitespace
+      - id: end-of-file-fixer
+      - id: check-yaml
+      - id: check-json
+      - id: check-toml
+      - id: check-added-large-files
+        args: ['--maxkb=1000']
+      - id: check-merge-conflict
+      - id: detect-private-key
+
+  # ─────────────────────────────────────────────────────────────
+  # Ruff (linting + formatting, replaces black/isort/flake8)
+  # ─────────────────────────────────────────────────────────────
+  - repo: https://github.com/astral-sh/ruff-pre-commit
+    rev: v0.9.2
+    hooks:
+      - id: ruff
+        args: [--fix, --exit-non-zero-on-fix]
+      - id: ruff-format
+
+  # ─────────────────────────────────────────────────────────────
+  # Mypy (type checking via uv for deps)
+  # ─────────────────────────────────────────────────────────────
+  - repo: local
+    hooks:
+      - id: mypy
+        name: mypy (strict)
+        entry: uv run mypy
+        language: system
+        types: [python]
+        args: [src, tests, scripts]
+        pass_filenames: false
+        require_serial: true
+```
+
+### 10.3 GitHub Actions CI Workflow (.github/workflows/ci.yml)
+
+```yaml
+# .github/workflows/ci.yml
+name: CI
+
+on:
+  push:
+    branches: [main, dev]
+  pull_request:
+    branches: [main]
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  lint:
+    name: Lint & Format
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Install uv
+        uses: astral-sh/setup-uv@v7
+        with:
+          enable-cache: true
+          cache-dependency-glob: "uv.lock"
+
+      - name: Install dependencies
+        run: uv sync --locked --all-extras --dev
+
+      - name: Ruff lint
+        run: uv run ruff check . --output-format=github
+
+      - name: Ruff format check
+        run: uv run ruff format --check .
+
+  typecheck:
+    name: Type Check
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Install uv
+        uses: astral-sh/setup-uv@v7
+        with:
+          enable-cache: true
+          cache-dependency-glob: "uv.lock"
+
+      - name: Install dependencies
+        run: uv sync --locked --all-extras --dev
+
+      - name: Mypy
+        run: uv run mypy src tests scripts --strict
+
+  test:
+    name: Test (Python ${{ matrix.python-version }})
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        python-version: ["3.11", "3.12"]
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Install uv
+        uses: astral-sh/setup-uv@v7
+        with:
+          enable-cache: true
+          cache-dependency-glob: "uv.lock"
+
+      - name: Set Python version
+        run: uv python pin ${{ matrix.python-version }}
+
+      - name: Install dependencies
+        run: uv sync --locked --all-extras --dev
+
+      - name: Run tests with coverage
+        run: |
+          uv run pytest tests/ \
+            -n auto \
+            --cov=src/vibe_check \
+            --cov-report=xml \
+            --cov-report=term-missing \
+            --cov-fail-under=80
+
+      - name: Upload coverage to Codecov
+        uses: codecov/codecov-action@v5
+        with:
+          files: coverage.xml
+          fail_ci_if_error: false
+```
+
+### 10.4 Makefile
+
+```makefile
+# Makefile - Developer convenience commands
+.PHONY: help install dev test lint format typecheck ci clean
+
+# Default target
+help:
+	@echo "vibe-check development commands:"
+	@echo ""
+	@echo "  make dev          Install all dependencies + pre-commit hooks"
+	@echo "  make install      Install production dependencies only"
+	@echo "  make test         Run all tests with coverage"
+	@echo "  make test-unit    Run unit tests only (fast)"
+	@echo "  make test-parallel Run tests in parallel"
+	@echo "  make lint         Run ruff linter"
+	@echo "  make lint-fix     Auto-fix linting issues"
+	@echo "  make format       Format code with ruff"
+	@echo "  make typecheck    Run mypy strict type checking"
+	@echo "  make ci           Full CI: lint + typecheck + test"
+	@echo "  make clean        Remove build artifacts"
+
+# ─────────────────────────────────────────────────────────────
+# Setup
+# ─────────────────────────────────────────────────────────────
+install:
+	uv sync --locked
+
+dev:
+	uv sync --locked --all-extras --dev
+	uv run pre-commit install
+
+# ─────────────────────────────────────────────────────────────
+# Testing
+# ─────────────────────────────────────────────────────────────
+test:
+	uv run pytest tests/ --cov=src/vibe_check --cov-report=term-missing --cov-fail-under=80
+
+test-unit:
+	uv run pytest tests/unit/ -v
+
+test-parallel:
+	uv run pytest tests/ -n auto --dist=loadscope
+
+# ─────────────────────────────────────────────────────────────
+# Code Quality
+# ─────────────────────────────────────────────────────────────
+lint:
+	uv run ruff check .
+
+lint-fix:
+	uv run ruff check . --fix
+
+format:
+	uv run ruff format .
+
+format-check:
+	uv run ruff format --check .
+
+typecheck:
+	uv run mypy src tests scripts --strict
+
+# ─────────────────────────────────────────────────────────────
+# CI
+# ─────────────────────────────────────────────────────────────
+ci: format-check lint typecheck test
+
+# ─────────────────────────────────────────────────────────────
+# Cleanup
+# ─────────────────────────────────────────────────────────────
+clean:
+	rm -rf .pytest_cache .mypy_cache .ruff_cache htmlcov .coverage coverage.xml
+	find . -type d -name "__pycache__" -exec rm -rf {} + 2>/dev/null || true
+	find . -type f -name "*.pyc" -delete
 ```
 
 ---
