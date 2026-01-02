@@ -159,7 +159,7 @@ Consider:
 
 **Question**: What preprocessing/filtering does SQPsychConv need?
 
-Based on the [DAIC-WOZ validity paper](attached), there are critical preprocessing concerns:
+Based on the DAIC-WOZ validity paper (attached), there are critical preprocessing concerns:
 
 1. **Chinese character code-switching**: The qwq variant contains 4,019 CJK characters mid-sentence (measured in our local export)
    - Option: Filter affected dialogues OR use regex cleanup
@@ -422,8 +422,8 @@ When presenting this prompt to the external research agent, attach:
    - Location: `_literature/markdown/daic-woz-prompts/daic-woz-prompts.md`
    - Purpose: Critical preprocessing concerns about therapist prompt bias
 
-3. **Cross-Validation Spec** (`spec-sqpsychconv-cross-validation.md`)
-   - Location: `docs/research/spec-sqpsychconv-cross-validation.md`
+3. **Cross-Validation Spec** (`SPEC-SQPSYCHCONV-CROSS-VALIDATION.md`)
+   - Location: `docs/research/SPEC-SQPSYCHCONV-CROSS-VALIDATION.md`
    - Purpose: Detailed feasibility analysis and Path G recommendation
 
 4. **Microsoft Agent Framework Notes** (`microsoft-agent-framework-integration.md`)
