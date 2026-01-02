@@ -22,6 +22,106 @@ _MISSING_COMMA_AFTER_CONTAINER_RE = re.compile(r'([}\]])\s*\n\s*"([^"]+)"\s*:')
 _TRAILING_COMMA_RE = re.compile(r",\s*([}\]])")
 
 
+def _looks_like_json_object_key(text: str, start: int) -> bool:
+    """Return True if `text[start:]` begins with a JSON object key (`\"...\"\\s*:`)."""
+    if start >= len(text) or text[start] != '"':
+        return False
+
+    escaped = False
+    i = start + 1
+    while i < len(text):
+        ch = text[i]
+        if escaped:
+            escaped = False
+            i += 1
+            continue
+        if ch == "\\":
+            escaped = True
+            i += 1
+            continue
+        if ch == '"':
+            i += 1
+            break
+        i += 1
+    else:
+        return False
+
+    while i < len(text) and text[i].isspace():
+        i += 1
+
+    return i < len(text) and text[i] == ":"
+
+
+def _escape_unescaped_quotes_in_strings(text: str) -> str:
+    """Escape unescaped quotes inside JSON strings (best-effort).
+
+    LLMs occasionally emit unescaped double quotes inside string values
+    (e.g., `"evidence": ""quoted text"` or `"He said "hi""`), which breaks JSON
+    parsing with errors like `Expecting ',' delimiter`.
+
+    This is a conservative, index-stable pass that:
+    - Leaves already-escaped quotes (`\\\"`) untouched.
+    - Keeps valid string terminators (followed by `,`, `}`, `]`, or `:`).
+    - Treats quotes followed by a plausible next object key (`\"...\"\\s*:`) as terminators.
+    - Otherwise, escapes the quote in-place.
+    """
+    out: list[str] = []
+    in_string = False
+    escaped = False
+
+    i = 0
+    while i < len(text):
+        ch = text[i]
+        if not in_string:
+            out.append(ch)
+            if ch == '"':
+                in_string = True
+            i += 1
+            continue
+
+        # Inside a string literal
+        if escaped:
+            out.append(ch)
+            escaped = False
+            i += 1
+            continue
+
+        if ch == "\\":
+            out.append(ch)
+            escaped = True
+            i += 1
+            continue
+
+        if ch != '"':
+            out.append(ch)
+            i += 1
+            continue
+
+        # Potential string terminator or internal quote.
+        j = i + 1
+        while j < len(text) and text[j].isspace():
+            j += 1
+
+        if j >= len(text):
+            out.append('"')
+            in_string = False
+            i += 1
+            continue
+
+        next_non_ws = text[j]
+        if next_non_ws in {",", "}", "]", ":"} or _looks_like_json_object_key(text, j):
+            out.append('"')
+            in_string = False
+            i += 1
+            continue
+
+        # Treat as an internal quote and escape it.
+        out.append('\\"')
+        i += 1
+
+    return "".join(out)
+
+
 def _stable_text_hash(text: str) -> str:
     """Return a short, stable hash for logging (no raw text)."""
     return hashlib.sha256(text.encode("utf-8")).hexdigest()[:12]
@@ -34,7 +134,8 @@ def tolerant_json_fixups(text: str) -> str:
     1. Smart quotes → ASCII quotes
     2. Zero-width spaces → removed
     3. Missing commas between object entries → inserted
-    4. Trailing commas before } or ] → removed
+    4. Unescaped quotes inside strings → escaped
+    5. Trailing commas before } or ] → removed
 
     Properties:
     - Idempotent: fixups(fixups(x)) == fixups(x)
@@ -71,7 +172,13 @@ def tolerant_json_fixups(text: str) -> str:
         applied_fixes.append("missing_commas")
         fixed = missing_commas_fixed
 
-    # 4) Remove trailing commas before } or ]
+    # 4) Escape unescaped quotes inside JSON strings (best-effort)
+    escaped_quotes_fixed = _escape_unescaped_quotes_in_strings(fixed)
+    if escaped_quotes_fixed != fixed:
+        applied_fixes.append("unescaped_quotes")
+        fixed = escaped_quotes_fixed
+
+    # 5) Remove trailing commas before } or ]
     trailing_commas_fixed = _TRAILING_COMMA_RE.sub(r"\1", fixed)
     if trailing_commas_fixed != fixed:
         applied_fixes.append("trailing_commas")

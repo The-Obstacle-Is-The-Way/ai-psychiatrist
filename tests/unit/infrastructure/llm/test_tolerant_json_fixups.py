@@ -130,3 +130,25 @@ class TestTolerantJsonFixups:
         fixed = tolerant_json_fixups(broken)
         parsed = json.loads(fixed)
         assert parsed == {"a": 1, "b": 2, "c": 3}
+
+    # --- Unescaped quotes inside string values ---
+
+    def test_unescaped_quote_inside_string_value_escaped(self) -> None:
+        """Unescaped quotes inside string values must be escaped for valid JSON."""
+        broken = '{\n  "evidence": "He said "hi" yesterday",\n  "reason": "ok",\n  "score": 0\n}'
+        fixed = tolerant_json_fixups(broken)
+        parsed = json.loads(fixed)
+        assert parsed == {"evidence": 'He said "hi" yesterday', "reason": "ok", "score": 0}
+
+    def test_unescaped_leading_quote_in_string_value_escaped(self) -> None:
+        """Leading accidental double-quote in a value must not break JSON parsing."""
+        broken = (
+            '{\n  "evidence": ""quoted text without escapes",\n  "reason": "ok",\n  "score": 0\n}'
+        )
+        fixed = tolerant_json_fixups(broken)
+        parsed = json.loads(fixed)
+        assert parsed == {
+            "evidence": '"quoted text without escapes',
+            "reason": "ok",
+            "score": 0,
+        }
