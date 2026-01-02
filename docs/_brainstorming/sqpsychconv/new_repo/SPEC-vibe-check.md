@@ -22,7 +22,7 @@ The `ai-psychiatrist` pipeline achieves strong PHQ-8 prediction but cannot be de
 
 ### The Solution
 
-Score SQPsychConv (2,090 synthetic therapy dialogues) with PHQ-8 labels using frontier LLM consensus, creating a freely redistributable retrieval corpus validated against DAIC-WOZ ground truth.
+Score SQPsychConv (2,090 synthetic therapy dialogues) with PHQ-8 labels using frontier LLM consensus, intended to create a redistributable retrieval corpus validated against DAIC-WOZ ground truth (contingent on SQPsychConv licensing confirmation; see Section 3.1).
 
 ### Why "vibe-check"?
 
@@ -105,7 +105,7 @@ The system literally checks the "vibe" of therapy conversations to assess mental
 
 ## 3. Data Governance & Licensing Gates
 
-**This section is a hard gate. Do not proceed to implementation without resolving these items.**
+**This section is a hard gate for redistribution and for any processing of restricted datasets (e.g., DAIC-WOZ) via third-party APIs.** You can still implement the pipeline and run it on non-restricted data, but do not claim or attempt public release of derived artifacts until licensing is confirmed, and do not send restricted transcripts to external vendors without institutional approval.
 
 ### 3.1 SQPsychConv License
 
