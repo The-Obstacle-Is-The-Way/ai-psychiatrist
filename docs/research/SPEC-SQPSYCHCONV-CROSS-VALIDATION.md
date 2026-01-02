@@ -49,6 +49,8 @@ Dialogue structure:
   - End markers: [/END] tags
 ```
 
+**Important note (HF `SQPsychConv_qwq`)**: In our local cache, `data/sqpsychconv/train_sample.csv` and `data/sqpsychconv/test_sample.csv` are byte-identical (same `file_id` set and same dialogues). Treat them as a single corpus unless you intentionally re-split.
+
 ### 1.3 Data Quality Issues
 
 **Chinese Character Code-Switching**: 4,019 CJK characters found in dialogues (qwq variant; measured).
