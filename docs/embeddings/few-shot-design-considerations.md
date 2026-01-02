@@ -1,7 +1,7 @@
 # Few-Shot Design Considerations
 
 **Audience**: Researchers evaluating few-shot vs zero-shot approaches
-**Last Updated**: 2026-01-01
+**Last Updated**: 2026-01-02
 
 ---
 
@@ -50,7 +50,7 @@ Instead of assigning participant-level scores to chunks, we score each chunk ind
 ```bash
 # Generate per-chunk scores
 uv run python scripts/score_reference_chunks.py \
-  --embeddings-file huggingface_qwen3_8b_paper_train \
+  --embeddings-file huggingface_qwen3_8b_paper_train_participant_only \
   --scorer-backend ollama \
   --scorer-model gemma3:27b-it-qat
 

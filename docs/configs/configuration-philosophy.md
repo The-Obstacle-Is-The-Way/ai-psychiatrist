@@ -174,8 +174,8 @@ HuggingFace embeddings (FP16) produce higher quality similarity scores than Olla
 
 | Embeddings File | Backend | Precision | Quality |
 |-----------------|---------|-----------|---------|
-| `huggingface_qwen3_8b_paper_train` | HuggingFace | FP16 | **Higher** |
-| `ollama_qwen3_8b_paper_train` | Ollama | Q4_K_M | Lower |
+| `huggingface_qwen3_8b_paper_train_participant_only` | HuggingFace | FP16 | **Higher** |
+| `ollama_qwen3_8b_paper_train_participant_only` | Ollama | Q4_K_M | Lower |
 
 **Recommendation**:
 

@@ -19,7 +19,11 @@ from ai_psychiatrist.domain.exceptions import (
 from ai_psychiatrist.domain.value_objects import SimilarityMatch, TranscriptChunk
 from ai_psychiatrist.infrastructure.llm.protocols import EmbeddingBatchResponse
 from ai_psychiatrist.services import embedding as embedding_service_module
-from ai_psychiatrist.services.embedding import EmbeddingService, ReferenceBundle
+from ai_psychiatrist.services.embedding import (
+    EmbeddingService,
+    ReferenceBundle,
+    compute_retrieval_similarity_stats,
+)
 from ai_psychiatrist.services.reference_store import PHQ8_COLUMN_MAP, ReferenceStore
 from tests.fixtures.mock_llm import MockLLMClient
 
@@ -124,6 +128,42 @@ class TestReferenceBundle:
         sleep_idx = formatted.index("(PHQ8_Sleep Score: 3)\nsleep ref")
         tired_idx = formatted.index("(PHQ8_Tired Score: 1)\ntired ref")
         assert sleep_idx < tired_idx
+
+    def test_retrieval_similarity_stats_empty(self) -> None:
+        stats = compute_retrieval_similarity_stats([])
+        assert stats.retrieval_reference_count == 0
+        assert stats.retrieval_similarity_mean is None
+        assert stats.retrieval_similarity_max is None
+
+    def test_retrieval_similarity_stats_computes_mean_and_max(self) -> None:
+        matches = [
+            SimilarityMatch(
+                chunk=TranscriptChunk(text="a", participant_id=1), similarity=0.2, reference_score=0
+            ),
+            SimilarityMatch(
+                chunk=TranscriptChunk(text="b", participant_id=2), similarity=0.8, reference_score=2
+            ),
+        ]
+        stats = compute_retrieval_similarity_stats(matches)
+        assert stats.retrieval_reference_count == 2
+        assert stats.retrieval_similarity_mean == pytest.approx(0.5)
+        assert stats.retrieval_similarity_max == pytest.approx(0.8)
+
+    def test_retrieval_similarity_stats_skips_none_reference_score(self) -> None:
+        matches = [
+            SimilarityMatch(
+                chunk=TranscriptChunk(text="a", participant_id=1),
+                similarity=0.9,
+                reference_score=None,
+            ),
+            SimilarityMatch(
+                chunk=TranscriptChunk(text="b", participant_id=2), similarity=0.1, reference_score=1
+            ),
+        ]
+        stats = compute_retrieval_similarity_stats(matches)
+        assert stats.retrieval_reference_count == 1
+        assert stats.retrieval_similarity_mean == pytest.approx(0.1)
+        assert stats.retrieval_similarity_max == pytest.approx(0.1)
 
 
 class TestEmbeddingService:

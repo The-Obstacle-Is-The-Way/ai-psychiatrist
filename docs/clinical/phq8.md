@@ -47,7 +47,7 @@ Each item is scored based on symptom frequency over the past 2 weeks:
 
 ### N/A Scores
 
-When the LLM cannot determine a score due to insufficient evidence in the transcript, it returns `N/A`. These contribute 0 to the total score.
+When the LLM cannot determine a score due to insufficient evidence in the transcript, it returns `N/A`. These items represent **unknown** values, not zeroes.
 
 ```python
 class ItemAssessment:
@@ -55,21 +55,30 @@ class ItemAssessment:
 
     @property
     def score_value(self) -> int:
+        """Lower-bound value: treats N/A as 0."""
         return self.score if self.score is not None else 0
 ```
 
-### Total Score (0-24)
+### Total Score Bounds (0-24)
 
-Sum of all 8 item scores:
+When some items are `N/A`, the true total score is **bounded**, not known exactly:
 
-```
-Total = Item1 + Item2 + Item3 + Item4 + Item5 + Item6 + Item7 + Item8
+- **`min_total_score`**: Sum treating N/A as 0 (lower bound)
+- **`max_total_score`**: Sum treating N/A as 3 (upper bound, since each item maxes at 3)
+
+```python
+@property
+def min_total_score(self) -> int:
+    """Lower bound total score treating N/A as 0."""
+    return sum(item.score_value for item in self.items.values())
+
+@property
+def max_total_score(self) -> int:
+    """Upper bound total score treating N/A as 3 (max per PHQ-8 item)."""
+    return sum(item.score if item.score is not None else 3 for item in self.items.values())
 ```
 
-With N/A items:
-```
-Total = sum(item.score for item in items if item.score is not None)
-```
+The legacy `total_score` property returns `min_total_score` for backward compatibility, but **this is a lower bound when items are missing**.
 
 ---
 
@@ -113,6 +122,37 @@ class SeverityLevel(IntEnum):
     def is_mdd(self) -> bool:
         return self >= SeverityLevel.MODERATE
 ```
+
+### Severity Bounds (Partial Assessments)
+
+When items are N/A, severity is **bounded**, not uniquely identified:
+
+```python
+@property
+def severity_lower_bound(self) -> SeverityLevel:
+    """Lower bound severity derived from min_total_score."""
+    return SeverityLevel.from_total_score(self.min_total_score)
+
+@property
+def severity_upper_bound(self) -> SeverityLevel:
+    """Upper bound severity derived from max_total_score."""
+    return SeverityLevel.from_total_score(self.max_total_score)
+
+@property
+def severity(self) -> SeverityLevel | None:
+    """Determinate severity, or None if bounds differ."""
+    lower, upper = self.severity_bounds
+    if lower == upper:
+        return lower
+    return None
+```
+
+**Key insight:** A single severity label is only meaningful when the assessment is complete OR when missing items cannot change the severity band.
+
+**Example:** If 4 items are scored (total=8) and 4 are N/A:
+- `min_total_score = 8` → `severity_lower_bound = MILD`
+- `max_total_score = 8 + 12 = 20` → `severity_upper_bound = SEVERE`
+- `severity = None` (indeterminate)
 
 ---
 
@@ -241,9 +281,13 @@ The paper notes that some items are harder to predict:
 - TIRED: 2 (more than half the days)
 - Others: N/A (not discussed)
 
-**Total:** 8 (available items only) → **MILD** severity
+**Score bounds:**
+- `min_total_score = 8` (N/A → 0)
+- `max_total_score = 8 + 12 = 20` (N/A → 3)
 
-**Note:** With N/A items, the total may underestimate true severity.
+**Severity bounds:** MILD → SEVERE (indeterminate; `severity = None`)
+
+**Note:** With 4 N/A items, we cannot determine a single severity label. The system reports bounds instead.
 
 ### Example 2: Minimal Symptoms
 
@@ -286,12 +330,29 @@ class PHQ8Assessment:
     participant_id: int
 
     @property
-    def total_score(self) -> int:
+    def min_total_score(self) -> int:
+        """Lower bound total (N/A → 0)."""
         return sum(item.score_value for item in self.items.values())
 
     @property
-    def severity(self) -> SeverityLevel:
-        return SeverityLevel.from_total_score(self.total_score)
+    def max_total_score(self) -> int:
+        """Upper bound total (N/A → 3)."""
+        return sum(item.score if item.score is not None else 3 for item in self.items.values())
+
+    @property
+    def severity_lower_bound(self) -> SeverityLevel:
+        return SeverityLevel.from_total_score(self.min_total_score)
+
+    @property
+    def severity_upper_bound(self) -> SeverityLevel:
+        return SeverityLevel.from_total_score(self.max_total_score)
+
+    @property
+    def severity(self) -> SeverityLevel | None:
+        """Determinate severity, or None if bounds differ."""
+        if self.severity_lower_bound == self.severity_upper_bound:
+            return self.severity_lower_bound
+        return None
 ```
 
 ---

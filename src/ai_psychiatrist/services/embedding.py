@@ -26,11 +26,53 @@ from ai_psychiatrist.services.reference_validation import (
 )
 
 if TYPE_CHECKING:
+    from collections.abc import Sequence
+
     from ai_psychiatrist.config import EmbeddingSettings, ModelSettings
     from ai_psychiatrist.infrastructure.llm.protocols import EmbeddingClient
     from ai_psychiatrist.services.reference_store import ReferenceStore
 
 logger = get_logger(__name__)
+
+
+@dataclass(frozen=True, slots=True)
+class RetrievalSimilarityStats:
+    """Aggregated retrieval similarity statistics for one PHQ-8 item.
+
+    These signals are used as confidence ranking inputs for selective prediction
+    evaluation (Spec 046).
+    """
+
+    retrieval_reference_count: int
+    retrieval_similarity_mean: float | None
+    retrieval_similarity_max: float | None
+
+
+def compute_retrieval_similarity_stats(
+    matches: Sequence[SimilarityMatch],
+) -> RetrievalSimilarityStats:
+    """Compute retrieval similarity stats from final matches used in the prompt.
+
+    Notes:
+    - We only include matches with a non-null `reference_score`, matching
+      `ReferenceBundle.format_for_prompt()` behavior.
+    - If no valid references exist, mean/max are `None` (not 0.0) to preserve
+      observability in run artifacts.
+    """
+    usable = [m.similarity for m in matches if m.reference_score is not None]
+    if not usable:
+        return RetrievalSimilarityStats(
+            retrieval_reference_count=0,
+            retrieval_similarity_mean=None,
+            retrieval_similarity_max=None,
+        )
+
+    mean = sum(usable) / len(usable)
+    return RetrievalSimilarityStats(
+        retrieval_reference_count=len(usable),
+        retrieval_similarity_mean=mean,
+        retrieval_similarity_max=max(usable),
+    )
 
 
 @dataclass

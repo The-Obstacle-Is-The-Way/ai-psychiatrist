@@ -6,7 +6,7 @@ Tests verify the agent correctly:
 - Extracts evidence with keyword backfill
 - Parses JSON responses with multi-level repair
 - Handles N/A scores for insufficient evidence
-- Calculates total score and severity correctly
+- Calculates total score bounds and severity bounds correctly
 """
 
 from __future__ import annotations
@@ -242,12 +242,14 @@ class TestQuantitativeAssessmentAgent:
     async def test_assess_determines_severity(
         self, mock_client: MockLLMClient, sample_transcript: Transcript
     ) -> None:
-        """Assessment should determine correct severity level."""
+        """Partial assessments should not emit a single severity label."""
         agent = self.create_agent(mock_client)
         result = await agent.assess(sample_transcript)
 
-        # Total score 6 = MILD severity
-        assert result.severity == SeverityLevel.MILD
+        # Scores: 6 items are scored, 2 are N/A (unknown). The severity is bounded, not determinate.
+        assert result.severity is None
+        assert result.severity_lower_bound == SeverityLevel.MILD
+        assert result.severity_upper_bound == SeverityLevel.MODERATE
 
     @pytest.mark.asyncio
     @pytest.mark.usefixtures("mock_agent_factory")

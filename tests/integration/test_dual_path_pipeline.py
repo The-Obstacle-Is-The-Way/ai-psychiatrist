@@ -604,6 +604,7 @@ class TestSeverityMapping:
 
         assert result.total_score == 10
         assert result.severity == SeverityLevel.MODERATE
+        assert result.severity is not None
         assert result.severity.is_mdd  # MDD threshold check
 
     @pytest.mark.asyncio

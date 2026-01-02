@@ -1,7 +1,7 @@
 # Coverage Explained: What It Is and Why It Matters
 
 **Audience**: Anyone trying to understand what "coverage" means in PHQ-8 assessment
-**Last Updated**: 2026-01-01
+**Last Updated**: 2026-01-02
 
 ---
 
@@ -66,10 +66,10 @@ substantial abstention due to missing evidence.
 This repository also computes **item-level MAE excluding N/A**, but the exact
 coverage/MAE depends on model weights/quantization, backend, and prompt behavior.
 
-| Metric | Paper (reported) | Example Run (paper split, few-shot, backfill OFF) |
+| Metric | Paper (reported) | Example Run (paper-test, few-shot, participant-only transcripts) |
 |--------|------------------|----------------------------------------------|
-| Coverage | ~50% abstention (“unable to provide a prediction”) | 69.2% (item-level coverage over evaluated subjects) |
-| Item MAE | 0.619 | 0.778 (weighted across predicted items) |
+| Coverage (Cmax) | ~50% abstention (“unable to provide a prediction”) | 50.9% |
+| MAE_item | 0.619 | 0.609 |
 
 Run details and metric definitions live in:
 - `docs/results/run-history.md`

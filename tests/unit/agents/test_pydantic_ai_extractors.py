@@ -80,6 +80,26 @@ def test_extract_quantitative_invalid_score_range_retries() -> None:
         extract_quantitative(response)
 
 
+def test_extract_quantitative_missing_reason_is_filled() -> None:
+    response = """
+<answer>
+{
+  "PHQ8_NoInterest": {"evidence": "a", "reason": "b", "score": 2},
+  "PHQ8_Depressed": {"evidence": "a", "score": 1},
+  "PHQ8_Sleep": {"evidence": "a", "reason": "b", "score": 0},
+  "PHQ8_Tired": {"evidence": "a", "reason": "b", "score": 3},
+  "PHQ8_Appetite": {"evidence": "a", "reason": "b", "score": "N/A"},
+  "PHQ8_Failure": {"evidence": "a", "reason": "b", "score": 0},
+  "PHQ8_Concentrating": {"evidence": "a", "reason": "b", "score": 1},
+  "PHQ8_Moving": {"evidence": "a", "reason": "b", "score": null}
+}
+</answer>
+"""
+    parsed = extract_quantitative(response)
+    assert parsed.PHQ8_Depressed.score == 1
+    assert parsed.PHQ8_Depressed.reason != ""
+
+
 def test_extract_judge_metric_plain_text_valid() -> None:
     response = """
 Explanation: The assessment is coherent and specific.

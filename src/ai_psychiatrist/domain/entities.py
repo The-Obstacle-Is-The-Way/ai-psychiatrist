@@ -113,23 +113,69 @@ class PHQ8Assessment:
 
     @property
     def total_score(self) -> int:
-        """Calculate total PHQ-8 score (0-24).
+        """Calculate the lower-bound total PHQ-8 score (0-24).
 
-        N/A scores contribute 0 to the total.
+        This treats N/A scores as 0 and is therefore a **lower bound** when the
+        assessment is incomplete.
+
+        Use `min_total_score`/`max_total_score` (or `total_score_bounds`) when
+        you need to represent uncertainty due to missing items.
 
         Returns:
-            Sum of all item scores (0-24 range).
+            Lower-bound sum of all item scores (0-24 range).
         """
+        return self.min_total_score
+
+    @property
+    def min_total_score(self) -> int:
+        """Lower bound total score treating N/A as 0."""
         return sum(item.score_value for item in self.items.values())
 
     @property
-    def severity(self) -> SeverityLevel:
-        """Determine severity from total score.
+    def max_total_score(self) -> int:
+        """Upper bound total score treating N/A as 3 (max per PHQ-8 item)."""
+        return sum(item.score if item.score is not None else 3 for item in self.items.values())
+
+    @property
+    def total_score_bounds(self) -> tuple[int, int]:
+        """Return `(min_total_score, max_total_score)` bounds."""
+        return (self.min_total_score, self.max_total_score)
+
+    @property
+    def severity_lower_bound(self) -> SeverityLevel:
+        """Lower bound severity derived from `min_total_score`."""
+        return SeverityLevel.from_total_score(self.min_total_score)
+
+    @property
+    def severity_upper_bound(self) -> SeverityLevel:
+        """Upper bound severity derived from `max_total_score`."""
+        return SeverityLevel.from_total_score(self.max_total_score)
+
+    @property
+    def severity_bounds(self) -> tuple[SeverityLevel, SeverityLevel]:
+        """Return `(severity_lower_bound, severity_upper_bound)` bounds."""
+        return (self.severity_lower_bound, self.severity_upper_bound)
+
+    @property
+    def severity(self) -> SeverityLevel | None:
+        """Determine PHQ-8 severity when it is determinate.
+
+        A single severity label is only meaningful when the assessment is
+        complete *or* when missing items cannot change the severity band.
 
         Returns:
-            SeverityLevel based on paper thresholds.
+            The determinate severity level, or None if severity is bounded but
+            not uniquely identified.
         """
-        return SeverityLevel.from_total_score(self.total_score)
+        lower, upper = self.severity_bounds
+        if lower == upper:
+            return lower
+        return None
+
+    @property
+    def is_complete(self) -> bool:
+        """Return True if all 8 items have numeric scores (no N/A)."""
+        return self.na_count == 0
 
     @property
     def available_count(self) -> int:

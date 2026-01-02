@@ -3,6 +3,7 @@
 **Status**: Implemented
 **Primary implementation**: `scripts/preprocess_daic_woz_transcripts.py`
 **Integration points**: `src/ai_psychiatrist/config.py` (`DATA_TRANSCRIPTS_DIR`), `src/ai_psychiatrist/services/transcript.py`
+**Verification**: `uv run pytest tests/ --tb=short` (2026-01-02)
 
 ## 0. Problem Statement
 
@@ -64,10 +65,9 @@ Processed transcripts are written to a new transcripts root that preserves the s
 
 ```text
 data/
-  transcripts_preprocessed/
-    <variant_name>/
-      300_P/300_TRANSCRIPT.csv
-      ...
+  transcripts_<variant_name>/
+    300_P/300_TRANSCRIPT.csv
+    ...
 ```
 
 ### 3.2 Variant selection in runtime code
@@ -80,7 +80,7 @@ The runtime transcript loader is already configurable via `DATA_TRANSCRIPTS_DIR`
 Example:
 
 ```bash
-export DATA_TRANSCRIPTS_DIR=data/transcripts_preprocessed/participant_only
+export DATA_TRANSCRIPTS_DIR=data/transcripts_participant_only
 ```
 
 No code changes are required to select a variant: only configuration changes.
@@ -284,7 +284,7 @@ Known upstream issue to account for: Participant `409` has been observed with `P
 To avoid mixing artifacts from different transcript variants:
 
 1) Keep raw transcripts in `data/transcripts/`
-2) Generate a processed variant in `data/transcripts_preprocessed/<variant>/`
+2) Generate a processed variant in `data/transcripts_<variant>/`
 3) Set `DATA_TRANSCRIPTS_DIR` to that variant
 4) Generate embeddings with a variant-stamped artifact name
 5) Ensure `.tags.json` and `.chunk_scores.json` correspond to the same embeddings base name

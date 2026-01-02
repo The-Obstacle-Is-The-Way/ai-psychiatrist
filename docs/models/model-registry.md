@@ -177,7 +177,10 @@ MODEL_QUANTITATIVE_MODEL=gemma3:27b
 MODEL_EMBEDDING_MODEL=qwen3-embedding:8b
 EMBEDDING_DIMENSION=4096
 
-# Embeddings artifact (default: huggingface_qwen3_8b_paper_train)
+# Embeddings artifact (recommended: participant-only)
+# DATA_TRANSCRIPTS_DIR=data/transcripts_participant_only
+# EMBEDDING_EMBEDDINGS_FILE=huggingface_qwen3_8b_paper_train_participant_only
+#
 # Only set if you want to override the default HF embeddings
 # EMBEDDING_EMBEDDINGS_FILE=paper_reference_embeddings  # Use Ollama embeddings instead
 ```

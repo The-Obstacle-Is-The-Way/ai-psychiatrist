@@ -20,6 +20,139 @@ logger = get_logger(__name__)
 _MISSING_COMMA_AFTER_PRIMITIVE_RE = re.compile(r'("|\d|true|false|null)\s*\n\s*"([^"]+)"\s*:')
 _MISSING_COMMA_AFTER_CONTAINER_RE = re.compile(r'([}\]])\s*\n\s*"([^"]+)"\s*:')
 _TRAILING_COMMA_RE = re.compile(r",\s*([}\]])")
+_STRAY_STRING_FRAGMENT_RE = re.compile(
+    r'(:\s*)("(?:\\.|[^"\\])*")\s*,\s*("(?:\\.|[^"\\])*")(?=\s*[,}])',
+    flags=re.DOTALL,
+)
+
+
+def _looks_like_json_object_key(text: str, start: int) -> bool:
+    """Return True if `text[start:]` begins with a JSON object key (`\"...\"\\s*:`)."""
+    if start >= len(text) or text[start] != '"':
+        return False
+
+    escaped = False
+    i = start + 1
+    while i < len(text):
+        ch = text[i]
+        if escaped:
+            escaped = False
+            i += 1
+            continue
+        if ch == "\\":
+            escaped = True
+            i += 1
+            continue
+        if ch == '"':
+            i += 1
+            break
+        i += 1
+    else:
+        return False
+
+    while i < len(text) and text[i].isspace():
+        i += 1
+
+    return i < len(text) and text[i] == ":"
+
+
+def _escape_unescaped_quotes_in_strings(text: str) -> str:
+    """Escape unescaped quotes inside JSON strings (best-effort).
+
+    LLMs occasionally emit unescaped double quotes inside string values
+    (e.g., `"evidence": ""quoted text"` or `"He said "hi""`), which breaks JSON
+    parsing with errors like `Expecting ',' delimiter`.
+
+    This is a conservative, index-stable pass that:
+    - Leaves already-escaped quotes (`\\\"`) untouched.
+    - Keeps valid string terminators (followed by `,`, `}`, `]`, or `:`).
+    - Treats quotes followed by a plausible next object key (`\"...\"\\s*:`) as terminators.
+    - Otherwise, escapes the quote in-place.
+    """
+    out: list[str] = []
+    in_string = False
+    escaped = False
+
+    i = 0
+    while i < len(text):
+        ch = text[i]
+        if not in_string:
+            out.append(ch)
+            if ch == '"':
+                in_string = True
+            i += 1
+            continue
+
+        # Inside a string literal
+        if escaped:
+            out.append(ch)
+            escaped = False
+            i += 1
+            continue
+
+        if ch == "\\":
+            out.append(ch)
+            escaped = True
+            i += 1
+            continue
+
+        if ch != '"':
+            out.append(ch)
+            i += 1
+            continue
+
+        # Potential string terminator or internal quote.
+        j = i + 1
+        while j < len(text) and text[j].isspace():
+            j += 1
+
+        if j >= len(text):
+            out.append('"')
+            in_string = False
+            i += 1
+            continue
+
+        next_non_ws = text[j]
+        if next_non_ws in {",", "}", "]", ":"} or _looks_like_json_object_key(text, j):
+            out.append('"')
+            in_string = False
+            i += 1
+            continue
+
+        # Treat as an internal quote and escape it.
+        out.append('\\"')
+        i += 1
+
+    return "".join(out)
+
+
+def _join_stray_string_fragments(text: str) -> str:
+    """Join stray comma-delimited string fragments into a single string value.
+
+    Some LLMs emit multiple quoted fragments for a single string field, e.g.:
+        `"evidence": "quote 1", "quote 2", "reason": ...`
+
+    This is invalid JSON (the second fragment is interpreted as an object key, so the
+    parser raises `Expecting ':' delimiter`). This pass conservatively joins adjacent
+    string literals *in a value position* (immediately after `:`) when the next token
+    after the second string is `,` or `}` (i.e., it's not a key).
+
+    Joined fragments are separated by the JSON escape sequence `\\n`.
+    """
+
+    def _join(match: re.Match[str]) -> str:
+        prefix = match.group(1)
+        first = match.group(2)
+        second = match.group(3)
+        return f"{prefix}{first[:-1]}\\n{second[1:]}"
+
+    fixed = text
+    for _ in range(50):
+        merged = _STRAY_STRING_FRAGMENT_RE.sub(_join, fixed)
+        if merged == fixed:
+            break
+        fixed = merged
+    return fixed
 
 
 def _stable_text_hash(text: str) -> str:
@@ -34,7 +167,9 @@ def tolerant_json_fixups(text: str) -> str:
     1. Smart quotes → ASCII quotes
     2. Zero-width spaces → removed
     3. Missing commas between object entries → inserted
-    4. Trailing commas before } or ] → removed
+    4. Unescaped quotes inside strings → escaped
+    5. Stray string fragments → joined
+    6. Trailing commas before } or ] → removed
 
     Properties:
     - Idempotent: fixups(fixups(x)) == fixups(x)
@@ -71,7 +206,19 @@ def tolerant_json_fixups(text: str) -> str:
         applied_fixes.append("missing_commas")
         fixed = missing_commas_fixed
 
-    # 4) Remove trailing commas before } or ]
+    # 4) Escape unescaped quotes inside JSON strings (best-effort)
+    escaped_quotes_fixed = _escape_unescaped_quotes_in_strings(fixed)
+    if escaped_quotes_fixed != fixed:
+        applied_fixes.append("unescaped_quotes")
+        fixed = escaped_quotes_fixed
+
+    # 5) Join stray comma-delimited string fragments in value position
+    joined_fragments_fixed = _join_stray_string_fragments(fixed)
+    if joined_fragments_fixed != fixed:
+        applied_fixes.append("string_fragments")
+        fixed = joined_fragments_fixed
+
+    # 6) Remove trailing commas before } or ]
     trailing_commas_fixed = _TRAILING_COMMA_RE.sub(r"\1", fixed)
     if trailing_commas_fixed != fixed:
         applied_fixes.append("trailing_commas")

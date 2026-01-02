@@ -102,13 +102,18 @@ class EvaluationResult:
     predicted_items: dict[PHQ8Item, int | None] = field(default_factory=dict)
     ground_truth_total: int | None = None
     predicted_total: int | None = None
+    predicted_total_min: int | None = None
+    predicted_total_max: int | None = None
+    severity: str | None = None
+    severity_lower_bound: str | None = None
+    severity_upper_bound: str | None = None
 
     available_items: int = 0
     na_items: int = 0
     mae_available: float | None = None
 
     # Spec 25: Per-item confidence signals for selective prediction evaluation
-    item_signals: dict[PHQ8Item, dict[str, int | str | None]] = field(default_factory=dict)
+    item_signals: dict[PHQ8Item, dict[str, int | float | str | None]] = field(default_factory=dict)
 
 
 @dataclass
@@ -155,6 +160,11 @@ class ExperimentResults:
                     "error": r.error,
                     "ground_truth_total": r.ground_truth_total,
                     "predicted_total": r.predicted_total,
+                    "predicted_total_min": r.predicted_total_min,
+                    "predicted_total_max": r.predicted_total_max,
+                    "severity": r.severity,
+                    "severity_lower_bound": r.severity_lower_bound,
+                    "severity_upper_bound": r.severity_upper_bound,
                     "available_items": r.available_items,
                     "na_items": r.na_items,
                     "mae_available": r.mae_available,
@@ -287,13 +297,17 @@ async def evaluate_participant(
         mae_available = float(np.mean(errors)) if errors else None
 
         # Spec 25: Build item_signals for selective prediction evaluation
-        item_signals: dict[PHQ8Item, dict[str, int | str | None]] = {}
+        item_signals: dict[PHQ8Item, dict[str, int | float | str | None]] = {}
         for item in PHQ8Item.all_items():
             item_assessment = assessment.items[item]
             item_signals[item] = {
                 "llm_evidence_count": item_assessment.llm_evidence_count,
                 "keyword_evidence_count": item_assessment.keyword_evidence_count,
                 "evidence_source": item_assessment.evidence_source,
+                # Spec 046: retrieval-grounded confidence signals
+                "retrieval_reference_count": item_assessment.retrieval_reference_count,
+                "retrieval_similarity_mean": item_assessment.retrieval_similarity_mean,
+                "retrieval_similarity_max": item_assessment.retrieval_similarity_max,
             }
 
         duration = time.perf_counter() - start
@@ -306,6 +320,11 @@ async def evaluate_participant(
             predicted_items=predicted_items,
             ground_truth_total=sum(ground_truth_items.values()),
             predicted_total=assessment.total_score,
+            predicted_total_min=assessment.min_total_score,
+            predicted_total_max=assessment.max_total_score,
+            severity=assessment.severity.name if assessment.severity is not None else None,
+            severity_lower_bound=assessment.severity_lower_bound.name,
+            severity_upper_bound=assessment.severity_upper_bound.name,
             available_items=assessment.available_count,
             na_items=assessment.na_count,
             mae_available=mae_available,
