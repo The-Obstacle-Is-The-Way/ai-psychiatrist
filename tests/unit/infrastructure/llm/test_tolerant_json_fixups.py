@@ -152,3 +152,10 @@ class TestTolerantJsonFixups:
             "reason": "ok",
             "score": 0,
         }
+
+    def test_stray_string_fragments_after_string_value_joined(self) -> None:
+        """Stray comma-delimited string fragments must be joined into one string value."""
+        broken = '{\n  "evidence": "first", "second",\n  "reason": "ok",\n  "score": 0\n}'
+        fixed = tolerant_json_fixups(broken)
+        parsed = json.loads(fixed)
+        assert parsed == {"evidence": "first\nsecond", "reason": "ok", "score": 0}
