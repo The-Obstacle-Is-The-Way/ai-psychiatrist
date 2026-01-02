@@ -86,7 +86,7 @@ Interpretation: differences are small relative to uncertainty; **confidence rank
 
 ## Part 2: Candidate Techniques (Recent UQ + Selective Prediction Literature)
 
-External web access is not available in this environment, so the specific paper links below are **not re-validated here**. Treat them as starting points for an external agent to verify.
+This section summarizes external literature that is directly relevant to improving **risk–coverage performance** (AURC/AUGRC) via better uncertainty/confidence signals in RAG-like LLM systems.
 
 ### 2.1 Retrieval-Grounded Signals (RAG-specific)
 
@@ -97,6 +97,10 @@ Signals that exist in this repo today (or can be added with low risk):
 - reference score agreement / dispersion across retrieved examples (available when chunk scores are enabled)
 - reference validator pass/fail rate (Spec 36; optional)
 
+Relevant references:
+- Google Research (ICLR 2025): “Sufficient Context” shows retrieval **relevance alone** can be misleading, and proposes combining a context-sufficiency signal with model confidence for selective generation: https://arxiv.org/abs/2411.06037
+- ACL 2025: “Why UE Methods Fall Short in RAG” argues off-the-shelf UE can fail in RAG and motivates calibration functions tailored to retrieval settings: https://aclanthology.org/2025.findings-acl.852/
+
 ### 2.2 Post-Hoc Confidence Calibration (Black-box friendly)
 
 Key idea: treat confidence estimation as its own supervised problem.
@@ -106,6 +110,10 @@ Key idea: treat confidence estimation as its own supervised problem.
 Practical calibrators that are easy to ship and audit:
 - logistic regression / Platt scaling
 - isotonic regression (monotone, avoids “probability” assumptions)
+
+Relevant references:
+- UniCR (2025): a unified framework that fuses heterogeneous evidence (including retrieval compatibility) into a calibrated probability and applies conformal risk control for refusal: https://arxiv.org/abs/2509.01455
+- “Calibrating Verbalized Probabilities for LLMs” (2024) motivates post-hoc calibration when using self-reported confidences from black-box models: https://arxiv.org/abs/2410.06707
 
 ### 2.3 Disagreement-Based Uncertainty (Ensembles / Self-Consistency)
 
@@ -121,9 +129,8 @@ Trade-off: higher runtime cost.
 
 Key idea: calibrate a thresholding rule with finite-sample guarantees (risk or coverage). This is most useful if we want to *choose an operating point* (e.g., “risk ≤ 0.2”) rather than optimize integrated area metrics.
 
----
-
----
+Relevant reference:
+- UniCR (2025) explicitly uses conformal risk control for distribution-free guarantees: https://arxiv.org/abs/2509.01455
 
 ## Part 3: Recommended Improvements (Ranked by Effort/Impact)
 
@@ -219,10 +226,10 @@ To validate any improvement, run the following ablations:
 
 | Experiment | Confidence Signal | Expected Outcome |
 |------------|-------------------|------------------|
-| Baseline | `evidence_count` | Current AUGRC: 0.031 |
-| A1 | `mean_similarity` | May improve if similarity is well-calibrated |
-| A2 | `evidence_count * mean_similarity` | Joint signal |
-| A3 | `evidence_count + alpha * mean_similarity` | Weighted combination |
+| Baseline | `llm_evidence_count` | Current AUGRC ≈ 0.031 (Run 8) |
+| A1 | `retrieval_similarity_mean` | Tests whether retrieval strength is a good ranking signal |
+| A2 | `hybrid_evidence_similarity` | Deterministic combined signal (see Spec 046) |
+| A3 | `retrieval_similarity_max` | Tests whether “best match” is better than mean |
 
 ### Ablation B: Verbalized Confidence
 
@@ -274,12 +281,19 @@ To validate any improvement, run the following ablations:
 
 ## Part 6: Key References
 
-These are external links carried forward from earlier notes; **not revalidated offline**:
+All links below were validated as reachable on 2026-01-02:
 
-1. **AUGRC definition / selective classification evaluation**: https://arxiv.org/abs/2407.01032
-2. **AURC population characterization**: https://arxiv.org/abs/2410.15361
-3. **LLM uncertainty baselines / semantic-entropy family**: https://www.nature.com/articles/s41586-024-07421-0
-4. **RAG uncertainty / retrieval sufficiency**: https://research.google/blog/deeper-insights-into-retrieval-augmented-generation-the-role-of-sufficient-context/
+1. Traub et al. (2024): AUGRC proposal for selective classification evaluation: https://arxiv.org/abs/2407.01032
+2. “Population AURC characterization” (2024): https://arxiv.org/abs/2410.15361
+3. Vashurin et al. (TACL 2025): LM-Polygraph benchmark for LLM UQ: https://arxiv.org/abs/2406.15627
+4. Farquhar et al. (Nature 2024): semantic entropy for hallucination detection: https://www.nature.com/articles/s41586-024-07421-0
+5. Nguyen et al. (ACL Findings 2025): beyond semantic entropy via pairwise semantic similarity: https://aclanthology.org/2025.findings-acl.234/
+6. Soudani et al. (ACL Findings 2025): UE pitfalls in RAG + calibration function: https://aclanthology.org/2025.findings-acl.852/
+7. Google Research (ICLR 2025): sufficient context for RAG systems: https://arxiv.org/abs/2411.06037
+8. UniCR (2025): calibrated probability + conformal risk control for refusal: https://arxiv.org/abs/2509.01455
+9. QuCo-RAG (2025): corpus-grounded uncertainty signals for dynamic RAG: https://arxiv.org/abs/2512.19134
+10. UQLM toolkit paper (2025): black-box/white-box/judge/ensemble UQ: https://arxiv.org/abs/2504.19254
+11. Adaptive temperature scaling (OpenReview 2024): https://openreview.net/forum?id=BgfGqNpoMi
 
 ---
 
@@ -335,7 +349,7 @@ We do **not** have a defensible a-priori estimate for AUGRC gains without runnin
 
 The AUGRC parity between zero-shot and few-shot reveals a **confidence signal gap**. Few-shot retrieval provides valuable information (similarity scores, reference agreement) that is currently discarded.
 
-**Immediate recommendation**: Implement Spec 40 (retrieval similarity as confidence) and run an ablation. This is a low-effort, low-risk change with clear theoretical motivation from the 2025 literature.
+**Immediate recommendation**: Implement Spec 046 (retrieval similarity as confidence) and run an ablation. This is a low-effort, low-risk change with clear motivation from recent RAG uncertainty work (e.g., sufficient-context and RAG-specific calibration results).
 
 **Medium-term**: Add verbalized confidence extraction and train a simple calibrator on paper-train.
 

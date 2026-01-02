@@ -21,6 +21,11 @@ In Run 8, few-shot substantially improves accuracy (MAE_item) but does not mater
 
 If we want to improve AURC/AUGRC (i.e., “know when we’re likely wrong”), we must improve the ranking signal used by the risk–coverage curve.
 
+Research basis (validated 2026-01-02):
+- UniCR (2025) explicitly targets “calibrated probability → risk-controlled refusal” and reports improvements in area under risk–coverage metrics: https://arxiv.org/abs/2509.01455
+- Sufficient Context (ICLR 2025) shows retrieval-augmented context can increase hallucinations when insufficient, motivating retrieval-aware abstention signals: https://arxiv.org/abs/2411.06037
+- ACL 2025 highlights that generic UE methods can fail in RAG and motivates retrieval-aware calibration functions: https://aclanthology.org/2025.findings-acl.852/
+
 ## 1. Goals / Non-Goals
 
 ### 1.1 Goals
@@ -32,6 +37,7 @@ If we want to improve AURC/AUGRC (i.e., “know when we’re likely wrong”), w
   - backward compatible (old run artifacts still evaluable),
   - observable (signals stored for audit; no transcript text in metrics artifacts).
 - Provide an ablation path to answer: “Which confidence signal improves AURC/AUGRC on paper-test?”
+- (Optional) Enable a calibrated **risk-controlled refusal** policy that can abstain on likely-wrong item scores while preserving coverage when possible.
 
 ### 1.2 Non-Goals
 
@@ -95,7 +101,12 @@ Type safety:
 
 Backwards compatibility:
 
-- For older run artifacts, these keys will simply be absent; evaluation must handle missing values (default to `0.0` or fail-fast based on the confidence variant selected).
+- For older run artifacts, these keys will be absent and retrieval-based confidence variants must fail fast with a clear error.
+
+Forward compatibility (recommended):
+- For runs produced after this spec, write these keys for **both** modes:
+  - zero-shot: `retrieval_reference_count=0`, `retrieval_similarity_mean=null`, `retrieval_similarity_max=null`
+  - few-shot: computed values from the final references used in the prompt
 
 ### 3.3 Add new confidence variants in selective prediction evaluation
 
@@ -120,9 +131,13 @@ Rationale:
 
 CLI behavior:
 
-- If a retrieval-based confidence is requested but signals are missing:
+- If a retrieval-based confidence is requested but required signals are missing:
   - Raise a clear error pointing to the run artifact and required keys.
   - Do not silently treat missing as 0.0 (this would bias results).
+
+Applicability guidance:
+- `retrieval_similarity_mean` / `retrieval_similarity_max` are primarily meaningful for **few-shot** runs.
+- `hybrid_evidence_similarity` is the recommended cross-mode comparison signal because it degrades gracefully for zero-shot (similarity term = 0 when absent).
 
 Documentation updates:
 
@@ -156,6 +171,16 @@ Implementation sketch:
 - Output: JSON calibrator artifact (weights + schema + training metadata; no transcript text).
 
 The calibrator is evaluated by re-running `scripts/evaluate_selective_prediction.py` on `paper-test` using the calibrator-produced confidence.
+
+### 4.3 Risk-controlled refusal (conformal; runtime behavior)
+
+If we want the system to “know when not to answer” (not just rank confidence post-hoc), add an optional runtime refusal layer:
+
+1. Train a calibrator on `paper-val` (Section 4.2) to output `p_correct` per `(participant, item)`.
+2. Fit a conformal risk-control threshold `τ` for a user-specified error budget (e.g., expected normalized absolute error) or for a correctness target.
+3. At inference time: if `p_correct < τ`, override `score -> None` and set `na_reason = "low_confidence"` (new enum value).
+
+This approach is aligned with UniCR’s “calibrated probability → risk-controlled decision” framing (see 2509.01455).
 
 ## 5. Test Plan (TDD)
 
