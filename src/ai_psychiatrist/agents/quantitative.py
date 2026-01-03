@@ -17,7 +17,6 @@ from dataclasses import replace
 from typing import TYPE_CHECKING, Any, Literal
 
 from ai_psychiatrist.agents.prompts.quantitative import (
-    PHQ8_DOMAIN_KEYS,
     QUANTITATIVE_SYSTEM_PROMPT,
     make_evidence_prompt,
     make_scoring_prompt,
@@ -39,6 +38,12 @@ from ai_psychiatrist.domain.value_objects import ItemAssessment
 from ai_psychiatrist.infrastructure.llm.responses import parse_llm_json
 from ai_psychiatrist.infrastructure.logging import get_logger
 from ai_psychiatrist.services.embedding import ReferenceBundle, compute_retrieval_similarity_stats
+from ai_psychiatrist.services.evidence_validation import (
+    EvidenceGroundingError,
+    EvidenceSchemaError,
+    validate_evidence_grounding,
+    validate_evidence_schema,
+)
 
 if TYPE_CHECKING:
     from pydantic_ai import Agent
@@ -586,17 +591,39 @@ class QuantitativeAssessmentAgent:
         clean = self._strip_json_block(raw)
         obj = parse_llm_json(clean)
 
-        # Clean up extraction, ensure all keys present
-        evidence_dict: dict[str, list[str]] = {}
-        for key in PHQ8_DOMAIN_KEYS:
-            arr = obj.get(key, []) if isinstance(obj, dict) else []
-            if not isinstance(arr, list):
-                arr = []
-            # Dedupe and clean quotes
-            cleaned = list({str(q).strip() for q in arr if str(q).strip()})
-            evidence_dict[key] = cleaned
+        try:
+            evidence = validate_evidence_schema(obj)
+        except EvidenceSchemaError as exc:
+            import hashlib  # noqa: PLC0415
 
-        return evidence_dict
+            logger.error(
+                "evidence_schema_validation_failed",
+                component="evidence_extraction",
+                violations=exc.violations,
+                response_hash=hashlib.sha256(clean.encode("utf-8")).hexdigest()[:12],
+                response_len=len(clean),
+            )
+            raise
+
+        if self._settings.evidence_quote_validation_enabled:
+            evidence, stats = validate_evidence_grounding(
+                evidence,
+                transcript_text,
+                mode=self._settings.evidence_quote_validation_mode,
+                fuzzy_threshold=self._settings.evidence_quote_fuzzy_threshold,
+                log_rejections=self._settings.evidence_quote_log_rejections,
+            )
+
+            if (
+                self._settings.evidence_quote_fail_on_all_rejected
+                and stats.validated_count == 0
+                and stats.extracted_count > 0
+            ):
+                raise EvidenceGroundingError(
+                    "LLM returned evidence quotes but none could be grounded in the transcript."
+                )
+
+        return evidence
 
     def _strip_json_block(self, text: str) -> str:
         """Strip markdown code blocks and XML tags.

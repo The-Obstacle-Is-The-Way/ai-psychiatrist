@@ -12,11 +12,10 @@
 When the LLM returns malformed evidence JSON, non-list values are silently coerced to empty arrays:
 
 ```python
-# Current behavior in _extract_evidence()
-evidence[key] = [str(q).strip() for q in obj.get(key, []) if str(q).strip()]
-#                                          ^^^^^^^^^^^^^^^^
-#                                          If obj[key] is a string, this iterates
-#                                          over characters, then filters to empty
+# Current behavior in QuantitativeAssessmentAgent._extract_evidence()
+arr = obj.get(key, []) if isinstance(obj, dict) else []
+if not isinstance(arr, list):
+    arr = []  # silently coerced
 ```
 
 **Example of silent corruption**:
@@ -34,19 +33,20 @@ Result: `PHQ8_Sleep` becomes `[]` silently, losing the evidence.
 ## Current Behavior
 
 ```python
-# quantitative.py - _extract_evidence()
+# src/ai_psychiatrist/agents/quantitative.py - _extract_evidence()
 obj = parse_llm_json(clean)
-return {
-    key: [str(q).strip() for q in obj.get(key, []) if str(q).strip()]
-    for key in PHQ8_DOMAIN_KEYS
-}
+evidence_dict: dict[str, list[str]] = {}
+for key in PHQ8_DOMAIN_KEYS:
+    arr = obj.get(key, []) if isinstance(obj, dict) else []
+    if not isinstance(arr, list):
+        arr = []  # silent coercion (bug)
+    evidence_dict[key] = list({str(q).strip() for q in arr if str(q).strip()})
 ```
 
 Problems:
-1. If `obj[key]` is a string, `for q in "some string"` iterates over characters
-2. Each character gets `.strip()`, likely becomes empty or single char
-3. Result is `[]` or garbage like `["P", "a", "t"]`
-4. No error raised, no warning logged
+1. Non-list values (e.g., string/object/number) are silently treated as `[]`.
+2. If the model returns a valid JSON object but wrong types, the run “succeeds” with corrupted evidence.
+3. In few-shot mode, this can silently reduce retrieval quality and distort confidence signals.
 
 ---
 
@@ -61,7 +61,7 @@ Add explicit type validation immediately after JSON parsing, before any processi
 ### Schema Validation Function
 
 ```python
-# New: src/ai_psychiatrist/infrastructure/llm/schema_validation.py
+# New (shared with Spec 053): src/ai_psychiatrist/services/evidence_validation.py
 
 from typing import Any
 from ai_psychiatrist.agents.prompts.quantitative import PHQ8_DOMAIN_KEYS
@@ -78,7 +78,7 @@ class EvidenceSchemaError(ValueError):
         self.violations = violations
 
 
-def validate_evidence_schema(obj: dict[str, Any]) -> dict[str, list[str]]:
+def validate_evidence_schema(obj: object) -> dict[str, list[str]]:
     """Validate and normalize evidence extraction JSON schema.
 
     Expected schema:
@@ -95,8 +95,14 @@ def validate_evidence_schema(obj: dict[str, Any]) -> dict[str, list[str]]:
         Validated dict with all keys present and values as list[str]
 
     Raises:
-        EvidenceSchemaError: If any value is not a list or contains non-strings
+        EvidenceSchemaError: If the top-level is not an object, or any value is not a list[str].
     """
+    if not isinstance(obj, dict):
+        raise EvidenceSchemaError(
+            f"Expected JSON object at top level, got {type(obj).__name__}",
+            violations={"__root__": f"Expected object, got {type(obj).__name__}"},
+        )
+
     violations: dict[str, str] = {}
     validated: dict[str, list[str]] = {}
 
@@ -113,27 +119,32 @@ def validate_evidence_schema(obj: dict[str, Any]) -> dict[str, list[str]]:
             violations[key] = f"Expected list, got {type(value).__name__}: {str(value)[:100]}"
             continue
 
-        # Case 3: List with non-string elements - normalize with warning
-        normalized = []
+        # Case 3: List must contain only strings
+        normalized: list[str] = []
         for i, item in enumerate(value):
-            if isinstance(item, str):
-                stripped = item.strip()
-                if stripped:
-                    normalized.append(stripped)
-            elif item is not None:
-                # Non-string, non-null in list - log warning but convert
-                logger.warning(
-                    "evidence_list_item_not_string",
-                    key=key,
-                    index=i,
-                    item_type=type(item).__name__,
-                    item_value=str(item)[:50],
+            if not isinstance(item, str):
+                violations[key] = (
+                    f"Expected list[str] but element {i} was {type(item).__name__}: "
+                    f"{str(item)[:100]}"
                 )
-                converted = str(item).strip()
-                if converted:
-                    normalized.append(converted)
+                break
+            stripped = item.strip()
+            if stripped:
+                normalized.append(stripped)
 
-        validated[key] = normalized
+        if key in violations:
+            continue
+
+        # Preserve order while de-duping.
+        seen: set[str] = set()
+        deduped: list[str] = []
+        for quote in normalized:
+            if quote in seen:
+                continue
+            seen.add(quote)
+            deduped.append(quote)
+
+        validated[key] = deduped
 
     # If any violations, raise with details
     if violations:
@@ -148,12 +159,9 @@ def validate_evidence_schema(obj: dict[str, Any]) -> dict[str, list[str]]:
 ### Integration
 
 ```python
-# quantitative.py - modify _extract_evidence()
+# src/ai_psychiatrist/agents/quantitative.py - modify _extract_evidence()
 
-from ai_psychiatrist.infrastructure.llm.schema_validation import (
-    validate_evidence_schema,
-    EvidenceSchemaError,
-)
+from ai_psychiatrist.services.evidence_validation import validate_evidence_schema, EvidenceSchemaError
 
 async def _extract_evidence(self, transcript_text: str) -> dict[str, list[str]]:
     """Extract evidence quotes for each PHQ-8 domain."""
@@ -165,10 +173,13 @@ async def _extract_evidence(self, transcript_text: str) -> dict[str, list[str]]:
     try:
         evidence = validate_evidence_schema(obj)
     except EvidenceSchemaError as e:
+        import hashlib  # stdlib; used for privacy-safe hashing (no transcript text)
+
         logger.error(
             "evidence_schema_validation_failed",
             violations=e.violations,
-            raw_response_preview=clean[:500],
+            response_hash=hashlib.sha256(clean.encode("utf-8")).hexdigest()[:12],
+            response_len=len(clean),
         )
         raise  # Propagate - fail loudly, don't silently degrade
 
@@ -194,13 +205,10 @@ When schema validation fails:
 ## Testing
 
 ```python
-# tests/unit/infrastructure/llm/test_schema_validation.py
+# tests/unit/services/test_evidence_validation.py
 
 import pytest
-from ai_psychiatrist.infrastructure.llm.schema_validation import (
-    validate_evidence_schema,
-    EvidenceSchemaError,
-)
+from ai_psychiatrist.services.evidence_validation import validate_evidence_schema, EvidenceSchemaError
 
 
 def test_valid_schema_passes():
@@ -268,11 +276,11 @@ def test_whitespace_only_strings_filtered():
     assert result["PHQ8_Failure"] == ["valid", "also valid"]
 
 
-def test_non_string_list_items_converted_with_warning(caplog):
+def test_non_string_list_items_raises():
     obj = {"PHQ8_Concentrating": ["valid", 123, True]}
-    result = validate_evidence_schema(obj)
-    assert result["PHQ8_Concentrating"] == ["valid", "123", "True"]
-    assert "evidence_list_item_not_string" in caplog.text
+    with pytest.raises(EvidenceSchemaError) as exc_info:
+        validate_evidence_schema(obj)
+    assert "PHQ8_Concentrating" in exc_info.value.violations
 
 
 def test_multiple_violations_collected():
@@ -306,7 +314,7 @@ Result: evidence["PHQ8_Sleep"] = []  # SILENT LOSS
 LLM returns: {"PHQ8_Sleep": "trouble sleeping"}
 Result: EvidenceSchemaError raised
         Participant marked as failed
-        Error logged with full context
+        Error logged with violations + hashes (no transcript text)
         We KNOW something went wrong
 ```
 
@@ -332,7 +340,7 @@ No migration needed. This is a strictness improvement that will cause some exist
 ## Success Criteria
 
 1. Zero silent type coercion in evidence processing
-2. All schema violations logged with full context
+2. All schema violations logged with *privacy-safe* context (violations + hashes only)
 3. Test coverage for all edge cases
 4. No performance regression (<1ms overhead)
 

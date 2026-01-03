@@ -115,6 +115,54 @@ class TestProcessParticipantStrictMode:
         assert exc_info.value.chunk_index == 0  # First chunk
         assert "chunk 0" in str(exc_info.value)
 
+    @pytest.mark.asyncio
+    async def test_nan_embedding_raises(self) -> None:
+        """Spec 055: NaN embeddings must fail loudly in strict mode."""
+        mock_client = AsyncMock()
+        mock_client.embed.return_value = MagicMock(embedding=[0.0, float("nan"), 0.0])
+
+        mock_transcript_service = MagicMock()
+        mock_transcript = MagicMock()
+        mock_transcript.text = ("Line content here.\n" * 8) * 2
+        mock_transcript_service.load_transcript.return_value = mock_transcript
+
+        with pytest.raises(EmbeddingGenerationError):
+            await process_participant(
+                client=mock_client,
+                transcript_service=mock_transcript_service,
+                participant_id=100,
+                model="test",
+                dimension=3,
+                chunk_size=8,
+                step_size=8,
+                min_chars=10,
+                allow_partial=False,
+            )
+
+    @pytest.mark.asyncio
+    async def test_dimension_mismatch_raises(self) -> None:
+        """Spec 057: dimension mismatches must fail loudly in strict mode."""
+        mock_client = AsyncMock()
+        mock_client.embed.return_value = MagicMock(embedding=[1.0, 2.0])  # too short
+
+        mock_transcript_service = MagicMock()
+        mock_transcript = MagicMock()
+        mock_transcript.text = ("Line content here.\n" * 8) * 2
+        mock_transcript_service.load_transcript.return_value = mock_transcript
+
+        with pytest.raises(EmbeddingGenerationError):
+            await process_participant(
+                client=mock_client,
+                transcript_service=mock_transcript_service,
+                participant_id=100,
+                model="test",
+                dimension=3,
+                chunk_size=8,
+                step_size=8,
+                min_chars=10,
+                allow_partial=False,
+            )
+
 
 class TestProcessParticipantPartialMode:
     """Tests for explicit partial mode (allow_partial=True)."""
@@ -126,7 +174,7 @@ class TestProcessParticipantPartialMode:
         mock_transcript_service = MagicMock()
         mock_transcript_service.load_transcript.side_effect = FileNotFoundError("missing")
 
-        results, tags, skipped_chunks = await process_participant(
+        results, tags, skip_report = await process_participant(
             client=mock_client,
             transcript_service=mock_transcript_service,
             participant_id=100,
@@ -140,7 +188,7 @@ class TestProcessParticipantPartialMode:
 
         assert results == []
         assert tags == []
-        assert skipped_chunks == 0
+        assert skip_report.skipped_chunks == 0
 
     @pytest.mark.asyncio
     async def test_empty_transcript_returns_empty(self) -> None:
@@ -151,7 +199,7 @@ class TestProcessParticipantPartialMode:
         mock_transcript_service = MagicMock()
         mock_transcript_service.load_transcript.return_value = MagicMock(text="")
 
-        results, tags, skipped_chunks = await process_participant(
+        results, tags, skip_report = await process_participant(
             client=mock_client,
             transcript_service=mock_transcript_service,
             participant_id=100,
@@ -165,7 +213,7 @@ class TestProcessParticipantPartialMode:
 
         assert results == []
         assert tags == []
-        assert skipped_chunks == 0
+        assert skip_report.skipped_chunks == 0
 
     @pytest.mark.asyncio
     async def test_embedding_failure_skips_chunk(self) -> None:
@@ -183,7 +231,7 @@ class TestProcessParticipantPartialMode:
         mock_transcript.text = ("Line content here.\n" * 8) * 2
         mock_transcript_service.load_transcript.return_value = mock_transcript
 
-        results, _tags, skipped_chunks = await process_participant(
+        results, _tags, skip_report = await process_participant(
             client=mock_client,
             transcript_service=mock_transcript_service,
             participant_id=100,
@@ -197,7 +245,65 @@ class TestProcessParticipantPartialMode:
 
         # Should have 1 result (second chunk), first was skipped
         assert len(results) == 1
-        assert skipped_chunks == 1
+        assert skip_report.skipped_chunks == 1
+
+    @pytest.mark.asyncio
+    async def test_nan_embedding_skips_chunk(self) -> None:
+        """Spec 055: NaN embeddings are skipped in partial mode."""
+        mock_client = AsyncMock()
+        mock_client.embed.side_effect = [
+            MagicMock(embedding=[0.0, float("nan"), 0.0]),
+            MagicMock(embedding=[1.0] * 3),
+        ]
+
+        mock_transcript_service = MagicMock()
+        mock_transcript = MagicMock()
+        mock_transcript.text = ("Line content here.\n" * 8) * 2
+        mock_transcript_service.load_transcript.return_value = mock_transcript
+
+        results, _tags, skip_report = await process_participant(
+            client=mock_client,
+            transcript_service=mock_transcript_service,
+            participant_id=100,
+            model="test",
+            dimension=3,
+            chunk_size=8,
+            step_size=8,
+            min_chars=10,
+            allow_partial=True,
+        )
+
+        assert len(results) == 1
+        assert skip_report.skipped_chunks == 1
+
+    @pytest.mark.asyncio
+    async def test_dimension_mismatch_skips_chunk(self) -> None:
+        """Spec 057: dimension mismatches are skipped in partial mode."""
+        mock_client = AsyncMock()
+        mock_client.embed.side_effect = [
+            MagicMock(embedding=[1.0, 2.0]),  # too short
+            MagicMock(embedding=[1.0] * 3),
+        ]
+
+        mock_transcript_service = MagicMock()
+        mock_transcript = MagicMock()
+        mock_transcript.text = ("Line content here.\n" * 8) * 2
+        mock_transcript_service.load_transcript.return_value = mock_transcript
+
+        results, _tags, skip_report = await process_participant(
+            client=mock_client,
+            transcript_service=mock_transcript_service,
+            participant_id=100,
+            model="test",
+            dimension=3,
+            chunk_size=8,
+            step_size=8,
+            min_chars=10,
+            allow_partial=True,
+        )
+
+        assert len(results) == 1
+        assert skip_report.skipped_chunks == 1
 
     @pytest.mark.asyncio
     async def test_tagger_failure_raises_even_in_partial(self) -> None:
@@ -243,7 +349,7 @@ class TestProcessParticipantPartialMode:
         mock_transcript.text = ("Line content here.\n" * 8) * 2
         mock_transcript_service.load_transcript.return_value = mock_transcript
 
-        results, tags, skipped_chunks = await process_participant(
+        results, tags, skip_report = await process_participant(
             client=mock_client,
             transcript_service=mock_transcript_service,
             participant_id=100,
@@ -258,7 +364,7 @@ class TestProcessParticipantPartialMode:
         # All chunks failed, should return empty
         assert results == []
         assert tags == []
-        assert skipped_chunks == 2  # Both chunks were skipped
+        assert skip_report.skipped_chunks == 2  # Both chunks were skipped
 
 
 class TestExitCodes:

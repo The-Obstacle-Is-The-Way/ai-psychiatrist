@@ -23,22 +23,24 @@ This is a **silent corruption** that produces unpredictable results without any 
 ## Current Behavior
 
 ```python
-# reference_store.py - L2 normalization
-def _normalize_embedding(emb: np.ndarray) -> np.ndarray:
-    norm = np.linalg.norm(emb)
-    if norm == 0:
-        return emb  # Returns zero vector unchanged
-    return emb / norm
+# src/ai_psychiatrist/services/reference_store.py - L2 normalization
+def _l2_normalize(embedding: list[float]) -> list[float]:
+    arr = np.array(embedding, dtype=np.float32)
+    norm = float(np.linalg.norm(arr))
+    if norm > 0:
+        arr = arr / norm
+    return arr.tolist()
 ```
 
 If `emb` contains NaN:
 - `np.linalg.norm(emb)` returns NaN
-- `emb / NaN` returns array of NaN
-- No error raised
+- `norm > 0` is false, so the NaNs remain in the embedding
+- No error is raised; NaNs propagate into the reference matrix
 
 ```python
-# embedding.py - similarity computation
-similarities = reference_matrix @ query_vector  # NaN propagates
+# src/ai_psychiatrist/services/embedding.py - similarity computation
+similarities = matrix @ query_vec  # NaN propagates
+similarities = (1.0 + similarities) / 2.0
 ```
 
 ---
@@ -155,11 +157,8 @@ def validate_embedding_matrix(
 ```python
 # domain/exceptions.py - add new exception
 
-class EmbeddingValidationError(DomainException):
-    """Raised when embedding vector validation fails (NaN, Inf, zero)."""
-
-    def __init__(self, message: str):
-        super().__init__(message)
+class EmbeddingValidationError(EmbeddingError):
+    \"\"\"Raised when embedding validation fails (NaN/Inf/zero).\"\"\"
 ```
 
 ### Integration Points
@@ -167,72 +166,66 @@ class EmbeddingValidationError(DomainException):
 #### 1. Query Embedding Generation
 
 ```python
-# embedding.py - EmbeddingService._embed_text()
+# src/ai_psychiatrist/services/embedding.py - EmbeddingService.embed_text()
 
-async def _embed_text(self, text: str) -> np.ndarray:
-    """Generate embedding for text."""
-    embedding = await self._client.embed(text, model=self._model)
+async def embed_text(self, text: str) -> tuple[float, ...]:
+    \"\"\"Generate embedding for text.\"\"\"
+    response = await self._llm_client.embed(...)
+    embedding = response.embedding
+    if not embedding:
+        return ()  # existing behavior for too-short text
+
     vector = np.array(embedding, dtype=np.float32)
 
     # NEW: Validate before returning
     from ai_psychiatrist.infrastructure.validation import validate_embedding
     validate_embedding(
         vector,
-        context=f"query embedding for text '{text[:50]}...'",
+        context="query embedding (no text logged)",
     )
 
-    return vector
+    return tuple(vector.tolist())
 ```
 
 #### 2. Reference Store Loading
 
 ```python
-# reference_store.py - ReferenceStore._load_embeddings()
+# src/ai_psychiatrist/services/reference_store.py - ReferenceStore._l2_normalize()
 
-def _load_embeddings(self) -> None:
-    """Load and validate reference embeddings."""
-    # ... existing loading code ...
+def _l2_normalize(embedding: list[float]) -> list[float]:
+    arr = np.array(embedding, dtype=np.float32)
 
-    # After building the matrix:
-    from ai_psychiatrist.infrastructure.validation import validate_embedding_matrix
+    from ai_psychiatrist.infrastructure.validation import validate_embedding
+    validate_embedding(arr, context="reference embedding pre-normalize")
 
-    # NEW: Validate full matrix after loading
-    validate_embedding_matrix(
-        self._reference_matrix,
-        context=f"reference embeddings from {self._embeddings_path}",
-    )
+    norm = float(np.linalg.norm(arr))
+    if norm > 0:
+        arr = arr / norm
 
-    logger.info(
-        "reference_embeddings_validated",
-        shape=self._reference_matrix.shape,
-        dtype=str(self._reference_matrix.dtype),
-    )
+    validate_embedding(arr, context="reference embedding post-normalize", check_zero=True)
+    return arr.tolist()
 ```
 
 #### 3. Similarity Computation
 
 ```python
-# embedding.py - compute similarity
+# src/ai_psychiatrist/services/embedding.py - EmbeddingService._compute_similarities()
 
-def compute_similarities(
-    query: np.ndarray,
-    reference_matrix: np.ndarray,
-) -> np.ndarray:
-    """Compute cosine similarities with validation."""
-    from ai_psychiatrist.infrastructure.validation import validate_embedding
+from ai_psychiatrist.infrastructure.validation import validate_embedding
 
-    validate_embedding(query, context="query vector in similarity computation")
+query_vec = np.array(query_embedding, dtype=np.float32)
+validate_embedding(query_vec, context="query embedding pre-similarity")
 
-    similarities = reference_matrix @ query
-
-    # Validate output (should never have NaN if inputs are clean)
-    if np.isnan(similarities).any():
-        raise EmbeddingValidationError(
-            "NaN in similarity output despite valid inputs - numerical instability"
-        )
-
-    return similarities
+similarities = matrix @ query_vec
+if not np.isfinite(similarities).all():
+    raise EmbeddingValidationError("Non-finite similarity scores (NaN/Inf)")
 ```
+
+#### 4. Reference Artifact Generation (Recommended)
+
+Also validate during `scripts/generate_embeddings.py` so bad artifacts fail fast (before writing `.npz`/`.json`):
+- after each `generate_embedding(...)`, validate the returned vector is finite and non-zero
+- in `--allow-partial` mode, skip that chunk and record it in the `.partial.json` manifest
 
 ---
 
@@ -379,7 +372,7 @@ All phases can be deployed together - this is a pure strictness improvement.
 ## Success Criteria
 
 1. All NaN/Inf/zero embeddings detected at point of origin
-2. Clear error messages with context (which participant, which text)
+2. Clear error messages with privacy-safe context (participant/stage + hashes/lengths; no transcript text)
 3. Test coverage for all edge cases
 4. <1ms additional latency per participant
 

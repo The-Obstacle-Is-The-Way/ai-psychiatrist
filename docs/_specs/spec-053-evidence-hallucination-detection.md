@@ -22,15 +22,26 @@ This is a **silent corruption** - the pipeline succeeds but produces wrong resul
 
 ## Current Behavior
 
-In `quantitative.py:_extract_evidence()`:
+In `src/ai_psychiatrist/agents/quantitative.py:QuantitativeAssessmentAgent._extract_evidence()`:
 
 ```python
-# LLM returns evidence dict
+# LLM returns a JSON object mapping item keys -> list[str] (supposedly)
 obj = parse_llm_json(clean)
 
-# We trust it completely - no validation
-return {key: [str(q).strip() for q in obj.get(key, []) if str(q).strip()] for key in PHQ8_DOMAIN_KEYS}
+# Current behavior: best-effort coercion
+evidence_dict: dict[str, list[str]] = {}
+for key in PHQ8_DOMAIN_KEYS:
+    arr = obj.get(key, []) if isinstance(obj, dict) else []
+    if not isinstance(arr, list):
+        arr = []
+    cleaned = list({str(q).strip() for q in arr if str(q).strip()})
+    evidence_dict[key] = cleaned
 ```
+
+Notes:
+- Evidence extraction currently runs in both modes (zero-shot and few-shot).
+- In few-shot mode, the extracted evidence is embedded and used to retrieve references.
+- In both modes, evidence counts are used to compute `llm_evidence_count` and N/A reasons.
 
 **Example of hallucination**:
 - Transcript: "I've been feeling okay lately"
@@ -41,14 +52,24 @@ return {key: [str(q).strip() for q in obj.get(key, []) if str(q).strip()] for ke
 
 ## Proposed Solution
 
-Add fuzzy matching validation to verify each extracted quote exists in the source transcript.
+Add deterministic **evidence grounding validation**: treat each extracted "quote" as valid only if it is actually present in the source transcript after conservative normalization.
+
+Grounding rule (default):
+- A quote is accepted iff `normalize(quote)` is a substring of `normalize(transcript)`.
+
+Rationale:
+- The evidence prompt explicitly requires verbatim excerpts ("do not reformat them").
+- Substring matching is conservative and rejects paraphrases, which is desirable here.
+- This prevents hallucinated evidence from contaminating retrieval and confidence signals.
 
 ### Matching Strategy
 
-Use a two-tier approach:
+Use a conservative two-tier approach:
 
-1. **Exact substring match** (fast path): If quote is a direct substring of transcript
-2. **Fuzzy match** (fallback): Use normalized Levenshtein ratio with threshold
+1. **Normalized substring match** (default): checks `normalize(quote) in normalize(transcript)`.
+2. **Optional fuzzy substring match** (opt-in): `rapidfuzz.fuzz.partial_ratio` for whitespace/punctuation drift.
+
+**Important**: fuzzy matching is *not* the default because it can accept paraphrases, defeating the purpose of hallucination detection.
 
 ### Threshold Selection
 
@@ -59,7 +80,7 @@ Use a two-tier approach:
 | 0.8 | Moderate similarity (may allow some paraphrasing) |
 | <0.8 | Too permissive (defeats purpose) |
 
-**Recommendation**: Start with 0.85 threshold, configurable via settings.
+**Recommendation (if fuzzy enabled)**: start with 0.85, configurable via settings.
 
 ---
 
@@ -68,16 +89,34 @@ Use a two-tier approach:
 ### New Configuration
 
 ```python
-# config.py - EmbeddingSettings
-evidence_hallucination_threshold: float = Field(
+# config.py - QuantitativeSettings
+evidence_quote_validation_enabled: bool = Field(
+    default=True,
+    description="Validate extracted evidence quotes against the transcript (Spec 053).",
+)
+evidence_quote_validation_mode: Literal["substring", "fuzzy"] = Field(
+    default="substring",
+    description=(
+        "Evidence grounding mode. 'substring' is conservative and dependency-free; "
+        "'fuzzy' requires rapidfuzz and uses partial_ratio."
+    ),
+)
+evidence_quote_fuzzy_threshold: float = Field(
     default=0.85,
     ge=0.5,
     le=1.0,
-    description="Minimum similarity ratio for evidence quote validation (0.85 = 85% match required)"
+    description="Only used when evidence_quote_validation_mode='fuzzy'.",
 )
-evidence_validation_enabled: bool = Field(
+evidence_quote_fail_on_all_rejected: bool = Field(
     default=True,
-    description="Enable hallucination detection for extracted evidence"
+    description=(
+        "If true, fail when the LLM produced evidence but none of it can be grounded. "
+        "Prevents few-shot silently degrading to zero-shot."
+    ),
+)
+evidence_quote_log_rejections: bool = Field(
+    default=True,
+    description="If true, log counts + hashes for rejected quotes (never raw transcript text).",
 )
 ```
 
@@ -86,124 +125,172 @@ evidence_validation_enabled: bool = Field(
 ```python
 # New file: src/ai_psychiatrist/services/evidence_validation.py
 
-from rapidfuzz import fuzz
+from __future__ import annotations
+
+import hashlib
+import re
+import unicodedata
+from dataclasses import dataclass
+
 from ai_psychiatrist.infrastructure.logging import get_logger
 
 logger = get_logger(__name__)
 
+_WS_RE = re.compile(r"\\s+")
+_SMART_QUOTES = str.maketrans(
+    {
+        "\\u2018": "'",
+        "\\u2019": "'",
+        "\\u201C": '"',
+        "\\u201D": '"',
+        "\\u00A0": " ",  # NBSP
+    }
+)
+_ZERO_WIDTH = ("\\u200b", "\\u200c", "\\u200d", "\\ufeff")
 
-def normalize_text(text: str) -> str:
-    """Normalize text for comparison."""
-    # Lowercase, collapse whitespace, strip punctuation edges
-    import re
-    text = text.lower().strip()
-    text = re.sub(r'\s+', ' ', text)
-    return text
+
+def _stable_hash(text: str) -> str:
+    return hashlib.sha256(text.encode("utf-8")).hexdigest()[:12]
 
 
-def find_best_match(quote: str, transcript: str) -> tuple[float, str | None]:
-    """Find the best matching substring in transcript for a quote.
+def normalize_for_quote_match(text: str) -> str:
+    """Normalize text for conservative substring grounding checks.
 
-    Returns:
-        (similarity_ratio, matched_substring or None)
+    Properties:
+    - Deterministic
+    - Conservative (does not attempt semantic matching)
     """
-    quote_norm = normalize_text(quote)
-    transcript_norm = normalize_text(transcript)
-
-    # Fast path: exact substring
-    if quote_norm in transcript_norm:
-        return 1.0, quote
-
-    # Fuzzy search: sliding window over transcript
-    # Use partial_ratio for substring matching
-    ratio = fuzz.partial_ratio(quote_norm, transcript_norm) / 100.0
-
-    return ratio, None if ratio < 0.5 else quote
+    normalized = unicodedata.normalize("NFKC", text).translate(_SMART_QUOTES)
+    for ch in _ZERO_WIDTH:
+        normalized = normalized.replace(ch, "")
+    normalized = _WS_RE.sub(" ", normalized).strip().lower()
+    return normalized
 
 
-def validate_evidence_quotes(
+@dataclass(frozen=True, slots=True)
+class EvidenceGroundingStats:
+    extracted_count: int
+    validated_count: int
+    rejected_count: int
+    rejected_by_domain: dict[str, int]
+
+
+class EvidenceGroundingError(ValueError):
+    """Raised when extracted evidence cannot be grounded in the transcript."""
+
+
+def validate_evidence_grounding(
     evidence: dict[str, list[str]],
-    transcript: str,
-    threshold: float = 0.85,
-) -> tuple[dict[str, list[str]], dict[str, list[tuple[str, float]]]]:
-    """Validate extracted evidence quotes against source transcript.
+    transcript_text: str,
+    *,
+    mode: str = "substring",
+    fuzzy_threshold: float = 0.85,
+    log_rejections: bool = True,
+) -> tuple[dict[str, list[str]], EvidenceGroundingStats]:
+    """Validate extracted evidence quotes against the source transcript.
 
     Args:
-        evidence: Dict mapping PHQ8 domain keys to lists of quote strings
-        transcript: Source transcript text
-        threshold: Minimum similarity ratio to accept quote
+        evidence: Dict mapping PHQ8 domain keys to lists of quote strings.
+        transcript_text: Source transcript text.
+        mode: "substring" (default) or "fuzzy" (requires rapidfuzz).
+        fuzzy_threshold: Similarity threshold in [0, 1] when mode="fuzzy".
+        log_rejections: If true, emits privacy-safe logs for rejections.
 
     Returns:
-        (validated_evidence, rejected_quotes)
-        - validated_evidence: Same structure with only validated quotes
-        - rejected_quotes: Dict mapping domain to list of (quote, ratio) tuples
+        (validated_evidence, stats)
+        - validated_evidence: Same structure with only grounded quotes.
+        - stats: counts-only summary (no transcript text).
     """
-    validated = {}
-    rejected = {}
+    transcript_norm = normalize_for_quote_match(transcript_text)
+    transcript_hash = _stable_hash(transcript_text)
+
+    validated: dict[str, list[str]] = {}
+    rejected_by_domain: dict[str, int] = {}
+    extracted_count = 0
+    validated_count = 0
 
     for domain, quotes in evidence.items():
         validated[domain] = []
-        rejected[domain] = []
+        rejected_by_domain[domain] = 0
 
         for quote in quotes:
-            ratio, _ = find_best_match(quote, transcript)
+            extracted_count += 1
+            quote_norm = normalize_for_quote_match(quote)
+            grounded = bool(quote_norm) and (quote_norm in transcript_norm)
 
-            if ratio >= threshold:
+            if not grounded and mode == "fuzzy":
+                from rapidfuzz import fuzz  # type: ignore[import-not-found]
+
+                ratio = fuzz.partial_ratio(quote_norm, transcript_norm) / 100.0
+                grounded = ratio >= fuzzy_threshold
+
+            if grounded:
+                validated_count += 1
                 validated[domain].append(quote)
             else:
-                rejected[domain].append((quote, ratio))
-                logger.warning(
-                    "evidence_quote_rejected",
-                    domain=domain,
-                    quote_preview=quote[:100],
-                    similarity_ratio=round(ratio, 3),
-                    threshold=threshold,
-                )
+                rejected_by_domain[domain] += 1
+                if log_rejections:
+                    logger.warning(
+                        "evidence_quote_rejected",
+                        domain=domain,
+                        quote_hash=_stable_hash(quote),
+                        quote_len=len(quote),
+                        transcript_hash=transcript_hash,
+                        transcript_len=len(transcript_text),
+                        mode=mode,
+                    )
 
-    # Log summary
-    total_validated = sum(len(v) for v in validated.values())
-    total_rejected = sum(len(r) for r in rejected.values())
-
-    if total_rejected > 0:
+    rejected_count = extracted_count - validated_count
+    if rejected_count > 0 and log_rejections:
         logger.info(
-            "evidence_validation_complete",
-            validated_count=total_validated,
-            rejected_count=total_rejected,
-            rejection_rate=round(total_rejected / (total_validated + total_rejected), 3),
+            "evidence_grounding_complete",
+            extracted_count=extracted_count,
+            validated_count=validated_count,
+            rejected_count=rejected_count,
+            rejected_by_domain=rejected_by_domain,
+            transcript_hash=transcript_hash,
         )
 
-    return validated, rejected
+    return validated, EvidenceGroundingStats(
+        extracted_count=extracted_count,
+        validated_count=validated_count,
+        rejected_count=rejected_count,
+        rejected_by_domain=rejected_by_domain,
+    )
 ```
 
 ### Integration Point
 
 ```python
-# quantitative.py - modify _extract_evidence()
+# src/ai_psychiatrist/agents/quantitative.py - modify _extract_evidence()
 
 async def _extract_evidence(self, transcript_text: str) -> dict[str, list[str]]:
     """Extract evidence quotes for each PHQ-8 domain."""
     # ... existing extraction code ...
 
     obj = parse_llm_json(clean)
-    evidence = {key: [str(q).strip() for q in obj.get(key, []) if str(q).strip()]
-                for key in PHQ8_DOMAIN_KEYS}
 
-    # NEW: Validate evidence if enabled
-    if self._embedding_settings.evidence_validation_enabled:
-        from ai_psychiatrist.services.evidence_validation import validate_evidence_quotes
+    # Spec 054 (schema): validate types first (list[str] only).
+    evidence = validate_evidence_schema(obj)
 
-        validated, rejected = validate_evidence_quotes(
+    # Spec 053 (grounding): drop ungrounded quotes.
+    if self._settings.evidence_quote_validation_enabled:
+        evidence, stats = validate_evidence_grounding(
             evidence,
             transcript_text,
-            threshold=self._embedding_settings.evidence_hallucination_threshold,
+            mode=self._settings.evidence_quote_validation_mode,
+            fuzzy_threshold=self._settings.evidence_quote_fuzzy_threshold,
+            log_rejections=self._settings.evidence_quote_log_rejections,
         )
 
-        # Store rejection stats for diagnostics
-        self._last_evidence_rejection_stats = {
-            domain: len(quotes) for domain, quotes in rejected.items()
-        }
-
-        return validated
+        if (
+            self._settings.evidence_quote_fail_on_all_rejected
+            and stats.validated_count == 0
+            and stats.extracted_count > 0
+        ):
+            raise EvidenceGroundingError(
+                "LLM returned evidence quotes but none could be grounded in the transcript."
+            )
 
     return evidence
 ```
@@ -212,17 +299,11 @@ async def _extract_evidence(self, transcript_text: str) -> dict[str, list[str]]:
 
 ## Dependencies
 
-Add to `pyproject.toml`:
+None for the default `substring` grounding mode.
 
-```toml
-rapidfuzz = "^3.6.0"  # Fast fuzzy string matching
-```
+Optional (only if enabling `evidence_quote_validation_mode="fuzzy"`):
 
-**Why rapidfuzz?**
-- 10-100x faster than python-Levenshtein
-- Pure Python fallback available
-- MIT licensed
-- `partial_ratio` is ideal for substring matching
+- `rapidfuzz` (substring Levenshtein; used for `partial_ratio`).
 
 ---
 
@@ -236,67 +317,39 @@ rapidfuzz = "^3.6.0"  # Fast fuzzy string matching
 def test_exact_match_accepted():
     evidence = {"PHQ8_Sleep": ["I can't sleep at night"]}
     transcript = "Patient said: I can't sleep at night. Very tired."
-    validated, rejected = validate_evidence_quotes(evidence, transcript, threshold=0.85)
+    validated, stats = validate_evidence_grounding(evidence, transcript)
     assert validated["PHQ8_Sleep"] == ["I can't sleep at night"]
-    assert rejected["PHQ8_Sleep"] == []
+    assert stats.rejected_count == 0
 
 
 def test_hallucination_rejected():
     evidence = {"PHQ8_Depressed": ["I feel hopeless and worthless"]}
     transcript = "I've been feeling okay lately. Work is going well."
-    validated, rejected = validate_evidence_quotes(evidence, transcript, threshold=0.85)
+    validated, stats = validate_evidence_grounding(evidence, transcript)
     assert validated["PHQ8_Depressed"] == []
-    assert len(rejected["PHQ8_Depressed"]) == 1
+    assert stats.rejected_by_domain["PHQ8_Depressed"] == 1
 
 
 def test_minor_whitespace_difference_accepted():
     evidence = {"PHQ8_Tired": ["I   feel  tired"]}  # Extra spaces
     transcript = "I feel tired all the time"
-    validated, rejected = validate_evidence_quotes(evidence, transcript, threshold=0.85)
+    validated, _ = validate_evidence_grounding(evidence, transcript)
     assert len(validated["PHQ8_Tired"]) == 1
 
 
 def test_case_insensitive_matching():
     evidence = {"PHQ8_Sleep": ["I CAN'T SLEEP"]}
     transcript = "i can't sleep at all"
-    validated, rejected = validate_evidence_quotes(evidence, transcript, threshold=0.85)
+    validated, _ = validate_evidence_grounding(evidence, transcript)
     assert len(validated["PHQ8_Sleep"]) == 1
-
-
-def test_threshold_boundary():
-    # Quote with ~80% similarity
-    evidence = {"PHQ8_Tired": ["I feel very tired today"]}
-    transcript = "I feel somewhat tired lately"
-
-    # Should fail at 0.9 threshold
-    validated_strict, _ = validate_evidence_quotes(evidence, transcript, threshold=0.9)
-    assert validated_strict["PHQ8_Tired"] == []
-
-    # Should pass at 0.7 threshold
-    validated_loose, _ = validate_evidence_quotes(evidence, transcript, threshold=0.7)
-    assert len(validated_loose["PHQ8_Tired"]) == 1
 ```
 
-### Integration Tests
+### Integration Test (Suggested)
 
-```python
-def test_full_pipeline_with_validation(mock_ollama):
-    """Evidence validation integrates with full assessment flow."""
-    # Configure mock to return a hallucinated quote
-    mock_ollama.chat_response = json.dumps({
-        "PHQ8_NoInterest": ["I have no interest in anything"],  # Real
-        "PHQ8_Depressed": ["I want to end it all"],  # HALLUCINATED
-        # ...
-    })
-
-    transcript = Transcript(participant_id=300, text="I have no interest in anything lately.")
-
-    agent = QuantitativeAssessmentAgent(...)
-    result = await agent.assess(transcript)
-
-    # Hallucinated quote should not appear in final evidence
-    assert "end it all" not in str(result.items[PHQ8Item.DEPRESSED].evidence)
-```
+Prove the agent drops ungrounded quotes *before* retrieval (no transcript text persisted):
+- mock `llm_client.simple_chat` to return JSON evidence with one ungrounded quote
+- call `QuantitativeAssessmentAgent._extract_evidence(transcript.text)`
+- assert returned evidence lists exclude the ungrounded quote
 
 ---
 
@@ -313,27 +366,21 @@ def test_full_pipeline_with_validation(mock_ollama):
 
 ### Monitoring
 
-Add to evaluation output:
+At minimum:
+- emit a single `evidence_grounding_complete` log event per participant when rejections occur (counts + hashes only).
 
-```python
-# Per-participant in results JSON
-"evidence_validation_stats": {
-    "total_extracted": 24,
-    "total_validated": 22,
-    "total_rejected": 2,
-    "rejection_rate": 0.083,
-    "rejected_by_domain": {"PHQ8_Depressed": 1, "PHQ8_Moving": 1}
-}
-```
+Optional (if you want this visible in run artifacts):
+- extend `ItemAssessment` + `item_signals` with counts-only fields:
+  - `llm_evidence_extracted_count`
+  - `llm_evidence_rejected_count`
 
 ---
 
 ## Rollout Plan
 
-1. **Phase 1**: Implement with `evidence_validation_enabled=False` (off by default)
+1. **Phase 1**: Implement with `evidence_quote_validation_enabled=true` and `mode=substring`
 2. **Phase 2**: Run one evaluation with validation enabled, compare metrics
-3. **Phase 3**: If metrics improve, enable by default
-4. **Phase 4**: Remove the toggle after validation proves stable
+3. **Phase 3**: If false rejections appear, tune normalization or enable fuzzy mode (explicit opt-in)
 
 ---
 
@@ -341,18 +388,17 @@ Add to evaluation output:
 
 | Risk | Mitigation |
 |------|------------|
-| False positives (valid quotes rejected) | Start with 0.85 threshold, tune based on data |
-| Performance overhead | rapidfuzz is fast; add timing logs to monitor |
-| Legitimate paraphrasing rejected | Consider higher threshold or semantic matching |
+| False positives (valid excerpts rejected) | Keep normalization conservative; add fuzzy mode only if necessary |
+| Legitimate paraphrasing rejected | Treat as a prompt-following failure (the prompt requires verbatim excerpts) |
 
 ---
 
 ## Success Criteria
 
 1. Zero hallucinated quotes in validated evidence (by definition)
-2. <5% false positive rate (valid quotes rejected)
-3. No regression in MAE or AURC metrics
-4. <100ms additional latency per participant
+2. No transcript/quote text leaked in logs or artifacts (hashes + counts only)
+3. No silent degradation of few-shot into zero-shot due to ungrounded evidence
+4. No regression in MAE or AURC metrics attributable to this change
 
 ---
 
@@ -364,4 +410,4 @@ Add to evaluation output:
    - **Decision**: Start with string matching, semantic matching as future enhancement
 
 2. Should rejected quotes be logged to a separate file for analysis?
-   - **Decision**: Yes, add optional `--dump-rejected-evidence` flag to evaluation script
+   - **Decision**: Not by default (DAIC-WOZ licensing). If ever added, store only hashes + counts unless an explicit “unsafe debugging” flag is set.

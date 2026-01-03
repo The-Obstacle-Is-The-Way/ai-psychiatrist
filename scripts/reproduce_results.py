@@ -73,6 +73,13 @@ from ai_psychiatrist.domain.exceptions import LLMError
 from ai_psychiatrist.infrastructure.llm import OllamaClient
 from ai_psychiatrist.infrastructure.llm.factory import create_embedding_client
 from ai_psychiatrist.infrastructure.logging import get_logger, setup_logging
+from ai_psychiatrist.infrastructure.observability import (
+    FailureCategory,
+    FailureSeverity,
+    get_failure_registry,
+    init_failure_registry,
+    record_failure,
+)
 from ai_psychiatrist.services import EmbeddingService, ReferenceStore, TranscriptService
 from ai_psychiatrist.services.experiment_tracking import (
     ExperimentProvenance,
@@ -266,6 +273,53 @@ def load_total_ground_truth_test(data_dir: Path) -> dict[int, int]:
     return dict(zip(df["Participant_ID"].astype(int), df["PHQ_Score"].astype(int), strict=True))
 
 
+def classify_failure(
+    exc: Exception,
+) -> tuple[FailureCategory, FailureSeverity, dict[str, object]]:
+    """Classify failures for privacy-safe run observability (Spec 056)."""
+    name = type(exc).__name__
+    msg = str(exc)
+
+    category = FailureCategory.UNKNOWN
+    severity = FailureSeverity.ERROR
+    context: dict[str, object] = {"exception_type": name}
+
+    if name == "UnexpectedModelBehavior":
+        category = FailureCategory.SCORING_PYDANTIC_RETRY_EXHAUSTED
+        severity = FailureSeverity.FATAL
+        context = {}
+    elif name == "EmbeddingDimensionMismatchError":
+        category = FailureCategory.EMBEDDING_DIMENSION_MISMATCH
+        severity = FailureSeverity.FATAL
+        context = {}
+    elif name == "EmbeddingArtifactMismatchError":
+        category = FailureCategory.REFERENCE_ARTIFACT_CORRUPT
+        severity = FailureSeverity.FATAL
+        context = {}
+    elif name == "EmbeddingValidationError":
+        category = (
+            FailureCategory.EMBEDDING_ZERO_VECTOR
+            if "All-zero" in msg
+            else FailureCategory.EMBEDDING_NAN
+        )
+        severity = FailureSeverity.FATAL
+        context = {}
+    elif name == "EvidenceSchemaError":
+        category = FailureCategory.EVIDENCE_SCHEMA_INVALID
+        severity = FailureSeverity.FATAL
+        context = {}
+    elif name == "EvidenceGroundingError":
+        category = FailureCategory.EVIDENCE_HALLUCINATION
+        severity = FailureSeverity.FATAL
+        context = {}
+    elif name == "JSONDecodeError":
+        category = FailureCategory.EVIDENCE_JSON_PARSE
+        severity = FailureSeverity.FATAL
+        context = {}
+
+    return (category, severity, context)
+
+
 async def evaluate_participant(
     participant_id: int,
     ground_truth_items: dict[PHQ8Item, int],
@@ -364,6 +418,16 @@ async def evaluate_participant(
     except Exception as e:
         # Intentionally broad: per-participant failures should not abort the full run.
         duration = time.perf_counter() - start
+        category, severity, ctx = classify_failure(e)
+        record_failure(
+            category,
+            severity,
+            str(e),
+            participant_id=participant_id,
+            stage="evaluate_participant",
+            mode=mode,
+            **ctx,
+        )
         logger.exception(
             "Evaluation failed",
             participant_id=participant_id,
@@ -900,6 +964,7 @@ async def main_async(args: argparse.Namespace) -> int:
 
     settings = get_settings()
     run_metadata = RunMetadata.capture(ollama_base_url=settings.ollama.base_url)
+    init_failure_registry(run_metadata.run_id)
     if run_metadata.git_dirty:
         logger.warning(
             "Running with uncommitted changes",
@@ -910,19 +975,29 @@ async def main_async(args: argparse.Namespace) -> int:
     if args.embedding_backend:
         settings.embedding_config.backend = EmbeddingBackend(args.embedding_backend)
 
-    data_settings = settings.data
-    model_settings = settings.model
-    ollama_settings = settings.ollama
-    embedding_settings = settings.embedding
-    embedding_backend_settings = settings.embedding_config
+    (
+        data_settings,
+        model_settings,
+        ollama_settings,
+        embedding_settings,
+        embedding_backend_settings,
+    ) = (
+        settings.data,
+        settings.model,
+        settings.ollama,
+        settings.embedding,
+        settings.embedding_config,
+    )
 
     print_run_configuration(settings=settings, split=args.split)
     print(f"  Embedding Backend: {embedding_backend_settings.backend.value}")
 
     # Resolve effective consistency configuration (Spec 050).
-    consistency_enabled = settings.consistency.enabled
-    consistency_n_samples = settings.consistency.n_samples
-    consistency_temperature = settings.consistency.temperature
+    consistency_enabled, consistency_n_samples, consistency_temperature = (
+        settings.consistency.enabled,
+        settings.consistency.n_samples,
+        settings.consistency.temperature,
+    )
 
     if args.consistency_samples is not None:
         consistency_n_samples = int(args.consistency_samples)
@@ -1005,6 +1080,11 @@ async def main_async(args: argparse.Namespace) -> int:
             consistency_n_samples=consistency_n_samples,
             consistency_temperature=consistency_temperature,
         )
+
+        failure_registry = get_failure_registry()
+        failure_registry.print_summary()
+        failures_path = failure_registry.save(data_settings.base_dir / "outputs")
+        print(f"Failures saved to: {failures_path}")
 
     return 0
 

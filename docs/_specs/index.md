@@ -20,7 +20,7 @@ These specs address silent failure modes identified in `PIPELINE-BRITTLENESS.md`
 
 **Implementation Priority**:
 1. Spec 054 + 055 (quick wins, low complexity)
-2. Spec 053 (requires `rapidfuzz` dependency)
+2. Spec 053 (default substring grounding; optional `rapidfuzz` for fuzzy mode)
 3. Spec 057 (config change, may need migration)
 4. Spec 056 (larger scope, can be done incrementally)
 

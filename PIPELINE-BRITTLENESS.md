@@ -17,6 +17,13 @@ We've had recurring issues with JSON parsing failures, silent fallbacks, and mod
 
 ---
 
+## Privacy / Licensing Boundary (Non-Negotiable)
+
+DAIC-WOZ transcripts are licensed and must not leak into logs or artifacts. Any robustness or observability work proposed here MUST:
+- Never write raw transcript text to disk outside `data/` (which is already local-only).
+- Never include transcript text or evidence quotes in logs or “failure summaries”.
+- Prefer counts, lengths, stable hashes, model ids, and error codes.
+
 ## The Complete Pipeline Chain
 
 ```
@@ -29,10 +36,11 @@ We've had recurring issues with JSON parsing failures, silent fallbacks, and mod
                                     │
                                     ▼
 ┌─────────────────────────────────────────────────────────────────────────────┐
-│  STAGE 2: EVIDENCE EXTRACTION (Few-Shot Only)                               │
+│  STAGE 2: EVIDENCE EXTRACTION (All Modes)                                  │
 │  File: src/ai_psychiatrist/agents/quantitative.py                           │
 │  LLM Call: Evidence extraction → JSON dict of quotes per PHQ-8 domain       │
 │  Parser: parse_llm_json() in infrastructure/llm/responses.py                │
+│  Notes: Counts feed N/A reasons; few-shot uses evidence for retrieval       │
 └─────────────────────────────────────────────────────────────────────────────┘
                                     │
                                     ▼
@@ -101,13 +109,11 @@ These produce wrong results without any indication:
 
 | Stage | Failure Mode | What Happens | Severity | Fix Status |
 |-------|--------------|--------------|----------|------------|
-| 1 | Null values in text fields | Becomes "None: None" in dialogue | High | ❌ Not fixed |
-| 2 | Non-list value in evidence JSON | Coerced to empty array silently | High | ❌ Not fixed |
-| 2 | LLM hallucinated evidence | Included in bundle with no validation | High | ❌ Not fixed |
-| 3 | Embedding dimension mismatch | Silent truncation loses data | High | ⚠️ Configurable strict mode |
-| 3 | NaN in embedding vectors | Propagates through cosine similarity | Medium | ❌ Not fixed |
-| 4 | Text/embedding count mismatch | Silently skips if not strict mode | Medium | ⚠️ Configurable strict mode |
-| 5 | Wrong enum key mapping | Item assessments misaligned | High | ❌ Not validated |
+| 2 | Non-list value in evidence JSON | Wrong types silently become `[]` | High | ❌ Not fixed (Spec 054) |
+| 2 | LLM hallucinated evidence quotes | Ungrounded quotes contaminate retrieval | High | ❌ Not fixed (Spec 053) |
+| 3 | Insufficient embedding dimension | Some reference chunks skipped; may reduce retrieval quality | High | ⚠️ Logged, not fatal by default (Spec 057) |
+| 3 | NaN/Inf/zero embeddings | Propagates through cosine similarity | Medium | ❌ Not fixed (Spec 055) |
+| 4 | Text/embedding count mismatch | Skips participant unless strict alignment required | Medium | ⚠️ Logged, fatal when alignment required |
 | 6 | Reference chunk duplication | Same chunk appears multiple times | Low | ❌ Not deduplicated |
 
 ### TIER 3: GRACEFUL DEGRADATIONS (Acceptable)
@@ -144,7 +150,7 @@ Even with `format="json"`, models can produce:
 
 ### What 2025 Best Practices Say
 
-From web research ([Ollama Structured Outputs](https://ollama.com/blog/structured-outputs), [Constrained Decoding](https://mbrenndoerfer.com/writing/constrained-decoding-structured-llm-output)):
+From web research ([Ollama Structured Outputs](https://docs.ollama.com/capabilities/structured-outputs), [Constrained Decoding](https://mbrenndoerfer.com/writing/constrained-decoding-structured-llm-output)):
 
 | Practice | Status in Our Codebase | Notes |
 |----------|------------------------|-------|
@@ -201,7 +207,7 @@ This format is clean. The brittleness is **not in preprocessing** - it's in:
 
 **Problem**: LLM can return evidence quotes not present in transcript.
 
-**Solution**: Validate that each extracted quote exists (fuzzy match) in the source transcript.
+**Solution**: Validate that each extracted quote is grounded in the source transcript after conservative normalization (substring match). (Spec 053)
 
 ```python
 # In quantitative.py after evidence extraction
@@ -209,7 +215,7 @@ def _validate_evidence_quotes(evidence: dict, transcript: str) -> dict:
     """Remove hallucinated quotes not found in transcript."""
     validated = {}
     for key, quotes in evidence.items():
-        validated[key] = [q for q in quotes if _fuzzy_match(q, transcript)]
+        validated[key] = [q for q in quotes if normalize(q) in normalize(transcript)]
     return validated
 ```
 
@@ -239,7 +245,8 @@ for key in PHQ8_DOMAIN_KEYS:
 
 ```python
 if np.isnan(embedding).any():
-    raise ValueError(f"NaN detected in embedding for {text[:50]}")
+    # Do not log raw text; use hash/length only
+    raise ValueError("NaN detected in embedding (text hash logged separately)")
 ```
 
 **Status**: Not implemented. Would catch embedding issues early.
@@ -250,32 +257,36 @@ if np.isnan(embedding).any():
 
 **Problem**: We don't know how often each failure mode occurs.
 
-**Solution**: Structured logging for all failure types.
+**Solution**: Structured failure registry + privacy-safe logging (Spec 056).
 
 ```python
 logger.warning(
     "evidence_extraction_failure",
     participant_id=pid,
     failure_type="json_parse",
-    raw_response_preview=raw[:200],
+    response_hash=sha256(raw),
+    response_len=len(raw),
     error=str(e),
 )
 ```
 
-**Status**: Partially implemented. Need consistent taxonomy.
+**Status**: Not implemented (Spec 056).
 
 #### 5. Add Embedding Dimension Strict Mode Default
 
-**Problem**: Dimension mismatch silently truncates.
+**Problem**: If any reference embedding vector has fewer dims than `EMBEDDING_DIMENSION`, reference chunks can be skipped, reducing the corpus.
 
-**Solution**: Make strict mode the default.
+**Solution**: Enforce dimension invariants (generation + load) and fail fast by default (Spec 057).
 
 ```python
-# In config.py
-embedding_dimension_strict: bool = True  # Was False
+# Proposed env/config escape hatch (default false):
+# EMBEDDING_ALLOW_INSUFFICIENT_DIMENSION_EMBEDDINGS=false
+#
+# Also enforce at generation time (scripts/generate_embeddings.py):
+# if len(embedding) != config.dimension: fail (or skip only in --allow-partial mode)
 ```
 
-**Status**: Configurable but not default. Should flip.
+**Status**: Partially mitigated (warnings + fail if all mismatched). Spec 057 makes partial mismatches fatal by default.
 
 ### LOW PRIORITY (Nice to Have)
 
@@ -333,7 +344,7 @@ The preprocessing is solid. The JSON parsing is fixed. The remaining work is **v
 
 ## Sources
 
-- [Ollama Structured Outputs](https://ollama.com/blog/structured-outputs) - Grammar-level JSON constraints
+- [Ollama Structured Outputs](https://docs.ollama.com/capabilities/structured-outputs) - JSON mode / constrained output
 - [Constrained Decoding Guide](https://mbrenndoerfer.com/writing/constrained-decoding-structured-llm-output) - GBNF/FSM approaches
 - [Taming LLMs: Structured Output](https://dev.to/shrsv/taming-llms-how-to-get-structured-output-every-time-even-for-big-responses-445c) - Best practices
 - [Ollama + Qwen3 Structured Output](https://medium.com/@rosgluk/constraining-llms-with-structured-output-ollama-qwen3-python-or-go-2f56ff41d720) - Python implementation patterns

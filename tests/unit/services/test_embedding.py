@@ -15,6 +15,7 @@ from ai_psychiatrist.domain.enums import PHQ8Item
 from ai_psychiatrist.domain.exceptions import (
     EmbeddingArtifactMismatchError,
     EmbeddingDimensionMismatchError,
+    EmbeddingValidationError,
 )
 from ai_psychiatrist.domain.value_objects import SimilarityMatch, TranscriptChunk
 from ai_psychiatrist.infrastructure.llm.protocols import EmbeddingBatchResponse
@@ -663,10 +664,10 @@ class TestReferenceStore:
         np.testing.assert_array_almost_equal(normalized, expected)
 
     def test_l2_normalize_zero_vector(self) -> None:
-        """Zero vector should remain zero (avoid division by zero)."""
+        """Spec 055: All-zero embeddings must fail loudly (do not silently normalize)."""
         zero = [0.0, 0.0, 0.0]
-        normalized = ReferenceStore._l2_normalize(zero)
-        np.testing.assert_array_almost_equal(normalized, [0.0, 0.0, 0.0])
+        with pytest.raises(EmbeddingValidationError, match="All-zero"):
+            ReferenceStore._l2_normalize(zero)
 
     def test_l2_normalize_result_has_unit_length(self) -> None:
         """Normalized vector should have unit length."""
@@ -894,7 +895,7 @@ class TestEmbeddingDimensionMismatch:
         assert excinfo.value.actual == 2
 
     def test_partial_mismatch_skips_bad_embeddings(self, tmp_path: Path) -> None:
-        """Should skip embeddings that are too short and keep valid ones."""
+        """Spec 057: Escape hatch can skip short embeddings instead of failing."""
         # Mix of valid and invalid embeddings
         raw_data = {
             "100": [("chunk1", [1.0, 0.0])],  # Only 2 dims - will be skipped
@@ -915,7 +916,8 @@ class TestEmbeddingDimensionMismatch:
         )
 
         embed_settings = EmbeddingSettings(
-            dimension=4
+            dimension=4,
+            allow_insufficient_dimension_embeddings=True,
         )  # Need at least 4, so 2-dim is skipped, 10-dim is valid
 
         store = ReferenceStore(data_settings, embed_settings)
@@ -1557,3 +1559,32 @@ class TestReferenceValidation:
         bundle = await service.build_reference_bundle({PHQ8Item.SLEEP: ["evidence"]})
 
         assert len(bundle.item_references[PHQ8Item.SLEEP]) == 0
+
+
+class TestEmbeddingValidation:
+    @pytest.mark.asyncio
+    async def test_embed_text_nan_raises(self) -> None:
+        """Spec 055: NaN query embeddings must fail loudly at generation time."""
+        client = MockLLMClient(embedding_responses=[(0.0, float("nan"), 0.0, 0.0)])
+        store = MagicMock()
+        settings = EmbeddingSettings(dimension=4, min_evidence_chars=1)
+
+        service = EmbeddingService(client, store, settings)
+        with pytest.raises(EmbeddingValidationError, match="NaN"):
+            await service.embed_text("hello")
+
+    @pytest.mark.asyncio
+    async def test_similarity_computation_nan_query_raises(self) -> None:
+        """Spec 055: NaN must not silently propagate into similarity scores."""
+        store = MagicMock()
+        store.get_vectorized_data.return_value = (
+            np.array([[1.0, 0.0, 0.0, 0.0]], dtype=np.float32),
+            [{"participant_id": 1, "chunk_index": 0, "text": "t", "tags": set()}],
+        )
+        store.get_score.return_value = 1
+        client = MockLLMClient()
+        settings = EmbeddingSettings(dimension=4)
+
+        service = EmbeddingService(client, store, settings)
+        with pytest.raises(EmbeddingValidationError):
+            await service.find_similar_chunks((float("nan"), 0.0, 0.0, 0.0))

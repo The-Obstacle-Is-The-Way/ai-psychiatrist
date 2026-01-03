@@ -41,6 +41,19 @@ Implement a **Failure Registry** that:
 3. Persists to JSON for cross-run analysis
 4. Integrates with existing logging
 
+### Privacy / Licensing Constraint (Non-Negotiable)
+
+DAIC-WOZ transcripts are licensed and must not leak into logs or artifacts. The failure registry MUST:
+- Never store raw transcript text.
+- Never store raw LLM responses or evidence quote strings.
+- Only store counts, lengths, stable hashes, model ids, error codes, and stack-trace-free messages.
+
+Examples of allowed context fields:
+- `response_hash`, `response_len`
+- `transcript_hash`, `transcript_len`
+- `text_hash`, `text_len` (for embeddings)
+- `exception_type`, `http_status`
+
 ---
 
 ## Implementation
@@ -121,6 +134,7 @@ class Failure:
     stage: str | None = None  # e.g., "evidence_extraction"
     timestamp: str = field(default_factory=lambda: datetime.now(UTC).isoformat())
     context: dict[str, Any] = field(default_factory=dict)
+    """Additional privacy-safe context (never raw transcript/LLM text)."""
 
     def to_dict(self) -> dict[str, Any]:
         return {
@@ -307,89 +321,76 @@ def record_failure(
 
 ### Integration Points
 
-#### 1. Evidence Extraction
+#### 1) Per-participant failure capture (required)
+
+The most robust/low-coupling integration point is the existing per-participant exception handler in
+`scripts/reproduce_results.py:evaluate_participant()`. Record failures there so every participant failure
+is captured even if it originates deep in the call stack.
 
 ```python
-# quantitative.py
+# scripts/reproduce_results.py (inside evaluate_participant)
 
 from ai_psychiatrist.infrastructure.observability import (
-    record_failure, FailureCategory, FailureSeverity
+    record_failure,
+    FailureCategory,
+    FailureSeverity,
 )
 
-async def _extract_evidence(self, transcript_text: str) -> dict[str, list[str]]:
-    try:
-        # ... existing code ...
-        obj = parse_llm_json(clean)
-    except json.JSONDecodeError as e:
-        record_failure(
-            FailureCategory.EVIDENCE_JSON_PARSE,
-            FailureSeverity.FATAL,
-            f"Evidence JSON parse failed: {e}",
-            participant_id=self._current_participant_id,
-            stage="evidence_extraction",
-            raw_response_preview=clean[:500],
-            error=str(e),
-        )
-        raise
-```
+def classify_failure(exc: Exception) -> tuple[FailureCategory, FailureSeverity, dict[str, object]]:
+    # Minimal, privacy-safe classification by exception type.
+    name = type(exc).__name__
+    if name == "UnexpectedModelBehavior":
+        return (FailureCategory.SCORING_PYDANTIC_RETRY_EXHAUSTED, FailureSeverity.FATAL, {})
+    if name in {"EmbeddingDimensionMismatchError", "EmbeddingArtifactMismatchError"}:
+        return (FailureCategory.EMBEDDING_DIMENSION_MISMATCH, FailureSeverity.FATAL, {})
+    if name in {"EmbeddingValidationError"}:
+        return (FailureCategory.EMBEDDING_NAN, FailureSeverity.FATAL, {})
+    return (FailureCategory.UNKNOWN, FailureSeverity.ERROR, {"exception_type": name})
 
-#### 2. Embedding Generation
-
-```python
-# embedding.py
-
-async def _embed_text(self, text: str) -> np.ndarray:
-    # ... existing code ...
-    try:
-        validate_embedding(vector, context=f"query for '{text[:50]}...'")
-    except EmbeddingValidationError as e:
-        record_failure(
-            FailureCategory.EMBEDDING_NAN,
-            FailureSeverity.FATAL,
-            str(e),
-            participant_id=self._current_participant_id,
-            stage="embedding_generation",
-            text_preview=text[:100],
-        )
-        raise
-```
-
-#### 3. Scoring
-
-```python
-# quantitative.py - in assess()
-
-except ModelRetry as e:
+# ...
+except Exception as e:
+    category, severity, ctx = classify_failure(e)
     record_failure(
-        FailureCategory.SCORING_PYDANTIC_RETRY_EXHAUSTED,
-        FailureSeverity.FATAL,
-        f"Pydantic retries exhausted: {e}",
-        participant_id=transcript.participant_id,
-        stage="scoring",
+        category,
+        severity,
+        str(e),
+        participant_id=participant_id,
+        stage="evaluate_participant",
+        **ctx,
     )
-    raise
+    return EvaluationResult(
+        participant_id=participant_id,
+        mode=mode,
+        duration_seconds=duration,
+        success=False,
+        error=str(e),
+    )
 ```
 
-#### 4. Reproduction Script
+#### 2) Evidence extraction parse failures (optional, adds hash/length)
+
+If you want extra observability for deterministic JSON failures, also record them at the source in
+`src/ai_psychiatrist/agents/quantitative.py:_extract_evidence()` where the sanitized JSON string is available:
+
+- `response_hash` / `response_len` (never raw output)
+- `exception_type`
+
+#### 3) Run initialization + persistence (required)
 
 ```python
-# reproduce_results.py
+# scripts/reproduce_results.py (inside main_async; RunMetadata is already captured)
 
-from ai_psychiatrist.infrastructure.observability import (
-    init_failure_registry, get_failure_registry
-)
+from ai_psychiatrist.infrastructure.observability import init_failure_registry
 
-def main():
-    # Initialize at start of run
-    run_id = f"{mode}_{split}_{datetime.now().strftime('%Y%m%d_%H%M%S')}"
-    registry = init_failure_registry(run_id)
+# Initialize at start of run (SSOT run id)
+failure_registry = init_failure_registry(run_metadata.run_id)
 
-    # ... run evaluation ...
+# ... run evaluation ...
 
-    # At end of run
-    registry.print_summary()
-    failure_path = registry.save(Path("data/outputs"))
-    print(f"Failures saved to: {failure_path}")
+# At end of run
+failure_registry.print_summary()
+failure_path = failure_registry.save(Path("data/outputs"))
+print(f"Failures saved to: {failure_path}")
 ```
 
 ---
@@ -402,7 +403,7 @@ def main():
 ============================================================
 FAILURE SUMMARY
 ============================================================
-Run ID: few_shot_paper-test_20260103_143022
+Run ID: 19b42478
 Total failures: 12
   Fatal: 3
   Error: 7
@@ -430,7 +431,7 @@ Most Failing Participants:
 ```json
 {
   "summary": {
-    "run_id": "few_shot_paper-test_20260103_143022",
+    "run_id": "19b42478",
     "start_time": "2026-01-03T14:30:22.123456+00:00",
     "end_time": "2026-01-03T16:45:33.789012+00:00",
     "total_failures": 12,
@@ -468,8 +469,9 @@ Most Failing Participants:
       "stage": "evidence_extraction",
       "timestamp": "2026-01-03T14:35:12.456789+00:00",
       "context": {
-        "raw_response_preview": "{\"PHQ8_NoInterest\": [\"quote1\" \"quote2\"]...",
-        "error": "Expecting ',' delimiter: line 1 column 42"
+        "response_hash": "4f1c2b6a19d0",
+        "response_len": 1289,
+        "exception_type": "JSONDecodeError"
       }
     }
   ]

@@ -150,7 +150,13 @@ class ReferenceStore:
             self._vectorized_cache = (np.zeros((0, self._dimension), dtype=np.float32), [])
             return self._vectorized_cache
 
-        self._vectorized_cache = (np.array(matrix_rows, dtype=np.float32), metadata)
+        matrix = np.array(matrix_rows, dtype=np.float32)
+        from ai_psychiatrist.infrastructure.validation import (  # noqa: PLC0415
+            validate_embedding_matrix,
+        )
+
+        validate_embedding_matrix(matrix, context="reference embedding matrix")
+        self._vectorized_cache = (matrix, metadata)
         return self._vectorized_cache
 
     def _get_texts_path(self) -> Path:
@@ -464,7 +470,10 @@ class ReferenceStore:
 
                 # Validate dimension
                 if emb_len < self._dimension:
-                    if require_alignment:
+                    if (
+                        require_alignment
+                        or not self._embedding_settings.allow_insufficient_dimension_embeddings
+                    ):
                         raise EmbeddingDimensionMismatchError(
                             expected=self._dimension,
                             actual=emb_len,
@@ -967,9 +976,13 @@ class ReferenceStore:
             L2-normalized embedding (unit length).
         """
         arr = np.array(embedding, dtype=np.float32)
+        from ai_psychiatrist.infrastructure.validation import validate_embedding  # noqa: PLC0415
+
+        validate_embedding(arr, context="reference embedding (pre-normalize)")
         norm = float(np.linalg.norm(arr))
         if norm > 0:
             arr = arr / norm
+        validate_embedding(arr, context="reference embedding (post-normalize)")
         result: list[float] = arr.tolist()
         return result
 

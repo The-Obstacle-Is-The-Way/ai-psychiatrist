@@ -33,6 +33,7 @@ from ai_psychiatrist.config import PydanticAISettings
 from ai_psychiatrist.domain.entities import PHQ8Assessment, Transcript
 from ai_psychiatrist.domain.enums import AssessmentMode, PHQ8Item, SeverityLevel
 from ai_psychiatrist.domain.value_objects import ItemAssessment
+from ai_psychiatrist.services.evidence_validation import EvidenceGroundingError, EvidenceSchemaError
 from tests.fixtures.mock_llm import MockLLMClient
 
 pytestmark = pytest.mark.unit
@@ -154,6 +155,34 @@ class TestQuantitativeAssessmentAgent:
             pydantic_ai_settings=PydanticAISettings(enabled=True),
             ollama_base_url="http://mock-ollama:11434",
         )
+
+    @pytest.mark.asyncio
+    async def test_extract_evidence_schema_violation_raises(self) -> None:
+        """Spec 054: evidence schema violations must fail loudly (no silent coercion)."""
+        client = MockLLMClient(chat_responses=['{"PHQ8_NoInterest": "not a list"}'])
+        agent = QuantitativeAssessmentAgent(
+            llm_client=client,
+            mode=AssessmentMode.ZERO_SHOT,
+            pydantic_ai_settings=PydanticAISettings(enabled=False),
+        )
+
+        with pytest.raises(EvidenceSchemaError):
+            await agent._extract_evidence("Participant: hello")
+
+    @pytest.mark.asyncio
+    async def test_extract_evidence_ungrounded_quotes_fail(self) -> None:
+        """Spec 053: hallucinated evidence must not silently pass through."""
+        client = MockLLMClient(
+            chat_responses=['{"PHQ8_NoInterest": ["I feel hopeless every day"]}']
+        )
+        agent = QuantitativeAssessmentAgent(
+            llm_client=client,
+            mode=AssessmentMode.ZERO_SHOT,
+            pydantic_ai_settings=PydanticAISettings(enabled=False),
+        )
+
+        with pytest.raises(EvidenceGroundingError):
+            await agent._extract_evidence("Participant: I'm doing fine lately.")
 
     @pytest.mark.asyncio
     async def test_pydantic_agent_run_error_not_masked(

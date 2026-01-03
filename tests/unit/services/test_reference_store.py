@@ -6,6 +6,7 @@ from pathlib import Path
 from typing import cast
 from unittest.mock import MagicMock, patch
 
+import numpy as np
 import pytest
 from numpy.lib.npyio import NpzFile
 
@@ -19,6 +20,8 @@ from ai_psychiatrist.config import (
 from ai_psychiatrist.domain.enums import PHQ8Item
 from ai_psychiatrist.domain.exceptions import (
     EmbeddingArtifactMismatchError,
+    EmbeddingDimensionMismatchError,
+    EmbeddingValidationError,
 )
 from ai_psychiatrist.services.chunk_scoring import PHQ8_ITEM_KEYS, chunk_scoring_prompt_hash
 from ai_psychiatrist.services.reference_store import ReferenceStore
@@ -750,3 +753,125 @@ class TestChunkScoring:
         store._embeddings = {100: [("c1", [1.0, 0.0])]}
 
         assert store.has_chunk_scores() is True
+
+
+class TestReferenceStoreEmbeddingValidation:
+    def test_nan_embedding_raises_on_load(self, tmp_path: Path) -> None:
+        """Spec 055: NaN embeddings must fail loudly at load-time."""
+        data_dir = tmp_path / "data"
+        data_dir.mkdir()
+
+        transcripts_dir = data_dir / "transcripts"
+        transcripts_dir.mkdir()
+
+        embeddings_path = data_dir / "embeddings.npz"
+        embeddings_path.with_suffix(".json").write_text(
+            json.dumps({"300": ["hello"]}),
+            encoding="utf-8",
+        )
+        embeddings_path.with_suffix(".meta.json").write_text(
+            json.dumps({"backend": "huggingface", "dimension": 4, "chunk_size": 8}),
+            encoding="utf-8",
+        )
+        np.savez_compressed(
+            str(embeddings_path),
+            emb_300=np.array([[0.0, np.nan, 0.0, 0.0]], dtype=np.float32),
+        )
+
+        data_settings = DataSettings(
+            base_dir=data_dir,
+            transcripts_dir=transcripts_dir,
+            embeddings_path=embeddings_path,
+        )
+        embedding_settings = EmbeddingSettings(
+            dimension=4,
+            chunk_size=8,
+            enable_item_tag_filter=False,
+        )
+        backend_settings = EmbeddingBackendSettings(backend=EmbeddingBackend.HUGGINGFACE)
+
+        store = ReferenceStore(data_settings, embedding_settings, backend_settings)
+        with pytest.raises(EmbeddingValidationError):
+            store._load_embeddings()
+
+
+class TestReferenceStoreEmbeddingDimensions:
+    def test_dimension_mismatch_raises_by_default(self, tmp_path: Path) -> None:
+        """Spec 057: insufficient-dimension embeddings must fail fast by default."""
+        data_dir = tmp_path / "data"
+        data_dir.mkdir()
+
+        transcripts_dir = data_dir / "transcripts"
+        transcripts_dir.mkdir()
+
+        embeddings_path = data_dir / "embeddings.npz"
+        embeddings_path.with_suffix(".json").write_text(
+            json.dumps({"300": ["ok"], "301": ["bad"]}),
+            encoding="utf-8",
+        )
+        embeddings_path.with_suffix(".meta.json").write_text(
+            json.dumps({"backend": "huggingface", "dimension": 4, "chunk_size": 8}),
+            encoding="utf-8",
+        )
+        np.savez_compressed(
+            str(embeddings_path),
+            emb_300=np.array([[1.0, 0.0, 0.0, 0.0]], dtype=np.float32),
+            emb_301=np.array([[1.0, 0.0]], dtype=np.float32),
+        )
+
+        data_settings = DataSettings(
+            base_dir=data_dir,
+            transcripts_dir=transcripts_dir,
+            embeddings_path=embeddings_path,
+        )
+        embedding_settings = EmbeddingSettings(
+            dimension=4,
+            chunk_size=8,
+            enable_item_tag_filter=False,
+        )
+        backend_settings = EmbeddingBackendSettings(backend=EmbeddingBackend.HUGGINGFACE)
+
+        store = ReferenceStore(data_settings, embedding_settings, backend_settings)
+        with pytest.raises(EmbeddingDimensionMismatchError):
+            store._load_embeddings()
+
+    def test_dimension_mismatch_can_be_skipped_when_allowed(self, tmp_path: Path) -> None:
+        """Escape hatch allows skipping mismatched embeddings for debugging."""
+        data_dir = tmp_path / "data"
+        data_dir.mkdir()
+
+        transcripts_dir = data_dir / "transcripts"
+        transcripts_dir.mkdir()
+
+        embeddings_path = data_dir / "embeddings.npz"
+        embeddings_path.with_suffix(".json").write_text(
+            json.dumps({"300": ["ok"], "301": ["bad"]}),
+            encoding="utf-8",
+        )
+        embeddings_path.with_suffix(".meta.json").write_text(
+            json.dumps({"backend": "huggingface", "dimension": 4, "chunk_size": 8}),
+            encoding="utf-8",
+        )
+        np.savez_compressed(
+            str(embeddings_path),
+            emb_300=np.array([[1.0, 0.0, 0.0, 0.0]], dtype=np.float32),
+            emb_301=np.array([[1.0, 0.0]], dtype=np.float32),
+        )
+
+        data_settings = DataSettings(
+            base_dir=data_dir,
+            transcripts_dir=transcripts_dir,
+            embeddings_path=embeddings_path,
+        )
+        embedding_settings = EmbeddingSettings(
+            dimension=4,
+            chunk_size=8,
+            enable_item_tag_filter=False,
+            allow_insufficient_dimension_embeddings=True,
+        )
+        backend_settings = EmbeddingBackendSettings(backend=EmbeddingBackend.HUGGINGFACE)
+
+        store = ReferenceStore(data_settings, embedding_settings, backend_settings)
+        loaded = store._load_embeddings()
+        assert 300 in loaded
+        assert 301 not in loaded
