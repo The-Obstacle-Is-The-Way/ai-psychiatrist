@@ -6,6 +6,7 @@ like markdown code blocks, smart quotes, and malformed JSON.
 
 from __future__ import annotations
 
+import ast
 import hashlib
 import json
 import re
@@ -160,6 +161,117 @@ def _stable_text_hash(text: str) -> str:
     return hashlib.sha256(text.encode("utf-8")).hexdigest()[:12]
 
 
+def _replace_json_literals_for_python(text: str) -> str:
+    """Convert JSON literals (true/false/null) to Python (True/False/None) outside strings.
+
+    This handles the common LLM failure mode where models output Python-style dicts
+    instead of JSON (e.g., `True` instead of `true`).
+    """
+    out: list[str] = []
+    in_string: str | None = None
+    escaped = False
+
+    i = 0
+    while i < len(text):
+        ch = text[i]
+
+        if in_string is not None:
+            out.append(ch)
+            if escaped:
+                escaped = False
+            elif ch == "\\":
+                escaped = True
+            elif ch == in_string:
+                in_string = None
+            i += 1
+            continue
+
+        if ch in {'"', "'"}:
+            in_string = ch
+            out.append(ch)
+            i += 1
+            continue
+
+        if ch.isalpha():
+            start = i
+            while i < len(text) and text[i].isalpha():
+                i += 1
+            token = text[start:i]
+            lowered = token.lower()
+            if lowered == "true":
+                out.append("True")
+            elif lowered == "false":
+                out.append("False")
+            elif lowered == "null":
+                out.append("None")
+            else:
+                out.append(token)
+            continue
+
+        out.append(ch)
+        i += 1
+
+    return "".join(out)
+
+
+def parse_llm_json(text: str) -> dict[str, Any]:
+    """Canonical JSON parser for all LLM outputs. NO SILENT FALLBACKS.
+
+    This is the single source of truth for parsing JSON from LLM responses.
+    All call sites MUST use this function instead of raw json.loads().
+
+    Parse order:
+    1. Apply tolerant_json_fixups() for smart quotes, missing commas, etc.
+    2. Try json.loads()
+    3. If that fails, convert Python literals and try ast.literal_eval()
+    4. RAISE on failure - never silently degrade
+
+    Args:
+        text: Raw JSON string from LLM output.
+
+    Returns:
+        Parsed dictionary.
+
+    Raises:
+        json.JSONDecodeError: If parsing fails after all repair attempts.
+    """
+
+    # Step 1: Apply tolerant fixups (smart quotes, trailing commas, etc.)
+    fixed = tolerant_json_fixups(text)
+
+    # Step 2: Try standard JSON parsing
+    try:
+        result = json.loads(fixed)
+        if not isinstance(result, dict):
+            raise json.JSONDecodeError("Expected JSON object", text, 0)
+        return result
+    except json.JSONDecodeError as json_error:
+        # Step 3: Try Python literal parsing (handles True/False/None)
+        pythonish = _replace_json_literals_for_python(fixed)
+        try:
+            result = ast.literal_eval(pythonish)
+            if not isinstance(result, dict):
+                raise json.JSONDecodeError("Expected JSON object", text, 0)
+
+            logger.debug(
+                "Parsed LLM JSON via Python literal fallback",
+                component="json_parser",
+                before_hash=_stable_text_hash(text),
+            )
+            return result
+        except (SyntaxError, ValueError) as python_error:
+            # Step 4: RAISE - no silent fallbacks
+            logger.warning(
+                "Failed to parse LLM JSON after all repair attempts",
+                component="json_parser",
+                json_error=str(json_error),
+                python_error=str(python_error),
+                text_length=len(text),
+                text_hash=_stable_text_hash(text),
+            )
+            raise json_error from python_error
+
+
 def tolerant_json_fixups(text: str) -> str:
     """Apply tolerant fixups to common LLM JSON mistakes.
 
@@ -248,8 +360,21 @@ class SimpleChatClient(Protocol):
         system_prompt: str = "",
         model: str | None = None,
         temperature: float = 0.0,
+        format: str | None = None,
     ) -> str:
-        """Send a simple chat prompt and return response."""
+        """Send a simple chat prompt and return response.
+
+        Args:
+            user_prompt: User message content.
+            system_prompt: Optional system message.
+            model: Model to use.
+            temperature: Sampling temperature.
+            format: Output format constraint. Use "json" for guaranteed well-formed
+                JSON output via Ollama's grammar-level constraints.
+
+        Returns:
+            Generated response content.
+        """
         ...
 
 
@@ -257,7 +382,8 @@ def extract_json_from_response(raw: str) -> dict[str, Any]:
     """Extract JSON object from LLM response.
 
     Handles common issues like markdown code blocks, smart quotes,
-    and trailing commas.
+    and trailing commas. Uses the canonical parse_llm_json() function
+    for consistent parsing across all call sites.
 
     Args:
         raw: Raw LLM response text.
@@ -279,17 +405,20 @@ def extract_json_from_response(raw: str) -> dict[str, Any]:
     # Strip markdown code blocks
     text = _strip_markdown_fences(text)
 
-    # Apply tolerant fixups before extracting boundaries
-    text = tolerant_json_fixups(text)
-
-    # Extract JSON object
+    # Extract JSON object boundaries
     text = _extract_json_object(text)
 
     try:
-        result: dict[str, Any] = json.loads(text)
-        return result
+        # Use canonical parser - NO SILENT FALLBACKS
+        return parse_llm_json(text)
     except json.JSONDecodeError as e:
-        logger.warning("JSON parse failed", error=str(e), text_preview=text[:200])
+        logger.warning(
+            "JSON parse failed in extract_json_from_response",
+            component="json_parser",
+            error=str(e),
+            text_length=len(text),
+            text_hash=_stable_text_hash(text),
+        )
         raise LLMResponseParseError(raw, str(e)) from e
 
 

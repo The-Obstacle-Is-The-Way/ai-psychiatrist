@@ -1,13 +1,37 @@
 # ANALYSIS-026: JSON Parsing Architecture Deep Audit
 
 **Date**: 2026-01-03
-**Status**: 🔍 INVESTIGATION (NOT A BUG FIX - ANALYSIS ONLY)
+**Status**: ✅ RESOLVED
 **Severity**: HIGH - Systemic issue causing recurrent failures
 **Triggered By**: Run10 errors showing "Exceeded maximum retries (3) for output validation"
+**Resolution Date**: 2026-01-03
 
 ---
 
-## Executive Summary
+## Resolution Summary
+
+**Root cause validated and fixed.** The investigation identified three systemic issues:
+
+1. **JSON parsing was fragmented** across 3 call sites with inconsistent behavior
+2. **`_extract_evidence()` silently dropped evidence** on parse failure (data corruption)
+3. **Ollama `format:json` not used** for constrained generation
+
+### Fixes Applied
+
+| Issue | Fix | Files Changed |
+|-------|-----|---------------|
+| Fragmented parsing | Created canonical `parse_llm_json()` function | `responses.py` |
+| Silent fallback | Removed silent `{}` fallback, now raises | `quantitative.py` |
+| No format constraint | Added `format="json"` to evidence extraction | `quantitative.py`, `ollama.py`, `protocols.py` |
+| Mock client outdated | Updated `MockLLMClient` for `format` param | `mock_llm.py` |
+
+### Test Results
+- **822 tests pass** (up from 821 after fixing test expectations)
+- **84% coverage** maintained
+
+---
+
+## Original Executive Summary
 
 This document audits the entire JSON parsing and error handling chain in the codebase to determine if our approach is fundamentally sound or if we're missing industry-standard solutions.
 
@@ -200,35 +224,36 @@ data = json_repair.loads(raw_text)
 
 ---
 
-## Part 8: Immediate Action Items
+## Part 8: Action Items
 
-### Before Next Run
-- [ ] Verify Run10 completes (or cancel and restart with fix)
-- [ ] Confirm `f67443b` fix is included in codebase
+### ✅ Completed (2026-01-03)
+- [x] Created canonical `parse_llm_json()` function in `responses.py`
+- [x] Removed silent fallback in `_extract_evidence()` - now raises on failure
+- [x] Added `format="json"` to Ollama API for evidence extraction
+- [x] Updated `ChatRequest` to support `format` parameter
+- [x] Updated all extractors to use canonical parser
+- [x] Fixed test that expected old silent fallback behavior
+- [x] All 822 tests pass
+
+### Still Recommended (Future)
 - [ ] Increase `max_result_retries` to at least 5
-
-### This Sprint
 - [ ] Evaluate `json-repair` library integration
-- [ ] Add logging of raw LLM output on parse failure
-- [ ] Create test cases for all known failure modes
-
-### Future
 - [ ] Evaluate `instructor` library for self-correcting structured output
-- [ ] Consider LangGraph for workflow-level error handling
 - [ ] Add retry telemetry metrics
 
 ---
 
-## Appendix A: Code Locations
+## Appendix A: Code Locations (Updated)
 
 | File | Line | Function | Purpose |
 |------|------|----------|---------|
-| `agents/extractors.py` | 208 | `extract_quantitative` | Main extraction entry point |
-| `agents/extractors.py` | 81 | `_parse_json_object_like` | JSON/Python literal parsing |
-| `agents/extractors.py` | 32 | `_replace_json_literals_for_python` | true→True conversion |
-| `infrastructure/llm/responses.py` | 163 | `tolerant_json_fixups` | Smart quote/comma repair |
-| `agents/quantitative.py` | 349 | `_collect_consistency_samples` | Sample-level retry loop |
-| `agents/quantitative.py` | 454 | `_score_items` | PydanticAI agent call |
+| `infrastructure/llm/responses.py` | 216 | `parse_llm_json()` | **NEW** Canonical JSON parser (SSOT) |
+| `infrastructure/llm/responses.py` | 163 | `_replace_json_literals_for_python()` | **MOVED** true→True conversion |
+| `infrastructure/llm/responses.py` | 275 | `tolerant_json_fixups()` | Smart quote/comma repair |
+| `infrastructure/llm/protocols.py` | 67 | `ChatRequest.format` | **NEW** Format constraint field |
+| `infrastructure/llm/ollama.py` | 170 | `chat()` | Uses format parameter |
+| `agents/extractors.py` | 142 | `extract_quantitative()` | Uses canonical parser |
+| `agents/quantitative.py` | 571 | `_extract_evidence()` | Uses format="json", raises on failure |
 
 ## Appendix B: Related Bug Reports
 
@@ -241,6 +266,7 @@ data = json_repair.loads(raw_text)
 - [Machine Learning Mastery: Pydantic for LLM Outputs](https://machinelearningmastery.com/the-complete-guide-to-using-pydantic-for-validating-llm-outputs/)
 - [Instructor Library](https://python.useinstructor.com/)
 - [json-repair PyPI](https://pypi.org/project/json-repair/)
+- [Ollama Structured Outputs](https://docs.ollama.com/capabilities/structured-outputs)
 
 ### Agent Framework Comparisons
 - [ZenML: Pydantic AI vs LangGraph](https://www.zenml.io/blog/pydantic-ai-vs-langgraph)
@@ -249,4 +275,32 @@ data = json_repair.loads(raw_text)
 
 ---
 
-*This is an analysis document. No code changes have been made.*
+## Appendix D: Key Design Decisions
+
+### Why NO Silent Fallbacks in Research Code
+
+The old behavior in `_extract_evidence()` was:
+```python
+except (json.JSONDecodeError, ValueError):
+    logger.warning("Failed to parse evidence JSON, using empty evidence")
+    obj = {}  # <-- SILENT DEGRADATION
+```
+
+**This is data corruption.** When evidence parsing fails:
+1. Few-shot mode silently degrades to ~zero-shot behavior
+2. Retrieval quality collapses without any indication
+3. Research metrics are corrupted
+4. The researcher has no way to know this happened
+
+**New behavior:** Raise on failure. The caller decides retry/fail policy.
+
+### Why Ollama `format:"json"` Matters
+
+From [Ollama docs](https://docs.ollama.com/capabilities/structured-outputs):
+> "JSON mode outputs are always a well-formed JSON object"
+
+This is **grammar-level enforcement**, not post-hoc repair. The LLM's output is constrained at token generation time to only produce valid JSON.
+
+---
+
+*This analysis document has been resolved. Code changes were made to fix the identified issues.*

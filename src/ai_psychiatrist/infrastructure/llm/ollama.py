@@ -156,7 +156,7 @@ class OllamaClient:
             LLMTimeoutError: If request times out.
             LLMError: If request fails.
         """
-        payload = {
+        payload: dict[str, object] = {
             "model": request.model,
             "messages": [{"role": msg.role, "content": msg.content} for msg in request.messages],
             "stream": False,
@@ -164,6 +164,11 @@ class OllamaClient:
                 "temperature": request.temperature,
             },
         }
+
+        # Ollama format:"json" guarantees well-formed JSON at grammar level.
+        # See: https://docs.ollama.com/capabilities/structured-outputs
+        if request.format is not None:
+            payload["format"] = request.format
 
         logger.debug(
             "Sending chat request",
@@ -322,6 +327,7 @@ class OllamaClient:
         system_prompt: str = "",
         model: str | None = None,
         temperature: float = 0.0,
+        format: str | None = None,
     ) -> str:
         """Simple chat completion with just user/system prompts.
 
@@ -330,6 +336,8 @@ class OllamaClient:
             system_prompt: Optional system message.
             model: Model to use (Paper Section 2.2: gemma3:27b).
             temperature: Sampling temperature (e.g., 0.0 for Judge agent).
+            format: Output format constraint. Use "json" for guaranteed well-formed
+                JSON output via Ollama's grammar-level constraints.
 
         Returns:
             Generated response content.
@@ -349,6 +357,7 @@ class OllamaClient:
             model=model or default_model,
             temperature=temperature,
             timeout_seconds=self._default_timeout,
+            format=format,
         )
         response = await self.chat(request)
         return response.content

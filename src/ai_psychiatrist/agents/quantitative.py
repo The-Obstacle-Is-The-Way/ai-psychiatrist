@@ -13,7 +13,6 @@ prediction, with multi-level JSON repair for robust parsing.
 from __future__ import annotations
 
 import asyncio
-import json
 from dataclasses import replace
 from typing import TYPE_CHECKING, Any, Literal
 
@@ -37,7 +36,7 @@ from ai_psychiatrist.config import (
 from ai_psychiatrist.domain.entities import PHQ8Assessment, Transcript
 from ai_psychiatrist.domain.enums import AssessmentMode, NAReason, PHQ8Item
 from ai_psychiatrist.domain.value_objects import ItemAssessment
-from ai_psychiatrist.infrastructure.llm.responses import tolerant_json_fixups
+from ai_psychiatrist.infrastructure.llm.responses import parse_llm_json
 from ai_psychiatrist.infrastructure.logging import get_logger
 from ai_psychiatrist.services.embedding import ReferenceBundle, compute_retrieval_similarity_stats
 
@@ -551,6 +550,10 @@ class QuantitativeAssessmentAgent:
 
         Returns:
             Dictionary of PHQ8 key -> list of evidence quotes.
+
+        Raises:
+            json.JSONDecodeError: If evidence JSON parsing fails. NO SILENT FALLBACKS -
+                the caller must decide how to handle failures (retry, fail, etc.)
         """
         user_prompt = make_evidence_prompt(transcript_text)
 
@@ -558,24 +561,19 @@ class QuantitativeAssessmentAgent:
         model = get_model_name(self._model_settings, "quantitative")
         temperature = self._model_settings.temperature if self._model_settings else 0.0
 
+        # Use format="json" to guarantee well-formed JSON at grammar level
+        # See: https://docs.ollama.com/capabilities/structured-outputs
         raw = await self._llm.simple_chat(
             user_prompt=user_prompt,
             model=model,
             temperature=temperature,
+            format="json",
         )
 
-        # Parse JSON response with tolerant fixups (BUG-011: Apply repair before parsing)
-        try:
-            clean = self._strip_json_block(raw)
-            clean = tolerant_json_fixups(clean)
-            obj = json.loads(clean)
-        except (json.JSONDecodeError, ValueError):
-            # BUG-011: Include response preview in warning to aid debugging
-            logger.warning(
-                "Failed to parse evidence JSON, using empty evidence",
-                response_preview=raw[:200] if raw else "",
-            )
-            obj = {}
+        # Parse JSON response using canonical parser - NO SILENT FALLBACKS
+        # If parsing fails, the exception propagates to the caller
+        clean = self._strip_json_block(raw)
+        obj = parse_llm_json(clean)
 
         # Clean up extraction, ensure all keys present
         evidence_dict: dict[str, list[str]] = {}

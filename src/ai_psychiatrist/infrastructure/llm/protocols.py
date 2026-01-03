@@ -54,12 +54,17 @@ class ChatRequest:
         model: Model identifier (e.g., "gemma3:27b").
         temperature: Sampling temperature (0.0 = deterministic, higher = more random).
         timeout_seconds: Request timeout in seconds.
+        format: Optional output format constraint. Use "json" for Ollama's JSON mode
+            which guarantees well-formed JSON output at the grammar level. This is
+            strongly recommended for any structured output to avoid parse failures.
+            See: https://docs.ollama.com/capabilities/structured-outputs
     """
 
     messages: Sequence[ChatMessage]
     model: str
     temperature: float = 0.0
     timeout_seconds: int = 300
+    format: str | None = None
 
     def __post_init__(self) -> None:
         """Validate request after initialization."""
@@ -74,6 +79,9 @@ class ChatRequest:
             raise ValueError(msg)
         if self.timeout_seconds < 1:
             msg = f"timeout_seconds {self.timeout_seconds} must be >= 1"
+            raise ValueError(msg)
+        if self.format is not None and self.format not in ("json",):
+            msg = f"format must be None or 'json', got {self.format!r}"
             raise ValueError(msg)
 
 

@@ -22,8 +22,9 @@ class _FakeChatClient:
         system_prompt: str = "",
         model: str | None = None,
         temperature: float = 0.0,
+        format: str | None = None,
     ) -> str:
-        _ = (user_prompt, system_prompt, model, temperature)
+        _ = (user_prompt, system_prompt, model, temperature, format)
         return self._response
 
 
