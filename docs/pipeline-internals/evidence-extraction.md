@@ -131,6 +131,27 @@ The LLM **semantically analyzes** the transcript:
 
 **Related**: [ANALYSIS-026](../_bugs/ANALYSIS-026-JSON-PARSING-ARCHITECTURE-AUDIT.md) - Full audit of JSON parsing architecture
 
+### ⚠️ CRITICAL: Mode Isolation (Zero-Shot vs Few-Shot)
+
+**Zero-shot and few-shot are INDEPENDENT RESEARCH METHODOLOGIES.** They must be completely isolated.
+
+A previous bug allowed silent fallback to empty evidence:
+```python
+# OLD BUG (FIXED):
+except (json.JSONDecodeError, ValueError):
+    obj = {}  # <-- SILENT: Few-shot becomes zero-shot!
+```
+
+This violated mode isolation:
+- Few-shot mode with empty evidence → no references → same as zero-shot
+- Published results claiming "few-shot" could be partially zero-shot
+- Comparative analysis between modes would be invalid
+
+**The fix ensures:**
+- `_extract_evidence()` raises on failure instead of returning `{}`
+- Few-shot mode fails loudly if it can't build proper references
+- Mode isolation is maintained throughout the pipeline
+
 ---
 
 ## Step 2: Scoring (Back to the LLM)

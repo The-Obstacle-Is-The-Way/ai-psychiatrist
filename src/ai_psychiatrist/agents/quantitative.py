@@ -545,6 +545,17 @@ class QuantitativeAssessmentAgent:
     async def _extract_evidence(self, transcript_text: str) -> dict[str, list[str]]:
         """Extract evidence quotes for each PHQ-8 item.
 
+        ⚠️ CRITICAL: NO SILENT FALLBACKS
+
+        This function MUST raise on failure. Returning empty dict {} on failure
+        would violate mode isolation between zero-shot and few-shot:
+
+        - Few-shot + empty evidence → empty references → functionally zero-shot
+        - This corrupts research results without indication
+        - Published comparisons between modes become invalid
+
+        See: docs/_bugs/ANALYSIS-026-JSON-PARSING-ARCHITECTURE-AUDIT.md
+
         Args:
             transcript_text: Interview transcript text.
 
@@ -552,8 +563,8 @@ class QuantitativeAssessmentAgent:
             Dictionary of PHQ8 key -> list of evidence quotes.
 
         Raises:
-            json.JSONDecodeError: If evidence JSON parsing fails. NO SILENT FALLBACKS -
-                the caller must decide how to handle failures (retry, fail, etc.)
+            json.JSONDecodeError: If evidence JSON parsing fails. The caller
+                must decide how to handle failures (retry, fail, etc.)
         """
         user_prompt = make_evidence_prompt(transcript_text)
 
