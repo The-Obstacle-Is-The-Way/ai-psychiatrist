@@ -144,6 +144,28 @@ SSOT: `_integrate_curve()` in `src/ai_psychiatrist/metrics/selective_prediction.
 
 ---
 
+## Optimal and Excess Metrics (Spec 052)
+
+Added in Jan 2026 to measure distance from the theoretical limit.
+
+### Optimal Baselines (Oracle CSF)
+- **AURC_optimal**: The AURC achievable if items were perfectly ranked by loss (ascending).
+- **AUGRC_optimal**: The AUGRC achievable under perfect ranking.
+
+### Excess Metrics
+- **e-AURC** = `AURC - AURC_optimal`
+- **e-AUGRC** = `AUGRC - AUGRC_optimal`
+
+### Interpretation
+- `e-AURC = 0` implies the confidence signal perfectly ranks correctness.
+- `aurc_gap_pct` = `(e-AURC / AURC_optimal) * 100` shows the percentage room for improvement.
+
+### Achievable AURC (Convex Hull)
+- **AURC_achievable**: The AURC of the lower convex hull of the risk-coverage curve.
+- Represents the performance achievable by optimally selecting working points (filtering out suboptimal confidence thresholds).
+
+---
+
 ## Truncated Areas and MAE@Coverage
 
 ### Truncated AURC/AUGRC
