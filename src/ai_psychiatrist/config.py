@@ -375,6 +375,38 @@ class QuantitativeSettings(BaseSettings):
     )
 
 
+class ConsistencySettings(BaseSettings):
+    """Consistency-based confidence configuration (Spec 050).
+
+    These settings control optional multi-sample quantitative scoring used to derive
+    agreement-based confidence signals.
+    """
+
+    model_config = SettingsConfigDict(
+        env_prefix="CONSISTENCY_",
+        env_file=ENV_FILE,
+        env_file_encoding=ENV_FILE_ENCODING,
+        extra="ignore",
+    )
+
+    enabled: bool = Field(
+        default=False,
+        description="Enable consistency mode (multi-sample scoring).",
+    )
+    n_samples: int = Field(
+        default=5,
+        ge=1,
+        le=20,
+        description="Number of scoring samples to draw when consistency is enabled.",
+    )
+    temperature: float = Field(
+        default=0.3,
+        ge=0.0,
+        le=2.0,
+        description="Sampling temperature used for consistency scoring (ignored when disabled).",
+    )
+
+
 class PydanticAISettings(BaseSettings):
     """Pydantic AI integration settings."""
 
@@ -560,6 +592,7 @@ class Settings(BaseSettings):
     embedding: EmbeddingSettings = Field(default_factory=EmbeddingSettings)
     feedback: FeedbackLoopSettings = Field(default_factory=FeedbackLoopSettings)
     quantitative: QuantitativeSettings = Field(default_factory=QuantitativeSettings)
+    consistency: ConsistencySettings = Field(default_factory=ConsistencySettings)
     pydantic_ai: PydanticAISettings = Field(default_factory=PydanticAISettings)
     data: DataSettings = Field(default_factory=DataSettings)
     logging: LoggingSettings = Field(default_factory=LoggingSettings)

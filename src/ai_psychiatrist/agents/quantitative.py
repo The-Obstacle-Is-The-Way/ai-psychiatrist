@@ -14,13 +14,20 @@ from __future__ import annotations
 
 import asyncio
 import json
-from typing import TYPE_CHECKING, Literal
+from dataclasses import replace
+from typing import TYPE_CHECKING, Any, Literal
 
 from ai_psychiatrist.agents.prompts.quantitative import (
     PHQ8_DOMAIN_KEYS,
     QUANTITATIVE_SYSTEM_PROMPT,
     make_evidence_prompt,
     make_scoring_prompt,
+)
+from ai_psychiatrist.confidence.consistency import compute_consistency_metrics
+from ai_psychiatrist.confidence.token_csfs import (
+    compute_token_energy,
+    compute_token_msp,
+    compute_token_pe,
 )
 from ai_psychiatrist.config import (
     PydanticAISettings,
@@ -36,6 +43,7 @@ from ai_psychiatrist.services.embedding import ReferenceBundle, compute_retrieva
 
 if TYPE_CHECKING:
     from pydantic_ai import Agent
+    from pydantic_ai.models.openai import OpenAIChatModelSettings
 
     from ai_psychiatrist.agents.output_models import QuantitativeOutput
     from ai_psychiatrist.config import ModelSettings
@@ -58,6 +66,7 @@ PHQ8_KEY_MAP: dict[str, PHQ8Item] = {
 
 # Reverse mapping for lookups
 ITEM_TO_LEGACY_KEY: dict[PHQ8Item, str] = {v: k for k, v in PHQ8_KEY_MAP.items()}
+_DEFAULT_TOP_LOGPROBS = 5
 
 
 class QuantitativeAssessmentAgent:
@@ -200,10 +209,18 @@ class QuantitativeAssessmentAgent:
                 score = parsed.score
                 evidence = parsed.evidence
                 reason = parsed.reason
+                verbalized_confidence = parsed.verbalized_confidence if score is not None else None
+                token_msp = parsed.token_msp
+                token_pe = parsed.token_pe
+                token_energy = parsed.token_energy
             else:
                 score = None
                 evidence = "No relevant evidence found"
                 reason = "Unable to assess"
+                verbalized_confidence = None
+                token_msp = None
+                token_pe = None
+                token_energy = None
 
             # Determine NA reason and Evidence Source
             na_reason: NAReason | None = None
@@ -233,6 +250,10 @@ class QuantitativeAssessmentAgent:
                 retrieval_reference_count=retrieval_stats.retrieval_reference_count,
                 retrieval_similarity_mean=retrieval_stats.retrieval_similarity_mean,
                 retrieval_similarity_max=retrieval_stats.retrieval_similarity_max,
+                verbalized_confidence=verbalized_confidence,
+                token_msp=token_msp,
+                token_pe=token_pe,
+                token_energy=token_energy,
             )
 
         assessment = PHQ8Assessment(
@@ -257,6 +278,115 @@ class QuantitativeAssessmentAgent:
 
         return assessment
 
+    async def assess_with_consistency(
+        self,
+        transcript: Transcript,
+        *,
+        n_samples: int,
+        temperature: float,
+    ) -> PHQ8Assessment:
+        """Run multiple scoring samples and attach consistency-based confidence signals.
+
+        Spec 050.
+        """
+        if n_samples < 1:
+            raise ValueError("n_samples must be >= 1")
+        if not 0.0 <= temperature <= 2.0:
+            raise ValueError("temperature must be in [0.0, 2.0]")
+
+        logger.info(
+            "Starting quantitative assessment (consistency mode)",
+            participant_id=transcript.participant_id,
+            mode=self._mode.value,
+            n_samples=n_samples,
+            temperature=temperature,
+        )
+
+        # Step 1: Extract evidence (deterministic; uses MODEL_TEMPERATURE)
+        final_evidence = await self._extract_evidence(transcript.text)
+        llm_counts = {k: len(v) for k, v in final_evidence.items()}
+
+        # Step 2: Build references (few-shot only)
+        reference_text = ""
+        reference_bundle: ReferenceBundle | None = None
+        if self._mode == AssessmentMode.FEW_SHOT and self._embedding:
+            evidence_for_embedding = {
+                PHQ8_KEY_MAP[k]: v for k, v in final_evidence.items() if k in PHQ8_KEY_MAP
+            }
+            reference_bundle = await self._embedding.build_reference_bundle(evidence_for_embedding)
+            reference_text = reference_bundle.format_for_prompt()
+
+        # Step 3: Score with LLM N times (temperature > 0 introduces variability)
+        prompt = make_scoring_prompt(transcript.text, reference_text)
+        model = get_model_name(self._model_settings, "quantitative")
+
+        sample_outputs: list[dict[PHQ8Item, ItemAssessment]] = []
+        for _ in range(n_samples):
+            sample_outputs.append(
+                await self._score_items(prompt=prompt, _model=model, temperature=temperature)
+            )
+
+        final_items: dict[PHQ8Item, ItemAssessment] = {}
+        for phq_item in PHQ8Item:
+            legacy_key = ITEM_TO_LEGACY_KEY[phq_item]
+            llm_count = llm_counts.get(legacy_key, 0)
+
+            per_sample = [s[phq_item] for s in sample_outputs]
+            sample_scores = tuple(a.score for a in per_sample)
+            metrics = compute_consistency_metrics(sample_scores)
+
+            if metrics.modal_confidence >= 0.5:
+                selected = next(
+                    (a for a in per_sample if a.score == metrics.modal_score),
+                    per_sample[0],
+                )
+            else:
+                selected = per_sample[0]
+
+            score = selected.score
+            evidence = selected.evidence
+            reason = selected.reason
+
+            na_reason: NAReason | None = None
+            evidence_source: Literal["llm"] | None = "llm" if llm_count > 0 else None
+            if score is None and self._settings.track_na_reasons:
+                na_reason = self._determine_na_reason(llm_count)
+            if evidence_source is None and score is not None:
+                evidence_source = "llm"
+
+            retrieval_stats = compute_retrieval_similarity_stats(
+                reference_bundle.item_references.get(phq_item, []) if reference_bundle else []
+            )
+
+            final_items[phq_item] = ItemAssessment(
+                item=phq_item,
+                evidence=evidence,
+                reason=reason,
+                score=score,
+                na_reason=na_reason,
+                evidence_source=evidence_source,
+                llm_evidence_count=llm_count,
+                retrieval_reference_count=retrieval_stats.retrieval_reference_count,
+                retrieval_similarity_mean=retrieval_stats.retrieval_similarity_mean,
+                retrieval_similarity_max=retrieval_stats.retrieval_similarity_max,
+                verbalized_confidence=selected.verbalized_confidence,
+                token_msp=selected.token_msp,
+                token_pe=selected.token_pe,
+                token_energy=selected.token_energy,
+                consistency_modal_score=metrics.modal_score,
+                consistency_modal_count=metrics.modal_count,
+                consistency_modal_confidence=metrics.modal_confidence,
+                consistency_score_std=metrics.score_std,
+                consistency_na_rate=metrics.na_rate,
+                consistency_samples=sample_scores,
+            )
+
+        return PHQ8Assessment(
+            items=final_items,
+            mode=self._mode,
+            participant_id=transcript.participant_id,
+        )
+
     async def _score_items(
         self,
         *,
@@ -270,14 +400,32 @@ class QuantitativeAssessmentAgent:
 
         try:
             timeout = self._pydantic_ai.timeout_seconds
+            model_settings: OpenAIChatModelSettings = {
+                "temperature": temperature,
+                # Spec 051: request logprobs to compute token-level confidence signals
+                # when supported by the backend.
+                "openai_logprobs": True,
+                "openai_top_logprobs": _DEFAULT_TOP_LOGPROBS,
+                **({"timeout": timeout} if timeout is not None else {}),
+            }
             result = await self._scoring_agent.run(
                 prompt,
-                model_settings={
-                    "temperature": temperature,
-                    **({"timeout": timeout} if timeout is not None else {}),
-                },
+                model_settings=model_settings,
             )
-            return self._from_quantitative_output(result.output)
+            parsed = self._from_quantitative_output(result.output)
+            token_signals = self._extract_token_signals(getattr(result, "response", None))
+            if token_signals is None:
+                return parsed
+
+            return {
+                item: replace(
+                    assessment,
+                    token_msp=token_signals["token_msp"],
+                    token_pe=token_signals["token_pe"],
+                    token_energy=token_signals["token_energy"],
+                )
+                for item, assessment in parsed.items()
+            }
         except asyncio.CancelledError:
             raise
         except Exception as e:
@@ -291,6 +439,30 @@ class QuantitativeAssessmentAgent:
             raise
 
     @staticmethod
+    def _extract_token_signals(response: Any) -> dict[str, float] | None:
+        provider_details = getattr(response, "provider_details", None)
+        if not isinstance(provider_details, dict):
+            return None
+
+        logprobs = provider_details.get("logprobs")
+        if not isinstance(logprobs, list) or not logprobs:
+            return None
+
+        try:
+            return {
+                "token_msp": compute_token_msp(logprobs),
+                "token_pe": compute_token_pe(logprobs),
+                "token_energy": compute_token_energy(logprobs),
+            }
+        except Exception as exc:
+            logger.warning(
+                "Failed to compute token-level confidence signals",
+                error=str(exc),
+                error_type=type(exc).__name__,
+            )
+            return None
+
+    @staticmethod
     def _from_quantitative_output(output: QuantitativeOutput) -> dict[PHQ8Item, ItemAssessment]:
         """Convert validated QuantitativeOutput into ItemAssessment mapping."""
         result: dict[PHQ8Item, ItemAssessment] = {}
@@ -301,6 +473,9 @@ class QuantitativeAssessmentAgent:
                 evidence=evidence_output.evidence,
                 reason=evidence_output.reason,
                 score=evidence_output.score,
+                verbalized_confidence=(
+                    evidence_output.confidence if evidence_output.score is not None else None
+                ),
             )
         return result
 

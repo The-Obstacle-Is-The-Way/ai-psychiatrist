@@ -142,6 +142,11 @@ class ExperimentProvenance:
     participants_requested: int
     participants_evaluated: int
 
+    # Spec 050: consistency-based confidence configuration (if enabled)
+    consistency_enabled: bool = False
+    consistency_n_samples: int | None = None
+    consistency_temperature: float | None = None
+
     @classmethod
     def capture(
         cls,
@@ -152,9 +157,26 @@ class ExperimentProvenance:
         embeddings_path: Path | None,
         participants_requested: int,
         participants_evaluated: int,
+        consistency_enabled: bool | None = None,
+        consistency_n_samples: int | None = None,
+        consistency_temperature: float | None = None,
     ) -> ExperimentProvenance:
         """Capture experiment provenance."""
         meta_path = embeddings_path.with_suffix(".meta.json") if embeddings_path else None
+
+        enabled = (
+            settings.consistency.enabled if consistency_enabled is None else consistency_enabled
+        )
+        n_samples = (
+            settings.consistency.n_samples
+            if consistency_n_samples is None and enabled
+            else consistency_n_samples
+        )
+        temp = (
+            settings.consistency.temperature
+            if consistency_temperature is None and enabled
+            else consistency_temperature
+        )
 
         return cls(
             mode=mode,
@@ -168,6 +190,9 @@ class ExperimentProvenance:
             embeddings_meta_checksum=compute_file_checksum(meta_path) if meta_path else None,
             participants_requested=participants_requested,
             participants_evaluated=participants_evaluated,
+            consistency_enabled=enabled,
+            consistency_n_samples=n_samples,
+            consistency_temperature=temp,
         )
 
     def to_dict(self) -> dict[str, object]:

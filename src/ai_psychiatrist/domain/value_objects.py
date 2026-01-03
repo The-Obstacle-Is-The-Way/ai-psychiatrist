@@ -173,6 +173,42 @@ class ItemAssessment:
     retrieval_similarity_max: float | None = None
     """Maximum similarity of retrieved reference chunks used for prompt construction, if any."""
 
+    # SPEC-048 extensions (verbalized confidence)
+    verbalized_confidence: int | None = None
+    """Verbalized confidence rating on a 1-5 scale, if provided by the LLM."""
+
+    # SPEC-051 extensions (token-level confidence signals)
+    token_msp: float | None = None
+    """Mean token maximum softmax probability (MSP), if available from logprobs."""
+
+    token_pe: float | None = None
+    """Mean token predictive entropy (lower = more confident), if available from logprobs."""
+
+    token_energy: float | None = None
+    """Mean token energy (logsumexp over top token log-probabilities).
+
+    Available only when logprobs are returned by the backend.
+    """
+
+    # SPEC-050 extensions (consistency-based confidence)
+    consistency_modal_score: int | None = None
+    """Modal score across consistency samples (0-3 or None)."""
+
+    consistency_modal_count: int | None = None
+    """Count of samples equal to modal score."""
+
+    consistency_modal_confidence: float | None = None
+    """Modal count divided by number of samples (0-1)."""
+
+    consistency_score_std: float | None = None
+    """Standard deviation of numeric scores across samples (0 when <2 numeric samples)."""
+
+    consistency_na_rate: float | None = None
+    """Fraction of samples that were N/A (0-1)."""
+
+    consistency_samples: tuple[int | None, ...] | None = None
+    """Raw sample scores across N runs, for debugging and auditing."""
+
     def __post_init__(self) -> None:
         """Validate score is within PHQ-8 range.
 
@@ -181,6 +217,35 @@ class ItemAssessment:
         """
         if self.score is not None and not 0 <= self.score <= 3:
             raise ValueError(f"Score must be 0-3 or None, got {self.score}")
+        if self.verbalized_confidence is not None and not 1 <= self.verbalized_confidence <= 5:
+            raise ValueError(
+                f"verbalized_confidence must be 1-5 or None, got {self.verbalized_confidence}"
+            )
+        if self.token_msp is not None and not 0.0 <= self.token_msp <= 1.0:
+            raise ValueError(f"token_msp must be in [0, 1] or None, got {self.token_msp}")
+        if self.token_pe is not None and self.token_pe < 0.0:
+            raise ValueError(f"token_pe must be >= 0 or None, got {self.token_pe}")
+        if self.consistency_modal_confidence is not None and not (
+            0.0 <= self.consistency_modal_confidence <= 1.0
+        ):
+            raise ValueError(
+                "consistency_modal_confidence must be in [0, 1] or None, got "
+                f"{self.consistency_modal_confidence}"
+            )
+        if self.consistency_score_std is not None and self.consistency_score_std < 0.0:
+            raise ValueError(
+                f"consistency_score_std must be >= 0 or None, got {self.consistency_score_std}"
+            )
+        if self.consistency_na_rate is not None and not 0.0 <= self.consistency_na_rate <= 1.0:
+            raise ValueError(
+                f"consistency_na_rate must be in [0, 1] or None, got {self.consistency_na_rate}"
+            )
+        if self.consistency_modal_count is not None and self.consistency_modal_count < 1:
+            raise ValueError(
+                f"consistency_modal_count must be >= 1 or None, got {self.consistency_modal_count}"
+            )
+        if self.consistency_samples is not None and len(self.consistency_samples) < 1:
+            raise ValueError("consistency_samples must be non-empty when provided")
 
     @property
     def is_available(self) -> bool:

@@ -122,16 +122,22 @@ For each symptom, provide:
 1. "evidence": exact quotes from transcript (use "No relevant evidence found" if not discussed)
 2. "reason": explanation of scoring decision, including cross-reference analysis when applicable and why N/A if applicable
 3. "score": integer 0-3 based on evidence, or "N/A" if no relevant evidence
+4. "confidence": integer 1-5 indicating how confident you are in the score (omit if score is "N/A"):
+   - 1: Very uncertain - guessing based on minimal evidence
+   - 2: Somewhat uncertain - evidence is weak or ambiguous
+   - 3: Moderately confident - some supporting evidence
+   - 4: Fairly confident - clear supporting evidence
+   - 5: Very confident - strong, unambiguous evidence
 
 Return ONLY a JSON object in <answer> tags with these exact keys:
-- "PHQ8_NoInterest": {{"evidence": "...", "reason": "...", "score": ...}}
-- "PHQ8_Depressed": {{"evidence": "...", "reason": "...", "score": ...}}
-- "PHQ8_Sleep": {{"evidence": "...", "reason": "...", "score": ...}}
-- "PHQ8_Tired": {{"evidence": "...", "reason": "...", "score": ...}}
-- "PHQ8_Appetite": {{"evidence": "...", "reason": "...", "score": ...}}
-- "PHQ8_Failure": {{"evidence": "...", "reason": "...", "score": ...}}
-- "PHQ8_Concentrating": {{"evidence": "...", "reason": "...", "score": ...}}
-- "PHQ8_Moving": {{"evidence": "...", "reason": "...", "score": ...}}"""
+- "PHQ8_NoInterest": {{"evidence": "...", "reason": "...", "score": ..., "confidence": ...}}
+- "PHQ8_Depressed": {{"evidence": "...", "reason": "...", "score": ..., "confidence": ...}}
+- "PHQ8_Sleep": {{"evidence": "...", "reason": "...", "score": ..., "confidence": ...}}
+- "PHQ8_Tired": {{"evidence": "...", "reason": "...", "score": ..., "confidence": ...}}
+- "PHQ8_Appetite": {{"evidence": "...", "reason": "...", "score": ..., "confidence": ...}}
+- "PHQ8_Failure": {{"evidence": "...", "reason": "...", "score": ..., "confidence": ...}}
+- "PHQ8_Concentrating": {{"evidence": "...", "reason": "...", "score": ..., "confidence": ...}}
+- "PHQ8_Moving": {{"evidence": "...", "reason": "...", "score": ..., "confidence": ...}}"""
 
 
 def make_evidence_prompt(transcript: str) -> str:
