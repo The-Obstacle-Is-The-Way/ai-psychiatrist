@@ -56,3 +56,16 @@ class TestCSFRegistry:
 
         fn = registry.parse_variant("secondary:x+y:product")
         assert fn({"x": 0.5, "y": 0.2}) == pytest.approx(0.1)
+
+    def test_register_duplicate_raises(self) -> None:
+        registry = CSFRegistry()
+
+        @registry.register("dup")
+        def csf_dup(item_signals: Mapping[str, Any]) -> float:
+            return 1.0
+
+        with pytest.raises(ValueError, match="already registered"):
+
+            @registry.register("dup")
+            def csf_dup2(item_signals: Mapping[str, Any]) -> float:
+                return 2.0

@@ -33,6 +33,5 @@ Use a vector index or approximate nearest neighbor (ANN) search library for effi
 
 For a quick in-memory fix, pre-stack all embeddings into a single numpy matrix $X$ ($K \times D$) and compute similarities via matrix multiplication:
 $$ \text{sims} = X \cdot q^T $$
-This allows using BLAS optimizations rather than Python loops.
 
-```
+This allows using BLAS optimizations rather than Python loops.

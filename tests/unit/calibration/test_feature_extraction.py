@@ -27,3 +27,8 @@ class TestCalibratorFeatureExtractor:
             {"llm_evidence_count": 2, "retrieval_similarity_mean": 0.75, "verbalized_confidence": 4}
         )
         assert np.allclose(x, np.array([2.0, 0.75, 4.0]))
+
+    def test_extract_rejects_bool(self) -> None:
+        extractor = CalibratorFeatureExtractor(["llm_evidence_count"])
+        with pytest.raises(TypeError, match="must be numeric or null, got bool"):
+            extractor.extract({"llm_evidence_count": True})

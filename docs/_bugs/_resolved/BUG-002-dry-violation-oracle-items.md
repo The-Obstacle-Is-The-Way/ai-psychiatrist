@@ -12,6 +12,7 @@
 The functions `compute_aurc_optimal` and `compute_augrc_optimal` share identical logic for creating the "Oracle" CSF items (sorting by loss and assigning synthetic confidence). This logic is encapsulated in `_create_oracle_items`, which is good.
 
 However, the calculation of the optimal metrics themselves:
+
 ```python
 def compute_aurc_optimal(...):
     oracle_items = _create_oracle_items(items, loss=loss)

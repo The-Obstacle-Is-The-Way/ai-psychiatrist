@@ -206,19 +206,19 @@ class TestEmbeddingService:
                 "participant_id": 100,
                 "chunk_index": 0,
                 "text": "Sample reference text",
-                "tags": [],
+                "tags": set(),
             },
             {
                 "participant_id": 100,
                 "chunk_index": 1,
                 "text": "Another reference",
-                "tags": [],
+                "tags": set(),
             },
             {
                 "participant_id": 101,
                 "chunk_index": 0,
                 "text": "Different participant",
-                "tags": [],
+                "tags": set(),
             },
         ]
         store.get_vectorized_data.return_value = (matrix, metadata)
@@ -1000,9 +1000,9 @@ class TestSimilarityTransformation:
         # Mock get_vectorized_data
         matrix = np.array([identical, orthogonal, opposite], dtype=np.float32)
         metadata = [
-            {"participant_id": 100, "chunk_index": 0, "text": "identical match", "tags": []},
-            {"participant_id": 101, "chunk_index": 0, "text": "orthogonal match", "tags": []},
-            {"participant_id": 102, "chunk_index": 0, "text": "opposite match", "tags": []},
+            {"participant_id": 100, "chunk_index": 0, "text": "identical match", "tags": set()},
+            {"participant_id": 101, "chunk_index": 0, "text": "orthogonal match", "tags": set()},
+            {"participant_id": 102, "chunk_index": 0, "text": "opposite match", "tags": set()},
         ]
         store.get_vectorized_data.return_value = (matrix, metadata)
 
@@ -1379,8 +1379,8 @@ class TestReferenceScoreSource:
         # Mock get_vectorized_data
         matrix = np.array([[1.0] * 256] * 2, dtype=np.float32)
         metadata = [
-            {"participant_id": 100, "chunk_index": 0, "text": "chunk100", "tags": []},
-            {"participant_id": 101, "chunk_index": 0, "text": "chunk101", "tags": []},
+            {"participant_id": 100, "chunk_index": 0, "text": "chunk100", "tags": set()},
+            {"participant_id": 101, "chunk_index": 0, "text": "chunk101", "tags": set()},
         ]
         store.get_vectorized_data.return_value = (matrix, metadata)
 

@@ -37,3 +37,8 @@ def test_compute_consistency_metrics_tie_prefers_none() -> None:
     assert metrics.modal_score is None
     assert metrics.modal_count == 2
     assert metrics.modal_confidence == pytest.approx(0.5)
+
+
+def test_compute_consistency_metrics_empty_raises() -> None:
+    with pytest.raises(ValueError, match="samples cannot be empty"):
+        compute_consistency_metrics(())
