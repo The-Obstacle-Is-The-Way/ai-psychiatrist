@@ -1,6 +1,6 @@
 # Paper Reproduction Results (Current Status)
 
-**Last Updated**: 2026-01-02
+**Last Updated**: 2026-01-03
 
 This page is a high-level, **current-state** summary. The canonical timeline + per-run statistics live in:
 - `docs/results/run-history.md`
@@ -11,16 +11,16 @@ This page is a high-level, **current-state** summary. The canonical timeline + p
 
 - **Participant-only transcript preprocessing evaluated** (Run 8)
 - **Paper MAE_item parity achieved**: few-shot `0.609` vs paper `0.619`; zero-shot `0.776` vs paper `0.796`
-- **Selective prediction**: AURC/AUGRC are very similar between modes in Run 8 (paired ΔAURC CI overlaps 0), suggesting confidence/abstention quality is not materially different
-- **Tradeoff**: overall Cmax dropped to ~51% in Run 8 (vs ~66% in Run 7), indicating more abstention
-- **Next lever**: improve confidence signals for AURC/AUGRC (Spec 046: `docs/_specs/spec-046-selective-prediction-confidence-signals.md`)
-- **Run 9**: in progress (Spec 046 confidence variants; see `docs/results/run-history.md`)
+- **Selective prediction**: AURC/AUGRC are very similar between modes (paired ΔAURC CI overlaps 0)
+- **Spec 046 evaluated** (Run 9): `retrieval_similarity_mean` improves AURC by 5.4% vs evidence-count-only
+- **AUGRC target not reached**: Best AUGRC is 0.031 (target was <0.020 per Issue #86)
+- **Tradeoff**: overall Cmax at ~51% (vs ~66% in Run 7), indicating more abstention
 
 ---
 
 ## Current Best Retained Results (Paper-Test)
 
-From `docs/results/run-history.md` (Run 3 / Run 7 / Run 8):
+From `docs/results/run-history.md` (Run 3 / Run 7 / Run 8 / Run 9):
 
 | Run | Change | Zero-shot AURC | Few-shot AURC | Notes |
 |-----|--------|----------------|---------------|------|
@@ -28,10 +28,11 @@ From `docs/results/run-history.md` (Run 3 / Run 7 / Run 8):
 | Run 5 | Spec 33+34 | 0.138 | 0.213 | Guardrails + tags made few-shot worse |
 | Run 7 | Spec 35 | 0.138 | **0.151** | Chunk scoring: 29% improvement |
 | Run 8 | Participant-only transcripts | 0.141 | **0.125** | Lower Cmax (~49% / ~51%) |
+| Run 9 | Spec 046 confidence signals | 0.144 | 0.135 (0.128 w/ similarity) | 5.4% AURC improvement with retrieval similarity |
 
-**Interpretation**: Run 8 closes the remaining “participant-only preprocessing” lever, but does so by substantially lowering coverage. AURC/Cmax must be interpreted together.
+**Interpretation**: Run 8 closes the remaining "participant-only preprocessing" lever, but does so by substantially lowering coverage. AURC/Cmax must be interpreted together.
 
-**Interpretation**: Spec 35 chunk-level scoring fixed the core label problem. The remaining gap is within statistical noise.
+**Interpretation**: Spec 35 chunk-level scoring fixed the core label problem. Spec 046 retrieval similarity provides modest additional improvement.
 
 ---
 

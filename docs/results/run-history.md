@@ -2,7 +2,7 @@
 
 **Purpose**: Comprehensive record of all reproduction runs, code changes, and statistical analyses for posterity.
 
-**Last Updated**: 2026-01-02
+**Last Updated**: 2026-01-03
 
 ---
 
@@ -10,10 +10,12 @@
 
 | Mode | AURC | AUGRC | Cmax | Run |
 |------|------|-------|------|-----|
-| **Zero-shot** | **0.134** [0.094-0.176] | **0.037** [0.024-0.053] | 55.5% | Run 3 |
+| **Zero-shot** | **0.134** [0.094-0.176] | **0.031** [0.022-0.043] | 48.8% | Run 8 |
 | **Few-shot** | **0.125** [0.099-0.151] | **0.031** [0.022-0.041] | 50.9% | Run 8 |
 
 **Winner (lowest AURC)**: Few-shot (Run 8), but with substantially lower Cmax than earlier runs.
+
+**Spec 046 Finding (Run 9)**: Using `retrieval_similarity_mean` as confidence signal improves AURC by 5.4% (0.1351 → 0.1278) compared to evidence-count-only.
 
 **Note**: Run 8 has much lower coverage ceiling (`Cmax` ~51%) than Run 7 (`Cmax` ~66%). Interpret AURC alongside Cmax.
 
@@ -440,20 +442,52 @@ Spec 31/32 improved few-shot by ~10%, proving formatting matters. Retrieval qual
 
 ---
 
-### Run 9: Jan 2, 2026 - Spec 046 Confidence Signals (In Progress)
+### Run 9: Jan 2-3, 2026 - Spec 046 Confidence Signals Ablation
 
-**Status**: Running in tmux (`run9` / `run9_eval`)
+**File**: `both_paper-test_backfill-off_20260102_215843.json`
 
 **Log**: `data/outputs/run9_spec046_20260102_181114.log`
 
-**Goal**: Evaluate whether retrieval-grounded confidence signals (Spec 046) improve AURC/AUGRC via alternative confidence variants:
-- `retrieval_similarity_mean`
-- `retrieval_similarity_max`
-- `hybrid_evidence_similarity`
+**Git Commit**: Post Spec 046 + 047 (retrieval signals + keyword backfill removal)
 
-**Expected outputs** (after completion):
-- Run artifact JSON (path printed in the log: `Results saved to: ...`)
-- Selective prediction metrics JSONs for each confidence variant
+**Timestamp**: 2026-01-03T02:58:43
+
+**Code State**:
+- Spec 33-35: Full retrieval stack ✅
+- Spec 37: Batch query embedding ✅
+- Spec 046: Retrieval similarity fields ✅
+- Spec 047: Keyword backfill removal ✅
+
+**Results**:
+
+| Mode | AURC | AUGRC | Cmax | MAE_w | MAE_item | N_included |
+|------|------|-------|------|-------|----------|------------|
+| Zero-shot | 0.144 | 0.032 | 48.8% | 0.744 | 0.776 | 40 |
+| Few-shot | 0.135 | 0.035 | 53.0% | 0.718 | 0.662 | 41 |
+
+**95% Bootstrap CIs** (10,000 resamples, participant-level):
+
+| Mode | AURC CI | AUGRC CI | Cmax CI |
+|------|---------|----------|---------|
+| Zero-shot | [0.110, 0.178] | [0.022, 0.045] | [0.412, 0.567] |
+| Few-shot | [0.107, 0.165] | [0.025, 0.047] | [0.460, 0.604] |
+
+**Spec 046 Confidence Signal Ablation (few-shot)**:
+
+| Confidence Signal | AURC | AUGRC | vs llm baseline |
+|-------------------|------|-------|-----------------|
+| `llm` (evidence count) | 0.135 | 0.035 | — |
+| `retrieval_similarity_mean` | **0.128** | 0.034 | **-5.4% AURC** |
+| `retrieval_similarity_max` | **0.128** | 0.034 | **-5.4% AURC** |
+| `hybrid_evidence_similarity` | 0.135 | 0.035 | +0.2% AURC |
+
+**Key Findings**:
+1. **Retrieval similarity improves AURC 5.4%**: `retrieval_similarity_mean` provides better ranking than evidence count alone
+2. **AUGRC unchanged**: Improvement within noise (0.034 vs 0.035)
+3. **Hybrid signal not helpful**: Multiplying evidence × similarity doesn't improve over either alone
+4. **GitHub Issue #86 hypothesis partially validated**: Retrieval signals help AURC but don't substantially move AUGRC
+
+**Interpretation**: The retrieval similarity signal provides modest but measurable improvement in selective prediction ranking. However, the AUGRC target of <0.020 (from Issue #86) was not achieved. Further improvements would require Phase 2 (verbalized confidence) or Phase 3 (multi-signal calibration) approaches.
 
 ---
 

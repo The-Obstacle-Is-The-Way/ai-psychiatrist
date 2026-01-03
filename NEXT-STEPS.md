@@ -1,7 +1,7 @@
 # Next Steps
 
-**Status**: READY FOR RUN 9
-**Last Updated**: 2026-01-02
+**Status**: RUN 9 COMPLETE - Spec 046 Evaluated
+**Last Updated**: 2026-01-03
 
 ---
 
@@ -42,54 +42,34 @@ The paper's reference implementation (`_reference/ai_psychiatrist/`) demonstrate
 
 ---
 
-## 1. Immediate Action: Run 9 (Spec 046 Confidence Signals)
+## 1. Run 9 Results (Spec 046 Confidence Signals) ✅ COMPLETE
 
-**Why**: Spec 046 adds retrieval similarity signals to run outputs, enabling new confidence variants for AURC/AUGRC evaluation. Run 8 was produced BEFORE Spec 046 was implemented, so it does NOT contain these signals.
+**Run 9 completed**: 2026-01-03T02:58:43
 
-**Prerequisites verified** (all present):
+**File**: `data/outputs/both_paper-test_backfill-off_20260102_215843.json`
 
-| Artifact | Path | Status |
-|----------|------|--------|
-| Embeddings NPZ | `data/embeddings/huggingface_qwen3_8b_paper_train_participant_only.npz` | 68 MB |
-| Text chunks | `data/embeddings/...participant_only.json` | 2.1 MB |
-| Metadata | `data/embeddings/...participant_only.meta.json` | 432 B |
-| Item tags (Spec 34) | `data/embeddings/...participant_only.tags.json` | 48 KB |
-| Chunk scores (Spec 35) | `data/embeddings/...participant_only.chunk_scores.json` | 1.1 MB |
-| Chunk scores meta | `data/embeddings/...participant_only.chunk_scores.meta.json` | 284 B |
-| Transcripts | `data/transcripts_participant_only/` | 189 dirs |
+### Results Summary
 
-**Command**:
+| Mode | MAE_item | AURC | AUGRC | Cmax |
+|------|----------|------|-------|------|
+| Zero-shot | 0.776 | 0.144 | 0.032 | 48.8% |
+| Few-shot | 0.662 | 0.135 | 0.035 | 53.0% |
 
-```bash
-# In tmux for long runs (~2-3 hours):
-tmux new -s run9
-uv run python scripts/reproduce_results.py \
-  --split paper-test \
-  2>&1 | tee data/outputs/run9_spec046_$(date +%Y%m%d_%H%M%S).log
-```
+### Spec 046 Confidence Signal Ablation (few-shot)
 
-**After Run 9, evaluate with new confidence variants**:
+| Confidence Signal | AURC | vs baseline |
+|-------------------|------|-------------|
+| `llm` (evidence count) | 0.135 | — |
+| `retrieval_similarity_mean` | **0.128** | **-5.4%** |
+| `retrieval_similarity_max` | **0.128** | **-5.4%** |
+| `hybrid_evidence_similarity` | 0.135 | +0.2% |
 
-```bash
-# Compare confidence signals for few-shot
-uv run python scripts/evaluate_selective_prediction.py \
-  --input data/outputs/<RUN9_OUTPUT>.json \
-  --mode few_shot \
-  --confidence llm \
-  --seed 42
+### Key Findings
 
-uv run python scripts/evaluate_selective_prediction.py \
-  --input data/outputs/<RUN9_OUTPUT>.json \
-  --mode few_shot \
-  --confidence retrieval_similarity_mean \
-  --seed 42
-
-uv run python scripts/evaluate_selective_prediction.py \
-  --input data/outputs/<RUN9_OUTPUT>.json \
-  --mode few_shot \
-  --confidence hybrid_evidence_similarity \
-  --seed 42
-```
+1. **Retrieval similarity improves AURC by 5.4%**: `retrieval_similarity_mean` provides better ranking
+2. **AUGRC unchanged**: Still at ~0.031-0.035 (target was <0.020)
+3. **Hybrid signal not helpful**: Multiplying evidence × similarity doesn't help
+4. **GitHub Issue #86 hypothesis partially validated**: Retrieval signals help AURC but don't substantially move AUGRC
 
 ---
 
@@ -116,33 +96,45 @@ Code defaults exist for testing and fallback only. They are NOT recommended for 
 
 ## 3. Spec 046 Implementation Status
 
-**Status**: IMPLEMENTED (2026-01-02)
+**Status**: ✅ IMPLEMENTED AND TESTED (2026-01-03)
 
 **What was added**:
 - New fields in `ItemAssessment`: `retrieval_reference_count`, `retrieval_similarity_mean`, `retrieval_similarity_max`
 - New confidence variants in `evaluate_selective_prediction.py`: `retrieval_similarity_mean`, `retrieval_similarity_max`, `hybrid_evidence_similarity`
 
-**What Run 9 will test**:
-- Whether retrieval-grounded confidence signals improve AURC/AUGRC vs evidence-count-only
-- Hypothesis: `hybrid_evidence_similarity` should be a better ranking signal than `llm` alone
+**Run 9 Results**:
+- `retrieval_similarity_mean` improves AURC by 5.4% vs `llm` (evidence count only)
+- AUGRC did not materially improve (0.034 vs 0.035)
+- `hybrid_evidence_similarity` did not help
 
 ---
 
-## 4. Post-Run 9 Work
+## 4. Future Work (If Pursuing AUGRC <0.020)
 
-1. **Analyze results**: Compare AURC/AUGRC across confidence variants
-2. **Document findings**: Update `docs/results/run-history.md` with Run 9
-3. **If improvement**: Consider Phase 2 work (verbalized confidence, calibrator)
-4. **If no improvement**: Investigate alternative signals
+Per GitHub Issue #86, the following phases were proposed:
+
+### Phase 2: Verbalized Confidence (Medium Effort)
+- Modify LLM prompt to request confidence rating (1-5) alongside score
+- Apply temperature scaling calibration
+- Expected: 20-40% AUGRC reduction
+
+### Phase 3: Multi-Signal Ensemble (Higher Effort)
+- Train logistic regression calibrator on [evidence, similarity, verbalized] → correctness
+- Use paper-train split for calibration
+- Expected: 30-50% AUGRC reduction
+
+**Current recommendation**: Phase 1 (retrieval similarity) is now complete. Phase 2/3 require prompt engineering and additional training data. Evaluate whether AUGRC improvement is worth the effort.
 
 ---
 
-## 5. Senior Review Request
+## 5. Definition of Done
 
-Before launching Run 9, request senior review of:
-1. This NEXT-STEPS.md document
-2. Configuration in `.env.example` vs code defaults
-3. Spec 046 implementation completeness
-4. All root documentation files (CLAUDE.md, AGENTS.md, GEMINI.md)
+| Milestone | Status |
+|-----------|--------|
+| Paper MAE_item parity | ✅ few-shot 0.609 vs paper 0.619 |
+| Chunk-level scoring (Spec 35) | ✅ Implemented |
+| Participant-only preprocessing | ✅ Implemented |
+| Retrieval confidence signals (Spec 046) | ✅ Tested (+5.4% AURC) |
+| AUGRC < 0.020 target | ❌ Current best: 0.031 |
 
 ---
