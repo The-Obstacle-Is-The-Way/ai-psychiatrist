@@ -43,7 +43,7 @@ This repo includes deterministic integrity checks/repairs for common AVEC2017 CS
 
 ## Inputs (Raw, Untouched)
 
-Canonical raw layout (see `docs/data/daic-woz-schema.md`):
+Canonical raw layout (see [DAIC-WOZ Schema](./daic-woz-schema.md)):
 
 ```
 data/
@@ -187,7 +187,7 @@ Tooling:
 - `uv run python scripts/patch_missing_phq8_values.py --apply`
 
 Doc:
-- `docs/data/patch-missing-phq8-values.md`
+- [Patching Missing PHQ-8 Values](./patch-missing-phq8-values.md)
 
 ### B) `PHQ8_Binary` consistency
 
@@ -218,8 +218,8 @@ To avoid mixing artifacts from different transcript variants:
 Also ensure any `.tags.json` / `.chunk_scores.json` sidecars are generated from the **same** embeddings base name.
 
 See:
-- `docs/data/artifact-namespace-registry.md`
-- `docs/rag/artifact-generation.md`
+- [Artifact Namespace Registry](./artifact-namespace-registry.md)
+- [RAG Artifact Generation](../rag/artifact-generation.md)
 
 ---
 

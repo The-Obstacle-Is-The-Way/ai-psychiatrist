@@ -1,8 +1,7 @@
 # Artifact Namespace Registry
 
 **Purpose**: Single source of truth for all data artifacts, scripts, and naming conventions
-**Created**: 2025-12-23
-**Status**: DRAFT - Identified during reproduction run
+**Last Updated**: 2026-01-03
 
 ---
 
@@ -21,27 +20,12 @@ Legacy filenames like `paper_reference_embeddings.npz` are still supported (use 
 
 ## Data Splits
 
-### AVEC2017 Official Splits (Default)
+See [Data Splits Overview](./data-splits-overview.md) for the authoritative reference on AVEC2017 vs paper splits.
 
-| File | Participants | Per-Item PHQ-8 | Usage |
-|------|-------------|----------------|-------|
-| `data/train_split_Depression_AVEC2017.csv` | 107 | Yes | Training/few-shot knowledge base |
-| `data/dev_split_Depression_AVEC2017.csv` | 35 | Yes | Default evaluation |
-| `data/test_split_Depression_AVEC2017.csv` | 47 | No | Competition (unusable for item MAE) |
-| `data/full_test_split.csv` | 47 | Total only | Competition alt |
-
-### Paper Custom Splits
-
-| File | Participants | Per-Item PHQ-8 | Usage |
-|------|-------------|----------------|-------|
-| `data/paper_splits/paper_split_train.csv` | 58 | Yes | Paper-style knowledge base |
-| `data/paper_splits/paper_split_val.csv` | 43 | Yes | Hyperparameter tuning |
-| `data/paper_splits/paper_split_test.csv` | 41 | Yes | Paper reproduction evaluation |
-| `data/paper_splits/paper_split_metadata.json` | - | - | Split provenance |
-
-**Important**: These splits are now generated using **ground truth participant IDs** reverse-engineered from the paper authors' output files (see `docs/data/paper-split-registry.md`). This ensures exact reproduction.
-
-The script `scripts/create_paper_split.py` defaults to `--mode ground-truth`. The legacy seeded algorithmic generation (Appendix C) is available via `--mode algorithmic`.
+**Quick Reference**:
+- AVEC2017: 107 train / 35 dev / 47 test (test has no per-item labels)
+- Paper custom: 58 train / 43 val / 41 test (all have per-item labels)
+- Ground truth IDs: [Paper Split Registry](./paper-split-registry.md)
 
 ---
 
@@ -72,7 +56,7 @@ Select a variant via:
 DATA_TRANSCRIPTS_DIR=data/transcripts_participant_only
 ```
 
-See: `docs/data/daic-woz-preprocessing.md`.
+See: [DAIC-WOZ Preprocessing](./daic-woz-preprocessing.md).
 
 ---
 
@@ -135,7 +119,7 @@ Chunk scoring produces per-chunk estimated PHQ-8 item scores aligned with `{outp
 - Values are `0..3` or `null`
 - `prompt_hash` matches the current scorer prompt (unless explicitly overridden as unsafe)
 
-See: `docs/data/chunk-scoring.md`.
+See: [Chunk-level scoring](../rag/chunk-scoring.md).
 
 ### Partial Output Manifest (Spec 40)
 
@@ -178,40 +162,6 @@ If `{artifact}.meta.json` exists, `ReferenceStore` validates metadata (backend, 
 
 ---
 
-## Configuration Parameters
-
-### Paper-Specified (Appendix D)
-
-| Parameter | Value | Config Path |
-|-----------|-------|-------------|
-| `chunk_size` | 8 | `embedding.chunk_size` |
-| `chunk_step` | 2 | `embedding.chunk_step` |
-| `top_k_references` | 2 | `embedding.top_k_references` |
-| `dimension` | 4096 | `embedding.dimension` |
-| `max_iterations` | 10 | `feedback.max_iterations` |
-| `score_threshold` | 3 | `feedback.score_threshold` |
-
-### Implementation Defaults (GAP-001)
-
-| Parameter | Value | Rationale |
-|-----------|-------|-----------|
-| `temperature` | 0.0 | Clinical AI best practice (Med-PaLM, medRxiv 2025) |
-| `top_k` | — | Not set (irrelevant at temp=0) |
-| `top_p` | — | Not set (best practice: use temp only) |
-
-See [Agent Sampling Registry](../configs/agent-sampling-registry.md) for citations.
-
-### Model Precision Options
-
-| Backend | Chat Model | Embedding Model | Precision |
-|---------|------------|-----------------|-----------|
-| **Ollama (default)** | `gemma3:27b` | `qwen3-embedding:8b` | Q4_K_M (4-bit) |
-| **HuggingFace (high-quality)** | `google/medgemma-27b-text-it` | `Qwen/Qwen3-Embedding-8B` | FP16 (16-bit) |
-
-See [Model Registry](../models/model-registry.md#high-quality-setup-recommended-for-production) and [Issue #42](https://github.com/The-Obstacle-Is-The-Way/ai-psychiatrist/issues/42) for details.
-
----
-
 ## Output Artifacts
 
 | File Pattern | Purpose |
@@ -224,29 +174,11 @@ See [Model Registry](../models/model-registry.md#high-quality-setup-recommended-
 
 ---
 
-## Friction Points / Improvements Needed
+## Related Documentation
 
-### 1. Naming Consistency Review
-
-**Current State**: Mostly consistent with `paper_` prefix convention.
-
-**Potential Issues**:
-- [ ] `--split paper` vs `--split paper-test` - both work but confusing
-- [ ] No explicit `avec_` prefix for AVEC artifacts (implied by absence)
-
-### 2. Documentation Gaps
-
-- [ ] Add inline comments to `src/ai_psychiatrist/config.py` referencing this registry
-- [ ] Update `scripts/reproduce_results.py` help text with artifact mapping
-
-### 3. Potential Improvements
-
-- [ ] Consider adding `avec_` prefix for symmetry
-- [x] Fail-fast if embeddings are missing (implemented in `scripts/reproduce_results.py`)
-
----
-
-## See Also
-
-- [data-splits-overview.md](./data-splits-overview.md) - Detailed split documentation
-- [Agent Sampling Registry](../configs/agent-sampling-registry.md) - Sampling parameters (paper leaves some unspecified)
+- [Data Splits Overview](./data-splits-overview.md) - AVEC2017 vs paper splits
+- [DAIC-WOZ Schema](./daic-woz-schema.md) - Dataset format and domain model
+- [DAIC-WOZ Preprocessing](./daic-woz-preprocessing.md) - Transcript variant generation
+- [RAG Artifact Generation](../rag/artifact-generation.md) - Embedding generation
+- [Configuration](../configs/configuration.md) - Environment variables
+- [Model Registry](../models/model-registry.md) - Model options and precision
