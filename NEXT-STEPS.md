@@ -139,7 +139,8 @@ Specs 048–051 are now implemented. The next step is to run a new reproduction 
 
    Token CSF readiness (Spec 051):
    - Token-level confidence signals require the LLM backend to return per-token logprobs via the OpenAI-compatible `/v1` API.
-   - The code requests logprobs automatically during scoring; the only remaining question is whether the backend actually returns them.
+   - Verified locally on `ollama` `0.13.5` + `pydantic_ai` `1.39.0`: logprobs are returned and exposed as `result.response.provider_details["logprobs"]`.
+   - The code requests logprobs automatically during scoring; if you are on an older Ollama version or a different backend, logprobs may be absent.
    - To remove uncertainty, run a 1-participant smoke test and check the output:
 
      ```bash
