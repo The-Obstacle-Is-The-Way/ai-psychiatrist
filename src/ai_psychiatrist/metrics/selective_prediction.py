@@ -263,8 +263,11 @@ def compute_aurc_optimal(
     """Compute optimal AURC (oracle CSF baseline) for regression or binary.
 
     Constructs an oracle CSF that perfectly ranks items by their loss (ascending).
+    Preserves abstained items with confidence=-inf to maintain correct n for selective risk.
     """
     predicted = [i for i in items if i.pred is not None]
+    abstained = [i for i in items if i.pred is None]
+
     if not predicted:
         return 0.0
 
@@ -277,13 +280,13 @@ def compute_aurc_optimal(
 
     # Create oracle items with synthetic confidence
     # Rank 0 (lowest loss) -> Confidence 1.0
-    # Rank N-1 (highest loss) -> Confidence 0.0
-    n = len(sorted_pairs)
-    oracle_items = []
+    # Rank N-1 (highest loss) -> Confidence ~0
+    n_predicted = len(sorted_pairs)
+    oracle_items: list[ItemPrediction] = []
 
     for rank, (_, original_item) in enumerate(sorted_pairs):
         # High confidence for low loss
-        conf = 1.0 - (rank / n)
+        conf = 1.0 - (rank / n_predicted)
         oracle_items.append(
             ItemPrediction(
                 participant_id=original_item.participant_id,
@@ -291,6 +294,19 @@ def compute_aurc_optimal(
                 pred=original_item.pred,
                 gt=original_item.gt,
                 confidence=conf,
+            )
+        )
+
+    # Add abstained items with confidence=-inf (they remain abstained, don't affect ranking)
+    # This preserves the original n for risk calculations
+    for item in abstained:
+        oracle_items.append(
+            ItemPrediction(
+                participant_id=item.participant_id,
+                item_index=item.item_index,
+                pred=None,  # Still abstained
+                gt=item.gt,
+                confidence=float("-inf"),
             )
         )
 
@@ -303,19 +319,23 @@ def compute_augrc_optimal(
     """Compute optimal AUGRC (oracle CSF baseline) for regression or binary.
 
     Constructs an oracle CSF that perfectly ranks items by their loss (ascending).
+    Preserves abstained items with confidence=-inf to maintain correct n for generalized risk.
     """
     predicted = [i for i in items if i.pred is not None]
+    abstained = [i for i in items if i.pred is None]
+
     if not predicted:
         return 0.0
 
     losses = [_compute_loss(i, loss) for i in predicted]
     sorted_pairs = sorted(zip(losses, predicted, strict=True), key=lambda x: x[0])
 
-    n = len(sorted_pairs)
-    oracle_items = []
+    n_predicted = len(sorted_pairs)
+    oracle_items: list[ItemPrediction] = []
 
+    # Add predicted items with oracle confidence (highest confidence = lowest loss)
     for rank, (_, original_item) in enumerate(sorted_pairs):
-        conf = 1.0 - (rank / n)
+        conf = 1.0 - (rank / n_predicted)
         oracle_items.append(
             ItemPrediction(
                 participant_id=original_item.participant_id,
@@ -323,6 +343,19 @@ def compute_augrc_optimal(
                 pred=original_item.pred,
                 gt=original_item.gt,
                 confidence=conf,
+            )
+        )
+
+    # Add abstained items with confidence=-inf (they remain abstained, don't affect ranking)
+    # This preserves the original n for generalized risk calculation
+    for item in abstained:
+        oracle_items.append(
+            ItemPrediction(
+                participant_id=item.participant_id,
+                item_index=item.item_index,
+                pred=None,  # Still abstained
+                gt=item.gt,
+                confidence=float("-inf"),
             )
         )
 
