@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import ast
 import json
 import re
 
@@ -26,6 +27,72 @@ logger = get_logger(__name__)
 
 _DEFAULT_QUANT_REASON = "Auto-filled: missing reason"
 _DEFAULT_QUANT_EVIDENCE = "No relevant evidence found"
+
+
+def _replace_json_literals_for_python(text: str) -> str:
+    """Convert JSON literals (true/false/null) to Python (True/False/None) outside strings."""
+    out: list[str] = []
+    in_string: str | None = None
+    escaped = False
+
+    i = 0
+    while i < len(text):
+        ch = text[i]
+
+        if in_string is not None:
+            out.append(ch)
+            if escaped:
+                escaped = False
+            elif ch == "\\":
+                escaped = True
+            elif ch == in_string:
+                in_string = None
+            i += 1
+            continue
+
+        if ch in {'"', "'"}:
+            in_string = ch
+            out.append(ch)
+            i += 1
+            continue
+
+        if ch.isalpha():
+            start = i
+            while i < len(text) and text[i].isalpha():
+                i += 1
+            token = text[start:i]
+            lowered = token.lower()
+            if lowered == "true":
+                out.append("True")
+            elif lowered == "false":
+                out.append("False")
+            elif lowered == "null":
+                out.append("None")
+            else:
+                out.append(token)
+            continue
+
+        out.append(ch)
+        i += 1
+
+    return "".join(out)
+
+
+def _parse_json_object_like(text: str) -> dict[str, object]:
+    """Parse a JSON object, tolerating common LLM "python dict" mistakes."""
+    try:
+        data = json.loads(text)
+    except json.JSONDecodeError as json_error:
+        pythonish = _replace_json_literals_for_python(text)
+        try:
+            data = ast.literal_eval(pythonish)
+        except (SyntaxError, ValueError) as python_error:
+            raise json_error from python_error
+
+    if not isinstance(data, dict):
+        raise json.JSONDecodeError("Expected JSON object", text, 0)
+
+    return data
 
 
 def _fill_missing_quantitative_fields(data: object) -> object:
@@ -142,7 +209,7 @@ def extract_quantitative(text: str) -> QuantitativeOutput:
     """Extract and validate quantitative scoring output from a raw LLM response."""
     try:
         json_str = tolerant_json_fixups(_extract_answer_json(text))
-        data = json.loads(json_str)
+        data = _parse_json_object_like(json_str)
         return QuantitativeOutput.model_validate(_fill_missing_quantitative_fields(data))
     except json.JSONDecodeError as e:
         raise ModelRetry(

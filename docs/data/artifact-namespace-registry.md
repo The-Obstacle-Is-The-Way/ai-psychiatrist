@@ -25,7 +25,7 @@ See [Data Splits Overview](./data-splits-overview.md) for the authoritative refe
 **Quick Reference**:
 - AVEC2017: 107 train / 35 dev / 47 test (test has no per-item labels)
 - Paper custom: 58 train / 43 val / 41 test (all have per-item labels)
-- Ground truth IDs: [Paper Split Registry](./paper-split-registry.md)
+- Ground truth IDs: [Data Splits Overview](./data-splits-overview.md#appendix-a-paper-split-participant-ids)
 
 ---
 

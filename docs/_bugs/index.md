@@ -14,6 +14,7 @@ _No active bugs at this time._
 | [BUG-022](../_archive/bugs/BUG-022_DRY_VIOLATION_ORACLE_ITEMS.md) | DRY Violation in Oracle Items | Resolved | Helper already exists |
 | [BUG-023](../_archive/bugs/BUG-023_HARDCODED_CALIBRATION_LOGIC.md) | Hardcoded Calibration Logic | Won't Fix | Tech debt, not a bug |
 | [BUG-024](../_archive/bugs/BUG-024_EMBEDDING_LINEAR_SCAN.md) | O(N*M) Linear Scan | Resolved | Already vectorized |
+| [BUG-025](../_archive/bugs/BUG-025_PYDANTIC_AI_JSON_PYTHON_LITERAL_FALLBACK.md) | PydanticAI TextOutput Python-Literal JSON | Resolved | Added tolerant parse fallback + consistency sampling resilience |
 
 ## Archive
 

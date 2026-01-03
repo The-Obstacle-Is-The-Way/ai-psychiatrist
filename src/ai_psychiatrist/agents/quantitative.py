@@ -289,10 +289,7 @@ class QuantitativeAssessmentAgent:
 
         Spec 050.
         """
-        if n_samples < 1:
-            raise ValueError("n_samples must be >= 1")
-        if not 0.0 <= temperature <= 2.0:
-            raise ValueError("temperature must be in [0.0, 2.0]")
+        self._validate_consistency_params(n_samples=n_samples, temperature=temperature)
 
         logger.info(
             "Starting quantitative assessment (consistency mode)",
@@ -302,30 +299,109 @@ class QuantitativeAssessmentAgent:
             temperature=temperature,
         )
 
-        # Step 1: Extract evidence (deterministic; uses MODEL_TEMPERATURE)
         final_evidence = await self._extract_evidence(transcript.text)
         llm_counts = {k: len(v) for k, v in final_evidence.items()}
 
-        # Step 2: Build references (few-shot only)
-        reference_text = ""
-        reference_bundle: ReferenceBundle | None = None
-        if self._mode == AssessmentMode.FEW_SHOT and self._embedding:
-            evidence_for_embedding = {
-                PHQ8_KEY_MAP[k]: v for k, v in final_evidence.items() if k in PHQ8_KEY_MAP
-            }
-            reference_bundle = await self._embedding.build_reference_bundle(evidence_for_embedding)
-            reference_text = reference_bundle.format_for_prompt()
+        reference_bundle = await self._maybe_build_reference_bundle(final_evidence)
+        reference_text = reference_bundle.format_for_prompt() if reference_bundle else ""
 
-        # Step 3: Score with LLM N times (temperature > 0 introduces variability)
         prompt = make_scoring_prompt(transcript.text, reference_text)
         model = get_model_name(self._model_settings, "quantitative")
 
+        sample_outputs = await self._collect_consistency_samples(
+            prompt=prompt,
+            model=model,
+            temperature=temperature,
+            n_samples=n_samples,
+            participant_id=transcript.participant_id,
+        )
+
+        final_items = self._build_consistency_items(
+            llm_counts=llm_counts,
+            sample_outputs=sample_outputs,
+            reference_bundle=reference_bundle,
+        )
+
+        return PHQ8Assessment(
+            items=final_items,
+            mode=self._mode,
+            participant_id=transcript.participant_id,
+        )
+
+    @staticmethod
+    def _validate_consistency_params(*, n_samples: int, temperature: float) -> None:
+        if n_samples < 1:
+            raise ValueError("n_samples must be >= 1")
+        if not 0.0 <= temperature <= 2.0:
+            raise ValueError("temperature must be in [0.0, 2.0]")
+
+    async def _maybe_build_reference_bundle(
+        self, evidence: dict[str, list[str]]
+    ) -> ReferenceBundle | None:
+        if self._mode != AssessmentMode.FEW_SHOT or not self._embedding:
+            return None
+
+        evidence_for_embedding = {
+            PHQ8_KEY_MAP[key]: values for key, values in evidence.items() if key in PHQ8_KEY_MAP
+        }
+        return await self._embedding.build_reference_bundle(evidence_for_embedding)
+
+    async def _collect_consistency_samples(
+        self,
+        *,
+        prompt: str,
+        model: str | None,
+        temperature: float,
+        n_samples: int,
+        participant_id: int,
+    ) -> list[dict[PHQ8Item, ItemAssessment]]:
         sample_outputs: list[dict[PHQ8Item, ItemAssessment]] = []
-        for _ in range(n_samples):
-            sample_outputs.append(
-                await self._score_items(prompt=prompt, _model=model, temperature=temperature)
+        last_error: Exception | None = None
+        max_attempts = max(n_samples * 2, n_samples)
+
+        for attempt in range(1, max_attempts + 1):
+            if len(sample_outputs) >= n_samples:
+                break
+            try:
+                sample_outputs.append(
+                    await self._score_items(prompt=prompt, _model=model, temperature=temperature)
+                )
+            except asyncio.CancelledError:
+                raise
+            except Exception as exc:
+                last_error = exc
+                logger.warning(
+                    "Consistency sample failed",
+                    participant_id=participant_id,
+                    mode=self._mode.value,
+                    attempt=attempt,
+                    requested_samples=n_samples,
+                    collected_samples=len(sample_outputs),
+                    error=str(exc),
+                    error_type=type(exc).__name__,
+                )
+
+        if not sample_outputs and last_error is not None:
+            raise last_error
+        if len(sample_outputs) < n_samples:
+            logger.warning(
+                "Consistency run produced fewer samples than requested",
+                participant_id=participant_id,
+                mode=self._mode.value,
+                requested_samples=n_samples,
+                collected_samples=len(sample_outputs),
+                max_attempts=max_attempts,
             )
 
+        return sample_outputs
+
+    def _build_consistency_items(
+        self,
+        *,
+        llm_counts: dict[str, int],
+        sample_outputs: list[dict[PHQ8Item, ItemAssessment]],
+        reference_bundle: ReferenceBundle | None,
+    ) -> dict[PHQ8Item, ItemAssessment]:
         final_items: dict[PHQ8Item, ItemAssessment] = {}
         for phq_item in PHQ8Item:
             legacy_key = ITEM_TO_LEGACY_KEY[phq_item]
@@ -335,23 +411,15 @@ class QuantitativeAssessmentAgent:
             sample_scores = tuple(a.score for a in per_sample)
             metrics = compute_consistency_metrics(sample_scores)
 
+            selected = per_sample[0]
             if metrics.modal_confidence >= 0.5:
-                selected = next(
-                    (a for a in per_sample if a.score == metrics.modal_score),
-                    per_sample[0],
-                )
-            else:
-                selected = per_sample[0]
-
-            score = selected.score
-            evidence = selected.evidence
-            reason = selected.reason
+                selected = next((a for a in per_sample if a.score == metrics.modal_score), selected)
 
             na_reason: NAReason | None = None
             evidence_source: Literal["llm"] | None = "llm" if llm_count > 0 else None
-            if score is None and self._settings.track_na_reasons:
+            if selected.score is None and self._settings.track_na_reasons:
                 na_reason = self._determine_na_reason(llm_count)
-            if evidence_source is None and score is not None:
+            if evidence_source is None and selected.score is not None:
                 evidence_source = "llm"
 
             retrieval_stats = compute_retrieval_similarity_stats(
@@ -360,9 +428,9 @@ class QuantitativeAssessmentAgent:
 
             final_items[phq_item] = ItemAssessment(
                 item=phq_item,
-                evidence=evidence,
-                reason=reason,
-                score=score,
+                evidence=selected.evidence,
+                reason=selected.reason,
+                score=selected.score,
                 na_reason=na_reason,
                 evidence_source=evidence_source,
                 llm_evidence_count=llm_count,
@@ -381,11 +449,7 @@ class QuantitativeAssessmentAgent:
                 consistency_samples=sample_scores,
             )
 
-        return PHQ8Assessment(
-            items=final_items,
-            mode=self._mode,
-            participant_id=transcript.participant_id,
-        )
+        return final_items
 
     async def _score_items(
         self,

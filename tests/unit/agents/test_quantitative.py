@@ -336,6 +336,40 @@ class TestQuantitativeAssessmentAgent:
 
     @pytest.mark.asyncio
     @pytest.mark.usefixtures("mock_agent_factory")
+    async def test_assess_with_consistency_recovers_from_sample_failure(
+        self,
+        mock_client: MockLLMClient,
+        sample_transcript: Transcript,
+    ) -> None:
+        """Consistency mode should tolerate occasional sample failures and keep running."""
+        agent = self.create_agent(mock_client)
+
+        def make_items(score_no_interest: int | None) -> dict[PHQ8Item, ItemAssessment]:
+            items: dict[PHQ8Item, ItemAssessment] = {}
+            for phq_item in PHQ8Item.all_items():
+                score = score_no_interest if phq_item == PHQ8Item.NO_INTEREST else 1
+                items[phq_item] = ItemAssessment(
+                    item=phq_item,
+                    evidence="test",
+                    reason="test",
+                    score=score,
+                )
+            return items
+
+        scores = [2, 2, 2, 1, 1]
+        side_effect: list[object] = [RuntimeError("boom"), *[make_items(s) for s in scores]]
+        agent._score_items = AsyncMock(side_effect=side_effect)  # type: ignore[method-assign]
+
+        result = await agent.assess_with_consistency(
+            sample_transcript, n_samples=5, temperature=0.3
+        )
+        item = result.items[PHQ8Item.NO_INTEREST]
+        assert item.score == 2
+        assert item.consistency_samples == tuple(scores)
+        assert agent._score_items.call_count == 6
+
+    @pytest.mark.asyncio
+    @pytest.mark.usefixtures("mock_agent_factory")
     async def test_assess_counts_na_items(
         self, mock_client: MockLLMClient, sample_transcript: Transcript
     ) -> None:

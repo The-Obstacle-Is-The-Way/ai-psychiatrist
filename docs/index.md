@@ -82,11 +82,9 @@ AI Psychiatrist is an engineering-focused, reproducible implementation of a rese
 | Document | Description |
 |----------|-------------|
 | [DAIC-WOZ Schema](data/daic-woz-schema.md) | Dataset schema for development without data access |
-| [DAIC-WOZ Preprocessing](data/daic-woz-preprocessing.md) | Transcript cleaning + participant-only variants |
-| [Data Splits Overview](data/data-splits-overview.md) | AVEC2017 vs paper splits explained |
-| [Paper Split Registry](data/paper-split-registry.md) | Exact participant IDs for paper splits |
+| [DAIC-WOZ Preprocessing](data/daic-woz-preprocessing.md) | Transcript cleaning, participant-only variants, ground truth integrity |
+| [Data Splits Overview](data/data-splits-overview.md) | AVEC2017 vs paper splits + exact participant IDs |
 | [Artifact Namespace Registry](data/artifact-namespace-registry.md) | Embedding artifact naming conventions |
-| [Patch Missing PHQ-8 Values](data/patch-missing-phq8-values.md) | Deterministic ground-truth repair |
 
 ### Pipeline Internals
 
