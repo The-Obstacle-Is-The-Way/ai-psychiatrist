@@ -30,7 +30,7 @@ from ai_psychiatrist.calibration.calibrators import (
     TemperatureScalingCalibrator,
 )
 from ai_psychiatrist.calibration.feature_extraction import CalibratorFeatureExtractor
-from ai_psychiatrist.confidence.csf_registry import get_csf, parse_csf_variant
+from ai_psychiatrist.confidence.csf_registry import parse_csf_variant
 from ai_psychiatrist.domain.enums import PHQ8Item
 from ai_psychiatrist.metrics.bootstrap import (
     bootstrap_by_participant,
@@ -310,29 +310,64 @@ def _compute_confidence(
     item_key: str,
     calibration: Calibration | None,
 ) -> float:
+    # Handle "calibrated:<base_csf>" wrapper
+    # Example: "calibrated:verbalized" or legacy "verbalized_calibrated"
+    # Legacy support
     if confidence_key == "verbalized_calibrated":
-        if not isinstance(calibration, TemperatureScalingCalibrator):
-            raise ValueError(
-                "confidence='verbalized_calibrated' requires --calibration "
-                "(temperature_scaling.json)."
-            )
-        raw = float(get_csf("verbalized")(sig))
-        conf = float(calibration.apply(np.array([raw], dtype=float))[0])
+        base_key = "verbalized"
+        should_calibrate = True
     elif confidence_key == "calibrated":
+        # Spec 049: "calibrated" uses supervised calibration on extracted features,
+        # not a wrapper around a scalar CSF.
         if not isinstance(calibration, SupervisedCalibration):
             raise ValueError("confidence='calibrated' requires --calibration from Spec 049")
-        conf = calibration.predict_confidence(sig)
+        return calibration.predict_confidence(sig)
+    elif confidence_key.startswith("calibrated:"):
+        base_key = confidence_key.split(":", 1)[1]
+        should_calibrate = True
     else:
-        try:
-            csf = parse_csf_variant(confidence_key)
-            conf = float(csf(sig))
-        except Exception as exc:
-            raise type(exc)(
-                f"Participant {participant_id} item {item_key}: {exc} "
-                f"(confidence='{confidence_key}')"
-            ) from exc
+        base_key = confidence_key
+        should_calibrate = False
 
-    return conf
+    # 1. Compute Base Confidence (Raw)
+    try:
+        csf = parse_csf_variant(base_key)
+        raw_conf = float(csf(sig))
+    except Exception as exc:
+        raise type(exc)(
+            f"Participant {participant_id} item {item_key}: {exc} (confidence='{base_key}')"
+        ) from exc
+
+    # 2. Apply Calibration if requested
+    if should_calibrate:
+        if calibration is None:
+            raise ValueError(f"confidence='{confidence_key}' requires --calibration artifact")
+
+        # Determine how to apply calibration
+        if isinstance(calibration, TemperatureScalingCalibrator):
+            # TS expects logits or uncalibrated probs.
+            # If our base CSF returns [0,1], we might need logit transform?
+            # Standard TS applies to logits.
+            # However, our csf_registry returns "probabilities" [0,1].
+            # Spec 048 implies verbalized is just a scalar.
+            # Assume calibrator.apply() handles the input format (1D array of scalars).
+            return float(calibration.apply(np.array([raw_conf], dtype=float))[0])
+
+        elif isinstance(calibration, SupervisedCalibration):
+            # Supervised calibration: "calibrated:..." uses TS or Isotonic on scalar.
+            if isinstance(calibration.calibrator, IsotonicCalibrator):
+                return float(
+                    calibration.calibrator.predict_proba(np.array([raw_conf], dtype=float))[0]
+                )
+
+            # Logistic/Linear expects features, not scalars.
+            raise ValueError(
+                f"Cannot apply supervised calibration '{calibration.method}' "
+                f"to scalar CSF '{base_key}'. Use confidence='calibrated' for "
+                "feature extraction, or use temperature_scaling/isotonic."
+            )
+
+    return raw_conf
 
 
 def parse_items(
@@ -352,7 +387,11 @@ def parse_items(
     if not isinstance(results, list):
         raise TypeError(f"Experiment results must be a list, got {type(results).__name__}")
 
-    if confidence_key not in CONFIDENCE_VARIANTS and not confidence_key.startswith("secondary:"):
+    if (
+        confidence_key not in CONFIDENCE_VARIANTS
+        and not confidence_key.startswith("secondary:")
+        and not confidence_key.startswith("calibrated:")
+    ):
         raise ValueError(f"Unknown confidence_key: {confidence_key}")
 
     item_keys = [item.value for item in PHQ8Item.all_items()]

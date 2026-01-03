@@ -1,7 +1,9 @@
 # BUG-001: Float Equality in Dominant Points (Convex Hull)
 
 **Severity**: P3 (Minor / Robustness)
-**Status**: Open
+**Status**: Resolved (Already Fixed)
+**Resolved**: 2026-01-03
+**Resolution**: Code already contains fix at `selective_prediction.py:388-397` with `epsilon = 1e-10`
 **Created**: 2026-01-03
 **File**: `src/ai_psychiatrist/metrics/selective_prediction.py`
 

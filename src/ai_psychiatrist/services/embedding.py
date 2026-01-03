@@ -11,7 +11,6 @@ from dataclasses import dataclass
 from typing import TYPE_CHECKING
 
 import numpy as np
-from sklearn.metrics.pairwise import cosine_similarity
 
 from ai_psychiatrist.config import get_model_name
 from ai_psychiatrist.domain.enums import PHQ8Item
@@ -221,9 +220,10 @@ class EmbeddingService:
         Returns:
             List of all similarity matches (unsorted).
         """
-        all_refs = self._reference_store.get_all_embeddings()
+        # BUG-004 Fix: Use vectorized matrix operations
+        matrix, metadata = self._reference_store.get_vectorized_data()
 
-        if not all_refs:
+        if matrix.shape[0] == 0:
             logger.warning("No reference embeddings available")
             return []
 
@@ -233,67 +233,52 @@ class EmbeddingService:
                 actual=len(query_embedding),
             )
 
-        query_array = np.array([query_embedding])
+        # Compute Cosine Similarity: sims = Matrix . Query
+        # Assumes matrix rows are already L2 normalized (ReferenceStore ensures this).
+        query_vec = np.array(query_embedding, dtype=np.float32)
+
+        # Dot product: (N, D) @ (D,) -> (N,)
+        similarities = matrix @ query_vec
+
+        # Transform cosine similarity from [-1, 1] to [0, 1] range
+        similarities = (1.0 + similarities) / 2.0
+        # Clip for float precision safety
+        similarities = np.clip(similarities, 0.0, 1.0)
+
         matches: list[SimilarityMatch] = []
         lookup_item = item or PHQ8Item.NO_INTEREST
+        target_tag = (
+            f"PHQ8_{item.value}" if (self._enable_item_tag_filter and item is not None) else None
+        )
 
-        for participant_id, chunks in all_refs.items():
-            # Spec 34: Item Tag Filtering
-            should_filter = False
-            participant_tags: list[list[str]] = []
-            target_tag = ""
+        # Iterate over results
+        # While this is still a loop, it's just unpacking/filtering, not computing dot products.
+        for idx, sim in enumerate(similarities):
+            meta = metadata[idx]
 
-            if self._enable_item_tag_filter and item is not None:
-                participant_tags = self._reference_store.get_participant_tags(participant_id)
-                if participant_tags:
-                    should_filter = True
-                    target_tag = f"PHQ8_{item.value}"
+            # Tag filtering
+            if target_tag and target_tag not in meta["tags"]:
+                continue
 
-            for idx, (chunk_text, embedding) in enumerate(chunks):
-                # Filter out chunks that don't have the target item tag
-                if (
-                    should_filter
-                    and idx < len(participant_tags)
-                    and target_tag not in participant_tags[idx]
-                ):
-                    continue
+            pid = meta["participant_id"]
+            chunk_idx = meta["chunk_index"]
 
-                if len(embedding) != len(query_embedding):
-                    # Skip embeddings with dimension mismatch
-                    # (can occur if reference data has mixed dimensions)
-                    logger.warning(
-                        "Dimension mismatch between query and reference",
-                        query_dim=len(query_embedding),
-                        ref_dim=len(embedding),
-                        participant_id=participant_id,
-                    )
-                    continue
+            # Get item-specific score
+            if self._reference_score_source == "chunk":
+                score = self._reference_store.get_chunk_score(pid, chunk_idx, lookup_item)
+            else:
+                score = self._reference_store.get_score(pid, lookup_item)
 
-                ref_array = np.array([embedding])
-                raw_cos = float(cosine_similarity(query_array, ref_array)[0][0])
-
-                # Transform cosine similarity from [-1, 1] to [0, 1] (BUG-010 fix)
-                # This gives: -1 (opposite) -> 0, 0 (orthogonal) -> 0.5, 1 (identical) -> 1
-                sim = (1.0 + raw_cos) / 2.0
-                # Numeric guard: float error can slightly exceed bounds (e.g., 1.00000002).
-                sim = max(0.0, min(1.0, sim))
-
-                # Get item-specific score
-                if self._reference_score_source == "chunk":
-                    score = self._reference_store.get_chunk_score(participant_id, idx, lookup_item)
-                else:
-                    score = self._reference_store.get_score(participant_id, lookup_item)
-
-                matches.append(
-                    SimilarityMatch(
-                        chunk=TranscriptChunk(
-                            text=chunk_text,
-                            participant_id=participant_id,
-                        ),
-                        similarity=sim,
-                        reference_score=score,
-                    )
+            matches.append(
+                SimilarityMatch(
+                    chunk=TranscriptChunk(
+                        text=meta["text"],
+                        participant_id=pid,
+                    ),
+                    similarity=float(sim),
+                    reference_score=score,
                 )
+            )
 
         return matches
 

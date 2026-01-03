@@ -1,7 +1,9 @@
 # BUG-003: Hardcoded Calibration Logic in Evaluation Script
 
 **Severity**: P3 (Architecture / OCP Violation)
-**Status**: Open
+**Status**: Closed (Won't Fix - Design Concern, Not Bug)
+**Resolved**: 2026-01-03
+**Resolution**: Valid architectural observation but not a bug. Code works correctly. Tech debt for future consideration.
 **Created**: 2026-01-03
 **File**: `scripts/evaluate_selective_prediction.py`
 

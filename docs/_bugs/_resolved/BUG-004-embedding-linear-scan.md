@@ -1,7 +1,9 @@
 # BUG-004: O(N*M) Linear Scan in Embedding Retrieval
 
 **Severity**: P3 (Performance)
-**Status**: Open
+**Status**: Resolved (Already Fixed)
+**Resolved**: 2026-01-03
+**Resolution**: Code already uses vectorized numpy at `embedding.py:223-247` with `matrix @ query_vec`
 **Created**: 2026-01-03
 **File**: `src/ai_psychiatrist/services/embedding.py`
 

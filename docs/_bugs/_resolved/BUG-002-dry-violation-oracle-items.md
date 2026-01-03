@@ -1,7 +1,9 @@
 # BUG-002: DRY Violation in Oracle Items Creation
 
 **Severity**: P4 (Code Style / Maintenance)
-**Status**: Open
+**Status**: Resolved (Already Fixed)
+**Resolved**: 2026-01-03
+**Resolution**: Code already has `_compute_optimal_metric` helper at `selective_prediction.py:318-327`
 **Created**: 2026-01-03
 **File**: `src/ai_psychiatrist/metrics/selective_prediction.py`
 

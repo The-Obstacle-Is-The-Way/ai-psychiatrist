@@ -16,6 +16,7 @@ from __future__ import annotations
 import hashlib
 import json
 from dataclasses import dataclass
+from pathlib import Path  # noqa: TC003 - used at runtime in EmbeddingPaths dataclass
 from typing import TYPE_CHECKING, Any
 
 import numpy as np
@@ -32,8 +33,6 @@ from ai_psychiatrist.infrastructure.logging import get_logger
 from ai_psychiatrist.services.chunk_scoring import PHQ8_ITEM_KEY_SET, chunk_scoring_prompt_hash
 
 if TYPE_CHECKING:
-    from pathlib import Path
-
     from ai_psychiatrist.config import (
         DataSettings,
         EmbeddingBackendSettings,
@@ -113,6 +112,46 @@ class ReferenceStore:
         self._tags: dict[int, list[list[str]]] | None = None
         self._chunk_scores: dict[int, list[dict[str, int | None]]] | None = None
         self._scores_df: pd.DataFrame | None = None
+        self._vectorized_cache: tuple[np.ndarray, list[dict[str, Any]]] | None = None
+
+    def get_vectorized_data(self) -> tuple[np.ndarray, list[dict[str, Any]]]:
+        """Get flattened embedding matrix and metadata for vectorized search.
+
+        Returns:
+            Tuple of (matrix, metadata_list).
+            - matrix: (N_chunks, dimension) float32 array.
+            - metadata_list: List of dicts with participant_id, chunk_index, text, tags.
+        """
+        if self._vectorized_cache is not None:
+            return self._vectorized_cache
+
+        all_embeddings = self._load_embeddings()
+        matrix_rows = []
+        metadata = []
+
+        # Consistent sorting for reproducibility
+        for pid in sorted(all_embeddings.keys()):
+            chunks = all_embeddings[pid]
+            p_tags = self.get_participant_tags(pid)
+
+            for i, (text, emb) in enumerate(chunks):
+                matrix_rows.append(emb)
+                tags = p_tags[i] if i < len(p_tags) else []
+                metadata.append(
+                    {
+                        "participant_id": pid,
+                        "chunk_index": i,
+                        "text": text,
+                        "tags": set(tags),  # Use set for faster lookups
+                    }
+                )
+
+        if not matrix_rows:
+            self._vectorized_cache = (np.zeros((0, self._dimension), dtype=np.float32), [])
+            return self._vectorized_cache
+
+        self._vectorized_cache = (np.array(matrix_rows, dtype=np.float32), metadata)
+        return self._vectorized_cache
 
     def _get_texts_path(self) -> Path:
         """Get path to the JSON sidecar file containing text chunks."""

@@ -179,6 +179,7 @@ class TestEmbeddingService:
         """Create mock reference store."""
         store = MagicMock(spec=ReferenceStore)
         # Return normalized embeddings (sum of squares = 1)
+        # NOTE: get_all_embeddings is still used by tests, but service uses get_vectorized_data
         store.get_all_embeddings.return_value = {
             100: [
                 ("Sample reference text", [0.1] * 256),
@@ -189,6 +190,39 @@ class TestEmbeddingService:
             ],
         }
         store.get_score.return_value = 2
+
+        # Mock get_vectorized_data for vectorized retrieval
+        # Rows must match the content above
+        matrix = np.array(
+            [
+                [0.1] * 256,  # 100, 0
+                [0.2] * 256,  # 100, 1
+                [0.3] * 256,  # 101, 0
+            ],
+            dtype=np.float32,
+        )
+        metadata = [
+            {
+                "participant_id": 100,
+                "chunk_index": 0,
+                "text": "Sample reference text",
+                "tags": [],
+            },
+            {
+                "participant_id": 100,
+                "chunk_index": 1,
+                "text": "Another reference",
+                "tags": [],
+            },
+            {
+                "participant_id": 101,
+                "chunk_index": 0,
+                "text": "Different participant",
+                "tags": [],
+            },
+        ]
+        store.get_vectorized_data.return_value = (matrix, metadata)
+
         return store
 
     @pytest.fixture
@@ -198,6 +232,7 @@ class TestEmbeddingService:
             dimension=256,
             top_k_references=2,
             min_evidence_chars=8,
+            enable_item_tag_filter=False,
         )
 
     @pytest.mark.asyncio
@@ -330,6 +365,10 @@ class TestEmbeddingService:
     ) -> None:
         """Should handle empty reference store gracefully."""
         mock_reference_store.get_all_embeddings.return_value = {}
+        mock_reference_store.get_vectorized_data.return_value = (
+            np.zeros((0, 256), dtype=np.float32),
+            [],
+        )
 
         service = EmbeddingService(
             mock_llm_client,
@@ -957,6 +996,16 @@ class TestSimilarityTransformation:
             102: [("opposite match", opposite)],
         }
         store.get_score.return_value = 2
+
+        # Mock get_vectorized_data
+        matrix = np.array([identical, orthogonal, opposite], dtype=np.float32)
+        metadata = [
+            {"participant_id": 100, "chunk_index": 0, "text": "identical match", "tags": []},
+            {"participant_id": 101, "chunk_index": 0, "text": "orthogonal match", "tags": []},
+            {"participant_id": 102, "chunk_index": 0, "text": "opposite match", "tags": []},
+        ]
+        store.get_vectorized_data.return_value = (matrix, metadata)
+
         return store
 
     @pytest.mark.asyncio
@@ -1037,6 +1086,26 @@ class TestItemTaggedFiltering:
             101: [["PHQ8_Depressed"]],
             102: [[]],
         }.get(pid, [])
+
+        # Mock get_vectorized_data
+        matrix = np.array([[1.0] * 256] * 3, dtype=np.float32)
+        metadata = [
+            {
+                "participant_id": 100,
+                "chunk_index": 0,
+                "text": "sleepy chunk",
+                "tags": {"PHQ8_Sleep"},
+            },
+            {
+                "participant_id": 101,
+                "chunk_index": 0,
+                "text": "sad chunk",
+                "tags": {"PHQ8_Depressed"},
+            },
+            {"participant_id": 102, "chunk_index": 0, "text": "random chunk", "tags": set()},
+        ]
+        store.get_vectorized_data.return_value = (matrix, metadata)
+
         return store
 
     @pytest.mark.asyncio
@@ -1078,14 +1147,27 @@ class TestItemTaggedFiltering:
         assert len(matches_anh) == 0
 
     @pytest.mark.asyncio
-    async def test_missing_tags_falls_back_to_unfiltered(
+    async def test_empty_tags_yields_no_matches_when_filtering_enabled(
         self,
         mock_llm_client: MagicMock,
         mock_store: MagicMock,
     ) -> None:
-        """Should ignore filter if tags are missing/empty in store."""
-        # Setup store to return empty tags (simulate missing file or load failure)
+        """When filtering is enabled but chunks have no tags, no matches are returned.
+
+        Note: In production, if enable_item_tag_filter=True, ReferenceStore
+        requires a valid tags file. This tests the edge case where tags are empty.
+        """
+        # Setup store to return empty tags
         mock_store.get_participant_tags.side_effect = lambda _: []
+
+        # Override get_vectorized_data to return metadata with empty tags
+        matrix = np.array([[1.0] * 256] * 3, dtype=np.float32)
+        metadata = [
+            {"participant_id": 100, "chunk_index": 0, "text": "sleepy chunk", "tags": set()},
+            {"participant_id": 101, "chunk_index": 0, "text": "sad chunk", "tags": set()},
+            {"participant_id": 102, "chunk_index": 0, "text": "random chunk", "tags": set()},
+        ]
+        mock_store.get_vectorized_data.return_value = (matrix, metadata)
 
         settings = EmbeddingSettings(
             dimension=256,
@@ -1095,9 +1177,9 @@ class TestItemTaggedFiltering:
 
         query = tuple([1.0] * 256)
 
-        # Should return ALL chunks because tags are missing (fallback)
+        # When all chunks have empty tags, filter cannot match anything
         matches = service._compute_similarities(query, item=PHQ8Item.SLEEP)
-        assert len(matches) == 3  # 100, 101, 102
+        assert len(matches) == 0  # No chunks have PHQ8_Sleep tag
 
     @pytest.mark.asyncio
     async def test_filter_disabled_by_default(
@@ -1294,6 +1376,14 @@ class TestReferenceScoreSource:
             3 if pid == 100 else 0  # Different from participant scores
         )
 
+        # Mock get_vectorized_data
+        matrix = np.array([[1.0] * 256] * 2, dtype=np.float32)
+        metadata = [
+            {"participant_id": 100, "chunk_index": 0, "text": "chunk100", "tags": []},
+            {"participant_id": 101, "chunk_index": 0, "text": "chunk101", "tags": []},
+        ]
+        store.get_vectorized_data.return_value = (matrix, metadata)
+
         return store
 
     @pytest.mark.asyncio
@@ -1301,8 +1391,12 @@ class TestReferenceScoreSource:
         self,
         mock_llm_client: MagicMock,
         mock_store: MagicMock,
+        monkeypatch: pytest.MonkeyPatch,
     ) -> None:
         """With default settings, must use participant-level score."""
+        # Unset env var to test code default
+        monkeypatch.delenv("EMBEDDING_REFERENCE_SCORE_SOURCE", raising=False)
+
         settings = EmbeddingSettings(dimension=256)
         # Verify default
         assert settings.reference_score_source == "participant"

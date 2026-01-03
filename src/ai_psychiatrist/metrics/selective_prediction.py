@@ -11,7 +11,7 @@ from typing import TYPE_CHECKING, Literal
 import numpy as np
 
 if TYPE_CHECKING:
-    from collections.abc import Sequence
+    from collections.abc import Callable, Sequence
 
 
 @dataclass(frozen=True, slots=True)
@@ -315,6 +315,18 @@ def _create_oracle_items(
     return oracle_items
 
 
+def _compute_optimal_metric(
+    items: Sequence[ItemPrediction],
+    loss: Literal["abs", "abs_norm"],
+    metric_fn: Callable[[Sequence[ItemPrediction]], float],
+) -> float:
+    """Compute optimal metric (oracle CSF baseline) using a generic metric function."""
+    oracle_items = _create_oracle_items(items, loss=loss)
+    if not oracle_items:
+        return 0.0
+    return metric_fn(oracle_items)
+
+
 def compute_aurc_optimal(
     items: Sequence[ItemPrediction], *, loss: Literal["abs", "abs_norm"]
 ) -> float:
@@ -322,10 +334,7 @@ def compute_aurc_optimal(
 
     Constructs an oracle CSF that perfectly ranks items by their loss (ascending).
     """
-    oracle_items = _create_oracle_items(items, loss=loss)
-    if not oracle_items:
-        return 0.0
-    return compute_aurc(oracle_items, loss=loss)
+    return _compute_optimal_metric(items, loss, lambda x: compute_aurc(x, loss=loss))
 
 
 def compute_augrc_optimal(
@@ -335,10 +344,7 @@ def compute_augrc_optimal(
 
     Constructs an oracle CSF that perfectly ranks items by their loss (ascending).
     """
-    oracle_items = _create_oracle_items(items, loss=loss)
-    if not oracle_items:
-        return 0.0
-    return compute_augrc(oracle_items, loss=loss)
+    return _compute_optimal_metric(items, loss, lambda x: compute_augrc(x, loss=loss))
 
 
 def compute_eaurc(items: Sequence[ItemPrediction], *, loss: Literal["abs", "abs_norm"]) -> float:
@@ -379,10 +385,19 @@ def _compute_dominant_points(coverages: list[float], risks: list[float]) -> list
     indexed_points = sorted(enumerate(zip(coverages, risks, strict=True)), key=lambda x: x[1][0])
 
     # Monotone Chain algorithm for lower hull - track original indices
+    # BUG-001 Fix: Use epsilon for robustness against float precision issues.
+    epsilon = 1e-10
     lower: list[tuple[int, tuple[float, float]]] = []
     for idx, point in indexed_points:
-        while len(lower) >= 2 and _cross_product(lower[-2][1], lower[-1][1], point) <= 0:
-            lower.pop()
+        while len(lower) >= 2:
+            cp = _cross_product(lower[-2][1], lower[-1][1], point)
+            # Remove point if it creates a clockwise turn (convex) or is collinear.
+            # Standard Monotone Chain for lower hull keeps counter-clockwise turns (cp > 0).
+            # Robust check: cp <= epsilon implies clockwise or collinear.
+            if cp <= epsilon:
+                lower.pop()
+            else:
+                break
         lower.append((idx, point))
 
     # Create mask using indices (avoids float equality issues)
