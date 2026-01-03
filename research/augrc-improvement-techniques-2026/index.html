@@ -1,0 +1,3451 @@
+
+<!doctype html>
+<html lang="en" class="no-js">
+  <head>
+    
+      <meta charset="utf-8">
+      <meta name="viewport" content="width=device-width,initial-scale=1">
+      
+      
+      
+        <link rel="canonical" href="https://the-obstacle-is-the-way.github.io/ai-psychiatrist/research/augrc-improvement-techniques-2026/">
+      
+      
+        <link rel="prev" href="../SPEC-SQPSYCHCONV-CROSS-VALIDATION/">
+      
+      
+        <link rel="next" href="../../results/reproduction-results/">
+      
+      
+        
+      
+      
+      <link rel="icon" href="../../assets/images/favicon.png">
+      <meta name="generator" content="mkdocs-1.6.1, mkdocs-material-9.7.1">
+    
+    
+      
+        <title>AUGRC Improvement Techniques for Few-Shot PHQ-8 Assessment - AI Psychiatrist</title>
+      
+    
+    
+      <link rel="stylesheet" href="../../assets/stylesheets/main.484c7ddc.min.css">
+      
+      
+
+
+    
+    
+      
+    
+    
+      
+        
+        
+        <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+        <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Roboto:300,300i,400,400i,700,700i%7CRoboto+Mono:400,400i,700,700i&display=fallback">
+        <style>:root{--md-text-font:"Roboto";--md-code-font:"Roboto Mono"}</style>
+      
+    
+    
+    <script>__md_scope=new URL("../..",location),__md_hash=e=>[...e].reduce(((e,_)=>(e<<5)-e+_.charCodeAt(0)),0),__md_get=(e,_=localStorage,t=__md_scope)=>JSON.parse(_.getItem(t.pathname+"."+e)),__md_set=(e,_,t=localStorage,a=__md_scope)=>{try{t.setItem(a.pathname+"."+e,JSON.stringify(_))}catch(e){}}</script>
+    
+      
+
+    
+    
+  </head>
+  
+  
+    <body dir="ltr">
+  
+    
+    <input class="md-toggle" data-md-toggle="drawer" type="checkbox" id="__drawer" autocomplete="off">
+    <input class="md-toggle" data-md-toggle="search" type="checkbox" id="__search" autocomplete="off">
+    <label class="md-overlay" for="__drawer"></label>
+    <div data-md-component="skip">
+      
+        
+        <a href="#augrc-improvement-techniques-for-few-shot-phq-8-assessment" class="md-skip">
+          Skip to content
+        </a>
+      
+    </div>
+    <div data-md-component="announce">
+      
+    </div>
+    
+    
+      
+
+  
+
+<header class="md-header md-header--shadow" data-md-component="header">
+  <nav class="md-header__inner md-grid" aria-label="Header">
+    <a href="../.." title="AI Psychiatrist" class="md-header__button md-logo" aria-label="AI Psychiatrist" data-md-component="logo">
+      
+  
+  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 8a3 3 0 0 0 3-3 3 3 0 0 0-3-3 3 3 0 0 0-3 3 3 3 0 0 0 3 3m0 3.54C9.64 9.35 6.5 8 3 8v11c3.5 0 6.64 1.35 9 3.54 2.36-2.19 5.5-3.54 9-3.54V8c-3.5 0-6.64 1.35-9 3.54"/></svg>
+
+    </a>
+    <label class="md-header__button md-icon" for="__drawer">
+      
+      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M3 6h18v2H3zm0 5h18v2H3zm0 5h18v2H3z"/></svg>
+    </label>
+    <div class="md-header__title" data-md-component="header-title">
+      <div class="md-header__ellipsis">
+        <div class="md-header__topic">
+          <span class="md-ellipsis">
+            AI Psychiatrist
+          </span>
+        </div>
+        <div class="md-header__topic" data-md-component="header-topic">
+          <span class="md-ellipsis">
+            
+              AUGRC Improvement Techniques for Few-Shot PHQ-8 Assessment
+            
+          </span>
+        </div>
+      </div>
+    </div>
+    
+    
+      <script>var palette=__md_get("__palette");if(palette&&palette.color){if("(prefers-color-scheme)"===palette.color.media){var media=matchMedia("(prefers-color-scheme: light)"),input=document.querySelector(media.matches?"[data-md-color-media='(prefers-color-scheme: light)']":"[data-md-color-media='(prefers-color-scheme: dark)']");palette.color.media=input.getAttribute("data-md-color-media"),palette.color.scheme=input.getAttribute("data-md-color-scheme"),palette.color.primary=input.getAttribute("data-md-color-primary"),palette.color.accent=input.getAttribute("data-md-color-accent")}for(var[key,value]of Object.entries(palette.color))document.body.setAttribute("data-md-color-"+key,value)}</script>
+    
+    
+    
+      
+      
+        <label class="md-header__button md-icon" for="__search">
+          
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M9.5 3A6.5 6.5 0 0 1 16 9.5c0 1.61-.59 3.09-1.56 4.23l.27.27h.79l5 5-1.5 1.5-5-5v-.79l-.27-.27A6.52 6.52 0 0 1 9.5 16 6.5 6.5 0 0 1 3 9.5 6.5 6.5 0 0 1 9.5 3m0 2C7 5 5 7 5 9.5S7 14 9.5 14 14 12 14 9.5 12 5 9.5 5"/></svg>
+        </label>
+        <div class="md-search" data-md-component="search" role="dialog">
+  <label class="md-search__overlay" for="__search"></label>
+  <div class="md-search__inner" role="search">
+    <form class="md-search__form" name="search">
+      <input type="text" class="md-search__input" name="query" aria-label="Search" placeholder="Search" autocapitalize="off" autocorrect="off" autocomplete="off" spellcheck="false" data-md-component="search-query" required>
+      <label class="md-search__icon md-icon" for="__search">
+        
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M9.5 3A6.5 6.5 0 0 1 16 9.5c0 1.61-.59 3.09-1.56 4.23l.27.27h.79l5 5-1.5 1.5-5-5v-.79l-.27-.27A6.52 6.52 0 0 1 9.5 16 6.5 6.5 0 0 1 3 9.5 6.5 6.5 0 0 1 9.5 3m0 2C7 5 5 7 5 9.5S7 14 9.5 14 14 12 14 9.5 12 5 9.5 5"/></svg>
+        
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M20 11v2H8l5.5 5.5-1.42 1.42L4.16 12l7.92-7.92L13.5 5.5 8 11z"/></svg>
+      </label>
+      <nav class="md-search__options" aria-label="Search">
+        
+        <button type="reset" class="md-search__icon md-icon" title="Clear" aria-label="Clear" tabindex="-1">
+          
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M19 6.41 17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12z"/></svg>
+        </button>
+      </nav>
+      
+    </form>
+    <div class="md-search__output">
+      <div class="md-search__scrollwrap" tabindex="0" data-md-scrollfix>
+        <div class="md-search-result" data-md-component="search-result">
+          <div class="md-search-result__meta">
+            Initializing search
+          </div>
+          <ol class="md-search-result__list" role="presentation"></ol>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+      
+    
+    
+      <div class="md-header__source">
+        <a href="https://github.com/The-Obstacle-Is-The-Way/ai-psychiatrist" title="Go to repository" class="md-source" data-md-component="source">
+  <div class="md-source__icon md-icon">
+    
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 448 512"><!--! Font Awesome Free 7.1.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2025 Fonticons, Inc.--><path d="M439.6 236.1 244 40.5c-5.4-5.5-12.8-8.5-20.4-8.5s-15 3-20.4 8.4L162.5 81l51.5 51.5c27.1-9.1 52.7 16.8 43.4 43.7l49.7 49.7c34.2-11.8 61.2 31 35.5 56.7-26.5 26.5-70.2-2.9-56-37.3L240.3 199v121.9c25.3 12.5 22.3 41.8 9.1 55-6.4 6.4-15.2 10.1-24.3 10.1s-17.8-3.6-24.3-10.1c-17.6-17.6-11.1-46.9 11.2-56v-123c-20.8-8.5-24.6-30.7-18.6-45L142.6 101 8.5 235.1C3 240.6 0 247.9 0 255.5s3 15 8.5 20.4l195.6 195.7c5.4 5.4 12.7 8.4 20.4 8.4s15-3 20.4-8.4l194.7-194.7c5.4-5.4 8.4-12.8 8.4-20.4s-3-15-8.4-20.4"/></svg>
+  </div>
+  <div class="md-source__repository">
+    GitHub
+  </div>
+</a>
+      </div>
+    
+  </nav>
+  
+</header>
+    
+    <div class="md-container" data-md-component="container">
+      
+      
+        
+          
+        
+      
+      <main class="md-main" data-md-component="main">
+        <div class="md-main__inner md-grid">
+          
+            
+              
+              <div class="md-sidebar md-sidebar--primary" data-md-component="sidebar" data-md-type="navigation" >
+                <div class="md-sidebar__scrollwrap">
+                  <div class="md-sidebar__inner">
+                    
+
+
+
+<nav class="md-nav md-nav--primary" aria-label="Navigation" data-md-level="0">
+  <label class="md-nav__title" for="__drawer">
+    <a href="../.." title="AI Psychiatrist" class="md-nav__button md-logo" aria-label="AI Psychiatrist" data-md-component="logo">
+      
+  
+  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 8a3 3 0 0 0 3-3 3 3 0 0 0-3-3 3 3 0 0 0-3 3 3 3 0 0 0 3 3m0 3.54C9.64 9.35 6.5 8 3 8v11c3.5 0 6.64 1.35 9 3.54 2.36-2.19 5.5-3.54 9-3.54V8c-3.5 0-6.64 1.35-9 3.54"/></svg>
+
+    </a>
+    AI Psychiatrist
+  </label>
+  
+    <div class="md-nav__source">
+      <a href="https://github.com/The-Obstacle-Is-The-Way/ai-psychiatrist" title="Go to repository" class="md-source" data-md-component="source">
+  <div class="md-source__icon md-icon">
+    
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 448 512"><!--! Font Awesome Free 7.1.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2025 Fonticons, Inc.--><path d="M439.6 236.1 244 40.5c-5.4-5.5-12.8-8.5-20.4-8.5s-15 3-20.4 8.4L162.5 81l51.5 51.5c27.1-9.1 52.7 16.8 43.4 43.7l49.7 49.7c34.2-11.8 61.2 31 35.5 56.7-26.5 26.5-70.2-2.9-56-37.3L240.3 199v121.9c25.3 12.5 22.3 41.8 9.1 55-6.4 6.4-15.2 10.1-24.3 10.1s-17.8-3.6-24.3-10.1c-17.6-17.6-11.1-46.9 11.2-56v-123c-20.8-8.5-24.6-30.7-18.6-45L142.6 101 8.5 235.1C3 240.6 0 247.9 0 255.5s3 15 8.5 20.4l195.6 195.7c5.4 5.4 12.7 8.4 20.4 8.4s15-3 20.4-8.4l194.7-194.7c5.4-5.4 8.4-12.8 8.4-20.4s-3-15-8.4-20.4"/></svg>
+  </div>
+  <div class="md-source__repository">
+    GitHub
+  </div>
+</a>
+    </div>
+  
+  <ul class="md-nav__list" data-md-scrollfix>
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../.." class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    AI Psychiatrist Documentation
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    
+    
+    
+    
+      
+        
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--section md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_2" >
+        
+          
+          <label class="md-nav__link" for="__nav_2" id="__nav_2_label" tabindex="">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Architecture
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_2_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_2">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    Architecture
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../architecture/architecture/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Architecture
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../architecture/future-architecture/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Future Architecture: Agent Orchestration Options
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../architecture/pipeline/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Pipeline
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    
+    
+    
+    
+      
+        
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--section md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_3" >
+        
+          
+          <label class="md-nav__link" for="__nav_3" id="__nav_3_label" tabindex="">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Clinical
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_3_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_3">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    Clinical
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../clinical/clinical-understanding/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Clinical Understanding: How This System Works
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../clinical/glossary/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Glossary
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../clinical/phq8/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    PHQ-8: Patient Health Questionnaire
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    
+    
+    
+    
+      
+        
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--section md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_4" >
+        
+          
+          <label class="md-nav__link" for="__nav_4" id="__nav_4_label" tabindex="">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Configs
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_4_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_4">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    Configs
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../configs/agent-sampling-registry/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Agent Sampling Parameter Registry
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../configs/configuration-philosophy/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Configuration Philosophy
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../configs/configuration/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Configuration Reference
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    
+    
+    
+    
+      
+        
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--section md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_5" >
+        
+          
+          <label class="md-nav__link" for="__nav_5" id="__nav_5_label" tabindex="">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Data
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_5_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_5">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    Data
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../data/artifact-namespace-registry/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Artifact Namespace Registry
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../data/daic-woz-preprocessing/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    DAIC-WOZ Transcript Preprocessing (Bias-Aware, Deterministic)
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../data/daic-woz-schema/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    DAIC-WOZ Dataset Schema
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../data/data-splits-overview/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Data Splits Overview
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../data/paper-split-registry/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Paper Split Registry
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../data/patch-missing-phq8-values/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Patching Missing PHQ-8 Values (Deterministic, Not Imputation)
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    
+    
+    
+    
+      
+        
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--section md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_6" >
+        
+          
+          <label class="md-nav__link" for="__nav_6" id="__nav_6_label" tabindex="">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Developer
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_6_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_6">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    Developer
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../developer/api-endpoints/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    API Reference
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../developer/dependency-registry/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Dependency Registry
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../developer/error-handling/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Error Handling and Fail-Fast Philosophy
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../developer/exceptions/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Exception Reference (Domain + Runtime)
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../developer/testing/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Testing Conventions (Markers, Fixtures, and Test Doubles)
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    
+    
+    
+    
+      
+        
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--section md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_7" >
+        
+          
+          <label class="md-nav__link" for="__nav_7" id="__nav_7_label" tabindex="">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Embeddings
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_7_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_7">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    Embeddings
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../embeddings/batch-query-embedding/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Batch Query Embedding (Spec 37) — Fixing Query-Embedding Timeouts
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../embeddings/chunk-scoring/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Chunk-Level Scoring (Spec 35) — Schema, Workflow, and Gotchas
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../embeddings/debugging-retrieval-quality/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Debugging Retrieval Quality (Audit Logs + Guardrails)
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../embeddings/embedding-generation/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Embedding Generation (Fail-Fast, Tags, and Partial Mode)
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../embeddings/embeddings-explained/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Embeddings and Few-Shot Retrieval: A Plain-Language Guide
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../embeddings/few-shot-design-considerations/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Few-Shot Design Considerations
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../embeddings/few-shot-prompt-format/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Few-Shot Prompt Format (Reference Examples)
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../embeddings/item-tagging-setup/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Item Tagging Setup (Spec 34 + Spec 38 Semantics)
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    
+    
+    
+    
+      
+        
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--section md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_8" >
+        
+          
+          <label class="md-nav__link" for="__nav_8" id="__nav_8_label" tabindex="">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Getting started
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_8_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_8">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    Getting started
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../getting-started/quickstart/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Quickstart Guide
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    
+    
+    
+    
+      
+        
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--section md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_9" >
+        
+          
+          <label class="md-nav__link" for="__nav_9" id="__nav_9_label" tabindex="">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Models
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_9_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_9">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    Models
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../models/model-registry/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    AI Psychiatrist Model Registry
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../models/model-wiring/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Model Wiring: Current State
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    
+    
+    
+    
+      
+        
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--section md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_10" >
+        
+          
+          <label class="md-nav__link" for="__nav_10" id="__nav_10_label" tabindex="">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Pipeline internals
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_10_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_10">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    Pipeline internals
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../pipeline-internals/evidence-extraction/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Evidence Extraction Mechanism: How It Actually Works
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../pipeline-internals/features/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Feature Reference (Non-Archive Canonical)
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    
+    
+    
+    
+      
+        
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--section md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_11" >
+        
+          
+          <label class="md-nav__link" for="__nav_11" id="__nav_11_label" tabindex="">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Preflight checklist
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_11_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_11">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    Preflight checklist
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../preflight-checklist/preflight-checklist-few-shot/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Preflight Checklist: Few-Shot Reproduction
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../preflight-checklist/preflight-checklist-zero-shot/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Preflight Checklist: Zero-Shot Run
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+    
+  
+  
+  
+    
+    
+    
+    
+      
+        
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--active md-nav__item--section md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_12" checked>
+        
+          
+          <label class="md-nav__link" for="__nav_12" id="__nav_12_label" tabindex="">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Research
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_12_label" aria-expanded="true">
+          <label class="md-nav__title" for="__nav_12">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    Research
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../SPEC-SQPSYCHCONV-CROSS-VALIDATION/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    SPEC: SQPsychConv Cross-Dataset Validation
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+    
+  
+  
+  
+    <li class="md-nav__item md-nav__item--active">
+      
+      <input class="md-nav__toggle md-toggle" type="checkbox" id="__toc">
+      
+      
+        
+      
+      
+        <label class="md-nav__link md-nav__link--active" for="__toc">
+          
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    AUGRC Improvement Techniques for Few-Shot PHQ-8 Assessment
+  
+
+    
+  </span>
+  
+  
+
+          <span class="md-nav__icon md-icon"></span>
+        </label>
+      
+      <a href="./" class="md-nav__link md-nav__link--active">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    AUGRC Improvement Techniques for Few-Shot PHQ-8 Assessment
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+      
+        
+
+<nav class="md-nav md-nav--secondary" aria-label="Table of contents">
+  
+  
+  
+    
+  
+  
+    <label class="md-nav__title" for="__toc">
+      <span class="md-nav__icon md-icon"></span>
+      Table of contents
+    </label>
+    <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
+      
+        <li class="md-nav__item">
+  <a href="#executive-summary" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Executive Summary
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#part-1-current-system-analysis" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Part 1: Current System Analysis
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Part 1: Current System Analysis">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#11-how-confidence-is-currently-generated" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        1.1 How Confidence is Currently Generated
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#12-unused-signals-in-few-shot" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        1.2 Unused Signals in Few-Shot
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#13-run-8-results-ground-truth" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        1.3 Run 8 Results (Ground Truth)
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#part-2-candidate-techniques-recent-uq-selective-prediction-literature" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Part 2: Candidate Techniques (Recent UQ + Selective Prediction Literature)
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Part 2: Candidate Techniques (Recent UQ + Selective Prediction Literature)">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#21-retrieval-grounded-signals-rag-specific" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        2.1 Retrieval-Grounded Signals (RAG-specific)
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#22-post-hoc-confidence-calibration-black-box-friendly" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        2.2 Post-Hoc Confidence Calibration (Black-box friendly)
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#23-disagreement-based-uncertainty-ensembles-self-consistency" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        2.3 Disagreement-Based Uncertainty (Ensembles / Self-Consistency)
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#24-conformal-risk-control-optional-guarantees-focused" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        2.4 Conformal Risk Control (Optional, Guarantees-focused)
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#part-3-recommended-improvements-ranked-by-effortimpact" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Part 3: Recommended Improvements (Ranked by Effort/Impact)
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Part 3: Recommended Improvements (Ranked by Effort/Impact)">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#31-immediate-use-retrieval-similarity-as-confidence-signal" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        3.1 Immediate: Use Retrieval Similarity as Confidence Signal
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#32-short-term-add-verbalized-confidence-extraction" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        3.2 Short-Term: Add Verbalized Confidence Extraction
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#33-medium-term-multi-evidence-ensemble-unicr-style" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        3.3 Medium-Term: Multi-Evidence Ensemble (UniCR-Style)
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#34-long-term-semantic-entropy-via-multiple-sampling" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        3.4 Long-Term: Semantic Entropy via Multiple Sampling
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#part-4-ablation-study-design" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Part 4: Ablation Study Design
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Part 4: Ablation Study Design">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#ablation-a-retrieval-similarity-confidence" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Ablation A: Retrieval Similarity Confidence
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#ablation-b-verbalized-confidence" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Ablation B: Verbalized Confidence
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#ablation-c-multi-signal-ensemble" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Ablation C: Multi-Signal Ensemble
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#part-5-implementation-roadmap" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Part 5: Implementation Roadmap
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Part 5: Implementation Roadmap">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#phase-1-quick-win-week-1" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Phase 1: Quick Win (Week 1)
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#phase-2-verbalized-confidence-week-2-3" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Phase 2: Verbalized Confidence (Week 2-3)
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#phase-3-ensemble-calibration-week-4" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Phase 3: Ensemble Calibration (Week 4+)
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#part-6-key-references" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Part 6: Key References
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#appendix-a-the-fundamental-issue-visualized" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Appendix A: The Fundamental Issue Visualized
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#appendix-b-expected-augrc-improvement-estimates" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Appendix B: Expected AUGRC Improvement Estimates
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#conclusion" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Conclusion
+      
+    </span>
+  </a>
+  
+</li>
+      
+    </ul>
+  
+</nav>
+      
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    
+    
+    
+    
+      
+        
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--section md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_13" >
+        
+          
+          <label class="md-nav__link" for="__nav_13" id="__nav_13_label" tabindex="">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Results
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_13_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_13">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    Results
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../results/reproduction-results/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Paper Reproduction Results (Current Status)
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../results/run-history/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Complete Run History &amp; Statistical Analysis
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../results/run-output-schema/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Reproduction Run Output Schema (JSON + Registry)
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    
+    
+    
+    
+      
+        
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--section md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_14" >
+        
+          
+          <label class="md-nav__link" for="__nav_14" id="__nav_14_label" tabindex="">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Statistics
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_14_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_14">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    Statistics
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../statistics/coverage/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Coverage Explained: What It Is and Why It Matters
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../statistics/crag-validation-guide/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    CRAG Reference Validation (Spec 36)
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../statistics/metrics-and-evaluation/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Metrics and Evaluation (Exact Definitions + Output Schema)
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../statistics/statistical-methodology-aurc-augrc/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Statistical Methodology: AURC/AUGRC for Selective Prediction
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+  </ul>
+</nav>
+                  </div>
+                </div>
+              </div>
+            
+            
+              
+              <div class="md-sidebar md-sidebar--secondary" data-md-component="sidebar" data-md-type="toc" >
+                <div class="md-sidebar__scrollwrap">
+                  <div class="md-sidebar__inner">
+                    
+
+<nav class="md-nav md-nav--secondary" aria-label="Table of contents">
+  
+  
+  
+    
+  
+  
+    <label class="md-nav__title" for="__toc">
+      <span class="md-nav__icon md-icon"></span>
+      Table of contents
+    </label>
+    <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
+      
+        <li class="md-nav__item">
+  <a href="#executive-summary" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Executive Summary
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#part-1-current-system-analysis" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Part 1: Current System Analysis
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Part 1: Current System Analysis">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#11-how-confidence-is-currently-generated" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        1.1 How Confidence is Currently Generated
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#12-unused-signals-in-few-shot" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        1.2 Unused Signals in Few-Shot
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#13-run-8-results-ground-truth" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        1.3 Run 8 Results (Ground Truth)
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#part-2-candidate-techniques-recent-uq-selective-prediction-literature" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Part 2: Candidate Techniques (Recent UQ + Selective Prediction Literature)
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Part 2: Candidate Techniques (Recent UQ + Selective Prediction Literature)">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#21-retrieval-grounded-signals-rag-specific" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        2.1 Retrieval-Grounded Signals (RAG-specific)
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#22-post-hoc-confidence-calibration-black-box-friendly" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        2.2 Post-Hoc Confidence Calibration (Black-box friendly)
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#23-disagreement-based-uncertainty-ensembles-self-consistency" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        2.3 Disagreement-Based Uncertainty (Ensembles / Self-Consistency)
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#24-conformal-risk-control-optional-guarantees-focused" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        2.4 Conformal Risk Control (Optional, Guarantees-focused)
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#part-3-recommended-improvements-ranked-by-effortimpact" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Part 3: Recommended Improvements (Ranked by Effort/Impact)
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Part 3: Recommended Improvements (Ranked by Effort/Impact)">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#31-immediate-use-retrieval-similarity-as-confidence-signal" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        3.1 Immediate: Use Retrieval Similarity as Confidence Signal
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#32-short-term-add-verbalized-confidence-extraction" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        3.2 Short-Term: Add Verbalized Confidence Extraction
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#33-medium-term-multi-evidence-ensemble-unicr-style" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        3.3 Medium-Term: Multi-Evidence Ensemble (UniCR-Style)
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#34-long-term-semantic-entropy-via-multiple-sampling" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        3.4 Long-Term: Semantic Entropy via Multiple Sampling
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#part-4-ablation-study-design" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Part 4: Ablation Study Design
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Part 4: Ablation Study Design">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#ablation-a-retrieval-similarity-confidence" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Ablation A: Retrieval Similarity Confidence
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#ablation-b-verbalized-confidence" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Ablation B: Verbalized Confidence
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#ablation-c-multi-signal-ensemble" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Ablation C: Multi-Signal Ensemble
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#part-5-implementation-roadmap" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Part 5: Implementation Roadmap
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Part 5: Implementation Roadmap">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#phase-1-quick-win-week-1" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Phase 1: Quick Win (Week 1)
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#phase-2-verbalized-confidence-week-2-3" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Phase 2: Verbalized Confidence (Week 2-3)
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#phase-3-ensemble-calibration-week-4" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Phase 3: Ensemble Calibration (Week 4+)
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#part-6-key-references" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Part 6: Key References
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#appendix-a-the-fundamental-issue-visualized" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Appendix A: The Fundamental Issue Visualized
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#appendix-b-expected-augrc-improvement-estimates" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Appendix B: Expected AUGRC Improvement Estimates
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#conclusion" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Conclusion
+      
+    </span>
+  </a>
+  
+</li>
+      
+    </ul>
+  
+</nav>
+                  </div>
+                </div>
+              </div>
+            
+          
+          
+            <div class="md-content" data-md-component="content">
+              
+              <article class="md-content__inner md-typeset">
+                
+                  
+
+
+  
+    <a href="https://github.com/The-Obstacle-Is-The-Way/ai-psychiatrist/edit/main/docs/research/augrc-improvement-techniques-2026.md" title="Edit this page" class="md-content__button md-icon" rel="edit">
+      
+      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M10 20H6V4h7v5h5v3.1l2-2V8l-6-6H6c-1.1 0-2 .9-2 2v16c0 1.1.9 2 2 2h4zm10.2-7c.1 0 .3.1.4.2l1.3 1.3c.2.2.2.6 0 .8l-1 1-2.1-2.1 1-1c.1-.1.2-.2.4-.2m0 3.9L14.1 23H12v-2.1l6.1-6.1z"/></svg>
+    </a>
+  
+  
+    
+      
+    
+    <a href="https://github.com/The-Obstacle-Is-The-Way/ai-psychiatrist/raw/main/docs/research/augrc-improvement-techniques-2026.md" title="View source of this page" class="md-content__button md-icon">
+      
+      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M17 18c.56 0 1 .44 1 1s-.44 1-1 1-1-.44-1-1 .44-1 1-1m0-3c-2.73 0-5.06 1.66-6 4 .94 2.34 3.27 4 6 4s5.06-1.66 6-4c-.94-2.34-3.27-4-6-4m0 6.5a2.5 2.5 0 0 1-2.5-2.5 2.5 2.5 0 0 1 2.5-2.5 2.5 2.5 0 0 1 2.5 2.5 2.5 2.5 0 0 1-2.5 2.5M9.27 20H6V4h7v5h5v4.07c.7.08 1.36.25 2 .49V8l-6-6H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h4.5a8.2 8.2 0 0 1-1.23-2"/></svg>
+    </a>
+  
+
+
+<h1 id="augrc-improvement-techniques-for-few-shot-phq-8-assessment">AUGRC Improvement Techniques for Few-Shot PHQ-8 Assessment</h1>
+<p><strong>Research Date</strong>: January 2026
+<strong>Author</strong>: AI Research Assistant
+<strong>Status</strong>: Research Complete - Awaiting Implementation Decision</p>
+<hr />
+<h2 id="executive-summary">Executive Summary</h2>
+<p><strong>The Problem</strong>: In Run 8, few-shot prompting achieved better MAE_item (0.609 vs 0.776) than zero-shot, but <strong>selective prediction quality is statistically indistinguishable</strong> between modes under the current confidence signal (evidence counts).</p>
+<p><strong>Root Cause</strong>: Confidence is currently based on <strong>evidence count</strong> (number of quotes extracted by the LLM), which is independent of the few-shot retrieval system. The retrieval similarity scores (cosine similarity 0-1) are computed but <strong>not used</strong> as confidence signals.</p>
+<p><strong>Key Insight</strong>: Few-shot provides better examples for scoring, but the confidence mechanism ignores all retrieval-related signals.</p>
+<hr />
+<h2 id="part-1-current-system-analysis">Part 1: Current System Analysis</h2>
+<h3 id="11-how-confidence-is-currently-generated">1.1 How Confidence is Currently Generated</h3>
+<div class="highlight"><pre><span></span><code>Transcript
+  ↓
+Evidence Extraction (LLM finds quotes per PHQ-8 item)
+  ↓
+confidence = llm_evidence_count  ← CURRENT SIGNAL
+  ↓
+AUGRC computed by sorting predictions by confidence
+</code></pre></div>
+<p><strong>File</strong>: <code>src/ai_psychiatrist/agents/quantitative.py:257-259</code>
+<div class="highlight"><pre><span></span><code><span class="n">final_items</span><span class="p">[</span><span class="n">phq_item</span><span class="p">]</span> <span class="o">=</span> <span class="n">ItemAssessment</span><span class="p">(</span>
+    <span class="n">llm_evidence_count</span><span class="o">=</span><span class="n">llm_counts</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">legacy_key</span><span class="p">,</span> <span class="mi">0</span><span class="p">),</span>
+<span class="p">)</span>
+</code></pre></div></p>
+<p><strong>File</strong>: <code>src/ai_psychiatrist/metrics/selective_prediction.py:87-91</code>
+<div class="highlight"><pre><span></span><code><span class="c1"># Confidence = evidence count, sorted descending for risk-coverage curve</span>
+<span class="n">predictions</span><span class="o">.</span><span class="n">sort</span><span class="p">(</span><span class="n">key</span><span class="o">=</span><span class="k">lambda</span> <span class="n">x</span><span class="p">:</span> <span class="n">x</span><span class="p">[</span><span class="mi">1</span><span class="p">],</span> <span class="n">reverse</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+</code></pre></div></p>
+<h3 id="12-unused-signals-in-few-shot">1.2 Unused Signals in Few-Shot</h3>
+<p>The few-shot pipeline computes <strong>retrieval similarity</strong> but discards it after ranking:</p>
+<p><strong>File</strong>: <code>src/ai_psychiatrist/services/embedding.py:231-237</code>
+<div class="highlight"><pre><span></span><code><span class="n">raw_cos</span> <span class="o">=</span> <span class="nb">float</span><span class="p">(</span><span class="n">cosine_similarity</span><span class="p">(</span><span class="n">query_array</span><span class="p">,</span> <span class="n">ref_array</span><span class="p">)[</span><span class="mi">0</span><span class="p">][</span><span class="mi">0</span><span class="p">])</span>
+<span class="n">sim</span> <span class="o">=</span> <span class="p">(</span><span class="mf">1.0</span> <span class="o">+</span> <span class="n">raw_cos</span><span class="p">)</span> <span class="o">/</span> <span class="mf">2.0</span>  <span class="c1"># Transform to [0, 1]</span>
+</code></pre></div></p>
+<p>This similarity is stored in <code>SimilarityMatch.similarity</code> but <strong>never flows to confidence</strong>.</p>
+<h3 id="13-run-8-results-ground-truth">1.3 Run 8 Results (Ground Truth)</h3>
+<p>Run 8 artifacts (SSOT):
+- <code>docs/results/run-history.md</code> (run narrative)
+- <code>data/outputs/selective_prediction_metrics_20260102T132843Z.json</code> (zero-shot)
+- <code>data/outputs/selective_prediction_metrics_20260102T132902Z.json</code> (few-shot)
+- <code>data/outputs/selective_prediction_metrics_20260102T132930Z_paired.json</code> (paired overlap N=40)</p>
+<p><strong>Single-mode selective prediction metrics</strong> (<code>--loss abs_norm</code>, confidence=<code>llm</code>):</p>
+<table>
+<thead>
+<tr>
+<th>Mode</th>
+<th>MAE_item</th>
+<th style="text-align: right;">AURC_full</th>
+<th style="text-align: right;">AUGRC_full</th>
+<th style="text-align: right;">Cmax</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Zero-shot</td>
+<td>0.776</td>
+<td style="text-align: right;">0.141432</td>
+<td style="text-align: right;">0.031276</td>
+<td style="text-align: right;">48.78%</td>
+</tr>
+<tr>
+<td>Few-shot</td>
+<td>0.609</td>
+<td style="text-align: right;">0.124751</td>
+<td style="text-align: right;">0.030575</td>
+<td style="text-align: right;">50.94%</td>
+</tr>
+</tbody>
+</table>
+<p><strong>Paired comparison (overlap N=40, <code>--intersection-only</code>)</strong>:
+- ΔAURC_full (few − zero) = <code>-0.0197</code> (CI95 <code>[-0.0529, +0.0139]</code>)
+- ΔAUGRC_full (few − zero) = <code>-0.0021</code> (CI95 <code>[-0.0127, +0.0079]</code>)</p>
+<p>Interpretation: differences are small relative to uncertainty; <strong>confidence ranking quality does not materially change</strong>.</p>
+<p><strong>Interpretation</strong>:
+- MAE improved 21.5% with few-shot (0.776 → 0.609)
+- AUGRC is effectively unchanged (overlapping CIs; paired ΔAUGRC CI includes 0)
+- Few-shot predicts better but does not meaningfully improve confidence ranking under the current signal</p>
+<hr />
+<h2 id="part-2-candidate-techniques-recent-uq-selective-prediction-literature">Part 2: Candidate Techniques (Recent UQ + Selective Prediction Literature)</h2>
+<p>This section summarizes external literature that is directly relevant to improving <strong>risk–coverage performance</strong> (AURC/AUGRC) via better uncertainty/confidence signals in RAG-like LLM systems.</p>
+<h3 id="21-retrieval-grounded-signals-rag-specific">2.1 Retrieval-Grounded Signals (RAG-specific)</h3>
+<p>Key idea: if the answer depends on retrieved context, the <em>quality of retrieval</em> is a strong confidence proxy.</p>
+<p>Signals that exist in this repo today (or can be added with low risk):
+- mean/max retrieval similarity per PHQ-8 item (already computed in few-shot)
+- reference score agreement / dispersion across retrieved examples (available when chunk scores are enabled)
+- reference validator pass/fail rate (Spec 36; optional)</p>
+<p>Relevant references:
+- Google Research (ICLR 2025): “Sufficient Context” shows retrieval <strong>relevance alone</strong> can be misleading, and proposes combining a context-sufficiency signal with model confidence for selective generation: https://arxiv.org/abs/2411.06037
+- ACL 2025: “Why UE Methods Fall Short in RAG” argues off-the-shelf UE can fail in RAG and motivates calibration functions tailored to retrieval settings: https://aclanthology.org/2025.findings-acl.852/</p>
+<h3 id="22-post-hoc-confidence-calibration-black-box-friendly">2.2 Post-Hoc Confidence Calibration (Black-box friendly)</h3>
+<p>Key idea: treat confidence estimation as its own supervised problem.
+- Fit a calibrator on a held-out split (e.g., <code>paper-val</code>) mapping observable signals → probability of correctness.
+- Use the calibrated score as the ranking signal for the RC curve.</p>
+<p>Practical calibrators that are easy to ship and audit:
+- logistic regression / Platt scaling
+- isotonic regression (monotone, avoids “probability” assumptions)</p>
+<p>Relevant references:
+- UniCR (2025): a unified framework that fuses heterogeneous evidence (including retrieval compatibility) into a calibrated probability and applies conformal risk control for refusal: https://arxiv.org/abs/2509.01455
+- “Calibrating Verbalized Probabilities for LLMs” (2024) motivates post-hoc calibration when using self-reported confidences from black-box models: https://arxiv.org/abs/2410.06707</p>
+<h3 id="23-disagreement-based-uncertainty-ensembles-self-consistency">2.3 Disagreement-Based Uncertainty (Ensembles / Self-Consistency)</h3>
+<p>Key idea: if multiple “independent” prompts disagree, uncertainty is higher.</p>
+<p>Implementation options:
+- multiple prompt templates (deterministic) and compare predicted scores
+- multiple models (if available) and compare scores</p>
+<p>Trade-off: higher runtime cost.</p>
+<h3 id="24-conformal-risk-control-optional-guarantees-focused">2.4 Conformal Risk Control (Optional, Guarantees-focused)</h3>
+<p>Key idea: calibrate a thresholding rule with finite-sample guarantees (risk or coverage). This is most useful if we want to <em>choose an operating point</em> (e.g., “risk ≤ 0.2”) rather than optimize integrated area metrics.</p>
+<p>Relevant reference:
+- UniCR (2025) explicitly uses conformal risk control for distribution-free guarantees: https://arxiv.org/abs/2509.01455</p>
+<h2 id="part-3-recommended-improvements-ranked-by-effortimpact">Part 3: Recommended Improvements (Ranked by Effort/Impact)</h2>
+<h3 id="31-immediate-use-retrieval-similarity-as-confidence-signal">3.1 Immediate: Use Retrieval Similarity as Confidence Signal</h3>
+<p><strong>Effort</strong>: Low (code change only)
+<strong>Expected Impact</strong>: Moderate AUGRC improvement
+<strong>Risk</strong>: Low</p>
+<p><strong>Current State</strong>: Similarity computed but discarded after ranking.</p>
+<p><strong>Proposed Change</strong>: Persist per-item retrieval similarity statistics into <code>item_signals</code>, and add a new confidence variant that uses them.</p>
+<div class="highlight"><pre><span></span><code><span class="c1"># Option A: Replace evidence count with average retrieval similarity</span>
+<span class="n">confidence</span> <span class="o">=</span> <span class="n">mean</span><span class="p">([</span><span class="n">match</span><span class="o">.</span><span class="n">similarity</span> <span class="k">for</span> <span class="n">match</span> <span class="ow">in</span> <span class="n">top_k_matches</span><span class="p">])</span>
+
+<span class="c1"># Option B: Combine evidence count + similarity (weighted)</span>
+<span class="n">confidence</span> <span class="o">=</span> <span class="n">alpha</span> <span class="o">*</span> <span class="n">evidence_count</span> <span class="o">+</span> <span class="p">(</span><span class="mi">1</span> <span class="o">-</span> <span class="n">alpha</span><span class="p">)</span> <span class="o">*</span> <span class="n">mean_similarity</span>
+
+<span class="c1"># Option C: Product (joint signal)</span>
+<span class="n">confidence</span> <span class="o">=</span> <span class="n">evidence_count</span> <span class="o">*</span> <span class="n">mean_similarity</span>
+</code></pre></div>
+<p><strong>Implementation Location</strong>:
+- <code>src/ai_psychiatrist/agents/quantitative.py:250-259</code> (store similarity in ItemAssessment)
+- <code>scripts/evaluate_selective_prediction.py:182-192</code> (parse new confidence)</p>
+<p><strong>Rationale (first principles)</strong>: if the retrieved examples are semantically close to the participant’s evidence, we expect the scoring prompt to be better grounded.</p>
+<h3 id="32-short-term-add-verbalized-confidence-extraction">3.2 Short-Term: Add Verbalized Confidence Extraction</h3>
+<p><strong>Effort</strong>: Medium
+<strong>Expected Impact</strong>: Moderate-High AUGRC improvement
+<strong>Risk</strong>: Medium (LLM may be overconfident)</p>
+<p><strong>Concept</strong>: Ask the LLM to rate its own confidence (1-5 or percentage) alongside the score.</p>
+<p><strong>Prompt Modification</strong>:
+<div class="highlight"><pre><span></span><code>For each PHQ-8 item, provide:
+1. Score (0-3)
+2. Confidence (1-5): How confident are you in this score?
+3. Evidence quotes
+</code></pre></div></p>
+<p><strong>Calibration Requirement</strong>: LLM verbalized confidence is often overconfident. Apply temperature scaling or isotonic regression on a validation set.</p>
+<h3 id="33-medium-term-multi-evidence-ensemble-unicr-style">3.3 Medium-Term: Multi-Evidence Ensemble (UniCR-Style)</h3>
+<p><strong>Effort</strong>: High
+<strong>Expected Impact</strong>: High AUGRC improvement
+<strong>Risk</strong>: Medium (requires validation data for calibration head)</p>
+<p><strong>Concept</strong>: Train a small calibration head that takes multiple signals and outputs calibrated confidence.</p>
+<p><strong>Input Signals</strong>:
+1. <code>llm_evidence_count</code> (current)
+2. <code>retrieval_similarity_mean</code> (from few-shot)
+3. <code>retrieval_similarity_max</code> (best match quality)
+4. <code>reference_score_variance</code> (disagreement among retrieved examples)
+5. <code>llm_verbalized_confidence</code> (if extracted)</p>
+<p><strong>Calibration</strong>: Use paper-train split to learn weights (logistic regression or small MLP).</p>
+<p><strong>Coverage</strong>: Apply Conformal Risk Control for coverage guarantees at a target risk level.</p>
+<h3 id="34-long-term-semantic-entropy-via-multiple-sampling">3.4 Long-Term: Semantic Entropy via Multiple Sampling</h3>
+<p><strong>Effort</strong>: Very High (compute cost)
+<strong>Expected Impact</strong>: Highest AUGRC improvement
+<strong>Risk</strong>: High (latency, cost)</p>
+<p><strong>Concept</strong>: Sample N responses from the LLM, cluster by meaning, compute entropy.</p>
+<p><strong>Implementation</strong>:
+1. Set temperature &gt; 0 for LLM scoring
+2. Sample 5-10 responses per item
+3. Cluster by semantic similarity (embedding-based)
+4. Compute entropy over cluster distribution</p>
+<p><strong>Trade-off</strong>: 5-10x increase in LLM calls per evaluation.</p>
+<p><strong>Hybrid Approach</strong>: Apply semantic entropy only to low-confidence items (second-pass refinement).</p>
+<hr />
+<h2 id="part-4-ablation-study-design">Part 4: Ablation Study Design</h2>
+<p>To validate any improvement, run the following ablations:</p>
+<h3 id="ablation-a-retrieval-similarity-confidence">Ablation A: Retrieval Similarity Confidence</h3>
+<table>
+<thead>
+<tr>
+<th>Experiment</th>
+<th>Confidence Signal</th>
+<th>Expected Outcome</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Baseline</td>
+<td><code>llm_evidence_count</code></td>
+<td>Current AUGRC ≈ 0.031 (Run 8)</td>
+</tr>
+<tr>
+<td>A1</td>
+<td><code>retrieval_similarity_mean</code></td>
+<td>Tests whether retrieval strength is a good ranking signal</td>
+</tr>
+<tr>
+<td>A2</td>
+<td><code>hybrid_evidence_similarity</code></td>
+<td>Deterministic combined signal (see Spec 046)</td>
+</tr>
+<tr>
+<td>A3</td>
+<td><code>retrieval_similarity_max</code></td>
+<td>Tests whether “best match” is better than mean</td>
+</tr>
+</tbody>
+</table>
+<h3 id="ablation-b-verbalized-confidence">Ablation B: Verbalized Confidence</h3>
+<table>
+<thead>
+<tr>
+<th>Experiment</th>
+<th>Confidence Signal</th>
+<th>Expected Outcome</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>B1</td>
+<td><code>llm_verbalized_confidence</code> (raw)</td>
+<td>May be overconfident</td>
+</tr>
+<tr>
+<td>B2</td>
+<td><code>llm_verbalized_confidence</code> (temp-scaled)</td>
+<td>Calibrated version</td>
+</tr>
+<tr>
+<td>B3</td>
+<td><code>evidence_count * verbalized_confidence</code></td>
+<td>Combined signal</td>
+</tr>
+</tbody>
+</table>
+<h3 id="ablation-c-multi-signal-ensemble">Ablation C: Multi-Signal Ensemble</h3>
+<table>
+<thead>
+<tr>
+<th>Experiment</th>
+<th>Signals Combined</th>
+<th>Expected Outcome</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>C1</td>
+<td>evidence + similarity + verbalized</td>
+<td>Best if properly weighted</td>
+</tr>
+<tr>
+<td>C2</td>
+<td>+ reference_score_variance</td>
+<td>Penalize disagreeing examples</td>
+</tr>
+</tbody>
+</table>
+<hr />
+<h2 id="part-5-implementation-roadmap">Part 5: Implementation Roadmap</h2>
+<h3 id="phase-1-quick-win-week-1">Phase 1: Quick Win (Week 1)</h3>
+<ol>
+<li><strong>Spec 046: Retrieval Similarity Confidence</strong></li>
+<li>See: <code>docs/_specs/spec-046-selective-prediction-confidence-signals.md</code></li>
+<li>Add <code>retrieval_similarity_mean</code> to <code>ItemAssessment</code></li>
+<li>Update <code>evaluate_selective_prediction.py</code> to use it as confidence</li>
+<li>Run ablation on paper-test split</li>
+<li>
+<p>Compare AUGRC vs baseline</p>
+</li>
+<li>
+<p><strong>Data Collection</strong>: Log all similarity scores in Run 9 output JSON for post-hoc analysis.</p>
+</li>
+</ol>
+<h3 id="phase-2-verbalized-confidence-week-2-3">Phase 2: Verbalized Confidence (Week 2-3)</h3>
+<ol>
+<li><strong>Spec (proposed): LLM Confidence Extraction</strong></li>
+<li>Modify quantitative scoring prompt to request confidence</li>
+<li>Parse confidence from LLM output</li>
+<li>
+<p>Apply temperature scaling calibration</p>
+</li>
+<li>
+<p><strong>Calibration Data</strong>: Use paper-train to learn temperature.</p>
+</li>
+</ol>
+<h3 id="phase-3-ensemble-calibration-week-4">Phase 3: Ensemble Calibration (Week 4+)</h3>
+<ol>
+<li><strong>Spec (proposed): Multi-Signal Calibrator</strong></li>
+<li>Train logistic regression on [evidence, similarity, verbalized] → correctness</li>
+<li>Output calibrated probability as confidence</li>
+<li>Evaluate on paper-test</li>
+</ol>
+<hr />
+<h2 id="part-6-key-references">Part 6: Key References</h2>
+<p>All links below were validated as reachable on 2026-01-02:</p>
+<ol>
+<li>Traub et al. (2024): AUGRC proposal for selective classification evaluation: https://arxiv.org/abs/2407.01032</li>
+<li>“Population AURC characterization” (2024): https://arxiv.org/abs/2410.15361</li>
+<li>Vashurin et al. (TACL 2025): LM-Polygraph benchmark for LLM UQ: https://arxiv.org/abs/2406.15627</li>
+<li>Farquhar et al. (Nature 2024): semantic entropy for hallucination detection: https://www.nature.com/articles/s41586-024-07421-0</li>
+<li>Nguyen et al. (ACL Findings 2025): beyond semantic entropy via pairwise semantic similarity: https://aclanthology.org/2025.findings-acl.234/</li>
+<li>Soudani et al. (ACL Findings 2025): UE pitfalls in RAG + calibration function: https://aclanthology.org/2025.findings-acl.852/</li>
+<li>Google Research (ICLR 2025): sufficient context for RAG systems: https://arxiv.org/abs/2411.06037</li>
+<li>UniCR (2025): calibrated probability + conformal risk control for refusal: https://arxiv.org/abs/2509.01455</li>
+<li>QuCo-RAG (2025): corpus-grounded uncertainty signals for dynamic RAG: https://arxiv.org/abs/2512.19134</li>
+<li>UQLM toolkit paper (2025): black-box/white-box/judge/ensemble UQ: https://arxiv.org/abs/2504.19254</li>
+<li>Xie et al. (EMNLP 2024): Adaptive temperature scaling: https://arxiv.org/abs/2409.19817</li>
+</ol>
+<hr />
+<h2 id="appendix-a-the-fundamental-issue-visualized">Appendix A: The Fundamental Issue Visualized</h2>
+<div class="highlight"><pre><span></span><code>┌─────────────────────────────────────────────────────────────────┐
+│                        CURRENT SYSTEM                            │
+├─────────────────────────────────────────────────────────────────┤
+│                                                                  │
+│  Transcript ──┬──&gt; Evidence Extraction ──&gt; evidence_count ───┐   │
+│               │                                               │   │
+│               └──&gt; Retrieval ──&gt; similarity (DISCARDED) ──X   │   │
+│                          │                                    │   │
+│                          v                                    v   │
+│                    Reference Examples               Confidence    │
+│                          │                          (evidence     │
+│                          v                           only!)       │
+│                    LLM Scoring ──&gt; Score                         │
+│                                                                  │
+└─────────────────────────────────────────────────────────────────┘
+
+                              ↓
+
+┌─────────────────────────────────────────────────────────────────┐
+│                       PROPOSED SYSTEM                            │
+├─────────────────────────────────────────────────────────────────┤
+│                                                                  │
+│  Transcript ──┬──&gt; Evidence Extraction ──&gt; evidence_count ───┐   │
+│               │                                               │   │
+│               └──&gt; Retrieval ──&gt; similarity ─────────────────┤   │
+│                          │                                    │   │
+│                          v                                    v   │
+│                    Reference Examples            Confidence =     │
+│                          │                      f(evidence,       │
+│                          v                        similarity,     │
+│                    LLM Scoring ──&gt; Score          verbalized)    │
+│                          │                                       │
+│                          └──&gt; verbalized_confidence ────────────┘│
+│                                                                  │
+└─────────────────────────────────────────────────────────────────┘
+</code></pre></div>
+<hr />
+<h2 id="appendix-b-expected-augrc-improvement-estimates">Appendix B: Expected AUGRC Improvement Estimates</h2>
+<p>We do <strong>not</strong> have a defensible a-priori estimate for AUGRC gains without running ablations in this codebase. Treat improvement magnitude as an empirical question.</p>
+<hr />
+<h2 id="conclusion">Conclusion</h2>
+<p>The AUGRC parity between zero-shot and few-shot reveals a <strong>confidence signal gap</strong>. Few-shot retrieval provides valuable information (similarity scores, reference agreement) that is currently discarded.</p>
+<p><strong>Immediate recommendation</strong>: Implement Spec 046 (retrieval similarity as confidence) and run an ablation. This is a low-effort, low-risk change with clear motivation from recent RAG uncertainty work (e.g., sufficient-context and RAG-specific calibration results).</p>
+<p><strong>Medium-term</strong>: Add verbalized confidence extraction and train a simple calibrator on paper-train.</p>
+<p>The literature is clear: multi-signal ensembles with proper calibration outperform any single signal. Our system has the signals—we just need to use them.</p>
+
+
+
+
+
+
+
+
+
+
+
+
+                
+              </article>
+            </div>
+          
+          
+<script>var target=document.getElementById(location.hash.slice(1));target&&target.name&&(target.checked=target.name.startsWith("__tabbed_"))</script>
+        </div>
+        
+      </main>
+      
+        <footer class="md-footer">
+  
+    
+      
+      <nav class="md-footer__inner md-grid" aria-label="Footer" >
+        
+          
+          <a href="../SPEC-SQPSYCHCONV-CROSS-VALIDATION/" class="md-footer__link md-footer__link--prev" aria-label="Previous: SPEC: SQPsychConv Cross-Dataset Validation">
+            <div class="md-footer__button md-icon">
+              
+              <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M20 11v2H8l5.5 5.5-1.42 1.42L4.16 12l7.92-7.92L13.5 5.5 8 11z"/></svg>
+            </div>
+            <div class="md-footer__title">
+              <span class="md-footer__direction">
+                Previous
+              </span>
+              <div class="md-ellipsis">
+                SPEC: SQPsychConv Cross-Dataset Validation
+              </div>
+            </div>
+          </a>
+        
+        
+          
+          <a href="../../results/reproduction-results/" class="md-footer__link md-footer__link--next" aria-label="Next: Paper Reproduction Results (Current Status)">
+            <div class="md-footer__title">
+              <span class="md-footer__direction">
+                Next
+              </span>
+              <div class="md-ellipsis">
+                Paper Reproduction Results (Current Status)
+              </div>
+            </div>
+            <div class="md-footer__button md-icon">
+              
+              <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M4 11v2h12l-5.5 5.5 1.42 1.42L19.84 12l-7.92-7.92L10.5 5.5 16 11z"/></svg>
+            </div>
+          </a>
+        
+      </nav>
+    
+  
+  <div class="md-footer-meta md-typeset">
+    <div class="md-footer-meta__inner md-grid">
+      <div class="md-copyright">
+  
+  
+    Made with
+    <a href="https://squidfunk.github.io/mkdocs-material/" target="_blank" rel="noopener">
+      Material for MkDocs
+    </a>
+  
+</div>
+      
+    </div>
+  </div>
+</footer>
+      
+    </div>
+    <div class="md-dialog" data-md-component="dialog">
+      <div class="md-dialog__inner md-typeset"></div>
+    </div>
+    
+    
+    
+      
+      
+      <script id="__config" type="application/json">{"annotate": null, "base": "../..", "features": ["content.code.copy", "content.action.edit", "content.action.view", "navigation.tracking", "navigation.sections", "navigation.footer", "navigation.instant"], "search": "../../assets/javascripts/workers/search.2c215733.min.js", "tags": null, "translations": {"clipboard.copied": "Copied to clipboard", "clipboard.copy": "Copy to clipboard", "search.result.more.one": "1 more on this page", "search.result.more.other": "# more on this page", "search.result.none": "No matching documents", "search.result.one": "1 matching document", "search.result.other": "# matching documents", "search.result.placeholder": "Type to start searching", "search.result.term.missing": "Missing", "select.version": "Select version"}, "version": null}</script>
+    
+    
+      <script src="../../assets/javascripts/bundle.79ae519e.min.js"></script>
+      
+    
+  </body>
+</html>
