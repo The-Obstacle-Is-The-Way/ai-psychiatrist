@@ -1,11 +1,18 @@
 # Spec 055: Embedding NaN Detection and Validation
 
-**Status**: Ready to Implement
+**Status**: Implemented (PR #92, 2026-01-03)
 **Priority**: High
 **Complexity**: Low
 **Related**: PIPELINE-BRITTLENESS.md
 
 ---
+
+## SSOT (Implemented)
+
+- Code: `src/ai_psychiatrist/infrastructure/validation.py` (`validate_embedding()`, `validate_embedding_matrix()`)
+- Exceptions: `src/ai_psychiatrist/domain/exceptions.py` (`EmbeddingValidationError`)
+- Wire-up: `src/ai_psychiatrist/services/reference_store.py`, `src/ai_psychiatrist/services/embedding.py`, `scripts/generate_embeddings.py`
+- Tests: `tests/unit/infrastructure/test_validation.py`, `tests/unit/services/test_reference_store.py`, `tests/unit/services/test_embedding.py`, `tests/unit/scripts/test_generate_embeddings_fail_fast.py`
 
 ## Problem Statement
 
@@ -20,7 +27,7 @@ This is a **silent corruption** that produces unpredictable results without any 
 
 ---
 
-## Current Behavior
+## Previous Behavior (Fixed)
 
 ```python
 # src/ai_psychiatrist/services/reference_store.py - L2 normalization
@@ -45,7 +52,7 @@ similarities = (1.0 + similarities) / 2.0
 
 ---
 
-## Proposed Solution
+## Implemented Solution
 
 Add NaN detection at all embedding generation and loading points.
 

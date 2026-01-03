@@ -2,7 +2,7 @@
 
 Implementation-ready (or implementation-planned) specifications for changes that require code modifications.
 
-## Ready to Implement
+## Implemented
 
 ### Pipeline Robustness (Specs 053-057)
 
@@ -16,13 +16,15 @@ These specs address silent failure modes identified in `PIPELINE-BRITTLENESS.md`
 | **056** | [Failure Pattern Observability](spec-056-failure-pattern-observability.md) | Medium | Medium | Structured failure logging with per-run summaries and JSON export |
 | **057** | [Embedding Dimension Strict Mode](spec-057-embedding-dimension-strict-mode.md) | Medium | Low | Change default to fail on dimension mismatch instead of silent skip |
 
-**Dependency Order**: 054 → 053 (schema validation before hallucination detection)
+**Implemented in**: PR #92 (2026-01-03)
 
-**Implementation Priority**:
-1. Spec 054 + 055 (quick wins, low complexity)
+**Dependency Order used**: 054 → 053 (schema validation before hallucination detection)
+
+**Implementation Order used**:
+1. Spec 054 + 055
 2. Spec 053 (default substring grounding; optional `rapidfuzz` for fuzzy mode)
-3. Spec 057 (config change, may need migration)
-4. Spec 056 (larger scope, can be done incrementally)
+3. Spec 057 (strict-by-default, explicit escape hatch)
+4. Spec 056 (run-level failure registry + JSON artifact)
 
 ## Deferred
 

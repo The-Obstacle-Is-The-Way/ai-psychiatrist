@@ -1,11 +1,17 @@
 # Spec 054: Strict Evidence Schema Validation
 
-**Status**: Ready to Implement
+**Status**: Implemented (PR #92, 2026-01-03)
 **Priority**: High
 **Complexity**: Low
 **Related**: PIPELINE-BRITTLENESS.md, ANALYSIS-026
 
 ---
+
+## SSOT (Implemented)
+
+- Code: `src/ai_psychiatrist/services/evidence_validation.py` (`validate_evidence_schema()`, `EvidenceSchemaError`)
+- Wire-up: `src/ai_psychiatrist/agents/quantitative.py` (`QuantitativeAssessmentAgent._extract_evidence()`)
+- Tests: `tests/unit/services/test_evidence_validation.py`, `tests/unit/agents/test_quantitative.py`
 
 ## Problem Statement
 
@@ -30,7 +36,7 @@ Result: `PHQ8_Sleep` becomes `[]` silently, losing the evidence.
 
 ---
 
-## Current Behavior
+## Previous Behavior (Fixed)
 
 ```python
 # src/ai_psychiatrist/agents/quantitative.py - _extract_evidence()
@@ -50,7 +56,7 @@ Problems:
 
 ---
 
-## Proposed Solution
+## Implemented Solution
 
 Add explicit type validation immediately after JSON parsing, before any processing.
 

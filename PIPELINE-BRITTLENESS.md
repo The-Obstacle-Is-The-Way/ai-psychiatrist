@@ -109,10 +109,10 @@ These produce wrong results without any indication:
 
 | Stage | Failure Mode | What Happens | Severity | Fix Status |
 |-------|--------------|--------------|----------|------------|
-| 2 | Non-list value in evidence JSON | Wrong types silently become `[]` | High | ❌ Not fixed (Spec 054) |
-| 2 | LLM hallucinated evidence quotes | Ungrounded quotes contaminate retrieval | High | ❌ Not fixed (Spec 053) |
-| 3 | Insufficient embedding dimension | Some reference chunks skipped; may reduce retrieval quality | High | ⚠️ Logged, not fatal by default (Spec 057) |
-| 3 | NaN/Inf/zero embeddings | Propagates through cosine similarity | Medium | ❌ Not fixed (Spec 055) |
+| 2 | Non-list value in evidence JSON | Wrong types silently become `[]` | High | ✅ Fixed (Spec 054, PR #92) |
+| 2 | LLM hallucinated evidence quotes | Ungrounded quotes contaminate retrieval | High | ✅ Fixed (Spec 053, PR #92) |
+| 3 | Insufficient embedding dimension | Some reference chunks skipped; may reduce retrieval quality | High | ✅ Fixed (Spec 057, PR #92) |
+| 3 | NaN/Inf/zero embeddings | Propagates through cosine similarity | Medium | ✅ Fixed (Spec 055, PR #92) |
 | 4 | Text/embedding count mismatch | Skips participant unless strict alignment required | Medium | ⚠️ Logged, fatal when alignment required |
 | 6 | Reference chunk duplication | Same chunk appears multiple times | Low | ❌ Not deduplicated |
 
@@ -210,16 +210,12 @@ This format is clean. The brittleness is **not in preprocessing** - it's in:
 **Solution**: Validate that each extracted quote is grounded in the source transcript after conservative normalization (substring match). (Spec 053)
 
 ```python
-# In quantitative.py after evidence extraction
-def _validate_evidence_quotes(evidence: dict, transcript: str) -> dict:
-    """Remove hallucinated quotes not found in transcript."""
-    validated = {}
-    for key, quotes in evidence.items():
-        validated[key] = [q for q in quotes if normalize(q) in normalize(transcript)]
-    return validated
+# Implemented in:
+# - src/ai_psychiatrist/services/evidence_validation.py: validate_evidence_grounding()
+# - src/ai_psychiatrist/agents/quantitative.py: QuantitativeAssessmentAgent._extract_evidence()
 ```
 
-**Status**: Not implemented. Would catch hallucinated evidence.
+**Status**: ✅ Implemented (PR #92).
 
 #### 2. Add Schema Validation for Evidence JSON
 
@@ -228,14 +224,12 @@ def _validate_evidence_quotes(evidence: dict, transcript: str) -> dict:
 **Solution**: Strict validation immediately after parse.
 
 ```python
-# Add to _extract_evidence()
-for key in PHQ8_DOMAIN_KEYS:
-    value = obj.get(key, [])
-    if not isinstance(value, list):
-        raise ValueError(f"Expected list for {key}, got {type(value)}")
+# Implemented in:
+# - src/ai_psychiatrist/services/evidence_validation.py: validate_evidence_schema()
+# - src/ai_psychiatrist/agents/quantitative.py: QuantitativeAssessmentAgent._extract_evidence()
 ```
 
-**Status**: Not implemented. Would catch type coercion issues.
+**Status**: ✅ Implemented (PR #92).
 
 #### 3. Add NaN Detection in Embeddings
 
@@ -244,12 +238,13 @@ for key in PHQ8_DOMAIN_KEYS:
 **Solution**: Validate embeddings after generation.
 
 ```python
-if np.isnan(embedding).any():
-    # Do not log raw text; use hash/length only
-    raise ValueError("NaN detected in embedding (text hash logged separately)")
+# Implemented in:
+# - src/ai_psychiatrist/infrastructure/validation.py: validate_embedding(), validate_embedding_matrix()
+# - scripts/generate_embeddings.py (generation-time)
+# - src/ai_psychiatrist/services/reference_store.py + embedding.py (load/runtime)
 ```
 
-**Status**: Not implemented. Would catch embedding issues early.
+**Status**: ✅ Implemented (PR #92).
 
 ### MEDIUM PRIORITY (Observability)
 
@@ -260,17 +255,12 @@ if np.isnan(embedding).any():
 **Solution**: Structured failure registry + privacy-safe logging (Spec 056).
 
 ```python
-logger.warning(
-    "evidence_extraction_failure",
-    participant_id=pid,
-    failure_type="json_parse",
-    response_hash=sha256(raw),
-    response_len=len(raw),
-    error=str(e),
-)
+# Implemented in:
+# - src/ai_psychiatrist/infrastructure/observability.py: FailureRegistry
+# - scripts/reproduce_results.py: per-participant recording + failures_{run_id}.json artifact
 ```
 
-**Status**: Not implemented (Spec 056).
+**Status**: ✅ Implemented (PR #92).
 
 #### 5. Add Embedding Dimension Strict Mode Default
 
@@ -286,7 +276,8 @@ logger.warning(
 # if len(embedding) != config.dimension: fail (or skip only in --allow-partial mode)
 ```
 
-**Status**: Partially mitigated (warnings + fail if all mismatched). Spec 057 makes partial mismatches fatal by default.
+**Status**: ✅ Implemented (PR #92). Default is fail-fast; escape hatch is
+`EMBEDDING_ALLOW_INSUFFICIENT_DIMENSION_EMBEDDINGS=true` for forensics only.
 
 ### LOW PRIORITY (Nice to Have)
 
@@ -318,6 +309,11 @@ The following are now **correctly handled**:
 | Few-shot mode with empty evidence | Silently becomes zero-shot | Fails loudly |
 | Non-canonical JSON parsing | Multiple parsers with different behaviors | Single `parse_llm_json()` SSOT |
 | Ollama evidence extraction | Prompt-only JSON constraint | `format="json"` grammar constraint |
+| Evidence JSON schema violations | Silent coercion to `[]` | Raises `EvidenceSchemaError` (Spec 054) |
+| Evidence quote hallucinations | Ungrounded quotes contaminate retrieval | Grounding validation (Spec 053) |
+| NaN/Inf/zero embeddings | Propagate into similarity | Validation fails loudly (Spec 055) |
+| Dimension mismatch (partial) | Warn + skip | Fail fast by default; escape hatch available (Spec 057) |
+| Failure pattern visibility | Ad-hoc logs | FailureRegistry + failures JSON artifact (Spec 056) |
 
 ---
 

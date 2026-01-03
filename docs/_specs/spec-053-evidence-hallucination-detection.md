@@ -1,11 +1,18 @@
 # Spec 053: Evidence Hallucination Detection
 
-**Status**: Ready to Implement
+**Status**: Implemented (PR #92, 2026-01-03)
 **Priority**: High
 **Complexity**: Medium
 **Related**: PIPELINE-BRITTLENESS.md, ANALYSIS-026
 
 ---
+
+## SSOT (Implemented)
+
+- Code: `src/ai_psychiatrist/services/evidence_validation.py` (`validate_evidence_grounding()`)
+- Wire-up: `src/ai_psychiatrist/agents/quantitative.py` (`QuantitativeAssessmentAgent._extract_evidence()`)
+- Config: `.env.example` (`QUANTITATIVE_EVIDENCE_QUOTE_VALIDATION_*`)
+- Tests: `tests/unit/services/test_evidence_validation.py`, `tests/unit/agents/test_quantitative.py`
 
 ## Problem Statement
 
@@ -20,7 +27,7 @@ This is a **silent corruption** - the pipeline succeeds but produces wrong resul
 
 ---
 
-## Current Behavior
+## Previous Behavior (Fixed)
 
 In `src/ai_psychiatrist/agents/quantitative.py:QuantitativeAssessmentAgent._extract_evidence()`:
 
@@ -50,7 +57,7 @@ Notes:
 
 ---
 
-## Proposed Solution
+## Implemented Solution
 
 Add deterministic **evidence grounding validation**: treat each extracted "quote" as valid only if it is actually present in the source transcript after conservative normalization.
 

@@ -1,11 +1,18 @@
 # Spec 057: Embedding Dimension Invariants (Fail Fast)
 
-**Status**: Ready to Implement
+**Status**: Implemented (PR #92, 2026-01-03)
 **Priority**: Medium
 **Complexity**: Low
 **Related**: `PIPELINE-BRITTLENESS.md`, Spec 055
 
 ---
+
+## SSOT (Implemented)
+
+- Code: `src/ai_psychiatrist/config.py` (`EmbeddingSettings.allow_insufficient_dimension_embeddings`)
+- Wire-up (load-time): `src/ai_psychiatrist/services/reference_store.py` (`ReferenceStore._combine_and_normalize()`)
+- Wire-up (generation-time): `scripts/generate_embeddings.py` (strict `len(embedding) == dimension`, skip reasons in `--allow-partial`)
+- Tests: `tests/unit/services/test_reference_store.py`, `tests/unit/scripts/test_generate_embeddings_fail_fast.py`, `tests/unit/services/test_embedding.py`
 
 ## Problem Statement
 
@@ -21,7 +28,7 @@ This spec enforces **dimension invariants** so these failures become explicit an
 
 ---
 
-## Current Behavior (SSOT)
+## Previous Behavior (Fixed)
 
 ### Generation-time (`scripts/generate_embeddings.py`)
 
@@ -48,7 +55,7 @@ Net effect: **partial** dimension mismatches can reduce the reference corpus wit
 
 ---
 
-## Proposed Solution
+## Implemented Solution
 
 Enforce these invariants:
 

@@ -1,11 +1,17 @@
 # Spec 056: Failure Pattern Observability
 
-**Status**: Ready to Implement
+**Status**: Implemented (PR #92, 2026-01-03)
 **Priority**: Medium
 **Complexity**: Medium
 **Related**: PIPELINE-BRITTLENESS.md, ANALYSIS-026
 
 ---
+
+## SSOT (Implemented)
+
+- Code: `src/ai_psychiatrist/infrastructure/observability.py` (`FailureRegistry`, `record_failure()`)
+- Wire-up: `scripts/reproduce_results.py` (registry init + per-participant recording + `failures_{run_id}.json`)
+- Tests: `tests/unit/infrastructure/test_observability.py`
 
 ## Problem Statement
 
@@ -23,7 +29,7 @@ We need structured observability to:
 
 ---
 
-## Current State
+## Previous Behavior (Fixed)
 
 Logging is ad-hoc:
 - Some failures logged with `logger.warning()` or `logger.error()`
@@ -33,7 +39,7 @@ Logging is ad-hoc:
 
 ---
 
-## Proposed Solution
+## Implemented Solution
 
 Implement a **Failure Registry** that:
 1. Captures all failures with consistent structure
