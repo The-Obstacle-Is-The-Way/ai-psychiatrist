@@ -1,6 +1,6 @@
 # Spec 048: Verbalized Confidence for AUGRC Improvement
 
-**Status**: Ready to Implement
+**Status**: Implemented (2026-01-03)
 **Priority**: High (next AUGRC improvement lever)
 **Depends on**: Spec 046 (retrieval signals)
 **Estimated effort**: Medium
@@ -161,9 +161,10 @@ confidence = (verbalized_confidence - 1) / 4  # Normalize to [0, 1]
 
 **Formula for `verbalized_calibrated`:**
 ```text
-# Temperature scaling learned from paper-train
-confidence = softmax((verbalized_confidence - 1) / T)
-# where T is learned via negative log-likelihood minimization
+# Temperature scaling learned from paper-train (probability-space temperature scaling)
+p = (verbalized_confidence - 1) / 4   # Normalize to [0, 1] (use 0.5 if null)
+confidence = sigmoid(logit(p) / T)
+# where T > 0 is fit by minimizing binary negative log-likelihood
 ```
 
 **Formula for `hybrid_verbalized`:**

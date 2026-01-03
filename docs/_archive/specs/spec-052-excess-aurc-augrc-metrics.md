@@ -1,6 +1,6 @@
 # Spec 052: Excess AURC/AUGRC and Optimal Reference Metrics
 
-**Status**: Ready to Implement
+**Status**: Implemented (2026-01-03)
 **Priority**: Low (metric enrichment)
 **Depends on**: None (standalone)
 **Estimated effort**: Low

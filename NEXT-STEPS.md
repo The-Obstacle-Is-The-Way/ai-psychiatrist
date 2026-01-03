@@ -1,6 +1,6 @@
 # Next Steps
 
-**Status**: RUN 9 COMPLETE - Spec 046 Evaluated
+**Status**: Ready for Run 10 (Spec 048–051 confidence suite)
 **Last Updated**: 2026-01-03
 
 ---
@@ -111,19 +111,87 @@ Code defaults exist for testing and fallback only. They are NOT recommended for 
 
 ## 4. Future Work (If Pursuing AUGRC <0.020)
 
-Per GitHub Issue #86, the following phases were proposed:
+Specs 048–051 are now implemented. The next step is to run a new reproduction that emits the new per-item signals and then evaluate AURC/AUGRC across confidence variants.
 
-### Phase 2: Verbalized Confidence (Medium Effort)
-- Modify LLM prompt to request confidence rating (1-5) alongside score
-- Apply temperature scaling calibration
-- Expected: 20-40% AUGRC reduction
+### What Run 10 is testing
 
-### Phase 3: Multi-Signal Ensemble (Higher Effort)
-- Train logistic regression calibrator on [evidence, similarity, verbalized] → correctness
-- Use paper-train split for calibration
-- Expected: 30-50% AUGRC reduction
+| Spec | Capability | Where it shows up |
+|------|------------|-------------------|
+| 048 | Verbalized confidence (1–5) | `item_signals[*]["verbalized_confidence"]` |
+| 049 | Supervised calibrator | `scripts/evaluate_selective_prediction.py --confidence calibrated --calibration <artifact>` |
+| 050 | Consistency-based confidence (multi-sample) | `item_signals[*]["consistency_*"]` (requires consistency enabled) |
+| 051 | Token-level CSFs from logprobs | `item_signals[*]["token_msp|token_pe|token_energy"]` (backend-dependent) |
 
-**Current recommendation**: Phase 1 (retrieval similarity) is now complete. Phase 2/3 require prompt engineering and additional training data. Evaluate whether AUGRC improvement is worth the effort.
+### Run 10 checklist (don’t skip)
+
+1. Preflight: confirm the validated configuration is active
+   - `cp .env.example .env` (if needed)
+   - Confirm transcripts exist: `ls -d data/transcripts_participant_only/*_P | wc -l`
+   - `uv run python scripts/reproduce_results.py --split paper-test --dry-run`
+   - Confirm the header shows:
+     - `Embeddings Artifact: data/embeddings/huggingface_qwen3_8b_paper_train_participant_only.npz`
+     - `Tags Sidecar: ...tags.json (FOUND)`
+     - `Chunk Scores Sidecar: ...chunk_scores.json (FOUND)`
+     - `Reference Score Source: chunk`
+     - `Item Tag Filter: True`
+     - `Min Reference Similarity: 0.3`
+     - `Max Reference Chars Per Item: 500`
+
+   Token CSF readiness (Spec 051):
+   - Token-level confidence signals require the LLM backend to return per-token logprobs via the OpenAI-compatible `/v1` API.
+   - The code requests logprobs automatically during scoring; the only remaining question is whether the backend actually returns them.
+   - To remove uncertainty, run a 1-participant smoke test and check the output:
+
+     ```bash
+     uv run python scripts/reproduce_results.py --split paper-test --few-shot-only --limit 1
+     # Then confirm token signals exist in the saved JSON:
+     rg -n '\"token_msp\"|\"token_pe\"|\"token_energy\"' data/outputs/both_*.json | head
+     ```
+
+   - If the run artifact contains no `token_*` keys, skip token variants for this run (the evaluator will fail fast by design).
+
+2. Enable consistency signals (Spec 050)
+   - Option A (recommended): CLI overrides (explicit in the run log)
+     - `--consistency-samples 5 --consistency-temperature 0.3`
+     - (Optional) Increase samples if you want a tighter agreement estimate: `--consistency-samples 10`
+   - Option B: `.env`
+     - `CONSISTENCY_ENABLED=true`
+     - (Defaults in `.env.example`) `CONSISTENCY_N_SAMPLES=5`, `CONSISTENCY_TEMPERATURE=0.3`
+
+3. Run in tmux
+
+   ```bash
+   tmux new -s run10
+   uv run python scripts/reproduce_results.py \
+     --split paper-test \
+     --consistency-samples 5 \
+     --consistency-temperature 0.3 \
+     2>&1 | tee data/outputs/run10_confidence_suite_$(date +%Y%m%d_%H%M%S).log
+   ```
+
+4. Evaluate selective prediction (compare confidence variants)
+
+   Use the JSON output path printed by `reproduce_results.py` (the `both_*.json` file), then run:
+
+   ```bash
+   uv run python scripts/evaluate_selective_prediction.py --input <both_run.json> --mode few_shot --confidence llm
+	   uv run python scripts/evaluate_selective_prediction.py --input <both_run.json> --mode few_shot --confidence retrieval_similarity_mean
+	   uv run python scripts/evaluate_selective_prediction.py --input <both_run.json> --mode few_shot --confidence verbalized
+	   uv run python scripts/evaluate_selective_prediction.py --input <both_run.json> --mode few_shot --confidence hybrid_verbalized
+	   uv run python scripts/evaluate_selective_prediction.py --input <both_run.json> --mode few_shot --confidence consistency
+	   uv run python scripts/evaluate_selective_prediction.py --input <both_run.json> --mode few_shot --confidence hybrid_consistency
+	   ```
+
+	   Notes:
+	   - `token_msp|token_pe|token_energy` variants only work when the backend returns token logprobs; if the run artifact doesn’t include `item_signals[*]["token_*"]`, those variants will fail fast (by design).
+	   - If `token_*` keys are present, also evaluate:
+
+	     ```bash
+	     uv run python scripts/evaluate_selective_prediction.py --input <both_run.json> --mode few_shot --confidence token_msp
+	     uv run python scripts/evaluate_selective_prediction.py --input <both_run.json> --mode few_shot --confidence token_pe
+	     uv run python scripts/evaluate_selective_prediction.py --input <both_run.json> --mode few_shot --confidence token_energy
+	     ```
+	   - For multi-signal calibration (Spec 049), train a calibrator on a training output and then re-evaluate using `--confidence calibrated`.
 
 ---
 
@@ -135,6 +203,7 @@ Per GitHub Issue #86, the following phases were proposed:
 | Chunk-level scoring (Spec 35) | ✅ Implemented |
 | Participant-only preprocessing | ✅ Implemented |
 | Retrieval confidence signals (Spec 046) | ✅ Tested (+5.4% AURC) |
+| Confidence improvement suite (Specs 048–051) | ✅ Implemented (needs Run 10 eval) |
 | AUGRC < 0.020 target | ❌ Current best: 0.031 |
 
 ---

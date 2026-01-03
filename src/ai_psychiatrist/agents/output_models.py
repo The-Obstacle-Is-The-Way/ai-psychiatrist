@@ -15,6 +15,10 @@ class EvidenceOutput(BaseModel):
     evidence: str = Field(description="Direct quote from transcript")
     reason: str = Field(description="Reasoning for score assignment")
     score: int | None = Field(description="PHQ-8 score (0-3) or None for N/A")
+    confidence: int | None = Field(
+        default=None,
+        description="Verbalized confidence on a 1-5 scale (optional; omit for N/A)",
+    )
 
     @field_validator("score", mode="before")
     @classmethod
@@ -33,6 +37,24 @@ class EvidenceOutput(BaseModel):
         if isinstance(value, int) and 0 <= value <= 3:
             return value
         raise ValueError("score must be 0-3 or N/A")
+
+    @field_validator("confidence", mode="before")
+    @classmethod
+    def validate_confidence(cls, value: object) -> int | None:
+        if value is None:
+            return None
+        if isinstance(value, str):
+            if value.strip().upper() == "N/A":
+                return None
+            try:
+                value = int(value)
+            except ValueError as e:
+                raise ValueError("confidence must be 1-5 or N/A") from e
+        if isinstance(value, float) and value == int(value):
+            value = int(value)
+        if isinstance(value, int) and 1 <= value <= 5:
+            return value
+        raise ValueError("confidence must be 1-5 or N/A")
 
 
 class QuantitativeOutput(BaseModel):

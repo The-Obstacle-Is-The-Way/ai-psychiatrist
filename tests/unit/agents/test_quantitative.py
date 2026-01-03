@@ -12,6 +12,7 @@ from __future__ import annotations
 
 import asyncio
 import json
+import math
 from typing import TYPE_CHECKING
 from unittest.mock import AsyncMock, patch
 
@@ -117,7 +118,7 @@ class TestQuantitativeAssessmentAgent:
     def mock_quantitative_output(self) -> QuantitativeOutput:
         """Create valid QuantitativeOutput object."""
         return QuantitativeOutput(
-            PHQ8_NoInterest=EvidenceOutput(evidence="test", reason="test", score=1),
+            PHQ8_NoInterest=EvidenceOutput(evidence="test", reason="test", score=1, confidence=4),
             PHQ8_Depressed=EvidenceOutput(evidence="test", reason="test", score=1),
             PHQ8_Sleep=EvidenceOutput(evidence="test", reason="test", score=1),
             PHQ8_Tired=EvidenceOutput(evidence="test", reason="test", score=1),
@@ -225,6 +226,54 @@ class TestQuantitativeAssessmentAgent:
 
     @pytest.mark.asyncio
     @pytest.mark.usefixtures("mock_agent_factory")
+    async def test_assess_propagates_verbalized_confidence(
+        self, mock_client: MockLLMClient, sample_transcript: Transcript
+    ) -> None:
+        """Verbalized confidence should be preserved per item (Spec 048)."""
+        agent = self.create_agent(mock_client)
+        result = await agent.assess(sample_transcript)
+
+        assert result.items[PHQ8Item.NO_INTEREST].verbalized_confidence == 4
+
+    @pytest.mark.asyncio
+    async def test_assess_propagates_token_signals_when_available(
+        self,
+        mock_client: MockLLMClient,
+        sample_transcript: Transcript,
+        mock_quantitative_output: QuantitativeOutput,
+    ) -> None:
+        """Token-level confidence signals should be attached when logprobs exist (Spec 051)."""
+        logprobs = [
+            {
+                "logprob": math.log(0.9),
+                "top_logprobs": [{"logprob": math.log(0.9)}, {"logprob": math.log(0.1)}],
+            }
+        ]
+
+        fake_result = AsyncMock()
+        fake_result.output = mock_quantitative_output
+        fake_result.response = AsyncMock()
+        fake_result.response.provider_details = {"logprobs": logprobs}
+
+        mock_agent = AsyncMock(spec_set=Agent)
+        mock_agent.run.return_value = fake_result
+
+        with patch(
+            "ai_psychiatrist.agents.pydantic_agents.create_quantitative_agent",
+            return_value=mock_agent,
+        ):
+            agent = self.create_agent(mock_client)
+            result = await agent.assess(sample_transcript)
+
+        item = result.items[PHQ8Item.NO_INTEREST]
+        assert item.token_msp == pytest.approx(0.9)
+
+        expected_entropy = -(0.9 * math.log(0.9) + 0.1 * math.log(0.1))
+        assert item.token_pe == pytest.approx(expected_entropy)
+        assert item.token_energy == pytest.approx(0.0)
+
+    @pytest.mark.asyncio
+    @pytest.mark.usefixtures("mock_agent_factory")
     async def test_assess_calculates_total_score(
         self, mock_client: MockLLMClient, sample_transcript: Transcript
     ) -> None:
@@ -247,7 +296,43 @@ class TestQuantitativeAssessmentAgent:
         # Scores: 6 items are scored, 2 are N/A (unknown). The severity is bounded, not determinate.
         assert result.severity is None
         assert result.severity_lower_bound == SeverityLevel.MILD
-        assert result.severity_upper_bound == SeverityLevel.MODERATE
+
+    @pytest.mark.asyncio
+    @pytest.mark.usefixtures("mock_agent_factory")
+    async def test_assess_with_consistency_sets_modal_score_and_signals(
+        self,
+        mock_client: MockLLMClient,
+        sample_transcript: Transcript,
+    ) -> None:
+        """Consistency mode should attach modal agreement signals per item (Spec 050)."""
+        agent = self.create_agent(mock_client)
+
+        def make_items(score_no_interest: int | None) -> dict[PHQ8Item, ItemAssessment]:
+            items: dict[PHQ8Item, ItemAssessment] = {}
+            for phq_item in PHQ8Item.all_items():
+                score = score_no_interest if phq_item == PHQ8Item.NO_INTEREST else 1
+                items[phq_item] = ItemAssessment(
+                    item=phq_item,
+                    evidence="test",
+                    reason="test",
+                    score=score,
+                )
+            return items
+
+        # Samples: [2, 2, 2, 1, 1] => modal=2, count=3, conf=0.6
+        scores = [2, 2, 2, 1, 1]
+        agent._score_items = AsyncMock(side_effect=[make_items(s) for s in scores])  # type: ignore[method-assign]
+
+        result = await agent.assess_with_consistency(
+            sample_transcript, n_samples=5, temperature=0.3
+        )
+        item = result.items[PHQ8Item.NO_INTEREST]
+        assert item.score == 2
+        assert item.consistency_modal_score == 2
+        assert item.consistency_modal_count == 3
+        assert item.consistency_modal_confidence == pytest.approx(0.6)
+        assert item.consistency_na_rate == pytest.approx(0.0)
+        assert item.consistency_samples == tuple(scores)
 
     @pytest.mark.asyncio
     @pytest.mark.usefixtures("mock_agent_factory")

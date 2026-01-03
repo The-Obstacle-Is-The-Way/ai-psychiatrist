@@ -44,6 +44,7 @@ def embedding_settings() -> EmbeddingSettings:
     return EmbeddingSettings(
         dimension=4096,
         chunk_size=8,
+        enable_item_tag_filter=False,  # Explicitly disable to avoid environment override
     )
 
 
