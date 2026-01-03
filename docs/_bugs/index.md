@@ -2,6 +2,12 @@
 
 This directory tracks active bug investigations. Resolved bugs are archived in `docs/_archive/bugs/`.
 
+## Active Investigations
+
+| ID | Title | Status | Summary |
+|----|-------|--------|---------|
+| [ANALYSIS-026](./ANALYSIS-026-JSON-PARSING-ARCHITECTURE-AUDIT.md) | JSON Parsing Architecture Audit | 🔍 Investigation | Deep audit of JSON parsing chain, comparison to industry practices (json-repair, instructor, LangGraph) |
+
 ## Active Bugs
 
 _No active bugs at this time._
@@ -27,7 +33,7 @@ All resolved bugs are in `docs/_archive/bugs/`:
 
 1. Check if bug already exists in archive
 2. Create file: `docs/_bugs/BUG-XXX-short-title.md`
-3. Use next available number (currently: BUG-025)
+3. Use next available number (currently: BUG-026)
 4. Include: Severity, Status, File, Description, Impact, Fix
 
 When resolved, move to `docs/_archive/bugs/` with naming convention:
