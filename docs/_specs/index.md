@@ -4,7 +4,25 @@ Implementation-ready (or implementation-planned) specifications for changes that
 
 ## Ready to Implement
 
-All currently scoped specs are implemented and archived under `docs/_archive/specs/`. New proposals should be added here before code changes.
+### Pipeline Robustness (Specs 053-057)
+
+These specs address silent failure modes identified in `PIPELINE-BRITTLENESS.md`:
+
+| Spec | Title | Priority | Complexity | Description |
+|------|-------|----------|------------|-------------|
+| **053** | [Evidence Hallucination Detection](spec-053-evidence-hallucination-detection.md) | High | Medium | Validate extracted evidence quotes exist in source transcript |
+| **054** | [Strict Evidence Schema Validation](spec-054-strict-evidence-schema-validation.md) | High | Low | Fail loudly when evidence JSON has wrong types (string instead of list) |
+| **055** | [Embedding NaN Detection](spec-055-embedding-nan-detection.md) | High | Low | Validate embeddings for NaN/Inf/zero before similarity computation |
+| **056** | [Failure Pattern Observability](spec-056-failure-pattern-observability.md) | Medium | Medium | Structured failure logging with per-run summaries and JSON export |
+| **057** | [Embedding Dimension Strict Mode](spec-057-embedding-dimension-strict-mode.md) | Medium | Low | Change default to fail on dimension mismatch instead of silent skip |
+
+**Dependency Order**: 054 → 053 (schema validation before hallucination detection)
+
+**Implementation Priority**:
+1. Spec 054 + 055 (quick wins, low complexity)
+2. Spec 053 (requires `rapidfuzz` dependency)
+3. Spec 057 (config change, may need migration)
+4. Spec 056 (larger scope, can be done incrementally)
 
 ## Deferred
 
