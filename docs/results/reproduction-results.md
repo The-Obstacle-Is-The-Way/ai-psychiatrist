@@ -61,7 +61,7 @@ uv run python scripts/reproduce_results.py --split paper-test --few-shot-only
 The runner prints the saved path:
 
 ```text
-Results saved to: data/outputs/{mode}_{split}_backfill-{on,off}_{YYYYMMDD_HHMMSS}.json
+Results saved to: data/outputs/{mode}_{split}_{YYYYMMDD_HHMMSS}.json
 ```
 
 ### 2) Compute selective prediction metrics

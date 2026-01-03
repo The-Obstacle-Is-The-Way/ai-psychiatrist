@@ -26,8 +26,6 @@ class TestNAReason:
     def test_values_exist(self) -> None:
         """All expected NA reasons should exist."""
         assert NAReason.NO_MENTION.value == "no_mention"
-        assert NAReason.LLM_ONLY_MISSED.value == "llm_only_missed"
-        assert NAReason.KEYWORDS_INSUFFICIENT.value == "keywords_insufficient"
         assert NAReason.SCORE_NA_WITH_EVIDENCE.value == "score_na_with_evidence"
 
     def test_is_str_enum(self) -> None:

@@ -104,8 +104,7 @@ Our system predicts PHQ-8 item scores (0-3 scale) from clinical interview transc
 We use two confidence signals for ranking predictions:
 
 1. **`llm_evidence_count`**: Number of evidence spans the LLM cited
-2. **`keyword_evidence_count`**: Number of keyword matches found
-3. **`total_evidence`**: Sum of both (composite signal)
+2. **`total_evidence`**: Legacy alias for `llm_evidence_count` (keyword backfill removed in Spec 047)
 
 ### Bootstrap Confidence Intervals
 

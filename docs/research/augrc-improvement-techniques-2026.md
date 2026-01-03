@@ -25,7 +25,7 @@ Transcript
   ↓
 Evidence Extraction (LLM finds quotes per PHQ-8 item)
   ↓
-confidence = llm_evidence_count (or llm + keyword evidence)  ← CURRENT SIGNAL
+confidence = llm_evidence_count  ← CURRENT SIGNAL
   ↓
 AUGRC computed by sorting predictions by confidence
 ```
@@ -34,7 +34,6 @@ AUGRC computed by sorting predictions by confidence
 ```python
 final_items[phq_item] = ItemAssessment(
     llm_evidence_count=llm_counts.get(legacy_key, 0),
-    keyword_evidence_count=keyword_added_counts.get(legacy_key, 0),
 )
 ```
 

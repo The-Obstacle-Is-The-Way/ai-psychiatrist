@@ -1,6 +1,6 @@
 # Spec 047: Remove Deprecated Keyword Backfill Feature
 
-**Status**: DRAFT
+**Status**: Implemented (2026-01-03)
 **Issue**: #82 - Remove deprecated keyword backfill feature
 **Author**: Claude
 **Date**: 2026-01-02
@@ -12,7 +12,7 @@
 The keyword backfill feature is a flawed heuristic that matches keywords like "sleep" or "tired" without semantic understanding. It was retained for historical comparison but should now be completely removed to reduce code complexity and eliminate dead code paths.
 
 **Why Remove Now?**
-1. Default is OFF (`enable_keyword_backfill=false`) and documented as deprecated
+1. Feature was OFF by default and documented as deprecated
 2. Enabling it harms validity without improving clinical outcomes
 3. It adds ~200 lines of code that are never executed in production
 4. It creates confusion for new contributors
@@ -308,7 +308,8 @@ empty_evidence = json.dumps({k: [] for k in DOMAIN_KEYWORDS})
 # AFTER
 empty_evidence = json.dumps({k: [] for k in PHQ8_DOMAIN_KEYS})
 
-# DELETE entire TestDomainKeywords class (lines 461-485) - both tests test keyword functionality
+# DELETE entire TestKeywordBackfill class (tests keyword backfill behavior)
+# DELETE entire TestDomainKeywords class (tests keyword list + normalization)
 ```
 
 **Update `tests/unit/agents/test_quantitative_coverage.py`:**
@@ -326,6 +327,25 @@ SAMPLE_EVIDENCE_RESPONSE = json.dumps({k: ["evidence"] for k in DOMAIN_KEYWORDS}
 # AFTER
 SAMPLE_EVIDENCE_RESPONSE = json.dumps({k: ["evidence"] for k in PHQ8_DOMAIN_KEYS})
 ```
+
+**Update `tests/unit/domain/test_value_objects.py`:**
+
+- Remove `keyword_evidence_count` construction + assertions.
+- Narrow `evidence_source` expectations to `"llm"` or `None` only.
+
+**Update `tests/unit/scripts/test_evaluate_selective_prediction_confidence.py`:**
+
+- Remove `keyword_evidence_count` from synthetic `item_signals` fixtures.
+
+**Update `tests/integration/test_selective_prediction_from_output.py`:**
+
+- Remove `keyword_evidence_count` from synthetic `item_signals` fixtures.
+
+**Add regression tests (new):**
+
+- `tests/unit/test_spec_047_remove_keyword_backfill.py`
+  - Asserts keyword backfill config + schema are removed (field-level).
+  - Asserts run output filename no longer includes `backfill-*`.
 
 #### 2.2 Experiment Tracking (`src/ai_psychiatrist/services/experiment_tracking.py`)
 
@@ -384,11 +404,15 @@ sig.get("keyword_evidence_count", 0)
 | `docs/configs/configuration-philosophy.md` | Remove backfill from "OFF permanently" section |
 | `docs/preflight-checklist/preflight-checklist-zero-shot.md` | Remove backfill checks |
 | `docs/preflight-checklist/preflight-checklist-few-shot.md` | Remove backfill checks |
+| `docs/architecture/pipeline.md` | Remove backfill mention in quantitative stage |
 | `docs/results/run-output-schema.md` | Remove `keyword_evidence_count` from schema |
+| `docs/results/reproduction-results.md` | Update “Results saved to” filename format |
 | `docs/statistics/metrics-and-evaluation.md` | Simplify confidence formula (remove `+ keyword_evidence_count`) |
 | `docs/statistics/statistical-methodology-aurc-augrc.md` | Remove `keyword_evidence_count` reference |
+| `docs/statistics/coverage.md` | Remove backfill ablation mention (feature removed) |
 | `docs/research/augrc-improvement-techniques-2026.md` | Remove `keyword_evidence_count` from code sample |
 | `docs/_specs/spec-046-selective-prediction-confidence-signals.md` | Simplify `total_evidence` formula |
+| `docs/data/artifact-namespace-registry.md` | Update outputs filename pattern (no `backfill-*`) |
 
 #### 3.2 Archive Documentation (Leave As-Is)
 
@@ -456,7 +480,7 @@ Files in `docs/_archive/` should remain untouched as historical record:
 
 ### For Users
 
-1. **No action needed** if using default settings (`enable_keyword_backfill=false`)
+1. **No action needed** for baseline runs (keyword backfill was removed; no runtime toggle remains).
 2. After update, remove these from `.env` if present:
    - `QUANTITATIVE_ENABLE_KEYWORD_BACKFILL`
    - `QUANTITATIVE_KEYWORD_BACKFILL_CAP`
@@ -465,6 +489,9 @@ Files in `docs/_archive/` should remain untouched as historical record:
 ### For Downstream Analysis Scripts
 
 Scripts that read `keyword_evidence_count` or check for `evidence_source == "keyword"` will need updates.
+
+**Note on historical artifacts**: existing run outputs may still include `backfill-off` in filenames.
+This is a historical naming convention; new runs after this spec should use the updated naming scheme.
 
 ---
 
@@ -584,8 +611,8 @@ uv run pytest -v
 # 2. Check for remaining references
 rg "keyword.?backfill|BACKFILL" --type py --type yaml
 
-# 3. Verify .env.example has no backfill settings
-grep -i backfill .env.example
+# 3. Verify .env.example has no backfill settings (expect no output)
+rg -n "backfill" .env.example || true
 
 # 4. Run a quick assessment to verify nothing breaks
 uv run python -c "

@@ -13,7 +13,7 @@ if TYPE_CHECKING:
     from collections.abc import Generator
 
 from ai_psychiatrist.agents.output_models import EvidenceOutput, QuantitativeOutput
-from ai_psychiatrist.agents.prompts.quantitative import DOMAIN_KEYWORDS
+from ai_psychiatrist.agents.prompts.quantitative import PHQ8_DOMAIN_KEYS
 from ai_psychiatrist.agents.quantitative import QuantitativeAssessmentAgent
 from ai_psychiatrist.config import PydanticAISettings
 from ai_psychiatrist.domain.entities import Transcript
@@ -22,7 +22,7 @@ from tests.fixtures.mock_llm import MockLLMClient
 
 pytestmark = pytest.mark.unit
 
-SAMPLE_EVIDENCE_RESPONSE = json.dumps({k: ["evidence"] for k in DOMAIN_KEYWORDS})
+SAMPLE_EVIDENCE_RESPONSE = json.dumps({k: ["evidence"] for k in PHQ8_DOMAIN_KEYS})
 
 
 class TestQuantitativeCoverage:

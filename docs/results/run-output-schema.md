@@ -5,7 +5,7 @@
 
 This repo writes two primary provenance artifacts for quantitative reproduction runs:
 
-1. `data/outputs/{mode}_{split}_backfill-{on,off}_{YYYYMMDD_HHMMSS}.json`
+1. `data/outputs/{mode}_{split}_{YYYYMMDD_HHMMSS}.json`
 2. `data/experiments/registry.yaml` (append/update registry of runs)
 
 SSOT implementation:
@@ -19,7 +19,7 @@ SSOT implementation:
 `generate_output_filename()` produces:
 
 ```text
-{mode}_{split}_backfill-{on,off}_{YYYYMMDD_HHMMSS}.json
+{mode}_{split}_{YYYYMMDD_HHMMSS}.json
 ```
 
 Where:
@@ -73,7 +73,7 @@ Per-mode aggregated metrics + per-participant results:
 For downstream AURC/AUGRC evaluation, `scripts/evaluate_selective_prediction.py` consumes:
 - per-participant `success`
 - per-item predictions
-- `item_signals` evidence counts (`llm_evidence_count`, `keyword_evidence_count`)
+- `item_signals` evidence counts (`llm_evidence_count`)
 - (Spec 046) retrieval stats (`retrieval_reference_count`, `retrieval_similarity_mean`, `retrieval_similarity_max`)
 
 ---

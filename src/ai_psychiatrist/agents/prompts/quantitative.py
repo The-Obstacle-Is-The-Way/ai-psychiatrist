@@ -11,14 +11,6 @@ predicting PHQ-8 scores from interview transcripts.
 
 from __future__ import annotations
 
-from functools import lru_cache
-from importlib import resources
-from typing import Any
-
-import yaml
-
-_KEYWORDS_RESOURCE_PATH = "resources/phq8_keywords.yaml"
-
 # The PHQ-8 item keys used throughout the prompts and parsers.
 PHQ8_DOMAIN_KEYS: tuple[str, ...] = (
     "PHQ8_NoInterest",
@@ -30,46 +22,6 @@ PHQ8_DOMAIN_KEYS: tuple[str, ...] = (
     "PHQ8_Concentrating",
     "PHQ8_Moving",
 )
-
-
-@lru_cache(maxsize=1)
-def _load_domain_keywords() -> dict[str, list[str]]:
-    """Load PHQ-8 domain keywords from YAML file.
-
-    Keywords are cached after first load for performance.
-
-    Returns:
-        Dictionary mapping PHQ-8 item keys to keyword lists.
-
-    Raises:
-        FileNotFoundError: If keywords file is missing from the installed package.
-        ValueError: If the YAML structure is invalid or missing required keys.
-        yaml.YAMLError: If YAML is malformed.
-    """
-    keywords_file = resources.files("ai_psychiatrist").joinpath(_KEYWORDS_RESOURCE_PATH)
-    with keywords_file.open("r", encoding="utf-8") as f:
-        data: Any = yaml.safe_load(f)
-
-    if not isinstance(data, dict):
-        raise ValueError("PHQ-8 keywords YAML must be a mapping")
-
-    result: dict[str, list[str]] = {}
-    for key in PHQ8_DOMAIN_KEYS:
-        raw_value = data.get(key)
-        if not isinstance(raw_value, list):
-            raise ValueError(f"PHQ-8 keywords YAML missing list for {key}")
-        keywords = [str(v).strip().lower() for v in raw_value if str(v).strip()]
-        if not keywords:
-            raise ValueError(f"PHQ-8 keywords YAML has empty keyword list for {key}")
-        result[key] = keywords
-
-    return result
-
-
-# Domain keywords for keyword backfill
-# Loaded from a packaged YAML resource for easier clinical review
-# Used to catch evidence when LLM extraction misses relevant sentences
-DOMAIN_KEYWORDS: dict[str, list[str]] = _load_domain_keywords()
 
 QUANTITATIVE_SYSTEM_PROMPT = """You are an AI psychiatrist assessment tool specialized in analyzing \
 interview transcripts to evaluate PHQ-8 (Patient Health Questionnaire-8) scores. The PHQ-8 is a \

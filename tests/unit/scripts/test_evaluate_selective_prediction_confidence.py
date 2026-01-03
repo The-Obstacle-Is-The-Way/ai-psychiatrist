@@ -42,14 +42,13 @@ def _make_experiment(*, signals: dict[str, dict[str, Any]]) -> dict[str, Any]:
 
 
 def _signals_without_retrieval() -> dict[str, dict[str, Any]]:
-    return {k: {"llm_evidence_count": 1, "keyword_evidence_count": 0} for k in _make_item_keys()}
+    return {k: {"llm_evidence_count": 1} for k in _make_item_keys()}
 
 
 def _signals_with_retrieval_mean(mean: float | None) -> dict[str, dict[str, Any]]:
     return {
         k: {
             "llm_evidence_count": 3,
-            "keyword_evidence_count": 0,
             "retrieval_reference_count": 2,
             "retrieval_similarity_mean": mean,
             "retrieval_similarity_max": mean,

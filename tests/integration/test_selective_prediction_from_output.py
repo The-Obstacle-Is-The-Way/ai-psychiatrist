@@ -29,7 +29,6 @@ def mock_output_json(tmp_path: Path) -> Path:
     signals: dict[str, dict[str, int | float | None]] = {
         k: {
             "llm_evidence_count": 0,
-            "keyword_evidence_count": 0,
             # Spec 046: retrieval-grounded confidence signals
             "retrieval_reference_count": 0,
             "retrieval_similarity_mean": None,

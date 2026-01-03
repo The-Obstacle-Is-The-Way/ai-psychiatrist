@@ -32,7 +32,6 @@ Few-shot mode uses reference embeddings to retrieve similar transcript chunks as
 
 - [ ] **Copy template**: `cp .env.example .env`
   - **Gotcha (BUG-018b)**: `.env` OVERRIDES code defaults! Always start fresh.
-  - **Gotcha (BUG-024)**: If `.env` predates SPEC-003, it may lack `QUANTITATIVE_ENABLE_KEYWORD_BACKFILL=false`. Re-copy from `.env.example` or add missing settings.
 
 - [ ] **Review .env file manually** - open it and verify:
   ```bash
@@ -298,21 +297,9 @@ If only some chunks are mismatched, retrieval quality degrades. Always validate 
 
 ---
 
-## Phase 5: Quantitative Settings (SPEC-003)
+## Phase 5: Quantitative Settings
 
-### 5.1 Keyword Backfill Toggle
-
-**Reference**: SPEC-003, Coverage Investigation
-
-- [ ] **Backfill is DISABLED** (baseline defaults ≈50% coverage):
-  ```bash
-  grep "QUANTITATIVE_ENABLE_KEYWORD_BACKFILL" .env
-  # MUST show: QUANTITATIVE_ENABLE_KEYWORD_BACKFILL=false
-  ```
-
-  **Gotcha**: Backfill ON is an ablation that increases coverage (~74%) but can harm validity.
-
-### 5.2 N/A Reason Tracking
+### 5.1 N/A Reason Tracking
 
 - [ ] **N/A tracking enabled** (for debugging):
   ```bash
@@ -466,7 +453,6 @@ print('=== CRITICAL SETTINGS ===')
 print(f'Quantitative Model: {s.model.quantitative_model}')
 print(f'Embedding Model: {s.model.embedding_model}')
 print(f'Temperature: {s.model.temperature}')
-print(f'Keyword Backfill: {s.quantitative.enable_keyword_backfill}')
 print(f'Timeout: {s.ollama.timeout_seconds}s')
 print(f'Pydantic AI Enabled: {s.pydantic_ai.enabled}')
 print()
@@ -484,7 +470,6 @@ Expected output:
 Quantitative Model: gemma3:27b-it-qat  (or gemma3:27b for legacy baseline)
 Embedding Model: qwen3-embedding:8b
 Temperature: 0.0
-Keyword Backfill: False
 Timeout: 600s  (or higher for research runs)
 Pydantic AI Enabled: True
 
@@ -544,7 +529,7 @@ Watch for these log patterns:
 | Log Pattern | Issue | Action |
 |-------------|-------|--------|
 | `LLM request timed out` | Transcript too long | Increase `OLLAMA_TIMEOUT_SECONDS` |
-| `Failed to parse evidence JSON` | LLM output malformed | Keyword backfill mitigates; check model |
+| `Failed to parse evidence JSON` | LLM output malformed | Check JSON repair (Spec 043) and inspect the raw response |
 | `na_count = 8` for all | MedGemma contamination | Ensure model is Gemma3 (`gemma3:27b-it-qat` or `gemma3:27b`), not MedGemma |
 | `No reference embeddings found` | Missing/wrong embeddings | Generate: `scripts/generate_embeddings.py` |
 | `Embedding dimension mismatch` | Dimension inconsistency | Regenerate embeddings with correct dimension |
@@ -647,7 +632,6 @@ Watch for these log patterns:
 | Symptom | Cause | Fix |
 |---------|-------|-----|
 | All items N/A | MedGemma model | Change to `gemma3:27b` |
-| 74% coverage | Backfill ON | Set `QUANTITATIVE_ENABLE_KEYWORD_BACKFILL=false` |
 | Timeouts on 13% | Long transcripts | Increase `OLLAMA_TIMEOUT_SECONDS=600` or higher |
 | Participant 487 fails | macOS resource fork | Re-extract with `unzip -x '._*'` |
 | Config not applying | .env override | Start fresh: `cp .env.example .env` |

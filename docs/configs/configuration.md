@@ -347,17 +347,7 @@ These settings control the quantitative assessment behavior (evidence extraction
 
 | Variable | Type | Default | Description |
 |----------|------|---------|-------------|
-| `QUANTITATIVE_ENABLE_KEYWORD_BACKFILL` | bool | `false` | Enable keyword backfill for evidence extraction (baseline default: OFF) |
 | `QUANTITATIVE_TRACK_NA_REASONS` | bool | `true` | Track why items return N/A |
-| `QUANTITATIVE_KEYWORD_BACKFILL_CAP` | int | `3` | Max keyword-matched sentences per domain |
-
-**Default Behavior (Baseline):**
-
-Keyword backfill is **OFF by default** (conservative baseline; ~50% coverage).
-
-> ⚠️ **Deprecated**: Keyword backfill is a historical ablation feature. Enabling it is not recommended for new runs. See `POST-ABLATION-DEFAULTS.md` in the project root for rationale.
-
-See [Configuration Philosophy](./configuration-philosophy.md) for background on why legacy baseline settings are deprecated.
 
 ---
 

@@ -3,7 +3,6 @@
 Tests verify the agent correctly:
 - Predicts PHQ-8 scores (0-3) for all 8 items
 - Supports zero-shot and few-shot modes
-- Extracts evidence with keyword backfill
 - Parses JSON responses with multi-level repair
 - Handles N/A scores for insufficient evidence
 - Calculates total score bounds and severity bounds correctly
@@ -24,13 +23,12 @@ if TYPE_CHECKING:
 
 from ai_psychiatrist.agents.output_models import EvidenceOutput, QuantitativeOutput
 from ai_psychiatrist.agents.prompts.quantitative import (
-    DOMAIN_KEYWORDS,
     QUANTITATIVE_SYSTEM_PROMPT,
     make_evidence_prompt,
     make_scoring_prompt,
 )
 from ai_psychiatrist.agents.quantitative import QuantitativeAssessmentAgent
-from ai_psychiatrist.config import PydanticAISettings, QuantitativeSettings
+from ai_psychiatrist.config import PydanticAISettings
 from ai_psychiatrist.domain.entities import PHQ8Assessment, Transcript
 from ai_psychiatrist.domain.enums import AssessmentMode, PHQ8Item, SeverityLevel
 from ai_psychiatrist.domain.value_objects import ItemAssessment
@@ -308,87 +306,6 @@ class TestQuantitativeAssessmentAgent:
             await agent.assess(sample_transcript)
 
 
-class TestKeywordBackfill:
-    """Tests for keyword backfill functionality."""
-
-    @pytest.fixture
-    def sample_transcript(self) -> Transcript:
-        """Create transcript with keyword-rich text."""
-        return Transcript(
-            participant_id=456,
-            text="""Ellie: How are you sleeping?
-Participant: I can't fall asleep at night. I'm exhausted all the time.
-Ellie: And your appetite?
-Participant: I've lost weight recently. Don't bother eating much.
-Ellie: How is your concentration?
-Participant: I have trouble focusing on anything. Can't think straight.""",
-        )
-
-    @pytest.fixture
-    def mock_quantitative_output(self) -> QuantitativeOutput:
-        """Create valid QuantitativeOutput object with 0 scores."""
-        return QuantitativeOutput(
-            PHQ8_NoInterest=EvidenceOutput(evidence="test", reason="test", score=0),
-            PHQ8_Depressed=EvidenceOutput(evidence="test", reason="test", score=0),
-            PHQ8_Sleep=EvidenceOutput(evidence="test", reason="test", score=0),
-            PHQ8_Tired=EvidenceOutput(evidence="test", reason="test", score=0),
-            PHQ8_Appetite=EvidenceOutput(evidence="test", reason="test", score=0),
-            PHQ8_Failure=EvidenceOutput(evidence="test", reason="test", score=0),
-            PHQ8_Concentrating=EvidenceOutput(evidence="test", reason="test", score=0),
-            PHQ8_Moving=EvidenceOutput(evidence="test", reason="test", score=0),
-        )
-
-    @pytest.fixture
-    def mock_agent_factory(
-        self, mock_quantitative_output: QuantitativeOutput
-    ) -> Generator[AsyncMock, None, None]:
-        """Patch create_quantitative_agent to return a mock agent."""
-        mock_agent = AsyncMock(spec_set=Agent)
-        mock_agent.run.return_value = AsyncMock(output=mock_quantitative_output)
-
-        patcher = patch(
-            "ai_psychiatrist.agents.pydantic_agents.create_quantitative_agent",
-            return_value=mock_agent,
-        )
-        mock = patcher.start()
-        yield mock
-        patcher.stop()
-
-    def create_agent(
-        self, client: MockLLMClient, settings: QuantitativeSettings
-    ) -> QuantitativeAssessmentAgent:
-        """Helper to create agent with Pydantic AI enabled."""
-        return QuantitativeAssessmentAgent(
-            llm_client=client,
-            mode=AssessmentMode.ZERO_SHOT,
-            quantitative_settings=settings,
-            pydantic_ai_settings=PydanticAISettings(enabled=True),
-            ollama_base_url="http://mock-ollama:11434",
-        )
-
-    @pytest.mark.asyncio
-    @pytest.mark.usefixtures("mock_agent_factory")
-    async def test_backfill_adds_missed_evidence(self, sample_transcript: Transcript) -> None:
-        """Keyword backfill should add evidence when LLM misses it."""
-        # LLM returns empty evidence for Step 1
-        empty_evidence = json.dumps({k: [] for k in DOMAIN_KEYWORDS})
-        client = MockLLMClient(chat_responses=[empty_evidence])
-
-        # Explicitly enable backfill (default is OFF for baseline defaults)
-        settings = QuantitativeSettings(enable_keyword_backfill=True)
-        agent = self.create_agent(client, settings)
-
-        # Call assess to trigger full pipeline including backfill
-        assessment = await agent.assess(sample_transcript)
-
-        # Should have found evidence via keywords (checked via keyword_evidence_count)
-        # Note: assess logic now populates keyword_evidence_count
-        assert assessment.items[PHQ8Item.SLEEP].keyword_evidence_count > 0
-        assert assessment.items[PHQ8Item.TIRED].keyword_evidence_count > 0
-        assert assessment.items[PHQ8Item.APPETITE].keyword_evidence_count > 0
-        assert assessment.items[PHQ8Item.CONCENTRATING].keyword_evidence_count > 0
-
-
 class TestQuantitativePrompts:
     """Tests for prompt template functions."""
 
@@ -456,33 +373,6 @@ class TestQuantitativePrompts:
         """System prompt should explain N/A handling."""
         assert "N/A" in QUANTITATIVE_SYSTEM_PROMPT
         assert "no relevant evidence" in QUANTITATIVE_SYSTEM_PROMPT.lower()
-
-
-class TestDomainKeywords:
-    """Tests for domain keyword definitions."""
-
-    def test_all_phq8_domains_have_keywords(self) -> None:
-        """All 8 PHQ-8 domains should have keyword lists."""
-        expected_domains = [
-            "PHQ8_NoInterest",
-            "PHQ8_Depressed",
-            "PHQ8_Sleep",
-            "PHQ8_Tired",
-            "PHQ8_Appetite",
-            "PHQ8_Failure",
-            "PHQ8_Concentrating",
-            "PHQ8_Moving",
-        ]
-        for domain in expected_domains:
-            assert domain in DOMAIN_KEYWORDS
-            assert isinstance(DOMAIN_KEYWORDS[domain], list)
-            assert len(DOMAIN_KEYWORDS[domain]) > 0
-
-    def test_keywords_are_lowercase(self) -> None:
-        """Keywords should be lowercase for case-insensitive matching."""
-        for domain, keywords in DOMAIN_KEYWORDS.items():
-            for kw in keywords:
-                assert kw == kw.lower(), f"Keyword '{kw}' in {domain} not lowercase"
 
 
 class TestFewShotMode:

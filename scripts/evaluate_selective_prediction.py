@@ -230,12 +230,8 @@ def parse_items(
             sig = _require_dict(signals[key], participant_id=pid, field_name=f"item_signals[{key}]")
 
             # Compute confidence
-            if confidence_key == "llm":
+            if confidence_key in {"llm", "total_evidence"}:
                 conf = float(sig.get("llm_evidence_count", 0))
-            elif confidence_key == "total_evidence":
-                conf = float(sig.get("llm_evidence_count", 0)) + float(
-                    sig.get("keyword_evidence_count", 0)
-                )
             elif confidence_key == "retrieval_similarity_mean":
                 s = _optional_float_signal(
                     sig,

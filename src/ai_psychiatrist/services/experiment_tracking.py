@@ -81,20 +81,18 @@ def generate_output_filename(
     *,
     mode: str,
     split: str,
-    backfill: bool,
     timestamp: datetime,
 ) -> str:
     """Generate semantic output filename.
 
-    Format: {mode}_{split}_{backfill}_{timestamp}.json
+    Format: {mode}_{split}_{timestamp}.json
 
     Examples:
-        few_shot_paper-test_backfill-off_20251225_143022.json
-        zero_shot_dev_backfill-on_20251225_150000.json
+        few_shot_paper-test_20251225_143022.json
+        zero_shot_dev_20251225_150000.json
     """
-    backfill_str = "backfill-on" if backfill else "backfill-off"
     ts = timestamp.strftime("%Y%m%d_%H%M%S")
-    return f"{mode}_{split}_{backfill_str}_{ts}.json"
+    return f"{mode}_{split}_{ts}.json"
 
 
 @dataclass(frozen=True)
@@ -138,7 +136,6 @@ class ExperimentProvenance:
     embedding_model: str
     llm_backend: str
     embedding_backend: str
-    enable_keyword_backfill: bool
     embeddings_path: str | None
     embeddings_checksum: str | None
     embeddings_meta_checksum: str | None
@@ -166,7 +163,6 @@ class ExperimentProvenance:
             embedding_model=settings.model.embedding_model,
             llm_backend=settings.backend.backend.value,
             embedding_backend=settings.embedding_config.backend.value,
-            enable_keyword_backfill=settings.quantitative.enable_keyword_backfill,
             embeddings_path=str(embeddings_path) if embeddings_path else None,
             embeddings_checksum=compute_file_checksum(embeddings_path) if embeddings_path else None,
             embeddings_meta_checksum=compute_file_checksum(meta_path) if meta_path else None,

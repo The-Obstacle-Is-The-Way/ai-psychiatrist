@@ -302,7 +302,6 @@ async def evaluate_participant(
             item_assessment = assessment.items[item]
             item_signals[item] = {
                 "llm_evidence_count": item_assessment.llm_evidence_count,
-                "keyword_evidence_count": item_assessment.keyword_evidence_count,
                 "evidence_source": item_assessment.evidence_source,
                 # Spec 046: retrieval-grounded confidence signals
                 "retrieval_reference_count": item_assessment.retrieval_reference_count,
@@ -823,7 +822,6 @@ def persist_experiment_outputs(
     output_filename = generate_output_filename(
         mode=filename_mode,
         split=args.split,
-        backfill=settings.quantitative.enable_keyword_backfill,
         timestamp=datetime.now(),
     )
     output_path = output_dir / output_filename

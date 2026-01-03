@@ -185,21 +185,14 @@ class EvaluationMetric(StrEnum):
 class NAReason(StrEnum):
     """Reason for N/A (unable to assess) score.
 
-    Used for debugging extraction failures and comparing
-    backfill-enabled vs backfill-disabled runs.
+    Used for debugging extraction failures.
     """
 
     NO_MENTION = "no_mention"
-    """Neither LLM nor keywords found any evidence."""
-
-    LLM_ONLY_MISSED = "llm_only_missed"
-    """LLM missed evidence that keywords would have found (backfill disabled)."""
-
-    KEYWORDS_INSUFFICIENT = "keywords_insufficient"
-    """Keywords matched but still insufficient for scoring."""
+    """No relevant evidence was extracted for the item."""
 
     SCORE_NA_WITH_EVIDENCE = "score_na_with_evidence"
-    """Evidence exists (LLM and/or keyword) but scorer returned N/A (abstained)."""
+    """Evidence exists but scorer returned N/A (abstained)."""
 
 
 class AssessmentMode(StrEnum):

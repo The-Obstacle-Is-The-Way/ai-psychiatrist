@@ -28,10 +28,8 @@ pytestmark = [
 
 def test_generate_output_filename() -> None:
     ts = datetime(2025, 12, 25, 14, 30, 22)
-    name = generate_output_filename(
-        mode="few_shot", split="paper-test", backfill=False, timestamp=ts
-    )
-    assert name == "few_shot_paper-test_backfill-off_20251225_143022.json"
+    name = generate_output_filename(mode="few_shot", split="paper-test", timestamp=ts)
+    assert name == "few_shot_paper-test_20251225_143022.json"
 
 
 def test_compute_file_checksum(tmp_path: Path) -> None:
@@ -75,7 +73,6 @@ def test_update_experiment_registry_writes_yaml(tmp_path: Path) -> None:
                 embedding_model="qwen3-embedding:8b",
                 llm_backend="ollama",
                 embedding_backend="huggingface",
-                enable_keyword_backfill=False,
                 embeddings_path=None,
                 embeddings_checksum=None,
                 embeddings_meta_checksum=None,
