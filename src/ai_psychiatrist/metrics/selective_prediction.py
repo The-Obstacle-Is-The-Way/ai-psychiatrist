@@ -257,35 +257,38 @@ def _integrate_truncated(
     return float(np.trapezoid(ys_trunc, xs_trunc))
 
 
-def compute_aurc_optimal(
+def _create_oracle_items(
     items: Sequence[ItemPrediction], *, loss: Literal["abs", "abs_norm"]
-) -> float:
-    """Compute optimal AURC (oracle CSF baseline) for regression or binary.
+) -> list[ItemPrediction]:
+    """Create oracle-ranked items with synthetic confidence based on loss.
 
-    Constructs an oracle CSF that perfectly ranks items by their loss (ascending).
-    Preserves abstained items with confidence=-inf to maintain correct n for selective risk.
+    Items are ranked by loss (ascending), so lowest-loss items get highest confidence.
+    Abstained items are preserved with confidence=-inf to maintain correct n for
+    both selective and generalized risk calculations.
+
+    Args:
+        items: Sequence of item predictions.
+        loss: Loss function to use for ranking.
+
+    Returns:
+        List of ItemPrediction with oracle confidence scores.
+        Empty list if no predicted items exist.
     """
     predicted = [i for i in items if i.pred is not None]
     abstained = [i for i in items if i.pred is None]
 
     if not predicted:
-        return 0.0
+        return []
 
     # Sort by loss (ascending = oracle ranking)
-    # We want items with lowest loss to have highest confidence.
     losses = [_compute_loss(i, loss) for i in predicted]
-
-    # Zip and sort by loss
     sorted_pairs = sorted(zip(losses, predicted, strict=True), key=lambda x: x[0])
 
-    # Create oracle items with synthetic confidence
-    # Rank 0 (lowest loss) -> Confidence 1.0
-    # Rank N-1 (highest loss) -> Confidence ~0
+    # Create oracle items: Rank 0 -> Confidence 1.0, Rank N-1 -> Confidence ~0
     n_predicted = len(sorted_pairs)
     oracle_items: list[ItemPrediction] = []
 
     for rank, (_, original_item) in enumerate(sorted_pairs):
-        # High confidence for low loss
         conf = 1.0 - (rank / n_predicted)
         oracle_items.append(
             ItemPrediction(
@@ -297,19 +300,31 @@ def compute_aurc_optimal(
             )
         )
 
-    # Add abstained items with confidence=-inf (they remain abstained, don't affect ranking)
-    # This preserves the original n for risk calculations
+    # Add abstained items with confidence=-inf (preserves original n)
     for item in abstained:
         oracle_items.append(
             ItemPrediction(
                 participant_id=item.participant_id,
                 item_index=item.item_index,
-                pred=None,  # Still abstained
+                pred=None,
                 gt=item.gt,
                 confidence=float("-inf"),
             )
         )
 
+    return oracle_items
+
+
+def compute_aurc_optimal(
+    items: Sequence[ItemPrediction], *, loss: Literal["abs", "abs_norm"]
+) -> float:
+    """Compute optimal AURC (oracle CSF baseline) for regression or binary.
+
+    Constructs an oracle CSF that perfectly ranks items by their loss (ascending).
+    """
+    oracle_items = _create_oracle_items(items, loss=loss)
+    if not oracle_items:
+        return 0.0
     return compute_aurc(oracle_items, loss=loss)
 
 
@@ -319,46 +334,10 @@ def compute_augrc_optimal(
     """Compute optimal AUGRC (oracle CSF baseline) for regression or binary.
 
     Constructs an oracle CSF that perfectly ranks items by their loss (ascending).
-    Preserves abstained items with confidence=-inf to maintain correct n for generalized risk.
     """
-    predicted = [i for i in items if i.pred is not None]
-    abstained = [i for i in items if i.pred is None]
-
-    if not predicted:
+    oracle_items = _create_oracle_items(items, loss=loss)
+    if not oracle_items:
         return 0.0
-
-    losses = [_compute_loss(i, loss) for i in predicted]
-    sorted_pairs = sorted(zip(losses, predicted, strict=True), key=lambda x: x[0])
-
-    n_predicted = len(sorted_pairs)
-    oracle_items: list[ItemPrediction] = []
-
-    # Add predicted items with oracle confidence (highest confidence = lowest loss)
-    for rank, (_, original_item) in enumerate(sorted_pairs):
-        conf = 1.0 - (rank / n_predicted)
-        oracle_items.append(
-            ItemPrediction(
-                participant_id=original_item.participant_id,
-                item_index=original_item.item_index,
-                pred=original_item.pred,
-                gt=original_item.gt,
-                confidence=conf,
-            )
-        )
-
-    # Add abstained items with confidence=-inf (they remain abstained, don't affect ranking)
-    # This preserves the original n for generalized risk calculation
-    for item in abstained:
-        oracle_items.append(
-            ItemPrediction(
-                participant_id=item.participant_id,
-                item_index=item.item_index,
-                pred=None,  # Still abstained
-                gt=item.gt,
-                confidence=float("-inf"),
-            )
-        )
-
     return compute_augrc(oracle_items, loss=loss)
 
 
@@ -387,50 +366,28 @@ def _cross_product(o: tuple[float, float], a: tuple[float, float], b: tuple[floa
 def _compute_dominant_points(coverages: list[float], risks: list[float]) -> list[bool]:
     """Compute mask for dominant points (lower convex hull in Risk-Coverage space).
 
-    The risk-coverage curve is typically decreasing (higher coverage -> higher risk usually?
-    No, RC curve: coverage [0, 1], risk usually increasing as we cover more hard items?
-    Wait. RC curve:
-    Coverage 0 -> Risk ?? (Undefined or extrapolated)
-    Coverage 1 -> Risk (Full dataset error)
+    The risk-coverage curve starts with high-confidence (low-risk) items and adds
+    uncertain items as coverage increases. Dominant points form the lower convex
+    envelope - the achievable frontier that no rational user would go above.
 
-    Standard RC curve: Sort by confidence descending.
-    Top confidence items (likely correct) are covered first.
-    So Risk starts low and increases as we add uncertain items.
-    So it's a monotonically increasing function (roughly).
-
-    The "Achievable" curve is the CONVEX HULL of the RC curve points.
-    Since we want to MINIMIZE risk for a given coverage, strictly speaking,
-    we want the "lower" convex hull if we consider points (coverage, risk).
-
-    Yes, we want the lower boundary.
-    However, standard RC curves are often jagged.
-    Dominant points are those that form the lower convex envelope.
+    This implementation uses index-based tracking to avoid float equality issues.
     """
-    points = sorted(zip(coverages, risks, strict=True), key=lambda x: x[0])
-    if not points:
+    if not coverages:
         return []
 
-    # Monotone Chain algorithm for lower hull
-    lower: list[tuple[float, float]] = []
-    for p in points:
-        while len(lower) >= 2 and _cross_product(lower[-2], lower[-1], p) <= 0:
+    # Create indexed points and sort by coverage
+    indexed_points = sorted(enumerate(zip(coverages, risks, strict=True)), key=lambda x: x[1][0])
+
+    # Monotone Chain algorithm for lower hull - track original indices
+    lower: list[tuple[int, tuple[float, float]]] = []
+    for idx, point in indexed_points:
+        while len(lower) >= 2 and _cross_product(lower[-2][1], lower[-1][1], point) <= 0:
             lower.pop()
-        lower.append(p)
+        lower.append((idx, point))
 
-    # We need to return a mask matching the original inputs.
-    # But inputs might not be sorted by coverage?
-    # compute_risk_coverage_curve returns sorted coverages (accumulating k).
-    # So inputs are sorted.
-
-    # Create a set of dominant points for fast lookup
-    dominant_set = set(lower)
-
-    # We match by value (float equality is risky but these come from same source)
-    mask = []
-    for c, r in zip(coverages, risks, strict=True):
-        mask.append((c, r) in dominant_set)
-
-    return mask
+    # Create mask using indices (avoids float equality issues)
+    dominant_indices = {idx for idx, _ in lower}
+    return [i in dominant_indices for i in range(len(coverages))]
 
 
 def compute_aurc_achievable(
