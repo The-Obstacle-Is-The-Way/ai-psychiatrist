@@ -1,0 +1,7 @@
+{
+  "githubPullRequests.upstreamRemote": null,
+  "githubPullRequests.createOnPublishBranch": false,
+  "githubPullRequests.pushBranch": "always",
+  "githubPullRequests.defaultMergeMethod": "squash",
+  "git.autofetch": false
+}
