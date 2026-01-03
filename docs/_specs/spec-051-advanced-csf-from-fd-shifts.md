@@ -76,7 +76,8 @@ This spec focuses on **portable CSFs** that can enhance our confidence signal li
 
 ### 3.1 Token-Level CSFs via Ollama Logprobs
 
-Ollama supports `logprobs` in the response when enabled:
+Ollama supports `logprobs` in the response when enabled (Requires Ollama >= 0.12.11).
+The response JSON structure contains a `logprobs` field which is a list of objects.
 
 ```python
 # Ollama API call with logprobs
@@ -86,11 +87,19 @@ response = ollama.chat(
     options={"logprobs": True, "top_logprobs": 5}
 )
 
-# Response includes token-level probabilities
-# response["message"]["logprobs"] = [
-#     {"token": "2", "logprob": -0.1, "top_logprobs": [...]},
+# Response structure (verified):
+# {
+#   "message": { ... },
+#   "logprobs": [
+#     {
+#       "token": "The",
+#       "logprob": -0.001,
+#       "bytes": [84, 104, 101],
+#       "top_logprobs": [ ... ]
+#     },
 #     ...
-# ]
+#   ]
+# }
 ```
 
 **Token MSP (Maximum Softmax Probability):**

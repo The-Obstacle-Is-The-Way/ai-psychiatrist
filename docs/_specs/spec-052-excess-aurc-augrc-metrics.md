@@ -46,7 +46,7 @@ This enables:
 
 ### 2.1 AURC_optimal (Binary Residuals)
 
-From fd-shifts `rc_stats.py`:
+From fd-shifts `rc_stats.py` (derived from Geifman & El-Yaniv 2019, "SelectiveNet"):
 
 ```python
 def aurc_optimal_binary(accuracy: float) -> float:
@@ -54,6 +54,7 @@ def aurc_optimal_binary(accuracy: float) -> float:
     err = 1 - accuracy
     if err == 0:
         return 0.0
+    # Note: Returns unscaled [0,1] value. fd-shifts scales by 1000.
     return err + (1 - err) * np.log(1 - err)
 ```
 

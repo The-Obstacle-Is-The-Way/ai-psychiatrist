@@ -4,7 +4,7 @@
 **Priority**: High (Phase 3 of AUGRC improvement)
 **Depends on**: Spec 046 (retrieval signals), Spec 048 (verbalized confidence)
 **Estimated effort**: Medium-High
-**Research basis**: [fd-shifts NeurIPS 2024](https://arxiv.org/abs/2407.01032), [UniCR (2025)](https://arxiv.org/abs/2509.01455)
+**Research basis**: [fd-shifts NeurIPS 2024](https://arxiv.org/abs/2407.01032), [On Calibration of Modern Neural Networks (Guo et al. 2017)](https://arxiv.org/abs/1706.04599), [Platt Scaling (1999)](https://www.cs.colorado.edu/~mozer/Teaching/syllabi/6622/papers/Platt1999.pdf)
 
 ## 0. Problem Statement
 
@@ -32,7 +32,7 @@ _combine_opts = {
 }
 ```
 
-The UniCR paper (2025) explicitly targets "calibrated probability → risk-controlled refusal" and shows that multi-signal calibration improves area under risk–coverage curves.
+The calibration literature (Guo et al. 2017, Platt 1999) demonstrates that post-hoc calibration on a validation set significantly improves uncertainty estimation. Multi-signal calibration (e.g., using logistic regression on multiple features) is a standard extension to capture complementary uncertainty information.
 
 ## 1. Goals / Non-Goals
 
@@ -269,7 +269,7 @@ Compare on paper-test:
 
 ## 5. Expected Outcomes
 
-Based on fd-shifts and UniCR literature:
+Based on fd-shifts and calibration literature:
 
 | Method | Expected AUGRC | vs Baseline |
 |--------|----------------|-------------|
@@ -307,7 +307,5 @@ Based on fd-shifts and UniCR literature:
 ## 8. References
 
 - [fd-shifts benchmark](https://github.com/IML-DKFZ/fd-shifts)
-- [UniCR (2025)](https://arxiv.org/abs/2509.01455)
 - [Platt Scaling (1999)](https://www.cs.colorado.edu/~mozer/Teaching/syllabi/6622/papers/Platt1999.pdf)
-- [On Calibration of Modern Neural Networks](https://arxiv.org/abs/1706.04599)
-- [Temperature Scaling (Guo et al. 2017)](https://arxiv.org/abs/1706.04599)
+- [On Calibration of Modern Neural Networks (Guo et al. 2017)](https://arxiv.org/abs/1706.04599)
