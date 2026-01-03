@@ -12,7 +12,9 @@ import sys
 from dataclasses import dataclass
 from datetime import UTC, datetime
 from pathlib import Path
-from typing import TYPE_CHECKING, Any, Literal, cast
+from typing import TYPE_CHECKING, Any, Literal, TypeAlias, cast
+
+import numpy as np
 
 if TYPE_CHECKING:
     from collections.abc import Sequence
@@ -20,6 +22,15 @@ if TYPE_CHECKING:
 # Add src to path
 sys.path.insert(0, str(Path(__file__).parent.parent / "src"))
 
+from ai_psychiatrist.calibration.calibrators import (
+    IsotonicCalibrator,
+    LinearCalibrator,
+    LogisticCalibrator,
+    StandardScalerParams,
+    TemperatureScalingCalibrator,
+)
+from ai_psychiatrist.calibration.feature_extraction import CalibratorFeatureExtractor
+from ai_psychiatrist.confidence.csf_registry import get_csf, parse_csf_variant
 from ai_psychiatrist.domain.enums import PHQ8Item
 from ai_psychiatrist.metrics.bootstrap import (
     bootstrap_by_participant,
@@ -53,6 +64,20 @@ CONFIDENCE_VARIANTS = {
     "retrieval_similarity_mean",
     "retrieval_similarity_max",
     "hybrid_evidence_similarity",
+    # Spec 048: verbalized confidence
+    "verbalized",
+    "verbalized_calibrated",
+    "hybrid_verbalized",
+    # Spec 051: token-level CSFs (requires logprobs in run artifacts)
+    "token_msp",
+    "token_pe",
+    "token_energy",
+    # Spec 050: consistency-based confidence
+    "consistency",
+    "consistency_inverse_std",
+    "hybrid_consistency",
+    # Spec 049: supervised calibrator
+    "calibrated",
 }
 
 CONFIDENCE_DEFAULT_VARIANTS = ["llm", "total_evidence"]
@@ -137,49 +162,184 @@ def _require_contains_all_keys(
         raise ValueError(f"Participant {participant_id}: missing {field_name} keys: {missing}")
 
 
-def _require_key(
-    mapping: dict[str, Any],
-    key: str,
-    *,
-    participant_id: int,
-    item_key: str,
-    confidence_key: str,
-) -> Any:
-    if key not in mapping:
-        raise ValueError(
-            f"Participant {participant_id} item {item_key}: missing item_signals['{key}'] "
-            f"(required for confidence='{confidence_key}')."
+@dataclass(frozen=True, slots=True)
+class SupervisedCalibration:
+    method: str
+    target: str
+    features: tuple[str, ...]
+    extractor: CalibratorFeatureExtractor
+    calibrator: LogisticCalibrator | LinearCalibrator | IsotonicCalibrator
+
+    def predict_confidence(self, item_signals: dict[str, Any]) -> float:
+        x = self.extractor.extract(item_signals)
+        if isinstance(self.calibrator, IsotonicCalibrator):
+            # Isotonic is 1D by definition (enforced at load time)
+            return float(self.calibrator.predict_proba(np.array([x[0]], dtype=float))[0])
+        if isinstance(self.calibrator, LogisticCalibrator):
+            return float(self.calibrator.predict_proba(x)[0])
+        return float(self.calibrator.predict(x)[0])
+
+
+Calibration: TypeAlias = TemperatureScalingCalibrator | SupervisedCalibration
+
+
+def _require_mapping(value: Any, *, field_name: str) -> dict[str, Any]:
+    if not isinstance(value, dict):
+        raise TypeError(f"Calibration artifact '{field_name}' must be a dict")
+    return cast("dict[str, Any]", value)
+
+
+def _require_str(value: Any, *, field_name: str) -> str:
+    if not isinstance(value, str):
+        raise TypeError(f"Calibration artifact '{field_name}' must be a string")
+    return value
+
+
+def _require_number(value: Any, *, field_name: str) -> float:
+    if not isinstance(value, (int, float)):
+        raise TypeError(f"Calibration artifact '{field_name}' must be a number")
+    return float(value)
+
+
+def _require_str_list(value: Any, *, field_name: str) -> list[str]:
+    if not isinstance(value, list) or not all(isinstance(x, str) for x in value):
+        raise TypeError(f"Calibration artifact '{field_name}' must be a list[str]")
+    return value
+
+
+def _require_number_list(value: Any, *, field_name: str) -> list[float]:
+    if not isinstance(value, list) or not all(isinstance(x, (int, float)) for x in value):
+        raise TypeError(f"Calibration artifact '{field_name}' must be a list[number]")
+    return [float(x) for x in value]
+
+
+def _load_temperature_scaling(data: dict[str, Any]) -> TemperatureScalingCalibrator:
+    temperature = data.get("temperature")
+    if temperature is None:
+        model = data.get("model")
+        if model is not None:
+            temperature = _require_mapping(model, field_name="model").get("temperature")
+    return TemperatureScalingCalibrator(
+        temperature=_require_number(temperature, field_name="temperature")
+    )
+
+
+def _load_logistic_or_platt(data: dict[str, Any], *, method: str) -> SupervisedCalibration:
+    features = _require_str_list(data.get("features"), field_name="features")
+    target = _require_str(data.get("target"), field_name="target")
+    model = _require_mapping(data.get("model"), field_name="model")
+
+    coefficients = np.asarray(
+        _require_number_list(model.get("coefficients"), field_name="model.coefficients"),
+        dtype=float,
+    )
+    intercept = _require_number(model.get("intercept"), field_name="model.intercept")
+    link = _require_str(model.get("link", "sigmoid"), field_name="model.link")
+
+    scaler_dict = _require_mapping(model.get("scaler"), field_name="model.scaler")
+    mean = np.asarray(
+        _require_number_list(scaler_dict.get("mean"), field_name="model.scaler.mean"), dtype=float
+    )
+    std = np.asarray(
+        _require_number_list(scaler_dict.get("std"), field_name="model.scaler.std"), dtype=float
+    )
+
+    scaler_params = StandardScalerParams(mean=mean, std=std)
+    if link == "sigmoid":
+        calibrator: LogisticCalibrator | LinearCalibrator = LogisticCalibrator(
+            coefficients=coefficients, intercept=intercept, scaler=scaler_params
         )
-    return mapping[key]
+    elif link == "identity":
+        calibrator = LinearCalibrator(
+            coefficients=coefficients, intercept=intercept, scaler=scaler_params
+        )
+    else:
+        raise ValueError(f"Unsupported link function '{link}'")
+
+    return SupervisedCalibration(
+        method=method,
+        target=target,
+        features=tuple(features),
+        extractor=CalibratorFeatureExtractor(features),
+        calibrator=calibrator,
+    )
 
 
-def _optional_float_signal(
-    mapping: dict[str, Any],
-    key: str,
+def _load_isotonic(data: dict[str, Any]) -> SupervisedCalibration:
+    features = _require_str_list(data.get("features"), field_name="features")
+    if len(features) != 1:
+        raise ValueError("Isotonic calibration requires exactly one feature")
+    target = _require_str(data.get("target"), field_name="target")
+    model = _require_mapping(data.get("model"), field_name="model")
+
+    x_thresholds = np.asarray(
+        _require_number_list(model.get("x_thresholds"), field_name="model.x_thresholds"),
+        dtype=float,
+    )
+    y_thresholds = np.asarray(
+        _require_number_list(model.get("y_thresholds"), field_name="model.y_thresholds"),
+        dtype=float,
+    )
+
+    return SupervisedCalibration(
+        method="isotonic",
+        target=target,
+        features=tuple(features),
+        extractor=CalibratorFeatureExtractor(features),
+        calibrator=IsotonicCalibrator(x_thresholds=x_thresholds, y_thresholds=y_thresholds),
+    )
+
+
+def _load_calibration(path: Path) -> Calibration:
+    data = load_run_data(path)
+    method = data.get("method")
+    if method == "temperature_scaling":
+        return _load_temperature_scaling(data)
+    if method in {"platt", "logistic"}:
+        return _load_logistic_or_platt(data, method=method)
+    if method == "isotonic":
+        return _load_isotonic(data)
+    raise ValueError(f"Unsupported calibration method '{method}'")
+
+
+def _compute_confidence(
+    sig: dict[str, Any],
     *,
+    confidence_key: str,
     participant_id: int,
     item_key: str,
-    confidence_key: str,
-) -> float | None:
-    value = _require_key(
-        mapping,
-        key,
-        participant_id=participant_id,
-        item_key=item_key,
-        confidence_key=confidence_key,
-    )
-    if value is None:
-        return None
-    if isinstance(value, (int, float)):
-        return float(value)
-    raise TypeError(
-        f"Participant {participant_id} item {item_key}: item_signals['{key}'] must be a number "
-        f"or null, got {type(value).__name__}."
-    )
+    calibration: Calibration | None,
+) -> float:
+    if confidence_key == "verbalized_calibrated":
+        if not isinstance(calibration, TemperatureScalingCalibrator):
+            raise ValueError(
+                "confidence='verbalized_calibrated' requires --calibration "
+                "(temperature_scaling.json)."
+            )
+        raw = float(get_csf("verbalized")(sig))
+        conf = float(calibration.apply(np.array([raw], dtype=float))[0])
+    elif confidence_key == "calibrated":
+        if not isinstance(calibration, SupervisedCalibration):
+            raise ValueError("confidence='calibrated' requires --calibration from Spec 049")
+        conf = calibration.predict_confidence(sig)
+    else:
+        try:
+            csf = parse_csf_variant(confidence_key)
+            conf = float(csf(sig))
+        except Exception as exc:
+            raise type(exc)(
+                f"Participant {participant_id} item {item_key}: {exc} "
+                f"(confidence='{confidence_key}')"
+            ) from exc
+
+    return conf
 
 
 def parse_items(
-    experiment: dict[str, Any], confidence_key: str
+    experiment: dict[str, Any],
+    confidence_key: str,
+    *,
+    calibration: Calibration | None = None,
 ) -> tuple[list[ItemPrediction], set[int], set[int]]:
     """Parse items from experiment results.
 
@@ -192,7 +352,7 @@ def parse_items(
     if not isinstance(results, list):
         raise TypeError(f"Experiment results must be a list, got {type(results).__name__}")
 
-    if confidence_key not in CONFIDENCE_VARIANTS:
+    if confidence_key not in CONFIDENCE_VARIANTS and not confidence_key.startswith("secondary:"):
         raise ValueError(f"Unknown confidence_key: {confidence_key}")
 
     item_keys = [item.value for item in PHQ8Item.all_items()]
@@ -234,43 +394,13 @@ def parse_items(
             pred = cast("int | None", pred_map[key])
             sig = _require_dict(signals[key], participant_id=pid, field_name=f"item_signals[{key}]")
 
-            # Compute confidence
-            if confidence_key in {"llm", "total_evidence"}:
-                conf = float(sig.get("llm_evidence_count", 0))
-            elif confidence_key == "retrieval_similarity_mean":
-                s = _optional_float_signal(
-                    sig,
-                    "retrieval_similarity_mean",
-                    participant_id=pid,
-                    item_key=key,
-                    confidence_key=confidence_key,
-                )
-                conf = float(s) if s is not None else 0.0
-            elif confidence_key == "retrieval_similarity_max":
-                s = _optional_float_signal(
-                    sig,
-                    "retrieval_similarity_max",
-                    participant_id=pid,
-                    item_key=key,
-                    confidence_key=confidence_key,
-                )
-                conf = float(s) if s is not None else 0.0
-            else:
-                llm_count = float(sig.get("llm_evidence_count", 0))
-                e = min(llm_count, 3.0) / 3.0
-                e = max(0.0, min(1.0, e))
-
-                s = _optional_float_signal(
-                    sig,
-                    "retrieval_similarity_mean",
-                    participant_id=pid,
-                    item_key=key,
-                    confidence_key=confidence_key,
-                )
-                s_val = float(s) if s is not None else 0.0
-                s_val = max(0.0, min(1.0, s_val))
-
-                conf = 0.5 * e + 0.5 * s_val
+            conf = _compute_confidence(
+                sig,
+                confidence_key=confidence_key,
+                participant_id=pid,
+                item_key=key,
+                calibration=calibration,
+            )
 
             items.append(
                 ItemPrediction(
@@ -464,6 +594,7 @@ def main() -> int:  # noqa: PLR0912, PLR0915
     )
     parser.add_argument("--bootstrap-resamples", type=int, default=DEFAULT_RESAMPLES)
     parser.add_argument("--seed", type=int, default=DEFAULT_SEED)
+    parser.add_argument("--calibration", type=Path, help="Optional calibration artifact JSON")
     parser.add_argument("--output", type=Path, help="Path to save metrics JSON")
     parser.add_argument(
         "--intersection-only",
@@ -505,6 +636,10 @@ def main() -> int:  # noqa: PLR0912, PLR0915
     # Resolve items
     input_records: list[dict[str, Any]] = []
 
+    calibration: Calibration | None = None
+    if args.calibration is not None:
+        calibration = _load_calibration(args.calibration)
+
     for cfg in input_configs:
         try:
             raw = load_run_data(cfg.path)
@@ -524,7 +659,7 @@ def main() -> int:  # noqa: PLR0912, PLR0915
 
             # Wait, for paired comparison, we need the SAME participant set.
             # Let's load items with a dummy confidence just to get the PID sets first.
-            _, included, failed = parse_items(exp, "llm")
+            _, included, failed = parse_items(exp, "llm", calibration=calibration)
 
             input_records.append(
                 {
@@ -612,7 +747,7 @@ def main() -> int:  # noqa: PLR0912, PLR0915
         variant_results = []
 
         for rec in input_records:
-            items_all, _, _ = parse_items(rec["exp"], variant)
+            items_all, _, _ = parse_items(rec["exp"], variant, calibration=calibration)
             # Filter
             items_filtered = [i for i in items_all if i.participant_id in analysis_pids]
             expected_n = len(analysis_pids) * 8
@@ -643,12 +778,12 @@ def main() -> int:  # noqa: PLR0912, PLR0915
             # Compute deltas
             items_left = [
                 i
-                for i in parse_items(input_records[0]["exp"], variant)[0]
+                for i in parse_items(input_records[0]["exp"], variant, calibration=calibration)[0]
                 if i.participant_id in analysis_pids
             ]
             items_right = [
                 i
-                for i in parse_items(input_records[1]["exp"], variant)[0]
+                for i in parse_items(input_records[1]["exp"], variant, calibration=calibration)[0]
                 if i.participant_id in analysis_pids
             ]
 

@@ -88,6 +88,9 @@ if TYPE_CHECKING:
 logger = get_logger(__name__)
 
 
+ItemSignalValue = int | float | str | None | list[int | None]
+
+
 @dataclass
 class EvaluationResult:
     """Result for a single participant evaluation."""
@@ -113,7 +116,7 @@ class EvaluationResult:
     mae_available: float | None = None
 
     # Spec 25: Per-item confidence signals for selective prediction evaluation
-    item_signals: dict[PHQ8Item, dict[str, int | float | str | None]] = field(default_factory=dict)
+    item_signals: dict[PHQ8Item, dict[str, ItemSignalValue]] = field(default_factory=dict)
 
 
 @dataclass
@@ -269,6 +272,10 @@ async def evaluate_participant(
     agent: QuantitativeAssessmentAgent,
     transcript_service: TranscriptService,
     mode: str,
+    *,
+    consistency_enabled: bool,
+    consistency_n_samples: int,
+    consistency_temperature: float,
 ) -> EvaluationResult:
     """Evaluate a single participant.
 
@@ -286,7 +293,14 @@ async def evaluate_participant(
 
     try:
         transcript = transcript_service.load_transcript(participant_id)
-        assessment = await agent.assess(transcript)
+        if consistency_enabled and consistency_n_samples > 1:
+            assessment = await agent.assess_with_consistency(
+                transcript,
+                n_samples=consistency_n_samples,
+                temperature=consistency_temperature,
+            )
+        else:
+            assessment = await agent.assess(transcript)
         predicted_items = {item: assessment.items[item].score for item in PHQ8Item.all_items()}
         errors: list[int] = []
         for item in PHQ8Item.all_items():
@@ -297,7 +311,7 @@ async def evaluate_participant(
         mae_available = float(np.mean(errors)) if errors else None
 
         # Spec 25: Build item_signals for selective prediction evaluation
-        item_signals: dict[PHQ8Item, dict[str, int | float | str | None]] = {}
+        item_signals: dict[PHQ8Item, dict[str, ItemSignalValue]] = {}
         for item in PHQ8Item.all_items():
             item_assessment = assessment.items[item]
             item_signals[item] = {
@@ -307,6 +321,23 @@ async def evaluate_participant(
                 "retrieval_reference_count": item_assessment.retrieval_reference_count,
                 "retrieval_similarity_mean": item_assessment.retrieval_similarity_mean,
                 "retrieval_similarity_max": item_assessment.retrieval_similarity_max,
+                # Spec 048: verbalized confidence (1-5 scale)
+                "verbalized_confidence": item_assessment.verbalized_confidence,
+                # Spec 051: token-level confidence signals (requires logprobs support)
+                "token_msp": item_assessment.token_msp,
+                "token_pe": item_assessment.token_pe,
+                "token_energy": item_assessment.token_energy,
+                # Spec 050: consistency-based confidence signals
+                "consistency_modal_score": item_assessment.consistency_modal_score,
+                "consistency_modal_count": item_assessment.consistency_modal_count,
+                "consistency_modal_confidence": item_assessment.consistency_modal_confidence,
+                "consistency_score_std": item_assessment.consistency_score_std,
+                "consistency_na_rate": item_assessment.consistency_na_rate,
+                "consistency_samples": (
+                    list(item_assessment.consistency_samples)
+                    if item_assessment.consistency_samples is not None
+                    else None
+                ),
             }
 
         duration = time.perf_counter() - start
@@ -435,6 +466,10 @@ async def run_experiment(
     embedding_service: EmbeddingService | None,
     model_name: str,
     limit: int | None = None,
+    *,
+    consistency_enabled: bool,
+    consistency_n_samples: int,
+    consistency_temperature: float,
 ) -> ExperimentResults:
     """Run evaluation experiment for a given mode.
 
@@ -446,6 +481,9 @@ async def run_experiment(
         embedding_service: Embedding service (required for few-shot).
         model_name: Model name for logging.
         limit: Optional limit on number of participants.
+        consistency_enabled: Whether to enable multi-sample scoring.
+        consistency_n_samples: Number of samples when consistency is enabled.
+        consistency_temperature: Sampling temperature for multi-sample scoring.
 
     Returns:
         ExperimentResults with aggregate metrics.
@@ -485,6 +523,9 @@ async def run_experiment(
             agent=agent,
             transcript_service=transcript_service,
             mode=mode_name,
+            consistency_enabled=consistency_enabled,
+            consistency_n_samples=consistency_n_samples,
+            consistency_temperature=consistency_temperature,
         )
         results.append(result)
 
@@ -736,6 +777,9 @@ async def run_requested_experiments(
     transcript_service: TranscriptService,
     embedding_service: EmbeddingService | None,
     model_name: str,
+    consistency_enabled: bool,
+    consistency_n_samples: int,
+    consistency_temperature: float,
 ) -> list[ExperimentResults]:
     """Run experiments based on CLI flags."""
     experiments: list[ExperimentResults] = []
@@ -750,6 +794,9 @@ async def run_requested_experiments(
                 embedding_service=None,
                 model_name=model_name,
                 limit=args.limit,
+                consistency_enabled=consistency_enabled,
+                consistency_n_samples=consistency_n_samples,
+                consistency_temperature=consistency_temperature,
             )
         )
 
@@ -763,6 +810,9 @@ async def run_requested_experiments(
                 embedding_service=embedding_service,
                 model_name=model_name,
                 limit=args.limit,
+                consistency_enabled=consistency_enabled,
+                consistency_n_samples=consistency_n_samples,
+                consistency_temperature=consistency_temperature,
             )
         )
 
@@ -778,6 +828,9 @@ def persist_experiment_outputs(
     participants_requested: int,
     data_settings: DataSettings,
     embedding_settings: EmbeddingSettings,
+    consistency_enabled: bool,
+    consistency_n_samples: int,
+    consistency_temperature: float,
 ) -> None:
     """Persist experiment outputs and update the experiment registry."""
     print_summary(experiments)
@@ -804,6 +857,9 @@ def persist_experiment_outputs(
             embeddings_path=exp_embeddings_path,
             participants_requested=participants_requested,
             participants_evaluated=exp.total_subjects,
+            consistency_enabled=consistency_enabled,
+            consistency_n_samples=consistency_n_samples,
+            consistency_temperature=consistency_temperature,
         )
         experiments_with_provenance.append(
             {
@@ -863,6 +919,27 @@ async def main_async(args: argparse.Namespace) -> int:
     print_run_configuration(settings=settings, split=args.split)
     print(f"  Embedding Backend: {embedding_backend_settings.backend.value}")
 
+    # Resolve effective consistency configuration (Spec 050).
+    consistency_enabled = settings.consistency.enabled
+    consistency_n_samples = settings.consistency.n_samples
+    consistency_temperature = settings.consistency.temperature
+
+    if args.consistency_samples is not None:
+        consistency_n_samples = int(args.consistency_samples)
+        consistency_enabled = consistency_n_samples > 1
+    if args.consistency_temperature is not None:
+        consistency_temperature = float(args.consistency_temperature)
+
+    if args.consistency_temperature is not None and not consistency_enabled:
+        print("ERROR: --temperature/--consistency-temperature requires --consistency-samples > 1")
+        return 1
+
+    print(
+        "  Consistency: "
+        f"{'ENABLED' if consistency_enabled else 'disabled'} "
+        f"(n={consistency_n_samples}, temp={consistency_temperature})"
+    )
+
     if args.dry_run:
         print("\n[DRY RUN] Would run evaluation with above settings.")
         return 0
@@ -911,6 +988,9 @@ async def main_async(args: argparse.Namespace) -> int:
             transcript_service=transcript_service,
             embedding_service=embedding_service,
             model_name=model_settings.quantitative_model,
+            consistency_enabled=consistency_enabled,
+            consistency_n_samples=consistency_n_samples,
+            consistency_temperature=consistency_temperature,
         )
 
         persist_experiment_outputs(
@@ -921,6 +1001,9 @@ async def main_async(args: argparse.Namespace) -> int:
             participants_requested=len(ground_truth),
             data_settings=data_settings,
             embedding_settings=embedding_settings,
+            consistency_enabled=consistency_enabled,
+            consistency_n_samples=consistency_n_samples,
+            consistency_temperature=consistency_temperature,
         )
 
     return 0
@@ -984,6 +1067,20 @@ Examples:
         choices=["ollama", "huggingface"],
         default=None,
         help="Override embedding backend",
+    )
+    parser.add_argument(
+        "--consistency-samples",
+        type=int,
+        default=None,
+        help="Enable multi-sample scoring (Spec 050) with N samples (N>1).",
+    )
+    parser.add_argument(
+        "--consistency-temperature",
+        "--temperature",
+        type=float,
+        dest="consistency_temperature",
+        default=None,
+        help="Sampling temperature for multi-sample scoring (Spec 050).",
     )
     args = parser.parse_args()
 
