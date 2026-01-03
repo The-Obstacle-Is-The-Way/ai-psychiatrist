@@ -93,8 +93,8 @@ Optional but required when features are enabled:
 - `{emb}.chunk_scores.json` + `{emb}.chunk_scores.meta.json` if `EMBEDDING_REFERENCE_SCORE_SOURCE=chunk`
 
 See:
-- `docs/embeddings/embedding-generation.md`
-- `docs/embeddings/chunk-scoring.md`
+- [Artifact generation](artifact-generation.md)
+- [Chunk scoring](chunk-scoring.md)
 
 ---
 

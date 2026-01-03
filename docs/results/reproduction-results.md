@@ -84,8 +84,8 @@ Generated artifacts:
 - `data/embeddings/huggingface_qwen3_8b_paper_train_participant_only.chunk_scores.meta.json`
 
 See:
-- `docs/embeddings/chunk-scoring.md`
-- `docs/embeddings/crag-validation.md` (Spec 36; optional validation layer)
+- `docs/rag/chunk-scoring.md`
+- `docs/rag/runtime-features.md` (includes Spec 36 CRAG validation)
 
 ---
 
@@ -93,5 +93,5 @@ See:
 
 - Feature defaults: `docs/pipeline-internals/features.md`
 - Configuration philosophy: `docs/configs/configuration-philosophy.md`
-- Retrieval debugging: `docs/embeddings/debugging-retrieval-quality.md`
-- Batch query embedding: `docs/embeddings/batch-query-embedding.md`
+- RAG debugging: `docs/rag/debugging.md`
+- RAG runtime features: `docs/rag/runtime-features.md`

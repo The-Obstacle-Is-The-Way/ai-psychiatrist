@@ -557,8 +557,7 @@ uv run python scripts/generate_embeddings.py --split paper-train
 
 - Statistical methodology: `docs/statistics/statistical-methodology-aurc-augrc.md`
 - Feature index + defaults: `docs/pipeline-internals/features.md`
-- Few-shot prompt format: `docs/embeddings/few-shot-prompt-format.md`
-- Retrieval debugging: `docs/embeddings/debugging-retrieval-quality.md`
-- Item-tag filtering setup: `docs/embeddings/item-tagging-setup.md`
-- CRAG validation guide: `docs/embeddings/crag-validation.md`
+- RAG runtime features: `docs/rag/runtime-features.md`
+- RAG debugging: `docs/rag/debugging.md`
+- RAG artifact generation: `docs/rag/artifact-generation.md`
 - Paper analysis: `docs/_archive/misc/paper-reproduction-analysis.md`
