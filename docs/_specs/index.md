@@ -25,7 +25,8 @@ Implemented specs are distilled into canonical (non-archive) documentation under
 - Error handling philosophy: [error-handling.md](../developer/error-handling.md)
 - Exception taxonomy: [exceptions.md](../developer/exceptions.md)
 - Metrics definitions + output schema: [metrics-and-evaluation.md](../statistics/metrics-and-evaluation.md)
-- Selective prediction confidence signals: [spec](spec-046-selective-prediction-confidence-signals.md) → [metrics docs](../statistics/metrics-and-evaluation.md#confidence-variants)
+- Selective prediction confidence signals (Spec 046): [spec](../_archive/specs/spec-046-selective-prediction-confidence-signals.md) → [metrics docs](../statistics/metrics-and-evaluation.md#confidence-variants)
+- Remove keyword backfill (Spec 047): [spec](../_archive/specs/spec-047-remove-keyword-backfill.md) → [configuration philosophy](../configs/configuration-philosophy.md)
 - Configuration philosophy: [configuration-philosophy.md](../configs/configuration-philosophy.md)
 - DAIC-WOZ transcript preprocessing + variants: [spec](../_archive/specs/daic-woz-transcript-preprocessing.md) → [user guide](../data/daic-woz-preprocessing.md)
 
