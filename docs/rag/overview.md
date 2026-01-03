@@ -1,4 +1,4 @@
-# Embeddings and Few-Shot Retrieval: A Plain-Language Guide
+# RAG Overview: Embeddings and Few-Shot Retrieval
 
 **Audience**: Clinicians and non-CS folks who want to understand the "magic"
 **Last Updated**: 2026-01-03

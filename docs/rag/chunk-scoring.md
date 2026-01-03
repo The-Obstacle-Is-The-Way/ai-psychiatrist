@@ -182,6 +182,6 @@ If you need strict fail-fast chunk scoring, add it as a dedicated spec (mirrorin
 
 ## Related Docs
 
-- Embedding generation: `docs/embeddings/embedding-generation.md`
-- Item tags: `docs/embeddings/item-tagging-setup.md`
-- CRAG validation: `docs/embeddings/crag-validation.md`
+- Artifact generation: [artifact-generation.md](artifact-generation.md)
+- Runtime features: [runtime-features.md](runtime-features.md)
+- Debugging: [debugging.md](debugging.md)

@@ -1,4 +1,4 @@
-# Debugging Retrieval Quality (Audit Logs + Guardrails)
+# RAG Debugging (Audit Logs + Guardrails)
 
 **Audience**: Researchers debugging few-shot performance
 **Last Updated**: 2026-01-01
@@ -121,5 +121,5 @@ Use audit logs to disambiguate.
 ## Related Docs
 
 - Feature index: `docs/pipeline-internals/features.md`
-- Few-shot prompt format: `docs/embeddings/few-shot-prompt-format.md`
+- Runtime features: [runtime-features.md](runtime-features.md)
 - Error-handling philosophy: `docs/developer/error-handling.md`
