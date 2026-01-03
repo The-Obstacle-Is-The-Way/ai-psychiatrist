@@ -3,7 +3,18 @@
 **Last Updated**: 2026-01-03
 
 This page is a high-level, **current-state** summary. The canonical timeline + per-run statistics live in:
+
 - `docs/results/run-history.md`
+
+---
+
+## ⚠️ Run Integrity Warning
+
+**A silent fallback bug was discovered on 2026-01-03** that could have caused few-shot mode to silently degrade to zero-shot if JSON parsing failed. Runs 1-9 may be affected. Run 10 started with pre-fix code.
+
+**For publication-quality results, re-run with post-fix code.**
+
+See: `docs/_bugs/ANALYSIS-026-JSON-PARSING-ARCHITECTURE-AUDIT.md` and `docs/results/run-history.md` for details.
 
 ---
 
