@@ -102,6 +102,6 @@ See: [Preflight checklist (few-shot)](../preflight-checklist/preflight-checklist
 - [Retrieval debugging](../embeddings/debugging-retrieval-quality.md)
 - [Item tagging setup](../embeddings/item-tagging-setup.md)
 - [Chunk scoring (Spec 35)](../embeddings/chunk-scoring.md)
-- [CRAG validation guide](../statistics/crag-validation-guide.md)
+- [CRAG validation guide](../embeddings/crag-validation.md)
 - [Error-handling philosophy](../developer/error-handling.md)
 - [Exception reference](../developer/exceptions.md)

@@ -85,7 +85,7 @@ Generated artifacts:
 
 See:
 - `docs/embeddings/chunk-scoring.md`
-- `docs/statistics/crag-validation-guide.md` (Spec 36; optional validation layer)
+- `docs/embeddings/crag-validation.md` (Spec 36; optional validation layer)
 
 ---
 

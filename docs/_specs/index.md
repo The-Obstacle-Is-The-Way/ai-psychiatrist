@@ -20,7 +20,7 @@ Implemented specs are distilled into canonical (non-archive) documentation under
 - Retrieval debugging workflow: [debugging-retrieval-quality.md](../embeddings/debugging-retrieval-quality.md)
 - Item-tag filtering setup + schema: [item-tagging-setup.md](../embeddings/item-tagging-setup.md)
 - Chunk scoring setup + schema: [chunk-scoring.md](../embeddings/chunk-scoring.md)
-- CRAG validation setup: [crag-validation-guide.md](../statistics/crag-validation-guide.md)
+- CRAG validation setup: [crag-validation.md](../embeddings/crag-validation.md)
 - Embedding generation (fail-fast + partial): [embedding-generation.md](../embeddings/embedding-generation.md)
 - Error handling philosophy: [error-handling.md](../developer/error-handling.md)
 - Exception taxonomy: [exceptions.md](../developer/exceptions.md)

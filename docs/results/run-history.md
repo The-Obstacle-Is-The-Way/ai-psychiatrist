@@ -560,5 +560,5 @@ uv run python scripts/generate_embeddings.py --split paper-train
 - Few-shot prompt format: `docs/embeddings/few-shot-prompt-format.md`
 - Retrieval debugging: `docs/embeddings/debugging-retrieval-quality.md`
 - Item-tag filtering setup: `docs/embeddings/item-tagging-setup.md`
-- CRAG validation guide: `docs/statistics/crag-validation-guide.md`
+- CRAG validation guide: `docs/embeddings/crag-validation.md`
 - Paper analysis: `docs/_archive/misc/paper-reproduction-analysis.md`

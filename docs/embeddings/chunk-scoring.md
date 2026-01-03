@@ -184,4 +184,4 @@ If you need strict fail-fast chunk scoring, add it as a dedicated spec (mirrorin
 
 - Embedding generation: `docs/embeddings/embedding-generation.md`
 - Item tags: `docs/embeddings/item-tagging-setup.md`
-- CRAG validation: `docs/statistics/crag-validation-guide.md`
+- CRAG validation: `docs/embeddings/crag-validation.md`

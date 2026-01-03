@@ -78,6 +78,7 @@ AI Psychiatrist is an engineering-focused, reproducible implementation of a rese
 | [Item Tagging Setup](embeddings/item-tagging-setup.md) | Item-tag filtering (Spec 34) |
 | [Retrieval Debugging](embeddings/debugging-retrieval-quality.md) | Interpret retrieval logs |
 | [Batch Query Embedding](embeddings/batch-query-embedding.md) | Query-embedding timeout fix (Spec 37) |
+| [CRAG Validation](embeddings/crag-validation.md) | Reference validation (Spec 36) |
 
 ### Data
 
@@ -104,7 +105,6 @@ AI Psychiatrist is an engineering-focused, reproducible implementation of a rese
 | [Metrics and Evaluation](statistics/metrics-and-evaluation.md) | Exact metric definitions |
 | [Coverage Explained](statistics/coverage.md) | What coverage means and why it matters |
 | [AURC/AUGRC Methodology](statistics/statistical-methodology-aurc-augrc.md) | Selective prediction metrics |
-| [CRAG Validation Guide](statistics/crag-validation-guide.md) | Reference validation (Spec 36) |
 
 ### Results & Reproduction
 

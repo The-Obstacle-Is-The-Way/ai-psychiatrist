@@ -179,5 +179,5 @@ See [Chunk-level scoring](chunk-scoring.md) for generation commands.
 
 - [Chunk-level scoring (Spec 35)](chunk-scoring.md) - Spec 35 details
 - [Embeddings explained](embeddings-explained.md) - How retrieval works
-- [CRAG validation guide](../statistics/crag-validation-guide.md) - Spec 36 details
+- [CRAG validation guide](crag-validation.md) - Spec 36 details
 - [Item tagging setup](item-tagging-setup.md) - Spec 34 details
