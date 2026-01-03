@@ -1,72 +1,42 @@
-# BUG-001: Float Equality in `_compute_dominant_points`
+# BUG-001: Float Equality in Dominant Points (Convex Hull)
 
-**Status**: Fixed (2026-01-03)
-**Severity**: Critical
-**Component**: `src/ai_psychiatrist/metrics/selective_prediction.py`
-**Discovered**: 2026-01-03
-**Related Spec**: Spec 052 (Excess AURC/AUGRC)
+**Severity**: P3 (Minor / Robustness)
+**Status**: Open
+**Created**: 2026-01-03
+**File**: `src/ai_psychiatrist/metrics/selective_prediction.py`
 
-## Summary
+## Description
 
-The `_compute_dominant_points` function uses float tuple membership in a set for matching, which is fragile due to floating point precision issues.
-
-## Root Cause
-
-Lines 425-431 of `selective_prediction.py`:
+The `_compute_dominant_points` function implements a Monotone Chain algorithm to find the lower convex hull of the risk-coverage curve. It uses a cross-product check to determine orientation:
 
 ```python
-# We need to return a mask matching the original inputs.
-dominant_set = set(lower)
+def _cross_product(o, a, b):
+    return (a[0] - o[0]) * (b[1] - o[1]) - (a[1] - o[1]) * (b[0] - o[0])
 
-# We match by value (float equality is risky but these come from same source)
-mask = []
-for c, r in zip(coverages, risks, strict=True):
-    mask.append((c, r) in dominant_set)
+...
+while len(lower) >= 2 and _cross_product(lower[-2][1], lower[-1][1], point) <= 0:
+    lower.pop()
 ```
 
-The comment acknowledges the risk ("float equality is risky") but proceeds anyway. When floats undergo arithmetic operations, precision loss can cause `(c, r)` to fail membership tests even when the values are mathematically equal.
+The check `<= 0` relies on exact floating point comparison. In geometric algorithms, floating point precision errors can cause strictly collinear points to appear slightly non-collinear (or vice-versa), leading to:
+1.  Jittery hulls (including/excluding points unpredictably).
+2.  Potential infinite loops (unlikely here due to loop structure, but possible in other hull algos).
+3.  Inconsistency across platforms.
 
-## Symptoms
+## Impact
 
-- `compute_aurc_achievable()` may incorrectly exclude valid dominant points
-- The convex hull mask may not match all expected points
-- Results are non-deterministic across platforms/Python versions
+The `achievable_aurc` metric might vary slightly due to precision noise. While likely negligible for high-level metrics, it is not robust.
 
-## Expected Behavior
+## Recommended Fix
 
-The dominant point detection should use index-based tracking instead of value-based matching to avoid floating point comparison issues.
-
-## Proposed Fix
-
-Replace value-based matching with index-based tracking:
+Introduce an epsilon for the comparison:
 
 ```python
-def _compute_dominant_points(coverages: list[float], risks: list[float]) -> list[bool]:
-    """Compute mask for dominant points (lower convex hull)."""
-    if not coverages:
-        return []
+EPSILON = 1e-10
 
-    # Create indexed points and sort by coverage
-    indexed_points = sorted(enumerate(zip(coverages, risks, strict=True)), key=lambda x: x[1][0])
-
-    # Monotone Chain algorithm for lower hull - track original indices
-    lower: list[tuple[int, tuple[float, float]]] = []
-    for idx, point in indexed_points:
-        while len(lower) >= 2 and _cross_product(lower[-2][1], lower[-1][1], point) <= 0:
-            lower.pop()
-        lower.append((idx, point))
-
-    # Create mask using indices (avoids float equality issues)
-    dominant_indices = {idx for idx, _ in lower}
-    return [i in dominant_indices for i in range(len(coverages))]
+# ...
+while len(lower) >= 2 and _cross_product(..., point) <= EPSILON:
+    lower.pop()
 ```
 
-## Test Coverage
-
-The existing test `test_aurc_achievable_realistic` may not catch this bug because:
-1. It uses synthetic data that doesn't trigger precision issues
-2. The test values may coincidentally pass equality checks
-
-## Notes
-
-This bug was noted in a previous session's summary as "fixed" but the fix was never applied to the codebase. The current code still contains the fragile implementation.
+Or ensure `_cross_product` logic explicitly handles "close to zero" as zero.
