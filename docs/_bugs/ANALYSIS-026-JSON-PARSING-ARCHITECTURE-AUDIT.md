@@ -26,8 +26,9 @@
 | Mock client outdated | Updated `MockLLMClient` for `format` param | `mock_llm.py` |
 
 ### Test Results
-- **822 tests pass** (up from 821 after fixing test expectations)
-- **84% coverage** maintained
+- `make ci` ✅ (ruff, mypy, pytest, coverage)
+- `pytest`: 838 passed, 7 skipped (as of 2026-01-03)
+- Coverage: 83.58% (≥ 80% threshold)
 
 ---
 
@@ -54,7 +55,7 @@ pydantic_ai.exceptions.UnexpectedModelBehavior: Exceeded maximum retries (3) for
 | 13:52:20 | Commit `f67443b` (JSON parsing fix) |
 | 16:20:01 | Run10 started with `064ed30` + uncommitted changes |
 
-**Conclusion**: Run10 is using pre-fix code. The fix has NOT been tested yet.
+**Conclusion**: Run10 used pre-fix code. The fix is now merged and validated via `make ci`; re-run is required to confirm runtime impact on long-running tmux jobs.
 
 ---
 
@@ -76,31 +77,21 @@ pydantic_ai.exceptions.UnexpectedModelBehavior: Exceeded maximum retries (3) for
 └───────────────────────────┬─────────────────────────────────────────┘
                             ▼
 ┌─────────────────────────────────────────────────────────────────────┐
-│  2. tolerant_json_fixups(json_str)                                  │
-│     - Smart quotes → ASCII quotes                                   │
-│     - Remove zero-width spaces                                      │
-│     - Insert missing commas at newlines                             │
-│     - Escape unescaped quotes                                       │
-│     - Remove trailing commas                                        │
-│     - Returns: fixed JSON string                                    │
+│  2. parse_llm_json(json_str)                                        │
+│     - tolerant_json_fixups(): smart quotes, missing commas, etc.     │
+│     - Try json.loads()                                              │
+│     - Fallback: ast.literal_eval() after literal conversion          │
+│     - Returns: dict or raises JSONDecodeError (NO SILENT FALLBACKS)  │
 └───────────────────────────┬─────────────────────────────────────────┘
                             ▼
 ┌─────────────────────────────────────────────────────────────────────┐
-│  3. _parse_json_object_like(json_str)  [NEW IN FIX]                 │
-│     - Try json.loads() first                                        │
-│     - On failure: convert true/false/null → True/False/None         │
-│     - Try ast.literal_eval() on Python-ized string                  │
-│     - Returns: dict or raises JSONDecodeError                       │
-└───────────────────────────┬─────────────────────────────────────────┘
-                            ▼
-┌─────────────────────────────────────────────────────────────────────┐
-│  4. QuantitativeOutput.model_validate(data)                         │
+│  3. QuantitativeOutput.model_validate(data)                         │
 │     - Pydantic schema validation                                    │
 │     - On failure: raises ModelRetry                                 │
 └───────────────────────────┬─────────────────────────────────────────┘
                             ▼
 ┌─────────────────────────────────────────────────────────────────────┐
-│  5. PydanticAI Agent                                                │
+│  4. PydanticAI Agent                                                │
 │     - max_result_retries=3 (default)                                │
 │     - On 3 failures: raises UnexpectedModelBehavior                 │
 └─────────────────────────────────────────────────────────────────────┘
@@ -109,7 +100,7 @@ pydantic_ai.exceptions.UnexpectedModelBehavior: Exceeded maximum retries (3) for
 ### Current Retry Configuration
 - **PydanticAI default**: `max_result_retries=3`
 - **Our override**: None (using default)
-- **Industry recommendation**: 5-10 retries for structured output
+- **Practical note**: If you observe repeated transient parse/validation failures, increasing retries can help, but it increases runtime. Prefer generation-time constraints (Ollama JSON mode/schema) when possible.
 
 ---
 
@@ -117,11 +108,11 @@ pydantic_ai.exceptions.UnexpectedModelBehavior: Exceeded maximum retries (3) for
 
 ### Libraries We're NOT Using
 
-| Library | Purpose | Downloads | Status |
-|---------|---------|-----------|--------|
-| [`json-repair`](https://github.com/mangiucugna/json_repair) | Fix malformed LLM JSON | 3M+/month | ❌ Not installed |
-| [`instructor`](https://python.useinstructor.com/) | Structured output with auto-retry | 3M+/month | ❌ Not installed |
-| [`outlines`](https://github.com/outlines-dev/outlines) | Constrained generation | 1M+/month | ❌ Not installed |
+| Library | Purpose | Status |
+|---------|---------|--------|
+| [`json-repair`](https://github.com/mangiucugna/json_repair) | Post-hoc repair of malformed JSON | ❌ Not installed |
+| [`instructor`](https://python.useinstructor.com/) | Structured output with auto-retry + error feedback | ❌ Not installed |
+| [`outlines`](https://github.com/outlines-dev/outlines) | Grammar / FSM constrained generation | ❌ Not installed |
 
 ### What `json-repair` Does That We Don't
 - Handles truncated JSON (incomplete objects)
@@ -129,12 +120,10 @@ pydantic_ai.exceptions.UnexpectedModelBehavior: Exceeded maximum retries (3) for
 - Handles mixed quote styles (`'` vs `"`)
 - Handles unquoted keys
 - Handles trailing text after JSON
-- 0.55.0 is battle-tested across millions of LLM outputs
 
 ### What `instructor` Does That We Don't
 - **Automatic self-correction**: When validation fails, sends error back to LLM with instruction to fix
 - **Semantic validation**: Uses LLM to validate natural language criteria
-- **10+ retry recommendation**: Built-in support for higher retry counts
 - **Pydantic-native**: Same stack we're already using
 
 ---
@@ -153,17 +142,20 @@ pydantic_ai.exceptions.UnexpectedModelBehavior: Exceeded maximum retries (3) for
 | Gap | Our Approach | Industry Best Practice |
 |-----|--------------|------------------------|
 | JSON repair | Custom `tolerant_json_fixups` (~100 LOC) | Use `json-repair` library (battle-tested) |
-| Retry count | 3 retries (PydanticAI default) | 5-10 retries recommended |
+| Retry count | 3 retries (PydanticAI default) | Tune retries to observed failure rate; prefer generation-time constraints when available |
 | Error feedback | No feedback to LLM on parse failure | `instructor` sends error back to LLM for self-correction |
 | Retry visibility | Limited logging on retry | Rich telemetry with retry context |
-| Constrained output | None | `outlines` guarantees valid JSON via FSM |
+| Constrained output | **Ollama JSON mode for evidence extraction** | Prefer generation-time constraints (JSON mode / schema) |
 
-### Specific Code Smell: Reinventing Wheels
+### Specific Code Smell: “Custom Repair” Maintenance Burden
 
-**File**: `src/ai_psychiatrist/infrastructure/llm/responses.py:163-230` (68 lines)
-**File**: `src/ai_psychiatrist/agents/extractors.py:32-95` (64 lines)
+We now intentionally centralize all tolerant parsing in:
 
-~130 lines of custom JSON repair code that could be replaced with:
+- `src/ai_psychiatrist/infrastructure/llm/responses.py` (`tolerant_json_fixups`, `parse_llm_json`)
+
+This reduces whack-a-mole fixes, but it does mean we own the maintenance burden of custom repair logic.
+
+If failures persist (e.g., truncated JSON, unquoted keys), evaluate whether adopting `json-repair` as a first-pass parser would reduce maintenance risk:
 ```python
 import json_repair
 data = json_repair.loads(raw_text)
@@ -196,7 +188,7 @@ data = json_repair.loads(raw_text)
 ### Quick Wins (Low Risk)
 1. **Increase `max_result_retries` to 5-10** in PydanticAI agent config
 2. **Add `json-repair` to dependencies** and use as primary parser
-3. **Log raw LLM output on parse failure** for debugging
+3. **Improve failure capture without transcript leakage**: log stable hashes + lengths; optionally write raw output to a local-only quarantine file behind an explicit flag (never default).
 
 ### Medium-Term (Moderate Effort)
 4. **Consider `instructor` library** for auto-retry with error feedback
@@ -213,13 +205,13 @@ data = json_repair.loads(raw_text)
 ## Part 7: Risk Assessment
 
 ### If We Do Nothing
-- **Expected failure rate**: ~2-5% of participants (observed in Run10: 1/15 = 6.7%)
+- **Failure rate is workload-dependent**: observed failures were enough to drop participants and invalidate mode comparisons when silent fallbacks existed.
 - **Impact**: Dropped participants reduce coverage, bias evaluation
 - **Debugging**: Each failure requires manual log analysis
 
 ### If We Adopt json-repair + instructor
-- **Expected failure rate**: <0.5% (based on library benchmarks)
-- **Effort**: ~1-2 hours to integrate
+- **Potential**: Lower parse-failure rate via post-hoc repair + self-correction loops
+- **Effort**: Moderate (new dependency + integration + test updates)
 - **Risk**: New dependency, but both are mature and well-maintained
 
 ---
@@ -233,7 +225,7 @@ data = json_repair.loads(raw_text)
 - [x] Updated `ChatRequest` to support `format` parameter
 - [x] Updated all extractors to use canonical parser
 - [x] Fixed test that expected old silent fallback behavior
-- [x] All 822 tests pass
+- [x] `make ci` passes (ruff, mypy, pytest, coverage)
 
 ### Still Recommended (Future)
 - [ ] Increase `max_result_retries` to at least 5
