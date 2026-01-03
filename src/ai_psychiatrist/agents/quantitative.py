@@ -14,11 +14,10 @@ from __future__ import annotations
 
 import asyncio
 import json
-import re
 from typing import TYPE_CHECKING, Literal
 
 from ai_psychiatrist.agents.prompts.quantitative import (
-    DOMAIN_KEYWORDS,
+    PHQ8_DOMAIN_KEYS,
     QUANTITATIVE_SYSTEM_PROMPT,
     make_evidence_prompt,
     make_scoring_prompt,
@@ -139,9 +138,9 @@ class QuantitativeAssessmentAgent:
         """Generate PHQ-8 assessment for transcript.
 
         Pipeline:
-        1. Extract evidence for each PHQ-8 item (optional keyword backfill)
+        1. Extract evidence for each PHQ-8 item
         2. (Few-shot) Build reference bundle via embeddings
-        3. Score with LLM using evidence + references
+        3. Score with LLM using transcript + references
         4. Parse and validate scores with repair
 
         Args:
@@ -157,32 +156,8 @@ class QuantitativeAssessmentAgent:
         )
 
         # Step 1: Extract evidence
-        llm_evidence = await self._extract_evidence(transcript.text)
-        llm_counts = {k: len(v) for k, v in llm_evidence.items()}
-
-        # Step 2: Find keyword hits (always computed for observability/N/A reasons)
-        keyword_hits: dict[str, list[str]] = {}
-        keyword_hit_counts: dict[str, int] = {}
-        if self._settings.enable_keyword_backfill or self._settings.track_na_reasons:
-            keyword_hits = self._find_keyword_hits(
-                transcript.text,
-                cap=self._settings.keyword_backfill_cap,
-            )
-            keyword_hit_counts = {k: len(v) for k, v in keyword_hits.items()}
-
-        # Step 3: Conditional backfill
-        if self._settings.enable_keyword_backfill:
-            # Merge LLM evidence with keyword hits
-            final_evidence = self._merge_evidence(
-                llm_evidence, keyword_hits, cap=self._settings.keyword_backfill_cap
-            )
-        else:
-            final_evidence = llm_evidence
-
-        # Calculate added evidence from backfill
-        keyword_added_counts = {
-            k: len(final_evidence.get(k, [])) - llm_counts.get(k, 0) for k in final_evidence
-        }
+        final_evidence = await self._extract_evidence(transcript.text)
+        llm_counts = {k: len(v) for k, v in final_evidence.items()}
 
         logger.debug(
             "Evidence extracted",
@@ -232,17 +207,11 @@ class QuantitativeAssessmentAgent:
 
             # Determine NA reason and Evidence Source
             na_reason: NAReason | None = None
-            evidence_source = self._determine_evidence_source(
-                llm_count=llm_counts.get(legacy_key, 0),
-                keyword_added_count=keyword_added_counts.get(legacy_key, 0),
-            )
+            llm_count = llm_counts.get(legacy_key, 0)
+            evidence_source: Literal["llm"] | None = "llm" if llm_count > 0 else None
 
             if score is None and self._settings.track_na_reasons:
-                na_reason = self._determine_na_reason(
-                    llm_count=llm_counts.get(legacy_key, 0),
-                    keyword_count=keyword_hit_counts.get(legacy_key, 0),
-                    backfill_enabled=self._settings.enable_keyword_backfill,
-                )
+                na_reason = self._determine_na_reason(llm_count)
 
             # Fix evidence source if we found nothing but the LLM still produced a score.
             if evidence_source is None and score is not None:
@@ -261,7 +230,6 @@ class QuantitativeAssessmentAgent:
                 na_reason=na_reason,
                 evidence_source=evidence_source,
                 llm_evidence_count=llm_counts.get(legacy_key, 0),
-                keyword_evidence_count=keyword_added_counts.get(legacy_key, 0),
                 retrieval_reference_count=retrieval_stats.retrieval_reference_count,
                 retrieval_similarity_mean=retrieval_stats.retrieval_similarity_mean,
                 retrieval_similarity_max=retrieval_stats.retrieval_similarity_max,
@@ -339,9 +307,6 @@ class QuantitativeAssessmentAgent:
     async def _extract_evidence(self, transcript_text: str) -> dict[str, list[str]]:
         """Extract evidence quotes for each PHQ-8 item.
 
-        Uses LLM extraction only. Keyword backfill (if enabled) is applied later in
-        `assess()` via `_find_keyword_hits()` and `_merge_evidence()`.
-
         Args:
             transcript_text: Interview transcript text.
 
@@ -375,7 +340,7 @@ class QuantitativeAssessmentAgent:
 
         # Clean up extraction, ensure all keys present
         evidence_dict: dict[str, list[str]] = {}
-        for key in DOMAIN_KEYWORDS:
+        for key in PHQ8_DOMAIN_KEYS:
             arr = obj.get(key, []) if isinstance(obj, dict) else []
             if not isinstance(arr, list):
                 arr = []
@@ -384,73 +349,6 @@ class QuantitativeAssessmentAgent:
             evidence_dict[key] = cleaned
 
         return evidence_dict
-
-    def _find_keyword_hits(
-        self,
-        transcript: str,
-        cap: int = 3,
-    ) -> dict[str, list[str]]:
-        """Find keyword-matched sentences in transcript.
-
-        Args:
-            transcript: Original transcript text.
-            cap: Maximum evidence items per PHQ-8 domain to find.
-
-        Returns:
-            Dictionary of PHQ8 key -> list of matched sentences.
-        """
-        # Split transcript into sentences
-        parts = re.split(r"(?<=[.?!])\s+|\n+", transcript.strip())
-        sentences = [p.strip() for p in parts if p and len(p.strip()) > 0]
-
-        hits: dict[str, list[str]] = {}
-
-        for key, keywords in DOMAIN_KEYWORDS.items():
-            key_hits: list[str] = []
-            for sent in sentences:
-                sent_lower = sent.lower()
-                if any(kw in sent_lower for kw in keywords):
-                    key_hits.append(sent)
-                if len(key_hits) >= cap:
-                    break
-            hits[key] = key_hits
-
-        return hits
-
-    def _merge_evidence(
-        self,
-        current: dict[str, list[str]],
-        hits: dict[str, list[str]],
-        cap: int = 3,
-    ) -> dict[str, list[str]]:
-        """Merge keyword hits into current evidence, respecting cap.
-
-        Args:
-            current: Current evidence dictionary (from LLM).
-            hits: Keyword hits dictionary.
-            cap: Maximum total evidence items per PHQ-8 domain.
-
-        Returns:
-            Enriched evidence dictionary.
-        """
-        out = {k: list(v) for k, v in current.items()}
-
-        for key, key_hits in hits.items():
-            current_items = out.get(key, [])
-            if len(current_items) >= cap:
-                continue
-
-            need = cap - len(current_items)
-
-            # Filter hits that are already in current (exact string match)
-            existing = set(current_items)
-            new_hits = [h for h in key_hits if h not in existing]
-
-            # Take only what we need
-            merged = current_items + new_hits[:need]
-            out[key] = merged
-
-        return out
 
     def _strip_json_block(self, text: str) -> str:
         """Strip markdown code blocks and XML tags.
@@ -491,29 +389,8 @@ class QuantitativeAssessmentAgent:
 
         return cleaned
 
-    def _determine_na_reason(
-        self,
-        llm_count: int,
-        keyword_count: int,
-        backfill_enabled: bool,
-    ) -> NAReason:
+    def _determine_na_reason(self, llm_count: int) -> NAReason:
         """Determine why an item has no score."""
-        if llm_count == 0 and keyword_count == 0:
+        if llm_count == 0:
             return NAReason.NO_MENTION
-        if llm_count == 0 and keyword_count > 0 and not backfill_enabled:
-            return NAReason.LLM_ONLY_MISSED
-        if llm_count == 0 and keyword_count > 0 and backfill_enabled:
-            return NAReason.KEYWORDS_INSUFFICIENT
         return NAReason.SCORE_NA_WITH_EVIDENCE
-
-    def _determine_evidence_source(
-        self, llm_count: int, keyword_added_count: int
-    ) -> Literal["llm", "keyword", "both"] | None:
-        """Determine source of evidence."""
-        if llm_count > 0 and keyword_added_count > 0:
-            return "both"
-        if llm_count > 0:
-            return "llm"
-        if keyword_added_count > 0:
-            return "keyword"
-        return None

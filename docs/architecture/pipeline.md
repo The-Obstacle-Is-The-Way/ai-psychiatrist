@@ -165,8 +165,6 @@ First, the agent extracts evidence quotes for each PHQ-8 item:
 }
 ```
 
-**Note:** Keyword backfill is a deprecated feature that is OFF by default and not recommended for use.
-
 #### Few-Shot Reference Retrieval
 
 For each item with evidence:

@@ -11,7 +11,7 @@ This repository evaluates PHQ-8 scoring as a **selective prediction** system: ea
 Today, confidence is derived only from **evidence counts**:
 
 - `confidence_llm = llm_evidence_count`
-- `confidence_total_evidence = llm_evidence_count + keyword_evidence_count`
+- `confidence_total_evidence = llm_evidence_count` (legacy alias; keyword backfill removed in Spec 047)
 
 This is implemented in `scripts/evaluate_selective_prediction.py` and documented in `docs/statistics/metrics-and-evaluation.md`.
 
@@ -52,7 +52,7 @@ Research basis (validated 2026-01-02):
 Per `docs/statistics/metrics-and-evaluation.md`:
 
 - `llm`: `confidence = llm_evidence_count`
-- `total_evidence`: `confidence = llm_evidence_count + keyword_evidence_count`
+- `total_evidence`: `confidence = llm_evidence_count` (legacy alias; keyword backfill removed in Spec 047)
 
 ### 2.2 Key observation (Run 8)
 

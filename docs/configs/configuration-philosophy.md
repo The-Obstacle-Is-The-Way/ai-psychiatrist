@@ -35,9 +35,9 @@ rigorous investigation, we discovered critical issues:
    This creates label noise: a chunk about "career goals" can be shown as `(PHQ8_Sleep Score: 2)`
    even if it contains no sleep evidence. This is not chunk-level ground truth.
 
-2. **Keyword backfill is a heuristic**: Keyword triggers ("sleep", "tired", etc.) can increase
+2. **Keyword backfill was a heuristic**: Keyword triggers ("sleep", "tired", etc.) can increase
    apparent coverage but may introduce false positives and distort selective-prediction metrics.
-   It must remain OFF by default and be clearly labeled when used.
+   This feature was removed in Spec 047; historical context is kept under `docs/_archive/`.
 
 3. **Reproducibility is ambiguous**: Despite extensive effort, we have not reproduced the
    paper's headline improvements in our environment. This could be due to methodology gaps
@@ -191,16 +191,11 @@ HuggingFace embeddings (FP16) produce higher quality similarity scores than Olla
 
 ---
 
-### 7. Deprecated (Remove After Freeze)
+### 7. Removed Features
 
-These should NOT be used. Flags exist only for historical comparison:
+These are no longer present in the codebase (historical context is kept under `docs/_archive/`):
 
-| Setting | Status | Why Deprecated |
-|---------|--------|----------------|
-| `QUANTITATIVE_ENABLE_KEYWORD_BACKFILL` | **OFF permanently** | Flawed heuristic, inflates coverage |
-| `QUANTITATIVE_KEYWORD_BACKFILL_CAP` | Irrelevant | Backfill should never be ON |
-
-**Post-publication**: Delete these entirely from codebase.
+- Keyword backfill (Spec 047)
 
 ---
 
@@ -374,7 +369,7 @@ For the consolidated defaults to work, these artifacts MUST exist:
 | **Hyperparameters** | top_k, thresholds, feedback | Yes | Baseline values |
 | **Models** | quantitative_model | Yes | Code: `gemma3:27b` |
 | **Infrastructure** | OLLAMA_HOST | Yes | localhost |
-| **Deprecated** | keyword_backfill | No | Always OFF |
+| **Removed** | keyword_backfill (Spec 047) | No | Removed |
 | **Safety overrides** | allow_prompt_mismatch | Yes | Always OFF |
 
 ---

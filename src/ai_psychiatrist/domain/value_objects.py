@@ -157,14 +157,11 @@ class ItemAssessment:
     na_reason: NAReason | None = None
     """Reason for N/A (only set when score is None)."""
 
-    evidence_source: Literal["llm", "keyword", "both"] | None = None
+    evidence_source: Literal["llm"] | None = None
     """Source of evidence provided to the scorer (None means no evidence)."""
 
     llm_evidence_count: int = 0
     """Number of evidence items found by LLM."""
-
-    keyword_evidence_count: int = 0
-    """Number of evidence items added from keyword hits (injected into scorer evidence)."""
 
     # SPEC-046 extensions (selective prediction confidence signals)
     retrieval_reference_count: int = 0

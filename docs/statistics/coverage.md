@@ -78,7 +78,7 @@ Run details and metric definitions live in:
 
 Interpretation: higher coverage often increases MAE because the model attempts more
 items (including harder-to-evidence symptoms). This is a general tradeoff; attributing
-cause requires ablations (e.g., keyword backfill on/off).
+cause requires ablations (e.g., retrieval thresholds, validation, model choice).
 
 ---
 

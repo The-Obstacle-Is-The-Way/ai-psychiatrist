@@ -58,7 +58,7 @@ SSOT: `compute_cmax()` in `src/ai_psychiatrist/metrics/selective_prediction.py`.
 1. `llm`:
    - `confidence = llm_evidence_count`
 2. `total_evidence`:
-   - `confidence = llm_evidence_count + keyword_evidence_count`
+   - `confidence = llm_evidence_count` (legacy alias; keyword backfill removed in Spec 047)
 3. `retrieval_similarity_mean` (Spec 046):
    - `confidence = retrieval_similarity_mean if not null else 0.0`
 4. `retrieval_similarity_max` (Spec 046):

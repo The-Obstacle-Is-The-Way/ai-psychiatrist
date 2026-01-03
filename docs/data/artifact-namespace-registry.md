@@ -216,7 +216,7 @@ See [Model Registry](../models/model-registry.md#high-quality-setup-recommended-
 
 | File Pattern | Purpose |
 |--------------|---------|
-| `data/outputs/{mode}_{split}_backfill-{on,off}_{YYYYMMDD_HHMMSS}.json` | Reproduction results with run + per-experiment provenance (from `scripts/reproduce_results.py`) |
+| `data/outputs/{mode}_{split}_{YYYYMMDD_HHMMSS}.json` | Reproduction results with run + per-experiment provenance (from `scripts/reproduce_results.py`) |
 | `data/outputs/selective_prediction_metrics_*.json` | AURC/AUGRC + bootstrap CIs (from `scripts/evaluate_selective_prediction.py`) |
 | `data/outputs/RUN_LOG.md` | Human-maintained run history log (append-only) |
 | `data/outputs/*.log` | Console log captures for long runs / tmux sessions (optional) |

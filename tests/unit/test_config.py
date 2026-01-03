@@ -38,17 +38,9 @@ class TestQuantitativeSettings:
     """Tests for QuantitativeSettings."""
 
     def test_defaults(self) -> None:
-        """Default values should match baseline defaults (backfill OFF)."""
+        """Default values should match baseline defaults."""
         settings = QuantitativeSettings()
-        assert settings.enable_keyword_backfill is False  # Baseline default
         assert settings.track_na_reasons is True
-        assert settings.keyword_backfill_cap == 3
-
-    def test_env_override_enable_backfill(self, monkeypatch: pytest.MonkeyPatch) -> None:
-        """Environment variable can enable backfill for higher coverage."""
-        monkeypatch.setenv("QUANTITATIVE_ENABLE_KEYWORD_BACKFILL", "true")
-        settings = QuantitativeSettings()
-        assert settings.enable_keyword_backfill is True
 
 
 class TestOllamaSettings:
