@@ -1,6 +1,6 @@
 # Spec 050: Consistency-Based Confidence (Multi-Sample)
 
-**Status**: Ready to Implement
+**Status**: Implemented (2026-01-03)
 **Priority**: Medium (alternative to verbalized confidence)
 **Depends on**: None (standalone)
 **Estimated effort**: Medium-High

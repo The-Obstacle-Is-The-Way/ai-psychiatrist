@@ -1,6 +1,6 @@
 # Spec 049: Supervised Confidence Calibrator (Multi-Signal Ensemble)
 
-**Status**: Ready to Implement
+**Status**: Implemented (2026-01-03)
 **Priority**: High (Phase 3 of AUGRC improvement)
 **Depends on**: Spec 046 (retrieval signals), Spec 048 (verbalized confidence)
 **Estimated effort**: Medium-High

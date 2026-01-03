@@ -2,41 +2,9 @@
 
 Implementation-ready (or implementation-planned) specifications for changes that require code modifications.
 
-## Ready to Implement (AUGRC Improvement Suite)
+## Ready to Implement
 
-These specs form the **gold-standard AUGRC improvement roadmap**, derived from [fd-shifts](https://github.com/IML-DKFZ/fd-shifts) (NeurIPS 2024), [AsymptoticAURC](https://arxiv.org/abs/2410.15361) (ICML 2025), and 2025-2026 LLM uncertainty research.
-
-### Phase 2: Verbalized Confidence
-
-- **Spec 048**: [Verbalized Confidence](spec-048-verbalized-confidence.md) — Prompt LLM to output confidence rating (1-5), apply temperature scaling calibration. Expected: 20-40% AUGRC reduction.
-
-### Phase 3: Multi-Signal Calibration
-
-- **Spec 049**: [Supervised Confidence Calibrator](spec-049-supervised-confidence-calibrator.md) — Train logistic/isotonic regression on multiple signals (evidence, retrieval similarity, verbalized confidence). Expected: 30-50% AUGRC reduction.
-
-### Alternative: Consistency-Based Confidence
-
-- **Spec 050**: [Consistency-Based Confidence](spec-050-consistency-based-confidence.md) — Multiple inference passes (N=5), measure agreement. Trade-off: 5x inference time. Expected: 20-35% AUGRC reduction.
-
-### Enrichment: Advanced CSFs
-
-- **Spec 051**: [Advanced CSFs from fd-shifts](spec-051-advanced-csf-from-fd-shifts.md) — Port token-level CSFs (MSP, entropy, energy) and secondary combinations from fd-shifts benchmark.
-
-### Enrichment: Excess Metrics
-
-- **Spec 052**: [Excess AURC/AUGRC Metrics](spec-052-excess-aurc-augrc-metrics.md) — Compute optimal baselines and excess metrics (e-AURC, e-AUGRC) for interpretable progress tracking.
-
-### Implementation Priority
-
-| Spec | Priority | Effort | Expected AUGRC |
-|------|----------|--------|----------------|
-| 048 | High | Medium | ~0.024 |
-| 049 | High | Medium-High | ~0.018 |
-| 050 | Medium | Medium-High | ~0.020 |
-| 051 | Medium | Low-Medium | — |
-| 052 | Low | Low | — |
-
-**Recommended path**: Spec 048 → Spec 049 → Spec 052 (for tracking) → Spec 051 (enrichment)
+All currently scoped specs are implemented and archived under `docs/_archive/specs/`. New proposals should be added here before code changes.
 
 ## Deferred
 
@@ -58,6 +26,11 @@ Implemented specs are distilled into canonical (non-archive) documentation under
 - Exception taxonomy: [exceptions.md](../developer/exceptions.md)
 - Metrics definitions + output schema: [metrics-and-evaluation.md](../statistics/metrics-and-evaluation.md)
 - Selective prediction confidence signals (Spec 046): [spec](../_archive/specs/spec-046-selective-prediction-confidence-signals.md) → [metrics docs](../statistics/metrics-and-evaluation.md#confidence-variants)
+- Verbalized confidence (Spec 048): [spec](../_archive/specs/spec-048-verbalized-confidence.md) → [metrics docs](../statistics/metrics-and-evaluation.md#confidence-variants)
+- Supervised confidence calibrator (Spec 049): [spec](../_archive/specs/spec-049-supervised-confidence-calibrator.md) → [metrics docs](../statistics/metrics-and-evaluation.md#confidence-variants)
+- Consistency-based confidence (Spec 050): [spec](../_archive/specs/spec-050-consistency-based-confidence.md) → [metrics docs](../statistics/metrics-and-evaluation.md#confidence-variants)
+- Advanced CSFs from fd-shifts (Spec 051): [spec](../_archive/specs/spec-051-advanced-csf-from-fd-shifts.md) → [metrics docs](../statistics/metrics-and-evaluation.md#confidence-variants)
+- Excess AURC/AUGRC metrics (Spec 052): [spec](../_archive/specs/spec-052-excess-aurc-augrc-metrics.md) → [metrics docs](../statistics/metrics-and-evaluation.md#optimal-and-excess-metrics-spec-052)
 - Remove keyword backfill (Spec 047): [spec](../_archive/specs/spec-047-remove-keyword-backfill.md) → [configuration philosophy](../configs/configuration-philosophy.md)
 - Configuration philosophy: [configuration-philosophy.md](../configs/configuration-philosophy.md)
 - DAIC-WOZ transcript preprocessing + variants: [spec](../_archive/specs/daic-woz-transcript-preprocessing.md) → [user guide](../data/daic-woz-preprocessing.md)

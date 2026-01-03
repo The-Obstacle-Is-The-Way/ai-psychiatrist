@@ -67,8 +67,53 @@ SSOT: `compute_cmax()` in `src/ai_psychiatrist/metrics/selective_prediction.py`.
    - `e = min(llm_evidence_count, 3) / 3`
    - `s = retrieval_similarity_mean if not null else 0.0`
    - `confidence = 0.5 * e + 0.5 * s`
+6. `verbalized` (Spec 048):
+   - `v = verbalized_confidence` (1–5 scale)
+   - `confidence = (v - 1) / 4` (normalized to 0–1; uses 0.5 if null)
+7. `verbalized_calibrated` (Spec 048):
+   - Requires `--calibration` pointing to a `method=temperature_scaling` artifact
+   - `v = (verbalized_confidence - 1) / 4` (0–1; uses 0.5 if null)
+   - `confidence = sigmoid(logit(v) / T)` where `T` is fitted on a training run
+8. `hybrid_verbalized` (Spec 048):
+   - `v = (verbalized_confidence - 1) / 4` (0–1; uses 0.5 if null)
+   - `e = min(llm_evidence_count, 3) / 3`
+   - `s = retrieval_similarity_mean if not null else 0.0`
+   - `confidence = 0.4 * v + 0.3 * e + 0.3 * s`
+9. `calibrated` (Spec 049):
+   - Requires `--calibration` pointing to a calibrator artifact (e.g., `method=logistic`)
+   - Extract features from per-item `item_signals` using the artifact’s `features` list
+   - `confidence = p_correct` (or a calibrated confidence score) produced by the calibrator
+10. `token_msp` (Spec 051):
+   - Requires per-item `token_msp` in `item_signals`
+   - `confidence = token_msp` (0–1, higher = more confident)
+11. `token_pe` (Spec 051):
+   - Requires per-item `token_pe` in `item_signals`
+   - Stored value is entropy (lower = more confident)
+   - `confidence = 1 / (1 + token_pe)` (maps to (0, 1])
+12. `token_energy` (Spec 051):
+   - Requires per-item `token_energy` in `item_signals`
+   - Stored value is `logsumexp(top_logprobs.logprob)` over tokens
+   - `confidence = exp(token_energy)` (interpretable as cumulative mass captured by `top_logprobs`)
+13. `secondary:<csf1>+<csf2>:<average|product>` (Spec 051):
+   - Combines two base CSFs on the fly
+   - Example: `secondary:token_msp+retrieval_similarity_mean:average`
+14. `consistency` (Spec 050):
+   - Requires per-item `consistency_modal_confidence` in `item_signals`
+   - `confidence = consistency_modal_confidence`
+15. `consistency_inverse_std` (Spec 050):
+   - Requires per-item `consistency_score_std` in `item_signals`
+   - `confidence = 1 / (1 + consistency_score_std)`
+16. `hybrid_consistency` (Spec 050):
+   - Requires per-item `consistency_modal_confidence` in `item_signals`
+   - `e = min(llm_evidence_count, 3) / 3`
+   - `s = retrieval_similarity_mean if not null else 0.0`
+   - `confidence = 0.4 * consistency_modal_confidence + 0.3 * e + 0.3 * s`
 
 These are derived from `item_signals` in the run output JSON.
+
+Calibration artifacts can be generated via:
+- `scripts/calibrate_verbalized_confidence.py` (Spec 048, `method=temperature_scaling`)
+- `scripts/train_confidence_calibrator.py` (Spec 049, `method=platt|logistic|isotonic|temperature_scaling`)
 
 ### Retrieval-Signal Availability (Spec 046)
 
@@ -82,6 +127,38 @@ Run artifacts produced by older versions of `scripts/reproduce_results.py` will 
 contain these keys. In that case, `scripts/evaluate_selective_prediction.py` will raise
 a clear error if a retrieval-based confidence variant is requested (it will not silently
 substitute missing values).
+
+### Verbalized-Confidence Availability (Spec 048)
+
+The verbalized confidence variants require the following per-item key inside
+`item_signals`:
+- `verbalized_confidence`
+
+Artifacts produced by older versions of `scripts/reproduce_results.py` will not contain
+this key. In that case, `scripts/evaluate_selective_prediction.py` will raise a clear
+error if a verbalized-confidence variant is requested.
+
+### Token-Confidence Availability (Spec 051)
+
+The token-level confidence variants require the following per-item keys inside
+`item_signals`:
+- `token_msp`
+- `token_pe`
+- `token_energy`
+
+These values are only populated when the quantitative scorer backend returns logprobs.
+If the backend does not support logprobs, the keys may be present but null; requesting
+`token_*` confidence variants will then raise a clear error (no silent fallback).
+
+### Consistency-Signal Availability (Spec 050)
+
+The consistency-based confidence variants require the following per-item keys inside
+`item_signals`:
+- `consistency_modal_confidence`
+- `consistency_score_std`
+
+These are only populated when the run was produced with multi-sample scoring enabled
+(`--consistency-samples > 1` in `scripts/reproduce_results.py` or `CONSISTENCY_ENABLED=true`).
 
 ---
 

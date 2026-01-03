@@ -17,6 +17,8 @@
 
 **Spec 046 Finding (Run 9)**: Using `retrieval_similarity_mean` as confidence signal improves AURC by 5.4% (0.1351 → 0.1278) compared to evidence-count-only.
 
+**AUGRC Improvement Suite (Specs 048–052, implemented 2026-01-03)**: New confidence variants and calibration utilities are available (verbalized confidence, supervised calibrator, token-level CSFs, consistency mode, and excess metrics). Baseline re-evaluation (few-shot, `confidence=llm`): `data/outputs/selective_prediction_metrics_20260103T070506Z.json` (AURC 0.1351, AUGRC 0.0346, Cmax 0.5305).
+
 **Note**: Run 8 has much lower coverage ceiling (`Cmax` ~51%) than Run 7 (`Cmax` ~66%). Interpret AURC alongside Cmax.
 
 **Note**: `Cmax` is the max coverage in the risk–coverage curve (counts participants with 8/8 N/A as 0 coverage). `MAE_w` is computed over evaluated subjects only.
