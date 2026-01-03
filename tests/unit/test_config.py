@@ -156,8 +156,8 @@ class TestEmbeddingBackendSettings:
 class TestEmbeddingSettings:
     """Tests for embedding configuration."""
 
-    def test_paper_optimal_defaults(self) -> None:
-        """Defaults should match paper Appendix D optimal values."""
+    def test_validated_baseline_defaults(self) -> None:
+        """Defaults should match paper Appendix D baseline values."""
         settings = EmbeddingSettings()
         assert settings.dimension == 4096  # Paper Appendix D
         assert settings.chunk_size == 8  # Paper Appendix D
@@ -187,7 +187,7 @@ class TestEmbeddingSettings:
 class TestFeedbackLoopSettings:
     """Tests for feedback loop configuration."""
 
-    def test_paper_optimal_defaults(self) -> None:
+    def test_validated_baseline_defaults(self) -> None:
         """Defaults should match paper Section 2.3.1."""
         settings = FeedbackLoopSettings()
         assert settings.enabled is True

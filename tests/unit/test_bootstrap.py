@@ -83,7 +83,7 @@ class TestEnvExample:
         """.env.example should exist."""
         assert Path(".env.example").exists()
 
-    def test_env_example_has_paper_optimal_values(self) -> None:
+    def test_env_example_has_validated_baseline_values(self) -> None:
         """.env.example should contain validated baseline configuration."""
         content = Path(".env.example").read_text()
 
