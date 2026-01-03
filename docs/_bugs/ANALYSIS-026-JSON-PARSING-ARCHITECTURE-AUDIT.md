@@ -294,6 +294,36 @@ except (json.JSONDecodeError, ValueError):
 
 **New behavior:** Raise on failure. The caller decides retry/fail policy.
 
+### ⚠️ CRITICAL: Zero-Shot vs Few-Shot Mode Isolation
+
+**Zero-shot and few-shot are INDEPENDENT RESEARCH METHODOLOGIES.** They must be completely isolated.
+
+The silent fallback bug violated this isolation:
+
+```
+FEW-SHOT MODE (BROKEN):
+  _extract_evidence() → {} (silent failure)
+    ↓
+  build_reference_bundle({}) → empty bundle
+    ↓
+  reference_text = "" (no references)
+    ↓
+  make_scoring_prompt(transcript, "") → SAME AS ZERO-SHOT!
+    ↓
+  Research results corrupted without indication
+```
+
+**Why this matters:**
+- Zero-shot and few-shot are distinct experimental conditions
+- If few-shot silently becomes zero-shot, comparative analysis is invalid
+- Published results claiming "few-shot performance" could be partially zero-shot
+- This is a fundamental methodological error
+
+**The fix ensures:**
+- `_extract_evidence()` raises on failure instead of returning `{}`
+- Few-shot mode fails loudly if it can't build proper references
+- Mode isolation is maintained throughout the pipeline
+
 ### Why Ollama `format:"json"` Matters
 
 From [Ollama docs](https://docs.ollama.com/capabilities/structured-outputs):
