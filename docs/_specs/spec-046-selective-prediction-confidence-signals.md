@@ -42,7 +42,7 @@ Research basis (validated 2026-01-02):
 ### 1.2 Non-Goals
 
 - Improving MAE directly (this spec targets confidence/ranking quality).
-- Changing the paper-parity prompt format or retrieval content.
+- Changing the prompt format or retrieval content.
 - Enabling Spec 36 validation by default (still optional; this spec only consumes its signal if present).
 
 ## 2. Baseline (Current Behavior)

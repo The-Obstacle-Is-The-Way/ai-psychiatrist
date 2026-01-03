@@ -85,7 +85,7 @@ class ReferenceBundle:
     item_references: dict[PHQ8Item, list[SimilarityMatch]]
 
     def format_for_prompt(self) -> str:
-        """Format references as prompt text (paper-parity).
+        """Format references as prompt text (baseline prompt format).
 
         Paper notebook behavior (cell 49f51ff5) + Spec 33 XML fix:
         - Single unified <Reference Examples> block.

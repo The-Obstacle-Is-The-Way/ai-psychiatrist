@@ -98,7 +98,7 @@ Few-shot mode uses reference embeddings to retrieve similar transcript chunks as
   ```bash
   grep "EMBEDDING_BACKEND" .env
   # Recommended (default): EMBEDDING_BACKEND=huggingface (FP16, higher quality)
-  # Alternative: EMBEDDING_BACKEND=ollama (Q4_K_M, paper-parity)
+  # Alternative: EMBEDDING_BACKEND=ollama (Q4_K_M, legacy baseline)
   ```
 
   **Note**: HuggingFace backend requires `make dev-hf` to install dependencies.
@@ -125,7 +125,8 @@ Few-shot mode uses reference embeddings to retrieve similar transcript chunks as
   # Should show: PYDANTIC_AI_ENABLED=true (or be absent, as true is the default)
   ```
 
-  **What it does**: Adds structured validation + automatic retries (up to 3x) for quantitative scoring, judge metrics, and meta-review. Falls back to legacy parsing on failure.
+  **What it does**: Adds structured validation + automatic retries (up to 3x) for quantitative scoring, judge metrics, and meta-review.
+  There is no legacy parsing fallback; failures after retries remain failures.
 
 - [ ] **Verify in config summary**:
   ```bash
@@ -142,7 +143,7 @@ Few-shot mode uses reference embeddings to retrieve similar transcript chunks as
 
 ## Phase 3: Embedding Hyperparameters (CRITICAL)
 
-### 3.1 Paper-Optimal Values
+### 3.1 Appendix D Hyperparameters (Baseline)
 
 **Reference**: Paper Appendix D
 
@@ -210,7 +211,7 @@ If only some chunks are mismatched, retrieval quality degrades. Always validate 
   ```
 
   **Default embedding artifact**: `huggingface_qwen3_8b_paper_train_participant_only.npz` (FP16, participant-only transcripts; recommended)
-  **Alternative**: `paper_reference_embeddings.npz` (Ollama Q4_K_M, paper-parity)
+  **Alternative**: `ollama_qwen3_8b_paper_train_participant_only.npz` (Ollama Q4_K_M, legacy baseline)
 
   If missing, generate (takes ~65 min for 58 participants):
 
@@ -224,9 +225,12 @@ If only some chunks are mismatched, retrieval quality degrades. Always validate 
   # Optional (Spec 34): also write per-chunk PHQ-8 item tags sidecar
   # (recommended for retrieval): add --write-item-tags
 
-  # Or generate Ollama embeddings (paper-parity)
-  EMBEDDING_BACKEND=ollama uv run python scripts/generate_embeddings.py --split paper-train
-  # Output: data/embeddings/ollama_qwen3_8b_paper_train.npz
+  # Or generate Ollama embeddings (legacy baseline)
+  DATA_TRANSCRIPTS_DIR=data/transcripts_participant_only \
+  EMBEDDING_BACKEND=ollama uv run python scripts/generate_embeddings.py \
+    --backend ollama \
+    --split paper-train \
+    --output data/embeddings/ollama_qwen3_8b_paper_train_participant_only.npz
   ```
 
 ### 4.2 Verify Embedding Integrity
@@ -300,13 +304,13 @@ If only some chunks are mismatched, retrieval quality degrades. Always validate 
 
 **Reference**: SPEC-003, Coverage Investigation
 
-- [ ] **Backfill is DISABLED** (paper parity = ~50% coverage):
+- [ ] **Backfill is DISABLED** (baseline defaults ≈50% coverage):
   ```bash
   grep "QUANTITATIVE_ENABLE_KEYWORD_BACKFILL" .env
   # MUST show: QUANTITATIVE_ENABLE_KEYWORD_BACKFILL=false
   ```
 
-  **Gotcha**: Backfill ON = ~74% coverage, which diverges from paper's ~50%.
+  **Gotcha**: Backfill ON is an ablation that increases coverage (~74%) but can harm validity.
 
 ### 5.2 N/A Reason Tracking
 
@@ -324,7 +328,7 @@ If only some chunks are mismatched, retrieval quality degrades. Always validate 
 
 - [ ] **Transcripts directory exists**:
   ```bash
-  ls data/transcripts/ | wc -l
+  ls data/transcripts_participant_only/ | wc -l
   # Should show ~189 (or your participant count)
   ```
 
@@ -334,14 +338,14 @@ If only some chunks are mismatched, retrieval quality degrades. Always validate 
 
 - [ ] **Participant 487 is NOT corrupted**:
   ```bash
-  file data/transcripts/487_P/487_TRANSCRIPT.csv
+  file data/transcripts_participant_only/487_P/487_TRANSCRIPT.csv
   # MUST show: ASCII text, or UTF-8 Unicode text
   # NOT: AppleDouble encoded, or binary
   ```
 
 - [ ] **Correct file size** (~20KB, not 4KB):
   ```bash
-  ls -lh data/transcripts/487_P/487_TRANSCRIPT.csv
+  ls -lh data/transcripts_participant_only/487_P/487_TRANSCRIPT.csv
   # Should be ~18-25KB, NOT 4KB
   ```
 
@@ -477,7 +481,7 @@ print(f'Top-K References: {s.embedding.top_k_references} (paper: 2)')
 Expected output:
 ```text
 === CRITICAL SETTINGS ===
-Quantitative Model: gemma3:27b-it-qat  (or gemma3:27b for paper-parity)
+Quantitative Model: gemma3:27b-it-qat  (or gemma3:27b for legacy baseline)
 Embedding Model: qwen3-embedding:8b
 Temperature: 0.0
 Keyword Backfill: False
@@ -705,5 +709,5 @@ uv run python scripts/reproduce_results.py --split paper
 ## Related Documentation
 
 - [Zero-Shot Preflight](./preflight-checklist-zero-shot.md) - Simpler, no embeddings
-- [Configuration Philosophy](../configs/configuration-philosophy.md) - Why we've moved beyond paper parity
+- [Configuration Philosophy](../configs/configuration-philosophy.md) - Why we use validated baselines
 - [Model Registry](../models/model-registry.md) - Model configuration and backend options

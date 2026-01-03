@@ -129,7 +129,7 @@ def sample_ollama_response() -> dict[str, object]:
         '{"evidence": "can\'t be bothered", "reason": "clear anhedonia", "score": 2}}'
     )
     return {
-        "model": "alibayram/medgemma:27b",  # Paper-optimal (Appendix F)
+        "model": "alibayram/medgemma:27b",  # Appendix F ablation (paper-reported)
         "message": {
             "role": "assistant",
             "content": content,

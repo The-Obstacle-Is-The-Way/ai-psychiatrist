@@ -120,7 +120,7 @@ Pre-computed database of embeddings from training set transcripts with known PHQ
 
 ### Chunk
 
-A segment of transcript text used for embedding generation. Paper-optimal: 8 lines with 2-line sliding window step.
+A segment of transcript text used for embedding generation. Appendix D hyperparameters: 8 lines with a 2-line sliding window step.
 
 ---
 

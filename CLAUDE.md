@@ -16,7 +16,9 @@ gh pr create --repo The-Obstacle-Is-The-Way/ai-psychiatrist ...
 
 ## Project Overview
 
-LLM-based Multi-Agent System for Depression Assessment from Clinical Interviews. Implements a research paper's methodology using four specialized agents to analyze transcripts and predict PHQ-8 depression scores.
+LLM-based Multi-Agent System for Depression Assessment from Clinical Interviews. This is a **robust, independent implementation** that fixes severe methodological flaws in the original research paper. We use four specialized agents to analyze transcripts and predict PHQ-8 depression scores.
+
+**IMPORTANT**: Do NOT use "paper-parity" terminology. The original paper has documented methodological failures (see closed GitHub issues #81, #69, #66, #47, #46, #45). Our implementation diverges intentionally to fix these issues.
 
 ## Commands
 
@@ -49,7 +51,7 @@ make typecheck              # mypy strict mode
 
 ## Architecture
 
-### Four-Agent Pipeline (Paper Section 2.3)
+### Four-Agent Pipeline
 1. **QualitativeAssessmentAgent**: Narrative analysis → social/biological/risk factors
 2. **JudgeAgent**: Evaluates qualitative output (coherence, completeness, specificity, accuracy)
 3. **FeedbackLoopService**: Iterates qualitative + judge until score ≥4 (max 10 iterations)
@@ -74,19 +76,21 @@ src/ai_psychiatrist/
 
 ## Configuration
 
-Environment-driven via `.env` (copy from `.env.example`). See `CONFIGURATION-PHILOSOPHY.md` for what should be configurable vs baked-in.
+**CRITICAL**: Copy `.env.example` to `.env` before running evaluations. Code defaults are conservative baselines for testing only.
 
-Key settings:
+Environment-driven via `.env`. See `docs/configs/configuration-philosophy.md` for details.
 
-| Setting | Default | Paper Reference |
-|---------|---------|-----------------|
-| `MODEL_QUANTITATIVE_MODEL` | `gemma3:27b` | Section 2.2 (MedGemma in Appendix F produces more N/A) |
-| `EMBEDDING_DIMENSION` | 4096 | Appendix D (optimal) |
-| `EMBEDDING_TOP_K_REFERENCES` | 2 | Appendix D |
-| `FEEDBACK_SCORE_THRESHOLD` | 3 | Section 2.3.1 (score <4 triggers refinement) |
-| `OLLAMA_TIMEOUT_SECONDS` | 600 | Large transcripts need extended time |
+### Recommended Settings (from .env.example)
 
-Environment variable prefix: `OLLAMA_HOST=custom` sets `OllamaSettings.host`
+| Setting | Value | Purpose |
+|---------|-------|---------|
+| `EMBEDDING_REFERENCE_SCORE_SOURCE` | `chunk` | Use chunk-level scores (fixes core flaw) |
+| `EMBEDDING_ENABLE_ITEM_TAG_FILTER` | `true` | Filter refs by PHQ-8 item domain |
+| `EMBEDDING_MIN_REFERENCE_SIMILARITY` | `0.3` | Drop low-quality refs |
+| `EMBEDDING_MAX_REFERENCE_CHARS_PER_ITEM` | `500` | Limit ref context per item |
+| `DATA_TRANSCRIPTS_DIR` | `data/transcripts_participant_only` | Participant-only preprocessing |
+| `EMBEDDING_BACKEND` | `huggingface` | FP16 embeddings (better quality) |
+| `OLLAMA_TIMEOUT_SECONDS` | `600` | Large transcripts need extended time |
 
 ## Testing
 
@@ -97,7 +101,7 @@ Environment variable prefix: `OLLAMA_HOST=custom` sets `OllamaSettings.host`
 
 ## Few-Shot RAG Pipeline (Specs 33-36)
 
-The few-shot pipeline has known methodological issues. See `HYPOTHESIS-FEWSHOT-DESIGN-FLAW.md`.
+Our implementation fixes the original methodology's core flaw: participant-level PHQ-8 scores were assigned to arbitrary chunks. See `docs/_archive/misc/HYPOTHESIS-FEWSHOT-DESIGN-FLAW.md`.
 
 ### Current Spec Status
 
@@ -105,38 +109,18 @@ The few-shot pipeline has known methodological issues. See `HYPOTHESIS-FEWSHOT-D
 |------|-------------|--------|--------|
 | 33 | Retrieval guardrails (similarity threshold, char limits) | Enabled | `EMBEDDING_MIN_REFERENCE_SIMILARITY=0.3` |
 | 34 | Item-tag filtering | Enabled | `EMBEDDING_ENABLE_ITEM_TAG_FILTER=true` |
-| 35 | Chunk-level scoring | Implemented, needs preprocessing | See below |
-| 36 | CRAG runtime validation | Implemented, disabled | `EMBEDDING_ENABLE_REFERENCE_VALIDATION` |
-
-### Spec 35: Chunk Scoring (Production Run)
-
-Spec 35 fixes the core flaw: participant-level scores assigned to arbitrary chunks.
-
-#### Step 1: Generate chunk scores (one-time preprocessing)
-```bash
-python scripts/score_reference_chunks.py \
-  --embeddings-file ollama_qwen3_8b_paper_train \
-  --scorer-backend ollama \
-  --scorer-model gemma3:27b-it-qat \
-  --allow-same-model
-```
-
-#### Step 2: Enable in .env
-```bash
-EMBEDDING_REFERENCE_SCORE_SOURCE=chunk
-```
-
-**Scorer Model Choice**: Spec 35 defaults to a disjoint scorer for defensibility. Use `--allow-same-model` only if you explicitly want a same-model baseline, and ablate against a disjoint/MedGemma scorer if feasible.
+| 35 | Chunk-level scoring | Enabled | `EMBEDDING_REFERENCE_SCORE_SOURCE=chunk` |
+| 36 | CRAG runtime validation | Disabled | `EMBEDDING_ENABLE_REFERENCE_VALIDATION` |
+| 46 | Retrieval similarity confidence signals | Implemented | New confidence variants |
 
 ### Running the Full Evaluation
 
 ```bash
-# In tmux for long runs:
-python scripts/reproduce_results.py \
-  --mode both \
-  --output-dir data/outputs \
+# In tmux for long runs (~2-3 hours):
+tmux new -s run9
+uv run python scripts/reproduce_results.py \
   --split paper-test \
-  2>&1 | tee data/outputs/run_$(date +%Y%m%d_%H%M%S).log
+  2>&1 | tee data/outputs/run9_$(date +%Y%m%d_%H%M%S).log
 ```
 
 ## Evaluation Metrics (CRITICAL)
@@ -165,26 +149,33 @@ MAE comparisons are ONLY valid when coverage is similar between conditions. If z
 
 ```bash
 # Compute AURC/AUGRC with bootstrap CIs
-python scripts/evaluate_selective_prediction.py \
+uv run python scripts/evaluate_selective_prediction.py \
   --input data/outputs/<your_run>.json \
   --mode few_shot \
-  --loss abs \
+  --confidence llm \
+  --bootstrap-resamples 1000
+
+# Try new retrieval-based confidence signals (Spec 046)
+uv run python scripts/evaluate_selective_prediction.py \
+  --input data/outputs/<your_run>.json \
+  --mode few_shot \
+  --confidence hybrid_evidence_similarity \
   --bootstrap-resamples 1000
 ```
 
-### Key Results (2026-01-02, Chunk Scoring + Participant-Only)
+### Key Results (Run 8: 2026-01-02)
 
-| Mode | MAE_i | Coverage | AURC | AUGRC |
-|------|-------|----------|------|-------|
-| Zero-shot | 0.776 | 50.0% | 0.424 | 0.094 |
-| Few-shot | 0.609 | 50.9% | 0.374 | 0.092 |
+| Mode | MAE_item | Coverage | AURC | AUGRC |
+|------|----------|----------|------|-------|
+| Zero-shot | 0.776 | 48.8% | 0.141 | 0.031 |
+| Few-shot | 0.609 | 50.9% | 0.125 | 0.031 |
 
-Coverage is now similar (~50%), so MAE comparisons are valid for this run.
+Coverage is now similar (~50%), so MAE comparisons are valid.
 
 ## Important Notes
 
-- **Legacy code is archived**: `_legacy/`, `_literature/`, `_reference/` are not production code
+- **Legacy code is archived**: `_legacy/`, `_literature/`, `_reference/` are NOT production code
 - **Entry point**: `server.py` (root). Run with `make serve` or `uv run uvicorn server:app`
-- **All hyperparameters are paper-justified**: Check docstrings for section references
 - **Strict typing enforced**: mypy strict mode, full annotations required
 - **Pre-commit hooks**: ruff lint/format, mypy, trailing whitespace cleanup
+- **Do NOT reference "paper-parity"**: Use "baseline defaults" or "validated configuration" instead

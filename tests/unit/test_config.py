@@ -1,6 +1,6 @@
 """Tests for configuration management.
 
-Tests verify settings match paper hyperparameters and provide
+Tests verify settings match baseline hyperparameters and provide
 proper validation, caching, and environment variable loading.
 """
 
@@ -38,9 +38,9 @@ class TestQuantitativeSettings:
     """Tests for QuantitativeSettings."""
 
     def test_defaults(self) -> None:
-        """Default values should match paper parity (backfill OFF)."""
+        """Default values should match baseline defaults (backfill OFF)."""
         settings = QuantitativeSettings()
-        assert settings.enable_keyword_backfill is False  # Paper parity default
+        assert settings.enable_keyword_backfill is False  # Baseline default
         assert settings.track_na_reasons is True
         assert settings.keyword_backfill_cap == 3
 
@@ -100,7 +100,7 @@ class TestOllamaSettings:
 class TestModelSettings:
     """Tests for model configuration."""
 
-    def test_paper_optimal_defaults(self) -> None:
+    def test_default_values(self) -> None:
         """Defaults should match paper Section 2.2.
 
         NOTE: quantitative_model uses gemma3:27b (not MedGemma) because
@@ -156,8 +156,8 @@ class TestEmbeddingBackendSettings:
 class TestEmbeddingSettings:
     """Tests for embedding configuration."""
 
-    def test_paper_optimal_defaults(self) -> None:
-        """Defaults should match paper Appendix D optimal values."""
+    def test_validated_baseline_defaults(self) -> None:
+        """Defaults should match paper Appendix D baseline values."""
         settings = EmbeddingSettings()
         assert settings.dimension == 4096  # Paper Appendix D
         assert settings.chunk_size == 8  # Paper Appendix D
@@ -187,7 +187,7 @@ class TestEmbeddingSettings:
 class TestFeedbackLoopSettings:
     """Tests for feedback loop configuration."""
 
-    def test_paper_optimal_defaults(self) -> None:
+    def test_validated_baseline_defaults(self) -> None:
         """Defaults should match paper Section 2.3.1."""
         settings = FeedbackLoopSettings()
         assert settings.enabled is True

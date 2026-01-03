@@ -1,7 +1,7 @@
 # AI Psychiatrist Model Registry
 
-Last Updated: 2025-12-26
-Purpose: Paper-aligned, reproducible model configuration for this repo.
+**Last Updated**: 2026-01-02
+**Purpose**: Validated, reproducible model configuration for this repo.
 
 ---
 
@@ -13,8 +13,8 @@ Chat and embeddings can be configured separately via:
 
 | Setup | Chat Backend (`LLM_BACKEND`) | Embedding Backend (`EMBEDDING_BACKEND`) | Quality | Hardware Needed | Use Case |
 |-------|------------------------------|----------------------------------------|---------|-----------------|----------|
-| **Default (Recommended)** | Ollama | HuggingFace | Better similarity | 16GB+ RAM + HF deps | Paper-parity chat + FP16 embeddings |
-| **Paper Parity (Pure Ollama)** | Ollama | Ollama | Good | Any Mac/Linux | Reproduce paper results without HF deps |
+| **Default (Recommended)** | Ollama | HuggingFace | Better similarity | 16GB+ RAM + HF deps | Validated configuration (recommended) |
+| **Legacy Baseline (Pure Ollama)** | Ollama | Ollama | Good | Any Mac/Linux | No HF deps; lower-quality similarity |
 | **High Quality (Full HF)** | HuggingFace | HuggingFace | Best | 32GB+ RAM, CUDA/MPS | Best possible MAE |
 | **Development** | Ollama | Ollama | Fast | Any | Quick iteration |
 
@@ -22,9 +22,10 @@ Note: The codebase intentionally fails fast when a configured backend can’t ru
 
 ---
 
-## Paper-Optimal Models (Reproduction)
+## Baseline Models (Paper-Referenced)
 
-These models match the paper's methodology and are required for paper-accurate runs.
+These models are referenced by the paper and are the default starting point in this repo.
+We recommend the QAT variant (`gemma3:27b-it-qat`) for faster local runs.
 
 | Role | Model family | Params | Ollama tag | Paper reference | Notes |
 |------|--------------|--------|------------|-----------------|-------|
@@ -42,7 +43,7 @@ The paper authors likely used full-precision BF16 weights. Both Ollama variants 
 
 Both are acceptable for reproduction. Use `-it-qat` for faster runs, or `27b` for closer naming parity with the paper.
 
-Approximate disk for paper-optimal pulls: ~32 GB.
+Approximate disk for baseline pulls: ~32 GB.
 
 ### MedGemma Note (Appendix F)
 
@@ -72,7 +73,7 @@ Use these for fast local testing only. They do not reproduce paper metrics.
 
 ## Installation Commands
 
-### Ollama (Paper-optimal)
+### Ollama (Baseline)
 
 ```bash
 # Recommended (QAT-optimized, faster):
@@ -170,10 +171,10 @@ LLM_BACKEND=ollama
 EMBEDDING_BACKEND=huggingface
 
 # Models (all default to gemma3:27b for chat, qwen3-embedding:8b for embeddings)
-MODEL_QUALITATIVE_MODEL=gemma3:27b
-MODEL_JUDGE_MODEL=gemma3:27b
-MODEL_META_REVIEW_MODEL=gemma3:27b
-MODEL_QUANTITATIVE_MODEL=gemma3:27b
+MODEL_QUALITATIVE_MODEL=gemma3:27b-it-qat
+MODEL_JUDGE_MODEL=gemma3:27b-it-qat
+MODEL_META_REVIEW_MODEL=gemma3:27b-it-qat
+MODEL_QUANTITATIVE_MODEL=gemma3:27b-it-qat
 MODEL_EMBEDDING_MODEL=qwen3-embedding:8b
 EMBEDDING_DIMENSION=4096
 
@@ -182,15 +183,15 @@ EMBEDDING_DIMENSION=4096
 # EMBEDDING_EMBEDDINGS_FILE=huggingface_qwen3_8b_paper_train_participant_only
 #
 # Only set if you want to override the default HF embeddings
-# EMBEDDING_EMBEDDINGS_FILE=paper_reference_embeddings  # Use Ollama embeddings instead
+# EMBEDDING_EMBEDDINGS_FILE=ollama_qwen3_8b_paper_train_participant_only
 ```
 
-### Paper Parity (Pure Ollama)
+### Legacy Baseline (Pure Ollama)
 
 ```bash
 LLM_BACKEND=ollama
 EMBEDDING_BACKEND=ollama
-EMBEDDING_EMBEDDINGS_FILE=paper_reference_embeddings  # Use Ollama Q4_K_M embeddings
+EMBEDDING_EMBEDDINGS_FILE=ollama_qwen3_8b_paper_train_participant_only
 ```
 
 ### With MedGemma (Appendix F - HuggingFace backend required)

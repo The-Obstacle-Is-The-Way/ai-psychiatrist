@@ -10,7 +10,7 @@ Configuration is managed via Pydantic Settings with three sources (in priority o
 
 1. **Environment variables** (highest priority)
 2. **`.env` file** (recommended for development)
-3. **Code defaults** (paper-optimal values)
+3. **Code defaults** (baseline defaults)
 
 ```bash
 # Copy template and customize
@@ -164,7 +164,7 @@ Few-shot retrieval configuration.
 | `EMBEDDING_MIN_REFERENCE_SIMILARITY` | float | `0.0` | Spec 33 (drop low-similarity references; 0 disables) |
 | `EMBEDDING_MAX_REFERENCE_CHARS_PER_ITEM` | int | `0` | Spec 33 (per-item reference context budget; 0 disables) |
 | `EMBEDDING_ENABLE_ITEM_TAG_FILTER` | bool | `false` | Spec 34 (filter refs by item tags; requires `{name}.tags.json`) |
-| `EMBEDDING_REFERENCE_SCORE_SOURCE` | string | `participant` | Spec 35: `participant` (paper-parity) or `chunk` (experimental) |
+| `EMBEDDING_REFERENCE_SCORE_SOURCE` | string | `participant` | Spec 35: `participant` (legacy baseline; participant-level scores on chunks) or `chunk` (recommended; requires `.chunk_scores.json`) |
 | `EMBEDDING_ALLOW_CHUNK_SCORES_PROMPT_HASH_MISMATCH` | bool | `false` | Spec 35 circularity control bypass (unsafe) |
 | `EMBEDDING_ENABLE_REFERENCE_VALIDATION` | bool | `false` | Spec 36 (CRAG-style runtime validation; adds LLM calls) |
 | `EMBEDDING_VALIDATION_MODEL` | string | *(unset)* | Spec 36 validation model (if unset, runners fall back to `MODEL_JUDGE_MODEL`) |
@@ -187,7 +187,7 @@ sidecar. At runtime, enable tag-based filtering with `EMBEDDING_ENABLE_ITEM_TAG_
 
 **Chunk-level scoring (Spec 35)**: By default, retrieved chunks carry the participant's overall PHQ-8 score. Set
 `EMBEDDING_REFERENCE_SCORE_SOURCE=chunk` to use per-chunk scores (requires `scripts/score_reference_chunks.py` output).
-**WARNING**: This is NOT paper-parity; label runs as "experimental".
+This is the recommended configuration for research-honest retrieval; `participant` is retained as a legacy baseline only.
 
 **CRAG validation (Spec 36)**: Set `EMBEDDING_ENABLE_REFERENCE_VALIDATION=true` to have the LLM validate each retrieved
 reference at runtime (CRAG-style). Adds latency but filters irrelevant references.
@@ -347,17 +347,17 @@ These settings control the quantitative assessment behavior (evidence extraction
 
 | Variable | Type | Default | Description |
 |----------|------|---------|-------------|
-| `QUANTITATIVE_ENABLE_KEYWORD_BACKFILL` | bool | `false` | Enable keyword backfill for evidence extraction (paper parity: OFF) |
+| `QUANTITATIVE_ENABLE_KEYWORD_BACKFILL` | bool | `false` | Enable keyword backfill for evidence extraction (baseline default: OFF) |
 | `QUANTITATIVE_TRACK_NA_REASONS` | bool | `true` | Track why items return N/A |
 | `QUANTITATIVE_KEYWORD_BACKFILL_CAP` | int | `3` | Max keyword-matched sentences per domain |
 
-**Default Behavior (Paper Parity):**
+**Default Behavior (Baseline):**
 
-Keyword backfill is **OFF by default** to match paper methodology (~50% coverage).
+Keyword backfill is **OFF by default** (conservative baseline; ~50% coverage).
 
 > ⚠️ **Deprecated**: Keyword backfill is a historical ablation feature. Enabling it is not recommended for new runs. See `POST-ABLATION-DEFAULTS.md` in the project root for rationale.
 
-See [Configuration Philosophy](./configuration-philosophy.md) for background on why paper-parity settings are deprecated.
+See [Configuration Philosophy](./configuration-philosophy.md) for background on why legacy baseline settings are deprecated.
 
 ---
 

@@ -253,7 +253,7 @@ chunk_preview="mm\ni try not to get angry um\nbecause i have a really bad temper
 
 | Option | Pros | Cons | Risk |
 |--------|------|------|------|
-| **Keep Both (Status Quo)** | Paper parity, LLM context | Research warns against, 50% noise | Medium |
+| **Keep Both (Status Quo)** | Legacy baseline, LLM context | Research warns against, 50% noise | Medium |
 | **Participant Only** | Research best practice, denser signal | Loses question context | Low |
 | **Hybrid (Tag Speakers)** | Best of both, LLM can filter | More complex, untested | Medium |
 
@@ -326,7 +326,7 @@ The paper authors likely didn't address this explicitly because:
 If the goal is **validity and generalization** (not just maximizing metrics on DAIC-WOZ), the safest default is:
 
 1. **Participant-only for embeddings/retrieval/indexing** (at minimum), since the retrieval layer can be biased by interviewer follow-up patterns before the LLM ever sees the prompt.
-2. Treat **both-speakers transcripts as a paper-parity baseline**, and explicitly label any gains as potentially influenced by interviewer-protocol leakage.
+2. Treat **both-speakers transcripts as a legacy baseline**, and explicitly label any gains as potentially influenced by interviewer-protocol leakage.
 3. If participant-only harms interpretability for short answers (e.g., "yes/no"), test a compromise variant:
    - **Participant-only utterances + minimal question context**, e.g., include the immediately preceding Ellie prompt line for each participant response (Q/A context), while still excluding other interviewer content from indexing.
 

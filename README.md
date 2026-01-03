@@ -52,7 +52,7 @@ make dev  # or: make dev-hf (to enable HuggingFace backends)
 ollama pull gemma3:27b-it-qat  # or gemma3:27b
 ollama pull qwen3-embedding:8b
 
-# Configure (uses paper-optimal defaults)
+# Configure (uses validated baseline configuration)
 cp .env.example .env
 
 # Start server
@@ -121,12 +121,14 @@ ai-psychiatrist/
 │   ├── integration/      # Integration tests
 │   └── e2e/              # End-to-end tests
 ├── docs/
-│   ├── getting-started/  # Tutorials
-│   ├── concepts/         # Explanations
-│   ├── reference/        # API and config reference
-│   ├── data/             # Dataset documentation
-│   ├── specs/            # Active specs
-│   └── archive/          # Historical artifacts (not required for active docs)
+│   ├── getting-started/  # Quickstart and tutorials
+│   ├── configs/          # Configuration reference + philosophy
+│   ├── embeddings/       # Embeddings + retrieval documentation
+│   ├── pipeline-internals/ # Feature wiring and internals
+│   ├── preflight-checklist/ # Run checklists (zero-shot / few-shot)
+│   ├── results/          # Reproduction results + run history
+│   ├── statistics/       # Metrics + evaluation methodology (AURC/AUGRC)
+│   └── _specs/           # Specs index (implemented specs distilled into docs)
 └── data/                 # DAIC-WOZ dataset (gitignored)
 ```
 

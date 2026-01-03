@@ -1,14 +1,14 @@
-# Preflight Checklist: Zero-Shot Reproduction
+# Preflight Checklist: Zero-Shot Run
 
-**Purpose**: Comprehensive pre-run verification for zero-shot paper reproduction
-**Last Updated**: 2025-12-27
+**Purpose**: Comprehensive pre-run verification for zero-shot evaluation runs
+**Last Updated**: 2026-01-02
 **Related**: [Few-Shot Checklist](./preflight-checklist-few-shot.md) | [Configuration Reference](../configs/configuration.md)
 
 ---
 
 ## Overview
 
-This checklist prevents reproduction failures by verifying ALL known gotchas before running. Use this **every time** you start a zero-shot reproduction run.
+This checklist prevents run failures by verifying ALL known gotchas before running. Use this **every time** you start a zero-shot run.
 
 Zero-shot mode uses NO reference embeddings - the model scores symptoms from transcript alone.
 
@@ -96,7 +96,8 @@ Zero-shot mode uses NO reference embeddings - the model scores symptoms from tra
   # Should show: PYDANTIC_AI_ENABLED=true (or be absent, as true is the default)
   ```
 
-  **What it does**: Adds structured validation + automatic retries (up to 3x) for quantitative scoring, judge metrics, and meta-review. Falls back to legacy parsing on failure.
+  **What it does**: Adds structured validation + automatic retries (up to 3x) for quantitative scoring, judge metrics, and meta-review.
+  There is no legacy parsing fallback; failures after retries remain failures.
 
 ---
 
@@ -106,7 +107,7 @@ Zero-shot mode uses NO reference embeddings - the model scores symptoms from tra
 
 **Reference**: SPEC-003, Coverage Investigation
 
-- [ ] **Backfill is DISABLED** (paper parity = ~50% coverage):
+- [ ] **Backfill is DISABLED** (baseline defaults ≈50% coverage):
   ```bash
   grep "QUANTITATIVE_ENABLE_KEYWORD_BACKFILL" .env
   # MUST show: QUANTITATIVE_ENABLE_KEYWORD_BACKFILL=false
@@ -130,9 +131,12 @@ Zero-shot mode uses NO reference embeddings - the model scores symptoms from tra
 
 - [ ] **Transcripts directory exists**:
   ```bash
-  ls data/transcripts/ | wc -l
+  ls data/transcripts_participant_only/ | wc -l
   # Should show ~189 (or your participant count)
   ```
+
+  **Note**: This repo recommends `DATA_TRANSCRIPTS_DIR=data/transcripts_participant_only` for runs. If you are using
+  raw transcripts, adjust the path accordingly.
 
 ### 4.2 Participant 487 Validation
 
@@ -140,14 +144,14 @@ Zero-shot mode uses NO reference embeddings - the model scores symptoms from tra
 
 - [ ] **Participant 487 is NOT corrupted**:
   ```bash
-  file data/transcripts/487_P/487_TRANSCRIPT.csv
+  file data/transcripts_participant_only/487_P/487_TRANSCRIPT.csv
   # MUST show: ASCII text, or UTF-8 Unicode text
   # NOT: AppleDouble encoded, or binary
   ```
 
 - [ ] **Correct file size** (~20KB, not 4KB):
   ```bash
-  ls -lh data/transcripts/487_P/487_TRANSCRIPT.csv
+  ls -lh data/transcripts_participant_only/487_P/487_TRANSCRIPT.csv
   # Should be ~18-25KB, NOT 4KB
   ```
 
@@ -334,7 +338,7 @@ Watch for these log patterns:
 
 ### 9.3 Metrics Sanity Check
 
-- [ ] **Coverage is ~50-60%** (paper parity with backfill OFF):
+- [ ] **Coverage is ~50-60%** (baseline defaults with backfill OFF):
   ```bash
   # Check the output JSON for coverage metrics
   python3 -c "
@@ -349,7 +353,7 @@ Watch for these log patterns:
   "
   ```
 
-  Expected (zero-shot, paper parity):
+  Expected (zero-shot, backfill OFF):
   - Coverage: ~50-60% (with backfill OFF)
   - MAE: ~0.72-0.80 (paper reports 0.796)
 
@@ -390,14 +394,12 @@ Watch for these log patterns:
 If ALL items are checked:
 1. You're ready to run zero-shot reproduction
 2. Expected runtime: ~5 min/participant (varies by hardware)
-3. Paper zero-shot MAE target: 0.796
-
-**Remember**: The paper acknowledges stochasticity - results within ±0.1 MAE are considered consistent.
+3. Reference target (paper-reported, item-level MAE): 0.796 (use coverage-aware metrics for fair comparisons)
 
 ---
 
 ## Related Documentation
 
 - [Few-Shot Preflight](./preflight-checklist-few-shot.md) - For few-shot runs (includes embedding setup)
-- [Configuration Philosophy](../configs/configuration-philosophy.md) - Why we've moved beyond paper parity
+- [Configuration Philosophy](../configs/configuration-philosophy.md) - Why we've moved beyond the legacy baseline
 - [Model Registry](../models/model-registry.md) - Model configuration and backend options

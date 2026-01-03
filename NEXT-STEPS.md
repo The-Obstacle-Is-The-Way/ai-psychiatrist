@@ -1,177 +1,148 @@
 # Next Steps
 
-**Date**: 2026-01-02
-**Status**: ACTIVE
-**Hardware**: Apple M1 Max, 10 cores, 64 GB RAM
+**Status**: READY FOR RUN 9
+**Last Updated**: 2026-01-02
 
 ---
 
-## Immediate Priority: Improve Coverage + Eliminate Failures (Run 8)
+## Why We Abandoned "Paper-Parity"
 
-Run 8 (participant-only transcripts + chunk scoring) achieves paper MAE_item parity, but with a major tradeoff:
+The original paper (Greene et al.) has **severe methodological flaws** that make reproduction impossible. We have built a **robust, independent implementation** that fixes these issues.
 
-- Lower `Cmax` (~49–51% vs ~66% in Run 7), meaning substantially more abstention
-- 1/41 few-shot participant failure (PID 383: output validation retries exhausted)
+### Documented Failures (see closed GitHub issues)
 
-Canonical stats and run provenance live in:
-- `docs/results/run-history.md`
-- `docs/results/reproduction-results.md`
+| Issue | Problem |
+|-------|---------|
+| [#81](https://github.com/The-Obstacle-Is-The-Way/ai-psychiatrist/issues/81) | Participant-level PHQ-8 scores assigned to individual chunks (semantic mismatch) |
+| [#69](https://github.com/The-Obstacle-Is-The-Way/ai-psychiatrist/issues/69) | Few-shot retrieval attaches participant scores to arbitrary text chunks |
+| [#66](https://github.com/The-Obstacle-Is-The-Way/ai-psychiatrist/issues/66) | Paper uses invalid statistical comparison (MAE at different coverages) |
+| [#47](https://github.com/The-Obstacle-Is-The-Way/ai-psychiatrist/issues/47) | Paper does not specify model quantization |
+| [#46](https://github.com/The-Obstacle-Is-The-Way/ai-psychiatrist/issues/46) | Paper does not specify temperature/top_k/top_p sampling parameters |
+| [#45](https://github.com/The-Obstacle-Is-The-Way/ai-psychiatrist/issues/45) | Paper uses undocumented custom 58/43/41 split |
 
-### Action Items
+### Reference Code Quality
 
-1. **Explain the coverage drop**: validate whether the abstention increase is coming from retrieval (similarity threshold) vs evidence extraction vs transcript content changes.
-2. **Evaluate `participant_qa`**: test whether adding minimal question context improves evidence availability without reintroducing “Ellie leakage” in retrieval.
-3. **Fix remaining failure mode(s)**: investigate PID 383 few-shot “output validation” failure; reduce deterministic failure cases (e.g., tolerant parsing) without loosening schema safety.
+The paper's reference implementation (`_reference/ai_psychiatrist/`) demonstrates:
+- No configuration system (hardcoded paths)
+- No error handling
+- No tests
+- No typing
+- Inconsistent naming (e.g., `qualitive_evaluator.py`)
+- Single-file "server" with no separation of concerns
+
+**Our implementation** provides: Pydantic configuration, comprehensive tests (80%+ coverage), strict typing, structured logging, modular architecture, and proper experiment tracking.
+
+### Terminology Change
+
+| Old (deprecated) | New (use this) |
+|------------------|----------------|
+| "paper-parity" | "baseline/conservative defaults" |
+| "paper-optimal" | "validated configuration" |
+| "reproduce the paper" | "evaluate PHQ-8 assessment" |
 
 ---
 
-## Priority 2: Clean Up `.env.example` (It's Confusing Slop)
+## 1. Immediate Action: Run 9 (Spec 046 Confidence Signals)
 
-### The Problem
+**Why**: Spec 046 adds retrieval similarity signals to run outputs, enabling new confidence variants for AURC/AUGRC evaluation. Run 8 was produced BEFORE Spec 046 was implemented, so it does NOT contain these signals.
 
-`.env.example` is 146 lines of commented-out options, alternatives, and edge cases.
-It violates our Configuration Philosophy: **correct behavior should be obvious**.
+**Prerequisites verified** (all present):
 
-### Issues
+| Artifact | Path | Status |
+|----------|------|--------|
+| Embeddings NPZ | `data/embeddings/huggingface_qwen3_8b_paper_train_participant_only.npz` | 68 MB |
+| Text chunks | `data/embeddings/...participant_only.json` | 2.1 MB |
+| Metadata | `data/embeddings/...participant_only.meta.json` | 432 B |
+| Item tags (Spec 34) | `data/embeddings/...participant_only.tags.json` | 48 KB |
+| Chunk scores (Spec 35) | `data/embeddings/...participant_only.chunk_scores.json` | 1.1 MB |
+| Chunk scores meta | `data/embeddings/...participant_only.chunk_scores.meta.json` | 284 B |
+| Transcripts | `data/transcripts_participant_only/` | 189 dirs |
 
-1. **Too many comments about alternatives** - confusing
-2. **Deprecated features still visible** - why show them at all?
-3. **Spec-by-spec organization** - users don't think in specs
-4. **Commented fallbacks mixed with active settings** - hard to parse
-
-### The Fix: Restructure `.env.example`
-
-Create TWO sections:
-1. **Minimal config** - what you need to get started (10-15 lines)
-2. **Advanced options** - everything else, clearly separated
-
-Proposed new structure:
+**Command**:
 
 ```bash
-# ============================================================
-# AI Psychiatrist - Minimal Configuration
-# ============================================================
-# Copy to .env. Most users only need to verify these values.
-
-# Ollama server (required)
-OLLAMA_HOST=127.0.0.1
-OLLAMA_PORT=11434
-
-# Embedding backend (HuggingFace recommended for quality)
-EMBEDDING_BACKEND=huggingface
-EMBEDDING_EMBEDDINGS_FILE=huggingface_qwen3_8b_paper_train_participant_only
-
-# Models (Gemma 3 27B, paper-optimal)
-MODEL_EMBEDDING_MODEL=qwen3-embedding:8b
-MODEL_JUDGE_MODEL=gemma3:27b-it-qat
-MODEL_META_REVIEW_MODEL=gemma3:27b-it-qat
-MODEL_QUALITATIVE_MODEL=gemma3:27b-it-qat
-MODEL_QUANTITATIVE_MODEL=gemma3:27b-it-qat
-
-# ============================================================
-# Advanced Options (most users don't need to change these)
-# ============================================================
-# See CONFIGURATION-PHILOSOPHY.md for guidance.
-
-# [Rest of settings organized by category, not by spec]
+# In tmux for long runs (~2-3 hours):
+tmux new -s run9
+uv run python scripts/reproduce_results.py \
+  --split paper-test \
+  2>&1 | tee data/outputs/run9_spec046_$(date +%Y%m%d_%H%M%S).log
 ```
 
-### Action Items
+**After Run 9, evaluate with new confidence variants**:
 
-- [ ] Rewrite `.env.example` with minimal/advanced split
-- [ ] Remove deprecated features from visible config (they're in code for ablation only)
-- [ ] Group by user intent, not by spec number
-- [ ] Add cross-reference to `CONFIGURATION-PHILOSOPHY.md`
+```bash
+# Compare confidence signals for few-shot
+uv run python scripts/evaluate_selective_prediction.py \
+  --input data/outputs/<RUN9_OUTPUT>.json \
+  --mode few_shot \
+  --confidence llm \
+  --seed 42
 
----
+uv run python scripts/evaluate_selective_prediction.py \
+  --input data/outputs/<RUN9_OUTPUT>.json \
+  --mode few_shot \
+  --confidence retrieval_similarity_mean \
+  --seed 42
 
-## Priority 3: Ensure HuggingFace is the Default Everywhere
-
-### Checklist
-
-- [x] `.env.example` shows HuggingFace as explicit default
-- [ ] `CONFIGURATION-PHILOSOPHY.md` section 5a documents the quality difference
-- [ ] `POST-ABLATION-DEFAULTS.md` updated to require HuggingFace chunk scores
-- [ ] `CLAUDE.md` updated with HuggingFace as recommended
-
-### Current State
-
-| File | HuggingFace Default? | Notes |
-|------|----------------------|-------|
-| `.env.example` | ✅ Yes (just fixed) | Lines 23-24 |
-| `config.py` | ✅ Yes (code default) | `embedding_backend: str = "huggingface"` |
-| `CONFIGURATION-PHILOSOPHY.md` | ✅ Yes (section 5a) | Just added |
-| `POST-ABLATION-DEFAULTS.md` | ⚠️ No mention | Needs update |
-| `CLAUDE.md` | ❌ Not explicit | Needs update |
-
----
-
-## Priority 4: Post-Ablation Default Consolidation
-
-Once current reproduction run completes and we validate results:
-
-### From `POST-ABLATION-DEFAULTS.md`:
-
-| Setting | Current Default | Target Default |
-|---------|-----------------|----------------|
-| `EMBEDDING_REFERENCE_SCORE_SOURCE` | `participant` | `chunk` |
-| `EMBEDDING_ENABLE_ITEM_TAG_FILTER` | `false` | `true` |
-| `EMBEDDING_MIN_REFERENCE_SIMILARITY` | `0.0` | `0.3` |
-| `EMBEDDING_MAX_REFERENCE_CHARS_PER_ITEM` | `0` | `500` |
-| `EMBEDDING_ENABLE_REFERENCE_VALIDATION` | `false` | `true` |
-
-### Validation Gates (Before Flipping Defaults)
-
-- [ ] Spec 35 ablation complete (chunk vs participant scoring)
-- [ ] `*.chunk_scores.json` artifacts exist for both Ollama AND HuggingFace
-- [ ] No regressions in primary metrics
-- [ ] CI passes with new defaults
-
----
-
-## Execution Order
-
-```
-1. [RUNNING] Reproduction with Ollama chunk scores (tmux `repro`)
-   └── Wait for completion, analyze results
-
-2. [NEXT] Generate HuggingFace chunk scores
-   └── Run overnight if needed
-
-3. [NEXT] Clean up .env.example
-   └── Minimal/advanced split
-
-4. [NEXT] Run reproduction with HuggingFace chunk scores
-   └── Compare with Ollama results
-
-5. [AFTER VALIDATION] Flip defaults in config.py
-   └── Per POST-ABLATION-DEFAULTS.md
-
-6. [FINAL] Archive problem docs, simplify guidance
+uv run python scripts/evaluate_selective_prediction.py \
+  --input data/outputs/<RUN9_OUTPUT>.json \
+  --mode few_shot \
+  --confidence hybrid_evidence_similarity \
+  --seed 42
 ```
 
 ---
 
-## Related Documents
+## 2. Configuration Summary
 
-- `PROBLEM-HUGGINGFACE-CHUNK-SCORES-MISSING.md` — Why we need HF chunk scores
-- `PROBLEM-SPEC35-SCORER-MODEL-GAP.md` — Scorer model selection
-- `POST-ABLATION-DEFAULTS.md` — What defaults will change
-- `CONFIGURATION-PHILOSOPHY.md` — How to think about config
-- `SPEC-DOCUMENTATION-GAPS.md` — Doc migration status
+All features are **gated by `.env`**. Copy `.env.example` to `.env` before running.
+
+### Enabled Features (in `.env.example`)
+
+| Feature | Setting | Value |
+|---------|---------|-------|
+| Chunk-level scoring | `EMBEDDING_REFERENCE_SCORE_SOURCE` | `chunk` |
+| Item-tag filtering | `EMBEDDING_ENABLE_ITEM_TAG_FILTER` | `true` |
+| Similarity threshold | `EMBEDDING_MIN_REFERENCE_SIMILARITY` | `0.3` |
+| Context limit | `EMBEDDING_MAX_REFERENCE_CHARS_PER_ITEM` | `500` |
+| Participant-only transcripts | `DATA_TRANSCRIPTS_DIR` | `data/transcripts_participant_only` |
+| HuggingFace embeddings (FP16) | `EMBEDDING_BACKEND` | `huggingface` |
+
+### Code Defaults (conservative baseline)
+
+Code defaults exist for testing and fallback only. They are NOT recommended for evaluation runs.
 
 ---
 
-## Hardware Notes
+## 3. Spec 046 Implementation Status
 
-**Your machine (M1 Max, 64GB)** can:
-- Run Gemma 3 27B via Ollama (fits in unified memory)
-- Run chunk scoring (CPU-bound, ~10 cores available)
-- Run reproduction while chunk scoring runs (if carefully managed)
+**Status**: IMPLEMENTED (2026-01-02)
 
-**Recommendation**: Don't run chunk scoring and reproduction simultaneously.
-The LLM calls will compete for the same Ollama instance.
+**What was added**:
+- New fields in `ItemAssessment`: `retrieval_reference_count`, `retrieval_similarity_mean`, `retrieval_similarity_max`
+- New confidence variants in `evaluate_selective_prediction.py`: `retrieval_similarity_mean`, `retrieval_similarity_max`, `hybrid_evidence_similarity`
+
+**What Run 9 will test**:
+- Whether retrieval-grounded confidence signals improve AURC/AUGRC vs evidence-count-only
+- Hypothesis: `hybrid_evidence_similarity` should be a better ranking signal than `llm` alone
 
 ---
 
-*Last updated: 2026-01-02*
+## 4. Post-Run 9 Work
+
+1. **Analyze results**: Compare AURC/AUGRC across confidence variants
+2. **Document findings**: Update `docs/results/run-history.md` with Run 9
+3. **If improvement**: Consider Phase 2 work (verbalized confidence, calibrator)
+4. **If no improvement**: Investigate alternative signals
+
+---
+
+## 5. Senior Review Request
+
+Before launching Run 9, request senior review of:
+1. This NEXT-STEPS.md document
+2. Configuration in `.env.example` vs code defaults
+3. Spec 046 implementation completeness
+4. All root documentation files (CLAUDE.md, AGENTS.md, GEMINI.md)
+
+---

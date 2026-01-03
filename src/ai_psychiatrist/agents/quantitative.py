@@ -66,7 +66,7 @@ class QuantitativeAssessmentAgent:
 
     Supports two modes:
     - Zero-shot: Direct prediction without reference examples
-    - Few-shot: Uses embedding-based reference retrieval (paper optimal)
+    - Few-shot: Uses embedding-based reference retrieval (Appendix D hyperparameters)
 
     The few-shot approach achieves MAE of 0.619 vs 0.796 for zero-shot
     (22% improvement per paper Section 3.2).

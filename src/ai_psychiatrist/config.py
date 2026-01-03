@@ -1,7 +1,9 @@
 """Centralized configuration using Pydantic Settings.
 
-This module provides paper-optimal defaults for the AI Psychiatrist system.
-All settings can be overridden via environment variables.
+This module provides validated baseline defaults for the AI Psychiatrist system.
+Defaults are derived from the paper's reported settings and subsequent repo fixes/ablations.
+All settings can be overridden via environment variables; `.env.example` is the recommended
+run configuration.
 
 Paper references:
 - Section 2.2: Model configuration (Gemma 3 27B, Qwen 3 8B Embedding)
@@ -181,7 +183,7 @@ class ModelSettings(BaseSettings):
 
     NOTE: MedGemma 27B (Appendix F) achieves better item-level MAE (0.505 vs 0.619)
     but makes fewer predictions overall (lower coverage / more N/A). Use `gemma3:27b`
-    for paper-parity defaults; override `quantitative_model` to evaluate Appendix F.
+    for baseline defaults; override `quantitative_model` to evaluate Appendix F.
 
     Embeddings (Section 2.2): Qwen 3 8B Embedding. The paper does not specify
     quantization.
@@ -222,7 +224,7 @@ class ModelSettings(BaseSettings):
 class EmbeddingSettings(BaseSettings):
     """Embedding and few-shot configuration.
 
-    Paper-optimal hyperparameters (Appendix D):
+    Paper-reported hyperparameters (Appendix D):
     - chunk_size=8, step_size=2, top_k=2, dimension=4096
     """
 
@@ -326,7 +328,7 @@ class FeedbackLoopSettings(BaseSettings):
     Paper (Section 2.3.1): "When an original evaluation score was below four,
     the judge agent triggered an automatic feedback loop."
 
-    Paper-optimal: threshold=3 means scores <= 3 (i.e., < 4) trigger refinement.
+    Paper-derived: threshold=3 means scores <= 3 (i.e., < 4) trigger refinement.
     """
 
     model_config = SettingsConfigDict(

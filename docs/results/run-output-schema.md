@@ -1,7 +1,7 @@
 # Reproduction Run Output Schema (JSON + Registry)
 
 **Audience**: Researchers parsing outputs and maintaining run provenance
-**Last Updated**: 2026-01-01
+**Last Updated**: 2026-01-02
 
 This repo writes two primary provenance artifacts for quantitative reproduction runs:
 

@@ -667,9 +667,9 @@ Client: About an 8.
 
 Juror prompts must still enforce: **score PHQ-8 based only on client statements**; therapist text is context, not evidence.
 
-#### 5.3.3 DAIC-WOZ Phase 0: Deterministic Transcript Hygiene
+#### 5.3.3 DAIC-WOZ (Local-Only): Deterministic Transcript Hygiene
 
-Phase 0 validation must apply the same *mechanical* transcript corrections that the DAIC-WOZ preprocessing literature and reference tooling document, to avoid silently biasing evaluation.
+When evaluating transfer on DAIC-WOZ (local-only, outside this repo), apply the same *mechanical* transcript corrections that the DAIC-WOZ preprocessing literature and reference tooling document to avoid silently biasing evaluation.
 
 Minimum deterministic rules (parity with the Bailey/Plumbley DAIC-WOZ preprocessing tool and this repo’s implementation patterns):
 
@@ -689,7 +689,7 @@ Operational constraint:
 
 #### 5.3.4 Required Ablations (Preprocessing Is Not “Set and Forget”)
 
-To avoid accidental benchmark gaming and to quantify the prompt-leakage tradeoff, Phase 0 and Phase 3 must include:
+To avoid accidental benchmark gaming and to quantify the prompt-leakage tradeoff, include these ablations in both the SQPsychConv smoke run (Phase 0) and the downstream DAIC-WOZ evaluation (Phase 3):
 
 - scoring view: `client_qa_text` vs `client_only_text`
 - embedding view: `client_only_text` vs `dialogue_clean` (expected to be worse; included as a sanity check)
@@ -1917,7 +1917,7 @@ uv run python scripts/score_corpus.py --retry-failed --error-code rate_limit
 | **Model refuses** | "Clinical research assistant" role framing; self-harm as separate stage |
 | **Prompt leakage (therapist protocol bias)** | Use bias-aware dialogue views (`client_qa` for embeddings; `client_qa` for scoring); run required ablations |
 | **Semantic void (embeddings)** | Use `client_qa` or `client_contextualized` for embeddings (Section 5.3.1) |
-| **Synthetic circularity** | Cross-vendor scorers; validate on DAIC-WOZ |
+| **Synthetic circularity** | Cross-vendor scorers; validate transfer on DAIC-WOZ locally (in `ai-psychiatrist`, no external egress) |
 | **Cost overrun** | Hidden token budget (Section 2.3); Gemini 3 Flash is cheapest; batch API discounts |
 | **Redistribution/license risk** | Data Governance section (Section 3); SQPsychConv license UNKNOWN until author confirmation |
 | **File descriptor exhaustion** | Global semaphore (Section 4.4); MAX_CONCURRENT_DIALOGUES=50 |
@@ -1971,10 +1971,10 @@ uv run python scripts/score_corpus.py --retry-failed --error-code rate_limit
 
 ### Phase 4: Validation (3-5 days)
 
-1. [ ] Run Phase 0 on DAIC-WOZ
+1. [ ] Run Phase 0 sanity checks (SQPsychConv-only; no DAIC-WOZ)
 2. [ ] Score full SQPsychConv
 3. [ ] Generate embeddings
-4. [ ] Run sim-to-real evaluation
+4. [ ] Run sim-to-real evaluation (DAIC-WOZ local-only in `ai-psychiatrist`)
 
 ---
 

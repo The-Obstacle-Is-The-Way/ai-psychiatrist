@@ -83,7 +83,7 @@ See: `docs/statistics/statistical-methodology-aurc-augrc.md`
 
 ---
 
-### Run 3: Dec 29, 2025 - Post-Spec 31/32 (Paper-Parity Format)
+### Run 3: Dec 29, 2025 - Post-Spec 31/32 (Legacy Prompt Format)
 
 **File**: `both_paper-test_backfill-off_20251229_003543.json`
 
@@ -260,7 +260,7 @@ See: `docs/statistics/statistical-methodology-aurc-augrc.md`
 ### Interpretation
 
 1. **Zero-shot unchanged**: Expected - doesn't use reference examples
-2. **Few-shot improved 10-12%**: Paper-parity format helps
+2. **Few-shot improved 10-12%**: Legacy prompt format helps
 3. **Gap remains ~30%**: Zero-shot still significantly better (0.134 vs 0.193)
 4. **Paired bootstrap delta excludes 0**: Statistically significant difference at α=0.05
 
@@ -437,6 +437,23 @@ Spec 31/32 improved few-shot by ~10%, proving formatting matters. Retrieval qual
 **Known Issues**:
 - Few-shot had 1/41 participant failure (PID 383): `Exceeded maximum retries (3) for output validation`.
 - Zero-shot excluded 1/41 participant from MAE aggregation due to 8/8 N/A (counted as 0 coverage for Cmax).
+
+---
+
+### Run 9: Jan 2, 2026 - Spec 046 Confidence Signals (In Progress)
+
+**Status**: Running in tmux (`run9` / `run9_eval`)
+
+**Log**: `data/outputs/run9_spec046_20260102_181114.log`
+
+**Goal**: Evaluate whether retrieval-grounded confidence signals (Spec 046) improve AURC/AUGRC via alternative confidence variants:
+- `retrieval_similarity_mean`
+- `retrieval_similarity_max`
+- `hybrid_evidence_similarity`
+
+**Expected outputs** (after completion):
+- Run artifact JSON (path printed in the log: `Results saved to: ...`)
+- Selective prediction metrics JSONs for each confidence variant
 
 ---
 

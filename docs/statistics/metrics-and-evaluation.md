@@ -1,7 +1,7 @@
 # Metrics and Evaluation (Exact Definitions + Output Schema)
 
 **Audience**: Researchers who need implementation-accurate metrics
-**Last Updated**: 2026-01-01
+**Last Updated**: 2026-01-02
 
 This page is the canonical (non-archive) reference for how this repo computes and reports:
 - **coverage**
