@@ -1,7 +1,7 @@
 # RAG Debugging (Audit Logs + Guardrails)
 
 **Audience**: Researchers debugging few-shot performance
-**Last Updated**: 2026-01-01
+**Last Updated**: 2026-01-03
 
 This guide explains how to debug few-shot retrieval using the built-in diagnostic tools:
 - retrieval audit logs (Spec 32)
@@ -15,7 +15,7 @@ This guide explains how to debug few-shot retrieval using the built-in diagnosti
 
 Before debugging retrieval quality, confirm run configuration:
 - `scripts/reproduce_results.py` prints the effective settings at startup
-- your output JSON contains a settings snapshot in `run_metadata`
+- your output JSON stores per-experiment settings in `experiments[*].provenance` (`run_metadata` is run-level environment info)
 
 If you can’t explain exactly which features were enabled, do not interpret the results.
 

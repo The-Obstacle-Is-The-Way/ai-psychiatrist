@@ -17,7 +17,7 @@ _No active bugs at this time._
 
 ## Archive
 
-All resolved bugs are in [`docs/_archive/bugs/`](../_archive/bugs/):
+All resolved bugs are in `docs/_archive/bugs/`:
 
 - **BUG-001 to BUG-020**: Legacy bugs from initial development
 - **BUG-021 to BUG-024**: Spec 048-052 implementation audit (2026-01-03)

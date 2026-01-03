@@ -1,7 +1,7 @@
 # RAG Design Rationale
 
 **Audience**: Researchers evaluating few-shot vs zero-shot approaches
-**Last Updated**: 2026-01-02
+**Last Updated**: 2026-01-03
 
 ---
 
@@ -45,7 +45,7 @@ Chunk 95 (about sleep):
 
 ### The Fix: Spec 35 (Chunk-Level Scoring)
 
-Instead of assigning participant-level scores to chunks, we score each chunk individually:
+Instead of assigning participant-level scores to chunks, we score each chunk individually (0–3 or `null`) based on the chunk content:
 
 ```bash
 # Generate per-chunk scores

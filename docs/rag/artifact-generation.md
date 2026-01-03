@@ -19,7 +19,7 @@ Given an output basename `{name}`, embedding generation produces:
 |------|----------|----------|
 | `{name}.npz` | Embedding vectors (per-participant keys like `emb_303`) | Yes |
 | `{name}.json` | Chunk texts (participant id → list[str]) | Yes |
-| `{name}.meta.json` | Provenance metadata for fail-fast mismatch detection | Yes |
+| `{name}.meta.json` | Provenance metadata for fail-fast mismatch detection (legacy artifacts may omit; validation is then skipped with a warning) | Yes |
 | `{name}.tags.json` | PHQ-8 item tags per chunk (only if `--write-item-tags`) | Optional |
 
 For chunk-level scoring artifacts, see [chunk-scoring.md](chunk-scoring.md).

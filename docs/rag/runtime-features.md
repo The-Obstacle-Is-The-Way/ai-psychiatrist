@@ -103,7 +103,7 @@ Run few-shot on a small limit:
 uv run python scripts/reproduce_results.py --split paper-test --few-shot-only --limit 3
 ```
 
-If you see `LLM request timed out after 120s`, you're running older code or bypassing the timeout config.
+If you see `LLM request timed out after …s`, confirm `EMBEDDING_QUERY_EMBED_TIMEOUT_SECONDS` matches that value and that `EMBEDDING_ENABLE_BATCH_QUERY_EMBEDDING=true`.
 
 ---
 
@@ -111,8 +111,8 @@ If you see `LLM request timed out after 120s`, you're running older code or bypa
 
 CRAG-style validation adds a second LLM step after retrieval:
 1. Retrieve candidate reference chunks
-2. Validate each reference against the item + evidence (`accept` / `reject`)
-3. Include only accepted references in the few-shot prompt
+2. Validate each reference against the item + evidence (`accept` / `reject` / `unsure`)
+3. Include only `accept` references in the few-shot prompt
 
 ### Enable CRAG Validation
 
@@ -132,7 +132,7 @@ If validation is enabled, it must work or crash:
 - invalid JSON responses raise `LLMResponseParseError`
 - network/backend failures propagate (preserve exception type)
 
-There is no "return unsure and continue" fallback. Silent fallbacks corrupt research.
+`unsure` is a first-class validator output and is treated like `reject` (filtered out). There is no silent fallback for validation failures.
 
 ### What CRAG Can and Cannot Fix
 
@@ -155,12 +155,13 @@ CRAG validation is a **filter**, not a relabeler:
 1. Extract evidence per PHQ-8 item from qualitative assessment
 2. Batch embed all evidence texts (Spec 37)
 3. For each item with evidence:
-   a. Compute similarities against reference store
-   b. Apply similarity threshold (Spec 33)
-   c. Apply item-tag filter if enabled (Spec 34)
-   d. Apply per-item char budget (Spec 33)
-   e. Apply CRAG validation if enabled (Spec 36)
-   f. Attach scores (participant-level or chunk-level per Spec 35)
+   a. Compute similarities against all reference chunks (vectorized cosine)
+   b. If enabled, filter candidates to chunks tagged for that item (Spec 34)
+   c. Attach reference scores (participant-level or chunk-level per Spec 35)
+   d. Drop references below `EMBEDDING_MIN_REFERENCE_SIMILARITY` (Spec 33)
+   e. Take top-k references (`EMBEDDING_TOP_K_REFERENCES`)
+   f. Apply per-item char budget (`EMBEDDING_MAX_REFERENCE_CHARS_PER_ITEM`) (Spec 33)
+   g. Apply CRAG validation if enabled; keep only `accept` references (Spec 36)
 4. Format unified <Reference Examples> block
 5. Insert into quantitative scoring prompt
 ```

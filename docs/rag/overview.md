@@ -47,7 +47,7 @@ Instead of 2D coordinates (latitude, longitude), embeddings use 4096 dimensions.
 
 ### Why 4096 Dimensions?
 
-More dimensions = more nuance captured. The paper's Appendix D confirms 4096 dimensions is optimal for this task among the tested values (64, 256, 1024, 4096).
+More dimensions = more nuance captured. The paper reports 4096 performed best among the tested values (64, 256, 1024, 4096), and this repo defaults to 4096.
 
 Think of it like describing a patient:
 - 2 dimensions: "depressed" and "anxious"
@@ -101,14 +101,14 @@ Before running on new patients, we processed all **training patients**:
 
 1. Split each transcript into chunks (8 lines each)
 2. Computed embeddings for each chunk
-3. Stored them with their ground-truth PHQ-8 scores
+3. Stored them with PHQ-8 reference scores (participant-level ground truth by default; optionally chunk-level estimates when enabled)
 
 **Result**: A database of thousands of chunks from the training split. In the paper-style split, the
 training set is 58 participants; in the AVEC2017 split, it is 107 participants. The exact chunk
 count depends on the chosen split and chunking parameters, but the contents are always:
 - The text itself
 - Its embedding (4096 numbers)
-- The patient's actual PHQ-8 scores
+- A PHQ-8 item score used as the reference label (participant ground truth or chunk-level estimate, depending on configuration)
 
 ### Visualized
 
