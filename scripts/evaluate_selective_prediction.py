@@ -29,9 +29,14 @@ from ai_psychiatrist.metrics.selective_prediction import (
     ItemPrediction,
     compute_augrc,
     compute_augrc_at_coverage,
+    compute_augrc_optimal,
     compute_aurc,
+    compute_aurc_achievable,
     compute_aurc_at_coverage,
+    compute_aurc_optimal,
     compute_cmax,
+    compute_eaugrc,
+    compute_eaurc,
     compute_risk_at_coverage,
     compute_risk_coverage_curve,
 )
@@ -293,6 +298,20 @@ def compute_metrics_for_variant(
     aurc_full = compute_aurc(items, loss=loss)
     augrc_full = compute_augrc(items, loss=loss)
 
+    # Optimal and Excess metrics (Spec 052)
+    aurc_opt = compute_aurc_optimal(items, loss=loss)
+    augrc_opt = compute_augrc_optimal(items, loss=loss)
+    eaurc = compute_eaurc(items, loss=loss)
+    eaugrc = compute_eaugrc(items, loss=loss)
+    aurc_achievable = compute_aurc_achievable(items, loss=loss)
+
+    # Interpretation
+    aurc_gap_pct = (eaurc / aurc_opt * 100) if aurc_opt > 0 else 0.0
+    augrc_gap_pct = (eaugrc / augrc_opt * 100) if augrc_opt > 0 else 0.0
+    achievable_gain_pct = 0.0
+    if aurc_full > 0:
+        achievable_gain_pct = (aurc_full - aurc_achievable) / aurc_full * 100
+
     # Truncated
     aurc_at_c = compute_aurc_at_coverage(items, max_coverage=area_coverage, loss=loss)
     augrc_at_c = compute_augrc_at_coverage(items, max_coverage=area_coverage, loss=loss)
@@ -385,6 +404,16 @@ def compute_metrics_for_variant(
         "cmax": cmax,
         "aurc_full": aurc_full,
         "augrc_full": augrc_full,
+        "aurc_optimal": aurc_opt,
+        "augrc_optimal": augrc_opt,
+        "eaurc": eaurc,
+        "eaugrc": eaugrc,
+        "aurc_achievable": aurc_achievable,
+        "interpretation": {
+            "aurc_gap_pct": aurc_gap_pct,
+            "augrc_gap_pct": augrc_gap_pct,
+            "achievable_gain_pct": achievable_gain_pct,
+        },
         "aurc_at_c": {
             "requested": area_coverage,
             "used": min(area_coverage, cmax),
@@ -750,8 +779,15 @@ def main() -> int:  # noqa: PLR0912, PLR0915
                 return s
 
             print(f"{prefix}Cmax:       {fmt('cmax', m['cmax'])}")
-            print(f"{prefix}AURC:       {fmt('aurc_full', m['aurc_full'])}")
-            print(f"{prefix}AUGRC:      {fmt('augrc_full', m['augrc_full'])}")
+
+            aurc_info = f"{fmt('aurc_full', m['aurc_full'])} "
+            aurc_info += f"(Opt: {m.get('aurc_optimal', 0):.4f}, Excess: {m.get('eaurc', 0):.4f})"
+            print(f"{prefix}AURC:       {aurc_info}")
+
+            augrc_info = f"{fmt('augrc_full', m['augrc_full'])} "
+            augrc_info += f"(Opt: {m.get('augrc_optimal', 0):.4f}, "
+            augrc_info += f"Excess: {m.get('eaugrc', 0):.4f})"
+            print(f"{prefix}AUGRC:      {augrc_info}")
 
         if is_paired:
             print_metrics(res["input_0"], "Left ")

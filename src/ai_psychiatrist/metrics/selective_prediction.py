@@ -255,3 +255,159 @@ def _integrate_truncated(
         ys_trunc.append(interpolated_risk)
 
     return float(np.trapezoid(ys_trunc, xs_trunc))
+
+
+def compute_aurc_optimal(
+    items: Sequence[ItemPrediction], *, loss: Literal["abs", "abs_norm"]
+) -> float:
+    """Compute optimal AURC (oracle CSF baseline) for regression or binary.
+
+    Constructs an oracle CSF that perfectly ranks items by their loss (ascending).
+    """
+    predicted = [i for i in items if i.pred is not None]
+    if not predicted:
+        return 0.0
+
+    # Sort by loss (ascending = oracle ranking)
+    # We want items with lowest loss to have highest confidence.
+    losses = [_compute_loss(i, loss) for i in predicted]
+
+    # Zip and sort by loss
+    sorted_pairs = sorted(zip(losses, predicted, strict=True), key=lambda x: x[0])
+
+    # Create oracle items with synthetic confidence
+    # Rank 0 (lowest loss) -> Confidence 1.0
+    # Rank N-1 (highest loss) -> Confidence 0.0
+    n = len(sorted_pairs)
+    oracle_items = []
+
+    for rank, (_, original_item) in enumerate(sorted_pairs):
+        # High confidence for low loss
+        conf = 1.0 - (rank / n)
+        oracle_items.append(
+            ItemPrediction(
+                participant_id=original_item.participant_id,
+                item_index=original_item.item_index,
+                pred=original_item.pred,
+                gt=original_item.gt,
+                confidence=conf,
+            )
+        )
+
+    return compute_aurc(oracle_items, loss=loss)
+
+
+def compute_augrc_optimal(
+    items: Sequence[ItemPrediction], *, loss: Literal["abs", "abs_norm"]
+) -> float:
+    """Compute optimal AUGRC (oracle CSF baseline) for regression or binary.
+
+    Constructs an oracle CSF that perfectly ranks items by their loss (ascending).
+    """
+    predicted = [i for i in items if i.pred is not None]
+    if not predicted:
+        return 0.0
+
+    losses = [_compute_loss(i, loss) for i in predicted]
+    sorted_pairs = sorted(zip(losses, predicted, strict=True), key=lambda x: x[0])
+
+    n = len(sorted_pairs)
+    oracle_items = []
+
+    for rank, (_, original_item) in enumerate(sorted_pairs):
+        conf = 1.0 - (rank / n)
+        oracle_items.append(
+            ItemPrediction(
+                participant_id=original_item.participant_id,
+                item_index=original_item.item_index,
+                pred=original_item.pred,
+                gt=original_item.gt,
+                confidence=conf,
+            )
+        )
+
+    return compute_augrc(oracle_items, loss=loss)
+
+
+def compute_eaurc(items: Sequence[ItemPrediction], *, loss: Literal["abs", "abs_norm"]) -> float:
+    """Compute excess AURC (distance from optimal)."""
+    aurc = compute_aurc(items, loss=loss)
+    aurc_opt = compute_aurc_optimal(items, loss=loss)
+    return aurc - aurc_opt
+
+
+def compute_eaugrc(items: Sequence[ItemPrediction], *, loss: Literal["abs", "abs_norm"]) -> float:
+    """Compute excess AUGRC (distance from optimal)."""
+    augrc = compute_augrc(items, loss=loss)
+    augrc_opt = compute_augrc_optimal(items, loss=loss)
+    return augrc - augrc_opt
+
+
+def _cross_product(o: tuple[float, float], a: tuple[float, float], b: tuple[float, float]) -> float:
+    """2D cross product of OA and OB vectors, i.e., z-component of their 3D cross product.
+    Returns a positive value, if OAB makes a counter-clockwise turn,
+    negative for clockwise turn, and zero if the points are collinear.
+    """
+    return (a[0] - o[0]) * (b[1] - o[1]) - (a[1] - o[1]) * (b[0] - o[0])
+
+
+def _compute_dominant_points(coverages: list[float], risks: list[float]) -> list[bool]:
+    """Compute mask for dominant points (lower convex hull in Risk-Coverage space).
+
+    The risk-coverage curve is typically decreasing (higher coverage -> higher risk usually?
+    No, RC curve: coverage [0, 1], risk usually increasing as we cover more hard items?
+    Wait. RC curve:
+    Coverage 0 -> Risk ?? (Undefined or extrapolated)
+    Coverage 1 -> Risk (Full dataset error)
+
+    Standard RC curve: Sort by confidence descending.
+    Top confidence items (likely correct) are covered first.
+    So Risk starts low and increases as we add uncertain items.
+    So it's a monotonically increasing function (roughly).
+
+    The "Achievable" curve is the CONVEX HULL of the RC curve points.
+    Since we want to MINIMIZE risk for a given coverage, strictly speaking,
+    we want the "lower" convex hull if we consider points (coverage, risk).
+
+    Yes, we want the lower boundary.
+    However, standard RC curves are often jagged.
+    Dominant points are those that form the lower convex envelope.
+    """
+    points = sorted(zip(coverages, risks, strict=True), key=lambda x: x[0])
+    if not points:
+        return []
+
+    # Monotone Chain algorithm for lower hull
+    lower: list[tuple[float, float]] = []
+    for p in points:
+        while len(lower) >= 2 and _cross_product(lower[-2], lower[-1], p) <= 0:
+            lower.pop()
+        lower.append(p)
+
+    # We need to return a mask matching the original inputs.
+    # But inputs might not be sorted by coverage?
+    # compute_risk_coverage_curve returns sorted coverages (accumulating k).
+    # So inputs are sorted.
+
+    # Create a set of dominant points for fast lookup
+    dominant_set = set(lower)
+
+    # We match by value (float equality is risky but these come from same source)
+    mask = []
+    for c, r in zip(coverages, risks, strict=True):
+        mask.append((c, r) in dominant_set)
+
+    return mask
+
+
+def compute_aurc_achievable(
+    items: Sequence[ItemPrediction], *, loss: Literal["abs", "abs_norm"]
+) -> float:
+    """Compute achievable AURC using only dominant points (convex hull)."""
+    curve = compute_risk_coverage_curve(items, loss=loss)
+    mask = _compute_dominant_points(curve.coverage, curve.selective_risk)
+
+    dominant_coverages = [c for c, m in zip(curve.coverage, mask, strict=True) if m]
+    dominant_risks = [r for r, m in zip(curve.selective_risk, mask, strict=True) if m]
+
+    return _integrate_curve(dominant_coverages, dominant_risks, curve.cmax, mode="aurc")
