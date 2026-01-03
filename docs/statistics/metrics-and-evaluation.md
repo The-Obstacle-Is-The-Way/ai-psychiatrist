@@ -119,12 +119,17 @@ Calibration maps raw confidence to calibrated probabilities (typically P(correct
 ```bash
 # Temperature scaling for verbalized confidence (Spec 048)
 uv run python scripts/calibrate_verbalized_confidence.py \
-  --input data/outputs/train_run.json --mode few_shot
+  --input data/outputs/train_run.json \
+  --mode few_shot \
+  --output data/outputs/calibration_verbalized_temperature_scaling_fewshot.json
 
 # Supervised calibrator (Spec 049)
 uv run python scripts/train_confidence_calibrator.py \
-  --input data/outputs/train_run.json --mode few_shot \
-  --method logistic --features verbalized_confidence,retrieval_similarity_mean
+  --input data/outputs/train_run.json \
+  --mode few_shot \
+  --method logistic \
+  --features verbalized_confidence,retrieval_similarity_mean \
+  --output data/outputs/calibration_logistic_fewshot.json
 ```
 
 **Calibrator types** (SSOT: `src/ai_psychiatrist/calibration/calibrators.py`):
@@ -320,28 +325,50 @@ SSOT: `paired_bootstrap_delta_by_participant()` in `src/ai_psychiatrist/metrics/
 ```json
 {
   "schema_version": "1",
-  "created_at": "2025-12-31T00:00:00Z",
+  "created_at": "2026-01-03T00:00:00Z",
   "inputs": [
     {"path": "...", "run_id": "...", "git_commit": "...", "mode": "few_shot"}
   ],
   "population": {
-    "participants_included": 41,
-    "participants_failed": 0,
     "participants_total": 41,
-    "items_total": 328,
-    "items_predicted": 215,
-    "cmax": 0.655
+    "participants_included": 40,
+    "participants_failed": 1,
+    "items_total": 320
   },
-  "loss": {"name": "abs", "definition": "abs(pred - gt)", "raw_multiplier": 1},
+  "loss": {
+    "name": "abs_norm",
+    "definition": "abs(pred - gt) / 3",
+    "raw_multiplier": 3
+  },
   "confidence_variants": {
     "llm": {
       "cmax": 0.655,
       "aurc_full": 0.192,
       "augrc_full": 0.058,
-      "aurc_at_coverage": 0.0,
-      "augrc_at_coverage": 0.0,
-      "mae_grid": {"0.10": {"requested": 0.1, "achieved": 0.123, "value": 0.5}},
-      "bootstrap": {"ci95": {"cmax": [0.6, 0.7], "aurc_full": [0.1, 0.2]}}
+      "aurc_optimal": 0.110,
+      "augrc_optimal": 0.035,
+      "eaurc": 0.082,
+      "eaugrc": 0.023,
+      "aurc_achievable": 0.170,
+      "interpretation": {
+        "aurc_gap_pct": 74.3,
+        "augrc_gap_pct": 65.7,
+        "achievable_gain_pct": 11.5
+      },
+      "aurc_at_c": {"requested": 0.5, "used": 0.5, "value": 0.123},
+      "augrc_at_c": {"requested": 0.5, "used": 0.5, "value": 0.041},
+      "mae_at_coverage": {"0.10": {"requested": 0.1, "achieved": 0.123, "value": 0.5}},
+      "bootstrap": {
+        "seed": 42,
+        "n_resamples": 10000,
+        "ci95": {"cmax": [0.6, 0.7], "aurc_full": [0.1, 0.2]}
+      },
+      "curve": {
+        "coverage": [0.123, 0.234],
+        "selective_risk": [0.500, 0.700],
+        "generalized_risk": [0.062, 0.164],
+        "threshold": [3.0, 2.0]
+      }
     }
   },
   "comparison": {
@@ -362,6 +389,7 @@ Exact keys and nesting are defined in `scripts/evaluate_selective_prediction.py`
 uv run python scripts/evaluate_selective_prediction.py \
   --input data/outputs/your_run.json \
   --mode few_shot \
+  --confidence default \
   --loss abs \
   --bootstrap-resamples 10000 \
   --seed 42

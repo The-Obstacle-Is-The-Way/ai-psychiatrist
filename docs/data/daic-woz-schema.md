@@ -458,6 +458,6 @@ When working with data, verify:
 
 ## See Also
 
-- [Embedding generation](../embeddings/embedding-generation.md) - Generating embeddings safely (fail-fast)
-- [Embeddings explained](../embeddings/embeddings-explained.md) - Few-shot retrieval concepts
+- [RAG Artifact Generation](../rag/artifact-generation.md) - Generating embeddings safely (fail-fast)
+- [RAG Overview](../rag/overview.md) - Few-shot retrieval concepts
 - [Model Registry](../models/model-registry.md) - Embedding model options

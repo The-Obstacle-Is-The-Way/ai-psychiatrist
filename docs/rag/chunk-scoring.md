@@ -163,7 +163,7 @@ EMBEDDING_ALLOW_CHUNK_SCORES_PROMPT_HASH_MISMATCH=true
 
 References whose `reference_score` is `null` are omitted from the few-shot prompt formatting. This can reduce the number of examples surfaced for some items.
 
-See: `docs/embeddings/few-shot-prompt-format.md`.
+See: [Runtime Features](runtime-features.md) (prompt format section).
 
 ---
 

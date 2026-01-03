@@ -219,7 +219,7 @@ Also ensure any `.tags.json` / `.chunk_scores.json` sidecars are generated from 
 
 See:
 - `docs/data/artifact-namespace-registry.md`
-- `docs/embeddings/embedding-generation.md`
+- `docs/rag/artifact-generation.md`
 
 ---
 

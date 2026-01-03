@@ -66,7 +66,7 @@ When a run fails:
 2. Group by `error_type` in logs.
 3. Check whether the failure is “enabled feature broken” (should crash) vs “disabled feature” (should not touch files).
 
-See: [Retrieval debugging](../embeddings/debugging-retrieval-quality.md).
+See: [RAG Debugging](../rag/debugging.md).
 
 ---
 
