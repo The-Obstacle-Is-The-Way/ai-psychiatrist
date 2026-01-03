@@ -1,4 +1,4 @@
-# BUG-004: O(N*M) Linear Scan in Embedding Retrieval
+# BUG-024: O(N*M) Linear Scan in Embedding Retrieval
 
 **Severity**: P3 (Performance)
 **Status**: Resolved (Already Fixed)

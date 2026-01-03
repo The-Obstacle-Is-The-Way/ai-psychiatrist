@@ -1,4 +1,4 @@
-# BUG-002: DRY Violation in Oracle Items Creation
+# BUG-022: DRY Violation in Oracle Items Creation
 
 **Severity**: P4 (Code Style / Maintenance)
 **Status**: Resolved (Already Fixed)

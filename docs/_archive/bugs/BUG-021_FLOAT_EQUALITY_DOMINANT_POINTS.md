@@ -1,4 +1,4 @@
-# BUG-001: Float Equality in Dominant Points (Convex Hull)
+# BUG-021: Float Equality in Dominant Points (Convex Hull)
 
 **Severity**: P3 (Minor / Robustness)
 **Status**: Resolved (Already Fixed)

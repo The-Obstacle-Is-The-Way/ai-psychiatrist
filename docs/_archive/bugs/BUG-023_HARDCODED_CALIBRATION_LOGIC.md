@@ -1,4 +1,4 @@
-# BUG-003: Hardcoded Calibration Logic in Evaluation Script
+# BUG-023: Hardcoded Calibration Logic in Evaluation Script
 
 **Severity**: P3 (Architecture / OCP Violation)
 **Status**: Closed (Won't Fix - Design Concern, Not Bug)
