@@ -493,7 +493,7 @@ def prepare_config(args: argparse.Namespace, *, settings: Settings) -> Generatio
     model_settings = settings.model
     backend_settings = settings.embedding_config
 
-    # Paper-optimal hyperparameters
+    # Appendix D hyperparameters (baseline defaults)
     chunk_size = embedding_settings.chunk_size
     step_size = embedding_settings.chunk_step
     dimension = embedding_settings.dimension

@@ -224,7 +224,7 @@ class ModelSettings(BaseSettings):
 class EmbeddingSettings(BaseSettings):
     """Embedding and few-shot configuration.
 
-    Paper-optimal hyperparameters (Appendix D):
+    Paper-reported hyperparameters (Appendix D):
     - chunk_size=8, step_size=2, top_k=2, dimension=4096
     """
 
@@ -328,7 +328,7 @@ class FeedbackLoopSettings(BaseSettings):
     Paper (Section 2.3.1): "When an original evaluation score was below four,
     the judge agent triggered an automatic feedback loop."
 
-    Paper-optimal: threshold=3 means scores <= 3 (i.e., < 4) trigger refinement.
+    Paper-derived: threshold=3 means scores <= 3 (i.e., < 4) trigger refinement.
     """
 
     model_config = SettingsConfigDict(

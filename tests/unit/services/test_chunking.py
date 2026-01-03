@@ -22,11 +22,11 @@ class TestTranscriptChunker:
 
     @pytest.fixture
     def paper_chunker(self) -> TranscriptChunker:
-        """Create chunker with paper-optimal parameters (8, 2)."""
+        """Create chunker with Appendix D parameters (8, 2)."""
         return TranscriptChunker(chunk_size=8, step_size=2)
 
     def test_init_default_values(self) -> None:
-        """Should use paper-optimal defaults (8, 2)."""
+        """Should use Appendix D defaults (8, 2)."""
         chunker = TranscriptChunker()
 
         assert chunker.chunk_size == 8
@@ -83,7 +83,7 @@ class TestTranscriptChunker:
         assert "Line 3" in overlap
 
     def test_chunk_paper_params(self) -> None:
-        """Should work with paper parameters (chunk=8, step=2)."""
+        """Should work with Appendix D parameters (chunk=8, step=2)."""
         # Create a 20-line transcript
         text = "\n".join(f"Line {i}" for i in range(20))
         transcript = Transcript(participant_id=100, text=text)

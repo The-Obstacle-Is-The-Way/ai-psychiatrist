@@ -77,24 +77,24 @@ class TestMakefile:
 
 
 class TestEnvExample:
-    """Test .env.example contains paper-optimal values."""
+    """Test `.env.example` contains validated baseline values."""
 
     def test_env_example_exists(self) -> None:
         """.env.example should exist."""
         assert Path(".env.example").exists()
 
     def test_env_example_has_paper_optimal_values(self) -> None:
-        """.env.example should contain paper-optimal configuration."""
+        """.env.example should contain validated baseline configuration."""
         content = Path(".env.example").read_text()
 
-        # Paper-optimal models
+        # Baseline models
         assert "gemma3:27b" in content
         # MedGemma is an Appendix F alternative; official weights are HuggingFace-only and
         # referenced via canonical alias.
         assert "medgemma:27b" in content
         assert "qwen3-embedding:8b" in content
 
-        # Paper-optimal hyperparameters
+        # Appendix D hyperparameters
         assert "EMBEDDING_DIMENSION=4096" in content
         assert "EMBEDDING_TOP_K_REFERENCES=2" in content
         assert "EMBEDDING_CHUNK_SIZE=8" in content

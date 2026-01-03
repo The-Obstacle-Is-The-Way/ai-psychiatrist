@@ -69,7 +69,7 @@ See:
 
 ## Recommended Profiles (Research Workflow)
 
-### Paper-Parity Baseline (Historical)
+### Legacy Baseline (Historical)
 
 Goal: reproduce the paper’s *method as described*, even if it is noisy.
 

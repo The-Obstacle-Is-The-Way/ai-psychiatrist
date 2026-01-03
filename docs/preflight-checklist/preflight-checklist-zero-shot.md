@@ -107,7 +107,7 @@ Zero-shot mode uses NO reference embeddings - the model scores symptoms from tra
 
 **Reference**: SPEC-003, Coverage Investigation
 
-- [ ] **Backfill is DISABLED** (paper parity = ~50% coverage):
+- [ ] **Backfill is DISABLED** (baseline defaults ≈50% coverage):
   ```bash
   grep "QUANTITATIVE_ENABLE_KEYWORD_BACKFILL" .env
   # MUST show: QUANTITATIVE_ENABLE_KEYWORD_BACKFILL=false
@@ -144,14 +144,14 @@ Zero-shot mode uses NO reference embeddings - the model scores symptoms from tra
 
 - [ ] **Participant 487 is NOT corrupted**:
   ```bash
-  file data/transcripts/487_P/487_TRANSCRIPT.csv
+  file data/transcripts_participant_only/487_P/487_TRANSCRIPT.csv
   # MUST show: ASCII text, or UTF-8 Unicode text
   # NOT: AppleDouble encoded, or binary
   ```
 
 - [ ] **Correct file size** (~20KB, not 4KB):
   ```bash
-  ls -lh data/transcripts/487_P/487_TRANSCRIPT.csv
+  ls -lh data/transcripts_participant_only/487_P/487_TRANSCRIPT.csv
   # Should be ~18-25KB, NOT 4KB
   ```
 
@@ -338,7 +338,7 @@ Watch for these log patterns:
 
 ### 9.3 Metrics Sanity Check
 
-- [ ] **Coverage is ~50-60%** (paper parity with backfill OFF):
+- [ ] **Coverage is ~50-60%** (baseline defaults with backfill OFF):
   ```bash
   # Check the output JSON for coverage metrics
   python3 -c "

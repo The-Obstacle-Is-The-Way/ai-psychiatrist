@@ -14,6 +14,7 @@ This page is a high-level, **current-state** summary. The canonical timeline + p
 - **Selective prediction**: AURC/AUGRC are very similar between modes in Run 8 (paired ΔAURC CI overlaps 0), suggesting confidence/abstention quality is not materially different
 - **Tradeoff**: overall Cmax dropped to ~51% in Run 8 (vs ~66% in Run 7), indicating more abstention
 - **Next lever**: improve confidence signals for AURC/AUGRC (Spec 046: `docs/_specs/spec-046-selective-prediction-confidence-signals.md`)
+- **Run 9**: in progress (Spec 046 confidence variants; see `docs/results/run-history.md`)
 
 ---
 

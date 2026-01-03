@@ -1,7 +1,7 @@
 # Few-Shot Prompt Format (Reference Examples)
 
-**Audience**: Researchers validating paper-parity and prompt invariants
-**Last Updated**: 2026-01-01
+**Audience**: Researchers validating prompt invariants and retrieval formatting
+**Last Updated**: 2026-01-02
 
 This document is the canonical (non-archive) description of how few-shot reference examples are formatted and inserted into the quantitative scoring prompt.
 
@@ -95,7 +95,7 @@ Current code uses a proper XML-style closing tag:
 
 Rationale: Spec 33 intentionally adopted proper XML tags for clarity and compatibility with modern prompt-engineering guidance.
 
-If you need strict notebook parity for historical comparison, treat that as a separate “paper-parity mode” with explicit labeling (do not mix with correctness-oriented retrieval features).
+If you need strict notebook parity for historical comparison, treat that as a separate legacy mode with explicit labeling (do not mix with correctness-oriented retrieval features).
 
 ---
 

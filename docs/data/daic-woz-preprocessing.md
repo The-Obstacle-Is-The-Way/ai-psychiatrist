@@ -94,7 +94,7 @@ All variants apply the **same deterministic cleaning rules** first (next section
 ### Variant A: `both_speakers_clean`
 
 - Keep both speakers after cleaning.
-- Use for “paper-parity-ish” runs where you want to minimize non-clinical noise without changing speaker content.
+- Use for legacy baseline comparisons where you want to minimize non-clinical noise without changing speaker content.
 
 ### Variant B: `participant_only`
 
