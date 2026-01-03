@@ -1,7 +1,7 @@
 # Embeddings and Few-Shot Retrieval: A Plain-Language Guide
 
 **Audience**: Clinicians and non-CS folks who want to understand the "magic"
-**Last Updated**: 2025-12-29
+**Last Updated**: 2026-01-03
 
 ---
 

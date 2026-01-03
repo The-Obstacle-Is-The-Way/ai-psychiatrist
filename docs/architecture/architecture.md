@@ -19,6 +19,12 @@ AI Psychiatrist follows **Clean Architecture** principles with a **vertical slic
 │                        Services Layer                           │
 │   (FeedbackLoop, Embedding, Transcript, GroundTruth, Chunking)  │
 ├─────────────────────────────────────────────────────────────────┤
+│                   Confidence + Calibration                      │
+│         (CSF Registry, Consistency, Token CSFs, Calibrators)    │
+├─────────────────────────────────────────────────────────────────┤
+│                       Metrics Layer                             │
+│    (Selective Prediction: AURC/AUGRC, Bootstrap Inference)      │
+├─────────────────────────────────────────────────────────────────┤
 │                         Domain Layer                            │
 │            (Entities, Value Objects, Enums, Exceptions)         │
 ├─────────────────────────────────────────────────────────────────┤
@@ -66,6 +72,22 @@ src/ai_psychiatrist/
 │   ├── transcript.py      # Transcript loading
 │   ├── ground_truth.py    # PHQ-8 ground truth loading
 │   └── chunking.py        # Transcript chunking for embeddings
+│
+├── confidence/            # Confidence scoring functions (CSFs)
+│   ├── __init__.py
+│   ├── csf_registry.py    # Registry + base CSFs (llm, retrieval, verbalized)
+│   ├── consistency.py     # Multi-sample consistency metrics (Spec 050)
+│   └── token_csfs.py      # Token-level signals (MSP, entropy, energy)
+│
+├── calibration/           # Post-hoc confidence calibration
+│   ├── __init__.py
+│   ├── calibrators.py     # Temperature, Logistic, Isotonic, Linear calibrators
+│   └── feature_extraction.py  # Feature vectors from item_signals
+│
+├── metrics/               # Evaluation metrics
+│   ├── __init__.py
+│   ├── selective_prediction.py  # AURC, AUGRC, risk-coverage curves
+│   └── bootstrap.py       # Participant-cluster bootstrap CIs
 │
 ├── infrastructure/        # External integrations
 │   ├── __init__.py
@@ -249,6 +271,72 @@ Loads and parses DAIC-WOZ format transcripts.
 #### ReferenceStore (`src/ai_psychiatrist/services/reference_store.py`)
 
 Manages pre-computed reference embeddings (NPZ format with JSON sidecar + optional `.tags.json` item tags sidecar).
+
+---
+
+### Confidence Layer (`src/ai_psychiatrist/confidence/`)
+
+Confidence Scoring Functions (CSFs) produce scalar confidence values for selective prediction.
+
+#### CSFRegistry (`src/ai_psychiatrist/confidence/csf_registry.py`)
+
+Central registry for all confidence scoring functions. Supports:
+- Base CSFs: `llm`, `retrieval_similarity_mean`, `verbalized`, `token_msp`, etc.
+- Hybrid CSFs: `hybrid_evidence_similarity`, `hybrid_verbalized`, `hybrid_consistency`
+- Secondary combinations: `secondary:<csf1>+<csf2>:<average|product>`
+
+#### ConsistencyMetrics (`src/ai_psychiatrist/confidence/consistency.py`)
+
+Multi-sample scoring for consistency-based confidence (Spec 050):
+- Modal score across N samples
+- Modal confidence (agreement rate)
+- Score standard deviation
+
+#### Token CSFs (`src/ai_psychiatrist/confidence/token_csfs.py`)
+
+Token-level confidence extraction from logprobs (Spec 051):
+- `compute_token_msp()`: Mean Maximum Softmax Probability
+- `compute_token_pe()`: Predictive Entropy
+- `compute_token_energy()`: Energy score (logsumexp)
+
+---
+
+### Calibration Layer (`src/ai_psychiatrist/calibration/`)
+
+Post-hoc calibration maps raw confidence to calibrated probabilities.
+
+#### Calibrators (`src/ai_psychiatrist/calibration/calibrators.py`)
+
+| Calibrator | Description |
+|------------|-------------|
+| `TemperatureScalingCalibrator` | Single-param: `sigmoid(logit(p)/T)` |
+| `LogisticCalibrator` | Multi-feature logistic regression |
+| `LinearCalibrator` | Linear regression for continuous targets |
+| `IsotonicCalibrator` | Piecewise-linear monotonic |
+
+Also provides `compute_ece()` (Expected Calibration Error) and `compute_binary_nll()`.
+
+#### FeatureExtraction (`src/ai_psychiatrist/calibration/feature_extraction.py`)
+
+`CalibratorFeatureExtractor` extracts numeric vectors from `item_signals` for supervised calibration.
+
+---
+
+### Metrics Layer (`src/ai_psychiatrist/metrics/`)
+
+Evaluation metrics for selective prediction research.
+
+#### SelectivePrediction (`src/ai_psychiatrist/metrics/selective_prediction.py`)
+
+- `compute_aurc()`, `compute_augrc()`: Area under risk/generalized-risk coverage curves
+- `compute_eaurc()`, `compute_eaugrc()`: Excess metrics (distance from oracle)
+- `compute_aurc_optimal()`, `compute_aurc_achievable()`: Theoretical bounds
+- `compute_risk_coverage_curve()`: Full curve data
+
+#### Bootstrap (`src/ai_psychiatrist/metrics/bootstrap.py`)
+
+- `bootstrap_by_participant()`: Participant-cluster bootstrap for CIs
+- `paired_bootstrap_delta_by_participant()`: Paired comparison bootstrap
 
 ---
 
