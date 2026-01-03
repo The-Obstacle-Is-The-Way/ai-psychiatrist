@@ -82,8 +82,13 @@ class QuantitativeSettings(BaseSettings):
 
 **Remove from `assess()` method (lines 163-185):**
 
+**IMPORTANT:** The keyword hit computation (line 166) is triggered by EITHER `enable_keyword_backfill=True` OR `track_na_reasons=True`. This is because `_determine_na_reason()` uses keyword counts to distinguish `NO_MENTION` from `LLM_ONLY_MISSED`.
+
+After removing backfill, we no longer need keyword counts for N/A reason tracking because we're removing the `LLM_ONLY_MISSED` reason entirely.
+
 ```python
-# DELETE this entire block
+# DELETE this entire block (lines 163-185)
+# Step 2: Find keyword hits (always computed for observability/N/A reasons)
 keyword_hits: dict[str, list[str]] = {}
 keyword_hit_counts: dict[str, int] = {}
 if self._settings.enable_keyword_backfill or self._settings.track_na_reasons:
@@ -108,6 +113,44 @@ keyword_added_counts = {
 }
 ```
 
+**Replace with:**
+
+```python
+# Use LLM evidence directly (no backfill)
+final_evidence = llm_evidence
+```
+
+**Update ItemAssessment construction (lines 233-268):**
+
+```python
+# BEFORE (lines 235-238)
+evidence_source = self._determine_evidence_source(
+    llm_count=llm_counts.get(legacy_key, 0),
+    keyword_added_count=keyword_added_counts.get(legacy_key, 0),
+)
+
+# AFTER - inline the simplified logic
+llm_count = llm_counts.get(legacy_key, 0)
+evidence_source = "llm" if llm_count > 0 else None
+
+# BEFORE (lines 240-245)
+if score is None and self._settings.track_na_reasons:
+    na_reason = self._determine_na_reason(
+        llm_count=llm_counts.get(legacy_key, 0),
+        keyword_count=keyword_hit_counts.get(legacy_key, 0),
+        backfill_enabled=self._settings.enable_keyword_backfill,
+    )
+
+# AFTER
+if score is None and self._settings.track_na_reasons:
+    na_reason = self._determine_na_reason(llm_count)
+
+# BEFORE (line 264)
+keyword_evidence_count=keyword_added_counts.get(legacy_key, 0),
+
+# AFTER - remove this line entirely from ItemAssessment constructor
+```
+
 **Simplify `_determine_na_reason()` to:**
 
 ```python
@@ -117,6 +160,8 @@ def _determine_na_reason(self, llm_count: int) -> NAReason:
         return NAReason.NO_MENTION
     return NAReason.SCORE_NA_WITH_EVIDENCE
 ```
+
+**Remove `_determine_evidence_source()` method entirely** (lines 509-519) - the simplified logic is inlined above.
 
 #### 1.3 NAReason Enum (`src/ai_psychiatrist/domain/enums.py`)
 
@@ -178,17 +223,39 @@ def _load_domain_keywords() -> dict[str, list[str]]:
 DOMAIN_KEYWORDS: dict[str, list[str]] = _load_domain_keywords()
 ```
 
-**Keep the import removal in quantitative.py:**
+**Update import in quantitative.py:**
 
 ```python
-# DELETE from import statement
+# BEFORE
 from ai_psychiatrist.agents.prompts.quantitative import (
     DOMAIN_KEYWORDS,  # DELETE THIS
     QUANTITATIVE_SYSTEM_PROMPT,
     make_evidence_prompt,
     make_scoring_prompt,
 )
+
+# AFTER
+from ai_psychiatrist.agents.prompts.quantitative import (
+    PHQ8_DOMAIN_KEYS,  # USE THIS INSTEAD (already exists)
+    QUANTITATIVE_SYSTEM_PROMPT,
+    make_evidence_prompt,
+    make_scoring_prompt,
+)
 ```
+
+**Update `_extract_evidence()` method (line 378):**
+
+```python
+# BEFORE
+for key in DOMAIN_KEYWORDS:
+
+# AFTER
+for key in PHQ8_DOMAIN_KEYS:
+```
+
+**Note:** `DOMAIN_KEYWORDS` is used in two places:
+1. `_extract_evidence()` line 378 - only needs keys, use `PHQ8_DOMAIN_KEYS`
+2. `_find_keyword_hits()` line 408 - needs keyword lists, but this method is deleted
 
 #### 1.6 Resources
 
@@ -217,6 +284,47 @@ from ai_psychiatrist.agents.prompts.quantitative import (
 ```python
 # DELETE TestQuantitativeSettings.test_env_override_enable_backfill (lines 47-51)
 # UPDATE TestQuantitativeSettings.test_defaults to only check track_na_reasons
+# DELETE assertion: assert settings.keyword_backfill_cap == 3 (line 45)
+```
+
+**Update `tests/unit/agents/test_quantitative.py`:**
+
+```python
+# UPDATE import (line 27):
+# BEFORE
+from ai_psychiatrist.agents.prompts.quantitative import (
+    DOMAIN_KEYWORDS,
+    ...
+)
+# AFTER
+from ai_psychiatrist.agents.prompts.quantitative import (
+    PHQ8_DOMAIN_KEYS,
+    ...
+)
+
+# UPDATE line 374:
+# BEFORE
+empty_evidence = json.dumps({k: [] for k in DOMAIN_KEYWORDS})
+# AFTER
+empty_evidence = json.dumps({k: [] for k in PHQ8_DOMAIN_KEYS})
+
+# DELETE entire TestDomainKeywords class (lines 461-485) - both tests test keyword functionality
+```
+
+**Update `tests/unit/agents/test_quantitative_coverage.py`:**
+
+```python
+# UPDATE import (line 16):
+# BEFORE
+from ai_psychiatrist.agents.prompts.quantitative import DOMAIN_KEYWORDS
+# AFTER
+from ai_psychiatrist.agents.prompts.quantitative import PHQ8_DOMAIN_KEYS
+
+# UPDATE line 25:
+# BEFORE
+SAMPLE_EVIDENCE_RESPONSE = json.dumps({k: ["evidence"] for k in DOMAIN_KEYWORDS})
+# AFTER
+SAMPLE_EVIDENCE_RESPONSE = json.dumps({k: ["evidence"] for k in PHQ8_DOMAIN_KEYS})
 ```
 
 #### 2.2 Experiment Tracking (`src/ai_psychiatrist/services/experiment_tracking.py`)
@@ -237,11 +345,30 @@ enable_keyword_backfill=settings.quantitative.enable_keyword_backfill,
 
 #### 2.3 Reproduce Results Script (`scripts/reproduce_results.py`)
 
-**Remove backfill parameter:**
+**Remove backfill parameter (line 826):**
 
 ```python
-# DELETE line 826
+# DELETE
 backfill=settings.quantitative.enable_keyword_backfill,
+```
+
+**Remove keyword_evidence_count from output serialization (line 305):**
+
+```python
+# DELETE
+"keyword_evidence_count": item_assessment.keyword_evidence_count,
+```
+
+#### 2.4 Selective Prediction Evaluation Script (`scripts/evaluate_selective_prediction.py`)
+
+**Update confidence calculation (line 237):**
+
+```python
+# BEFORE
+sig.get("keyword_evidence_count", 0)
+
+# AFTER - remove this term from the calculation entirely
+# The total_evidence calculation becomes: llm_evidence_count only
 ```
 
 ---
@@ -257,6 +384,11 @@ backfill=settings.quantitative.enable_keyword_backfill,
 | `docs/configs/configuration-philosophy.md` | Remove backfill from "OFF permanently" section |
 | `docs/preflight-checklist/preflight-checklist-zero-shot.md` | Remove backfill checks |
 | `docs/preflight-checklist/preflight-checklist-few-shot.md` | Remove backfill checks |
+| `docs/results/run-output-schema.md` | Remove `keyword_evidence_count` from schema |
+| `docs/statistics/metrics-and-evaluation.md` | Simplify confidence formula (remove `+ keyword_evidence_count`) |
+| `docs/statistics/statistical-methodology-aurc-augrc.md` | Remove `keyword_evidence_count` reference |
+| `docs/research/augrc-improvement-techniques-2026.md` | Remove `keyword_evidence_count` from code sample |
+| `docs/_specs/spec-046-selective-prediction-confidence-signals.md` | Simplify `total_evidence` formula |
 
 #### 3.2 Archive Documentation (Leave As-Is)
 
@@ -340,18 +472,104 @@ Scripts that read `keyword_evidence_count` or check for `evidence_source == "key
 
 Execute in this order to maintain test coverage at each step:
 
-1. **Update NAReason enum** (remove unused values)
-2. **Update value_objects.py** (remove `keyword_evidence_count`, narrow `evidence_source`)
-3. **Update config.py** (remove settings)
-4. **Update conftest.py** (remove env vars from cleanup)
-5. **Delete test_quantitative_backfill.py**
-6. **Update test_config.py** (remove backfill tests)
-7. **Update quantitative.py** (remove methods, simplify logic)
-8. **Update prompts/quantitative.py** (remove DOMAIN_KEYWORDS)
-9. **Delete phq8_keywords.yaml**
-10. **Update experiment_tracking.py** (remove field)
-11. **Update reproduce_results.py** (remove parameter)
-12. **Update documentation**
+### Step 1: Remove enum values and narrow types (domain layer)
+
+```bash
+# 1a. Update NAReason enum (domain/enums.py)
+# Remove LLM_ONLY_MISSED, KEYWORDS_INSUFFICIENT
+
+# 1b. Update ItemAssessment (domain/value_objects.py)
+# Remove keyword_evidence_count field
+# Change evidence_source type: Literal["llm", "keyword", "both"] → Literal["llm"]
+```
+
+### Step 2: Update configuration (config layer)
+
+```bash
+# 2a. Update QuantitativeSettings (config.py)
+# Remove enable_keyword_backfill, keyword_backfill_cap fields
+
+# 2b. Update conftest.py
+# Remove QUANTITATIVE_ENABLE_KEYWORD_BACKFILL, QUANTITATIVE_KEYWORD_BACKFILL_CAP from cleanup
+```
+
+### Step 3: Delete keyword infrastructure (resources + prompts)
+
+```bash
+# 3a. Delete phq8_keywords.yaml
+
+# 3b. Update prompts/quantitative.py
+# Remove DOMAIN_KEYWORDS, _load_domain_keywords(), _KEYWORDS_RESOURCE_PATH
+```
+
+### Step 4: Update agent implementation (agents layer)
+
+```bash
+# 4a. Update quantitative.py imports
+# Change DOMAIN_KEYWORDS → PHQ8_DOMAIN_KEYS
+
+# 4b. Delete _find_keyword_hits() and _merge_evidence() methods
+
+# 4c. Simplify assess() method
+# Remove keyword hit computation, backfill logic, keyword counts
+# Inline evidence_source logic, simplify _determine_na_reason() call
+
+# 4d. Simplify _determine_na_reason() signature
+# Remove keyword_count and backfill_enabled parameters
+
+# 4e. Delete _determine_evidence_source() method
+```
+
+### Step 5: Delete and update tests
+
+```bash
+# 5a. Delete test_quantitative_backfill.py entirely
+
+# 5b. Update test_config.py
+# Remove backfill-related tests
+
+# 5c. Update test_quantitative.py
+# Change DOMAIN_KEYWORDS → PHQ8_DOMAIN_KEYS
+# Delete TestDomainKeywords class
+
+# 5d. Update test_quantitative_coverage.py
+# Change DOMAIN_KEYWORDS → PHQ8_DOMAIN_KEYS
+```
+
+### Step 6: Update services and scripts
+
+```bash
+# 6a. Update experiment_tracking.py
+# Remove enable_keyword_backfill field
+
+# 6b. Update reproduce_results.py
+# Remove backfill parameter
+# Remove keyword_evidence_count from output serialization
+
+# 6c. Update evaluate_selective_prediction.py
+# Remove keyword_evidence_count from total_evidence calculation
+```
+
+### Step 7: Update documentation
+
+```bash
+# 7a. Update .env.example
+# 7b. Update docs/configs/configuration.md
+# 7c. Update docs/configs/configuration-philosophy.md
+# 7d. Update preflight checklists
+# 7e. Update docs/results/run-output-schema.md
+# 7f. Update docs/statistics/metrics-and-evaluation.md
+# 7g. Update docs/statistics/statistical-methodology-aurc-augrc.md
+# 7h. Update docs/research/augrc-improvement-techniques-2026.md
+# 7i. Update docs/_specs/spec-046-selective-prediction-confidence-signals.md
+```
+
+### Step 8: Verify
+
+```bash
+uv run pytest -v
+rg "keyword.?backfill|BACKFILL" --type py --type yaml
+```
 
 ---
 
@@ -386,6 +604,23 @@ print('Import successful')
 | Breaking downstream scripts | Low | Medium | Document output schema changes |
 | Historical run comparison | Low | Low | Archive files preserved |
 | Test coverage drop | Low | Low | ~50 lines of test code removed, but it tested dead code |
+
+---
+
+## Code Metrics
+
+**Files Deleted:**
+- `src/ai_psychiatrist/resources/phq8_keywords.yaml` (~439 lines)
+- `tests/unit/agents/test_quantitative_backfill.py` (~276 lines)
+
+**Lines Removed (approximate):**
+- Config fields: ~15 lines
+- Quantitative agent methods: ~75 lines
+- Prompt loading: ~35 lines
+- Test updates: ~30 lines
+- Documentation: ~100 lines across multiple files
+
+**Total:** ~970 lines removed (net reduction in codebase)
 
 ---
 
