@@ -15,6 +15,7 @@ Run 10 had structural JSON errors (`Expecting property name enclosed in double q
 - Truncated JSON (incomplete objects)
 - Missing closing brackets
 - Trailing text after JSON
+- “Python-literal + stray backslash” artifacts that break `ast.literal_eval()` (e.g., `"{'a': 1}\\ foo"` → `SyntaxError: unexpected character after line continuation character`)
 
 ## Solution
 
@@ -38,6 +39,15 @@ From the [documentation](https://pypi.org/project/json-repair/):
 - Corrupted key-value structures
 - Incomplete/broken arrays/objects
 - Extra non-JSON characters (comments, trailing text)
+
+**Concrete example (matches the run log pattern)**:
+
+```python
+broken = \"{'a': 1}\\\\ foo\"
+# json.loads(broken) -> JSONDecodeError: Expecting property name enclosed in double quotes
+# ast.literal_eval(broken) -> SyntaxError: unexpected character after line continuation character
+json_repair.loads(broken)  # -> {'a': 1}
+```
 
 ## Implementation
 
