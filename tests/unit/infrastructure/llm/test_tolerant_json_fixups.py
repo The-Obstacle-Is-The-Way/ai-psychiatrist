@@ -247,6 +247,15 @@ class TestJsonRepairFallback:
         result = parse_llm_json(broken)
         assert result == {"score": 2, "reason": "ok"}
 
+    def test_json_repair_recovers_python_literal_with_stray_backslash(self) -> None:
+        """Run11 regression: python-literal dict + stray backslash breaks ast.literal_eval()."""
+        # Example failure mode:
+        # - json.loads(...) -> Expecting property name enclosed in double quotes
+        # - ast.literal_eval(...) -> unexpected character after line continuation character
+        broken = "{'a': 1}\\ foo"
+        result = parse_llm_json(broken)
+        assert result == {"a": 1}
+
     def test_json_repair_recovers_missing_closing_bracket(self) -> None:
         """json-repair should recover missing closing brackets."""
         broken = '{"items": [1, 2, 3, "score": 2}'
