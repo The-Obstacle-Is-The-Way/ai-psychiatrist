@@ -42,6 +42,7 @@ from __future__ import annotations
 import argparse
 import asyncio
 import contextlib
+import importlib.util
 import json
 import sys
 import time
@@ -72,6 +73,7 @@ from ai_psychiatrist.domain.enums import AssessmentMode, PHQ8Item
 from ai_psychiatrist.domain.exceptions import LLMError
 from ai_psychiatrist.infrastructure.llm import OllamaClient
 from ai_psychiatrist.infrastructure.llm.factory import create_embedding_client
+from ai_psychiatrist.infrastructure.llm.huggingface import MissingHuggingFaceDependenciesError
 from ai_psychiatrist.infrastructure.logging import get_logger, setup_logging
 from ai_psychiatrist.infrastructure.observability import (
     FailureCategory,
@@ -801,6 +803,22 @@ def init_embedding_service(
     """Initialize embedding service for few-shot mode (or return None)."""
     if args.zero_shot_only:
         return None
+
+    if embedding_backend_settings.backend == EmbeddingBackend.HUGGINGFACE:
+        missing_modules = [
+            module
+            for module in ("torch", "transformers", "sentence_transformers")
+            if importlib.util.find_spec(module) is None
+        ]
+        if missing_modules:
+            missing_str = ", ".join(missing_modules)
+            message = (
+                "Few-shot retrieval requires query embeddings computed at runtime in the same "
+                "embedding space as the precomputed reference embeddings. "
+                "`EMBEDDING_BACKEND=huggingface` is selected but optional dependencies are "
+                f"missing: {missing_str}. Install with `make dev-hf` (or `uv sync --extra hf`)."
+            )
+            raise MissingHuggingFaceDependenciesError(message)
 
     npz_path = get_effective_embeddings_path(data_settings, embedding_settings, args.split)
 
