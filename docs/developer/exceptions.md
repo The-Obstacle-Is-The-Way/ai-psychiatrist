@@ -33,6 +33,23 @@ Defined in `src/ai_psychiatrist/domain/exceptions.py`:
   - `EmbeddingError`
     - `EmbeddingDimensionMismatchError`
     - `EmbeddingArtifactMismatchError`
+    - `EmbeddingValidationError` (NaN/Inf/zero detection - Spec 055)
+
+---
+
+## Evidence Validation Exceptions (Specs 053-054)
+
+These are raised during evidence extraction validation:
+
+- `EvidenceSchemaError`
+  - Raised when extracted evidence JSON has wrong types (e.g., string instead of list)
+  - Contains `violations` dict with per-field error details
+  - SSOT: `src/ai_psychiatrist/services/evidence_validation.py`
+
+- `EvidenceGroundingError`
+  - Raised when all extracted evidence quotes are ungrounded (not found in transcript)
+  - Prevents few-shot silently degrading to zero-shot
+  - SSOT: `src/ai_psychiatrist/services/evidence_validation.py`
 
 ---
 

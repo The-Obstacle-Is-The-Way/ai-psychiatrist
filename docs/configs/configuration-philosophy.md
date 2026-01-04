@@ -63,6 +63,11 @@ creates misconfiguration risk and can corrupt research runs.
 | **Skip-if-disabled, crash-if-broken** (Spec 38) | `ReferenceStore` + `ReferenceValidation` | No (automatic) | Disabled feature = no file I/O; enabled feature = strict load + validate |
 | **Preserve exception types** (Spec 39) | Agents | No (automatic) | Log `error_type`, then `raise` to preserve the original exception |
 | **Fail-fast embedding generation** (Spec 40) | `scripts/generate_embeddings.py` | CLI (`--allow-partial`) | Strict-by-default; partial is for debugging only |
+| **Evidence schema validation** (Spec 54) | `_extract_evidence()` | No (automatic) | Raises `EvidenceSchemaError` on wrong types |
+| **Evidence grounding validation** (Spec 53) | `_extract_evidence()` | Yes (`QUANTITATIVE_EVIDENCE_QUOTE_VALIDATION_*`) | Default ON; validates quotes exist in transcript |
+| **Embedding NaN/Inf/zero detection** (Spec 55) | Query + reference embeddings | No (automatic) | Raises `EmbeddingValidationError` |
+| **Dimension strict mode** (Spec 57) | `ReferenceStore` | Yes (`EMBEDDING_ALLOW_INSUFFICIENT_DIMENSION_EMBEDDINGS`) | Default: fail on dimension < expected |
+| **Failure pattern observability** (Spec 56) | `reproduce_results.py` | No (automatic) | Writes `failures_{run_id}.json` |
 | **Pydantic AI structured output** | Agents | Yes (`PYDANTIC_AI_ENABLED`) | Disabling is **not supported** (agents will raise; legacy fallback removed) |
 | **Track N/A reasons** | Quantitative agent | Yes (`QUANTITATIVE_TRACK_NA_REASONS`) | Default ON; small runtime cost but improves run diagnostics |
 
@@ -206,6 +211,7 @@ These bypass safety checks. Require explicit acknowledgment:
 | Setting | Default | What It Bypasses |
 |---------|---------|------------------|
 | `EMBEDDING_ALLOW_CHUNK_SCORES_PROMPT_HASH_MISMATCH` | `false` | Prompt change detection |
+| `EMBEDDING_ALLOW_INSUFFICIENT_DIMENSION_EMBEDDINGS` | `false` | Dimension strict mode (Spec 57) |
 | `--allow-same-model` (CLI) | N/A | Scorer circularity check |
 | `--allow-partial` (CLI) | N/A | Fail-fast embedding generation |
 

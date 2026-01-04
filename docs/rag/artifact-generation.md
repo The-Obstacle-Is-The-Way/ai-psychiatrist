@@ -32,10 +32,34 @@ Strict mode is fail-fast and recommended for production:
 - transcript load failures → crash
 - empty transcript → crash
 - embedding failures → crash
+- **NaN/Inf/zero embeddings → crash** (Spec 055)
+- **dimension mismatch → crash** (Spec 057)
 
 ```bash
 uv run python scripts/generate_embeddings.py --split paper-train
 ```
+
+### Embedding Validation (Spec 055)
+
+All generated embeddings are validated for:
+- **NaN values**: Corrupted embedding vectors
+- **Inf values**: Numerical overflow
+- **Zero vectors**: Invalid for cosine similarity
+
+If any validation fails, generation crashes with a clear error message including the chunk index.
+
+### Dimension Invariants (Spec 057)
+
+If the embedding backend returns fewer dimensions than `EMBEDDING_DIMENSION`:
+- **Strict mode (default)**: Crashes immediately
+- **Partial mode (`--allow-partial`)**: Skips chunk, records `dimension_mismatch` in `.partial.json`
+
+**Escape hatch** (runtime only, not for generation):
+```bash
+EMBEDDING_ALLOW_INSUFFICIENT_DIMENSION_EMBEDDINGS=true
+```
+
+This allows loading legacy artifacts with dimension mismatches but should only be used for forensics.
 
 ---
 

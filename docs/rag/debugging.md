@@ -118,8 +118,43 @@ Use audit logs to disambiguate.
 
 ---
 
+## Step 5: Check Failure Registry (Spec 056)
+
+After each evaluation run, check `data/outputs/failures_{run_id}.json`:
+
+```bash
+cat data/outputs/failures_19b42478.json | jq '.summary'
+```
+
+The failure registry categorizes failures by:
+- **Category**: `evidence_json_parse`, `embedding_nan`, `scoring_pydantic_retry_exhausted`, etc.
+- **Severity**: `fatal`, `error`, `warning`, `info`
+- **Stage**: `evidence_extraction`, `embedding_generation`, `scoring`
+- **Participant**: Which participants failed most often
+
+Use this to identify systematic issues (e.g., "participant 373 always fails on evidence extraction").
+
+---
+
+## Step 6: Diagnose Embedding Failures (Spec 055)
+
+If you see `EmbeddingValidationError`:
+
+| Error Pattern | Likely Cause | Fix |
+|---------------|--------------|-----|
+| `NaN detected` | Malformed input to embedding backend | Check transcript preprocessing |
+| `Inf detected` | Numerical overflow | Check embedding model/backend |
+| `All-zero vector` | Empty or whitespace-only input | Check chunking configuration |
+
+**At generation time**: Regenerate artifacts with `scripts/generate_embeddings.py`
+
+**At runtime**: Check query embedding input (evidence text may be empty or corrupted)
+
+---
+
 ## Related Docs
 
 - Feature index: `docs/pipeline-internals/features.md`
 - Runtime features: [runtime-features.md](runtime-features.md)
 - Error-handling philosophy: `docs/developer/error-handling.md`
+- Failure registry: `docs/developer/error-handling.md#failure-pattern-observability-spec-056`

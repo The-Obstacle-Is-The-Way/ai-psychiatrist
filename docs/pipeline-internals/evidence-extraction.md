@@ -154,6 +154,58 @@ This violated mode isolation:
 
 ---
 
+### Evidence Schema Validation (Spec 054)
+
+After JSON parsing, the evidence structure is validated:
+
+```python
+from ai_psychiatrist.services.evidence_validation import validate_evidence_schema
+
+evidence = validate_evidence_schema(parsed_json)
+# Raises EvidenceSchemaError if:
+# - Top-level is not an object
+# - Any value is not a list
+# - List contains non-strings
+```
+
+**Why this matters**: Without schema validation, wrong types (e.g., string instead of list) would silently become empty arrays, corrupting evidence counts and retrieval.
+
+---
+
+### Evidence Hallucination Detection (Spec 053)
+
+The LLM can return "evidence" quotes that don't exist in the transcript. This is **silent corruption** that pollutes retrieval and confidence signals.
+
+**Solution**: Validate that each extracted quote is grounded in the source transcript:
+
+```python
+from ai_psychiatrist.services.evidence_validation import validate_evidence_grounding
+
+validated_evidence, stats = validate_evidence_grounding(
+    evidence=evidence,
+    transcript_text=transcript.text,
+    mode="substring",  # or "fuzzy" with rapidfuzz
+)
+```
+
+**Grounding modes**:
+- `substring` (default): Conservative. `normalize(quote) in normalize(transcript)`.
+- `fuzzy`: Uses `rapidfuzz.fuzz.partial_ratio` for whitespace/punctuation drift. Requires `rapidfuzz` dependency.
+
+**Configuration**:
+```bash
+QUANTITATIVE_EVIDENCE_QUOTE_VALIDATION_ENABLED=true    # default
+QUANTITATIVE_EVIDENCE_QUOTE_VALIDATION_MODE=substring  # or fuzzy
+QUANTITATIVE_EVIDENCE_QUOTE_FUZZY_THRESHOLD=0.85       # if mode=fuzzy
+QUANTITATIVE_EVIDENCE_QUOTE_FAIL_ON_ALL_REJECTED=true  # default
+```
+
+**Privacy**: Only hashes and counts are logged, never raw transcript text.
+
+**SSOT**: `src/ai_psychiatrist/services/evidence_validation.py`
+
+---
+
 ## Step 2: Scoring (Back to the LLM)
 
 ### What Happens

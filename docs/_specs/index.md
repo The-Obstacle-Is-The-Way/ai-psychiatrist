@@ -2,30 +2,6 @@
 
 Implementation-ready (or implementation-planned) specifications for changes that require code modifications.
 
-## Implemented
-
-### Pipeline Robustness (Specs 053-057)
-
-These specs address silent failure modes identified in `PIPELINE-BRITTLENESS.md`:
-
-| Spec | Title | Priority | Complexity | Description |
-|------|-------|----------|------------|-------------|
-| **053** | [Evidence Hallucination Detection](spec-053-evidence-hallucination-detection.md) | High | Medium | Validate extracted evidence quotes exist in source transcript |
-| **054** | [Strict Evidence Schema Validation](spec-054-strict-evidence-schema-validation.md) | High | Low | Fail loudly when evidence JSON has wrong types (string instead of list) |
-| **055** | [Embedding NaN Detection](spec-055-embedding-nan-detection.md) | High | Low | Validate embeddings for NaN/Inf/zero before similarity computation |
-| **056** | [Failure Pattern Observability](spec-056-failure-pattern-observability.md) | Medium | Medium | Structured failure logging with per-run summaries and JSON export |
-| **057** | [Embedding Dimension Strict Mode](spec-057-embedding-dimension-strict-mode.md) | Medium | Low | Change default to fail on dimension mismatch instead of silent skip |
-
-**Implemented in**: PR #92 (2026-01-03)
-
-**Dependency Order used**: 054 → 053 (schema validation before hallucination detection)
-
-**Implementation Order used**:
-1. Spec 054 + 055
-2. Spec 053 (default substring grounding; optional `rapidfuzz` for fuzzy mode)
-3. Spec 057 (strict-by-default, explicit escape hatch)
-4. Spec 056 (run-level failure registry + JSON artifact)
-
 ## Deferred
 
 - **Spec 20**: [Keyword Fallback Improvements (Deferred)](../_archive/specs/20-keyword-fallback-improvements.md)
@@ -33,6 +9,18 @@ These specs address silent failure modes identified in `PIPELINE-BRITTLENESS.md`
 ## Archived (Implemented)
 
 Implemented specs are distilled into canonical (non-archive) documentation under `docs/`:
+
+### Pipeline Robustness (Specs 053-057) - PR #92, 2026-01-03
+
+| Spec | Title | Canonical Doc Location |
+|------|-------|------------------------|
+| **053** | [Evidence Hallucination Detection](../_archive/specs/spec-053-evidence-hallucination-detection.md) | [Evidence Extraction](../pipeline-internals/evidence-extraction.md#evidence-hallucination-detection-spec-053), [Features](../pipeline-internals/features.md#evidence-extraction-validation-specs-053-054) |
+| **054** | [Strict Evidence Schema Validation](../_archive/specs/spec-054-strict-evidence-schema-validation.md) | [Evidence Extraction](../pipeline-internals/evidence-extraction.md#evidence-schema-validation-spec-054), [Exceptions](../developer/exceptions.md#evidence-validation-exceptions-specs-053-054) |
+| **055** | [Embedding NaN Detection](../_archive/specs/spec-055-embedding-nan-detection.md) | [Artifact Generation](../rag/artifact-generation.md#embedding-validation-spec-055), [Debugging](../rag/debugging.md#step-6-diagnose-embedding-failures-spec-055) |
+| **056** | [Failure Pattern Observability](../_archive/specs/spec-056-failure-pattern-observability.md) | [Error Handling](../developer/error-handling.md#failure-pattern-observability-spec-056), [Debugging](../rag/debugging.md#step-5-check-failure-registry-spec-056) |
+| **057** | [Embedding Dimension Strict Mode](../_archive/specs/spec-057-embedding-dimension-strict-mode.md) | [Artifact Generation](../rag/artifact-generation.md#dimension-invariants-spec-057), [Configuration](../configs/configuration-philosophy.md) |
+
+### Other Implemented Specs
 
 - Quantitative severity bounds (BUG-045): [spec](../_archive/specs/spec-045-quantitative-severity-bounds.md) → [PHQ-8 docs](../clinical/phq8.md#severity-bounds-partial-assessments)
 - Feature index + defaults: [features.md](../pipeline-internals/features.md)

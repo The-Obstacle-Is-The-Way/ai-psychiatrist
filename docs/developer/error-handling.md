@@ -47,15 +47,55 @@ Therefore:
 
 ---
 
+## Pipeline Robustness (Specs 053-057)
+
+These specs enforce fail-fast behavior at critical pipeline stages:
+
+| Spec | What It Validates | Where | Failure Mode |
+|------|------------------|-------|--------------|
+| 053 | Evidence grounding | `_extract_evidence()` | `EvidenceGroundingError` if all quotes ungrounded |
+| 054 | Evidence schema | `_extract_evidence()` | `EvidenceSchemaError` on wrong types |
+| 055 | Embedding validity | Query/reference generation, similarity | `EmbeddingValidationError` on NaN/Inf/zero |
+| 056 | Failure observability | Per-run | `failures_{run_id}.json` artifact |
+| 057 | Dimension invariants | Reference store load | `EmbeddingDimensionMismatchError` by default |
+
+SSOT:
+- Evidence validation: `src/ai_psychiatrist/services/evidence_validation.py`
+- Embedding validation: `src/ai_psychiatrist/infrastructure/validation.py`
+- Failure registry: `src/ai_psychiatrist/infrastructure/observability.py`
+
+---
+
+## Failure Pattern Observability (Spec 056)
+
+The `FailureRegistry` captures all failures with:
+- consistent taxonomy (by category, severity, stage)
+- per-run JSON artifacts (`data/outputs/failures_{run_id}.json`)
+- privacy-safe context (hashes + counts, never transcript text)
+
+Initialization:
+```python
+from ai_psychiatrist.infrastructure.observability import init_failure_registry
+registry = init_failure_registry(run_id)
+```
+
+At end of run:
+```python
+registry.print_summary()
+registry.save(Path("data/outputs"))
+```
+
+---
+
 ## Where Silent Fallbacks Are Allowed
 
 Silent fallbacks are generally treated as research corruption.
 
 The only allowed exceptions should be:
 - explicit debug modes (e.g., `scripts/generate_embeddings.py --allow-partial`)
-- explicitly documented, narrow “best-effort” helpers that cannot affect evaluation outputs
+- explicitly documented, narrow "best-effort" helpers that cannot affect evaluation outputs
 
-If a fallback changes an experiment’s method, it must not be silent.
+If a fallback changes an experiment's method, it must not be silent.
 
 ---
 

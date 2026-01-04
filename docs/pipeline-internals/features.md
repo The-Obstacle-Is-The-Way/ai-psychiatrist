@@ -50,8 +50,36 @@ When this page says “default”, it refers to **code defaults** unless explici
 | Feature | Spec | Where | Behavior |
 |---------|------|-------|----------|
 | Fail-fast embedding generation | 40 | `scripts/generate_embeddings.py` | Default strict mode crashes on missing/corrupt transcripts or embedding failures; `--allow-partial` is debug-only and exits `2` with a `{output}.partial.json` skip manifest |
+| Embedding NaN/Inf/zero detection | 55 | `infrastructure/validation.py` | Validates embeddings at generation, load, and similarity computation |
+| Dimension strict mode | 57 | `reference_store.py` | Default: fail on `len(emb) < dimension`; escape hatch: `EMBEDDING_ALLOW_INSUFFICIENT_DIMENSION_EMBEDDINGS=true` |
 
 See: [Artifact generation](../rag/artifact-generation.md).
+
+---
+
+## Evidence Extraction Validation (Specs 053-054)
+
+| Feature | Spec | Config | Code Default | What It Does |
+|---------|------|--------|--------------|--------------|
+| Evidence schema validation | 54 | *(automatic)* | ON | Raises `EvidenceSchemaError` on wrong types (string instead of list) |
+| Evidence hallucination detection | 53 | `QUANTITATIVE_EVIDENCE_QUOTE_VALIDATION_ENABLED` | `true` | Validates extracted quotes exist in transcript |
+| Grounding mode | 53 | `QUANTITATIVE_EVIDENCE_QUOTE_VALIDATION_MODE` | `substring` | `substring` (conservative) or `fuzzy` (requires rapidfuzz) |
+| Fail on all rejected | 53 | `QUANTITATIVE_EVIDENCE_QUOTE_FAIL_ON_ALL_REJECTED` | `true` | Raises if LLM returned evidence but none grounded |
+
+SSOT: `src/ai_psychiatrist/services/evidence_validation.py`
+
+---
+
+## Failure Pattern Observability (Spec 056)
+
+| Feature | Spec | Config | Code Default | What It Does |
+|---------|------|--------|--------------|--------------|
+| Failure registry | 56 | *(automatic)* | ON | Captures all failures with consistent taxonomy |
+| Failure JSON artifact | 56 | *(automatic)* | ON | Writes `failures_{run_id}.json` per evaluation run |
+
+SSOT: `src/ai_psychiatrist/infrastructure/observability.py`
+
+Privacy: only counts, lengths, hashes, and error codes are stored. Never raw transcript text.
 
 ---
 
