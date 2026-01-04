@@ -195,8 +195,18 @@ class HuggingFaceClient:
         system_prompt: str = "",
         model: str | None = None,
         temperature: float = 0.0,
+        format: str | None = None,
         timeout_seconds: int | None = None,
     ) -> str:
+        # HuggingFace doesn't have grammar-level format enforcement like Ollama.
+        # Log warning if caller expects JSON guarantees.
+        if format is not None:
+            logger.warning(
+                "format_parameter_ignored",
+                format=format,
+                reason="HuggingFace backend does not support grammar-level format enforcement",
+            )
+
         messages: list[ChatMessage] = []
         if system_prompt:
             messages.append(ChatMessage(role="system", content=system_prompt))

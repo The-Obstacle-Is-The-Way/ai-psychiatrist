@@ -406,6 +406,10 @@ class QuantitativeAssessmentAgent:
         sample_outputs: list[dict[PHQ8Item, ItemAssessment]],
         reference_bundle: ReferenceBundle | None,
     ) -> dict[PHQ8Item, ItemAssessment]:
+        if not sample_outputs:
+            msg = "sample_outputs must not be empty"
+            raise ValueError(msg)
+
         final_items: dict[PHQ8Item, ItemAssessment] = {}
         for phq_item in PHQ8Item:
             legacy_key = ITEM_TO_LEGACY_KEY[phq_item]
