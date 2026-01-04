@@ -8,16 +8,15 @@ _No active investigations at this time._
 
 ## Active Bugs (Pending Senior Review)
 
-| ID | Title | Severity | Status | Key Fix |
-|----|-------|----------|--------|---------|
-| [BUG-029](./BUG-029-evidence-grounding-too-strict.md) | Evidence Grounding Too Strict (20% Failure Rate) | P0 | Open | Enable RapidFuzz fuzzy matching @ 0.85 threshold |
-| [BUG-030](./BUG-030-json-control-char-sanitization-incomplete.md) | JSON Control Char Sanitization Incomplete | P0 | Open | Reorder fixups, add invalid escape handler |
-| [BUG-031](./BUG-031-observability-gaps-debugging-failures.md) | Observability Gaps for Debugging | P1 | Open | Add raw text logging, per-participant summary |
+_No active bugs at this time._
 
 ## Recently Resolved (2026-01-04)
 
 | ID | Title | Status | Resolution |
 |----|-------|--------|------------|
+| [BUG-032](../_archive/bugs/BUG-032_EVIDENCE_GROUNDING_ALL_REJECTED_POLICY.md) | Evidence grounding “all rejected” policy | ✅ Resolved | Default is fail-open + failure registry event; strict mode remains available |
+| [BUG-033](../_archive/bugs/BUG-033_JSON_PARSE_FAILURES_POST_SPEC059.md) | JSON parse failures (post Spec 059) | ✅ Resolved | json-repair fallback + improved failure metadata + regression tests |
+| [BUG-034](../_archive/bugs/BUG-034_PRIVACY_SAFE_OBSERVABILITY_UPGRADES.md) | Privacy-safe observability upgrades | ✅ Resolved | Counts-only summaries + failure/telemetry registries; no raw transcript text |
 | [BUG-027](../_archive/bugs/BUG-027_CONSISTENCY_TEMPERATURE_OPTIMIZATION.md) | Consistency Temperature Optimization | ✅ Resolved | Baseline set to `CONSISTENCY_TEMPERATURE=0.2` (docs + code + tests) |
 
 ## Recently Resolved (2026-01-03)
