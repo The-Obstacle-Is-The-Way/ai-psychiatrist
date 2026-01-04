@@ -139,7 +139,7 @@ rg -n '\"token_msp\"|\"token_pe\"|\"token_energy\"' data/outputs/both_*.json | h
 - **Embedding space mismatch**: `EMBEDDING_BACKEND` and `EMBEDDING_EMBEDDINGS_FILE` must match (`huggingface_*` with HF backend; `ollama_*` with Ollama backend).
 - **Chunk scores missing**: ensure `...chunk_scores.json` exists and `EMBEDDING_REFERENCE_SCORE_SOURCE=chunk`.
 - **Token CSFs missing**: backend didn’t return logprobs; skip token variants for that run.
-- **Evidence grounding rejects everything**: this is a loud failure to prevent silent corruption; fix prompts/parsing rather than disabling validation.
+- **Evidence grounding rejects everything**: all extracted quotes are discarded; default is fail-open + failure registry event (strict mode can fail closed).
 - **Hidden brittleness (retries/repairs)**: check `data/outputs/telemetry_{run_id}.json` for retry/repair spikes (Spec 060).
 
 ## Pointers (SSOT)

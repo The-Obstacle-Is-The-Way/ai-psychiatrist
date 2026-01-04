@@ -2,9 +2,10 @@
 
 **Created**: 2026-01-03
 **Purpose**: Complete mapping of all failure points from raw transcript to final PHQ-8 assessment
-**Status**: ✅ RESOLVED - All actionable items implemented in PR #92 (2026-01-03)
+**Status**: ✅ RESOLVED (P0/P1) - All high-priority items implemented; remaining low-priority ideas are documented
 
-> **Note**: This analysis document led to Specs 053-057, which are now implemented and archived.
+> **Note**: This analysis document led to Specs 053-057 (pipeline robustness) and Specs 058-060 (JSON reliability + retry telemetry),
+> which are now implemented and archived.
 > Canonical documentation for these features is in `docs/` (not this file).
 > See: `docs/pipeline-internals/features.md`, `docs/developer/error-handling.md`, `docs/rag/debugging.md`
 
@@ -163,8 +164,8 @@ From web research ([Ollama Structured Outputs](https://docs.ollama.com/capabilit
 | Temperature = 0 for schema adherence | ✅ We use 0.0 | Deterministic output |
 | Start with simple schemas | ✅ Our schemas are reasonable | 8 items × 4 fields |
 | Validate with Pydantic after parse | ✅ Used in extractors | Catches structure issues |
-| Retry on validation failure | ✅ PydanticAI retries 3x | Good error recovery |
-| Monitor success rates | ❌ Not implemented | Should log failure patterns |
+| Retry on validation failure | ✅ PydanticAI retries 5x (default) | Configurable; improves success rates for structured output |
+| Monitor success rates | ✅ Implemented | FailureRegistry (`failures_{run_id}.json`) + TelemetryRegistry (`telemetry_{run_id}.json`) |
 
 ---
 
@@ -311,26 +312,26 @@ The following are now **correctly handled**:
 | Issue | Old Behavior | New Behavior |
 |-------|--------------|--------------|
 | JSON parse failure in evidence extraction | Silent return `{}` | Raises `json.JSONDecodeError` |
-| Few-shot mode with empty evidence | Silently becomes zero-shot | Fails loudly |
+| Few-shot mode with empty evidence | Silent degradation | Fail-open with explicit failure registry event; strict mode can fail closed |
 | Non-canonical JSON parsing | Multiple parsers with different behaviors | Single `parse_llm_json()` SSOT |
 | Ollama evidence extraction | Prompt-only JSON constraint | `format="json"` grammar constraint |
 | Evidence JSON schema violations | Silent coercion to `[]` | Raises `EvidenceSchemaError` (Spec 054) |
 | Evidence quote hallucinations | Ungrounded quotes contaminate retrieval | Grounding validation (Spec 053) |
 | NaN/Inf/zero embeddings | Propagate into similarity | Validation fails loudly (Spec 055) |
 | Dimension mismatch (partial) | Warn + skip | Fail fast by default; escape hatch available (Spec 057) |
-| Failure pattern visibility | Ad-hoc logs | FailureRegistry + failures JSON artifact (Spec 056) |
+| Failure pattern visibility | Ad-hoc logs | FailureRegistry + TelemetryRegistry JSON artifacts (Specs 056, 060) |
 
 ---
 
 ## Summary: The Real Problem
 
-**The pipeline is now LOUD about JSON failures.** The remaining risks are:
+**The pipeline is now LOUD about JSON failures.** Remaining risks are mostly quality/ergonomics, not silent corruption:
 
-1. **Semantic corruption** (hallucinated evidence, wrong item mapping)
-2. **Numeric corruption** (NaN propagation, dimension truncation)
-3. **Observability gaps** (we don't log failure patterns systematically)
+1. **Semantic errors** (hallucinated evidence, wrong item mapping) — mitigated but not eliminated
+2. **Prompt size pressure** (very long transcripts + references approaching context limits) — deferred (see “Prompt Size Validation” below)
+3. **Reference bundle redundancy** (duplicate chunks) — low priority, not correctness-critical
 
-The preprocessing is solid. The JSON parsing is fixed. The remaining work is **validation and observability**, not fundamental architecture changes.
+The preprocessing is solid. The JSON parsing and observability are fixed. The remaining work is **ablation, tuning, and guardrails**, not fundamental architecture changes.
 
 ---
 
