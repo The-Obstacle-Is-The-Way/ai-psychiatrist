@@ -401,10 +401,11 @@ class QuantitativeSettings(BaseSettings):
         description="Only used when evidence_quote_validation_mode='fuzzy'.",
     )
     evidence_quote_fail_on_all_rejected: bool = Field(
-        default=True,
+        default=False,
         description=(
             "If true, fail when the LLM produced evidence but none of it can be grounded in "
-            "the transcript. Prevents few-shot silently degrading to zero-shot."
+            "the transcript. When false (default), the run continues with empty evidence but "
+            "records a failure event to avoid silent degradation."
         ),
     )
     evidence_quote_log_rejections: bool = Field(

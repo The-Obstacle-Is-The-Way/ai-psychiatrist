@@ -33,7 +33,13 @@ from ai_psychiatrist.config import PydanticAISettings
 from ai_psychiatrist.domain.entities import PHQ8Assessment, Transcript
 from ai_psychiatrist.domain.enums import AssessmentMode, PHQ8Item, SeverityLevel
 from ai_psychiatrist.domain.value_objects import ItemAssessment
-from ai_psychiatrist.services.evidence_validation import EvidenceGroundingError, EvidenceSchemaError
+from ai_psychiatrist.infrastructure.observability import (
+    FailureCategory,
+    FailureSeverity,
+    get_failure_registry,
+    init_failure_registry,
+)
+from ai_psychiatrist.services.evidence_validation import EvidenceSchemaError
 from tests.fixtures.mock_llm import MockLLMClient
 
 pytestmark = pytest.mark.unit
@@ -167,11 +173,11 @@ class TestQuantitativeAssessmentAgent:
         )
 
         with pytest.raises(EvidenceSchemaError):
-            await agent._extract_evidence("Participant: hello")
+            await agent._extract_evidence("Participant: hello", participant_id=300)
 
     @pytest.mark.asyncio
-    async def test_extract_evidence_ungrounded_quotes_fail(self) -> None:
-        """Spec 053: hallucinated evidence must not silently pass through."""
+    async def test_extract_evidence_all_rejected_records_failure_and_continues(self) -> None:
+        """Spec 053: when all quotes are ungrounded, record failure without dropping participant."""
         client = MockLLMClient(
             chat_responses=['{"PHQ8_NoInterest": ["I feel hopeless every day"]}']
         )
@@ -181,8 +187,20 @@ class TestQuantitativeAssessmentAgent:
             pydantic_ai_settings=PydanticAISettings(enabled=False),
         )
 
-        with pytest.raises(EvidenceGroundingError):
-            await agent._extract_evidence("Participant: I'm doing fine lately.")
+        init_failure_registry("test_evidence_grounding")
+        evidence = await agent._extract_evidence(
+            "Participant: I'm doing fine lately.", participant_id=300
+        )
+
+        assert all(quotes == [] for quotes in evidence.values())
+
+        registry = get_failure_registry()
+        assert any(
+            failure.category == FailureCategory.EVIDENCE_HALLUCINATION
+            and failure.severity == FailureSeverity.ERROR
+            and failure.participant_id == 300
+            for failure in registry.failures
+        )
 
     @pytest.mark.asyncio
     async def test_pydantic_agent_run_error_not_masked(

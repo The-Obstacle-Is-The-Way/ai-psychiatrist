@@ -74,3 +74,11 @@ class TestValidateEvidenceGrounding:
         validated, stats = validate_evidence_grounding(evidence, transcript)
         assert validated["PHQ8_Failure"] == ['I feel "worthless"']
         assert stats.validated_count == 1
+
+    def test_nonverbal_tags_ignored_for_matching(self) -> None:
+        """Evidence quotes may omit nonverbal tags like <laughter>; grounding should still succeed."""
+        evidence = {"PHQ8_Tired": ["I'm tired yeah"]}
+        transcript = "Participant: I'm tired <laughter> yeah"
+        validated, stats = validate_evidence_grounding(evidence, transcript)
+        assert validated["PHQ8_Tired"] == ["I'm tired yeah"]
+        assert stats.validated_count == 1

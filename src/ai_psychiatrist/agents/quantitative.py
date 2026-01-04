@@ -37,6 +37,11 @@ from ai_psychiatrist.domain.enums import AssessmentMode, NAReason, PHQ8Item
 from ai_psychiatrist.domain.value_objects import ItemAssessment
 from ai_psychiatrist.infrastructure.llm.responses import parse_llm_json
 from ai_psychiatrist.infrastructure.logging import get_logger
+from ai_psychiatrist.infrastructure.observability import (
+    FailureCategory,
+    FailureSeverity,
+    record_failure,
+)
 from ai_psychiatrist.services.embedding import ReferenceBundle, compute_retrieval_similarity_stats
 from ai_psychiatrist.services.evidence_validation import (
     EvidenceGroundingError,
@@ -169,7 +174,10 @@ class QuantitativeAssessmentAgent:
         )
 
         # Step 1: Extract evidence
-        final_evidence = await self._extract_evidence(transcript.text)
+        final_evidence = await self._extract_evidence(
+            transcript.text,
+            participant_id=transcript.participant_id,
+        )
         llm_counts = {k: len(v) for k, v in final_evidence.items()}
 
         logger.debug(
@@ -303,7 +311,10 @@ class QuantitativeAssessmentAgent:
             temperature=temperature,
         )
 
-        final_evidence = await self._extract_evidence(transcript.text)
+        final_evidence = await self._extract_evidence(
+            transcript.text,
+            participant_id=transcript.participant_id,
+        )
         llm_counts = {k: len(v) for k, v in final_evidence.items()}
 
         reference_bundle = await self._maybe_build_reference_bundle(final_evidence)
@@ -551,7 +562,9 @@ class QuantitativeAssessmentAgent:
             )
         return result
 
-    async def _extract_evidence(self, transcript_text: str) -> dict[str, list[str]]:
+    async def _extract_evidence(
+        self, transcript_text: str, *, participant_id: int
+    ) -> dict[str, list[str]]:
         """Extract evidence quotes for each PHQ-8 item.
 
         ⚠️ CRITICAL: NO SILENT FALLBACKS
@@ -567,6 +580,7 @@ class QuantitativeAssessmentAgent:
 
         Args:
             transcript_text: Interview transcript text.
+            participant_id: Transcript participant ID (for observability only).
 
         Returns:
             Dictionary of PHQ8 key -> list of evidence quotes.
@@ -618,14 +632,22 @@ class QuantitativeAssessmentAgent:
                 log_rejections=self._settings.evidence_quote_log_rejections,
             )
 
-            if (
-                self._settings.evidence_quote_fail_on_all_rejected
-                and stats.validated_count == 0
-                and stats.extracted_count > 0
-            ):
-                raise EvidenceGroundingError(
+            if stats.validated_count == 0 and stats.extracted_count > 0:
+                message = (
                     "LLM returned evidence quotes but none could be grounded in the transcript."
                 )
+                record_failure(
+                    FailureCategory.EVIDENCE_HALLUCINATION,
+                    FailureSeverity.ERROR,
+                    message,
+                    participant_id=participant_id,
+                    stage="evidence_extraction",
+                    mode=self._mode.value,
+                    extracted_count=stats.extracted_count,
+                    validation_mode=self._settings.evidence_quote_validation_mode,
+                )
+                if self._settings.evidence_quote_fail_on_all_rejected:
+                    raise EvidenceGroundingError(message)
 
         return evidence
 

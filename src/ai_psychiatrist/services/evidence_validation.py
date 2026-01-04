@@ -23,6 +23,7 @@ except ImportError:  # pragma: no cover
 logger = get_logger(__name__)
 
 _WS_RE = re.compile(r"\s+")
+_TAG_RE = re.compile(r"<[^>]+>")
 _SMART_QUOTES = str.maketrans(
     {
         "\u2018": "'",
@@ -136,6 +137,7 @@ def normalize_for_quote_match(text: str) -> str:
     normalized = unicodedata.normalize("NFKC", text).translate(_SMART_QUOTES)
     for ch in _ZERO_WIDTH:
         normalized = normalized.replace(ch, "")
+    normalized = _TAG_RE.sub(" ", normalized)
     normalized = _WS_RE.sub(" ", normalized).strip().lower()
     return normalized
 
@@ -221,4 +223,16 @@ def validate_evidence_grounding(
         rejected_count=(extracted_count - validated_count),
         rejected_by_domain=rejected_by_domain,
     )
+
+    if stats.rejected_count > 0 and log_rejections:
+        logger.info(
+            "evidence_grounding_complete",
+            extracted_count=stats.extracted_count,
+            validated_count=stats.validated_count,
+            rejected_count=stats.rejected_count,
+            rejected_by_domain=stats.rejected_by_domain,
+            transcript_hash=transcript_hash,
+            transcript_len=len(transcript_text),
+            mode=mode,
+        )
     return validated, stats

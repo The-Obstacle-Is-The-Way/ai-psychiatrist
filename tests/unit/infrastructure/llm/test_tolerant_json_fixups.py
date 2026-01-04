@@ -256,6 +256,13 @@ class TestJsonRepairFallback:
         result = parse_llm_json(broken)
         assert result == {"a": 1}
 
+    def test_parse_llm_json_recovers_invalid_escape_sequence(self) -> None:
+        """Run11/BUG-030 class: invalid escape sequences inside strings should be recoverable."""
+        broken = '{"reason": "bad \\q escape", "score": 1}'
+        result = parse_llm_json(broken)
+        assert result["score"] == 1
+        assert "\\q" in result["reason"]
+
     def test_json_repair_recovers_missing_closing_bracket(self) -> None:
         """json-repair should recover missing closing brackets."""
         broken = '{"items": [1, 2, 3, "score": 2}'
