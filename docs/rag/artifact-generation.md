@@ -55,6 +55,7 @@ If the embedding backend returns fewer dimensions than `EMBEDDING_DIMENSION`:
 - **Partial mode (`--allow-partial`)**: Skips chunk, records `dimension_mismatch` in `.partial.json`
 
 **Escape hatch** (runtime only, not for generation):
+
 ```bash
 EMBEDDING_ALLOW_INSUFFICIENT_DIMENSION_EMBEDDINGS=true
 ```

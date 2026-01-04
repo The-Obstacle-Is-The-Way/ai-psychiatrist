@@ -74,12 +74,14 @@ The `FailureRegistry` captures all failures with:
 - privacy-safe context (hashes + counts, never transcript text)
 
 Initialization:
+
 ```python
 from ai_psychiatrist.infrastructure.observability import init_failure_registry
 registry = init_failure_registry(run_id)
 ```
 
 At end of run:
+
 ```python
 registry.print_summary()
 registry.save(Path("data/outputs"))

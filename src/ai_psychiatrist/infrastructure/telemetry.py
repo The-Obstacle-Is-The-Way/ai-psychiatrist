@@ -155,6 +155,15 @@ def init_telemetry_registry(run_id: str) -> TelemetryRegistry:
     return registry
 
 
+def clear_telemetry_registry() -> None:
+    """Clear the telemetry registry for the current context.
+
+    This is primarily intended for unit tests to avoid test-order dependence.
+    """
+
+    _registry_var.set(None)
+
+
 def record_telemetry(category: TelemetryCategory, **kwargs: Any) -> None:
     """Record telemetry if initialized; no-op otherwise."""
     try:

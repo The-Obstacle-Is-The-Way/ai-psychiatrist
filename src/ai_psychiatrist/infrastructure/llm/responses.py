@@ -248,6 +248,8 @@ def parse_llm_json(text: str) -> dict[str, Any]:
             raise json.JSONDecodeError("Expected JSON object", text, 0)
         return result
     except json.JSONDecodeError as json_error:
+        text_hash = stable_text_hash(text)
+
         # Step 3: Try Python literal parsing (handles True/False/None)
         pythonish = _replace_json_literals_for_python(fixed)
         try:
@@ -260,11 +262,11 @@ def parse_llm_json(text: str) -> dict[str, Any]:
             logger.debug(
                 "Parsed LLM JSON via Python literal fallback",
                 component="json_parser",
-                before_hash=stable_text_hash(text),
+                text_hash=text_hash,
             )
             record_telemetry(
                 TelemetryCategory.JSON_PYTHON_LITERAL_FALLBACK,
-                before_hash=stable_text_hash(text),
+                text_hash=text_hash,
                 text_length=len(text),
             )
             return result
@@ -280,12 +282,12 @@ def parse_llm_json(text: str) -> dict[str, Any]:
             logger.info(
                 "json-repair recovered malformed LLM JSON",
                 component="json_parser",
-                text_hash=stable_text_hash(text),
+                text_hash=text_hash,
                 text_length=len(text),
             )
             record_telemetry(
                 TelemetryCategory.JSON_REPAIR_FALLBACK,
-                text_hash=stable_text_hash(text),
+                text_hash=text_hash,
                 text_length=len(text),
             )
             return result
@@ -302,7 +304,7 @@ def parse_llm_json(text: str) -> dict[str, Any]:
                 repair_error=str(repair_error),
                 repair_error_type=type(repair_error).__name__,
                 text_length=len(text),
-                text_hash=stable_text_hash(text),
+                text_hash=text_hash,
             )
             raise json_error from repair_error
 

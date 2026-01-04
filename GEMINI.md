@@ -16,7 +16,7 @@ Documented paper failures (closed issues):
 ## GitHub Repository
 
 **IMPORTANT**: This is a fork. Use the fork for issues and PRs:
-- https://github.com/The-Obstacle-Is-The-Way/ai-psychiatrist
+- [https://github.com/The-Obstacle-Is-The-Way/ai-psychiatrist](https://github.com/The-Obstacle-Is-The-Way/ai-psychiatrist)
 
 ```bash
 gh issue create --repo The-Obstacle-Is-The-Way/ai-psychiatrist ...

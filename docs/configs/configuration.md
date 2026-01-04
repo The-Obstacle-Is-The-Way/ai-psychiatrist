@@ -358,6 +358,7 @@ These settings control the quantitative assessment behavior (evidence extraction
 Validates that LLM-extracted evidence quotes actually appear in the source transcript. Prevents hallucinated quotes from contaminating few-shot retrieval.
 
 **Example:**
+
 ```bash
 # Enable fuzzy matching for better recall (requires rapidfuzz)
 QUANTITATIVE_EVIDENCE_QUOTE_VALIDATION_MODE="fuzzy"
@@ -372,7 +373,7 @@ Multi-sample scoring for agreement-based confidence signals (Spec 050).
 
 | Variable | Type | Default | Description |
 |----------|------|---------|-------------|
-| `CONSISTENCY_ENABLED` | bool | `true` | Enable multi-sample consistency scoring |
+| `CONSISTENCY_ENABLED` | bool | `false` | Enable multi-sample consistency scoring |
 | `CONSISTENCY_N_SAMPLES` | int | `5` | Number of samples per item |
 | `CONSISTENCY_TEMPERATURE` | float | `0.2` | Sampling temperature for consistency (must be >0 for variance) |
 
@@ -390,6 +391,7 @@ Multi-sample scoring for agreement-based confidence signals (Spec 050).
 - Self-consistency requires non-zero temperature for sample diversity
 
 **Example:**
+
 ```bash
 # Enable consistency scoring (recommended for confidence calibration)
 CONSISTENCY_ENABLED=true
@@ -398,6 +400,7 @@ CONSISTENCY_TEMPERATURE=0.2  # Clinical best practice (BUG-027)
 ```
 
 **Disabling:**
+
 ```bash
 # Disable for faster baseline runs (no confidence signals)
 CONSISTENCY_ENABLED=false

@@ -36,6 +36,7 @@ uv run python scripts/reproduce_results.py --split paper-test --dry-run
 - `--zero-shot-only`: runs zero-shot only.
 
 If you want all confidence-suite signals in one artifact, run both modes (default). `.env.example` enables consistency by default:
+
 ```bash
 uv run python scripts/reproduce_results.py \
   --split paper-test
@@ -126,7 +127,7 @@ uv run python scripts/reproduce_results.py \
 
   **Note**: HuggingFace backend requires `make dev` to install dependencies.
 
-  **IMPORTANT**: Precomputed `data/embeddings/*.npz` files are reference embeddings only. Few-shot also embeds
+  **IMPORTANT**: Precomputed `data/embeddings/*.npz` files are reference embeddings only. Few-shot also computes
   the *query* (participant evidence) at runtime in the same embedding space. If HF deps are missing, the run
   will fail fast with `MissingHuggingFaceDependenciesError` before wasting hours.
 
@@ -529,6 +530,7 @@ grep -E \"^(EMBEDDING_REFERENCE_SCORE_SOURCE|EMBEDDING_ENABLE_ITEM_TAG_FILTER|EM
 ```
 
 Evidence grounding (prevents ungrounded quotes contaminating retrieval):
+
 ```bash
 grep -E \"^QUANTITATIVE_EVIDENCE_QUOTE_VALIDATION_\" .env
 # Expected:

@@ -1,6 +1,6 @@
 # Next Steps
 
-**Status**: Ready for Run 12 (post Run 11 hardening)
+**Status**: Ready for Run 12 (post-Run 11 hardening)
 **Last Updated**: 2026-01-04
 
 ---
@@ -219,6 +219,7 @@ Specs 048–051 are now implemented. The next step is to run a new reproduction 
      uv run python scripts/evaluate_selective_prediction.py --input <both_run.json> --mode few_shot --confidence token_pe
      uv run python scripts/evaluate_selective_prediction.py --input <both_run.json> --mode few_shot --confidence token_energy
      ```
+
    - For multi-signal calibration (Spec 049), train a calibrator on a training output and then re-evaluate using `--confidence calibrated`.
 
 ---

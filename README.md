@@ -63,9 +63,8 @@ make serve
 > **Note (Embeddings backend)**: Chat and embeddings can use different backends:
 > - `LLM_BACKEND` controls chat for agents (default: `ollama`)
 > - `EMBEDDING_BACKEND` controls embeddings (default: `huggingface`)
->
 > If you want a pure-Ollama setup (no HuggingFace dependencies), set `EMBEDDING_BACKEND=ollama` in `.env`.
->
+
 > **Why HF deps matter even if embeddings exist**: few-shot retrieval embeds the *query* (participant evidence) at runtime in the same embedding space. If `EMBEDDING_BACKEND=huggingface`, you still need HF deps (`make dev`) to compute query embeddings, even when reference `*.npz` files are already present.
 
 > **Optional (Appendix F)**: The paper evaluates MedGemma 27B as an alternative model for the

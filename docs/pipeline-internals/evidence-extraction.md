@@ -193,6 +193,7 @@ validated_evidence, stats = validate_evidence_grounding(
 - `fuzzy`: Uses `rapidfuzz.fuzz.partial_ratio` for whitespace/punctuation drift. Requires `rapidfuzz` dependency.
 
 **Configuration**:
+
 ```bash
 QUANTITATIVE_EVIDENCE_QUOTE_VALIDATION_ENABLED=true    # default
 QUANTITATIVE_EVIDENCE_QUOTE_VALIDATION_MODE=substring  # or fuzzy

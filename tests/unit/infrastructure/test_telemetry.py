@@ -1,4 +1,4 @@
-"""Unit tests for retry telemetry (Spec 060)."""
+"""Unit tests for the telemetry system."""
 
 from __future__ import annotations
 
@@ -11,6 +11,7 @@ from ai_psychiatrist.infrastructure.llm.responses import parse_llm_json
 from ai_psychiatrist.infrastructure.telemetry import (
     TelemetryCategory,
     TelemetryRegistry,
+    clear_telemetry_registry,
     get_telemetry_registry,
     init_telemetry_registry,
     record_telemetry,
@@ -19,7 +20,16 @@ from ai_psychiatrist.infrastructure.telemetry import (
 pytestmark = pytest.mark.unit
 
 if TYPE_CHECKING:
+    from collections.abc import Iterator
     from pathlib import Path
+
+
+@pytest.fixture(autouse=True)
+def reset_telemetry_registry() -> Iterator[None]:
+    """Avoid cross-test leakage of the telemetry registry."""
+    clear_telemetry_registry()
+    yield
+    clear_telemetry_registry()
 
 
 def test_record_telemetry_noop_when_uninitialized() -> None:

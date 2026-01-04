@@ -265,9 +265,9 @@ class TestJsonRepairFallback:
 
     def test_json_repair_recovers_missing_closing_bracket(self) -> None:
         """json-repair should recover missing closing brackets."""
-        broken = '{"items": [1, 2, 3, "score": 2}'
+        broken = '{"items": [1, 2, 3}'
         result = parse_llm_json(broken)
-        assert "items" in result or "score" in result  # At least partial recovery
+        assert result == {"items": [1, 2, 3]}
 
     def test_json_repair_does_not_activate_for_valid_json(self) -> None:
         """json-repair should not be needed for valid JSON."""
