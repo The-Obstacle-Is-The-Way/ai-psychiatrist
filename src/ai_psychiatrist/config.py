@@ -438,7 +438,7 @@ class ConsistencySettings(BaseSettings):
         description="Number of scoring samples to draw when consistency is enabled.",
     )
     temperature: float = Field(
-        default=0.3,
+        default=0.2,
         ge=0.0,
         le=2.0,
         description="Sampling temperature used for consistency scoring (ignored when disabled).",

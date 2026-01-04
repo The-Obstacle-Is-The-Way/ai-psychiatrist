@@ -14,6 +14,7 @@ import pytest
 
 from ai_psychiatrist.config import (
     APISettings,
+    ConsistencySettings,
     DataSettings,
     EmbeddingSettings,
     FeedbackLoopSettings,
@@ -41,6 +42,22 @@ class TestQuantitativeSettings:
         """Default values should match baseline defaults."""
         settings = QuantitativeSettings()
         assert settings.track_na_reasons is True
+
+
+class TestConsistencySettings:
+    """Tests for consistency sampling configuration (Spec 050)."""
+
+    def test_default_temperature(self) -> None:
+        """Default temperature should use the low-variance baseline."""
+        # Use the schema default (do not depend on local `.env` overrides).
+        assert ConsistencySettings.model_fields["temperature"].default == 0.2
+
+    def test_temperature_validation(self) -> None:
+        """Temperature must be 0-2."""
+        with pytest.raises(ValueError):
+            ConsistencySettings(temperature=-0.1)
+        with pytest.raises(ValueError):
+            ConsistencySettings(temperature=2.1)
 
 
 class TestOllamaSettings:

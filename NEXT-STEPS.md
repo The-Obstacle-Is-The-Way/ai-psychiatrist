@@ -184,7 +184,7 @@ Specs 048–051 are now implemented. The next step is to run a new reproduction 
    - `.env.example` enables consistency by default for the confidence suite:
      - `CONSISTENCY_ENABLED=true`
      - `CONSISTENCY_N_SAMPLES=5`
-     - `CONSISTENCY_TEMPERATURE=0.3`
+     - `CONSISTENCY_TEMPERATURE=0.2`
    - Optional: override via CLI (explicit in the run log):
      - `--consistency-samples 10` (tighter agreement estimate)
 

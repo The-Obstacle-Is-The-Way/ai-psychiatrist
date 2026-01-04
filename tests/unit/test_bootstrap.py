@@ -100,3 +100,4 @@ class TestEnvExample:
         assert "EMBEDDING_CHUNK_SIZE=8" in content
         assert "FEEDBACK_SCORE_THRESHOLD=3" in content
         assert "FEEDBACK_MAX_ITERATIONS=10" in content
+        assert "CONSISTENCY_TEMPERATURE=0.2" in content

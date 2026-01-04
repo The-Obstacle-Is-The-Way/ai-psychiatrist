@@ -94,14 +94,14 @@ tmux new -s run12
 uv run python scripts/reproduce_results.py \
   --split paper-test \
   --consistency-samples 5 \
-  --consistency-temperature 0.3 \
+  --consistency-temperature 0.2 \
   2>&1 | tee data/outputs/run12_$(date +%Y%m%d_%H%M%S).log
 ```
 
 To make consistency “always on” without remembering CLI flags, set in `.env`:
 - `CONSISTENCY_ENABLED=true`
 - `CONSISTENCY_N_SAMPLES=5`
-- `CONSISTENCY_TEMPERATURE=0.3`
+- `CONSISTENCY_TEMPERATURE=0.2`
 
 Other useful flags:
 - `--zero-shot-only` / `--few-shot-only`
