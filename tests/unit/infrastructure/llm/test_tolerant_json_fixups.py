@@ -159,3 +159,67 @@ class TestTolerantJsonFixups:
         fixed = tolerant_json_fixups(broken)
         parsed = json.loads(fixed)
         assert parsed == {"evidence": "first\nsecond", "reason": "ok", "score": 0}
+
+    # --- Control characters inside string values (Run 10 failure mode) ---
+
+    def test_raw_newline_in_string_value_escaped(self) -> None:
+        """Raw newline inside string value causes 'Invalid control character' - must be escaped."""
+        # This simulates the Run 10 failure: LLM output with raw newline in string
+        broken = '{"reason": "line 1\nline 2", "score": 1}'
+        fixed = tolerant_json_fixups(broken)
+        parsed = json.loads(fixed)
+        assert parsed == {"reason": "line 1\nline 2", "score": 1}
+
+    def test_raw_tab_in_string_value_escaped(self) -> None:
+        """Raw tab inside string value must be escaped."""
+        broken = '{"reason": "before\tafter", "score": 1}'
+        fixed = tolerant_json_fixups(broken)
+        parsed = json.loads(fixed)
+        assert parsed == {"reason": "before\tafter", "score": 1}
+
+    def test_raw_carriage_return_in_string_value_escaped(self) -> None:
+        """Raw carriage return inside string value must be escaped."""
+        broken = '{"reason": "before\rafter", "score": 1}'
+        fixed = tolerant_json_fixups(broken)
+        parsed = json.loads(fixed)
+        assert parsed == {"reason": "before\rafter", "score": 1}
+
+    def test_null_byte_in_string_value_escaped(self) -> None:
+        """Null byte (0x00) inside string value must be escaped to \\u0000."""
+        broken = '{"reason": "has\x00null", "score": 1}'
+        fixed = tolerant_json_fixups(broken)
+        parsed = json.loads(fixed)
+        assert parsed == {"reason": "has\x00null", "score": 1}
+
+    def test_form_feed_in_string_value_escaped(self) -> None:
+        """Form feed (0x0C) inside string value must be escaped."""
+        broken = '{"reason": "has\x0cff", "score": 1}'
+        fixed = tolerant_json_fixups(broken)
+        parsed = json.loads(fixed)
+        assert parsed == {"reason": "has\x0cff", "score": 1}
+
+    def test_control_chars_outside_strings_preserved(self) -> None:
+        """Control characters outside strings (structural whitespace) must be preserved."""
+        # Newlines and tabs as JSON structural whitespace are valid
+        valid = '{\n\t"a": 1,\n\t"b": 2\n}'
+        fixed = tolerant_json_fixups(valid)
+        assert fixed == valid  # No changes
+        parsed = json.loads(fixed)
+        assert parsed == {"a": 1, "b": 2}
+
+    def test_already_escaped_control_chars_unchanged(self) -> None:
+        """Already escaped control chars (\\n, \\t) must not be double-escaped."""
+        valid = '{"reason": "line 1\\nline 2", "score": 1}'
+        fixed = tolerant_json_fixups(valid)
+        assert fixed == valid  # No changes
+        parsed = json.loads(fixed)
+        assert parsed == {"reason": "line 1\nline 2", "score": 1}
+
+    def test_control_chars_idempotent(self) -> None:
+        """Control char escaping must be idempotent."""
+        broken = '{"reason": "has\ttab", "score": 1}'
+        once = tolerant_json_fixups(broken)
+        twice = tolerant_json_fixups(once)
+        assert once == twice
+        parsed = json.loads(twice)
+        assert parsed == {"reason": "has\ttab", "score": 1}

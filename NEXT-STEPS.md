@@ -83,7 +83,7 @@ The paper's reference implementation (`_reference/ai_psychiatrist/`) demonstrate
 
 **Why it is not a valid comparison point**:
 
-- **Zero-shot evaluated 39/41 participants**: PIDs 383 and 427 failed with `Exceeded maximum retries (3) for output validation` (pre-ANALYSIS-026 JSON hardening).
+- **Zero-shot evaluated 39/41 participants**: PIDs 383 and 427 failed with `Exceeded maximum retries (3) for output validation` due to invalid control characters in LLM JSON output. This was fixed in `tolerant_json_fixups()` by adding step 5 (control char escaping).
 - **Few-shot evaluated 0/41 participants**: every participant failed with missing HuggingFace deps (`torch`), because the run used `EMBEDDING_BACKEND=huggingface` without installing `--extra hf`.
 
 **What we can still learn from it** (debugging only):

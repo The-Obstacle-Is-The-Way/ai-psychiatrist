@@ -227,9 +227,12 @@ data = json_repair.loads(raw_text)
 - [x] Fixed test that expected old silent fallback behavior
 - [x] `make ci` passes (ruff, mypy, pytest, coverage)
 
+### Post-Resolution Fix (2026-01-04)
+- [x] Added control character sanitization to `tolerant_json_fixups()` - fixes "Invalid control character" errors from Run 10 (PIDs 383, 427)
+
 ### Still Recommended (Future)
-- [ ] Increase `max_result_retries` to at least 5
-- [ ] Evaluate `json-repair` library integration
+- [ ] Consider increasing `PYDANTIC_AI_RETRIES` to 5 (configurable via env var)
+- [ ] Evaluate `json-repair` library integration (more battle-tested than our custom fixups)
 - [ ] Evaluate `instructor` library for self-correcting structured output
 - [ ] Add retry telemetry metrics
 

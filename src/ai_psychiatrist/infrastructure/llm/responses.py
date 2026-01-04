@@ -272,6 +272,59 @@ def parse_llm_json(text: str) -> dict[str, Any]:
             raise json_error from python_error
 
 
+def _escape_control_chars_in_strings(text: str) -> str:
+    """Escape unescaped control characters inside JSON string values.
+
+    Control characters (0x00-0x1F except \t, \n, \r which we convert to escapes)
+    cause "Invalid control character" JSON parse errors. This pass escapes them
+    inside string literals only, preserving structural whitespace outside strings.
+    """
+    out: list[str] = []
+    in_string = False
+    escaped = False
+
+    for ch in text:
+        if not in_string:
+            out.append(ch)
+            if ch == '"':
+                in_string = True
+            continue
+
+        # Inside a string literal
+        if escaped:
+            out.append(ch)
+            escaped = False
+            continue
+
+        if ch == "\\":
+            out.append(ch)
+            escaped = True
+            continue
+
+        if ch == '"':
+            out.append(ch)
+            in_string = False
+            continue
+
+        # Check for control characters (0x00-0x1F)
+        code = ord(ch)
+        if code < 0x20:
+            # Convert common whitespace to JSON escapes
+            if ch == "\t":
+                out.append("\\t")
+            elif ch == "\n":
+                out.append("\\n")
+            elif ch == "\r":
+                out.append("\\r")
+            else:
+                # Other control chars: use Unicode escape
+                out.append(f"\\u{code:04x}")
+        else:
+            out.append(ch)
+
+    return "".join(out)
+
+
 def tolerant_json_fixups(text: str) -> str:
     """Apply tolerant fixups to common LLM JSON mistakes.
 
@@ -280,8 +333,10 @@ def tolerant_json_fixups(text: str) -> str:
     2. Zero-width spaces → removed
     3. Missing commas between object entries → inserted
     4. Unescaped quotes inside strings → escaped
-    5. Stray string fragments → joined
-    6. Trailing commas before } or ] → removed
+    5. Control characters in strings → escaped (fixes "Invalid control character")
+       NOTE: Must run AFTER unescaped quote escaping so string boundaries are accurate
+    6. Stray string fragments → joined
+    7. Trailing commas before } or ] → removed
 
     Properties:
     - Idempotent: fixups(fixups(x)) == fixups(x)
@@ -324,13 +379,20 @@ def tolerant_json_fixups(text: str) -> str:
         applied_fixes.append("unescaped_quotes")
         fixed = escaped_quotes_fixed
 
-    # 5) Join stray comma-delimited string fragments in value position
+    # 5) Escape control characters in string values
+    # NOTE: Must run AFTER unescaped quote escaping so string boundaries are accurate
+    control_chars_fixed = _escape_control_chars_in_strings(fixed)
+    if control_chars_fixed != fixed:
+        applied_fixes.append("control_chars")
+        fixed = control_chars_fixed
+
+    # 6) Join stray comma-delimited string fragments in value position
     joined_fragments_fixed = _join_stray_string_fragments(fixed)
     if joined_fragments_fixed != fixed:
         applied_fixes.append("string_fragments")
         fixed = joined_fragments_fixed
 
-    # 6) Remove trailing commas before } or ]
+    # 7) Remove trailing commas before } or ]
     trailing_commas_fixed = _TRAILING_COMMA_RE.sub(r"\1", fixed)
     if trailing_commas_fixed != fixed:
         applied_fixes.append("trailing_commas")
