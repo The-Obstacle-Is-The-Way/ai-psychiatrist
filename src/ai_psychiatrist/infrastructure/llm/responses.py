@@ -10,6 +10,7 @@ import ast
 import hashlib
 import json
 import re
+import warnings
 from typing import Any, Protocol, runtime_checkable
 
 import json_repair
@@ -253,7 +254,9 @@ def parse_llm_json(text: str) -> dict[str, Any]:
         # Step 3: Try Python literal parsing (handles True/False/None)
         pythonish = _replace_json_literals_for_python(fixed)
         try:
-            result = ast.literal_eval(pythonish)
+            with warnings.catch_warnings():
+                warnings.simplefilter("ignore", SyntaxWarning)
+                result = ast.literal_eval(pythonish)
             if not isinstance(result, dict):
                 raise json.JSONDecodeError("Expected JSON object", text, 0)
 

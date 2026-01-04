@@ -569,12 +569,15 @@ class QuantitativeAssessmentAgent:
 
         ⚠️ CRITICAL: NO SILENT FALLBACKS
 
-        This function MUST raise on failure. Returning empty dict {} on failure
-        would violate mode isolation between zero-shot and few-shot:
+        This function MUST raise on parse/schema failures. Returning empty dict {}
+        on failure would violate mode isolation between zero-shot and few-shot:
 
         - Few-shot + empty evidence → empty references → functionally zero-shot
         - This corrupts research results without indication
         - Published comparisons between modes become invalid
+
+        Evidence grounding failures (all extracted quotes rejected) are recorded via the
+        failure registry and may be configured to raise.
 
         See: docs/_bugs/ANALYSIS-026-JSON-PARSING-ARCHITECTURE-AUDIT.md
 
@@ -633,6 +636,9 @@ class QuantitativeAssessmentAgent:
             )
 
             if stats.validated_count == 0 and stats.extracted_count > 0:
+                import hashlib  # noqa: PLC0415
+
+                transcript_hash = hashlib.sha256(transcript_text.encode("utf-8")).hexdigest()[:12]
                 message = (
                     "LLM returned evidence quotes but none could be grounded in the transcript."
                 )
@@ -645,6 +651,8 @@ class QuantitativeAssessmentAgent:
                     mode=self._mode.value,
                     extracted_count=stats.extracted_count,
                     validation_mode=self._settings.evidence_quote_validation_mode,
+                    transcript_hash=transcript_hash,
+                    transcript_len=len(transcript_text),
                 )
                 if self._settings.evidence_quote_fail_on_all_rejected:
                     raise EvidenceGroundingError(message)
