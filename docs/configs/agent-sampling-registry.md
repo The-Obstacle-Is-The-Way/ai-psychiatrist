@@ -1,8 +1,8 @@
 # Agent Sampling Parameter Registry
 
 **Purpose**: Single Source of Truth (SSOT) for all agent sampling parameters.
-**Last Updated**: 2026-01-01
-**Related**: [Configuration Reference](configuration.md) | [GitHub Issue #46](https://github.com/The-Obstacle-Is-The-Way/ai-psychiatrist/issues/46)
+**Last Updated**: 2026-01-04
+**Related**: [Configuration Reference](configuration.md) | [GitHub Issue #46](https://github.com/The-Obstacle-Is-The-Way/ai-psychiatrist/issues/46) | [BUG-027](../_archive/bugs/BUG-027_CONSISTENCY_TEMPERATURE_OPTIMIZATION.md)
 
 ---
 
@@ -56,6 +56,45 @@ That's it.
 | **Meta-Review** | 0.0 | — | — | Classification (severity 0-4) |
 
 **Note on "—"**: Don't set these. At temp=0 they're irrelevant (greedy decoding), and best practice is "use temperature only."
+
+---
+
+## Consistency Sampling (Spec 050)
+
+Multi-sample scoring for agreement-based confidence signals.
+
+### Why Consistency Needs Non-Zero Temperature
+
+| Mode | Temperature | Rationale |
+|------|-------------|-----------|
+| **Primary inference** | 0.0 | Deterministic, reproducible scores |
+| **Consistency sampling** | 0.2 | Needs variance to measure agreement |
+
+At `temp=0.0`, all N consistency samples would be identical (greedy decoding). You need `temp>0` to generate diverse reasoning paths for self-consistency signals.
+
+### Temperature Selection (BUG-027)
+
+| Value | Use Case | Research Basis |
+|-------|----------|----------------|
+| **0.0** | Primary inference | Med-PaLM, clinical best practice |
+| **0.2** | Consistency sampling | Clinical studies define "low" threshold |
+| **0.3+** | Not recommended | Performance becomes "unpredictable" |
+
+**Research Evidence:**
+- [How Model Size, Temperature, and Prompt Style Affect LLM-Human Assessment (arXiv 2509.19329)](https://arxiv.org/html/2509.19329) - Defines 0.2 as "low"
+- [GPT-4 Clinical Depression Assessment (arXiv 2501.00199)](https://arxiv.org/abs/2501.00199) - Notes unpredictability at ≥0.3
+
+### Environment Variables
+
+```bash
+# Primary inference: temp=0 (deterministic)
+MODEL_TEMPERATURE=0.0
+
+# Consistency sampling: temp=0.2 (low-variance for clinical)
+CONSISTENCY_ENABLED=true
+CONSISTENCY_N_SAMPLES=5
+CONSISTENCY_TEMPERATURE=0.2  # BUG-027: updated from 0.3
+```
 
 ---
 
