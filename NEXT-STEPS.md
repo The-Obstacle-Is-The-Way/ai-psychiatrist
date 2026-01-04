@@ -1,7 +1,7 @@
 # Next Steps
 
-**Status**: Ready for Run 10 (Spec 048–051 confidence suite)
-**Last Updated**: 2026-01-03
+**Status**: Ready for Run 11 (post Run 10 fixes)
+**Last Updated**: 2026-01-04
 
 ---
 
@@ -73,7 +73,28 @@ The paper's reference implementation (`_reference/ai_psychiatrist/`) demonstrate
 
 ---
 
-## 2. Configuration Summary
+## 2. Run 10 Postmortem (Confidence Suite Attempt) ⚠️ INVALID
+
+**Log**: `data/outputs/run10_confidence_suite_20260103_111959.log`
+**Output**: `data/outputs/both_paper-test_20260103_182316.json`
+**Run ID**: `3186a50d` (`git_dirty=true`)
+
+**What this run was trying to do**: emit the full confidence suite signals (Specs 048–051) and then evaluate AURC/AUGRC deltas.
+
+**Why it is not a valid comparison point**:
+
+- **Zero-shot evaluated 39/41 participants**: PIDs 383 and 427 failed with `Exceeded maximum retries (3) for output validation` (pre-ANALYSIS-026 JSON hardening).
+- **Few-shot evaluated 0/41 participants**: every participant failed with missing HuggingFace deps (`torch`), because the run used `EMBEDDING_BACKEND=huggingface` without installing `--extra hf`.
+
+**What we can still learn from it** (debugging only):
+- The run artifact contains the new `item_signals` keys (`verbalized_confidence`, `token_*`, `consistency_*`), so the instrumentation path works.
+- Use it only as a “signals present” smoke test; do not interpret AURC/MAE deltas from this run.
+
+**Next**: Run 11 is the first run that can cleanly evaluate the confidence suite end-to-end.
+
+---
+
+## 3. Configuration Summary
 
 All features are **gated by `.env`**. Copy `.env.example` to `.env` before running.
 
@@ -94,7 +115,7 @@ Code defaults exist for testing and fallback only. They are NOT recommended for 
 
 ---
 
-## 3. Spec 046 Implementation Status
+## 4. Spec 046 Implementation Status
 
 **Status**: ✅ IMPLEMENTED AND TESTED (2026-01-03)
 
@@ -109,11 +130,11 @@ Code defaults exist for testing and fallback only. They are NOT recommended for 
 
 ---
 
-## 4. Future Work (If Pursuing AUGRC <0.020)
+## 5. Future Work (If Pursuing AUGRC <0.020)
 
 Specs 048–051 are now implemented. The next step is to run a new reproduction that emits the new per-item signals and then evaluate AURC/AUGRC across confidence variants.
 
-### What Run 10 is testing
+### What Run 11 is testing
 
 | Spec | Capability | Where it shows up |
 |------|------------|-------------------|
@@ -122,10 +143,13 @@ Specs 048–051 are now implemented. The next step is to run a new reproduction 
 | 050 | Consistency-based confidence (multi-sample) | `item_signals[*]["consistency_*"]` (requires consistency enabled) |
 | 051 | Token-level CSFs from logprobs | `item_signals[*]["token_msp|token_pe|token_energy"]` (backend-dependent) |
 
-### Run 10 checklist (don’t skip)
+### Run 11 checklist (don’t skip)
 
 1. Preflight: confirm the validated configuration is active
    - `cp .env.example .env` (if needed)
+   - If `EMBEDDING_BACKEND=huggingface`: install deps + verify they load (this was the Run 10 failure mode):
+     - `make dev-hf`
+     - `uv run python -c "import torch; print(torch.__version__)"`
    - Confirm transcripts exist: `ls -d data/transcripts_participant_only/*_P | wc -l`
    - `uv run python scripts/reproduce_results.py --split paper-test --dry-run`
    - Confirm the header shows:
@@ -162,12 +186,12 @@ Specs 048–051 are now implemented. The next step is to run a new reproduction 
 3. Run in tmux
 
    ```bash
-   tmux new -s run10
+   tmux new -s run11
    uv run python scripts/reproduce_results.py \
      --split paper-test \
      --consistency-samples 5 \
      --consistency-temperature 0.3 \
-     2>&1 | tee data/outputs/run10_confidence_suite_$(date +%Y%m%d_%H%M%S).log
+     2>&1 | tee data/outputs/run11_confidence_suite_$(date +%Y%m%d_%H%M%S).log
    ```
 
 4. Evaluate selective prediction (compare confidence variants)
@@ -176,27 +200,27 @@ Specs 048–051 are now implemented. The next step is to run a new reproduction 
 
    ```bash
    uv run python scripts/evaluate_selective_prediction.py --input <both_run.json> --mode few_shot --confidence llm
-	   uv run python scripts/evaluate_selective_prediction.py --input <both_run.json> --mode few_shot --confidence retrieval_similarity_mean
-	   uv run python scripts/evaluate_selective_prediction.py --input <both_run.json> --mode few_shot --confidence verbalized
-	   uv run python scripts/evaluate_selective_prediction.py --input <both_run.json> --mode few_shot --confidence hybrid_verbalized
-	   uv run python scripts/evaluate_selective_prediction.py --input <both_run.json> --mode few_shot --confidence consistency
-	   uv run python scripts/evaluate_selective_prediction.py --input <both_run.json> --mode few_shot --confidence hybrid_consistency
-	   ```
+    uv run python scripts/evaluate_selective_prediction.py --input <both_run.json> --mode few_shot --confidence retrieval_similarity_mean
+    uv run python scripts/evaluate_selective_prediction.py --input <both_run.json> --mode few_shot --confidence verbalized
+    uv run python scripts/evaluate_selective_prediction.py --input <both_run.json> --mode few_shot --confidence hybrid_verbalized
+    uv run python scripts/evaluate_selective_prediction.py --input <both_run.json> --mode few_shot --confidence consistency
+    uv run python scripts/evaluate_selective_prediction.py --input <both_run.json> --mode few_shot --confidence hybrid_consistency
+    ```
 
-	   Notes:
-	   - `token_msp|token_pe|token_energy` variants only work when the backend returns token logprobs; if the run artifact doesn’t include `item_signals[*]["token_*"]`, those variants will fail fast (by design).
-	   - If `token_*` keys are present, also evaluate:
+   Notes:
+   - `token_msp|token_pe|token_energy` variants only work when the backend returns token logprobs; if the run artifact doesn’t include `item_signals[*][\"token_*\"]`, those variants will fail fast (by design).
+   - If `token_*` keys are present, also evaluate:
 
-	     ```bash
-	     uv run python scripts/evaluate_selective_prediction.py --input <both_run.json> --mode few_shot --confidence token_msp
-	     uv run python scripts/evaluate_selective_prediction.py --input <both_run.json> --mode few_shot --confidence token_pe
-	     uv run python scripts/evaluate_selective_prediction.py --input <both_run.json> --mode few_shot --confidence token_energy
-	     ```
-	   - For multi-signal calibration (Spec 049), train a calibrator on a training output and then re-evaluate using `--confidence calibrated`.
+     ```bash
+     uv run python scripts/evaluate_selective_prediction.py --input <both_run.json> --mode few_shot --confidence token_msp
+     uv run python scripts/evaluate_selective_prediction.py --input <both_run.json> --mode few_shot --confidence token_pe
+     uv run python scripts/evaluate_selective_prediction.py --input <both_run.json> --mode few_shot --confidence token_energy
+     ```
+   - For multi-signal calibration (Spec 049), train a calibrator on a training output and then re-evaluate using `--confidence calibrated`.
 
 ---
 
-## 5. Definition of Done
+## 6. Definition of Done
 
 | Milestone | Status |
 |-----------|--------|
@@ -204,7 +228,7 @@ Specs 048–051 are now implemented. The next step is to run a new reproduction 
 | Chunk-level scoring (Spec 35) | ✅ Implemented |
 | Participant-only preprocessing | ✅ Implemented |
 | Retrieval confidence signals (Spec 046) | ✅ Tested (+5.4% AURC) |
-| Confidence improvement suite (Specs 048–051) | ✅ Implemented (needs Run 10 eval) |
+| Confidence improvement suite (Specs 048–051) | ✅ Implemented (needs Run 11 eval) |
 | AUGRC < 0.020 target | ❌ Current best: 0.031 |
 
 ---
