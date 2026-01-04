@@ -11,9 +11,13 @@ from __future__ import annotations
 import math
 from collections.abc import Callable, Mapping
 from dataclasses import dataclass, field
-from typing import Any, TypeAlias
+from typing import Any, Final, TypeAlias
 
 CsfFunc: TypeAlias = Callable[[Mapping[str, Any]], float]
+
+_EVIDENCE_COUNT_CAP: Final[float] = 3.0
+_HYBRID_EVIDENCE_SIMILARITY_WEIGHTS: Final[tuple[float, float]] = (0.5, 0.5)
+_HYBRID_TRI_WEIGHTS: Final[tuple[float, float, float]] = (0.4, 0.3, 0.3)
 
 
 def _require_key(mapping: Mapping[str, Any], key: str) -> Any:
@@ -139,14 +143,15 @@ def csf_retrieval_similarity_max(item_signals: Mapping[str, Any]) -> float:
 @register_csf("hybrid_evidence_similarity")
 def csf_hybrid_evidence_similarity(item_signals: Mapping[str, Any]) -> float:
     llm_count = float(item_signals.get("llm_evidence_count", 0))
-    e = min(llm_count, 3.0) / 3.0
+    e = min(llm_count, _EVIDENCE_COUNT_CAP) / _EVIDENCE_COUNT_CAP
     e = max(0.0, min(1.0, e))
 
     s = _optional_float(item_signals, "retrieval_similarity_mean")
     s_val = float(s) if s is not None else 0.0
     s_val = max(0.0, min(1.0, s_val))
 
-    return 0.5 * e + 0.5 * s_val
+    e_w, s_w = _HYBRID_EVIDENCE_SIMILARITY_WEIGHTS
+    return e_w * e + s_w * s_val
 
 
 def _normalize_verbalized_confidence(v: int | None) -> float:
@@ -169,14 +174,15 @@ def csf_hybrid_verbalized(item_signals: Mapping[str, Any]) -> float:
     v = _normalize_verbalized_confidence(v_int)
 
     llm_count = float(item_signals.get("llm_evidence_count", 0))
-    e = min(llm_count, 3.0) / 3.0
+    e = min(llm_count, _EVIDENCE_COUNT_CAP) / _EVIDENCE_COUNT_CAP
     e = max(0.0, min(1.0, e))
 
     s = _optional_float(item_signals, "retrieval_similarity_mean")
     s_val = float(s) if s is not None else 0.0
     s_val = max(0.0, min(1.0, s_val))
 
-    conf = 0.4 * v + 0.3 * e + 0.3 * s_val
+    v_w, e_w, s_w = _HYBRID_TRI_WEIGHTS
+    conf = v_w * v + e_w * e + s_w * s_val
     return max(0.0, min(1.0, conf))
 
 
@@ -231,12 +237,13 @@ def csf_hybrid_consistency(item_signals: Mapping[str, Any]) -> float:
     c_val = max(0.0, min(1.0, float(c)))
 
     llm_count = float(item_signals.get("llm_evidence_count", 0))
-    e = min(llm_count, 3.0) / 3.0
+    e = min(llm_count, _EVIDENCE_COUNT_CAP) / _EVIDENCE_COUNT_CAP
     e = max(0.0, min(1.0, e))
 
     s = _optional_float(item_signals, "retrieval_similarity_mean")
     s_val = float(s) if s is not None else 0.0
     s_val = max(0.0, min(1.0, s_val))
 
-    conf = 0.4 * c_val + 0.3 * e + 0.3 * s_val
+    c_w, e_w, s_w = _HYBRID_TRI_WEIGHTS
+    conf = c_w * c_val + e_w * e + s_w * s_val
     return max(0.0, min(1.0, conf))

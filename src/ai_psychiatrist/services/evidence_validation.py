@@ -7,12 +7,12 @@ of downstream retrieval and confidence signals.
 
 from __future__ import annotations
 
-import hashlib
 import re
 import unicodedata
 from dataclasses import dataclass
 
 from ai_psychiatrist.agents.prompts.quantitative import PHQ8_DOMAIN_KEYS
+from ai_psychiatrist.infrastructure.hashing import stable_text_hash
 from ai_psychiatrist.infrastructure.logging import get_logger
 
 try:
@@ -128,10 +128,6 @@ def validate_evidence_schema(obj: object) -> dict[str, list[str]]:
     return validated
 
 
-def _stable_hash(text: str) -> str:
-    return hashlib.sha256(text.encode("utf-8")).hexdigest()[:12]
-
-
 def normalize_for_quote_match(text: str) -> str:
     """Normalize text for conservative substring grounding checks (Spec 053)."""
     normalized = unicodedata.normalize("NFKC", text).translate(_SMART_QUOTES)
@@ -178,7 +174,7 @@ def validate_evidence_grounding(
         (validated_evidence, stats)
     """
     transcript_norm = normalize_for_quote_match(transcript_text)
-    transcript_hash = _stable_hash(transcript_text)
+    transcript_hash = stable_text_hash(transcript_text)
 
     validated: dict[str, list[str]] = {}
     rejected_by_domain: dict[str, int] = {}
@@ -210,7 +206,7 @@ def validate_evidence_grounding(
                     logger.warning(
                         "evidence_quote_rejected",
                         domain=domain,
-                        quote_hash=_stable_hash(quote),
+                        quote_hash=stable_text_hash(quote),
                         quote_len=len(quote),
                         transcript_hash=transcript_hash,
                         transcript_len=len(transcript_text),

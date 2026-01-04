@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-import hashlib
+from ai_psychiatrist.infrastructure.hashing import stable_text_hash
 
 PHQ8_ITEM_KEYS: tuple[str, ...] = (
     "PHQ8_NoInterest",
@@ -45,7 +45,7 @@ Return JSON only in this exact shape:
 
 def chunk_scoring_prompt_hash() -> str:
     """Return a stable short hash for the scorer prompt (Spec 35 protocol lock)."""
-    return hashlib.sha256(CHUNK_SCORING_PROMPT_TEMPLATE.encode("utf-8")).hexdigest()[:12]
+    return stable_text_hash(CHUNK_SCORING_PROMPT_TEMPLATE)
 
 
 def render_chunk_scoring_prompt(*, chunk_text: str) -> str:

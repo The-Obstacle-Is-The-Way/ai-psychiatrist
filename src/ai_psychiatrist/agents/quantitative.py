@@ -35,6 +35,7 @@ from ai_psychiatrist.config import (
 from ai_psychiatrist.domain.entities import PHQ8Assessment, Transcript
 from ai_psychiatrist.domain.enums import AssessmentMode, NAReason, PHQ8Item
 from ai_psychiatrist.domain.value_objects import ItemAssessment
+from ai_psychiatrist.infrastructure.hashing import stable_text_hash
 from ai_psychiatrist.infrastructure.llm.responses import parse_llm_json
 from ai_psychiatrist.infrastructure.logging import get_logger
 from ai_psychiatrist.infrastructure.observability import (
@@ -615,13 +616,11 @@ class QuantitativeAssessmentAgent:
         try:
             evidence = validate_evidence_schema(obj)
         except EvidenceSchemaError as exc:
-            import hashlib  # noqa: PLC0415
-
             logger.error(
                 "evidence_schema_validation_failed",
                 component="evidence_extraction",
                 violations=exc.violations,
-                response_hash=hashlib.sha256(clean.encode("utf-8")).hexdigest()[:12],
+                response_hash=stable_text_hash(clean),
                 response_len=len(clean),
             )
             raise
@@ -636,9 +635,7 @@ class QuantitativeAssessmentAgent:
             )
 
             if stats.validated_count == 0 and stats.extracted_count > 0:
-                import hashlib  # noqa: PLC0415
-
-                transcript_hash = hashlib.sha256(transcript_text.encode("utf-8")).hexdigest()[:12]
+                transcript_hash = stable_text_hash(transcript_text)
                 message = (
                     "LLM returned evidence quotes but none could be grounded in the transcript."
                 )

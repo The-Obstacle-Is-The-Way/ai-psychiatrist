@@ -6,12 +6,14 @@ Implements Spec 25: Risk-Coverage curves, AURC, AUGRC, and related metrics.
 from __future__ import annotations
 
 from dataclasses import dataclass
-from typing import TYPE_CHECKING, Literal
+from typing import TYPE_CHECKING, Final, Literal
 
 import numpy as np
 
 if TYPE_CHECKING:
     from collections.abc import Callable, Sequence
+
+_FLOAT_EPSILON: Final[float] = 1e-10
 
 
 @dataclass(frozen=True, slots=True)
@@ -386,7 +388,6 @@ def _compute_dominant_points(coverages: list[float], risks: list[float]) -> list
 
     # Monotone Chain algorithm for lower hull - track original indices
     # BUG-001 Fix: Use epsilon for robustness against float precision issues.
-    epsilon = 1e-10
     lower: list[tuple[int, tuple[float, float]]] = []
     for idx, point in indexed_points:
         while len(lower) >= 2:
@@ -394,7 +395,7 @@ def _compute_dominant_points(coverages: list[float], risks: list[float]) -> list
             # Remove point if it creates a clockwise turn (convex) or is collinear.
             # Standard Monotone Chain for lower hull keeps counter-clockwise turns (cp > 0).
             # Robust check: cp <= epsilon implies clockwise or collinear.
-            if cp <= epsilon:
+            if cp <= _FLOAT_EPSILON:
                 lower.pop()
             else:
                 break

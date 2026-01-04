@@ -13,7 +13,6 @@ This format replaces pickle for security (no arbitrary code execution).
 
 from __future__ import annotations
 
-import hashlib
 import json
 from dataclasses import dataclass
 from pathlib import Path  # noqa: TC003 - used at runtime in EmbeddingPaths dataclass
@@ -28,6 +27,7 @@ from ai_psychiatrist.domain.exceptions import (
     EmbeddingArtifactMismatchError,
     EmbeddingDimensionMismatchError,
 )
+from ai_psychiatrist.infrastructure.hashing import stable_bytes_hash, stable_text_hash
 from ai_psychiatrist.infrastructure.llm.model_aliases import resolve_model_name
 from ai_psychiatrist.infrastructure.logging import get_logger
 from ai_psychiatrist.services.chunk_scoring import PHQ8_ITEM_KEY_SET, chunk_scoring_prompt_hash
@@ -187,7 +187,7 @@ class ReferenceStore:
         if not csv_path.exists():
             return None
 
-        return hashlib.sha256(csv_path.read_bytes()).hexdigest()[:12]
+        return stable_bytes_hash(csv_path.read_bytes())
 
     def _calculate_split_ids_hash(self, split: str) -> str | None:
         """Calculate hash of the sorted participant IDs in the split (semantic provenance)."""
@@ -207,7 +207,7 @@ class ReferenceStore:
                 return None
             ids = sorted(df["Participant_ID"].astype(int).tolist())
             ids_str = ",".join(map(str, ids))
-            return hashlib.sha256(ids_str.encode("utf-8")).hexdigest()[:12]
+            return stable_text_hash(ids_str)
         except (ValueError, OSError, pd.errors.ParserError, pd.errors.EmptyDataError):
             return None
 
@@ -222,7 +222,7 @@ class ReferenceStore:
                 # JSON keys are participant IDs (str)
                 ids = sorted(int(k) for k in data)
                 ids_str = ",".join(map(str, ids))
-                return hashlib.sha256(ids_str.encode("utf-8")).hexdigest()[:12]
+                return stable_text_hash(ids_str)
         except (TypeError, ValueError, OSError):
             return None
 

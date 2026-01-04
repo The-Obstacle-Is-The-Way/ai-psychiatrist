@@ -16,7 +16,7 @@ import uuid
 from dataclasses import asdict, dataclass
 from datetime import datetime
 from pathlib import Path
-from typing import TYPE_CHECKING, Literal
+from typing import TYPE_CHECKING, Final, Literal
 
 import yaml
 
@@ -26,6 +26,10 @@ if TYPE_CHECKING:
     from ai_psychiatrist.config import Settings
 
 logger = get_logger(__name__)
+
+_RUN_ID_PREFIX_LENGTH: Final[int] = 8
+_CHECKSUM_PREFIX_LENGTH: Final[int] = 16
+_CHECKSUM_READ_CHUNK_SIZE: Final[int] = 8192
 
 
 def get_git_info() -> tuple[str, bool]:
@@ -60,7 +64,7 @@ def get_git_info() -> tuple[str, bool]:
 
 
 def compute_file_checksum(path: Path) -> str | None:
-    """Compute SHA256 checksum (first 16 chars).
+    """Compute SHA256 checksum (short prefix).
 
     Returns:
         Checksum string or None if file doesn't exist or is not a regular file.
@@ -72,9 +76,9 @@ def compute_file_checksum(path: Path) -> str | None:
 
     sha256 = hashlib.sha256()
     with path.open("rb") as f:
-        for chunk in iter(lambda: f.read(8192), b""):
+        for chunk in iter(lambda: f.read(_CHECKSUM_READ_CHUNK_SIZE), b""):
             sha256.update(chunk)
-    return sha256.hexdigest()[:16]
+    return sha256.hexdigest()[:_CHECKSUM_PREFIX_LENGTH]
 
 
 def generate_output_filename(
@@ -112,7 +116,7 @@ class RunMetadata:
         """Capture current run metadata."""
         git_commit, git_dirty = get_git_info()
         return cls(
-            run_id=str(uuid.uuid4())[:8],
+            run_id=str(uuid.uuid4())[:_RUN_ID_PREFIX_LENGTH],
             timestamp=datetime.now().isoformat(),
             git_commit=git_commit,
             git_dirty=git_dirty,

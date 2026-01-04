@@ -2,7 +2,6 @@
 
 from __future__ import annotations
 
-import hashlib
 import json
 import re
 
@@ -15,6 +14,7 @@ from ai_psychiatrist.agents.output_models import (
     QualitativeOutput,
     QuantitativeOutput,
 )
+from ai_psychiatrist.infrastructure.hashing import stable_text_hash
 from ai_psychiatrist.infrastructure.llm.responses import (
     extract_score_from_text,
     extract_xml_tags,
@@ -28,10 +28,6 @@ logger = get_logger(__name__)
 
 _DEFAULT_QUANT_REASON = "Auto-filled: missing reason"
 _DEFAULT_QUANT_EVIDENCE = "No relevant evidence found"
-
-
-def _stable_hash(text: str) -> str:
-    return hashlib.sha256(text.encode("utf-8")).hexdigest()[:12]
 
 
 def _summarize_validation_error(err: ValidationError) -> dict[str, object]:
@@ -202,7 +198,7 @@ def extract_quantitative(text: str) -> QuantitativeOutput:
             error_type=type(e).__name__,
             lineno=e.lineno,
             colno=e.colno,
-            json_hash=_stable_hash(json_str),
+            json_hash=stable_text_hash(json_str),
             json_length=len(json_str),
         )
         raise ModelRetry(
@@ -216,7 +212,7 @@ def extract_quantitative(text: str) -> QuantitativeOutput:
             TelemetryCategory.PYDANTIC_RETRY,
             extractor="extract_quantitative",
             reason="schema_validation",
-            json_hash=_stable_hash(json_str),
+            json_hash=stable_text_hash(json_str),
             json_length=len(json_str),
             **telemetry_context,
         )
@@ -243,7 +239,7 @@ def extract_judge_metric(text: str) -> JudgeMetricOutput:
                 extractor="extract_judge_metric",
                 reason="json_parse" if isinstance(e, json.JSONDecodeError) else "schema_validation",
                 error_type=type(e).__name__,
-                json_hash=_stable_hash(json_str),
+                json_hash=stable_text_hash(json_str),
                 json_length=len(json_str),
             )
             raise ModelRetry(f"Invalid judge output JSON: {e}") from e
@@ -291,7 +287,7 @@ def extract_meta_review(text: str) -> MetaReviewOutput:
                 extractor="extract_meta_review",
                 reason="json_parse" if isinstance(e, json.JSONDecodeError) else "schema_validation",
                 error_type=type(e).__name__,
-                json_hash=_stable_hash(json_str),
+                json_hash=stable_text_hash(json_str),
                 json_length=len(json_str),
             )
             raise ModelRetry(f"Invalid meta-review output JSON: {e}") from e

@@ -11,7 +11,7 @@ import json
 from dataclasses import dataclass, field
 from datetime import UTC, datetime
 from enum import Enum
-from typing import TYPE_CHECKING, Any
+from typing import TYPE_CHECKING, Any, Final
 
 from ai_psychiatrist.infrastructure.logging import get_logger
 
@@ -19,6 +19,10 @@ if TYPE_CHECKING:
     from pathlib import Path
 
 logger = get_logger(__name__)
+
+_SUMMARY_WIDTH: Final[int] = 60
+_TOP_N_PARTICIPANTS_IN_SUMMARY: Final[int] = 10
+_TOP_N_PARTICIPANTS_IN_PRINT: Final[int] = 5
 
 
 class FailureCategory(str, Enum):
@@ -164,7 +168,9 @@ class FailureRegistry:
             "total_failures": len(self.failures),
             "by_category": dict(sorted(by_category.items(), key=lambda x: -x[1])),
             "by_severity": by_severity,
-            "by_participant": dict(sorted(by_participant.items(), key=lambda x: -x[1])[:10]),
+            "by_participant": dict(
+                sorted(by_participant.items(), key=lambda x: -x[1])[:_TOP_N_PARTICIPANTS_IN_SUMMARY]
+            ),
             "by_stage": by_stage,
             "fatal_count": by_severity.get(FailureSeverity.FATAL.value, 0),
             "error_count": by_severity.get(FailureSeverity.ERROR.value, 0),
@@ -183,9 +189,9 @@ class FailureRegistry:
     def print_summary(self) -> None:
         summary = self.summary()
 
-        print("\n" + "=" * 60)
+        print("\n" + "=" * _SUMMARY_WIDTH)
         print("FAILURE SUMMARY")
-        print("=" * 60)
+        print("=" * _SUMMARY_WIDTH)
         print(f"Run ID: {summary['run_id']}")
         print(f"Total failures: {summary['total_failures']}")
         print(f"  Fatal: {summary['fatal_count']}")
@@ -206,10 +212,12 @@ class FailureRegistry:
         by_participant = summary.get("by_participant", {})
         if by_participant:
             print("\nMost Failing Participants:")
-            for participant_id, count in list(by_participant.items())[:5]:
+            for participant_id, count in list(by_participant.items())[
+                :_TOP_N_PARTICIPANTS_IN_PRINT
+            ]:
                 print(f"  Participant {participant_id}: {count} failures")
 
-        print("=" * 60 + "\n")
+        print("=" * _SUMMARY_WIDTH + "\n")
 
 
 _registry_var: contextvars.ContextVar[FailureRegistry | None] = contextvars.ContextVar(

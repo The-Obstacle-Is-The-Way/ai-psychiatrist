@@ -7,19 +7,21 @@ like markdown code blocks, smart quotes, and malformed JSON.
 from __future__ import annotations
 
 import ast
-import hashlib
 import json
 import re
 import warnings
-from typing import Any, Protocol, runtime_checkable
+from typing import Any, Final, Protocol, runtime_checkable
 
 import json_repair
 
 from ai_psychiatrist.domain.exceptions import LLMResponseParseError
+from ai_psychiatrist.infrastructure.hashing import stable_text_hash
 from ai_psychiatrist.infrastructure.logging import get_logger
 from ai_psychiatrist.infrastructure.telemetry import TelemetryCategory, record_telemetry
 
 logger = get_logger(__name__)
+
+_MAX_STRAY_STRING_FRAGMENT_JOIN_PASSES: Final[int] = 50
 
 
 _MISSING_COMMA_AFTER_PRIMITIVE_RE = re.compile(r'("|\d|true|false|null)\s*\n\s*"([^"]+)"\s*:')
@@ -152,17 +154,12 @@ def _join_stray_string_fragments(text: str) -> str:
         return f"{prefix}{first[:-1]}\\n{second[1:]}"
 
     fixed = text
-    for _ in range(50):
+    for _ in range(_MAX_STRAY_STRING_FRAGMENT_JOIN_PASSES):
         merged = _STRAY_STRING_FRAGMENT_RE.sub(_join, fixed)
         if merged == fixed:
             break
         fixed = merged
     return fixed
-
-
-def _stable_text_hash(text: str) -> str:
-    """Return a short, stable hash for logging (no raw text)."""
-    return hashlib.sha256(text.encode("utf-8")).hexdigest()[:12]
 
 
 def _replace_json_literals_for_python(text: str) -> str:
@@ -263,11 +260,11 @@ def parse_llm_json(text: str) -> dict[str, Any]:
             logger.debug(
                 "Parsed LLM JSON via Python literal fallback",
                 component="json_parser",
-                before_hash=_stable_text_hash(text),
+                before_hash=stable_text_hash(text),
             )
             record_telemetry(
                 TelemetryCategory.JSON_PYTHON_LITERAL_FALLBACK,
-                before_hash=_stable_text_hash(text),
+                before_hash=stable_text_hash(text),
                 text_length=len(text),
             )
             return result
@@ -283,12 +280,12 @@ def parse_llm_json(text: str) -> dict[str, Any]:
             logger.info(
                 "json-repair recovered malformed LLM JSON",
                 component="json_parser",
-                text_hash=_stable_text_hash(text),
+                text_hash=stable_text_hash(text),
                 text_length=len(text),
             )
             record_telemetry(
                 TelemetryCategory.JSON_REPAIR_FALLBACK,
-                text_hash=_stable_text_hash(text),
+                text_hash=stable_text_hash(text),
                 text_length=len(text),
             )
             return result
@@ -305,7 +302,7 @@ def parse_llm_json(text: str) -> dict[str, Any]:
                 repair_error=str(repair_error),
                 repair_error_type=type(repair_error).__name__,
                 text_length=len(text),
-                text_hash=_stable_text_hash(text),
+                text_hash=stable_text_hash(text),
             )
             raise json_error from repair_error
 
@@ -443,14 +440,14 @@ def tolerant_json_fixups(text: str) -> str:
             applied_fixes=applied_fixes,
             before_length=len(text),
             after_length=len(fixed),
-            before_hash=_stable_text_hash(text),
-            after_hash=_stable_text_hash(fixed),
+            before_hash=stable_text_hash(text),
+            after_hash=stable_text_hash(fixed),
         )
         record_telemetry(
             TelemetryCategory.JSON_FIXUPS_APPLIED,
             fixes=applied_fixes,
-            before_hash=_stable_text_hash(text),
-            after_hash=_stable_text_hash(fixed),
+            before_hash=stable_text_hash(text),
+            after_hash=stable_text_hash(fixed),
             before_length=len(text),
             after_length=len(fixed),
         )
@@ -525,7 +522,7 @@ def extract_json_from_response(raw: str) -> dict[str, Any]:
             component="json_parser",
             error=str(e),
             text_length=len(text),
-            text_hash=_stable_text_hash(text),
+            text_hash=stable_text_hash(text),
         )
         raise LLMResponseParseError(raw, str(e)) from e
 

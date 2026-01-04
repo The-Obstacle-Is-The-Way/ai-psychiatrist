@@ -15,7 +15,7 @@ import json
 from dataclasses import dataclass, field
 from datetime import UTC, datetime
 from enum import Enum
-from typing import TYPE_CHECKING, Any
+from typing import TYPE_CHECKING, Any, Final
 
 from ai_psychiatrist.infrastructure.logging import get_logger
 
@@ -23,6 +23,10 @@ if TYPE_CHECKING:
     from pathlib import Path
 
 logger = get_logger(__name__)
+
+_SUMMARY_WIDTH: Final[int] = 60
+_DEFAULT_MAX_EVENTS: Final[int] = 5000
+_TOP_N_EXTRACTORS: Final[int] = 10
 
 
 class TelemetryCategory(str, Enum):
@@ -61,7 +65,7 @@ class TelemetryRegistry:
 
     run_id: str
     events: list[TelemetryEvent] = field(default_factory=list)
-    max_events: int = 5000
+    max_events: int = _DEFAULT_MAX_EVENTS
     dropped_events: int = 0
     _start_time: str = field(default_factory=lambda: datetime.now(UTC).isoformat())
 
@@ -110,9 +114,9 @@ class TelemetryRegistry:
 
     def print_summary(self) -> None:
         summary = self.summary()
-        print("\n" + "=" * 60)
+        print("\n" + "=" * _SUMMARY_WIDTH)
         print("TELEMETRY SUMMARY")
-        print("=" * 60)
+        print("=" * _SUMMARY_WIDTH)
         print(f"Run ID: {summary['run_id']}")
         print(f"Total events: {summary['total_events']}")
         if summary.get("dropped_events"):
@@ -125,9 +129,9 @@ class TelemetryRegistry:
         by_extractor = summary.get("by_extractor", {})
         if by_extractor:
             print("\nBy Extractor:")
-            for extractor, count in list(by_extractor.items())[:10]:
+            for extractor, count in list(by_extractor.items())[:_TOP_N_EXTRACTORS]:
                 print(f"  {extractor}: {count}")
-        print("=" * 60 + "\n")
+        print("=" * _SUMMARY_WIDTH + "\n")
 
 
 _registry_var: contextvars.ContextVar[TelemetryRegistry | None] = contextvars.ContextVar(
