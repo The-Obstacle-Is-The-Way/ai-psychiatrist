@@ -82,6 +82,7 @@ from ai_psychiatrist.infrastructure.observability import (
     init_failure_registry,
     record_failure,
 )
+from ai_psychiatrist.infrastructure.telemetry import get_telemetry_registry, init_telemetry_registry
 from ai_psychiatrist.services import EmbeddingService, ReferenceStore, TranscriptService
 from ai_psychiatrist.services.experiment_tracking import (
     ExperimentProvenance,
@@ -320,6 +321,25 @@ def classify_failure(
         context = {}
 
     return (category, severity, context)
+
+
+def init_run_observability(run_id: str) -> None:
+    """Initialize per-run observability registries (failures + telemetry)."""
+    init_failure_registry(run_id)
+    init_telemetry_registry(run_id)
+
+
+def finalize_run_observability(output_dir: Path) -> None:
+    """Persist and print observability artifacts at end of run."""
+    failure_registry = get_failure_registry()
+    failure_registry.print_summary()
+    failures_path = failure_registry.save(output_dir)
+    print(f"Failures saved to: {failures_path}")
+
+    telemetry_registry = get_telemetry_registry()
+    telemetry_registry.print_summary()
+    telemetry_path = telemetry_registry.save(output_dir)
+    print(f"Telemetry saved to: {telemetry_path}")
 
 
 async def evaluate_participant(
@@ -982,7 +1002,7 @@ async def main_async(args: argparse.Namespace) -> int:
 
     settings = get_settings()
     run_metadata = RunMetadata.capture(ollama_base_url=settings.ollama.base_url)
-    init_failure_registry(run_metadata.run_id)
+    init_run_observability(run_metadata.run_id)
     if run_metadata.git_dirty:
         logger.warning(
             "Running with uncommitted changes",
@@ -1099,10 +1119,7 @@ async def main_async(args: argparse.Namespace) -> int:
             consistency_temperature=consistency_temperature,
         )
 
-        failure_registry = get_failure_registry()
-        failure_registry.print_summary()
-        failures_path = failure_registry.save(data_settings.base_dir / "outputs")
-        print(f"Failures saved to: {failures_path}")
+        finalize_run_observability(data_settings.base_dir / "outputs")
 
     return 0
 

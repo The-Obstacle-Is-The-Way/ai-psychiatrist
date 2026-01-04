@@ -20,6 +20,14 @@ Implemented specs are distilled into canonical (non-archive) documentation under
 | **056** | [Failure Pattern Observability](../_archive/specs/spec-056-failure-pattern-observability.md) | [Error Handling](../developer/error-handling.md#failure-pattern-observability-spec-056), [Debugging](../rag/debugging.md#step-5-check-failure-registry-spec-056) |
 | **057** | [Embedding Dimension Strict Mode](../_archive/specs/spec-057-embedding-dimension-strict-mode.md) | [Artifact Generation](../rag/artifact-generation.md#dimension-invariants-spec-057), [Configuration](../configs/configuration-philosophy.md) |
 
+### JSON Reliability (Specs 058-060) - 2026-01-04
+
+| Spec | Title | Canonical Doc Location |
+|------|-------|------------------------|
+| **058** | [Increase PydanticAI Default Retries](../_archive/specs/spec-058-increase-pydantic-ai-retries.md) | [Configuration](../configs/configuration.md#pydantic-ai-settings), [JSON audit](../_bugs/ANALYSIS-026-JSON-PARSING-ARCHITECTURE-AUDIT.md) |
+| **059** | [json-repair Fallback](../_archive/specs/spec-059-json-repair-fallback.md) | [Evidence Extraction](../pipeline-internals/evidence-extraction.md), [JSON audit](../_bugs/ANALYSIS-026-JSON-PARSING-ARCHITECTURE-AUDIT.md) |
+| **060** | [Retry Telemetry Metrics](../_archive/specs/spec-060-retry-telemetry-metrics.md) | [Error Handling](../developer/error-handling.md#retry-telemetry-spec-060), [Debugging](../rag/debugging.md#step-5b-check-retry-telemetry-spec-060) |
+
 ### Other Implemented Specs
 
 - Quantitative severity bounds (BUG-045): [spec](../_archive/specs/spec-045-quantitative-severity-bounds.md) → [PHQ-8 docs](../clinical/phq8.md#severity-bounds-partial-assessments)

@@ -1,6 +1,7 @@
 # Spec 058: Increase PydanticAI Default Retries
 
-**Status**: Ready for Implementation
+**Status**: ✅ Implemented (2026-01-04)
+**Canonical Docs**: `docs/configs/configuration.md`, `docs/_bugs/ANALYSIS-026-JSON-PARSING-ARCHITECTURE-AUDIT.md`
 **Priority**: High
 **Risk**: Very Low
 **Effort**: Trivial
@@ -22,7 +23,7 @@ Increase the default `PYDANTIC_AI_RETRIES` from 3 to 5.
 
 ## Rationale
 
-From [ANALYSIS-026](../docs/_bugs/ANALYSIS-026-JSON-PARSING-ARCHITECTURE-AUDIT.md):
+From [ANALYSIS-026](../../_bugs/ANALYSIS-026-JSON-PARSING-ARCHITECTURE-AUDIT.md):
 > "3 retries is too few for complex structured output"
 
 5 retries provides:
@@ -55,9 +56,9 @@ Update `.env.example` to document the new default.
 
 ## Acceptance Criteria
 
-- [ ] Default retries changed from 3 to 5 in `config.py`
-- [ ] `.env.example` updated with comment about default
-- [ ] No test failures
+- [x] Default retries changed from 3 to 5 in `src/ai_psychiatrist/config.py`
+- [x] `.env.example` updated (default documented)
+- [x] `make ci` passes
 
 ---
 

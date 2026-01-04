@@ -1,6 +1,7 @@
 # Spec 059: json-repair Library as Last-Resort Fallback
 
-**Status**: Ready for Implementation
+**Status**: ✅ Implemented (2026-01-04)
+**Canonical Docs**: `docs/_bugs/ANALYSIS-026-JSON-PARSING-ARCHITECTURE-AUDIT.md`, `docs/pipeline-internals/evidence-extraction.md`
 **Priority**: Medium
 **Risk**: Low
 **Effort**: Low
@@ -44,8 +45,10 @@ From the [documentation](https://pypi.org/project/json-repair/):
 
 ```toml
 # pyproject.toml
-[project.dependencies]
-json-repair = ">=0.55.0"
+dependencies = [
+  # ...
+  "json-repair>=0.55.0",
+]
 ```
 
 ### 2. Update parse_llm_json()
@@ -53,11 +56,7 @@ json-repair = ">=0.55.0"
 ```python
 # src/ai_psychiatrist/infrastructure/llm/responses.py
 
-try:
-    import json_repair
-    _HAS_JSON_REPAIR = True
-except ImportError:
-    _HAS_JSON_REPAIR = False
+import json_repair
 
 def parse_llm_json(text: str) -> dict[str, Any]:
     """Canonical JSON parser with defense-in-depth fallbacks.
@@ -66,7 +65,7 @@ def parse_llm_json(text: str) -> dict[str, Any]:
     1. Apply tolerant_json_fixups() for smart quotes, control chars, etc.
     2. Try json.loads()
     3. If that fails, try ast.literal_eval() with Python literal conversion
-    4. If that fails AND json-repair is available, try json_repair.loads()
+    4. If that fails, try json_repair.loads() as last resort (Spec 059)
     5. RAISE on failure - never silently degrade
     """
     fixed = tolerant_json_fixups(text)
@@ -87,23 +86,16 @@ def parse_llm_json(text: str) -> dict[str, Any]:
         except (SyntaxError, ValueError):
             pass
 
-        # Step 3: Try json-repair as last resort
-        if _HAS_JSON_REPAIR:
-            try:
-                result = json_repair.loads(fixed)
-                if isinstance(result, dict):
-                    logger.info(
-                        "json-repair recovered malformed JSON",
-                        component="json_parser",
-                        text_hash=_stable_text_hash(text),
-                    )
-                    return result
-            except Exception as repair_error:
-                logger.warning(
-                    "json-repair fallback also failed",
-                    component="json_parser",
-                    repair_error=str(repair_error),
-                )
+        # Step 3: Try json-repair as last resort (Spec 059)
+        result = json_repair.loads(fixed)
+        if isinstance(result, dict):
+            # Observability only (Spec 060): record that the json-repair path was needed.
+            record_telemetry(
+                TelemetryCategory.JSON_REPAIR_FALLBACK,
+                text_hash=_stable_text_hash(text),
+                text_length=len(text),
+            )
+            return result
 
         # Step 4: Give up
         raise json_error
@@ -116,50 +108,29 @@ def parse_llm_json(text: str) -> dict[str, Any]:
    - It handles control characters (Run 10 fix)
    - json-repair only activates on failure
 
-2. **Optional import**: json-repair is optional. If not installed:
-   - Parse behavior is unchanged
-   - No import error
-   - Tests still pass
+2. **Required dependency**: `json-repair` is installed by default (not optional) so reproduction runs cannot silently degrade into per-participant failures due to missing repair tooling.
 
-3. **Logging**: We log when json-repair succeeds to track how often it's needed.
+3. **Telemetry (Spec 060)**: We record a privacy-safe telemetry event whenever the json-repair fallback is used. This avoids relying on brittle log scraping.
 
 ## Tests
 
-```python
-# tests/unit/infrastructure/llm/test_json_repair_fallback.py
-
-def test_json_repair_recovers_truncated_json():
-    """json-repair should recover truncated JSON."""
-    truncated = '{"score": 2, "reason": "incomplete'
-    result = parse_llm_json(truncated)
-    assert result["score"] == 2
-
-def test_json_repair_recovers_unquoted_keys():
-    """json-repair should recover unquoted keys."""
-    broken = '{score: 2, reason: "valid"}'
-    result = parse_llm_json(broken)
-    assert result["score"] == 2
-
-def test_json_repair_recovers_trailing_text():
-    """json-repair should recover JSON with trailing text."""
-    broken = '{"score": 2} I hope this helps!'
-    result = parse_llm_json(broken)
-    assert result["score"] == 2
-```
+Implemented as unit tests in:
+- `tests/unit/infrastructure/llm/test_tolerant_json_fixups.py` (truncated JSON, unquoted keys, trailing text, missing closing bracket, etc.)
+- `tests/unit/infrastructure/llm/test_responses.py` (integration coverage for canonical parser behavior)
 
 ## Acceptance Criteria
 
-- [ ] `json-repair>=0.55.0` added to dependencies
-- [ ] `parse_llm_json()` updated with json-repair fallback
-- [ ] Logging added for json-repair recovery events
-- [ ] Tests for fallback scenarios
-- [ ] All existing tests pass
+- [x] `json-repair>=0.55.0` added to dependencies
+- [x] `parse_llm_json()` updated with json-repair fallback
+- [x] Logging added for json-repair recovery events
+- [x] Unit tests for fallback scenarios
+- [x] `make ci` passes
 
 ---
 
 ## References
 
 - [json-repair on PyPI](https://pypi.org/project/json-repair/)
-- [GitHub: josdejong/jsonrepair](https://github.com/josdejong/jsonrepair)
+- [GitHub: mangiucugna/json_repair](https://github.com/mangiucugna/json_repair/)
 - [Tutorial on json_repair for LLM output](https://medium.com/@yanxingyang/tutorial-on-using-json-repair-in-python-easily-fix-invalid-json-returned-by-llm-8e43e6c01fa0)
 - ANALYSIS-026: JSON Parsing Architecture Audit

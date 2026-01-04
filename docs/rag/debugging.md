@@ -136,6 +136,26 @@ Use this to identify systematic issues (e.g., "participant 373 always fails on e
 
 ---
 
+## Step 5b: Check Retry Telemetry (Spec 060)
+
+Even when a run succeeds, the system can be “quietly brittle” (many retries, frequent JSON repair).
+
+After each run, check `data/outputs/telemetry_{run_id}.json`:
+
+```bash
+cat data/outputs/telemetry_19b42478.json | jq '.summary'
+```
+
+This captures:
+- PydanticAI retry triggers (`ModelRetry`) by extractor
+- JSON repair usage (`tolerant_json_fixups`, python-literal fallback, `json-repair`)
+
+If `dropped_events` is non-zero, the run hit the telemetry event cap (defaults to 5,000). Treat that as a sign of extreme brittleness.
+
+If these counts spike, treat it as a regression risk even if MAE/AUGRC look good.
+
+---
+
 ## Step 6: Diagnose Embedding Failures (Spec 055)
 
 If you see `EmbeddingValidationError`:

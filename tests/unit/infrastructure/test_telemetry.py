@@ -45,3 +45,14 @@ def test_parse_llm_json_emits_python_literal_telemetry() -> None:
     registry = get_telemetry_registry()
     categories = [event.category for event in registry.events]
     assert TelemetryCategory.JSON_PYTHON_LITERAL_FALLBACK in categories
+
+
+def test_registry_event_cap_tracks_dropped_events() -> None:
+    registry = TelemetryRegistry(run_id="test", max_events=2)
+    registry.record(TelemetryCategory.PYDANTIC_RETRY, extractor="extract_quantitative")
+    registry.record(TelemetryCategory.PYDANTIC_RETRY, extractor="extract_quantitative")
+    registry.record(TelemetryCategory.JSON_REPAIR_FALLBACK)
+
+    assert len(registry.events) == 2
+    assert registry.dropped_events == 1
+    assert registry.summary()["dropped_events"] == 1

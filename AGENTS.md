@@ -64,6 +64,7 @@ These are the “known-good” defaults from `.env.example`:
 | `EMBEDDING_MIN_REFERENCE_SIMILARITY` | `0.3` | Guardrail (Spec 33) |
 | `EMBEDDING_MAX_REFERENCE_CHARS_PER_ITEM` | `500` | Prompt budget guardrail |
 | `QUANTITATIVE_EVIDENCE_QUOTE_VALIDATION_ENABLED` | `true` | Prevent ungrounded quotes contaminating retrieval |
+| `PYDANTIC_AI_RETRIES` | `5` | Structured output retry budget (Spec 058) |
 
 ## Run Preflight (Don’t Skip)
 
@@ -139,6 +140,7 @@ rg -n '\"token_msp\"|\"token_pe\"|\"token_energy\"' data/outputs/both_*.json | h
 - **Chunk scores missing**: ensure `...chunk_scores.json` exists and `EMBEDDING_REFERENCE_SCORE_SOURCE=chunk`.
 - **Token CSFs missing**: backend didn’t return logprobs; skip token variants for that run.
 - **Evidence grounding rejects everything**: this is a loud failure to prevent silent corruption; fix prompts/parsing rather than disabling validation.
+- **Hidden brittleness (retries/repairs)**: check `data/outputs/telemetry_{run_id}.json` for retry/repair spikes (Spec 060).
 
 ## Pointers (SSOT)
 

@@ -103,13 +103,13 @@ def _find_answer_json(text: str, *, allow_unwrapped_object: bool) -> str | None:
     return None
 
 
-def _extract_answer_json(text: str) -> str:
+def _extract_answer_json(text: str, *, extractor: str) -> str:
     """Extract required JSON from <answer>...</answer> tags (preferred) or fallbacks."""
     json_str = _find_answer_json(text, allow_unwrapped_object=True)
     if json_str is None:
         record_telemetry(
             TelemetryCategory.PYDANTIC_RETRY,
-            extractor="_extract_answer_json",
+            extractor=extractor,
             reason="missing_structure",
         )
         raise ModelRetry(
@@ -190,7 +190,7 @@ def extract_quantitative(text: str) -> QuantitativeOutput:
     NO SILENT FALLBACKS - raises ModelRetry on parse failure.
     """
     try:
-        json_str = _extract_answer_json(text)
+        json_str = _extract_answer_json(text, extractor="extract_quantitative")
         # Use canonical parser - handles tolerant fixups and Python literal fallback
         data = parse_llm_json(json_str)
         return QuantitativeOutput.model_validate(_fill_missing_quantitative_fields(data))
@@ -241,9 +241,7 @@ def extract_judge_metric(text: str) -> JudgeMetricOutput:
             record_telemetry(
                 TelemetryCategory.PYDANTIC_RETRY,
                 extractor="extract_judge_metric",
-                reason="schema_validation"
-                if isinstance(e, (ValidationError, ValueError))
-                else "json_parse",
+                reason="json_parse" if isinstance(e, json.JSONDecodeError) else "schema_validation",
                 error_type=type(e).__name__,
                 json_hash=_stable_hash(json_str),
                 json_length=len(json_str),
@@ -291,9 +289,7 @@ def extract_meta_review(text: str) -> MetaReviewOutput:
             record_telemetry(
                 TelemetryCategory.PYDANTIC_RETRY,
                 extractor="extract_meta_review",
-                reason="schema_validation"
-                if isinstance(e, (ValidationError, ValueError))
-                else "json_parse",
+                reason="json_parse" if isinstance(e, json.JSONDecodeError) else "schema_validation",
                 error_type=type(e).__name__,
                 json_hash=_stable_hash(json_str),
                 json_length=len(json_str),

@@ -61,6 +61,8 @@ class TelemetryRegistry:
 
     run_id: str
     events: list[TelemetryEvent] = field(default_factory=list)
+    max_events: int = 5000
+    dropped_events: int = 0
     _start_time: str = field(default_factory=lambda: datetime.now(UTC).isoformat())
 
     def record(
@@ -70,7 +72,12 @@ class TelemetryRegistry:
         extractor: str | None = None,
         **context: Any,
     ) -> None:
-        self.events.append(TelemetryEvent(category=category, extractor=extractor, context=context))
+        if len(self.events) < self.max_events:
+            self.events.append(
+                TelemetryEvent(category=category, extractor=extractor, context=context)
+            )
+            return
+        self.dropped_events += 1
 
     def summary(self) -> dict[str, Any]:
         by_category: dict[str, int] = {}
@@ -86,6 +93,7 @@ class TelemetryRegistry:
             "start_time": self._start_time,
             "end_time": datetime.now(UTC).isoformat(),
             "total_events": len(self.events),
+            "dropped_events": self.dropped_events,
             "by_category": dict(sorted(by_category.items(), key=lambda x: -x[1])),
             "by_extractor": dict(sorted(by_extractor.items(), key=lambda x: -x[1])),
         }
@@ -107,6 +115,8 @@ class TelemetryRegistry:
         print("=" * 60)
         print(f"Run ID: {summary['run_id']}")
         print(f"Total events: {summary['total_events']}")
+        if summary.get("dropped_events"):
+            print(f"Dropped events (cap={self.max_events}): {summary['dropped_events']}")
         by_category = summary.get("by_category", {})
         if by_category:
             print("\nBy Category:")
@@ -147,8 +157,6 @@ def record_telemetry(category: TelemetryCategory, **kwargs: Any) -> None:
         registry = get_telemetry_registry()
         registry.record(category, **kwargs)
     except RuntimeError:
-        logger.debug(
-            "telemetry_registry_not_initialized",
-            category=category.value,
-            **kwargs,
-        )
+        # Do not forward arbitrary kwargs to logs: structlog reserves keys like "event",
+        # and kwargs may include sensitive values in future callers. Keep this minimal.
+        logger.debug("telemetry_registry_not_initialized", category=category.value)

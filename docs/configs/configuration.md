@@ -370,7 +370,7 @@ Structured validation + automatic retries for agent outputs (Spec 13).
 | Variable | Type | Default | Description |
 |----------|------|---------|-------------|
 | `PYDANTIC_AI_ENABLED` | bool | `true` | Enable Pydantic AI `TextOutput` validation + retry loop |
-| `PYDANTIC_AI_RETRIES` | int | `3` | Retry count when validation fails (`0` disables retries) |
+| `PYDANTIC_AI_RETRIES` | int | `5` | Retry count when validation fails (`0` disables retries); increased from 3 per Spec 058 |
 | `PYDANTIC_AI_TIMEOUT_SECONDS` | float | unset | Timeout override for Pydantic AI calls (unset = library default) |
 
 **Notes:**

@@ -69,7 +69,7 @@ pydantic_ai.exceptions.UnexpectedModelBehavior: Exceeded maximum retries (3) for
 └───────────────────────────┬─────────────────────────────────────────┘
                             ▼
 ┌─────────────────────────────────────────────────────────────────────┐
-│  1. _extract_answer_json(text)                                      │
+│  1. _extract_answer_json(text, extractor=...)                       │
 │     - Regex for <answer>...</answer> tags                           │
 │     - Fallback to ```json...``` fences                              │
 │     - Fallback to first {...} block                                 │
@@ -81,6 +81,7 @@ pydantic_ai.exceptions.UnexpectedModelBehavior: Exceeded maximum retries (3) for
 │     - tolerant_json_fixups(): smart quotes, missing commas, etc.     │
 │     - Try json.loads()                                              │
 │     - Fallback: ast.literal_eval() after literal conversion          │
+│     - Fallback: json_repair.loads() (Spec 059)                       │
 │     - Returns: dict or raises JSONDecodeError (NO SILENT FALLBACKS)  │
 └───────────────────────────┬─────────────────────────────────────────┘
                             ▼
@@ -92,15 +93,15 @@ pydantic_ai.exceptions.UnexpectedModelBehavior: Exceeded maximum retries (3) for
                             ▼
 ┌─────────────────────────────────────────────────────────────────────┐
 │  4. PydanticAI Agent                                                │
-│     - max_result_retries=3 (default)                                │
-│     - On 3 failures: raises UnexpectedModelBehavior                 │
+│     - max_result_retries=PYDANTIC_AI_RETRIES (repo default: 5)       │
+│     - On N failures: raises UnexpectedModelBehavior                 │
 └─────────────────────────────────────────────────────────────────────┘
 ```
 
 ### Current Retry Configuration
-- **PydanticAI default**: `max_result_retries=3`
-- **Our override**: None (using default)
-- **Practical note**: If you observe repeated transient parse/validation failures, increasing retries can help, but it increases runtime. Prefer generation-time constraints (Ollama JSON mode/schema) when possible.
+- **PydanticAI library default**: `max_result_retries=3`
+- **Repo default (Spec 058)**: `PYDANTIC_AI_RETRIES=5` (via `config.py` + `.env.example`)
+- **Practical note**: prefer generation-time constraints when available (Ollama JSON mode) and fail-fast validation; retries are a robustness backstop, not the primary strategy.
 
 ---
 
@@ -110,8 +111,8 @@ pydantic_ai.exceptions.UnexpectedModelBehavior: Exceeded maximum retries (3) for
 
 | Library | Purpose | Status |
 |---------|---------|--------|
-| [`json-repair`](https://github.com/mangiucugna/json_repair) | Post-hoc repair of malformed JSON | ❌ Not installed |
-| [`instructor`](https://python.useinstructor.com/) | Structured output with auto-retry + error feedback | ❌ Not installed |
+| [`json-repair`](https://pypi.org/project/json-repair/) | Post-hoc repair of malformed JSON | ✅ Installed + used as last-resort fallback (Spec 059) |
+| [`instructor`](https://python.useinstructor.com/) | Structured output with auto-retry + error feedback | ❌ Not installed (largely redundant with PydanticAI) |
 | [`outlines`](https://github.com/outlines-dev/outlines) | Grammar / FSM constrained generation | ❌ Not installed |
 
 ### What `json-repair` Does That We Don't
@@ -122,9 +123,13 @@ pydantic_ai.exceptions.UnexpectedModelBehavior: Exceeded maximum retries (3) for
 - Handles trailing text after JSON
 
 ### What `instructor` Does That We Don't
-- **Automatic self-correction**: When validation fails, sends error back to LLM with instruction to fix
-- **Semantic validation**: Uses LLM to validate natural language criteria
-- **Pydantic-native**: Same stack we're already using
+- `instructor` is a popular self-correction loop for structured outputs.
+
+In this repo we already get the core benefits via **PydanticAI**:
+- extractor-driven retries (`ModelRetry`) with error feedback
+- schema validation via Pydantic models
+
+Adopting `instructor` would only be justified if we replace PydanticAI entirely or if we observe persistent failure modes that PydanticAI cannot mitigate.
 
 ---
 
@@ -139,13 +144,13 @@ pydantic_ai.exceptions.UnexpectedModelBehavior: Exceeded maximum retries (3) for
 
 ### ⚠️ Anti-Patterns / Gaps
 
-| Gap | Our Approach | Industry Best Practice |
-|-----|--------------|------------------------|
-| JSON repair | Custom `tolerant_json_fixups` (~100 LOC) | Use `json-repair` library (battle-tested) |
-| Retry count | 3 retries (PydanticAI default) | Tune retries to observed failure rate; prefer generation-time constraints when available |
-| Error feedback | No feedback to LLM on parse failure | `instructor` sends error back to LLM for self-correction |
-| Retry visibility | Limited logging on retry | Rich telemetry with retry context |
-| Constrained output | **Ollama JSON mode for evidence extraction** | Prefer generation-time constraints (JSON mode / schema) |
+| Gap | Current Repo Behavior | Industry Best Practice |
+|-----|------------------------|------------------------|
+| JSON repair | `tolerant_json_fixups()` + `json-repair` fallback (Spec 059) | Prefer battle-tested repair libs; keep custom fixups small and tested |
+| Retry count | Default 5 retries (Spec 058), configurable | Tune to observed failure rates; avoid unbounded retries |
+| Error feedback | Extractors raise `ModelRetry` with parse/validation errors | Self-correction loops with targeted feedback |
+| Retry visibility | `failures_{run_id}.json` (Spec 056) + `telemetry_{run_id}.json` (Spec 060; capped events + `dropped_events`) | Persisted, privacy-safe retry telemetry |
+| Constrained output | Ollama JSON mode for evidence extraction; schema validation for scoring | Prefer generation-time constraints when available |
 
 ### Specific Code Smell: “Custom Repair” Maintenance Burden
 
@@ -168,7 +173,7 @@ data = json_repair.loads(raw_text)
 ### Root Causes
 
 1. **Model behavior variance**: Gemma3:27b occasionally outputs Python-style dicts (`True` not `true`)
-2. **Retry exhaustion**: 3 retries is too few for complex structured output
+2. **Retry budget**: PydanticAI library default is 3, but the repo default is 5 (Spec 058)
 3. **No self-correction**: Failed parses don't inform the model what went wrong
 4. **Temperature >0**: Consistency sampling uses temp=0.3, increasing output variance
 5. **Output length**: PHQ-8 JSON is ~2KB with 8 nested objects - more opportunity for errors
@@ -233,8 +238,8 @@ data = json_repair.loads(raw_text)
 - [x] Added `json-repair` library as fallback in `parse_llm_json()` (Spec 059)
 
 ### Still Recommended (Future)
-- [ ] Evaluate `instructor` library for self-correcting structured output
-- [ ] Add retry telemetry metrics
+- [x] Add retry telemetry metrics (Spec 060): `data/outputs/telemetry_{run_id}.json`
+- [ ] Evaluate `instructor` only if we replace PydanticAI or observe persistent failures not handled by the current retry + repair stack
 
 ---
 

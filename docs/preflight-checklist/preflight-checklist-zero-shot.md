@@ -114,7 +114,7 @@ uv run python scripts/reproduce_results.py --split paper-test --zero-shot-only
   # Should show: PYDANTIC_AI_ENABLED=true (or be absent, as true is the default)
   ```
 
-  **What it does**: Adds structured validation + automatic retries (up to 3x) for quantitative scoring, judge metrics, and meta-review.
+  **What it does**: Adds structured validation + automatic retries (default `PYDANTIC_AI_RETRIES=5`) for quantitative scoring, judge metrics, and meta-review.
   There is no legacy parsing fallback; failures after retries remain failures.
 
 ---

@@ -1,6 +1,7 @@
 # Spec 060: Retry Telemetry Metrics (PydanticAI + JSON Parsing)
 
-**Status**: Ready for Implementation
+**Status**: ✅ Implemented (2026-01-04)
+**Canonical Docs**: `docs/developer/error-handling.md`, `docs/rag/debugging.md`
 **Priority**: High
 **Risk**: Low (observability only; must not affect outputs)
 **Effort**: Medium
@@ -55,7 +56,9 @@ Write `data/outputs/telemetry_{run_id}.json` with:
 - run_id + timestamps
 - counts by telemetry category
 - top N (<=10) breakdowns where useful (e.g., extractor name)
-- full event list (optional, capped) OR aggregated only (choose aggregated-only by default)
+- a **capped** event list (default cap: 5,000 events) plus `dropped_events` for any events beyond the cap
+
+**Rationale**: aggregate summaries are the primary signal, but a capped event list enables post-hoc debugging without requiring log scraping. The cap prevents unbounded growth in long runs.
 
 ### R2. PydanticAI retry telemetry (attempt-level)
 
@@ -105,6 +108,7 @@ Create `src/ai_psychiatrist/infrastructure/telemetry.py`:
   - `summary()`
   - `save(output_dir)`
   - `print_summary()` (short)
+  - `max_events` cap + `dropped_events` counter (memory safety; no unbounded event growth)
 - `init_telemetry_registry(run_id)` + `get_telemetry_registry()` + `record_telemetry(...)`
   - Same contextvar pattern as `infrastructure/observability.py`
 
@@ -143,6 +147,7 @@ Create `tests/unit/infrastructure/test_telemetry.py`:
 
 1. `TelemetryRegistry` records and summarizes events correctly.
 2. `record_telemetry()` is a no-op when registry is uninitialized.
+3. Registry enforces an event cap and increments `dropped_events` when exceeded.
 
 Extend existing unit tests:
 
@@ -155,9 +160,8 @@ Avoid brittle assertions on exact log messages; test the telemetry artifact stat
 
 ## Acceptance Criteria
 
-- [ ] `data/outputs/telemetry_{run_id}.json` is written on reproduction runs
-- [ ] Telemetry does not contain transcript text or raw LLM outputs
-- [ ] Telemetry counts include:
-  - pydantic retry events by extractor and reason
-  - json repair path usage (fixups + fallbacks)
-- [ ] All tests pass: `make ci`
+- [x] `data/outputs/telemetry_{run_id}.json` is written on reproduction runs
+- [x] Telemetry contains hashes + counts only (no transcript text / raw LLM outputs)
+- [x] Telemetry counts include pydantic retry triggers + JSON repair path usage
+- [x] Telemetry event list is capped with `dropped_events` recorded (no unbounded growth)
+- [x] All tests pass: `make ci`

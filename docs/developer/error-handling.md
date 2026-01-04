@@ -1,7 +1,7 @@
 # Error Handling and Fail-Fast Philosophy
 
 **Audience**: Maintainers and researchers
-**Last Updated**: 2026-01-01
+**Last Updated**: 2026-01-04
 
 This repo prioritizes **research-honest behavior**:
 - broken features must not silently degrade
@@ -84,6 +84,24 @@ At end of run:
 registry.print_summary()
 registry.save(Path("data/outputs"))
 ```
+
+---
+
+## Retry Telemetry (Spec 060)
+
+The failure registry captures **terminal** failures (e.g., retry exhaustion), but runs can still be brittle even when they succeed.
+
+Spec 060 adds a privacy-safe per-run telemetry artifact:
+
+- `data/outputs/telemetry_{run_id}.json`
+
+It records:
+- PydanticAI retry triggers (`ModelRetry`) by extractor (`extract_quantitative`, etc.)
+- JSON repair path usage (`tolerant_json_fixups`, python-literal fallback, `json-repair`)
+
+The telemetry file includes a **capped** event list (default cap: 5,000) and reports `dropped_events` if the cap is exceeded.
+
+Telemetry must not include transcript text or raw LLM outputs (hashes + counts only).
 
 ---
 
