@@ -64,7 +64,7 @@ See: [Artifact generation](../rag/artifact-generation.md).
 | Evidence schema validation | 54 | *(automatic)* | ON | Raises `EvidenceSchemaError` on wrong types (string instead of list) |
 | Evidence hallucination detection | 53 | `QUANTITATIVE_EVIDENCE_QUOTE_VALIDATION_ENABLED` | `true` | Validates extracted quotes exist in transcript |
 | Grounding mode | 53 | `QUANTITATIVE_EVIDENCE_QUOTE_VALIDATION_MODE` | `substring` | `substring` (conservative) or `fuzzy` (requires rapidfuzz) |
-| Fail on all rejected | 53 | `QUANTITATIVE_EVIDENCE_QUOTE_FAIL_ON_ALL_REJECTED` | `true` | Raises if LLM returned evidence but none grounded |
+| Fail on all rejected | 53 | `QUANTITATIVE_EVIDENCE_QUOTE_FAIL_ON_ALL_REJECTED` | `false` | When enabled, raises if LLM returned evidence but none grounded (strict mode) |
 
 SSOT: `src/ai_psychiatrist/services/evidence_validation.py`
 

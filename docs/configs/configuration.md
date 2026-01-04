@@ -351,7 +351,7 @@ These settings control the quantitative assessment behavior (evidence extraction
 | `QUANTITATIVE_EVIDENCE_QUOTE_VALIDATION_ENABLED` | bool | `true` | Enable evidence grounding validation (Spec 053) |
 | `QUANTITATIVE_EVIDENCE_QUOTE_VALIDATION_MODE` | string | `substring` | Validation mode: `substring` (exact) or `fuzzy` (requires rapidfuzz) |
 | `QUANTITATIVE_EVIDENCE_QUOTE_FUZZY_THRESHOLD` | float | `0.85` | Fuzzy matching threshold (0.0-1.0) |
-| `QUANTITATIVE_EVIDENCE_QUOTE_FAIL_ON_ALL_REJECTED` | bool | `true` | Fail participant if ALL quotes rejected |
+| `QUANTITATIVE_EVIDENCE_QUOTE_FAIL_ON_ALL_REJECTED` | bool | `false` | Fail participant if ALL quotes rejected (strict mode) |
 | `QUANTITATIVE_EVIDENCE_QUOTE_LOG_REJECTIONS` | bool | `true` | Log rejected quotes for debugging |
 
 **Evidence Grounding (Spec 053):**

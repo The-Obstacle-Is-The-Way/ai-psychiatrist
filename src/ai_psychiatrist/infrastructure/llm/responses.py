@@ -298,7 +298,12 @@ def parse_llm_json(text: str) -> dict[str, Any]:
                 "Failed to parse LLM JSON after all repair attempts including json-repair",
                 component="json_parser",
                 json_error=str(json_error),
+                json_error_type=type(json_error).__name__,
+                json_error_lineno=getattr(json_error, "lineno", None),
+                json_error_colno=getattr(json_error, "colno", None),
+                json_error_pos=getattr(json_error, "pos", None),
                 repair_error=str(repair_error),
+                repair_error_type=type(repair_error).__name__,
                 text_length=len(text),
                 text_hash=_stable_text_hash(text),
             )

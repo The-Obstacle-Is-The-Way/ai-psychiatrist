@@ -197,7 +197,7 @@ validated_evidence, stats = validate_evidence_grounding(
 QUANTITATIVE_EVIDENCE_QUOTE_VALIDATION_ENABLED=true    # default
 QUANTITATIVE_EVIDENCE_QUOTE_VALIDATION_MODE=substring  # or fuzzy
 QUANTITATIVE_EVIDENCE_QUOTE_FUZZY_THRESHOLD=0.85       # if mode=fuzzy
-QUANTITATIVE_EVIDENCE_QUOTE_FAIL_ON_ALL_REJECTED=true  # default
+QUANTITATIVE_EVIDENCE_QUOTE_FAIL_ON_ALL_REJECTED=false # default (strict mode = true)
 ```
 
 **Privacy**: Only hashes and counts are logged, never raw transcript text.
