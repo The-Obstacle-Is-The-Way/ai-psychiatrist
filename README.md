@@ -64,6 +64,8 @@ make serve
 > - `EMBEDDING_BACKEND` controls embeddings (default: `huggingface`)
 >
 > If you installed `make dev` (no HF deps), set `EMBEDDING_BACKEND=ollama` in `.env` for a pure-Ollama setup.
+>
+> **Why HF deps matter even if embeddings exist**: few-shot retrieval embeds the *query* (participant evidence) at runtime in the same embedding space. If `EMBEDDING_BACKEND=huggingface`, you still need HF deps (`make dev-hf`) to compute query embeddings, even when reference `*.npz` files are already present.
 
 > **Optional (Appendix F)**: The paper evaluates MedGemma 27B as an alternative model for the
 > quantitative agent. There is no official MedGemma model in the Ollama library; use the HuggingFace
