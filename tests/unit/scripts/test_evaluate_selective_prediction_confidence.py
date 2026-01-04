@@ -6,7 +6,11 @@ from typing import Any
 
 import numpy as np
 import pytest
-from scripts.evaluate_selective_prediction import SupervisedCalibration, parse_items
+from scripts.evaluate_selective_prediction import (
+    SupervisedCalibration,
+    parse_items,
+    resolve_confidence_variants,
+)
 
 from ai_psychiatrist.calibration.calibrators import LogisticCalibrator, StandardScalerParams
 from ai_psychiatrist.calibration.feature_extraction import CalibratorFeatureExtractor
@@ -270,3 +274,10 @@ class TestConfidenceVariants:
         # c=0.8, e=1.0, s=0.4 => 0.4*c + 0.3*e + 0.3*s = 0.74
         items, _, _ = parse_items(experiment, "hybrid_consistency")
         assert items[0].confidence == pytest.approx(0.74)
+
+    def test_confidence_all_excludes_calibration_variants(self) -> None:
+        variants = set(resolve_confidence_variants("all"))
+        assert "llm" in variants
+        assert "total_evidence" in variants
+        assert "calibrated" not in variants
+        assert "verbalized_calibrated" not in variants

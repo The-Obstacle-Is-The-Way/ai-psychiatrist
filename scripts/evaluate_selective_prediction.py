@@ -58,6 +58,13 @@ DEFAULT_AREA_COVERAGE = 0.5
 DEFAULT_RESAMPLES = 10_000
 DEFAULT_SEED = 42
 
+CALIBRATION_REQUIRED_CONFIDENCE_VARIANTS = {
+    # Spec 048: requires a calibration artifact for the verbalized CSF
+    "verbalized_calibrated",
+    # Spec 049: supervised calibrator output requires a calibration artifact
+    "calibrated",
+}
+
 CONFIDENCE_VARIANTS = {
     "llm",
     "total_evidence",
@@ -79,6 +86,8 @@ CONFIDENCE_VARIANTS = {
     # Spec 049: supervised calibrator
     "calibrated",
 }
+
+CONFIDENCE_VARIANTS_ALL = CONFIDENCE_VARIANTS - CALIBRATION_REQUIRED_CONFIDENCE_VARIANTS
 
 CONFIDENCE_DEFAULT_VARIANTS = ["llm", "total_evidence"]
 
@@ -107,7 +116,7 @@ def resolve_confidence_variants(selector: str) -> list[str]:
     if selector == "default":
         return list(CONFIDENCE_DEFAULT_VARIANTS)
     if selector == "all":
-        return sorted(CONFIDENCE_VARIANTS)
+        return sorted(CONFIDENCE_VARIANTS_ALL)
     return [selector]
 
 
@@ -631,8 +640,10 @@ def main() -> int:  # noqa: PLR0912, PLR0915
         default="default",
         help=(
             "Confidence selector for risk-coverage ranking. Use 'default' for "
-            f"{CONFIDENCE_DEFAULT_VARIANTS}, use 'all' for all base variants, "
+            f"{CONFIDENCE_DEFAULT_VARIANTS}, use 'all' for all artifact-free variants, "
             "or pass a specific variant (e.g., 'retrieval_similarity_mean'). "
+            "Calibrated variants ('verbalized_calibrated', 'calibrated', 'calibrated:<csf>') "
+            "require --calibration. "
             "Advanced: 'secondary:<csf1>+<csf2>:<average|product>'."
         ),
     )

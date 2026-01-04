@@ -33,6 +33,15 @@ def mock_output_json(tmp_path: Path) -> Path:
             "retrieval_reference_count": 0,
             "retrieval_similarity_mean": None,
             "retrieval_similarity_max": None,
+            # Spec 048: verbalized confidence
+            "verbalized_confidence": None,
+            # Spec 051: token-level CSFs
+            "token_msp": 0.5,
+            "token_pe": 0.0,
+            "token_energy": 0.0,
+            # Spec 050: consistency-based confidence
+            "consistency_modal_confidence": 0.5,
+            "consistency_score_std": 0.0,
         }
         for k in item_keys
     }
@@ -57,6 +66,9 @@ def mock_output_json(tmp_path: Path) -> Path:
     signals[k0]["retrieval_similarity_max"] = 0.9
     signals[k1]["retrieval_similarity_max"] = 0.9
     signals[k2]["retrieval_similarity_max"] = 0.1
+    signals[k0]["verbalized_confidence"] = 5
+    signals[k1]["verbalized_confidence"] = 5
+    signals[k2]["verbalized_confidence"] = 3
 
     data = {
         "run_metadata": {"run_id": "test_run", "git_commit": "abc"},
@@ -174,3 +186,44 @@ def test_evaluate_cli_runs(mock_output_json: Path) -> None:
     assert llm["mae_at_coverage"]["0.25"]["achieved"] == pytest.approx(2 / 8)
     assert llm["mae_at_coverage"]["0.25"]["value"] == pytest.approx(1.0)
     assert llm["mae_at_coverage"]["0.50"] is None
+
+
+def test_evaluate_cli_runs_all_confidence_variants_without_calibration(
+    mock_output_json: Path,
+) -> None:
+    """Ensure --confidence all excludes calibrator-only variants by default."""
+    cmd = [
+        sys.executable,
+        "scripts/evaluate_selective_prediction.py",
+        "--input",
+        str(mock_output_json),
+        "--loss",
+        "abs",
+        "--confidence",
+        "all",
+        "--coverage-grid",
+        "0.25,0.50",
+        "--bootstrap-resamples",
+        "0",
+        "--output",
+        str(mock_output_json.parent / "metrics_all.json"),
+    ]
+
+    result = subprocess.run(cmd, check=False, capture_output=True, text=True)
+    assert result.returncode == 0, f"Stderr: {result.stderr}"
+
+    metrics_path = mock_output_json.parent / "metrics_all.json"
+    assert metrics_path.exists()
+
+    with metrics_path.open() as f:
+        m = json.load(f)
+
+    variants = set(m["confidence_variants"].keys())
+    assert "llm" in variants
+    assert "total_evidence" in variants
+    assert "retrieval_similarity_mean" in variants
+    assert "verbalized" in variants
+    assert "token_msp" in variants
+    assert "consistency" in variants
+    assert "calibrated" not in variants
+    assert "verbalized_calibrated" not in variants

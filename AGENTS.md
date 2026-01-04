@@ -118,13 +118,15 @@ Primary metrics are **coverage-aware**:
 Compute selective prediction metrics:
 
 ```bash
-# Evaluate all base confidence variants (Spec 046+ suite)
+# Evaluate all artifact-free confidence variants (Spec 046+ suite)
 uv run python scripts/evaluate_selective_prediction.py \
   --input data/outputs/<run>.json \
   --mode few_shot \
   --confidence all \
   --bootstrap-resamples 1000
 ```
+
+`--confidence all` intentionally excludes calibration-only variants. To evaluate calibrated variants, pass them explicitly with `--calibration` (Spec 048/049).
 
 Token-level CSFs (Spec 051) require token logprobs from the backend. To remove uncertainty:
 

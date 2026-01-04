@@ -579,6 +579,55 @@ Computed via:
 
 ---
 
+### Run 11: Jan 4, 2026 - Confidence Suite (Specs 048–051) (DIAGNOSTIC; NOT COMPARABLE)
+
+**File**: `data/outputs/both_paper-test_20260104_102031.json`
+
+**Log**: `data/outputs/run11_confidence_suite_20260103_215102.log`
+
+**Run ID**: `d4c78527`
+
+**Git Commit**: `056d3be` (clean)
+
+**Timestamp**: 2026-01-03T21:51:02
+
+**Goal**: Emit confidence-suite signals (verbalized confidence, token-level CSFs, consistency) and re-evaluate AURC/AUGRC for both modes.
+
+**What went wrong** (why this run is not comparable to prior baselines):
+
+- **5/41 participants failed in both modes** due to `evidence_hallucination` (10 total failures, all fatal).
+- Failure artifact: `data/outputs/failures_d4c78527.json`
+- Most failing participants: 367, 386, 409, 456, 487 (each failed in both modes)
+
+This creates selection bias (N=36 instead of N=41). Treat this run as **diagnostic-only** for confidence-signal ranking, not as a publication-quality benchmark.
+
+**Results** (diagnostic-only; N=36):
+
+| Mode | N_eval | MAE_w | MAE_item | Coverage |
+|------|--------|-------|----------|----------|
+| Zero-shot | 36/41 | 0.617 | 0.534 | 49.0% |
+| Few-shot | 36/41 | 0.715 | 0.663 | 47.6% |
+
+**Selective prediction (Run 11)**:
+
+Computed via:
+- `data/outputs/selective_prediction_metrics_run11_zero_shot_all.json`
+- `data/outputs/selective_prediction_metrics_run11_few_shot_all.json`
+- Paired (few − zero, overlap only): `data/outputs/selective_prediction_metrics_run11_paired_default.json`
+
+Key takeaways (abs_norm):
+
+| Mode | Confidence | AURC | AUGRC | Cmax |
+|------|------------|------|-------|------|
+| Zero-shot | `llm` | 0.1035 | 0.0253 | 48.96% |
+| Zero-shot | `verbalized` | **0.0878** | 0.0257 | 48.96% |
+| Few-shot | `llm` | 0.1184 | 0.0270 | 47.57% |
+| Few-shot | `token_pe` | **0.0861** | **0.0235** | 47.57% |
+
+Paired deltas (few-shot − zero-shot, `confidence=llm`): ΔAURC = +0.0149 [-0.0136, +0.0445], ΔAUGRC = +0.0017 [-0.0069, +0.0114].
+
+---
+
 ## Reproduction Commands
 
 ### Run Evaluation

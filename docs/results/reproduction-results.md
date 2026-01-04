@@ -20,7 +20,7 @@ See: `docs/_bugs/ANALYSIS-026-JSON-PARSING-ARCHITECTURE-AUDIT.md` and `docs/resu
 - Zero-shot evaluated 39/41 participants (2 hard failures).
 - Few-shot evaluated 0/41 participants due to missing HuggingFace optional deps (`torch`).
 
-Use `docs/results/run-history.md` as the SSOT; Run 11 is required for a clean confidence-suite evaluation.
+Use `docs/results/run-history.md` as the SSOT. Run 11 completed but is diagnostic-only (5/41 participants failed in both modes due to evidence grounding); Run 12 is required for a clean confidence-suite evaluation.
 
 ---
 

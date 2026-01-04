@@ -95,7 +95,7 @@ The paper's reference implementation (`_reference/ai_psychiatrist/`) demonstrate
 - The run artifact contains the new `item_signals` keys (`verbalized_confidence`, `token_*`, `consistency_*`), so the instrumentation path works.
 - Use it only as a “signals present” smoke test; do not interpret AURC/MAE deltas from this run.
 
-**Next**: Run 11 is the first run that can cleanly evaluate the confidence suite end-to-end.
+**Next**: Run 11 completed but is diagnostic-only (selection bias from evidence grounding failures). Run 12 is required for a clean confidence-suite evaluation.
 
 ---
 
@@ -231,7 +231,7 @@ Specs 048–051 are now implemented. The next step is to run a new reproduction 
 | Chunk-level scoring (Spec 35) | ✅ Implemented |
 | Participant-only preprocessing | ✅ Implemented |
 | Retrieval confidence signals (Spec 046) | ✅ Tested (+5.4% AURC) |
-| Confidence improvement suite (Specs 048–051) | ✅ Implemented (needs Run 11 eval) |
+| Confidence improvement suite (Specs 048–051) | ✅ Implemented (Run 11 diagnostic; needs clean Run 12 eval) |
 | AUGRC < 0.020 target | ❌ Current best: 0.031 |
 
 ---
