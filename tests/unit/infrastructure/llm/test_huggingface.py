@@ -72,9 +72,11 @@ class TestLLMFactory:
         client = create_llm_client(settings)
         assert isinstance(client, OllamaClient)
 
-    def test_creates_huggingface_client(self) -> None:
+    def test_creates_huggingface_client(self, monkeypatch: pytest.MonkeyPatch) -> None:
         """Should return HuggingFaceClient when backend=huggingface."""
         settings = Settings(backend=BackendSettings(backend=LLMBackend.HUGGINGFACE))
+        # Avoid importing heavyweight HF deps in unit tests (CI runs without --extra hf).
+        monkeypatch.setattr(hf_mod, "_load_transformers_deps", lambda: object())
         client = create_llm_client(settings)
         assert isinstance(client, HuggingFaceClient)
 

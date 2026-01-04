@@ -2,6 +2,9 @@
 
 from __future__ import annotations
 
+import json
+from typing import TYPE_CHECKING
+
 import pytest
 
 from ai_psychiatrist.infrastructure.llm.responses import parse_llm_json
@@ -14,6 +17,9 @@ from ai_psychiatrist.infrastructure.telemetry import (
 )
 
 pytestmark = pytest.mark.unit
+
+if TYPE_CHECKING:
+    from pathlib import Path
 
 
 def test_record_telemetry_noop_when_uninitialized() -> None:
@@ -56,3 +62,18 @@ def test_registry_event_cap_tracks_dropped_events() -> None:
     assert len(registry.events) == 2
     assert registry.dropped_events == 1
     assert registry.summary()["dropped_events"] == 1
+
+
+def test_registry_save_writes_summary_and_events(tmp_path: Path) -> None:
+    """save() should write a stable JSON file containing summary + events."""
+    registry = TelemetryRegistry(run_id="abc123")
+    registry.record(TelemetryCategory.PYDANTIC_RETRY, extractor="extract_quantitative")
+
+    out = registry.save(tmp_path)
+    assert out.exists()
+
+    data = json.loads(out.read_text())
+    assert set(data.keys()) == {"summary", "events"}
+    assert data["summary"]["run_id"] == "abc123"
+    assert data["summary"]["total_events"] == 1
+    assert data["events"][0]["category"] == TelemetryCategory.PYDANTIC_RETRY.value

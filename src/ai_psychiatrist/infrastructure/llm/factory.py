@@ -35,6 +35,12 @@ def create_llm_client(settings: Settings) -> LLMClient:
                 "or `pip install 'ai-psychiatrist[hf]'`."
             ) from e
 
+        # Fail fast: selecting HuggingFace backend implies these deps must exist.
+        # This avoids wasting an entire run only to error on the first embed/chat call.
+        from ai_psychiatrist.infrastructure.llm import huggingface as hf_mod  # noqa: PLC0415
+
+        hf_mod._load_transformers_deps()
+
         return HuggingFaceClient(
             backend_settings=settings.backend,
             model_settings=settings.model,
@@ -68,6 +74,11 @@ def create_embedding_client(settings: Settings) -> EmbeddingClient:
                 "Install with `make dev` (repo) or `uv sync --extra hf`, "
                 "or `pip install 'ai-psychiatrist[hf]'`."
             ) from e
+
+        # Fail fast: using HF embeddings requires torch/transformers installed.
+        from ai_psychiatrist.infrastructure.llm import huggingface as hf_mod  # noqa: PLC0415
+
+        hf_mod._load_transformers_deps()
 
         # HuggingFaceClient takes (backend_settings, model_settings)
         return HuggingFaceClient(
