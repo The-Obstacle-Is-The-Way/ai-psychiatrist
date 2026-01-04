@@ -348,6 +348,62 @@ These settings control the quantitative assessment behavior (evidence extraction
 | Variable | Type | Default | Description |
 |----------|------|---------|-------------|
 | `QUANTITATIVE_TRACK_NA_REASONS` | bool | `true` | Track why items return N/A |
+| `QUANTITATIVE_EVIDENCE_QUOTE_VALIDATION_ENABLED` | bool | `true` | Enable evidence grounding validation (Spec 053) |
+| `QUANTITATIVE_EVIDENCE_QUOTE_VALIDATION_MODE` | string | `substring` | Validation mode: `substring` (exact) or `fuzzy` (requires rapidfuzz) |
+| `QUANTITATIVE_EVIDENCE_QUOTE_FUZZY_THRESHOLD` | float | `0.85` | Fuzzy matching threshold (0.0-1.0) |
+| `QUANTITATIVE_EVIDENCE_QUOTE_FAIL_ON_ALL_REJECTED` | bool | `true` | Fail participant if ALL quotes rejected |
+| `QUANTITATIVE_EVIDENCE_QUOTE_LOG_REJECTIONS` | bool | `true` | Log rejected quotes for debugging |
+
+**Evidence Grounding (Spec 053):**
+Validates that LLM-extracted evidence quotes actually appear in the source transcript. Prevents hallucinated quotes from contaminating few-shot retrieval.
+
+**Example:**
+```bash
+# Enable fuzzy matching for better recall (requires rapidfuzz)
+QUANTITATIVE_EVIDENCE_QUOTE_VALIDATION_MODE="fuzzy"
+QUANTITATIVE_EVIDENCE_QUOTE_FUZZY_THRESHOLD=0.85
+```
+
+---
+
+### Consistency Sampling Settings
+
+Multi-sample scoring for agreement-based confidence signals (Spec 050).
+
+| Variable | Type | Default | Description |
+|----------|------|---------|-------------|
+| `CONSISTENCY_ENABLED` | bool | `true` | Enable multi-sample consistency scoring |
+| `CONSISTENCY_N_SAMPLES` | int | `5` | Number of samples per item |
+| `CONSISTENCY_TEMPERATURE` | float | `0.2` | Sampling temperature for consistency (must be >0 for variance) |
+
+**Temperature Rationale (BUG-027):**
+
+| Temperature | Purpose | Use Case |
+|-------------|---------|----------|
+| `0.0` | Deterministic | Primary inference (all agents) |
+| `0.2` | Low-variance | Consistency sampling (clinical best practice) |
+| `0.3+` | Higher-variance | Not recommended for clinical tasks |
+
+**Research Evidence:**
+- 2025 clinical studies define `0.2` as "low" temperature threshold
+- GPT-4 depression study notes performance becomes "unpredictable" at ≥0.3
+- Self-consistency requires non-zero temperature for sample diversity
+
+**Example:**
+```bash
+# Enable consistency scoring (recommended for confidence calibration)
+CONSISTENCY_ENABLED=true
+CONSISTENCY_N_SAMPLES=5
+CONSISTENCY_TEMPERATURE=0.2  # Clinical best practice (BUG-027)
+```
+
+**Disabling:**
+```bash
+# Disable for faster baseline runs (no confidence signals)
+CONSISTENCY_ENABLED=false
+```
+
+**See Also:** [Agent Sampling Registry](agent-sampling-registry.md) for full temperature rationale.
 
 ---
 
