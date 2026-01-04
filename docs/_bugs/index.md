@@ -42,7 +42,7 @@ All resolved bugs are in `docs/_archive/bugs/`:
 
 1. Check if bug already exists in archive
 2. Create file: `docs/_bugs/BUG-XXX-short-title.md`
-3. Use next available number (currently: BUG-032)
+3. Use next available number (currently: BUG-035)
 4. Include: Severity, Status, File, Description, Impact, Fix
 
 When resolved, move to `docs/_archive/bugs/` with naming convention:
