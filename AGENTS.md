@@ -51,6 +51,8 @@ E2E tests require a running Ollama instance:
 | `DATA_TRANSCRIPTS_DIR` | `data/transcripts_participant_only` | Participant-only preprocessing |
 | `EMBEDDING_BACKEND` | `huggingface` | FP16 embeddings (better quality) |
 
+**Important (HuggingFace embeddings)**: Even with precomputed reference embeddings (`*.npz`), few-shot must embed each query (participant evidence) at runtime in the *same* embedding space. If `EMBEDDING_BACKEND=huggingface`, install HF deps first (`make dev-hf`) or few-shot will fail when it tries to embed queries.
+
 ## Coding Style & Naming
 
 - Format + lint: `ruff format` and `ruff check` (don't hand-format).
