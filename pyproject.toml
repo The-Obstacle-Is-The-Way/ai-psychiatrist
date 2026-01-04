@@ -31,6 +31,7 @@ dependencies = [
     "scikit-learn>=1.8.0",
     "pyyaml>=6.0.0",
     "pydantic-ai>=1.39.0",
+    "json-repair>=0.55.0",  # LLM JSON recovery fallback (Spec 059)
 ]
 
 [project.optional-dependencies]

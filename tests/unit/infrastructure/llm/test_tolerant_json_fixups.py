@@ -1,4 +1,4 @@
-"""Unit tests for tolerant_json_fixups() — BUG-043 regression prevention."""
+"""Unit tests for tolerant_json_fixups() and parse_llm_json() — BUG-043 regression prevention."""
 
 from __future__ import annotations
 
@@ -6,7 +6,7 @@ import json
 
 import pytest
 
-from ai_psychiatrist.infrastructure.llm.responses import tolerant_json_fixups
+from ai_psychiatrist.infrastructure.llm.responses import parse_llm_json, tolerant_json_fixups
 
 pytestmark = pytest.mark.unit
 
@@ -223,3 +223,44 @@ class TestTolerantJsonFixups:
         assert once == twice
         parsed = json.loads(twice)
         assert parsed == {"reason": "has\ttab", "score": 1}
+
+
+class TestJsonRepairFallback:
+    """Tests for json-repair fallback in parse_llm_json() (Spec 059)."""
+
+    def test_json_repair_recovers_truncated_json(self) -> None:
+        """json-repair should recover truncated JSON (missing closing brace)."""
+        truncated = '{"score": 2, "reason": "incomplete'
+        result = parse_llm_json(truncated)
+        assert result["score"] == 2
+
+    def test_json_repair_recovers_unquoted_keys(self) -> None:
+        """json-repair should recover unquoted keys."""
+        broken = '{score: 2, reason: "valid"}'
+        result = parse_llm_json(broken)
+        assert result["score"] == 2
+        assert result["reason"] == "valid"
+
+    def test_json_repair_recovers_trailing_text(self) -> None:
+        """json-repair should recover JSON with trailing text."""
+        broken = '{"score": 2, "reason": "ok"} I hope this helps!'
+        result = parse_llm_json(broken)
+        assert result == {"score": 2, "reason": "ok"}
+
+    def test_json_repair_recovers_missing_closing_bracket(self) -> None:
+        """json-repair should recover missing closing brackets."""
+        broken = '{"items": [1, 2, 3, "score": 2}'
+        result = parse_llm_json(broken)
+        assert "items" in result or "score" in result  # At least partial recovery
+
+    def test_json_repair_does_not_activate_for_valid_json(self) -> None:
+        """json-repair should not be needed for valid JSON."""
+        valid = '{"score": 2, "reason": "ok"}'
+        result = parse_llm_json(valid)
+        assert result == {"score": 2, "reason": "ok"}
+
+    def test_json_repair_raises_for_completely_invalid(self) -> None:
+        """parse_llm_json should still raise for completely invalid input."""
+        garbage = "this is not json at all"
+        with pytest.raises(json.JSONDecodeError):
+            parse_llm_json(garbage)

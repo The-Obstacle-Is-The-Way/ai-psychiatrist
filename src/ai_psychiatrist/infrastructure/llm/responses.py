@@ -12,6 +12,8 @@ import json
 import re
 from typing import Any, Protocol, runtime_checkable
 
+import json_repair
+
 from ai_psychiatrist.domain.exceptions import LLMResponseParseError
 from ai_psychiatrist.infrastructure.logging import get_logger
 
@@ -215,16 +217,17 @@ def _replace_json_literals_for_python(text: str) -> str:
 
 
 def parse_llm_json(text: str) -> dict[str, Any]:
-    """Canonical JSON parser for all LLM outputs. NO SILENT FALLBACKS.
+    """Canonical JSON parser for all LLM outputs with defense-in-depth fallbacks.
 
     This is the single source of truth for parsing JSON from LLM responses.
     All call sites MUST use this function instead of raw json.loads().
 
     Parse order:
-    1. Apply tolerant_json_fixups() for smart quotes, missing commas, etc.
+    1. Apply tolerant_json_fixups() for smart quotes, control chars, missing commas, etc.
     2. Try json.loads()
     3. If that fails, convert Python literals and try ast.literal_eval()
-    4. RAISE on failure - never silently degrade
+    4. If that fails, try json_repair.loads() as last resort (Spec 059)
+    5. RAISE on failure - never silently degrade
 
     Args:
         text: Raw JSON string from LLM output.
@@ -236,7 +239,7 @@ def parse_llm_json(text: str) -> dict[str, Any]:
         json.JSONDecodeError: If parsing fails after all repair attempts.
     """
 
-    # Step 1: Apply tolerant fixups (smart quotes, trailing commas, etc.)
+    # Step 1: Apply tolerant fixups (smart quotes, control chars, trailing commas, etc.)
     fixed = tolerant_json_fixups(text)
 
     # Step 2: Try standard JSON parsing
@@ -259,17 +262,33 @@ def parse_llm_json(text: str) -> dict[str, Any]:
                 before_hash=_stable_text_hash(text),
             )
             return result
-        except (SyntaxError, ValueError) as python_error:
-            # Step 4: RAISE - no silent fallbacks
+        except (SyntaxError, ValueError):
+            pass
+
+        # Step 4: Try json-repair as last resort (Spec 059)
+        try:
+            result = json_repair.loads(fixed)
+            if not isinstance(result, dict):
+                raise json.JSONDecodeError("Expected JSON object", text, 0)
+
+            logger.info(
+                "json-repair recovered malformed LLM JSON",
+                component="json_parser",
+                text_hash=_stable_text_hash(text),
+                text_length=len(text),
+            )
+            return result
+        except Exception as repair_error:
+            # Step 5: RAISE - all fallbacks exhausted
             logger.warning(
-                "Failed to parse LLM JSON after all repair attempts",
+                "Failed to parse LLM JSON after all repair attempts including json-repair",
                 component="json_parser",
                 json_error=str(json_error),
-                python_error=str(python_error),
+                repair_error=str(repair_error),
                 text_length=len(text),
                 text_hash=_stable_text_hash(text),
             )
-            raise json_error from python_error
+            raise json_error from repair_error
 
 
 def _escape_control_chars_in_strings(text: str) -> str:

@@ -105,11 +105,12 @@ class TestExtractJson:
         with pytest.raises(LLMResponseParseError, match="No JSON object found"):
             extract_json_from_response(raw)
 
-    def test_invalid_json_raises(self) -> None:
-        """Should raise on malformed JSON."""
+    def test_invalid_json_recovered_by_json_repair(self) -> None:
+        """json-repair should recover malformed JSON like unquoted values (Spec 059)."""
         raw = '{"key": value_without_quotes}'
-        with pytest.raises(LLMResponseParseError):
-            extract_json_from_response(raw)
+        # json-repair recovers this as {"key": "value_without_quotes"} or similar
+        result = extract_json_from_response(raw)
+        assert "key" in result  # Successfully recovered
 
     def test_empty_object(self) -> None:
         """Should handle empty JSON object."""

@@ -464,10 +464,13 @@ class PydanticAISettings(BaseSettings):
         ),
     )
     retries: int = Field(
-        default=3,
+        default=5,
         ge=0,
         le=10,
-        description="Retry count for validation failures (0 disables retries).",
+        description=(
+            "Retry count for validation failures (0 disables retries). "
+            "Increased from 3 to 5 per Spec 058 to handle complex 8-item PHQ-8 JSON."
+        ),
     )
     timeout_seconds: float | None = Field(
         default=None,
