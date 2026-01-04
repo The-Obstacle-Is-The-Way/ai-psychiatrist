@@ -115,10 +115,11 @@ evidence_quote_fuzzy_threshold: float = Field(
     description="Only used when evidence_quote_validation_mode='fuzzy'.",
 )
 evidence_quote_fail_on_all_rejected: bool = Field(
-    default=True,
+    default=False,
     description=(
         "If true, fail when the LLM produced evidence but none of it can be grounded. "
-        "Prevents few-shot silently degrading to zero-shot."
+        "When false (default), record a failure event and continue with empty evidence "
+        "to avoid dropping participants while still preventing silent degradation."
     ),
 )
 evidence_quote_log_rejections: bool = Field(
@@ -170,6 +171,7 @@ def normalize_for_quote_match(text: str) -> str:
     normalized = unicodedata.normalize("NFKC", text).translate(_SMART_QUOTES)
     for ch in _ZERO_WIDTH:
         normalized = normalized.replace(ch, "")
+    normalized = re.sub(r"<[^>]+>", " ", normalized)  # ignore nonverbal tags (<laughter>, <ma>, ...)
     normalized = _WS_RE.sub(" ", normalized).strip().lower()
     return normalized
 
@@ -271,7 +273,7 @@ def validate_evidence_grounding(
 ```python
 # src/ai_psychiatrist/agents/quantitative.py - modify _extract_evidence()
 
-async def _extract_evidence(self, transcript_text: str) -> dict[str, list[str]]:
+async def _extract_evidence(self, transcript_text: str, *, participant_id: int) -> dict[str, list[str]]:
     """Extract evidence quotes for each PHQ-8 domain."""
     # ... existing extraction code ...
 
@@ -290,14 +292,24 @@ async def _extract_evidence(self, transcript_text: str) -> dict[str, list[str]]:
             log_rejections=self._settings.evidence_quote_log_rejections,
         )
 
-        if (
-            self._settings.evidence_quote_fail_on_all_rejected
-            and stats.validated_count == 0
-            and stats.extracted_count > 0
-        ):
-            raise EvidenceGroundingError(
-                "LLM returned evidence quotes but none could be grounded in the transcript."
+        if stats.validated_count == 0 and stats.extracted_count > 0:
+            # Always record a privacy-safe failure event for post-run auditability.
+            record_failure(
+                FailureCategory.EVIDENCE_HALLUCINATION,
+                FailureSeverity.ERROR,
+                "LLM returned evidence quotes but none could be grounded in the transcript.",
+                participant_id=participant_id,
+                stage="evidence_extraction",
+                mode=self._mode.value,
+                extracted_count=stats.extracted_count,
+                validation_mode=self._settings.evidence_quote_validation_mode,
             )
+
+            # Strict mode: raise and mark participant as failed.
+            if self._settings.evidence_quote_fail_on_all_rejected:
+                raise EvidenceGroundingError(
+                    "LLM returned evidence quotes but none could be grounded in the transcript."
+                )
 
     return evidence
 ```

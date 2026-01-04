@@ -533,7 +533,7 @@ Evidence grounding (prevents ungrounded quotes contaminating retrieval):
 grep -E \"^QUANTITATIVE_EVIDENCE_QUOTE_VALIDATION_\" .env
 # Expected:
 # QUANTITATIVE_EVIDENCE_QUOTE_VALIDATION_ENABLED=true
-# QUANTITATIVE_EVIDENCE_QUOTE_FAIL_ON_ALL_REJECTED=true
+# QUANTITATIVE_EVIDENCE_QUOTE_FAIL_ON_ALL_REJECTED=false  # strict mode = true
 ```
 
 ---
