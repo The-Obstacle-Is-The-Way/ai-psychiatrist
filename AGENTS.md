@@ -97,6 +97,11 @@ uv run python scripts/reproduce_results.py \
   2>&1 | tee data/outputs/run11_$(date +%Y%m%d_%H%M%S).log
 ```
 
+To make consistency “always on” without remembering CLI flags, set in `.env`:
+- `CONSISTENCY_ENABLED=true`
+- `CONSISTENCY_N_SAMPLES=5`
+- `CONSISTENCY_TEMPERATURE=0.3`
+
 Other useful flags:
 - `--zero-shot-only` / `--few-shot-only`
 - `--limit 1` (smoke test)
