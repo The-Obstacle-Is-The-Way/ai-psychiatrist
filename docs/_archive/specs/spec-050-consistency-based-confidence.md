@@ -159,7 +159,7 @@ Environment variables / `.env`:
 # Consistency mode (default: disabled)
 CONSISTENCY_ENABLED=false
 CONSISTENCY_N_SAMPLES=5
-CONSISTENCY_TEMPERATURE=0.3
+CONSISTENCY_TEMPERATURE=0.2  # Updated from 0.3 per BUG-027 (2025 clinical research)
 ```
 
 ## 3. Implementation Plan
