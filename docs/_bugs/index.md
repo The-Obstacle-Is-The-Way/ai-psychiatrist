@@ -6,9 +6,11 @@ This directory tracks active bug investigations. Resolved bugs are archived in `
 
 _No active investigations at this time._
 
-## Active Bugs
+## Active Bugs (Pending Senior Review)
 
-_No active bugs at this time._
+| ID | Title | Severity | Status |
+|----|-------|----------|--------|
+| [BUG-027](./BUG-027-consistency-temperature-optimization.md) | Consistency Temperature May Be Suboptimal | P2 | Open |
 
 ## Recently Resolved (2026-01-03)
 
@@ -33,7 +35,7 @@ All resolved bugs are in `docs/_archive/bugs/`:
 
 1. Check if bug already exists in archive
 2. Create file: `docs/_bugs/BUG-XXX-short-title.md`
-3. Use next available number (currently: BUG-027)
+3. Use next available number (currently: BUG-029)
 4. Include: Severity, Status, File, Description, Impact, Fix
 
 When resolved, move to `docs/_archive/bugs/` with naming convention:
