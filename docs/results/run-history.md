@@ -2,7 +2,7 @@
 
 **Purpose**: Comprehensive record of all reproduction runs, code changes, and statistical analyses for posterity.
 
-**Last Updated**: 2026-01-03
+**Last Updated**: 2026-01-04
 
 ---
 
@@ -23,7 +23,7 @@ A critical bug was discovered and fixed on 2026-01-03 where `_extract_evidence()
 | Run | Code Version | Affected? | Notes |
 |-----|--------------|-----------|-------|
 | Run 1-9 | Pre-fix | **Unknown** | Bug was SILENT - no way to know without re-running |
-| Run 10 | Pre-fix (started before commit) | **Possibly** | Currently running with old code |
+| Run 10 | Pre-fix (git dirty) | **Yes** | Completed but invalid (zero-shot partial, few-shot failed entirely) |
 | Future runs | Post-fix | No | Will fail loudly if JSON parsing fails |
 
 **Why we can't be certain about Run 1-9**:
@@ -529,6 +529,53 @@ Spec 31/32 improved few-shot by ~10%, proving formatting matters. Retrieval qual
 4. **GitHub Issue #86 hypothesis partially validated**: Retrieval signals help AURC but don't substantially move AUGRC
 
 **Interpretation**: The retrieval similarity signal provides modest but measurable improvement in selective prediction ranking. However, the AUGRC target of <0.020 (from Issue #86) was not achieved. Further improvements would require Phase 2 (verbalized confidence) or Phase 3 (multi-signal calibration) approaches.
+
+---
+
+### Run 10: Jan 3, 2026 - Confidence Suite (Specs 048–051) Attempt (INVALID)
+
+**File**: `data/outputs/both_paper-test_20260103_182316.json`
+
+**Log**: `data/outputs/run10_confidence_suite_20260103_111959.log`
+
+**Run ID**: `3186a50d`
+
+**Git Commit**: `064ed30` (dirty)
+
+**Timestamp**: 2026-01-03T11:20:01
+
+**Goal**: Emit confidence-suite signals (verbalized confidence, token-level CSFs, consistency) and re-evaluate AURC/AUGRC.
+
+**What went wrong** (why this run is invalid for comparisons):
+
+1. **Zero-shot had 2/41 hard failures** (PIDs 383, 427): `Exceeded maximum retries (3) for output validation`.
+   - This was caused by deterministic malformed “JSON-like” outputs in the scoring step (pre-ANALYSIS-026 JSON hardening).
+2. **Few-shot evaluated 0/41 participants**: every participant failed with:
+   - `HuggingFace backend requires optional dependencies. Install with: pip install 'ai-psychiatrist[hf]'`
+   - Root cause: the run used `EMBEDDING_BACKEND=huggingface` but `torch` was not installed, so query embeddings could not be computed.
+
+**Results** (retain for debugging only; not a publication-quality run):
+
+| Mode | N_eval | MAE_w | MAE_item | Coverage | Notes |
+|------|--------|-------|----------|----------|-------|
+| Zero-shot | 39/41 | 0.632 | 0.597 | 48.7% | Partial; biased by failures |
+| Few-shot | 0/41 | n/a | n/a | n/a | Invalid (missing HF deps) |
+
+**Selective prediction (zero-shot only; 39 participants)**:
+
+Computed via:
+`uv run python scripts/evaluate_selective_prediction.py --input data/outputs/both_paper-test_20260103_182316.json --mode zero_shot`
+
+| Confidence | AURC | AUGRC | Cmax | Notes |
+|------------|------|-------|------|-------|
+| `llm` | 0.101 | 0.026 | 48.7% | Baseline for this partial run |
+| `verbalized` | 0.092 | 0.026 | 48.7% | Lower AURC than `llm` |
+| `token_pe` | 0.100 | 0.024 | 48.7% | Lower AUGRC than `llm` |
+
+**Action items before Run 11**:
+- Use a clean git state for the run (commit or stash).
+- If using HuggingFace embeddings (`EMBEDDING_BACKEND=huggingface`), install deps first: `make dev-hf` (or `uv sync --extra hf`) and verify `uv run python -c "import torch"`.
+- Re-run the confidence suite on a valid run artifact (both modes evaluated) before interpreting deltas.
 
 ---
 

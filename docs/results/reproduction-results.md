@@ -1,6 +1,6 @@
 # Paper Reproduction Results (Current Status)
 
-**Last Updated**: 2026-01-03
+**Last Updated**: 2026-01-04
 
 This page is a high-level, **current-state** summary. The canonical timeline + per-run statistics live in:
 
@@ -15,6 +15,12 @@ This page is a high-level, **current-state** summary. The canonical timeline + p
 **For publication-quality results, re-run with post-fix code.**
 
 See: `docs/_bugs/ANALYSIS-026-JSON-PARSING-ARCHITECTURE-AUDIT.md` and `docs/results/run-history.md` for details.
+
+**Run 10 (confidence suite attempt) is not a valid comparison point**:
+- Zero-shot evaluated 39/41 participants (2 hard failures).
+- Few-shot evaluated 0/41 participants due to missing HuggingFace optional deps (`torch`).
+
+Use `docs/results/run-history.md` as the SSOT; Run 11 is required for a clean confidence-suite evaluation.
 
 ---
 
