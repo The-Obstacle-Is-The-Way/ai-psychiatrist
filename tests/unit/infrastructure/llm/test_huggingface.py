@@ -76,7 +76,12 @@ class TestLLMFactory:
         """Should return HuggingFaceClient when backend=huggingface."""
         settings = Settings(backend=BackendSettings(backend=LLMBackend.HUGGINGFACE))
         # Avoid importing heavyweight HF deps in unit tests (CI runs without --extra hf).
-        monkeypatch.setattr(hf_mod, "_load_transformers_deps", lambda: object())
+        deps = hf_mod._TransformersDeps(
+            torch=object(),
+            transformers=object(),
+            sentence_transformers=object(),
+        )
+        monkeypatch.setattr(hf_mod, "_load_transformers_deps", lambda: deps)
         client = create_llm_client(settings)
         assert isinstance(client, HuggingFaceClient)
 

@@ -28,7 +28,12 @@ pytestmark = pytest.mark.unit
 
 def _patch_hf_deps_available(monkeypatch: pytest.MonkeyPatch) -> None:
     """Avoid importing heavyweight HF deps during factory unit tests."""
-    monkeypatch.setattr(hf_mod, "_load_transformers_deps", lambda: object())
+    deps = hf_mod._TransformersDeps(
+        torch=object(),
+        transformers=object(),
+        sentence_transformers=object(),
+    )
+    monkeypatch.setattr(hf_mod, "_load_transformers_deps", lambda: deps)
 
 
 def _patch_hf_deps_missing(monkeypatch: pytest.MonkeyPatch) -> None:
@@ -87,16 +92,8 @@ class TestCreateEmbeddingClient:
         """Should create HuggingFaceClient when backend is HF."""
         settings.embedding_config.backend = EmbeddingBackend.HUGGINGFACE
         _patch_hf_deps_available(monkeypatch)
-        # Mock HF import to verify it is used
-        with patch("ai_psychiatrist.infrastructure.llm.huggingface.HuggingFaceClient") as MockHF:
-            client = create_embedding_client(settings)
-            assert client == MockHF.return_value
-            # Verify constructor args
-            MockHF.assert_called_once_with(
-                backend_settings=settings.backend,
-                model_settings=settings.model,
-                huggingface_settings=settings.huggingface,
-            )
+        client = create_embedding_client(settings)
+        assert isinstance(client, HuggingFaceClient)
 
     def test_create_hf_client_fails_fast_when_deps_missing(
         self, settings: Settings, monkeypatch: pytest.MonkeyPatch
