@@ -1,6 +1,6 @@
 # Next Steps
 
-**Status**: Ready for Run 11 (post Run 10 fixes)
+**Status**: Ready for Run 12 (post Run 11 hardening)
 **Last Updated**: 2026-01-04
 
 ---
@@ -86,6 +86,11 @@ The paper's reference implementation (`_reference/ai_psychiatrist/`) demonstrate
 - **Zero-shot evaluated 39/41 participants**: PIDs 383 and 427 failed with `Exceeded maximum retries (3) for output validation` due to invalid control characters in LLM JSON output. This was fixed in `tolerant_json_fixups()` by adding step 5 (control char escaping).
 - **Few-shot evaluated 0/41 participants**: every participant failed with missing HuggingFace deps (`torch`), because the run used `EMBEDDING_BACKEND=huggingface` without installing `--extra hf`.
 
+**Never-again prevention** (now enforced):
+- `make dev` installs HuggingFace extras by default (FP16 embeddings).
+- Few-shot runs fail fast with `MissingHuggingFaceDependenciesError` before wasting hours.
+- JSON parsing uses `parse_llm_json()` with `json-repair` as a last-resort fallback (Spec 059) and `PYDANTIC_AI_RETRIES=5` (Spec 058).
+
 **What we can still learn from it** (debugging only):
 - The run artifact contains the new `item_signals` keys (`verbalized_confidence`, `token_*`, `consistency_*`), so the instrumentation path works.
 - Use it only as a “signals present” smoke test; do not interpret AURC/MAE deltas from this run.
@@ -134,7 +139,7 @@ Code defaults exist for testing and fallback only. They are NOT recommended for 
 
 Specs 048–051 are now implemented. The next step is to run a new reproduction that emits the new per-item signals and then evaluate AURC/AUGRC across confidence variants.
 
-### What Run 11 is testing
+### What Run 12 is testing
 
 | Spec | Capability | Where it shows up |
 |------|------------|-------------------|
@@ -143,7 +148,7 @@ Specs 048–051 are now implemented. The next step is to run a new reproduction 
 | 050 | Consistency-based confidence (multi-sample) | `item_signals[*]["consistency_*"]` (requires consistency enabled) |
 | 051 | Token-level CSFs from logprobs | `item_signals[*]["token_msp|token_pe|token_energy"]` (backend-dependent) |
 
-### Run 11 checklist (don’t skip)
+### Run 12 checklist (don’t skip)
 
 1. Preflight: confirm the validated configuration is active
    - `cp .env.example .env` (if needed)
@@ -176,22 +181,20 @@ Specs 048–051 are now implemented. The next step is to run a new reproduction 
    - If the run artifact contains no `token_*` keys, skip token variants for this run (the evaluator will fail fast by design).
 
 2. Enable consistency signals (Spec 050)
-   - Option A (recommended): CLI overrides (explicit in the run log)
-     - `--consistency-samples 5 --consistency-temperature 0.3`
-     - (Optional) Increase samples if you want a tighter agreement estimate: `--consistency-samples 10`
-   - Option B: `.env`
+   - `.env.example` enables consistency by default for the confidence suite:
      - `CONSISTENCY_ENABLED=true`
-     - (Defaults in `.env.example`) `CONSISTENCY_N_SAMPLES=5`, `CONSISTENCY_TEMPERATURE=0.3`
+     - `CONSISTENCY_N_SAMPLES=5`
+     - `CONSISTENCY_TEMPERATURE=0.3`
+   - Optional: override via CLI (explicit in the run log):
+     - `--consistency-samples 10` (tighter agreement estimate)
 
 3. Run in tmux
 
    ```bash
-   tmux new -s run11
+   tmux new -s run12
    uv run python scripts/reproduce_results.py \
      --split paper-test \
-     --consistency-samples 5 \
-     --consistency-temperature 0.3 \
-     2>&1 | tee data/outputs/run11_confidence_suite_$(date +%Y%m%d_%H%M%S).log
+     2>&1 | tee data/outputs/run12_confidence_suite_$(date +%Y%m%d_%H%M%S).log
    ```
 
 4. Evaluate selective prediction (compare confidence variants)

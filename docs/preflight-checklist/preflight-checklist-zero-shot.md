@@ -25,7 +25,7 @@ uv run python scripts/reproduce_results.py --split paper-test --dry-run
 
 Verify the dry-run header shows:
 - `Embedding Backend: huggingface` (or your intended backend)
-- `Consistency: disabled` unless you explicitly enabled it
+- `Consistency: ENABLED (n=5, temp=0.3)` if you are using `.env.example` (confidence suite)
 - And then run **zero-shot only**:
 ```bash
 uv run python scripts/reproduce_results.py --split paper-test --zero-shot-only

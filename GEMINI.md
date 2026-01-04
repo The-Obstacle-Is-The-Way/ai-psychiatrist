@@ -88,14 +88,14 @@ If the header is wrong, **stop** and fix config before starting a multi-hour run
 ## Running Reproduction (tmux)
 
 ```bash
-tmux new -s run11
+tmux new -s run12
 
 # Full reproduction (zero-shot + few-shot) with consistency signals (Spec 050)
 uv run python scripts/reproduce_results.py \
   --split paper-test \
   --consistency-samples 5 \
   --consistency-temperature 0.3 \
-  2>&1 | tee data/outputs/run11_$(date +%Y%m%d_%H%M%S).log
+  2>&1 | tee data/outputs/run12_$(date +%Y%m%d_%H%M%S).log
 ```
 
 To make consistency “always on” without remembering CLI flags, set in `.env`:

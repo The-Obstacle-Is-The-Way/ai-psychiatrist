@@ -35,12 +35,10 @@ uv run python scripts/reproduce_results.py --split paper-test --dry-run
 - `--few-shot-only`: runs few-shot only.
 - `--zero-shot-only`: runs zero-shot only.
 
-If you want all confidence-suite signals in one artifact, run both modes and enable consistency:
+If you want all confidence-suite signals in one artifact, run both modes (default). `.env.example` enables consistency by default:
 ```bash
 uv run python scripts/reproduce_results.py \
-  --split paper-test \
-  --consistency-samples 5 \
-  --consistency-temperature 0.3
+  --split paper-test
 ```
 
 ---
@@ -165,7 +163,7 @@ uv run python scripts/reproduce_results.py \
   print(f'Pydantic AI Enabled: {s.pydantic_ai.enabled}')
   print(f'Pydantic AI Retries: {s.pydantic_ai.retries}')
   "
-  # Expected: Enabled=True, Retries=3
+  # Expected: Enabled=True, Retries=5
   ```
 
 ---
