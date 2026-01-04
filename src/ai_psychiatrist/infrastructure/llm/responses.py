@@ -16,6 +16,7 @@ import json_repair
 
 from ai_psychiatrist.domain.exceptions import LLMResponseParseError
 from ai_psychiatrist.infrastructure.logging import get_logger
+from ai_psychiatrist.infrastructure.telemetry import TelemetryCategory, record_telemetry
 
 logger = get_logger(__name__)
 
@@ -261,6 +262,11 @@ def parse_llm_json(text: str) -> dict[str, Any]:
                 component="json_parser",
                 before_hash=_stable_text_hash(text),
             )
+            record_telemetry(
+                TelemetryCategory.JSON_PYTHON_LITERAL_FALLBACK,
+                before_hash=_stable_text_hash(text),
+                text_length=len(text),
+            )
             return result
         except (SyntaxError, ValueError):
             pass
@@ -274,6 +280,11 @@ def parse_llm_json(text: str) -> dict[str, Any]:
             logger.info(
                 "json-repair recovered malformed LLM JSON",
                 component="json_parser",
+                text_hash=_stable_text_hash(text),
+                text_length=len(text),
+            )
+            record_telemetry(
+                TelemetryCategory.JSON_REPAIR_FALLBACK,
                 text_hash=_stable_text_hash(text),
                 text_length=len(text),
             )
@@ -426,6 +437,14 @@ def tolerant_json_fixups(text: str) -> str:
             after_length=len(fixed),
             before_hash=_stable_text_hash(text),
             after_hash=_stable_text_hash(fixed),
+        )
+        record_telemetry(
+            TelemetryCategory.JSON_FIXUPS_APPLIED,
+            fixes=applied_fixes,
+            before_hash=_stable_text_hash(text),
+            after_hash=_stable_text_hash(fixed),
+            before_length=len(text),
+            after_length=len(fixed),
         )
 
     return fixed

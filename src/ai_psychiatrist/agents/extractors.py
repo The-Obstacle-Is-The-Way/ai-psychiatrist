@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import hashlib
 import json
 import re
 
@@ -20,12 +21,39 @@ from ai_psychiatrist.infrastructure.llm.responses import (
     parse_llm_json,
 )
 from ai_psychiatrist.infrastructure.logging import get_logger
+from ai_psychiatrist.infrastructure.telemetry import TelemetryCategory, record_telemetry
 
 logger = get_logger(__name__)
 
 
 _DEFAULT_QUANT_REASON = "Auto-filled: missing reason"
 _DEFAULT_QUANT_EVIDENCE = "No relevant evidence found"
+
+
+def _stable_hash(text: str) -> str:
+    return hashlib.sha256(text.encode("utf-8")).hexdigest()[:12]
+
+
+def _summarize_validation_error(err: ValidationError) -> dict[str, object]:
+    errors = err.errors()
+    # Avoid leaking input values: capture only locations + error types.
+    summarized: list[dict[str, str]] = []
+    for e in errors[:10]:
+        loc = e.get("loc", ())
+        loc_str = (
+            ".".join(str(part) for part in loc) if isinstance(loc, (list, tuple)) else str(loc)
+        )
+        err_type = e.get("type")
+        summarized.append(
+            {
+                "loc": loc_str,
+                "type": str(err_type) if err_type is not None else "unknown",
+            }
+        )
+    return {
+        "error_count": len(errors),
+        "errors_top10": summarized,
+    }
 
 
 def _fill_missing_quantitative_fields(data: object) -> object:
@@ -79,6 +107,11 @@ def _extract_answer_json(text: str) -> str:
     """Extract required JSON from <answer>...</answer> tags (preferred) or fallbacks."""
     json_str = _find_answer_json(text, allow_unwrapped_object=True)
     if json_str is None:
+        record_telemetry(
+            TelemetryCategory.PYDANTIC_RETRY,
+            extractor="_extract_answer_json",
+            reason="missing_structure",
+        )
         raise ModelRetry(
             "Could not find structured output. "
             "Please wrap your JSON response in <answer>...</answer> tags."
@@ -113,6 +146,12 @@ def extract_qualitative(text: str) -> QualitativeOutput:
     # Validation: Check for missing required tags
     missing = [tag for tag in required_tags if not extracted.get(tag)]
     if missing:
+        record_telemetry(
+            TelemetryCategory.PYDANTIC_RETRY,
+            extractor="extract_qualitative",
+            reason="missing_structure",
+            missing_tags=missing,
+        )
         raise ModelRetry(
             f"Missing required XML tags: {', '.join(missing)}. "
             "Please ensure all assessment sections are provided in XML tags."
@@ -135,6 +174,12 @@ def extract_qualitative(text: str) -> QualitativeOutput:
             exact_quotes=quotes,
         )
     except ValidationError as e:
+        record_telemetry(
+            TelemetryCategory.PYDANTIC_RETRY,
+            extractor="extract_qualitative",
+            reason="schema_validation",
+            **_summarize_validation_error(e),
+        )
         raise ModelRetry(f"Output validation failed: {e}") from e
 
 
@@ -150,10 +195,31 @@ def extract_quantitative(text: str) -> QuantitativeOutput:
         data = parse_llm_json(json_str)
         return QuantitativeOutput.model_validate(_fill_missing_quantitative_fields(data))
     except json.JSONDecodeError as e:
+        record_telemetry(
+            TelemetryCategory.PYDANTIC_RETRY,
+            extractor="extract_quantitative",
+            reason="json_parse",
+            error_type=type(e).__name__,
+            lineno=e.lineno,
+            colno=e.colno,
+            json_hash=_stable_hash(json_str),
+            json_length=len(json_str),
+        )
         raise ModelRetry(
             f"Invalid JSON in <answer>: {e}. Please ensure <answer> contains valid JSON."
         ) from e
     except (ValidationError, ValueError) as e:
+        telemetry_context: dict[str, object] = {"error_type": type(e).__name__}
+        if isinstance(e, ValidationError):
+            telemetry_context.update(_summarize_validation_error(e))
+        record_telemetry(
+            TelemetryCategory.PYDANTIC_RETRY,
+            extractor="extract_quantitative",
+            reason="schema_validation",
+            json_hash=_stable_hash(json_str),
+            json_length=len(json_str),
+            **telemetry_context,
+        )
         raise ModelRetry(
             f"Response validation failed: {e}. Please ensure all PHQ-8 items are present and valid."
         ) from e
@@ -172,11 +238,26 @@ def extract_judge_metric(text: str) -> JudgeMetricOutput:
             data = parse_llm_json(json_str)
             return JudgeMetricOutput.model_validate(data)
         except (json.JSONDecodeError, ValidationError, ValueError) as e:
+            record_telemetry(
+                TelemetryCategory.PYDANTIC_RETRY,
+                extractor="extract_judge_metric",
+                reason="schema_validation"
+                if isinstance(e, (ValidationError, ValueError))
+                else "json_parse",
+                error_type=type(e).__name__,
+                json_hash=_stable_hash(json_str),
+                json_length=len(json_str),
+            )
             raise ModelRetry(f"Invalid judge output JSON: {e}") from e
 
     # Intentional fallback to score extraction (not silent degradation)
     score = extract_score_from_text(text)
     if score is None:
+        record_telemetry(
+            TelemetryCategory.PYDANTIC_RETRY,
+            extractor="extract_judge_metric",
+            reason="missing_structure",
+        )
         raise ModelRetry(
             "Could not extract judge score. Please include a line like 'Score: 4' "
             "with a number between 1 and 5."
@@ -185,6 +266,12 @@ def extract_judge_metric(text: str) -> JudgeMetricOutput:
     try:
         return JudgeMetricOutput.model_validate({"score": score, "explanation": text.strip()})
     except ValidationError as e:
+        record_telemetry(
+            TelemetryCategory.PYDANTIC_RETRY,
+            extractor="extract_judge_metric",
+            reason="schema_validation",
+            **_summarize_validation_error(e),
+        )
         raise ModelRetry(f"Invalid judge output: {e}") from e
 
 
@@ -201,11 +288,26 @@ def extract_meta_review(text: str) -> MetaReviewOutput:
             data = parse_llm_json(json_str)
             return MetaReviewOutput.model_validate(data)
         except (json.JSONDecodeError, ValidationError, ValueError) as e:
+            record_telemetry(
+                TelemetryCategory.PYDANTIC_RETRY,
+                extractor="extract_meta_review",
+                reason="schema_validation"
+                if isinstance(e, (ValidationError, ValueError))
+                else "json_parse",
+                error_type=type(e).__name__,
+                json_hash=_stable_hash(json_str),
+                json_length=len(json_str),
+            )
             raise ModelRetry(f"Invalid meta-review output JSON: {e}") from e
 
     tags = extract_xml_tags(text, ["severity", "explanation"])
     severity_raw = tags.get("severity", "").strip()
     if not severity_raw:
+        record_telemetry(
+            TelemetryCategory.PYDANTIC_RETRY,
+            extractor="extract_meta_review",
+            reason="missing_structure",
+        )
         raise ModelRetry(
             "Could not find <severity> tag. Please include <severity>0-4</severity> "
             "and <explanation>...</explanation> in your response."
@@ -214,6 +316,12 @@ def extract_meta_review(text: str) -> MetaReviewOutput:
     try:
         severity_value = int(severity_raw)
     except ValueError as e:
+        record_telemetry(
+            TelemetryCategory.PYDANTIC_RETRY,
+            extractor="extract_meta_review",
+            reason="schema_validation",
+            error_type=type(e).__name__,
+        )
         raise ModelRetry(f"Invalid severity value: {severity_raw!r}. Please provide 0-4.") from e
 
     if not (0 <= severity_value <= 4):
@@ -230,4 +338,10 @@ def extract_meta_review(text: str) -> MetaReviewOutput:
             {"severity": severity_value, "explanation": explanation}
         )
     except ValidationError as e:
+        record_telemetry(
+            TelemetryCategory.PYDANTIC_RETRY,
+            extractor="extract_meta_review",
+            reason="schema_validation",
+            **_summarize_validation_error(e),
+        )
         raise ModelRetry(f"Invalid meta-review output: {e}") from e
