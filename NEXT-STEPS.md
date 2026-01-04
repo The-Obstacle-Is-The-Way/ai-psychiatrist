@@ -148,7 +148,7 @@ Specs 048–051 are now implemented. The next step is to run a new reproduction 
 1. Preflight: confirm the validated configuration is active
    - `cp .env.example .env` (if needed)
    - If `EMBEDDING_BACKEND=huggingface`: install deps + verify they load (this was the Run 10 failure mode):
-     - `make dev-hf`
+     - `make dev`
      - `uv run python -c "import torch; print(torch.__version__)"`
    - Confirm transcripts exist: `ls -d data/transcripts_participant_only/*_P | wc -l`
    - `uv run python scripts/reproduce_results.py --split paper-test --dry-run`

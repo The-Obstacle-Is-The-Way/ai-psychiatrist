@@ -34,7 +34,7 @@ Selects which runtime implementation is used for chat.
 | `LLM_HF_TOKEN` | string | *(unset)* | Optional HuggingFace token (prefer `huggingface-cli login`) |
 
 **Notes:**
-- HuggingFace dependencies are optional; install with `make dev-hf` (or `pip install 'ai-psychiatrist[hf]'`).
+- HuggingFace dependencies are optional; install with `make dev` (repo) or `uv sync --extra hf`, or `pip install 'ai-psychiatrist[hf]'`.
 - Canonical model names like `gemma3:27b` are resolved to backend-specific IDs when possible.
 - Official MedGemma weights are HuggingFace-only; there is no official MedGemma in the Ollama library.
 - The `LLM_HF_*` settings are used when HuggingFace is selected for either chat (`LLM_BACKEND=huggingface`) or embeddings (`EMBEDDING_BACKEND=huggingface`).

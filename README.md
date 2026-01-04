@@ -46,7 +46,7 @@ git clone https://github.com/The-Obstacle-Is-The-Way/ai-psychiatrist.git
 cd ai-psychiatrist
 
 # Install dependencies (uses uv)
-make dev  # or: make dev-hf (to enable HuggingFace backends)
+make dev  # installs dev + docs + HuggingFace (recommended)
 
 # Pull required models
 ollama pull gemma3:27b-it-qat  # or gemma3:27b
@@ -65,11 +65,11 @@ make serve
 >
 > If you installed `make dev` (no HF deps), set `EMBEDDING_BACKEND=ollama` in `.env` for a pure-Ollama setup.
 >
-> **Why HF deps matter even if embeddings exist**: few-shot retrieval embeds the *query* (participant evidence) at runtime in the same embedding space. If `EMBEDDING_BACKEND=huggingface`, you still need HF deps (`make dev-hf`) to compute query embeddings, even when reference `*.npz` files are already present.
+> **Why HF deps matter even if embeddings exist**: few-shot retrieval embeds the *query* (participant evidence) at runtime in the same embedding space. If `EMBEDDING_BACKEND=huggingface`, you still need HF deps (`make dev`) to compute query embeddings, even when reference `*.npz` files are already present.
 
 > **Optional (Appendix F)**: The paper evaluates MedGemma 27B as an alternative model for the
 > quantitative agent. There is no official MedGemma model in the Ollama library; use the HuggingFace
-> backend (`make dev-hf`, `LLM_BACKEND=huggingface`, `MODEL_QUANTITATIVE_MODEL=medgemma:27b`) to load
+> backend (`make dev`, `LLM_BACKEND=huggingface`, `MODEL_QUANTITATIVE_MODEL=medgemma:27b`) to load
 > the official gated weights.
 
 ### Run Your First Assessment

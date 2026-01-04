@@ -30,7 +30,9 @@ def create_llm_client(settings: Settings) -> LLMClient:
             )
         except ImportError as e:
             raise ImportError(
-                "HuggingFace backend requires: pip install 'ai-psychiatrist[hf]'"
+                "HuggingFace backend requires optional dependencies. "
+                "Install with `make dev` (repo) or `uv sync --extra hf`, "
+                "or `pip install 'ai-psychiatrist[hf]'`."
             ) from e
 
         return HuggingFaceClient(
@@ -62,7 +64,9 @@ def create_embedding_client(settings: Settings) -> EmbeddingClient:
             )
         except ImportError as e:
             raise ImportError(
-                "HuggingFace backend requires: pip install 'ai-psychiatrist[hf]'"
+                "HuggingFace backend requires optional dependencies. "
+                "Install with `make dev` (repo) or `uv sync --extra hf`, "
+                "or `pip install 'ai-psychiatrist[hf]'`."
             ) from e
 
         # HuggingFaceClient takes (backend_settings, model_settings)

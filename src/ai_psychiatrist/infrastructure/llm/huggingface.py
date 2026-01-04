@@ -57,7 +57,8 @@ def _load_transformers_deps() -> _TransformersDeps:
     except ModuleNotFoundError as e:
         msg = (
             "HuggingFace backend requires optional dependencies. "
-            "Install with: `pip install 'ai-psychiatrist[hf]'`"
+            "Install with `make dev` (repo) or `uv sync --extra hf`, "
+            "or `pip install 'ai-psychiatrist[hf]'`."
         )
         raise MissingHuggingFaceDependenciesError(msg) from e
 

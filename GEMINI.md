@@ -41,7 +41,7 @@ Use `make` for most operations. The project relies on `uv` for dependency manage
 ### Setup
 *   `make install`: Install production dependencies.
 *   `make dev`: Install all dependencies (dev + docs) and pre-commit hooks.
-*   `make dev-hf`: Install dev dependencies + HuggingFace extras.
+*   `make dev`: Install dev + docs + HuggingFace extras.
 
 ### Development & Server
 *   `make serve`: Start the development server (FastAPI) on port 8000 with hot reload.
@@ -93,7 +93,7 @@ Use `make` for most operations. The project relies on `uv` for dependency manage
 | `EMBEDDING_BACKEND` | `huggingface` | FP16 embeddings (better quality) |
 | `OLLAMA_TIMEOUT_SECONDS` | `600` | Large transcripts need extended time |
 
-**Important (HuggingFace embeddings)**: Precomputed reference embeddings (`*.npz`) are not enough for few-shot. Retrieval requires embedding each participant’s evidence text at runtime in the *same* embedding space. If `EMBEDDING_BACKEND=huggingface`, install HF deps with `make dev-hf` or few-shot will fail when embedding queries.
+**Important (HuggingFace embeddings)**: Precomputed reference embeddings (`*.npz`) are not enough for few-shot. Retrieval requires embedding each participant’s evidence text at runtime in the *same* embedding space. If `EMBEDDING_BACKEND=huggingface`, install HF deps with `make dev` or few-shot will fail when embedding queries.
 
 ## Development Guidelines
 

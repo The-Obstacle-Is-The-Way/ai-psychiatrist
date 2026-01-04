@@ -103,7 +103,7 @@ This uses **official weights** via Transformers (not an Ollama community upload)
   current HuggingFace chat client (`AutoModelForCausalLM`).
 
 Setup (one-time):
-1. Install HuggingFace deps: `pip install 'ai-psychiatrist[hf]'` (or `make dev-hf` if available)
+1. Install HuggingFace deps: `pip install 'ai-psychiatrist[hf]'` (or `make dev` if available)
 2. Accept model terms + login:
    - https://huggingface.co/google/medgemma-27b-text-it
    - `huggingface-cli login`

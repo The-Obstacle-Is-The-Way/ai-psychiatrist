@@ -103,7 +103,7 @@ These block entire participants but are visible:
 | 2 | LLM timeout on evidence extraction | Exception propagates | ✅ Good (fixed in ANALYSIS-026) |
 | 2 | JSON parse failure after all fixups | Raises `json.JSONDecodeError` | ✅ Good (fixed in ANALYSIS-026) |
 | 3 | Embedding artifact missing | Raises `FileNotFoundError` | ✅ Good |
-| 3 | HuggingFace embedding backend missing optional deps (`torch`) | Raises `MissingHuggingFaceDependenciesError` when query embeddings are needed | ✅ Loud; ensure `make dev-hf` preflight |
+| 3 | HuggingFace embedding backend missing optional deps (`torch`) | Raises `MissingHuggingFaceDependenciesError` when query embeddings are needed | ✅ Loud; ensure `make dev` preflight |
 | 4 | Tag file structure invalid | Raises validation error | ✅ Good |
 | 5 | Pydantic validation failure (missing items) | Retries then fails | ✅ Good |
 | 7 | Ground truth CSV mismatch | Raises `ValueError` (BUG-025 fix) | ✅ Good |

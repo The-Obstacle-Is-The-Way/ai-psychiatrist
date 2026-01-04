@@ -92,7 +92,7 @@ Environment-driven via `.env`. See `docs/configs/configuration-philosophy.md` fo
 | `EMBEDDING_BACKEND` | `huggingface` | FP16 embeddings (better quality) |
 | `OLLAMA_TIMEOUT_SECONDS` | `600` | Large transcripts need extended time |
 
-**Important (HuggingFace embeddings)**: Precomputed reference embeddings (`*.npz`) are not sufficient for few-shot. Retrieval requires *query embeddings* computed at runtime from the participant’s evidence text in the same embedding space. If `EMBEDDING_BACKEND=huggingface`, install HF deps (`make dev-hf`) or few-shot will fail when embedding queries.
+**Important (HuggingFace embeddings)**: Precomputed reference embeddings (`*.npz`) are not sufficient for few-shot. Retrieval requires *query embeddings* computed at runtime from the participant’s evidence text in the same embedding space. If `EMBEDDING_BACKEND=huggingface`, install HF deps (`make dev`) or few-shot will fail when embedding queries.
 
 ## Testing
 

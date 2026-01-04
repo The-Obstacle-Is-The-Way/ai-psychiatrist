@@ -110,7 +110,7 @@ For accessing official Google models (including MedGemma), use HuggingFace Trans
 
 ```bash
 # Install the optional HuggingFace backend dependencies:
-make dev-hf
+make dev
 # Or, if installing via pip:
 pip install "ai-psychiatrist[hf]"
 ```

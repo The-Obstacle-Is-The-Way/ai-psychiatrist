@@ -816,7 +816,7 @@ def init_embedding_service(
                 "Few-shot retrieval requires query embeddings computed at runtime in the same "
                 "embedding space as the precomputed reference embeddings. "
                 "`EMBEDDING_BACKEND=huggingface` is selected but optional dependencies are "
-                f"missing: {missing_str}. Install with `make dev-hf` (or `uv sync --extra hf`)."
+                f"missing: {missing_str}. Install with `make dev` (or `uv sync --extra hf`)."
             )
             raise MissingHuggingFaceDependenciesError(message)
 

@@ -50,7 +50,7 @@ ollama pull qwen3-embedding:8b
 > **Note**: These are large models. Ensure you have sufficient disk space (~35GB total).
 
 > **High-Quality Setup (Optional)**:
-> - **FP16 embeddings**: keep `EMBEDDING_BACKEND=huggingface` (default) and install HF deps with `make dev-hf`
+> - **FP16 embeddings**: keep `EMBEDDING_BACKEND=huggingface` (default) and install HF deps with `make dev`
 > - **Official MedGemma** (Appendix F): set `LLM_BACKEND=huggingface` and `MODEL_QUANTITATIVE_MODEL=medgemma:27b`
 >
 > See [Model Registry - High-Quality Setup](../models/model-registry.md#high-quality-setup-recommended-for-production).
@@ -63,8 +63,8 @@ cp .env.example .env
 
 Default configuration uses the validated baseline settings from `.env.example`. Edit `.env` to customize.
 
-> **Note**: The codebase supports separate backends for chat and embeddings. If you installed `make dev`
-> (without HuggingFace deps), set `EMBEDDING_BACKEND=ollama` in `.env` for a pure-Ollama setup.
+> **Note**: The codebase supports separate backends for chat and embeddings. If you did a minimal install
+> (e.g., `make install` / `uv sync --no-dev`), set `EMBEDDING_BACKEND=ollama` in `.env` for a pure-Ollama setup.
 
 ---
 

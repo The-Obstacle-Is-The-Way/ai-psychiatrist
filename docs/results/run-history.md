@@ -574,7 +574,7 @@ Computed via:
 
 **Action items before Run 11**:
 - Use a clean git state for the run (commit or stash).
-- If using HuggingFace embeddings (`EMBEDDING_BACKEND=huggingface`), install deps first: `make dev-hf` (or `uv sync --extra hf`) and verify `uv run python -c "import torch"`.
+- If using HuggingFace embeddings (`EMBEDDING_BACKEND=huggingface`), install deps first: `make dev` (or `uv sync --extra hf`) and verify `uv run python -c "import torch"`.
 - Re-run the confidence suite on a valid run artifact (both modes evaluated) before interpreting deltas.
 
 ---

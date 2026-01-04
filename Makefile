@@ -8,13 +8,11 @@ help: ## Show this help message
 install: ## Install production dependencies
 	uv sync --no-dev
 
-dev: ## Install all dependencies (including dev)
-	uv sync --extra dev --extra docs
-	uv run pre-commit install
-
-dev-hf: ## Install dev deps + HuggingFace backend extras
+dev: ## Install all dependencies (dev + docs + hf)
 	uv sync --extra dev --extra docs --extra hf
 	uv run pre-commit install
+
+dev-hf: dev ## Backward-compatible alias for dev
 
 # ============== Testing ==============
 test: ## Run all tests with coverage

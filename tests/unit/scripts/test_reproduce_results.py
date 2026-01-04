@@ -94,7 +94,7 @@ def test_init_embedding_service_fails_fast_when_hf_deps_missing(
 
     args = argparse.Namespace(zero_shot_only=False, split="paper-test")
 
-    with pytest.raises(MissingHuggingFaceDependenciesError, match="make dev-hf"):
+    with pytest.raises(MissingHuggingFaceDependenciesError, match="make dev"):
         init_embedding_service(
             args=args,
             data_settings=DataSettings(base_dir=base_dir, transcripts_dir=transcripts_dir),

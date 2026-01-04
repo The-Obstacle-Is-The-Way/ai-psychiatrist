@@ -100,7 +100,7 @@ Few-shot mode uses reference embeddings to retrieve similar transcript chunks as
   # Alternative: EMBEDDING_BACKEND=ollama (Q4_K_M, legacy baseline)
   ```
 
-  **Note**: HuggingFace backend requires `make dev-hf` to install dependencies.
+  **Note**: HuggingFace backend requires `make dev` to install dependencies.
 
 ### 2.3 Sampling Parameters
 
@@ -661,7 +661,7 @@ If ALL items are checked:
 
 ```bash
 # 1. Setup (first time only)
-make dev-hf     # Install with HuggingFace deps (recommended)
+make dev        # Install with HuggingFace deps (recommended)
 cp .env.example .env
 
 # 2. Pull required Ollama models
