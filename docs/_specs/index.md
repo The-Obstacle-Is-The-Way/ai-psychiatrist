@@ -2,9 +2,29 @@
 
 Implementation-ready (or implementation-planned) specifications for changes that require code modifications.
 
-## Ready to Implement
+## Implemented
 
-All currently scoped specs are implemented and archived under `docs/_archive/specs/`. New proposals should be added here before code changes.
+### Pipeline Robustness (Specs 053-057)
+
+These specs address silent failure modes identified in `PIPELINE-BRITTLENESS.md`:
+
+| Spec | Title | Priority | Complexity | Description |
+|------|-------|----------|------------|-------------|
+| **053** | [Evidence Hallucination Detection](spec-053-evidence-hallucination-detection.md) | High | Medium | Validate extracted evidence quotes exist in source transcript |
+| **054** | [Strict Evidence Schema Validation](spec-054-strict-evidence-schema-validation.md) | High | Low | Fail loudly when evidence JSON has wrong types (string instead of list) |
+| **055** | [Embedding NaN Detection](spec-055-embedding-nan-detection.md) | High | Low | Validate embeddings for NaN/Inf/zero before similarity computation |
+| **056** | [Failure Pattern Observability](spec-056-failure-pattern-observability.md) | Medium | Medium | Structured failure logging with per-run summaries and JSON export |
+| **057** | [Embedding Dimension Strict Mode](spec-057-embedding-dimension-strict-mode.md) | Medium | Low | Change default to fail on dimension mismatch instead of silent skip |
+
+**Implemented in**: PR #92 (2026-01-03)
+
+**Dependency Order used**: 054 → 053 (schema validation before hallucination detection)
+
+**Implementation Order used**:
+1. Spec 054 + 055
+2. Spec 053 (default substring grounding; optional `rapidfuzz` for fuzzy mode)
+3. Spec 057 (strict-by-default, explicit escape hatch)
+4. Spec 056 (run-level failure registry + JSON artifact)
 
 ## Deferred
 
@@ -16,12 +36,10 @@ Implemented specs are distilled into canonical (non-archive) documentation under
 
 - Quantitative severity bounds (BUG-045): [spec](../_archive/specs/spec-045-quantitative-severity-bounds.md) → [PHQ-8 docs](../clinical/phq8.md#severity-bounds-partial-assessments)
 - Feature index + defaults: [features.md](../pipeline-internals/features.md)
-- Few-shot reference prompt format: [few-shot-prompt-format.md](../embeddings/few-shot-prompt-format.md)
-- Retrieval debugging workflow: [debugging-retrieval-quality.md](../embeddings/debugging-retrieval-quality.md)
-- Item-tag filtering setup + schema: [item-tagging-setup.md](../embeddings/item-tagging-setup.md)
-- Chunk scoring setup + schema: [chunk-scoring.md](../embeddings/chunk-scoring.md)
-- CRAG validation setup: [crag-validation-guide.md](../statistics/crag-validation-guide.md)
-- Embedding generation (fail-fast + partial): [embedding-generation.md](../embeddings/embedding-generation.md)
+- RAG runtime features (prompt format, CRAG, batch embedding): [runtime-features.md](../rag/runtime-features.md)
+- RAG debugging workflow: [debugging.md](../rag/debugging.md)
+- RAG artifact generation (embeddings + tags): [artifact-generation.md](../rag/artifact-generation.md)
+- Chunk scoring setup + schema: [chunk-scoring.md](../rag/chunk-scoring.md)
 - Error handling philosophy: [error-handling.md](../developer/error-handling.md)
 - Exception taxonomy: [exceptions.md](../developer/exceptions.md)
 - Metrics definitions + output schema: [metrics-and-evaluation.md](../statistics/metrics-and-evaluation.md)

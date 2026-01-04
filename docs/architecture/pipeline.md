@@ -179,7 +179,7 @@ For each item with evidence:
    - Spec 36: CRAG reference validation (`accept`/`reject`)
 5. **Format the references** into a unified `<Reference Examples>` block (Spec 31 + Spec 33 XML fix)
 
-See: `docs/pipeline-internals/features.md` and `docs/embeddings/few-shot-prompt-format.md`.
+See: `docs/pipeline-internals/features.md` and `docs/rag/runtime-features.md`.
 
 ```text
 Query: "i don't enjoy anything anymore, nothing seems fun"

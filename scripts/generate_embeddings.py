@@ -68,6 +68,7 @@ from ai_psychiatrist.infrastructure.llm.factory import create_embedding_client
 from ai_psychiatrist.infrastructure.llm.model_aliases import resolve_model_name
 from ai_psychiatrist.infrastructure.llm.protocols import EmbeddingRequest
 from ai_psychiatrist.infrastructure.logging import get_logger, setup_logging
+from ai_psychiatrist.infrastructure.validation import validate_embedding
 from ai_psychiatrist.services.transcript import TranscriptService
 
 if TYPE_CHECKING:
@@ -162,11 +163,24 @@ class GenerationResult:
     # Spec 40: Skip tracking for --allow-partial mode
     skipped_participants: list[int] = field(default_factory=list)
     total_skipped_chunks: int = 0
+    chunk_skip_reason_counts: dict[str, int] = field(default_factory=dict)
 
     @property
     def has_skips(self) -> bool:
         """True if any participants or chunks were skipped."""
         return len(self.skipped_participants) > 0 or self.total_skipped_chunks > 0
+
+
+@dataclass
+class SkipReport:
+    """Aggregated skip information for a single participant (partial mode only)."""
+
+    skipped_chunks: int = 0
+    chunk_skip_reasons: dict[str, int] = field(default_factory=dict)
+
+    def record_chunk_skip(self, reason: str) -> None:
+        self.skipped_chunks += 1
+        self.chunk_skip_reasons[reason] = self.chunk_skip_reasons.get(reason, 0) + 1
 
 
 def create_sliding_chunks(
@@ -322,6 +336,20 @@ def calculate_split_ids_hash(data_settings: DataSettings, split: str) -> str:
         return "error"
 
 
+def _classify_chunk_skip_reason(exc: Exception) -> str:
+    """Classify chunk-level skip reasons for partial manifests (Spec 057/055)."""
+    message = str(exc)
+    if message.startswith("Embedding dimension mismatch: expected "):
+        return "dimension_mismatch"
+    if "NaN detected" in message:
+        return "embedding_nan"
+    if "Inf detected" in message:
+        return "embedding_inf"
+    if "All-zero" in message:
+        return "embedding_zero"
+    return "embedding_error"
+
+
 async def process_participant(  # noqa: PLR0912
     client: EmbeddingClient,
     transcript_service: TranscriptService,
@@ -334,7 +362,7 @@ async def process_participant(  # noqa: PLR0912
     *,
     tagger: KeywordTagger | None = None,
     allow_partial: bool = False,
-) -> tuple[list[tuple[str, list[float]]], list[list[str]], int]:
+) -> tuple[list[tuple[str, list[float]]], list[list[str]], SkipReport]:
     """Generate embeddings for all chunks of a participant's transcript.
 
     Spec 40: Fail-fast by default, with optional --allow-partial mode.
@@ -355,12 +383,12 @@ async def process_participant(  # noqa: PLR0912
         Tuple of:
         - List of (chunk_text, embedding) pairs.
         - List of tag lists (one per chunk).
-        - Number of skipped chunks.
+        - SkipReport with counts and reason codes (partial mode only).
 
     Raises:
         EmbeddingGenerationError: In strict mode (allow_partial=False), on any failure.
     """
-    skipped_chunks = 0
+    skip_report = SkipReport()
 
     # Load transcript (fail-fast unless allow_partial)
     try:
@@ -372,7 +400,7 @@ async def process_participant(  # noqa: PLR0912
                 participant_id=participant_id,
                 error=str(e),
             )
-            return [], [], 0
+            return [], [], skip_report
         raise EmbeddingGenerationError(
             f"Failed to load transcript for participant {participant_id}: {e}",
             participant_id=participant_id,
@@ -388,7 +416,7 @@ async def process_participant(  # noqa: PLR0912
                 "No chunks produced for transcript (skipping participant)",
                 participant_id=participant_id,
             )
-            return [], [], 0
+            return [], [], skip_report
         raise EmbeddingGenerationError(
             f"No chunks produced for participant {participant_id} (empty transcript)",
             participant_id=participant_id,
@@ -404,16 +432,26 @@ async def process_participant(  # noqa: PLR0912
         # Embed chunk (fail-fast unless allow_partial)
         try:
             embedding = await generate_embedding(client, chunk, model, dimension)
+            if len(embedding) != dimension:
+                raise ValueError(
+                    f"Embedding dimension mismatch: expected {dimension}, got {len(embedding)}"
+                )
+            validate_embedding(
+                np.array(embedding, dtype=np.float32),
+                context=f"generated embedding (participant {participant_id} chunk {chunk_idx})",
+            )
             results.append((chunk, embedding))
         except Exception as e:
             if allow_partial:
+                reason = _classify_chunk_skip_reason(e)
                 logger.warning(
                     "Failed to embed chunk (skipping)",
                     participant_id=participant_id,
                     chunk_index=chunk_idx,
                     error=str(e),
+                    reason=reason,
                 )
-                skipped_chunks += 1
+                skip_report.record_chunk_skip(reason)
                 continue
             raise EmbeddingGenerationError(
                 f"Failed to embed chunk {chunk_idx} for participant {participant_id}: {e}",
@@ -442,13 +480,13 @@ async def process_participant(  # noqa: PLR0912
                 "No chunks embedded for participant (skipping participant)",
                 participant_id=participant_id,
             )
-            return [], [], skipped_chunks
+            return [], [], skip_report
         raise EmbeddingGenerationError(
             f"No chunks embedded for participant {participant_id}",
             participant_id=participant_id,
         )
 
-    return results, chunk_tags, skipped_chunks
+    return results, chunk_tags, skip_report
 
 
 def slugify_model(model: str) -> str:
@@ -585,13 +623,14 @@ async def run_generation_loop(
     # Spec 40: Track skips for partial mode
     skipped_participants: list[int] = []
     total_skipped_chunks = 0
+    skip_reason_counts: dict[str, int] = {}
 
     print(f"\nProcessing {len(participant_ids)} participants...")
     for idx, pid in enumerate(participant_ids, 1):
         if idx % 10 == 0 or idx == len(participant_ids):
             print(f"  Progress: {idx}/{len(participant_ids)} participants...")
 
-        results, chunk_tags, skipped_chunks = await process_participant(
+        results, chunk_tags, skip_report = await process_participant(
             client,
             transcript_service,
             pid,
@@ -604,7 +643,9 @@ async def run_generation_loop(
             allow_partial=config.allow_partial,
         )
 
-        total_skipped_chunks += skipped_chunks
+        total_skipped_chunks += skip_report.skipped_chunks
+        for reason, count in skip_report.chunk_skip_reasons.items():
+            skip_reason_counts[reason] = skip_reason_counts.get(reason, 0) + count
 
         if results:
             all_embeddings[pid] = results
@@ -620,6 +661,7 @@ async def run_generation_loop(
         total_chunks=total_chunks,
         skipped_participants=skipped_participants,
         total_skipped_chunks=total_skipped_chunks,
+        chunk_skip_reason_counts=skip_reason_counts,
     )
 
 
@@ -651,12 +693,19 @@ def save_embeddings(  # noqa: PLR0915
         for pid, tags in result.tags.items():
             json_tags[str(pid)] = tags
 
+    actual_dimensions = [len(emb) for pairs in result.embeddings.values() for _text, emb in pairs]
+    actual_dimension_min = min(actual_dimensions) if actual_dimensions else 0
+    actual_dimension_max = max(actual_dimensions) if actual_dimensions else 0
+
     # Prepare metadata
     metadata = {
         "backend": config.backend_settings.backend.value,
         "model": config.resolved_model,
         "model_canonical": config.model,
         "dimension": config.dimension,
+        "actual_dimension_min": actual_dimension_min,
+        "actual_dimension_max": actual_dimension_max,
+        "dimension_mismatch_count": result.chunk_skip_reason_counts.get("dimension_mismatch", 0),
         "chunk_size": config.chunk_size,
         "chunk_step": config.step_size,
         "min_evidence_chars": config.min_chars,
@@ -813,6 +862,7 @@ async def main_async(args: argparse.Namespace) -> int:  # noqa: PLR0915
             "skipped_participants": result.skipped_participants,
             "skipped_participant_count": len(result.skipped_participants),
             "skipped_chunks": result.total_skipped_chunks,
+            "chunk_skip_reason_counts": result.chunk_skip_reason_counts,
         }
         with manifest_path.open("w", encoding="utf-8") as f:
             json.dump(manifest, f, indent=2)

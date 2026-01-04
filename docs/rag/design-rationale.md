@@ -1,7 +1,7 @@
-# Few-Shot Design Considerations
+# RAG Design Rationale
 
 **Audience**: Researchers evaluating few-shot vs zero-shot approaches
-**Last Updated**: 2026-01-02
+**Last Updated**: 2026-01-03
 
 ---
 
@@ -45,7 +45,7 @@ Chunk 95 (about sleep):
 
 ### The Fix: Spec 35 (Chunk-Level Scoring)
 
-Instead of assigning participant-level scores to chunks, we score each chunk individually:
+Instead of assigning participant-level scores to chunks, we score each chunk individually (0–3 or `null`) based on the chunk content:
 
 ```bash
 # Generate per-chunk scores
@@ -178,6 +178,6 @@ See [Chunk-level scoring](chunk-scoring.md) for generation commands.
 ## Related Documentation
 
 - [Chunk-level scoring (Spec 35)](chunk-scoring.md) - Spec 35 details
-- [Embeddings explained](embeddings-explained.md) - How retrieval works
-- [CRAG validation guide](../statistics/crag-validation-guide.md) - Spec 36 details
-- [Item tagging setup](item-tagging-setup.md) - Spec 34 details
+- [RAG Overview](overview.md) - How retrieval works
+- [Runtime features](runtime-features.md) - CRAG validation (Spec 36), prompt format, batch embedding
+- [Artifact generation](artifact-generation.md) - Embeddings + item tags (Spec 34)

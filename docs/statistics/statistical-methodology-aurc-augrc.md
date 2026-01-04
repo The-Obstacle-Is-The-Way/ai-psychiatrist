@@ -2,7 +2,7 @@
 
 **Purpose**: Explains why AURC/AUGRC are the correct metrics for evaluating selective prediction systems, and why naive MAE comparisons are invalid.
 
-**Last Updated**: 2025-12-29
+**Last Updated**: 2026-01-03
 
 ---
 
@@ -73,6 +73,22 @@ AUGRC = ∫₀^Cmax GeneralizedRisk(c) dc
 - Penalizes both error **and** abstention (because generalized risk scales with coverage)
 - Optional normalized variant (sometimes reported): `nAUGRC = AUGRC / Cmax` when `Cmax > 0`
 
+#### Optimal and Excess Metrics (Spec 052)
+
+Beyond raw AURC/AUGRC, we compute **excess** metrics that measure distance from the theoretical optimum:
+
+| Metric | Definition | Interpretation |
+|--------|------------|----------------|
+| **AURC_optimal** | AURC with oracle ranking (sort by loss ascending) | Theoretical lower bound |
+| **AUGRC_optimal** | AUGRC with oracle ranking | Theoretical lower bound |
+| **e-AURC** | `AURC - AURC_optimal` | How much room for improvement |
+| **e-AUGRC** | `AUGRC - AUGRC_optimal` | How much room for improvement |
+| **AURC_achievable** | AURC of lower convex hull | Best achievable by threshold selection |
+
+**Why excess metrics matter**: A CSF with `e-AURC = 0` perfectly ranks predictions by correctness. The `aurc_gap_pct = (e-AURC / AURC_optimal) × 100` shows percentage improvement possible.
+
+SSOT: `compute_eaurc()`, `compute_eaugrc()`, `compute_aurc_optimal()`, `compute_augrc_optimal()`, `compute_aurc_achievable()` in `src/ai_psychiatrist/metrics/selective_prediction.py`.
+
 ---
 
 ## Why This Matters for Depression Assessment
@@ -99,12 +115,31 @@ Our system predicts PHQ-8 item scores (0-3 scale) from clinical interview transc
 
 ## Our Implementation
 
-### Confidence Signals
+### Confidence Scoring Functions (CSFs)
 
-We use two confidence signals for ranking predictions:
+CSFs are functions that produce a scalar confidence value for each prediction (higher = more confident). They live in `src/ai_psychiatrist/confidence/csf_registry.py` and support composition via the `secondary:` prefix.
 
-1. **`llm_evidence_count`**: Number of evidence spans the LLM cited
-2. **`total_evidence`**: Legacy alias for `llm_evidence_count` (keyword backfill removed in Spec 047)
+| CSF Name | Source | Description |
+|----------|--------|-------------|
+| `llm` / `total_evidence` | Spec 046 | Number of evidence spans cited by LLM |
+| `retrieval_similarity_mean` | Spec 046 | Mean similarity of retrieved references |
+| `retrieval_similarity_max` | Spec 046 | Max similarity of retrieved references |
+| `hybrid_evidence_similarity` | Spec 046 | 0.5 × evidence + 0.5 × similarity |
+| `verbalized` | Spec 048 | LLM's self-reported confidence (1-5 scale) |
+| `verbalized_calibrated` | Spec 048 | Temperature-scaled verbalized confidence |
+| `hybrid_verbalized` | Spec 048 | 0.4 × verbalized + 0.3 × evidence + 0.3 × similarity |
+| `token_msp` | Spec 051 | Mean Maximum Softmax Probability over tokens |
+| `token_pe` | Spec 051 | Predictive entropy (inverted: 1/(1+entropy)) |
+| `token_energy` | Spec 051 | Energy score from logsumexp of logprobs |
+| `consistency` | Spec 050 | Modal confidence from multi-sample scoring |
+| `consistency_inverse_std` | Spec 050 | 1/(1+std) of score distribution |
+| `hybrid_consistency` | Spec 050 | 0.4 × consistency + 0.3 × evidence + 0.3 × similarity |
+| `calibrated` | Spec 049 | Supervised calibrator output (logistic/isotonic) |
+
+**Combining CSFs**: Use `secondary:<csf1>+<csf2>:<average|product>` syntax:
+```bash
+--confidence secondary:token_msp+retrieval_similarity_mean:average
+```
 
 ### Bootstrap Confidence Intervals
 

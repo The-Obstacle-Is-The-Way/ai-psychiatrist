@@ -3,7 +3,18 @@
 **Last Updated**: 2026-01-03
 
 This page is a high-level, **current-state** summary. The canonical timeline + per-run statistics live in:
+
 - `docs/results/run-history.md`
+
+---
+
+## ⚠️ Run Integrity Warning
+
+**A silent fallback bug was discovered on 2026-01-03** that could have caused few-shot mode to silently degrade to zero-shot if JSON parsing failed. Runs 1-9 may be affected. Run 10 started with pre-fix code.
+
+**For publication-quality results, re-run with post-fix code.**
+
+See: `docs/_bugs/ANALYSIS-026-JSON-PARSING-ARCHITECTURE-AUDIT.md` and `docs/results/run-history.md` for details.
 
 ---
 
@@ -84,8 +95,8 @@ Generated artifacts:
 - `data/embeddings/huggingface_qwen3_8b_paper_train_participant_only.chunk_scores.meta.json`
 
 See:
-- `docs/embeddings/chunk-scoring.md`
-- `docs/statistics/crag-validation-guide.md` (Spec 36; optional validation layer)
+- `docs/rag/chunk-scoring.md`
+- `docs/rag/runtime-features.md` (includes Spec 36 CRAG validation)
 
 ---
 
@@ -93,5 +104,5 @@ See:
 
 - Feature defaults: `docs/pipeline-internals/features.md`
 - Configuration philosophy: `docs/configs/configuration-philosophy.md`
-- Retrieval debugging: `docs/embeddings/debugging-retrieval-quality.md`
-- Batch query embedding: `docs/embeddings/batch-query-embedding.md`
+- RAG debugging: `docs/rag/debugging.md`
+- RAG runtime features: `docs/rag/runtime-features.md`

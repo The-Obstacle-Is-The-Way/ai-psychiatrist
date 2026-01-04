@@ -1,7 +1,7 @@
 # Clinical Understanding: How This System Works
 
 **Audience**: Clinicians, researchers, non-CS folks
-**Last Updated**: 2025-12-24
+**Last Updated**: 2026-01-03
 
 ---
 

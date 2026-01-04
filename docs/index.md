@@ -66,29 +66,25 @@ AI Psychiatrist is an engineering-focused, reproducible implementation of a rese
 | [Model Registry](models/model-registry.md) | Supported models and backends |
 | [Model Wiring](models/model-wiring.md) | How agents connect to models |
 
-### Embeddings & Few-Shot
+### RAG (Few-Shot Retrieval)
 
 | Document | Description |
 |----------|-------------|
-| [Embeddings Explained](embeddings/embeddings-explained.md) | Core embedding concepts |
-| [Embedding Generation](embeddings/embedding-generation.md) | Fail-fast embedding artifacts |
-| [Few-Shot Design Considerations](embeddings/few-shot-design-considerations.md) | Design rationale and tradeoffs |
-| [Few-Shot Prompt Format](embeddings/few-shot-prompt-format.md) | How reference examples are formatted |
-| [Chunk Scoring](embeddings/chunk-scoring.md) | Chunk-level PHQ-8 scoring (Spec 35) |
-| [Item Tagging Setup](embeddings/item-tagging-setup.md) | Item-tag filtering (Spec 34) |
-| [Retrieval Debugging](embeddings/debugging-retrieval-quality.md) | Interpret retrieval logs |
-| [Batch Query Embedding](embeddings/batch-query-embedding.md) | Query-embedding timeout fix (Spec 37) |
+| [RAG Overview](rag/overview.md) | Core embedding + retrieval concepts (plain language) |
+| [Design Rationale](rag/design-rationale.md) | Why few-shot is built this way, known limitations |
+| [Artifact Generation](rag/artifact-generation.md) | Embeddings + item tags (Specs 34, 40) |
+| [Chunk Scoring](rag/chunk-scoring.md) | Chunk-level PHQ-8 scoring (Spec 35) |
+| [Runtime Features](rag/runtime-features.md) | Prompt format, CRAG validation, batch embedding (Specs 36, 37) |
+| [Debugging](rag/debugging.md) | Interpret retrieval logs, troubleshoot issues |
 
 ### Data
 
 | Document | Description |
 |----------|-------------|
 | [DAIC-WOZ Schema](data/daic-woz-schema.md) | Dataset schema for development without data access |
-| [DAIC-WOZ Preprocessing](data/daic-woz-preprocessing.md) | Transcript cleaning + participant-only variants |
-| [Data Splits Overview](data/data-splits-overview.md) | AVEC2017 vs paper splits explained |
-| [Paper Split Registry](data/paper-split-registry.md) | Exact participant IDs for paper splits |
+| [DAIC-WOZ Preprocessing](data/daic-woz-preprocessing.md) | Transcript cleaning, participant-only variants, ground truth integrity |
+| [Data Splits Overview](data/data-splits-overview.md) | AVEC2017 vs paper splits + exact participant IDs |
 | [Artifact Namespace Registry](data/artifact-namespace-registry.md) | Embedding artifact naming conventions |
-| [Patch Missing PHQ-8 Values](data/patch-missing-phq8-values.md) | Deterministic ground-truth repair |
 
 ### Pipeline Internals
 
@@ -104,7 +100,6 @@ AI Psychiatrist is an engineering-focused, reproducible implementation of a rese
 | [Metrics and Evaluation](statistics/metrics-and-evaluation.md) | Exact metric definitions |
 | [Coverage Explained](statistics/coverage.md) | What coverage means and why it matters |
 | [AURC/AUGRC Methodology](statistics/statistical-methodology-aurc-augrc.md) | Selective prediction metrics |
-| [CRAG Validation Guide](statistics/crag-validation-guide.md) | Reference validation (Spec 36) |
 
 ### Results & Reproduction
 

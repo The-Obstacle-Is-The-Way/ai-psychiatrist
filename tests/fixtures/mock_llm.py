@@ -189,6 +189,7 @@ class MockLLMClient:
         system_prompt: str = "",
         model: str | None = None,
         temperature: float = 0.0,
+        format: str | None = None,
     ) -> str:
         """Simple chat interface matching OllamaClient.
 
@@ -197,6 +198,7 @@ class MockLLMClient:
             system_prompt: Optional system message.
             model: Model to use (defaults to "mock").
             temperature: Sampling temperature.
+            format: Output format constraint (e.g., "json").
 
         Returns:
             Generated response content.
@@ -210,6 +212,7 @@ class MockLLMClient:
             messages=messages,
             model=model or "mock",
             temperature=temperature,
+            format=format,
         )
         response = await self.chat(request)
         return response.content

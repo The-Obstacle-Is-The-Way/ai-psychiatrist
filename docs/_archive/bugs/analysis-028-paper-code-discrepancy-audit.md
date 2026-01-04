@@ -16,7 +16,7 @@ This was a detailed forensic audit of the paper authors' sloppy codebase. **We n
 | Keyword backfill | [`docs/concepts/backfill-explained.md`](../../concepts/backfill-explained.md) | ✅ Implemented as toggle (SPEC-003) |
 | Hardware (A100 vs M3) | [`docs/models/model-wiring.md`](../../models/model-wiring.md) | ✅ Explains Q4 vs BF16 gap |
 | Sampling parameters | [`docs/reference/agent-sampling-registry.md`](../../reference/agent-sampling-registry.md) | ✅ Evidence-based defaults |
-| Data splits | [`docs/data/paper-split-registry.md`](../../data/paper-split-registry.md) | ✅ Ground truth IDs extracted |
+| Data splits | [`docs/data/data-splits-overview.md`](../../data/data-splits-overview.md#appendix-a-paper-split-participant-ids) | ✅ Ground truth IDs extracted |
 | Model defaults | [`docs/models/model-registry.md`](../../models/model-registry.md) | ✅ Gemma3:27b documented |
 
 **Bottom line**: The paper's public code has wrong defaults (llama3), undocumented heuristics (keyword backfill always ON), and conflicting hardware claims (A100 SLURM scripts vs M3 Pro text). We don't need to reproduce their mess—we have a clean implementation. The MAE gap (0.778 vs 0.619) is explained by quantization (Q4_K_M vs likely BF16).

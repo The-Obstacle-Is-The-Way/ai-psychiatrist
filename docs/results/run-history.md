@@ -6,6 +6,45 @@
 
 ---
 
+## ⚠️ CRITICAL: Run Integrity Warning (2026-01-03)
+
+### Silent Fallback Bug (ANALYSIS-026)
+
+A critical bug was discovered and fixed on 2026-01-03 where `_extract_evidence()` would **silently return `{}` on JSON parse failure** instead of raising an exception.
+
+**Impact on Mode Isolation**:
+
+- Few-shot mode with empty evidence `{}` → no reference bundle → effectively zero-shot
+- This violated the independence of zero-shot and few-shot as research methodologies
+- Published results claiming "few-shot" could have been partially zero-shot
+
+**Status by Run**:
+
+| Run | Code Version | Affected? | Notes |
+|-----|--------------|-----------|-------|
+| Run 1-9 | Pre-fix | **Unknown** | Bug was SILENT - no way to know without re-running |
+| Run 10 | Pre-fix (started before commit) | **Possibly** | Currently running with old code |
+| Future runs | Post-fix | No | Will fail loudly if JSON parsing fails |
+
+**Why we can't be certain about Run 1-9**:
+
+- The bug only triggers if LLM returns malformed JSON
+- If LLM always returned valid JSON, bug never triggered
+- Results look plausible (few-shot beats zero-shot on MAE with chunk scoring)
+- But we have NO PROOF the bug never triggered
+
+**Fix Applied**: Commit on 2026-01-03
+
+- `_extract_evidence()` now raises `json.JSONDecodeError` on failure
+- Uses `format="json"` for grammar-level JSON constraint
+- All parsers use canonical `parse_llm_json()` function
+
+**Recommendation**: For publication-quality results, consider re-running with post-fix code.
+
+See: `docs/_bugs/ANALYSIS-026-JSON-PARSING-ARCHITECTURE-AUDIT.md`
+
+---
+
 ## Quick Reference: Current Best Results
 
 | Mode | AURC | AUGRC | Cmax | Run |
@@ -557,8 +596,7 @@ uv run python scripts/generate_embeddings.py --split paper-train
 
 - Statistical methodology: `docs/statistics/statistical-methodology-aurc-augrc.md`
 - Feature index + defaults: `docs/pipeline-internals/features.md`
-- Few-shot prompt format: `docs/embeddings/few-shot-prompt-format.md`
-- Retrieval debugging: `docs/embeddings/debugging-retrieval-quality.md`
-- Item-tag filtering setup: `docs/embeddings/item-tagging-setup.md`
-- CRAG validation guide: `docs/statistics/crag-validation-guide.md`
+- RAG runtime features: `docs/rag/runtime-features.md`
+- RAG debugging: `docs/rag/debugging.md`
+- RAG artifact generation: `docs/rag/artifact-generation.md`
 - Paper analysis: `docs/_archive/misc/paper-reproduction-analysis.md`

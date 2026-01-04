@@ -33,6 +33,7 @@ from ai_psychiatrist.config import PydanticAISettings
 from ai_psychiatrist.domain.entities import PHQ8Assessment, Transcript
 from ai_psychiatrist.domain.enums import AssessmentMode, PHQ8Item, SeverityLevel
 from ai_psychiatrist.domain.value_objects import ItemAssessment
+from ai_psychiatrist.services.evidence_validation import EvidenceGroundingError, EvidenceSchemaError
 from tests.fixtures.mock_llm import MockLLMClient
 
 pytestmark = pytest.mark.unit
@@ -154,6 +155,34 @@ class TestQuantitativeAssessmentAgent:
             pydantic_ai_settings=PydanticAISettings(enabled=True),
             ollama_base_url="http://mock-ollama:11434",
         )
+
+    @pytest.mark.asyncio
+    async def test_extract_evidence_schema_violation_raises(self) -> None:
+        """Spec 054: evidence schema violations must fail loudly (no silent coercion)."""
+        client = MockLLMClient(chat_responses=['{"PHQ8_NoInterest": "not a list"}'])
+        agent = QuantitativeAssessmentAgent(
+            llm_client=client,
+            mode=AssessmentMode.ZERO_SHOT,
+            pydantic_ai_settings=PydanticAISettings(enabled=False),
+        )
+
+        with pytest.raises(EvidenceSchemaError):
+            await agent._extract_evidence("Participant: hello")
+
+    @pytest.mark.asyncio
+    async def test_extract_evidence_ungrounded_quotes_fail(self) -> None:
+        """Spec 053: hallucinated evidence must not silently pass through."""
+        client = MockLLMClient(
+            chat_responses=['{"PHQ8_NoInterest": ["I feel hopeless every day"]}']
+        )
+        agent = QuantitativeAssessmentAgent(
+            llm_client=client,
+            mode=AssessmentMode.ZERO_SHOT,
+            pydantic_ai_settings=PydanticAISettings(enabled=False),
+        )
+
+        with pytest.raises(EvidenceGroundingError):
+            await agent._extract_evidence("Participant: I'm doing fine lately.")
 
     @pytest.mark.asyncio
     async def test_pydantic_agent_run_error_not_masked(
@@ -333,6 +362,40 @@ class TestQuantitativeAssessmentAgent:
         assert item.consistency_modal_confidence == pytest.approx(0.6)
         assert item.consistency_na_rate == pytest.approx(0.0)
         assert item.consistency_samples == tuple(scores)
+
+    @pytest.mark.asyncio
+    @pytest.mark.usefixtures("mock_agent_factory")
+    async def test_assess_with_consistency_recovers_from_sample_failure(
+        self,
+        mock_client: MockLLMClient,
+        sample_transcript: Transcript,
+    ) -> None:
+        """Consistency mode should tolerate occasional sample failures and keep running."""
+        agent = self.create_agent(mock_client)
+
+        def make_items(score_no_interest: int | None) -> dict[PHQ8Item, ItemAssessment]:
+            items: dict[PHQ8Item, ItemAssessment] = {}
+            for phq_item in PHQ8Item.all_items():
+                score = score_no_interest if phq_item == PHQ8Item.NO_INTEREST else 1
+                items[phq_item] = ItemAssessment(
+                    item=phq_item,
+                    evidence="test",
+                    reason="test",
+                    score=score,
+                )
+            return items
+
+        scores = [2, 2, 2, 1, 1]
+        side_effect: list[object] = [RuntimeError("boom"), *[make_items(s) for s in scores]]
+        agent._score_items = AsyncMock(side_effect=side_effect)  # type: ignore[method-assign]
+
+        result = await agent.assess_with_consistency(
+            sample_transcript, n_samples=5, temperature=0.3
+        )
+        item = result.items[PHQ8Item.NO_INTEREST]
+        assert item.score == 2
+        assert item.consistency_samples == tuple(scores)
+        assert agent._score_items.call_count == 6
 
     @pytest.mark.asyncio
     @pytest.mark.usefixtures("mock_agent_factory")

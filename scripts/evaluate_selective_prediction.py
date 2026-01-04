@@ -102,6 +102,15 @@ def parse_coverage_grid(s: str) -> list[float]:
     return values
 
 
+def resolve_confidence_variants(selector: str) -> list[str]:
+    """Resolve the CLI confidence selector into concrete confidence variants."""
+    if selector == "default":
+        return list(CONFIDENCE_DEFAULT_VARIANTS)
+    if selector == "all":
+        return sorted(CONFIDENCE_VARIANTS)
+    return [selector]
+
+
 def load_run_data(path: Path) -> dict[str, Any]:
     with path.open("r") as f:
         return cast("dict[str, Any]", json.load(f))
@@ -392,7 +401,11 @@ def parse_items(
         and not confidence_key.startswith("secondary:")
         and not confidence_key.startswith("calibrated:")
     ):
-        raise ValueError(f"Unknown confidence_key: {confidence_key}")
+        available = ", ".join(sorted(CONFIDENCE_VARIANTS))
+        raise ValueError(
+            f"Unknown confidence_key: {confidence_key}. Available: [{available}] "
+            "or 'secondary:...' or 'calibrated:...'"
+        )
 
     item_keys = [item.value for item in PHQ8Item.all_items()]
 
@@ -615,9 +628,13 @@ def main() -> int:  # noqa: PLR0912, PLR0915
     parser.add_argument("--loss", choices=["abs", "abs_norm"], default="abs_norm")
     parser.add_argument(
         "--confidence",
-        choices=[*sorted(CONFIDENCE_VARIANTS), "all"],
-        default="all",
-        help="Confidence variant for risk-coverage ranking.",
+        default="default",
+        help=(
+            "Confidence selector for risk-coverage ranking. Use 'default' for "
+            f"{CONFIDENCE_DEFAULT_VARIANTS}, use 'all' for all base variants, "
+            "or pass a specific variant (e.g., 'retrieval_similarity_mean'). "
+            "Advanced: 'secondary:<csf1>+<csf2>:<average|product>'."
+        ),
     )
     parser.add_argument(
         "--coverage-grid",
@@ -775,7 +792,7 @@ def main() -> int:  # noqa: PLR0912, PLR0915
         pop_stats["items_total"] = len(analysis_pids) * 8
 
     # Process Confidence Variants
-    variants = CONFIDENCE_DEFAULT_VARIANTS if args.confidence == "all" else [args.confidence]
+    variants = resolve_confidence_variants(args.confidence)
 
     results_map = {}
     deltas_map = {}

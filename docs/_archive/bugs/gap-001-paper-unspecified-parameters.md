@@ -16,7 +16,7 @@ This investigation is complete. All gaps have been resolved and documented in de
 
 | Gap | Resolution | SSOT Location |
 |-----|------------|---------------|
-| GAP-001a (Data Split) | ✅ Reverse-engineered exact IDs from authors' output files | [`docs/data/paper-split-registry.md`](../../data/paper-split-registry.md) |
+| GAP-001a (Data Split) | ✅ Reverse-engineered exact IDs from authors' output files | [`docs/data/data-splits-overview.md`](../../data/data-splits-overview.md#appendix-a-paper-split-participant-ids) |
 | GAP-001b (Temperature) | ✅ Evidence-based: temp=0.0 for clinical AI | [`docs/reference/agent-sampling-registry.md`](../../reference/agent-sampling-registry.md) |
 | GAP-001c (top_k/top_p) | ✅ Don't set (irrelevant at temp=0; best practice) | [`docs/reference/agent-sampling-registry.md`](../../reference/agent-sampling-registry.md) |
 | GAP-001d (Hardware) | ✅ Documented Q4_K_M vs BF16 quantization | [`docs/models/model-registry.md`](../../models/model-registry.md) |

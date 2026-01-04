@@ -43,7 +43,7 @@ This repo includes deterministic integrity checks/repairs for common AVEC2017 CS
 
 ## Inputs (Raw, Untouched)
 
-Canonical raw layout (see `docs/data/daic-woz-schema.md`):
+Canonical raw layout (see [DAIC-WOZ Schema](./daic-woz-schema.md)):
 
 ```
 data/
@@ -172,24 +172,64 @@ If you want a “classical ML” style cleanup, make it an explicit variant/flag
 
 ## Ground Truth Integrity (PHQ-8 CSVs)
 
-These are deterministic fixes; they are not “imputation”.
+The AVEC2017-derived ground-truth CSVs occasionally contain integrity issues. These are **deterministic fixes**, not statistical imputation. The reproduction runner requires complete per-item ground truth and will fail fast if issues remain.
 
-### A) Missing PHQ-8 item cells
+### A) Missing PHQ-8 Item Cells
 
-If exactly one PHQ-8 item is missing and `PHQ8_Score` is present, the missing value is uniquely determined by:
+The dataset includes:
+- `PHQ8_Score` (total score; authoritative)
+- 8 item columns `PHQ8_*` (0–3 each)
+
+For valid rows, the invariant must hold:
+
+```text
+PHQ8_Score == sum(PHQ8 item columns)
+```
+
+If exactly **one** item cell is missing and the total is present, the missing cell is uniquely determined:
 
 ```text
 missing_item = PHQ8_Score - sum(known_items)
 ```
 
-Tooling:
-- `uv run python scripts/patch_missing_phq8_values.py --dry-run`
-- `uv run python scripts/patch_missing_phq8_values.py --apply`
+This is **not** statistical imputation. It is deterministic reconstruction of a single missing cell required for the invariant to hold.
 
-Doc:
-- `docs/data/patch-missing-phq8-values.md`
+**How to patch:**
 
-### B) `PHQ8_Binary` consistency
+1) Preview what would change:
+
+```bash
+uv run python scripts/patch_missing_phq8_values.py --dry-run
+```
+
+2) Apply the patch:
+
+```bash
+uv run python scripts/patch_missing_phq8_values.py --apply
+```
+
+3) Regenerate paper splits (so paper CSVs reflect corrected values):
+
+```bash
+uv run python scripts/create_paper_split.py --verify
+```
+
+4) Re-run a quick validation:
+
+```bash
+uv run python scripts/reproduce_results.py --split paper --zero-shot-only --limit 3
+```
+
+**Failure semantics:**
+
+If a ground-truth CSV has:
+- more than one missing PHQ-8 item in a row, or
+- an invariant violation (sum != total), or
+- a reconstructed value outside `0..3`
+
+the patch script will fail fast, because it cannot be corrected deterministically.
+
+### B) `PHQ8_Binary` Consistency
 
 This repo treats:
 
@@ -218,8 +258,8 @@ To avoid mixing artifacts from different transcript variants:
 Also ensure any `.tags.json` / `.chunk_scores.json` sidecars are generated from the **same** embeddings base name.
 
 See:
-- `docs/data/artifact-namespace-registry.md`
-- `docs/embeddings/embedding-generation.md`
+- [Artifact Namespace Registry](./artifact-namespace-registry.md)
+- [RAG Artifact Generation](../rag/artifact-generation.md)
 
 ---
 

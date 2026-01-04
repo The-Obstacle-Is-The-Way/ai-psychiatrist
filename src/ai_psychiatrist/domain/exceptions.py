@@ -17,6 +17,7 @@ This module defines a hierarchical exception system for domain errors:
     │   └── LLMTimeoutError
     └── EmbeddingError
         └── EmbeddingDimensionMismatchError
+        └── EmbeddingValidationError
 """
 
 from __future__ import annotations
@@ -216,6 +217,10 @@ class EmbeddingDimensionMismatchError(EmbeddingError):
         self.expected = expected
         self.actual = actual
         super().__init__(f"Embedding dimension mismatch: expected {expected}, got {actual}")
+
+
+class EmbeddingValidationError(EmbeddingError):
+    """Raised when embedding validation fails (NaN/Inf/zero vectors)."""
 
 
 class EmbeddingArtifactMismatchError(EmbeddingError):

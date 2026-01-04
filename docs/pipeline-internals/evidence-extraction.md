@@ -1,7 +1,7 @@
 # Evidence Extraction Mechanism: How It Actually Works
 
 **Audience**: Anyone wanting to understand the core engineering behind PHQ-8 scoring
-**Last Updated**: 2025-12-26
+**Last Updated**: 2026-01-03
 
 ---
 
@@ -111,6 +111,46 @@ The LLM **semantically analyzes** the transcript:
 | **LLM misses it** | LLM doesn't recognize the relevance | "I'm so drained" not mapped to Tired |
 | **Ambiguous language** | Could be interpreted multiple ways | "I'm fine" - denial or truth? |
 | **JSON parsing error** | LLM returns malformed output | Missing quote, bad escaping |
+
+### JSON Parsing Robustness (CRITICAL)
+
+**Problem**: LLMs sometimes output malformed JSON (Python-style `True` instead of `true`, missing commas, etc.). This was causing silent data corruption where few-shot mode would degrade to zero-shot without indication.
+
+**Solution (as of 2026-01-03)**:
+
+1. **Ollama `format:"json"`**: Evidence extraction now uses Ollama's grammar-level JSON constraint, which guarantees well-formed JSON at token generation time. See [Ollama Structured Outputs](https://docs.ollama.com/capabilities/structured-outputs).
+
+2. **Canonical Parser**: All JSON parsing uses `parse_llm_json()` in `responses.py`:
+   - Applies tolerant fixups (smart quotes, trailing commas)
+   - Falls back to Python literal parsing for `True`/`False`/`None`
+   - **NO SILENT FALLBACKS** - raises on failure
+
+3. **No Silent Degradation**: If JSON parsing fails, the system raises an exception instead of silently returning empty evidence. This prevents corrupted research results.
+
+**Code Location**: `src/ai_psychiatrist/infrastructure/llm/responses.py:parse_llm_json()`
+
+**Related**: [ANALYSIS-026](../_bugs/ANALYSIS-026-JSON-PARSING-ARCHITECTURE-AUDIT.md) - Full audit of JSON parsing architecture
+
+### ⚠️ CRITICAL: Mode Isolation (Zero-Shot vs Few-Shot)
+
+**Zero-shot and few-shot are INDEPENDENT RESEARCH METHODOLOGIES.** They must be completely isolated.
+
+A previous bug allowed silent fallback to empty evidence:
+```python
+# OLD BUG (FIXED):
+except (json.JSONDecodeError, ValueError):
+    obj = {}  # <-- SILENT: Few-shot becomes zero-shot!
+```
+
+This violated mode isolation:
+- Few-shot mode with empty evidence → no references → same as zero-shot
+- Published results claiming "few-shot" could be partially zero-shot
+- Comparative analysis between modes would be invalid
+
+**The fix ensures:**
+- `_extract_evidence()` raises on failure instead of returning `{}`
+- Few-shot mode fails loudly if it can't build proper references
+- Mode isolation is maintained throughout the pipeline
 
 ---
 

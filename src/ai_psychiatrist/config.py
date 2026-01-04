@@ -239,6 +239,14 @@ class EmbeddingSettings(BaseSettings):
         default=4096,
         description="Embedding dimension (Paper Appendix D: 4096 optimal)",
     )
+    allow_insufficient_dimension_embeddings: bool = Field(
+        default=False,
+        description=(
+            "Allow loading reference embeddings that have fewer dimensions than "
+            "EMBEDDING_DIMENSION. When false (default), dimension mismatches fail fast to "
+            "prevent silent retrieval degradation (Spec 057)."
+        ),
+    )
     chunk_size: int = Field(
         default=8,
         ge=2,
@@ -372,6 +380,36 @@ class QuantitativeSettings(BaseSettings):
     track_na_reasons: bool = Field(
         default=True,
         description="Track why items return N/A (for diagnostics).",
+    )
+
+    # Spec 053: evidence quote grounding validation
+    evidence_quote_validation_enabled: bool = Field(
+        default=True,
+        description="Validate extracted evidence quotes against the transcript (Spec 053).",
+    )
+    evidence_quote_validation_mode: Literal["substring", "fuzzy"] = Field(
+        default="substring",
+        description=(
+            "Evidence grounding mode. 'substring' is conservative and dependency-free; "
+            "'fuzzy' requires rapidfuzz and uses partial_ratio."
+        ),
+    )
+    evidence_quote_fuzzy_threshold: float = Field(
+        default=0.85,
+        ge=0.5,
+        le=1.0,
+        description="Only used when evidence_quote_validation_mode='fuzzy'.",
+    )
+    evidence_quote_fail_on_all_rejected: bool = Field(
+        default=True,
+        description=(
+            "If true, fail when the LLM produced evidence but none of it can be grounded in "
+            "the transcript. Prevents few-shot silently degrading to zero-shot."
+        ),
+    )
+    evidence_quote_log_rejections: bool = Field(
+        default=True,
+        description="If true, log counts + hashes for rejected quotes (never raw transcript text).",
     )
 
 

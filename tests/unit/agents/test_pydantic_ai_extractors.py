@@ -51,6 +51,30 @@ analysis...
     assert parsed.PHQ8_Moving.score is None
 
 
+def test_extract_quantitative_python_literal_valid() -> None:
+    """Accept python-literal dicts (single quotes / null) when JSON parsing fails."""
+    response = """
+<answer>
+{
+  'PHQ8_NoInterest': {'evidence': 'a', 'reason': 'b', 'score': 2},
+  'PHQ8_Depressed': {'evidence': 'a', 'reason': 'b', 'score': 1},
+  'PHQ8_Sleep': {'evidence': 'a', 'reason': 'b', 'score': 0},
+  'PHQ8_Tired': {'evidence': 'a', 'reason': 'b', 'score': 3},
+  'PHQ8_Appetite': {'evidence': 'a', 'reason': 'b', 'score': 'N/A'},
+  'PHQ8_Failure': {'evidence': 'a', 'reason': 'b', 'score': '0'},
+  'PHQ8_Concentrating': {'evidence': 'a', 'reason': 'b', 'score': 1},
+  'PHQ8_Moving': {'evidence': 'a', 'reason': 'b', 'score': null}
+}
+</answer>
+"""
+    parsed = extract_quantitative(response)
+    assert isinstance(parsed, QuantitativeOutput)
+    assert parsed.PHQ8_NoInterest.score == 2
+    assert parsed.PHQ8_Appetite.score is None
+    assert parsed.PHQ8_Failure.score == 0
+    assert parsed.PHQ8_Moving.score is None
+
+
 def test_extract_quantitative_missing_answer_tags_retries() -> None:
     with pytest.raises(ModelRetry):
         extract_quantitative("no answer tags here")

@@ -14,10 +14,14 @@ import numpy as np
 
 from ai_psychiatrist.config import get_model_name
 from ai_psychiatrist.domain.enums import PHQ8Item
-from ai_psychiatrist.domain.exceptions import EmbeddingDimensionMismatchError
+from ai_psychiatrist.domain.exceptions import (
+    EmbeddingDimensionMismatchError,
+    EmbeddingValidationError,
+)
 from ai_psychiatrist.domain.value_objects import EmbeddedChunk, SimilarityMatch, TranscriptChunk
 from ai_psychiatrist.infrastructure.llm.protocols import EmbeddingBatchRequest, EmbeddingRequest
 from ai_psychiatrist.infrastructure.logging import get_logger
+from ai_psychiatrist.infrastructure.validation import validate_embedding
 from ai_psychiatrist.services.reference_validation import (
     NoOpReferenceValidator,
     ReferenceValidationRequest,
@@ -192,6 +196,11 @@ class EmbeddingService:
             dimension=len(embedding),
         )
 
+        validate_embedding(
+            np.array(embedding, dtype=np.float32),
+            context="query embedding (no text logged)",
+        )
+
         return embedding
 
     async def embed_chunk(self, chunk: TranscriptChunk) -> EmbeddedChunk:
@@ -236,9 +245,12 @@ class EmbeddingService:
         # Compute Cosine Similarity: sims = Matrix . Query
         # Assumes matrix rows are already L2 normalized (ReferenceStore ensures this).
         query_vec = np.array(query_embedding, dtype=np.float32)
+        validate_embedding(query_vec, context="query embedding (pre-similarity)")
 
         # Dot product: (N, D) @ (D,) -> (N,)
         similarities = matrix @ query_vec
+        if not np.isfinite(similarities).all():
+            raise EmbeddingValidationError("Non-finite similarity scores (NaN/Inf) detected")
 
         # Transform cosine similarity from [-1, 1] to [0, 1] range
         similarities = (1.0 + similarities) / 2.0
@@ -427,6 +439,12 @@ class EmbeddingService:
                 timeout_seconds=self._query_embed_timeout_seconds,
             )
             embeddings = (await self._llm_client.embed_batch(batch_request)).embeddings
+
+            for idx, emb in enumerate(embeddings):
+                validate_embedding(
+                    np.array(emb, dtype=np.float32),
+                    context=f"batch query embedding {idx} (no text logged)",
+                )
         else:
             embeddings = [await self.embed_text(text) for _, text in item_texts]
 

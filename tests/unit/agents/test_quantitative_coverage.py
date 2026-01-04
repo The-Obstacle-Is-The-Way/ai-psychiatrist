@@ -65,8 +65,12 @@ class TestQuantitativeCoverage:
     @pytest.mark.asyncio
     @pytest.mark.usefixtures("mock_agent_factory")
     async def test_extract_evidence_json_error(self, transcript: Transcript) -> None:
-        """Test _extract_evidence handling of completely invalid JSON."""
-        # Evidence response is invalid JSON - should log warning and use empty dict
+        """Test _extract_evidence raises on invalid JSON (no silent fallbacks).
+
+        Research code MUST fail loudly on parse errors to prevent corrupted results.
+        The old behavior (silently returning empty dict) was a data integrity bug.
+        """
+        # Evidence response is invalid JSON - should RAISE, not silently degrade
         client = MockLLMClient(chat_responses=["NOT JSON AT ALL"])
 
         agent = QuantitativeAssessmentAgent(
@@ -76,9 +80,9 @@ class TestQuantitativeCoverage:
             ollama_base_url="http://mock",
         )
 
-        # This should log a warning for evidence parsing and still complete
-        result = await agent.assess(transcript)
-        assert result.total_score is not None
+        # Parse failure MUST raise - no silent fallbacks
+        with pytest.raises(json.JSONDecodeError):
+            await agent.assess(transcript)
 
     @pytest.mark.asyncio
     @pytest.mark.usefixtures("mock_agent_factory")

@@ -51,7 +51,7 @@ When this page says “default”, it refers to **code defaults** unless explici
 |---------|------|-------|----------|
 | Fail-fast embedding generation | 40 | `scripts/generate_embeddings.py` | Default strict mode crashes on missing/corrupt transcripts or embedding failures; `--allow-partial` is debug-only and exits `2` with a `{output}.partial.json` skip manifest |
 
-See: [Embedding generation](../embeddings/embedding-generation.md).
+See: [Artifact generation](../rag/artifact-generation.md).
 
 ---
 
@@ -97,11 +97,10 @@ See: [Preflight checklist (few-shot)](../preflight-checklist/preflight-checklist
 
 - [Configuration](../configs/configuration.md)
 - [Run output schema](../results/run-output-schema.md)
-- [Few-shot prompt format](../embeddings/few-shot-prompt-format.md)
-- [Batch query embedding](../embeddings/batch-query-embedding.md)
-- [Retrieval debugging](../embeddings/debugging-retrieval-quality.md)
-- [Item tagging setup](../embeddings/item-tagging-setup.md)
-- [Chunk scoring (Spec 35)](../embeddings/chunk-scoring.md)
-- [CRAG validation guide](../statistics/crag-validation-guide.md)
+- [RAG Overview](../rag/overview.md)
+- [RAG Artifact Generation](../rag/artifact-generation.md)
+- [RAG Chunk Scoring (Spec 35)](../rag/chunk-scoring.md)
+- [RAG Runtime Features](../rag/runtime-features.md)
+- [RAG Debugging](../rag/debugging.md)
 - [Error-handling philosophy](../developer/error-handling.md)
 - [Exception reference](../developer/exceptions.md)

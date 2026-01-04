@@ -17,7 +17,7 @@ from ai_psychiatrist.agents.output_models import (
 from ai_psychiatrist.infrastructure.llm.responses import (
     extract_score_from_text,
     extract_xml_tags,
-    tolerant_json_fixups,
+    parse_llm_json,
 )
 from ai_psychiatrist.infrastructure.logging import get_logger
 
@@ -139,10 +139,15 @@ def extract_qualitative(text: str) -> QualitativeOutput:
 
 
 def extract_quantitative(text: str) -> QuantitativeOutput:
-    """Extract and validate quantitative scoring output from a raw LLM response."""
+    """Extract and validate quantitative scoring output from a raw LLM response.
+
+    Uses the canonical parse_llm_json() for consistent JSON parsing across all call sites.
+    NO SILENT FALLBACKS - raises ModelRetry on parse failure.
+    """
     try:
-        json_str = tolerant_json_fixups(_extract_answer_json(text))
-        data = json.loads(json_str)
+        json_str = _extract_answer_json(text)
+        # Use canonical parser - handles tolerant fixups and Python literal fallback
+        data = parse_llm_json(json_str)
         return QuantitativeOutput.model_validate(_fill_missing_quantitative_fields(data))
     except json.JSONDecodeError as e:
         raise ModelRetry(
@@ -155,15 +160,21 @@ def extract_quantitative(text: str) -> QuantitativeOutput:
 
 
 def extract_judge_metric(text: str) -> JudgeMetricOutput:
-    """Extract and validate judge metric output from a raw LLM response."""
+    """Extract and validate judge metric output from a raw LLM response.
+
+    Uses canonical parse_llm_json() for JSON parsing with intentional fallback
+    to score extraction from text (not silent degradation).
+    """
     json_str = _find_answer_json(text, allow_unwrapped_object=False)
     if json_str is not None:
         try:
-            data = json.loads(tolerant_json_fixups(json_str))
+            # Use canonical parser for consistency
+            data = parse_llm_json(json_str)
             return JudgeMetricOutput.model_validate(data)
         except (json.JSONDecodeError, ValidationError, ValueError) as e:
             raise ModelRetry(f"Invalid judge output JSON: {e}") from e
 
+    # Intentional fallback to score extraction (not silent degradation)
     score = extract_score_from_text(text)
     if score is None:
         raise ModelRetry(
@@ -178,11 +189,16 @@ def extract_judge_metric(text: str) -> JudgeMetricOutput:
 
 
 def extract_meta_review(text: str) -> MetaReviewOutput:
-    """Extract and validate meta-review output from a raw LLM response."""
+    """Extract and validate meta-review output from a raw LLM response.
+
+    Uses canonical parse_llm_json() for JSON parsing with intentional fallback
+    to XML tag extraction (not silent degradation).
+    """
     json_str = _find_answer_json(text, allow_unwrapped_object=False)
     if json_str is not None:
         try:
-            data = json.loads(tolerant_json_fixups(json_str))
+            # Use canonical parser for consistency
+            data = parse_llm_json(json_str)
             return MetaReviewOutput.model_validate(data)
         except (json.JSONDecodeError, ValidationError, ValueError) as e:
             raise ModelRetry(f"Invalid meta-review output JSON: {e}") from e
