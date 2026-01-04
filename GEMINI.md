@@ -93,6 +93,8 @@ Use `make` for most operations. The project relies on `uv` for dependency manage
 | `EMBEDDING_BACKEND` | `huggingface` | FP16 embeddings (better quality) |
 | `OLLAMA_TIMEOUT_SECONDS` | `600` | Large transcripts need extended time |
 
+**Important (HuggingFace embeddings)**: Precomputed reference embeddings (`*.npz`) are not enough for few-shot. Retrieval requires embedding each participant’s evidence text at runtime in the *same* embedding space. If `EMBEDDING_BACKEND=huggingface`, install HF deps with `make dev-hf` or few-shot will fail when embedding queries.
+
 ## Development Guidelines
 
 *   **Legacy Code:** **DO NOT** modify or depend on code in `_legacy/`, `_literature/`, or `_reference/`. These are archived.
