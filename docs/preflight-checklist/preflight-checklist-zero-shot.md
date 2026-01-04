@@ -1,7 +1,7 @@
 # Preflight Checklist: Zero-Shot Run
 
 **Purpose**: Comprehensive pre-run verification for zero-shot evaluation runs
-**Last Updated**: 2026-01-02
+**Last Updated**: 2026-01-04
 **Related**: [Few-Shot Checklist](./preflight-checklist-few-shot.md) | [Configuration Reference](../configs/configuration.md)
 
 ---
@@ -10,7 +10,26 @@
 
 This checklist prevents run failures by verifying ALL known gotchas before running. Use this **every time** you start a zero-shot run.
 
-Zero-shot mode uses NO reference embeddings - the model scores symptoms from transcript alone.
+**Zero-shot mode uses NO reference embeddings** — the model scores symptoms from transcript alone.
+
+**CRITICAL RUN-MODE NOTE (do not skip)**:
+`scripts/reproduce_results.py` runs **both** modes (zero-shot + few-shot) by default. If you intend a true zero-shot run, you must pass `--zero-shot-only` or the run will attempt few-shot and require embeddings + embedding backend deps.
+
+### TL;DR (No-Excuses Preflight)
+
+```bash
+make dev
+cp .env.example .env
+uv run python scripts/reproduce_results.py --split paper-test --dry-run
+```
+
+Verify the dry-run header shows:
+- `Embedding Backend: huggingface` (or your intended backend)
+- `Consistency: disabled` unless you explicitly enabled it
+- And then run **zero-shot only**:
+```bash
+uv run python scripts/reproduce_results.py --split paper-test --zero-shot-only
+```
 
 ---
 
@@ -267,10 +286,10 @@ Embedding Dimension: 4096
 
 ```bash
 # Zero-shot on AVEC dev split (has per-item labels)
-uv run python scripts/reproduce_results.py --split dev
+uv run python scripts/reproduce_results.py --split dev --zero-shot-only
 
 # Zero-shot on paper test split
-uv run python scripts/reproduce_results.py --split paper
+uv run python scripts/reproduce_results.py --split paper-test --zero-shot-only
 ```
 
 ### 8.3 Monitor for Issues

@@ -1,7 +1,7 @@
 # Preflight Checklist: Few-Shot Reproduction
 
 **Purpose**: Comprehensive pre-run verification for few-shot paper reproduction
-**Last Updated**: 2025-12-27
+**Last Updated**: 2026-01-04
 **Related**: [Zero-Shot Checklist](./preflight-checklist-zero-shot.md) | [Configuration Reference](../configs/configuration.md)
 
 ---
@@ -15,7 +15,33 @@ Few-shot mode uses reference embeddings to retrieve similar transcript chunks as
 2. Matching embedding dimensions
 3. Correct embedding model
 
-**Paper Target**: MAE = 0.619 (few-shot) vs 0.796 (zero-shot)
+### TL;DR (No-Excuses Preflight)
+
+```bash
+make dev
+cp .env.example .env
+
+# If EMBEDDING_BACKEND=huggingface, verify deps load (required for runtime query embeddings)
+uv run python -c "import torch, transformers, sentence_transformers; print(torch.__version__)"
+
+# Sanity: verify the run header shows FOUND sidecars + chunk scoring enabled
+uv run python scripts/reproduce_results.py --split paper-test --dry-run
+```
+
+### Run Modes and Flags (Do Not Guess)
+
+`scripts/reproduce_results.py` behavior:
+- Default (no mode flags): runs **both** modes (zero-shot + few-shot).
+- `--few-shot-only`: runs few-shot only.
+- `--zero-shot-only`: runs zero-shot only.
+
+If you want all confidence-suite signals in one artifact, run both modes and enable consistency:
+```bash
+uv run python scripts/reproduce_results.py \
+  --split paper-test \
+  --consistency-samples 5 \
+  --consistency-temperature 0.3
+```
 
 ---
 
@@ -101,6 +127,10 @@ Few-shot mode uses reference embeddings to retrieve similar transcript chunks as
   ```
 
   **Note**: HuggingFace backend requires `make dev` to install dependencies.
+
+  **IMPORTANT**: Precomputed `data/embeddings/*.npz` files are reference embeddings only. Few-shot also embeds
+  the *query* (participant evidence) at runtime in the same embedding space. If HF deps are missing, the run
+  will fail fast with `MissingHuggingFaceDependenciesError` before wasting hours.
 
 ### 2.3 Sampling Parameters
 
@@ -486,6 +516,28 @@ Top-K References: 2 (paper: 2)
 - [ ] **Embeddings are from train split** (from Phase 8.3)
 - [ ] **Config matches paper Appendix D** (from Phase 9.2)
 
+### 9.4 Retrieval/RAG Features (Required for Current SSOT)
+
+These must be enabled for current “validated configuration” runs:
+
+```bash
+grep -E \"^(EMBEDDING_REFERENCE_SCORE_SOURCE|EMBEDDING_ENABLE_ITEM_TAG_FILTER|EMBEDDING_ENABLE_RETRIEVAL_AUDIT|EMBEDDING_MIN_REFERENCE_SIMILARITY|EMBEDDING_MAX_REFERENCE_CHARS_PER_ITEM)=\" .env
+# Expected (baseline):
+# EMBEDDING_REFERENCE_SCORE_SOURCE=chunk
+# EMBEDDING_ENABLE_ITEM_TAG_FILTER=true
+# EMBEDDING_ENABLE_RETRIEVAL_AUDIT=true
+# EMBEDDING_MIN_REFERENCE_SIMILARITY=0.3
+# EMBEDDING_MAX_REFERENCE_CHARS_PER_ITEM=500
+```
+
+Evidence grounding (prevents ungrounded quotes contaminating retrieval):
+```bash
+grep -E \"^QUANTITATIVE_EVIDENCE_QUOTE_VALIDATION_\" .env
+# Expected:
+# QUANTITATIVE_EVIDENCE_QUOTE_VALIDATION_ENABLED=true
+# QUANTITATIVE_EVIDENCE_QUOTE_FAIL_ON_ALL_REJECTED=true
+```
+
 ---
 
 ## Phase 10: Execute Few-Shot Run
@@ -513,14 +565,14 @@ Top-K References: 2 (paper: 2)
 ### 10.2 Run Command
 
 ```bash
-# Few-shot on paper test split (primary reproduction)
-uv run python scripts/reproduce_results.py --split paper --few-shot-only
+# Few-shot only on paper test split
+uv run python scripts/reproduce_results.py --split paper-test --few-shot-only
 
 # Few-shot on AVEC dev split (sanity check)
 uv run python scripts/reproduce_results.py --split dev --few-shot-only
 ```
 
-**Note**: `--few-shot-only` ensures few-shot mode. Without it, uses config `ENABLE_FEW_SHOT` setting.
+**Note**: `--few-shot-only` ensures few-shot mode. If you omit it, the script runs both modes by default.
 
 ### 10.3 Monitor for Issues
 
