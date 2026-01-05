@@ -1,16 +1,27 @@
 # Ralph Wiggum Loop Prompt — ai-psychiatrist Master Bug Audit
 
-This prompt is designed for the **Ralph Wiggum loop** in **Claude Code** to perform a destructive, end-to-end audit of the `ai-psychiatrist` repository and produce a **single master bug report**.
+This prompt is designed for the **Ralph Wiggum loop** in **Claude Code** to perform a comprehensive, end-to-end audit of the `ai-psychiatrist` repository and produce a **single master bug report**.
 
 ## How to Run (human operator)
 
 **Claude Code plugin** (official Ralph Wiggum plugin):
 
 ```bash
-/ralph-loop "$(cat prompt.md)" --completion-promise "<promise>COMPLETE</promise>" --max-iterations 50
+/ralph-loop "$(cat prompt.md)" --completion-promise "AUDIT_COMPLETE" --max-iterations 50
 ```
 
-If the plugin is broken in your environment, use an **external Ralph bash loop** (see `anthropics/claude-code/plugins/ralph-wiggum` and community workarounds like `ParkerRex/ralph-loop`). In that case, copy this file to whatever your loop expects (often `.claude/RALPH_PROMPT.md`).
+If the plugin is unavailable, use an **external Ralph bash loop** (see `anthropics/claude-code/plugins/ralph-wiggum` and community workarounds like `ParkerRex/ralph-loop`). In that case, copy this file to whatever your loop expects (often `.claude/RALPH_PROMPT.md`).
+
+## Iteration Awareness (IMPORTANT)
+
+Each Ralph iteration sees the file system from previous iterations.
+
+**If `MASTER_BUG_AUDIT.md` already exists**:
+- Read it first to understand progress
+- Continue from the last incomplete phase
+- Do NOT restart from Phase 0 unless explicitly incomplete
+
+**If starting fresh**: Begin at Phase 0.
 
 ---
 
@@ -150,7 +161,12 @@ uv run python scripts/evaluate_selective_prediction.py --input <RUN_JSON> --mode
 Validate from first principles:
 - MAE comparisons are only meaningful when coverage is similar.
 - AURC/AUGRC are computed over risk–coverage and should be stable under bootstrap.
-- Any “improvement” claim must be paired with coverage deltas and confidence intervals.
+- Any "improvement" claim must be paired with coverage deltas and confidence intervals.
+
+**Telemetry check (Spec 060)**:
+- Check `data/outputs/telemetry_*.json` for retry/repair spikes
+- High retry counts may indicate JSON parsing brittleness
+- Document any concerning patterns in the audit
 
 ### Phase 5 — Static code audit (bugs & anti-patterns)
 
@@ -224,12 +240,27 @@ Write the report with this exact structure:
 
 ---
 
+## Escape Hatch (if stuck)
+
+If after **40 iterations** you cannot complete all phases:
+
+1. Document in `MASTER_BUG_AUDIT.md` → **Open Questions** section:
+   - What is blocking progress
+   - What was attempted
+   - Suggested alternative approaches or human intervention needed
+
+2. Mark incomplete phases with `[INCOMPLETE]` in the doc
+
+3. Output `AUDIT_COMPLETE` anyway—partial audit is better than infinite loop
+
+---
+
 ## Completion Rule
 
 You may stop only when:
 - `MASTER_BUG_AUDIT.md` exists at repo root and matches the required structure, and
-- you have run Phase 0–Phase 6 (or documented why any step was impossible).
+- you have run Phase 0–Phase 6 (or documented why any step was impossible/incomplete).
 
-Then output exactly:
+Then output exactly (no markdown, no quotes):
 
-`<promise>COMPLETE</promise>`
+AUDIT_COMPLETE
