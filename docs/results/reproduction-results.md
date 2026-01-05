@@ -27,12 +27,24 @@ Use `docs/results/run-history.md` as the SSOT. Run 11 is diagnostic-only (select
 ## Current Status
 
 - **Participant-only transcript preprocessing evaluated** (Run 8)
-- **Paper MAE_item parity achieved**: few-shot `0.609` vs paper `0.619`; zero-shot `0.776` vs paper `0.796`
+- **Paper MAE_item parity achieved**: few-shot `0.609` vs paper `0.619`; zero-shot `0.776` vs paper `0.796` (Run 8)
 - **Selective prediction**: AURC/AUGRC are very similar between modes (paired ΔAURC CI overlaps 0)
 - **Spec 046 evaluated** (Run 9): `retrieval_similarity_mean` improves AURC by 5.4% vs evidence-count-only
 - **Confidence Suite validated (Run 12)**: 41/41 evaluated in both modes; token-level CSFs improve AURC/AUGRC over `llm`
 - **AUGRC target not reached (yet)**: Best artifact-free AUGRC is 0.0216 (`token_energy`, Run 12; target was <0.020 per Issue #86)
 - **Tradeoff**: coverage ceiling is ~46–49% in Run 12 (vs ~66% in Run 7), indicating more abstention
+
+### Few-Shot vs Zero-Shot (Run 12 Finding)
+
+In Run 12, **zero-shot outperformed few-shot** (MAE 0.572 vs 0.616) at similar coverage. This is a valid research result explained by:
+
+1. Evidence grounding (Spec 053) rejects ~50% of quotes, starving few-shot of reference data
+2. Consistency sampling benefits zero-shot more than few-shot
+3. PHQ-8 scoring is evidence-limited, not knowledge-limited
+
+**Recommendation**: Zero-shot with consistency sampling is the recommended approach.
+
+See: [Few-Shot Analysis](few-shot-analysis.md) for full details.
 
 ---
 

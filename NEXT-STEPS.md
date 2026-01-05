@@ -167,7 +167,36 @@ Code defaults exist for testing and fallback only. They are NOT recommended for 
 
 ---
 
-## 6. Future Work (If Pursuing AUGRC <0.020)
+## 6. Few-Shot vs Zero-Shot Analysis (Run 12 Finding)
+
+**Key Finding**: In Run 12, zero-shot **outperformed** few-shot (MAE 0.572 vs 0.616) at similar coverage. This is a valid research result, not a bug.
+
+### Root Cause
+
+Evidence grounding (Spec 053) rejects ~50% of extracted quotes, starving few-shot of reference data:
+
+| Metric | Run 8 (few-shot won) | Run 12 (zero-shot won) |
+|--------|---------------------|------------------------|
+| Items with LLM evidence | 61.3% | 32.0% |
+| Items with references | Higher | 15.2% |
+| Consistency sampling | No | Yes |
+
+### Why Few-Shot Can Be Neutral or Harmful
+
+1. **Evidence-limited, not knowledge-limited**: PHQ-8 needs frequency; RAG can't add missing evidence
+2. **Embedding similarity ≠ severity similarity**: Retrieved examples match topic, not severity
+3. **Anchoring harm**: Reference scores can dominate test evidence
+4. **Sparse references**: After guardrails, most items get 0-1 exemplars
+
+See: `docs/results/few-shot-analysis.md` for full analysis.
+
+### Recommendation
+
+For DAIC-WOZ PHQ-8 scoring with strict evidence grounding, **zero-shot with consistency sampling is the recommended approach**.
+
+---
+
+## 7. Future Work (If Pursuing AUGRC <0.020)
 
 Specs 048–051 are implemented and validated (Run 12). The next step is to push AUGRC further via:
 - **Spec 049 calibrated confidence** (train on non-test data, then evaluate on paper-test)
@@ -259,15 +288,17 @@ Specs 048–051 are implemented and validated (Run 12). The next step is to push
 
 ---
 
-## 7. Definition of Done
+## 8. Definition of Done
 
 | Milestone | Status |
 |-----------|--------|
-| Paper MAE_item parity | ✅ few-shot 0.609 vs paper 0.619 |
+| Paper MAE_item parity | ✅ few-shot 0.609 vs paper 0.619 (Run 8) |
 | Chunk-level scoring (Spec 35) | ✅ Implemented |
 | Participant-only preprocessing | ✅ Implemented |
 | Retrieval confidence signals (Spec 046) | ✅ Tested (+5.4% AURC) |
 | Confidence improvement suite (Specs 048–051) | ✅ Implemented + validated (Run 12) |
+| Evidence grounding (Spec 053) | ✅ Implemented |
 | AUGRC < 0.020 target | ❌ Current best: 0.0216 (`token_energy`, Run 12) |
+| Few-shot analysis documented | ✅ See `docs/results/few-shot-analysis.md` |
 
 ---

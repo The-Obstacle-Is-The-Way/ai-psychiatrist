@@ -147,5 +147,6 @@ rg -n '\"token_msp\"|\"token_pe\"|\"token_energy\"' data/outputs/both_*.json | h
 ## Pointers (SSOT)
 
 - `NEXT-STEPS.md` (run checklist + exact commands)
-- `PIPELINE-BRITTLENESS.md` (failure taxonomy + how we avoid silent corruption)
+- `docs/results/few-shot-analysis.md` (why few-shot may not beat zero-shot)
 - `docs/statistics/metrics-and-evaluation.md` (definitions for AURC/AUGRC and confidence variants)
+- `docs/pipeline-internals/features.md` (failure taxonomy + robustness features)
