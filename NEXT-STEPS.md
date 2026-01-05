@@ -302,3 +302,51 @@ Specs 048–051 are implemented and validated (Run 12). The next step is to push
 | Few-shot analysis documented | ✅ See `docs/results/few-shot-analysis.md` |
 
 ---
+
+## 9. Future Work: Prediction Modes (Specs 061-063)
+
+### Task Validity Context
+
+PHQ-8 item-level frequency scoring (0-3) is often underdetermined from DAIC-WOZ transcripts. The dataset was designed to capture behavioral indicators, not elicit explicit frequency statements. See `docs/clinical/task-validity.md`.
+
+**Key insight**: The chunk scoring bug (#69, #81) was **fixed** via Spec 35 (chunk-level scoring). Low coverage (~50%) is **expected behavior**, not a bug.
+
+### Alternative Prediction Modes
+
+These specs propose more defensible tasks that sidestep the frequency problem:
+
+| Spec | Mode | Output | Rationale |
+|------|------|--------|-----------|
+| **061** | Total Score | 0-24 | Errors average out; prior art exists |
+| **062** | Binary | depressed/not | Clinical threshold (PHQ-8 >= 10); paper reports 78% accuracy |
+| **063** | Severity Inference | Allow inference | Infer from "always"/"sometimes" without explicit frequency |
+
+### CLI Flags (To Be Implemented)
+
+```bash
+# Prediction mode
+--prediction-mode item     # Default: current behavior (8 items, 0-3)
+--prediction-mode total    # Sum-of-items (0-24) or direct prediction
+--prediction-mode binary   # PHQ-8 >= 10 threshold classification
+
+# Severity inference (Spec 063)
+--severity-inference strict  # Default: require explicit frequency
+--severity-inference infer   # Allow temporal/intensity marker inference
+```
+
+### Expected Improvements
+
+| Mode | Coverage | Interpretability | Clinical Utility |
+|------|----------|------------------|------------------|
+| item (current) | ~48% | High | Research only |
+| total | ~90%+ | Medium | Severity tiers |
+| binary | ~95%+ | Low | Screening |
+| item + infer | ~70-80% | High | Research |
+
+### Implementation Priority
+
+1. **Spec 063 (Severity Inference)**: Low-effort prompt change; may improve item coverage significantly
+2. **Spec 061 (Total Score)**: Medium-effort; sum-of-items is trivial, direct prediction needs new prompt
+3. **Spec 062 (Binary)**: Low-effort if using threshold; medium-effort for direct classification
+
+---

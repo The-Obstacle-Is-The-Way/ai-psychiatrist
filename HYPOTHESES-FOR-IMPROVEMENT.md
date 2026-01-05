@@ -12,6 +12,8 @@ A first-principles audit of the PHQ-8 scoring pipeline reveals several fundament
 
 **Key Finding**: DAIC-WOZ was designed to capture behavioral indicators of depression, not to elicit explicit PHQ-8 *frequency* information. Our quantitative prompts are (correctly) conservative about scoring without frequency evidence, but the dataset often does not provide it.
 
+> **Task Validity SSOT**: `docs/clinical/task-validity.md` — comprehensive analysis of construct mismatch and valid scientific claims.
+
 **Run 12 SSOT snapshot** (valid comparison; 41/41 evaluated in both modes; no selection bias):
 - **Zero-shot**: item MAE = **0.5715**, coverage (Cmax) = **48.5%**
 - **Few-shot**: item MAE = **0.6159**, coverage (Cmax) = **46.0%**
@@ -312,15 +314,20 @@ These are not DAIC-WOZ-specific, but they provide an empirical anchor: the label
 
 ## 9. Summary of Hypotheses
 
-| ID | Hypothesis | Type | Effort |
-|----|-----------|------|--------|
-| 2A | Allow frequency inference from temporal/intensity markers | Prompt change | Low |
-| 3A | Add explicit symptom definitions to chunk scorer | Prompt change | Low |
-| 4A | Embedding captures topic, not severity | Architecture | High |
-| 4B | Rerank by severity markers, not just similarity | Code change | Medium |
-| 5A | Consider behavioral indicators beyond verbal frequency | Research | High |
-| 7A | Fuzzy evidence grounding (semantic similarity) | Config + code | Medium |
-| 7B | Direct scoring without evidence extraction | Architecture | High |
+| ID | Hypothesis | Type | Effort | Status |
+|----|-----------|------|--------|--------|
+| 2A | Allow frequency inference from temporal/intensity markers | Prompt change | Low | **→ Spec 063** |
+| 3A | Add explicit symptom definitions to chunk scorer | Prompt change | Low | Proposed |
+| 4A | Embedding captures topic, not severity | Architecture | High | Research |
+| 4B | Rerank by severity markers, not just similarity | Code change | Medium | Proposed |
+| 5A | Consider behavioral indicators beyond verbal frequency | Research | High | Research |
+| 7A | Fuzzy evidence grounding (semantic similarity) | Config + code | Medium | Proposed |
+| 7B | Direct scoring without evidence extraction | Architecture | High | Research |
+
+**Related Specs** (address task validity):
+- **Spec 061**: Total PHQ-8 Score Prediction (0-24) — `docs/_specs/spec-061-total-phq8-score-prediction.md`
+- **Spec 062**: Binary Depression Classification — `docs/_specs/spec-062-binary-depression-classification.md`
+- **Spec 063**: Severity Inference Prompt Policy (implements Hypothesis 2A) — `docs/_specs/spec-063-severity-inference-prompt-policy.md`
 
 ---
 
@@ -345,9 +352,11 @@ These are not DAIC-WOZ-specific, but they provide an empirical anchor: the label
 
 ## 11. Related Documentation
 
+- [Task Validity](docs/clinical/task-validity.md) — **SSOT**: construct mismatch and valid claims
 - [Few-Shot Analysis](docs/results/few-shot-analysis.md) — Why few-shot may not beat zero-shot
 - [RAG Design Rationale](docs/rag/design-rationale.md) — Original design decisions
 - [Metrics and Evaluation](docs/statistics/metrics-and-evaluation.md) — AURC/AUGRC definitions
+- [Specs Index](docs/_specs/index.md) — Implementation specs (061-063 address task validity)
 
 ---
 

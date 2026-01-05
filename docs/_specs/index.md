@@ -2,6 +2,16 @@
 
 Implementation-ready (or implementation-planned) specifications for changes that require code modifications.
 
+## Proposed (Prediction Modes)
+
+| Spec | Title | Description |
+|------|-------|-------------|
+| **061** | [Total PHQ-8 Score Prediction](spec-061-total-phq8-score-prediction.md) | Predict total score (0-24) instead of item-level |
+| **062** | [Binary Depression Classification](spec-062-binary-depression-classification.md) | Binary classification (PHQ-8 >= 10) |
+| **063** | [Severity Inference Prompt Policy](spec-063-severity-inference-prompt-policy.md) | Allow inference from temporal/intensity markers |
+
+These specs address the task validity problem: PHQ-8 item-level frequency scoring is often underdetermined from DAIC-WOZ transcripts (see `docs/clinical/task-validity.md`).
+
 ## Deferred
 
 - **Spec 20**: [Keyword Fallback Improvements (Deferred)](../_archive/specs/20-keyword-fallback-improvements.md)
