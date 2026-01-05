@@ -1,6 +1,6 @@
 # Paper Reproduction Results (Current Status)
 
-**Last Updated**: 2026-01-04
+**Last Updated**: 2026-01-05
 
 This page is a high-level, **current-state** summary. The canonical timeline + per-run statistics live in:
 
@@ -20,7 +20,7 @@ See: `docs/_bugs/ANALYSIS-026-JSON-PARSING-ARCHITECTURE-AUDIT.md` and `docs/resu
 - Zero-shot evaluated 39/41 participants (2 hard failures).
 - Few-shot evaluated 0/41 participants due to missing HuggingFace optional deps (`torch`).
 
-Use `docs/results/run-history.md` as the SSOT. Run 11 completed but is diagnostic-only (5/41 participants failed in both modes due to evidence grounding); Run 12 is required for a clean confidence-suite evaluation.
+Use `docs/results/run-history.md` as the SSOT. Run 11 is diagnostic-only (selection bias: 5/41 participants failed in both modes due to evidence grounding); Run 12 is the first clean confidence-suite evaluation (41/41 evaluated in both modes).
 
 ---
 
@@ -30,14 +30,15 @@ Use `docs/results/run-history.md` as the SSOT. Run 11 completed but is diagnosti
 - **Paper MAE_item parity achieved**: few-shot `0.609` vs paper `0.619`; zero-shot `0.776` vs paper `0.796`
 - **Selective prediction**: AURC/AUGRC are very similar between modes (paired ΔAURC CI overlaps 0)
 - **Spec 046 evaluated** (Run 9): `retrieval_similarity_mean` improves AURC by 5.4% vs evidence-count-only
-- **AUGRC target not reached**: Best AUGRC is 0.031 (target was <0.020 per Issue #86)
+- **Confidence Suite validated (Run 12)**: 41/41 evaluated in both modes; token-level CSFs improve AURC/AUGRC over `llm`
+- **AUGRC target not reached (yet)**: Best artifact-free AUGRC is 0.0216 (`token_energy`, Run 12; target was <0.020 per Issue #86)
 - **Tradeoff**: overall Cmax at ~51% (vs ~66% in Run 7), indicating more abstention
 
 ---
 
 ## Current Best Retained Results (Paper-Test)
 
-From `docs/results/run-history.md` (Run 3 / Run 7 / Run 8 / Run 9):
+From `docs/results/run-history.md` (default `confidence=llm` unless noted):
 
 | Run | Change | Zero-shot AURC | Few-shot AURC | Notes |
 |-----|--------|----------------|---------------|------|
@@ -46,6 +47,7 @@ From `docs/results/run-history.md` (Run 3 / Run 7 / Run 8 / Run 9):
 | Run 7 | Spec 35 | 0.138 | **0.151** | Chunk scoring: 29% improvement |
 | Run 8 | Participant-only transcripts | 0.141 | **0.125** | Lower Cmax (~49% / ~51%) |
 | Run 9 | Spec 046 confidence signals | 0.144 | 0.135 (0.128 w/ similarity) | 5.4% AURC improvement with retrieval similarity |
+| Run 12 | Confidence suite (Specs 048–052) | **0.102** | 0.109 | Token CSFs yield best AURC/AUGRC within-run |
 
 **Interpretation**: Run 8 closes the remaining "participant-only preprocessing" lever, but does so by substantially lowering coverage. AURC/Cmax must be interpreted together.
 

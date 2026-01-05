@@ -2,7 +2,7 @@
 
 **Purpose**: Comprehensive record of all reproduction runs, code changes, and statistical analyses for posterity.
 
-**Last Updated**: 2026-01-04
+**Last Updated**: 2026-01-05
 
 ---
 
@@ -47,16 +47,25 @@ See: `docs/_bugs/ANALYSIS-026-JSON-PARSING-ARCHITECTURE-AUDIT.md`
 
 ## Quick Reference: Current Best Results
 
+All values below use `loss=abs_norm` and 10,000 participant-level bootstrap resamples.
+
+### Default confidence (`llm`)
+
 | Mode | AURC | AUGRC | Cmax | Run |
 |------|------|-------|------|-----|
-| **Zero-shot** | **0.134** [0.094-0.176] | **0.031** [0.022-0.043] | 48.8% | Run 8 |
-| **Few-shot** | **0.125** [0.099-0.151] | **0.031** [0.022-0.041] | 50.9% | Run 8 |
+| **Zero-shot** | **0.102** [0.081-0.121] | 0.025 [0.019-0.032] | 48.5% | Run 12 |
+| **Few-shot** | 0.109 [0.084-0.133] | **0.024** [0.018-0.032] | 46.0% | Run 12 |
 
-**Winner (lowest AURC)**: Few-shot (Run 8), but with substantially lower Cmax than earlier runs.
+### Best artifact-free confidence (within Run 12)
 
-**Spec 046 Finding (Run 9)**: Using `retrieval_similarity_mean` as confidence signal improves AURC by 5.4% (0.1351 → 0.1278) compared to evidence-count-only.
+| Mode | Confidence | AURC | AUGRC | Cmax |
+|------|------------|------|-------|------|
+| **Zero-shot** | `token_pe` | **0.093** [0.076-0.115] | 0.023 [0.018-0.030] | 48.5% |
+| **Few-shot** | `token_energy` | **0.086** [0.065-0.111] | **0.022** [0.015-0.029] | 46.0% |
 
-**AUGRC Improvement Suite (Specs 048–052, implemented 2026-01-03)**: New confidence variants and calibration utilities are available (verbalized confidence, supervised calibrator, token-level CSFs, consistency mode, and excess metrics). Baseline re-evaluation (few-shot, `confidence=llm`): `data/outputs/selective_prediction_metrics_20260103T070506Z.json` (AURC 0.1351, AUGRC 0.0346, Cmax 0.5305).
+**Spec 046 Finding (Run 9)**: Using `retrieval_similarity_mean` as confidence signal improves few-shot AURC by 5.4% (0.1351 → 0.1278) compared to evidence-count-only.
+
+**AUGRC Improvement Suite (Specs 048–052)**: Confidence-suite signals are now emitted and measurable; in Run 12, token-level CSFs deliver the largest AURC/AUGRC improvements over `llm` within the same run.
 
 **Note**: Run 8 has much lower coverage ceiling (`Cmax` ~51%) than Run 7 (`Cmax` ~66%). Interpret AURC alongside Cmax.
 
@@ -625,6 +634,53 @@ Key takeaways (abs_norm):
 | Few-shot | `token_pe` | **0.0861** | **0.0235** | 47.57% |
 
 Paired deltas (few-shot − zero-shot, `confidence=llm`): ΔAURC = +0.0149 [-0.0136, +0.0445], ΔAUGRC = +0.0017 [-0.0069, +0.0114].
+
+---
+
+### Run 12: Jan 4-5, 2026 - Confidence Suite (Specs 048–052) ✅ VALID (N=41)
+
+**File**: `data/outputs/both_paper-test_20260105_072303.json`
+
+**Log**: `data/outputs/run12_confidence_suite_20260104_115021.log`
+
+**Run ID**: `05621949`
+
+**Git Commit**: `c0d79c5` (clean)
+
+**Timestamp**: 2026-01-04T11:50:22
+
+**What changed vs Run 11**:
+- Evidence grounding failures are recorded as non-fatal (failure registry) instead of aborting participant evaluation, eliminating selection bias (N=41/41).
+- JSON parsing hardening and retry improvements are present at run start; the run completes with 0 JSON parse failures (telemetry records fixups without failures).
+
+**Results**:
+
+| Mode | N_eval | MAE_w | MAE_item | Coverage |
+|------|--------|-------|----------|----------|
+| Zero-shot | 41/41 | 0.642 | 0.572 | 48.5% |
+| Few-shot | 41/41 | 0.676 | 0.616 | 46.0% |
+
+**Selective prediction (Run 12, `confidence=llm`)**:
+
+| Mode | AURC | AUGRC | Cmax |
+|------|------|-------|------|
+| Zero-shot | 0.1019 [0.0806-0.1214] | 0.0252 [0.0186-0.0323] | 48.5% |
+| Few-shot | 0.1085 [0.0835-0.1327] | 0.0242 [0.0175-0.0319] | 46.0% |
+
+**Best artifact-free confidence variants (within the same run)**:
+- Zero-shot: `token_pe` (AURC 0.0932, AUGRC 0.0234)
+- Few-shot: `token_energy` (AURC 0.0862, AUGRC 0.0216)
+
+**Artifacts**:
+- Failures: `data/outputs/failures_05621949.json` (8 non-fatal `evidence_hallucination` events)
+- Telemetry: `data/outputs/telemetry_05621949.json` (`json_fixups_applied`)
+- Selective metrics (all variants): `data/outputs/selective_prediction_metrics_run12_zero_shot_all.json`, `data/outputs/selective_prediction_metrics_run12_few_shot_all.json`
+- Paired (few − zero, default): `data/outputs/selective_prediction_metrics_run12_paired_default.json`
+- Paired (Run 11 → Run 12, overlap only): `data/outputs/selective_prediction_metrics_run11_vs_run12_zero_shot_llm.json`, `data/outputs/selective_prediction_metrics_run11_vs_run12_few_shot_llm.json`
+
+**Interpretation**:
+- The confidence-suite signals are working and measurably reduce AURC/AUGRC relative to `llm` within a fixed run (selective prediction improvement without changing the underlying predictions).
+- Few-shot does not outperform zero-shot on MAE_item in this run; however, few-shot slightly improves AUGRC at the cost of lower Cmax and slightly worse AURC under `confidence=llm`. Prefer paired + confidence-variant comparisons for selective prediction claims.
 
 ---
 

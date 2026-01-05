@@ -1,18 +1,20 @@
 # Reproduction Run Output Schema (JSON + Registry)
 
 **Audience**: Researchers parsing outputs and maintaining run provenance
-**Last Updated**: 2026-01-04
+**Last Updated**: 2026-01-05
 
-This repo writes three primary provenance artifacts for quantitative reproduction runs:
+This repo writes four primary provenance artifacts for quantitative reproduction runs:
 
 1. `data/outputs/{mode}_{split}_{YYYYMMDD_HHMMSS}.json`
 2. `data/experiments/registry.yaml` (append/update registry of runs)
 3. `data/outputs/failures_{run_id}.json` (failure summary; Spec 056)
+4. `data/outputs/telemetry_{run_id}.json` (structured telemetry summary)
 
 SSOT implementation:
 - `scripts/reproduce_results.py` (writer)
 - `src/ai_psychiatrist/services/experiment_tracking.py` (filename + provenance helpers)
 - `src/ai_psychiatrist/infrastructure/observability.py` (failure registry; Spec 056)
+- `src/ai_psychiatrist/infrastructure/telemetry.py` (telemetry registry)
 
 ---
 
@@ -122,3 +124,13 @@ Top-level shape:
 Design constraints:
 - No transcript text or evidence quotes should be written to this file.
 - Prefer categorical `category`/`severity`, numeric counts, stable hashes, and short messages.
+
+---
+
+## Telemetry Registry (`data/outputs/telemetry_{run_id}.json`)
+
+Runs may also emit a compact telemetry summary for debugging/monitoring without leaking transcript text.
+
+Design constraints:
+- No transcript text, evidence quotes, or raw LLM outputs.
+- Telemetry should be categorical + aggregate (counts, stable hashes), suitable for trend tracking.
