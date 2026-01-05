@@ -32,7 +32,7 @@ Use `docs/results/run-history.md` as the SSOT. Run 11 is diagnostic-only (select
 - **Spec 046 evaluated** (Run 9): `retrieval_similarity_mean` improves AURC by 5.4% vs evidence-count-only
 - **Confidence Suite validated (Run 12)**: 41/41 evaluated in both modes; token-level CSFs improve AURC/AUGRC over `llm`
 - **AUGRC target not reached (yet)**: Best artifact-free AUGRC is 0.0216 (`token_energy`, Run 12; target was <0.020 per Issue #86)
-- **Tradeoff**: overall Cmax at ~51% (vs ~66% in Run 7), indicating more abstention
+- **Tradeoff**: coverage ceiling is ~46–49% in Run 12 (vs ~66% in Run 7), indicating more abstention
 
 ---
 

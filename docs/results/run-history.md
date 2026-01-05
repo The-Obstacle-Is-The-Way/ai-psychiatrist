@@ -58,10 +58,11 @@ All values below use `loss=abs_norm` and 10,000 participant-level bootstrap resa
 
 ### Best artifact-free confidence (within Run 12)
 
-| Mode | Confidence | AURC | AUGRC | Cmax |
-|------|------------|------|-------|------|
-| **Zero-shot** | `token_pe` | **0.093** [0.076-0.115] | 0.023 [0.018-0.030] | 48.5% |
-| **Few-shot** | `token_energy` | **0.086** [0.065-0.111] | **0.022** [0.015-0.029] | 46.0% |
+| Mode | Best For | Confidence | AURC | AUGRC | Cmax |
+|------|----------|------------|------|-------|------|
+| **Zero-shot** | AURC | `verbalized` | **0.092** [0.065-0.126] | 0.026 [0.018-0.034] | 48.5% |
+| **Zero-shot** | AUGRC | `token_pe` | 0.093 [0.076-0.115] | **0.023** [0.018-0.030] | 48.5% |
+| **Few-shot** | AURC/AUGRC | `token_energy` | **0.086** [0.065-0.110] | **0.022** [0.015-0.029] | 46.0% |
 
 **Spec 046 Finding (Run 9)**: Using `retrieval_similarity_mean` as confidence signal improves few-shot AURC by 5.4% (0.1351 → 0.1278) compared to evidence-count-only.
 
@@ -668,8 +669,9 @@ Paired deltas (few-shot − zero-shot, `confidence=llm`): ΔAURC = +0.0149 [-0.0
 | Few-shot | 0.1085 [0.0835-0.1327] | 0.0242 [0.0175-0.0319] | 46.0% |
 
 **Best artifact-free confidence variants (within the same run)**:
-- Zero-shot: `token_pe` (AURC 0.0932, AUGRC 0.0234)
-- Few-shot: `token_energy` (AURC 0.0862, AUGRC 0.0216)
+- Zero-shot (best AURC): `verbalized` (AURC 0.0917)
+- Zero-shot (best AUGRC): `token_pe` (AUGRC 0.0234)
+- Few-shot (best AURC/AUGRC): `token_energy` (AURC 0.0862, AUGRC 0.0216)
 
 **Artifacts**:
 - Failures: `data/outputs/failures_05621949.json` (8 non-fatal `evidence_hallucination` events)

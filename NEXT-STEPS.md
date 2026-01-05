@@ -1,7 +1,7 @@
 # Next Steps
 
-**Status**: Ready for Run 12 (post-Run 11 hardening)
-**Last Updated**: 2026-01-04
+**Status**: Run 12 complete (valid); ready for Run 13
+**Last Updated**: 2026-01-05
 
 ---
 
@@ -95,11 +95,43 @@ The paper's reference implementation (`_reference/ai_psychiatrist/`) demonstrate
 - The run artifact contains the new `item_signals` keys (`verbalized_confidence`, `token_*`, `consistency_*`), so the instrumentation path works.
 - Use it only as a “signals present” smoke test; do not interpret AURC/MAE deltas from this run.
 
-**Next**: Run 11 completed but is diagnostic-only (selection bias from evidence grounding failures). Run 12 is required for a clean confidence-suite evaluation.
+**Next**: Run 12 completed and is the current SSOT for confidence-suite results (see below). Run 13 should focus on pushing AUGRC below the target (<0.020) via calibrated confidence (Spec 049) and/or additional robustness improvements.
 
 ---
 
-## 3. Configuration Summary
+## 3. Run 12 Results (Confidence Suite) ✅ VALID (No Selection Bias)
+
+**Log**: `data/outputs/run12_confidence_suite_20260104_115021.log`
+**Output**: `data/outputs/both_paper-test_20260105_072303.json`
+**Failures**: `data/outputs/failures_05621949.json` (8 non-fatal `evidence_hallucination`)
+**Telemetry**: `data/outputs/telemetry_05621949.json` (`json_fixups_applied` × 9; 0 parse failures)
+**Run ID**: `05621949` (`git_dirty=false`, `git_commit=c0d79c5`)
+
+### Reproduction Summary
+
+| Mode | N_eval | MAE_item | Coverage |
+|------|--------|----------|----------|
+| Zero-shot | 41/41 | 0.5715 | 48.5% |
+| Few-shot | 41/41 | 0.6159 | 46.0% |
+
+### Selective Prediction Summary (`loss=abs_norm`, 10,000 bootstrap resamples)
+
+| Mode | Confidence | AURC | AUGRC | Cmax |
+|------|------------|------|-------|------|
+| Zero-shot | `llm` | 0.1019 | 0.0252 | 48.5% |
+| Zero-shot | best AURC: `verbalized` | 0.0917 | 0.0257 | 48.5% |
+| Zero-shot | best AUGRC: `token_pe` | 0.0932 | 0.0234 | 48.5% |
+| Few-shot | `llm` | 0.1085 | 0.0242 | 46.0% |
+| Few-shot | best AURC/AUGRC: `token_energy` | 0.0862 | 0.0216 | 46.0% |
+
+**All variants**:
+- Zero-shot: `data/outputs/selective_prediction_metrics_run12_zero_shot_all.json`
+- Few-shot: `data/outputs/selective_prediction_metrics_run12_few_shot_all.json`
+- Paired (few − zero, default): `data/outputs/selective_prediction_metrics_run12_paired_default.json`
+
+---
+
+## 4. Configuration Summary
 
 All features are **gated by `.env`**. Copy `.env.example` to `.env` before running.
 
@@ -120,7 +152,7 @@ Code defaults exist for testing and fallback only. They are NOT recommended for 
 
 ---
 
-## 4. Spec 046 Implementation Status
+## 5. Spec 046 Implementation Status
 
 **Status**: ✅ IMPLEMENTED AND TESTED (2026-01-03)
 
@@ -135,11 +167,14 @@ Code defaults exist for testing and fallback only. They are NOT recommended for 
 
 ---
 
-## 5. Future Work (If Pursuing AUGRC <0.020)
+## 6. Future Work (If Pursuing AUGRC <0.020)
 
-Specs 048–051 are now implemented. The next step is to run a new reproduction that emits the new per-item signals and then evaluate AURC/AUGRC across confidence variants.
+Specs 048–051 are implemented and validated (Run 12). The next step is to push AUGRC further via:
+- **Spec 049 calibrated confidence** (train on non-test data, then evaluate on paper-test)
+- Optional: systematic tuning of consistency sampling settings (n, temperature) and re-run evaluation
+  - Prefer paired comparisons + all-variant evaluation for claims
 
-### What Run 12 is testing
+### What Run 13 should test
 
 | Spec | Capability | Where it shows up |
 |------|------------|-------------------|
@@ -148,7 +183,7 @@ Specs 048–051 are now implemented. The next step is to run a new reproduction 
 | 050 | Consistency-based confidence (multi-sample) | `item_signals[*]["consistency_*"]` (requires consistency enabled) |
 | 051 | Token-level CSFs from logprobs | `item_signals[*]["token_msp|token_pe|token_energy"]` (backend-dependent) |
 
-### Run 12 checklist (don’t skip)
+### Run 13 checklist (don’t skip)
 
 1. Preflight: confirm the validated configuration is active
    - `cp .env.example .env` (if needed)
@@ -191,10 +226,10 @@ Specs 048–051 are now implemented. The next step is to run a new reproduction 
 3. Run in tmux
 
    ```bash
-   tmux new -s run12
+   tmux new -s run13
    uv run python scripts/reproduce_results.py \
      --split paper-test \
-     2>&1 | tee data/outputs/run12_confidence_suite_$(date +%Y%m%d_%H%M%S).log
+     2>&1 | tee data/outputs/run13_confidence_suite_$(date +%Y%m%d_%H%M%S).log
    ```
 
 4. Evaluate selective prediction (compare confidence variants)
@@ -224,7 +259,7 @@ Specs 048–051 are now implemented. The next step is to run a new reproduction 
 
 ---
 
-## 6. Definition of Done
+## 7. Definition of Done
 
 | Milestone | Status |
 |-----------|--------|
@@ -232,7 +267,7 @@ Specs 048–051 are now implemented. The next step is to run a new reproduction 
 | Chunk-level scoring (Spec 35) | ✅ Implemented |
 | Participant-only preprocessing | ✅ Implemented |
 | Retrieval confidence signals (Spec 046) | ✅ Tested (+5.4% AURC) |
-| Confidence improvement suite (Specs 048–051) | ✅ Implemented (Run 11 diagnostic; needs clean Run 12 eval) |
-| AUGRC < 0.020 target | ❌ Current best: 0.031 |
+| Confidence improvement suite (Specs 048–051) | ✅ Implemented + validated (Run 12) |
+| AUGRC < 0.020 target | ❌ Current best: 0.0216 (`token_energy`, Run 12) |
 
 ---
