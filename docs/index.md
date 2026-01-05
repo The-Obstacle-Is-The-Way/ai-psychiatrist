@@ -6,9 +6,11 @@
 
 ## What is AI Psychiatrist?
 
-AI Psychiatrist is an engineering-focused, reproducible implementation of a research paper that uses large language models (LLMs) in a multi-agent architecture to assess depression severity from clinical interview transcripts. The system analyzes interview transcripts and predicts PHQ-8 depression scores using a four-agent pipeline.
+AI Psychiatrist is an engineering-focused, reproducible implementation of a research paper that uses large language models (LLMs) in a multi-agent architecture to assess depression severity from clinical interview transcripts. The system analyzes interview transcripts and **selectively** predicts PHQ-8 item scores (0–3) when supported by evidence, otherwise abstaining (`N/A`), using a four-agent pipeline.
 
 > **Clinical disclaimer**: This repository is intended for paper reproduction and experimentation. It is not a medical device and should not be used for clinical diagnosis or treatment decisions.
+
+> **Task validity note**: PHQ-8 is a **2-week frequency** self-report instrument, while DAIC-WOZ transcripts are not structured as PHQ administration. Transcript-only item-level scoring is often underdetermined; the system may return `N/A` and must be evaluated with coverage-aware metrics (AURC/AUGRC). See: [Task Validity](clinical/task-validity.md).
 
 ### Key Features
 
@@ -48,6 +50,7 @@ AI Psychiatrist is an engineering-focused, reproducible implementation of a rese
 | Document | Description |
 |----------|-------------|
 | [PHQ-8](clinical/phq8.md) | Understanding PHQ-8 depression assessment |
+| [Task Validity](clinical/task-validity.md) | What can/cannot be inferred from transcripts |
 | [Clinical Understanding](clinical/clinical-understanding.md) | How the system works clinically |
 | [Glossary](clinical/glossary.md) | Terms and definitions |
 
@@ -154,7 +157,7 @@ AI Psychiatrist is an engineering-focused, reproducible implementation of a rese
 │                                              │                          │
 │   ┌──────────────┐    ┌──────────────────────▼──────────────────────┐   │
 │   │  EMBEDDINGS  │───►│            QUANTITATIVE AGENT               │   │
-│   │ (Few-Shot)   │    │  Predicts PHQ-8 item scores (0-3 each)      │   │
+│   │ (Few-Shot)   │    │  Predicts PHQ-8 item scores (0-3) or N/A    │   │
 │   └──────────────┘    └──────────────────────┬──────────────────────┘   │
 │                                              │                          │
 │                                              ▼                          │

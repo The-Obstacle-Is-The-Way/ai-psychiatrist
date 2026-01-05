@@ -13,6 +13,16 @@ PHQ-8 is derived from the PHQ-9, which includes a 9th question about suicide ide
 - Maintains strong psychometric properties
 - Correlates highly with PHQ-9 (as reported in PHQ-8 validation literature)
 
+## Task Validity in Transcript-Based Scoring (Important)
+
+PHQ-8 item scores are defined by **2-week frequency**, but DAIC-WOZ transcripts are not structured as PHQ administration. Many interviews do not contain explicit “days out of 14” frequency statements for each item.
+
+In this repo:
+- The quantitative agent returns **`N/A`** when it cannot justify an item score from transcript evidence.
+- Coverage (how many items are scored vs `N/A`) is expected to be well below 100%, and must be reported alongside accuracy.
+
+See: [Task Validity](task-validity.md).
+
 ---
 
 ## The 8 Items

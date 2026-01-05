@@ -86,7 +86,7 @@ A specialized LLM-powered component that performs a specific task in the pipelin
 
 1. **Qualitative Assessment Agent**: Analyzes social, biological, and risk factors
 2. **Judge Agent**: Evaluates qualitative assessment quality
-3. **Quantitative Assessment Agent**: Predicts PHQ-8 item scores
+3. **Quantitative Assessment Agent**: Selectively predicts PHQ-8 item scores (0-3) or abstains (`N/A`) when transcript evidence is insufficient (see `docs/clinical/task-validity.md`)
 4. **Meta-Review Agent**: Integrates all assessments into final severity
 
 ### Feedback Loop

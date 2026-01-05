@@ -206,7 +206,7 @@ def get_feedback_for_low_scores(evaluation: QualitativeEvaluation, threshold: in
 
 #### QuantitativeAssessmentAgent (`src/ai_psychiatrist/agents/quantitative.py`)
 
-Predicts PHQ-8 item scores (0-3) using evidence extraction and few-shot retrieval.
+Selectively predicts PHQ-8 item scores (0-3) **or abstains (`N/A`)** using evidence extraction and optional few-shot retrieval. See `docs/clinical/task-validity.md` for the dataset/task limitation (PHQ-8 is frequency-based; transcripts often underdetermine item-level frequency).
 
 **Responsibilities:**
 - Extract evidence quotes for each PHQ-8 item

@@ -15,6 +15,8 @@ Few-shot mode uses reference embeddings to retrieve similar transcript chunks as
 2. Matching embedding dimensions
 3. Correct embedding model
 
+> **Validity note**: Few-shot can only help when there is grounded, item-relevant evidence to embed at runtime. Because PHQ-8 is a 2-week frequency instrument and DAIC-WOZ transcripts are not structured as PHQ administration, references may be sparse and `N/A` outputs are expected. Evaluate with AURC/AUGRC (coverage-aware) and see `docs/clinical/task-validity.md`.
+
 ### TL;DR (No-Excuses Preflight)
 
 ```bash

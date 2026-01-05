@@ -9,6 +9,8 @@
 
 This document covers critical design considerations for few-shot PHQ-8 scoring, including known limitations and their fixes.
 
+**Task validity note**: PHQ-8 is a 2-week frequency instrument, while DAIC-WOZ transcripts are not structured as PHQ administration. Few-shot retrieval can only help when there is grounded, item-relevant evidence to embed; otherwise references will be sparse. See: `docs/clinical/task-validity.md` and `docs/results/few-shot-analysis.md`.
+
 ---
 
 ## The Participant-Level Score Problem

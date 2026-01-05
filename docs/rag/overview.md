@@ -11,6 +11,8 @@
 
 This document explains **embeddings** and **few-shot retrieval** without requiring any computer science background.
 
+> **Task validity note**: PHQ-8 is a 2-week **frequency** self-report instrument, while DAIC-WOZ interviews are not structured as PHQ administration. Few-shot retrieval can only help when there is grounded, item-relevant evidence to embed; otherwise the system often abstains (`N/A`). See: `docs/clinical/task-validity.md`.
+
 ---
 
 ## The Core Idea
@@ -190,16 +192,16 @@ LLM OUTPUT: Score 2
 
 ### The Calibration Effect
 
-Without examples, the LLM must guess what "2" means on the PHQ-8 scale.
+Without examples, the LLM must infer what "2" means on the PHQ-8 scale from the rubric and the transcript evidence.
 
-With examples, the LLM learns:
+With examples (when there is item-relevant evidence to retrieve), the LLM can calibrate:
 > "Oh, 'waking up at night' is a 2, not a 3. Got it."
 
 ### The Paper's Results
 
 | Mode | MAE | Explanation |
 |------|-----|-------------|
-| Zero-shot | 0.796 | No examples, LLM guesses |
+| Zero-shot | 0.796 | No examples, rubric-only calibration |
 | Few-shot | 0.619 | 2 examples per item, calibrated |
 
 That is a **22% lower item-level MAE** vs zero-shot (paper-reported). In this repository, few-shot performance is sensitive to retrieval quality and can underperform zero-shot; see `docs/results/reproduction-results.md` and `docs/results/run-history.md`.

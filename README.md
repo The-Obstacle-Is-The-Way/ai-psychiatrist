@@ -12,7 +12,9 @@
 
 ## Overview
 
-AI Psychiatrist implements a research paper's methodology for automated depression assessment using a four-agent LLM pipeline. The system analyzes clinical interview transcripts to predict PHQ-8 depression scores and severity levels.
+AI Psychiatrist implements a research paper's methodology for automated depression assessment using a four-agent LLM pipeline. The system analyzes clinical interview transcripts to **selectively** infer PHQ-8 item scores when supported by transcript evidence, abstaining (`N/A`) when evidence is insufficient.
+
+> **Task validity note**: PHQ-8 is a 2-week frequency self-report instrument, while DAIC-WOZ transcripts are not structured as PHQ administration. Transcript-only item scoring is often underdetermined; interpret results with coverage-aware metrics (AURC/AUGRC). See `docs/clinical/task-validity.md`.
 
 ### Key Features
 

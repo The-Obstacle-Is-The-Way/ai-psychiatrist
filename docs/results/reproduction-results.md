@@ -46,6 +46,8 @@ In Run 12, **zero-shot outperformed few-shot** (MAE 0.572 vs 0.616) at similar c
 
 See: [Few-Shot Analysis](few-shot-analysis.md) for full details.
 
+For the underlying construct-validity constraint (PHQ-8 frequency vs transcript evidence), see: `docs/clinical/task-validity.md`.
+
 ---
 
 ## Current Best Retained Results (Paper-Test)

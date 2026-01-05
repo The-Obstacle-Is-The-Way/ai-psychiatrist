@@ -150,7 +150,9 @@ the feedback loop:
 **Model:** Gemma 3 27B (default)
 **Paper Reference:** Section 2.3.2, Section 2.4.2
 
-The quantitative agent predicts PHQ-8 item scores (0-3) for each symptom.
+The quantitative agent predicts PHQ-8 item scores (0-3) **or abstains (`N/A`)** when the transcript lacks sufficient evidence.
+
+PHQ-8 item scores are defined by **2-week frequency**, while DAIC-WOZ transcripts are not structured as PHQ administration. Treat item scoring as a selective, evidence-limited task; see `docs/clinical/task-validity.md`.
 
 #### Evidence Extraction
 

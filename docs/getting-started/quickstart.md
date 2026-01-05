@@ -105,6 +105,8 @@ The API will be available at `http://localhost:8000`.
 
 ## Your First Assessment
 
+> **Note**: PHQ-8 item scoring from transcripts is a selective task. Some items may return `N/A` when the transcript lacks sufficient evidence, and evaluation must consider coverage (AURC/AUGRC). See `docs/clinical/task-validity.md`.
+
 ### Using the API
 
 ```bash

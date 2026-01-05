@@ -7,7 +7,9 @@
 
 ## The Big Picture
 
-This system reads interview transcripts (like DAIC-WOZ clinical interviews) and predicts PHQ-8 depression scores for each patient. It's trying to do what a clinician does when they read an interview transcript and assess depression severity.
+This system reads interview transcripts (like DAIC-WOZ clinical interviews) and **selectively** infers PHQ-8 depression item scores when the transcript contains sufficient evidence. When it cannot justify an item score from transcript evidence, it returns **`N/A`** (abstention).
+
+PHQ-8 item scores are defined by **2-week frequency**, but DAIC-WOZ transcripts are not structured as PHQ administration. This creates a real validity constraint for transcript-only item scoring; see: `docs/clinical/task-validity.md`.
 
 ---
 
@@ -68,7 +70,8 @@ The system makes **multiple LLM calls** per patient:
 #### Step 1: Evidence Extraction
 - LLM reads transcript
 - Outputs JSON with quotes for each PHQ-8 item
-- Sometimes this fails (malformed JSON) → falls back to empty evidence
+- Output is schema-validated and evidence-grounded (rejected quotes are logged without transcript text)
+- If parsing/validation fails, the participant evaluation fails loudly (no silent fallbacks)
 
 #### Step 2: Few-Shot Retrieval
 - Uses the extracted evidence to find **similar patients** from the training data
@@ -124,13 +127,14 @@ Interview Transcript
 
 ## Why We're Seeing What We're Seeing
 
-### The JSON Parsing Warning
-When evidence extraction produces malformed output, the system falls back to an **empty evidence** dict for that participant, resulting in more N/A items.
+### The Core Driver: Evidence Availability (Not “Model Knowledge”)
 
-### Variable Coverage (50-100%)
+Many DAIC-WOZ interviews do not contain explicit PHQ-8 frequency language for each item. The system is designed to abstain (`N/A`) when evidence is insufficient rather than hallucinate frequency.
+
+### Variable Coverage (Often ~50% on DAIC-WOZ)
 Coverage varies across participants and items. This depends on:
 - What symptoms the patient discussed
-- Whether evidence extraction succeeded
+- Whether extracted quotes can be grounded in the transcript
 - How explicit the symptom mentions were
 
 ### The Paper's Approach
@@ -166,9 +170,9 @@ If our MAE is close to 0.619 with reasonable coverage, we've successfully reprod
 
 ## Summary
 
-**In one sentence**: The system extracts symptom-related quotes from interviews, uses similar patient examples to calibrate, predicts 0-3 scores per PHQ-8 item (or N/A if insufficient evidence), and we measure accuracy via MAE on the items it actually predicted.
+**In one sentence**: The system extracts symptom-related quotes from interviews, optionally retrieves similar examples, predicts 0-3 scores per PHQ-8 item (or `N/A` if insufficient evidence), and we evaluate accuracy and abstention jointly via coverage-aware metrics (AURC/AUGRC) plus item-level MAE on predicted items.
 
-**Known limitation**: Evidence extraction sometimes fails to parse, leading to lower coverage. There's room for improvement in prompt engineering and JSON parsing robustness.
+**Known limitation**: Item-level PHQ-8 scoring from transcript-only evidence is often underdetermined because PHQ-8 is a 2-week frequency instrument. This is a dataset/task constraint, not just an engineering issue; see `docs/clinical/task-validity.md`.
 
 ---
 

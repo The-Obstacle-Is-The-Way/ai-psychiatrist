@@ -85,6 +85,16 @@ uv run python scripts/reproduce_results.py --split paper-test --dry-run
 
 If the header is wrong, **stop** and fix config before starting a multi-hour run.
 
+## Task Validity (Important)
+
+PHQ-8 item scores are defined by **2-week frequency**, but DAIC-WOZ transcripts are not structured as PHQ administration. Transcript-only item scoring is often underdetermined, so `N/A` outputs and ~50% coverage are expected in rigorous runs.
+
+Interpretation rules:
+- Treat the system as **selective prediction**: report `Cmax` + AURC/AUGRC, not just MAE.
+- Few-shot can only help when there is grounded, item-relevant evidence to embed; sparse evidence implies sparse references.
+
+SSOT: `docs/clinical/task-validity.md`.
+
 ## Running Reproduction (tmux)
 
 ```bash

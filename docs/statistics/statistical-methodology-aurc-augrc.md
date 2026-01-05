@@ -93,7 +93,9 @@ SSOT: `compute_eaurc()`, `compute_eaugrc()`, `compute_aurc_optimal()`, `compute_
 
 ## Why This Matters for Depression Assessment
 
-Our system predicts PHQ-8 item scores (0-3 scale) from clinical interview transcripts. The model can abstain when it lacks sufficient evidence.
+Our system predicts PHQ-8 item scores (0-3 scale) from clinical interview transcripts. The model can abstain (`N/A`) when it lacks sufficient evidence.
+
+Important: PHQ-8 items are defined by **2-week frequency**, but DAIC-WOZ transcripts are not structured as PHQ administration. Transcript-only item scoring is often underdetermined, so abstention is expected and must be treated as part of the evaluation signal. See: `docs/clinical/task-validity.md`.
 
 ### The Tradeoff
 

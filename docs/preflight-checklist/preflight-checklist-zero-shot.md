@@ -12,6 +12,8 @@ This checklist prevents run failures by verifying ALL known gotchas before runni
 
 **Zero-shot mode uses NO reference embeddings** — the model scores symptoms from transcript alone.
 
+> **Validity note**: PHQ-8 item scores are defined by 2-week frequency, which is often not explicit in DAIC-WOZ transcripts. Expect `N/A` outputs and coverage well below 100%; evaluate with coverage-aware metrics (AURC/AUGRC). See `docs/clinical/task-validity.md`.
+
 **CRITICAL RUN-MODE NOTE (do not skip)**:
 `scripts/reproduce_results.py` runs **both** modes (zero-shot + few-shot) by default. If you intend a true zero-shot run, you must pass `--zero-shot-only` or the run will attempt few-shot and require embeddings + embedding backend deps.
 

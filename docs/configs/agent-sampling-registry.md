@@ -23,7 +23,7 @@ Transcript
     │                       ↺ loops back if any score < 4 (max 10 iterations)
     ▼
 ┌─────────────────────┐
-│ 3. QUANTITATIVE     │  ← Predicts PHQ-8 item scores (0-3 each)
+│ 3. QUANTITATIVE     │  ← Selectively scores PHQ-8 items (0-3) or N/A
 └─────────────────────┘     (zero-shot OR few-shot with embeddings)
     │
     ▼
@@ -31,6 +31,8 @@ Transcript
 │ 4. META-REVIEW      │  ← Integrates all assessments
 └─────────────────────┘     → Final severity (0-4) + MDD indicator
 ```
+
+**Validity note**: PHQ-8 item scores are frequency-based; transcript-only item scoring is often underdetermined, so `N/A` outputs and <100% coverage are expected. Interpret quantitative results as **selective prediction** (coverage + AURC/AUGRC); see `docs/clinical/task-validity.md`.
 
 ---
 
@@ -51,8 +53,8 @@ That's it.
 |-------|------|-------|-------|-----------|
 | **Qualitative** | 0.0 | — | — | Clinical extraction, not creative writing |
 | **Judge** | 0.0 | — | — | Classification (1-5 scoring) |
-| **Quantitative (zero-shot)** | 0.0 | — | — | Classification (0-3 scoring) |
-| **Quantitative (few-shot)** | 0.0 | — | — | Classification (0-3 scoring) |
+| **Quantitative (zero-shot)** | 0.0 | — | — | Selective scoring (0-3 or N/A) |
+| **Quantitative (few-shot)** | 0.0 | — | — | Selective scoring (0-3 or N/A) |
 | **Meta-Review** | 0.0 | — | — | Classification (severity 0-4) |
 
 **Note on "—"**: Don't set these. At temp=0 they're irrelevant (greedy decoding), and best practice is "use temperature only."

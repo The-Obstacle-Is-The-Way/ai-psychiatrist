@@ -9,6 +9,8 @@
 
 This document explains how evidence extraction works, why it succeeds or fails, and how that leads to coverage.
 
+> **Task validity note**: PHQ-8 is a 2-week **frequency** instrument, while DAIC-WOZ interviews are not structured as PHQ administration. Transcript-only item-level scoring is often underdetermined, so `N/A` outputs and ~50% coverage are expected in rigorous runs. See `docs/clinical/task-validity.md`.
+
 ---
 
 ## The Pipeline (High Level)
