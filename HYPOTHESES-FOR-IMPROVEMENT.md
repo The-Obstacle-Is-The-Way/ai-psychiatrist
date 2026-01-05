@@ -10,7 +10,49 @@
 
 A first-principles audit of the PHQ-8 scoring pipeline reveals several fundamental mismatches between the dataset, the task, and our implementation. These are not bugs in the traditional sense—the code executes correctly—but rather **methodological constraints** that limit what is achievable with this approach on this dataset.
 
-**Key Finding**: DAIC-WOZ was designed to detect behavioral indicators of depression, not to elicit explicit PHQ-8 frequency information. Our prompts require frequency evidence that the dataset was never designed to provide.
+**Key Finding**: DAIC-WOZ was designed to capture behavioral indicators of depression, not to elicit explicit PHQ-8 *frequency* information. Our quantitative prompts are (correctly) conservative about scoring without frequency evidence, but the dataset often does not provide it.
+
+**Run 12 SSOT snapshot** (valid comparison; 41/41 evaluated in both modes; no selection bias):
+- **Zero-shot**: item MAE = **0.5715**, coverage (Cmax) = **48.5%**
+- **Few-shot**: item MAE = **0.6159**, coverage (Cmax) = **46.0%**
+- Evidence grounding rejects ~**49.5%** of extracted quotes (deduped across modes).
+- Only **32.0%** of item assessments had any grounded LLM evidence (105/328).
+- Few-shot references are sparse: **15.2%** of item assessments had any references (50/328), receiving **52 total** references.
+
+These numbers are derived from Run 12 artifacts in `data/outputs/` and summarized in `docs/results/few-shot-analysis.md`.
+
+---
+
+## Peer-Review “Reject” Threats (Adversarial List)
+
+These are the issues most likely to trigger rejection on *construct validity* / *method validity* grounds unless explicitly addressed via ablations or wording.
+
+### A) Construct validity: PHQ-8 is self-report frequency; transcripts often lack frequency (Major)
+
+- PHQ-8 is explicitly a “past two weeks / frequency” instrument; DAIC-WOZ is not a PHQ interview. Most interview statements are qualitative (no explicit day counts).
+- Our prompts correctly push the model to abstain when frequency is unclear (`src/ai_psychiatrist/agents/prompts/quantitative.py:37-45` and `src/ai_psychiatrist/agents/prompts/quantitative.py:111-117`), but that means the system is fundamentally measuring “inferable PHQ evidence from transcript” rather than PHQ itself.
+
+**Implication for claims**: You must frame the task as *selective, evidence-grounded inference* rather than “PHQ-8 from transcripts” in an absolute sense.
+
+### B) Few-shot is not a pure “add references” intervention (Major)
+
+For few-shot, we always inject a `<Reference Examples>` block; when there are no usable references it contains the string “No valid evidence found” (`src/ai_psychiatrist/services/embedding.py:90-115`). Zero-shot omits the block entirely (`src/ai_psychiatrist/agents/prompts/quantitative.py:102-110`).
+
+This is a *prompt confound* for the “few-shot vs zero-shot” research question: the few-shot condition changes the prompt even when retrieval returns zero references.
+
+**Immediate mitigation**: Add an ablation/control where zero-shot uses the same empty `<Reference Examples>` wrapper, or where few-shot omits the wrapper when it contains no references.
+
+### C) Participant-only transcripts remove disambiguating question context (Major)
+
+Participant-only transcripts are effective at reducing protocol leakage into embeddings, but they also remove the questions that disambiguate short answers (semantic void problem). This can reduce evidence yield and coverage.
+
+**Mitigation**: Ablate against `transcripts_participant_qa` (minimal question context) and quantify the impact on evidence grounding rate, coverage, and MAE/AUGRC.
+
+### D) Privacy/ethics risk: retrieval audit logging can leak transcript text (Major)
+
+If retrieval audit logging is enabled, we log `chunk_preview` from retrieved DAIC-WOZ references (`src/ai_psychiatrist/services/embedding.py:376-389`). This risks leaking restricted corpus content into logs/run artifacts.
+
+**Mitigation**: Keep audit logging off for all shareable runs; when enabled locally, redact previews or log only hashes and lengths.
 
 ---
 
@@ -42,10 +84,10 @@ PHQ-8 is a **frequency-based** instrument asking "Over the last 2 weeks, how oft
 - "I have trouble sleeping sometimes" (vague)
 - "I've been stressed lately" (qualitative)
 
-This explains why:
-- Only 30.4% of chunks have any scoreable evidence
-- ~50% of extracted quotes fail evidence grounding
-- Coverage ceiling is ~46-49%
+This explains why (Run 12 SSOT):
+- Only **32.0%** of item assessments have any grounded evidence (105/328)
+- ~**49.5%** of extracted quotes fail evidence grounding
+- Coverage stabilizes around **46–49%** in both modes
 
 ---
 
@@ -53,7 +95,7 @@ This explains why:
 
 ### Current Prompt Logic
 
-Our prompts (see `src/ai_psychiatrist/agents/prompts/quantitative.py:116-117`) say:
+Our prompts (see `src/ai_psychiatrist/agents/prompts/quantitative.py:111-117`) say:
 ```
 5. If no relevant evidence exists, mark as "N/A" rather than assuming absence
 6. Only assign numeric scores (0-3) when evidence clearly indicates frequency
@@ -153,6 +195,17 @@ Embedding captures **topic similarity**, not **severity similarity**:
 2. Score distribution (prefer balanced exemplars)
 3. Exclude chunks that are topic-adjacent but not symptom-indicative
 
+### Hypothesis 4C: Domain mismatch — general embeddings may be suboptimal (Major)
+
+We currently use a general-purpose embedding model (`MODEL_EMBEDDING_MODEL=qwen3-embedding:8b`). Clinical NLP has multiple domain-adapted models (e.g., ClinicalBERT / PubMedBERT) that may better represent symptom language and reduce topical-but-not-clinical matches.
+
+**Improvement Hypothesis**: Add an embeddings ablation suite:
+- baseline: current `qwen3-embedding:8b`
+- clinical-domain embedding baseline(s): ClinicalBERT / PubMedBERT style encoders (or a modern clinical embedding model)
+- evaluate: retrieval sparsity, reference score usefulness, downstream MAE/AUGRC
+
+This must be done as an ablation; do not assume improvements without measurement.
+
 ---
 
 ## 5. N/A Criteria Analysis
@@ -215,6 +268,15 @@ Evidence extraction is a **filter**:
 
 **Improvement Hypothesis**: Fuzzy grounding with semantic similarity instead of substring match.
 
+### Hypothesis 7C: Evidence extractor prompt may be inducing quote “hallucinations” (Major)
+
+The evidence extraction prompt currently asks the model to both (a) extract quotes and (b) “determine the appropriate PHQ-8 score”, but the response schema is quote arrays only (`src/ai_psychiatrist/agents/prompts/quantitative.py:47-89`). This mixed objective can incentivize the model to synthesize/normalize quotes rather than copy verbatim.
+
+**Improvement Hypothesis**: Rewrite evidence extraction as a pure “verbatim quote finder”:
+- Remove any instruction about scoring in the evidence step.
+- Add stronger constraints: “copy exact substrings; do not paraphrase; do not merge lines.”
+- Evaluate impact on grounding rejection rate and few-shot reference coverage.
+
 ### Question 7B: Direct Scoring vs. Evidence-Mediated
 
 Alternative architecture:
@@ -239,6 +301,12 @@ How reliable is the PHQ-8 ground truth?
 - The same patient might score differently on different days
 
 **Implication**: Even perfect prediction can't exceed ground truth reliability. MAE floor may be ~0.5 due to label noise, not model error.
+
+**Evidence** (examples of PHQ-8 reliability in the literature):
+- Swedish PHQ-8 psychometrics report **test-retest ICC ≈ 0.83** for total score and Cronbach’s α ≈ 0.85 (Rheumatol Int, 2020; PubMed: 32661929).
+- Another PHQ-8 psychometric study reports Cronbach’s α ≈ 0.922 (Hum Reprod Open, 2022; PubMed: 35591921).
+
+These are not DAIC-WOZ-specific, but they provide an empirical anchor: the label is not noise-free, and extremely low MAE targets may be unrealistic without additional modalities or repeated measures.
 
 ---
 
@@ -289,3 +357,10 @@ How reliable is the PHQ-8 ground truth?
 - [DAIC-WOZ Documentation](https://dcapswoz.ict.usc.edu/wp-content/uploads/2022/02/DAICWOZDepression_Documentation.pdf)
 - [DAIC-WOZ: On the Validity of Using the Therapist's prompts](https://arxiv.org/abs/2404.14463)
 - [The Distress Analysis Interview Corpus](https://www.researchgate.net/publication/311643727_The_Distress_Analysis_Interview_Corpus_of_human_and_computer_interviews)
+- PHQ-8 validation: [The PHQ-8 as a measure of current depression in the general population](https://pubmed.ncbi.nlm.nih.gov/18752852/)
+- PHQ-8 reliability example (test-retest ICC): https://pubmed.ncbi.nlm.nih.gov/32661929/
+- PHQ-8 internal consistency example: https://pubmed.ncbi.nlm.nih.gov/35591921/
+- DAIC-WOZ + PHQ-8 prediction prior art (LLMs): https://pubmed.ncbi.nlm.nih.gov/40720397/
+- DAIC-WOZ + PHQ-8 prediction prior art (text regression): https://pubmed.ncbi.nlm.nih.gov/37398577/
+- Selective classification evaluation pitfalls (AUGRC): http://arxiv.org/abs/2407.01032
+- Clinical-domain language models (embedding ablations): http://arxiv.org/abs/1904.05342 (ClinicalBERT), http://arxiv.org/abs/2007.15779 (PubMedBERT)
