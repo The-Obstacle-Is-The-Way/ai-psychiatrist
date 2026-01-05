@@ -56,7 +56,7 @@ Showing explicit scores in references can cause the scorer to overweight them ve
 
 After guardrails + truncation, many items get 0-1 exemplars. The "few-shot" is brittle and can be worse than none.
 
-**Run 12 data**: Only 15.2% of items had any references retrieved (52 references across 328 items).
+**Run 12 data**: Only 15.2% of item assessments (50 of 328) had any references retrieved; those 50 items received 52 references total.
 
 ### 5. Guardrails Reduce Effective Retrieval
 

@@ -683,6 +683,7 @@ Paired deltas (few-shot − zero-shot, `confidence=llm`): ΔAURC = +0.0149 [-0.0
 **Interpretation**:
 - The confidence-suite signals are working and measurably reduce AURC/AUGRC relative to `llm` within a fixed run (selective prediction improvement without changing the underlying predictions).
 - Few-shot does not outperform zero-shot on MAE_item in this run; however, few-shot slightly improves AUGRC at the cost of lower Cmax and slightly worse AURC under `confidence=llm`. Prefer paired + confidence-variant comparisons for selective prediction claims.
+- See [Few-Shot Analysis](few-shot-analysis.md) for first-principles explanation of why few-shot may not outperform zero-shot with strict evidence grounding.
 
 ---
 
