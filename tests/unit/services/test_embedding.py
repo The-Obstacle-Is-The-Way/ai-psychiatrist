@@ -71,11 +71,13 @@ class TestReferenceBundle:
     """Tests for ReferenceBundle (reference prompt formatting)."""
 
     def test_format_empty_bundle(self) -> None:
+        """Empty bundle returns empty string (BUG-035 fix).
+
+        Previously returned a wrapper with 'No valid evidence found', which created
+        a prompt confound between zero-shot and few-shot-with-no-refs modes.
+        """
         bundle = ReferenceBundle(item_references={})
-        assert (
-            bundle.format_for_prompt()
-            == "<Reference Examples>\nNo valid evidence found\n</Reference Examples>"
-        )
+        assert bundle.format_for_prompt() == ""
 
     def test_format_with_single_match(self) -> None:
         match = SimilarityMatch(
@@ -96,16 +98,17 @@ class TestReferenceBundle:
         assert "No valid evidence found" not in formatted
 
     def test_format_skips_none_score(self) -> None:
+        """Matches with None reference_score are skipped (BUG-035 fix).
+
+        If all matches are skipped, returns empty string (not a wrapper).
+        """
         match = SimilarityMatch(
             chunk=TranscriptChunk(text="Some text", participant_id=123),
             similarity=0.8,
             reference_score=None,
         )
         bundle = ReferenceBundle(item_references={PHQ8Item.SLEEP: [match]})
-        assert (
-            bundle.format_for_prompt()
-            == "<Reference Examples>\nNo valid evidence found\n</Reference Examples>"
-        )
+        assert bundle.format_for_prompt() == ""
 
     def test_format_multiple_items_preserves_order(self) -> None:
         # Order must follow PHQ8Item.all_items(): NoInterest, Depressed, Sleep, Tired, ...

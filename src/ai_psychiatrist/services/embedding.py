@@ -112,7 +112,11 @@ class ReferenceBundle:
         if entries:
             return "<Reference Examples>\n\n" + "\n\n".join(entries) + "\n\n</Reference Examples>"
 
-        return "<Reference Examples>\nNo valid evidence found\n</Reference Examples>"
+        # BUG-035 fix: Return empty string when no valid references.
+        # Previously returned a wrapper with "No valid evidence found", which created
+        # a prompt confound between zero-shot and few-shot-with-no-refs modes.
+        # Now few-shot-with-no-refs produces identical prompt to zero-shot.
+        return ""
 
 
 class EmbeddingService:

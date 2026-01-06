@@ -73,6 +73,10 @@ STEP 4: LLM Scoring
 
 **Key observation**: Few-shot is *worse* than zero-shot. Why? Evidence grounding starves retrieval of data.
 
+> **BUG-035 Note (2026-01-06)**: Run 12 was affected by a prompt confound where few-shot prompts
+> differed from zero-shot even when retrieval returned nothing. This has been fixed. Post-fix
+> runs are needed to validate true retrieval effects. See [BUG-035](docs/_bugs/BUG-035-FEW-SHOT-PROMPT-CONFOUND.md).
+
 ---
 
 ## 2. What We'll Have After Specs 061-063

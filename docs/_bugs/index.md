@@ -8,7 +8,9 @@ _No active investigations at this time._
 
 ## Active Bugs (Pending Senior Review)
 
-_No active bugs at this time._
+| ID | Title | Status | Impact |
+|----|-------|--------|--------|
+| [BUG-035](./BUG-035-FEW-SHOT-PROMPT-CONFOUND.md) | Few-Shot vs Zero-Shot Prompt Confound | **FIXED** | Invalidated comparative claims between modes; fix deployed |
 
 ## Recently Resolved (2026-01-04)
 
@@ -42,7 +44,7 @@ All resolved bugs are in `docs/_archive/bugs/`:
 
 1. Check if bug already exists in archive
 2. Create file: `docs/_bugs/BUG-XXX-short-title.md`
-3. Use next available number (currently: BUG-035)
+3. Use next available number (currently: BUG-036)
 4. Include: Severity, Status, File, Description, Impact, Fix
 
 When resolved, move to `docs/_archive/bugs/` with naming convention:

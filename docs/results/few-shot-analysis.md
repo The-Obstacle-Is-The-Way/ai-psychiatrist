@@ -5,9 +5,19 @@
 
 ---
 
+> **BUG-035 CAVEAT (2026-01-06)**: Historical runs (including Run 12) were affected by a prompt confound.
+> When few-shot retrieval returned zero references, the prompt still differed from zero-shot due to
+> an empty `<Reference Examples>No valid evidence found</Reference Examples>` wrapper. This confound
+> has been fixed, but comparative claims from pre-fix runs should be interpreted with caution.
+> See [BUG-035](../_bugs/BUG-035-FEW-SHOT-PROMPT-CONFOUND.md) for details.
+
+---
+
 ## Executive Summary
 
 In Run 12, zero-shot **outperformed** few-shot on MAE (0.572 vs 0.616) at similar coverage (48.5% vs 46.0%). This contradicts the paper's claim of 22% improvement but is **not necessarily a bug**. This document explains why few-shot can be neutral or harmful from first principles.
+
+**Note**: The BUG-035 prompt confound may have contributed to some of these differences. Post-fix runs are needed to validate the true retrieval effect.
 
 ---
 
