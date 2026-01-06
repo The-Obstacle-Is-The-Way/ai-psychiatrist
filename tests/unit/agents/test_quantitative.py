@@ -13,7 +13,7 @@ from __future__ import annotations
 import asyncio
 import json
 import math
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, cast
 from unittest.mock import AsyncMock, patch
 
 import pytest
@@ -21,6 +21,8 @@ from pydantic_ai import Agent
 
 if TYPE_CHECKING:
     from collections.abc import Generator
+
+    from ai_psychiatrist.services.embedding import EmbeddingService
 
 from ai_psychiatrist.agents.output_models import EvidenceOutput, QuantitativeOutput
 from ai_psychiatrist.agents.prompts.quantitative import (
@@ -39,6 +41,7 @@ from ai_psychiatrist.infrastructure.observability import (
     get_failure_registry,
     init_failure_registry,
 )
+from ai_psychiatrist.services.embedding import ReferenceBundle
 from ai_psychiatrist.services.evidence_validation import EvidenceSchemaError
 from tests.fixtures.mock_llm import MockLLMClient
 
@@ -580,7 +583,10 @@ class TestFewShotMode:
         patcher.stop()
 
     def create_agent(
-        self, client: MockLLMClient, mode: AssessmentMode, embedding_service: None = None
+        self,
+        client: MockLLMClient,
+        mode: AssessmentMode,
+        embedding_service: EmbeddingService | None = None,
     ) -> QuantitativeAssessmentAgent:
         return QuantitativeAssessmentAgent(
             llm_client=client,
@@ -618,3 +624,41 @@ class TestFewShotMode:
 
         assert result.mode == AssessmentMode.ZERO_SHOT
         assert len(result.items) == 8
+
+    @pytest.mark.asyncio
+    @pytest.mark.usefixtures("mock_agent_factory")
+    async def test_bug035_prompt_identical_when_few_shot_has_no_valid_references(
+        self,
+        mock_agent_factory: AsyncMock,
+        sample_transcript: Transcript,
+    ) -> None:
+        """BUG-035 regression: few-shot with empty references must match zero-shot prompt."""
+
+        class EmptyEmbeddingService:
+            async def build_reference_bundle(
+                self, _evidence: dict[PHQ8Item, list[str]]
+            ) -> ReferenceBundle:
+                return ReferenceBundle(item_references={})
+
+        mock_agent = mock_agent_factory.return_value
+
+        zero_client = MockLLMClient(chat_responses=[SAMPLE_EVIDENCE_RESPONSE])
+        zero_agent = self.create_agent(
+            zero_client, AssessmentMode.ZERO_SHOT, embedding_service=None
+        )
+        await zero_agent.assess(sample_transcript)
+        zero_prompt = mock_agent.run.call_args.args[0]
+
+        mock_agent.run.reset_mock()
+
+        few_client = MockLLMClient(chat_responses=[SAMPLE_EVIDENCE_RESPONSE])
+        few_agent = self.create_agent(
+            few_client,
+            AssessmentMode.FEW_SHOT,
+            embedding_service=cast("EmbeddingService", EmptyEmbeddingService()),
+        )
+        await few_agent.assess(sample_transcript)
+        few_prompt = mock_agent.run.call_args.args[0]
+
+        assert ReferenceBundle(item_references={}).format_for_prompt() == ""
+        assert few_prompt == zero_prompt
