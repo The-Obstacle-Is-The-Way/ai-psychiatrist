@@ -8,7 +8,7 @@
 
 ## 1. What We Have Now (Current Pipeline)
 
-```
+```text
 ┌─────────────────────────────────────────────────────────────────────────┐
 │                        CURRENT PIPELINE FLOW                            │
 └─────────────────────────────────────────────────────────────────────────┘
@@ -81,7 +81,7 @@ STEP 4: LLM Scoring
 
 ## 2. What We'll Have After Specs 061-063
 
-```
+```text
 ┌─────────────────────────────────────────────────────────────────────────┐
 │                     AFTER SPECS 061-063                                 │
 └─────────────────────────────────────────────────────────────────────────┘
@@ -220,7 +220,7 @@ You'd implement **ONE**, not both.
 
 **CURRENT STATE**:
 
-```
+```text
 Query: "I can't sleep at night, it's terrible"
 Reference corpus search finds:
   - "I need my rest because I'm out there driving that bus" (score=3)
@@ -267,7 +267,7 @@ def rerank_by_severity(matches, query_text):
 
 **CURRENT STATE**:
 
-```
+```text
 Prompt: "Only assign scores when evidence clearly indicates FREQUENCY"
 
 Participant transcript shows:
@@ -312,7 +312,7 @@ In addition to explicit statements, consider:
 
 **CURRENT STATE**:
 
-```
+```text
 Transcript → Extract Evidence → Ground Evidence → Embed → Retrieve → Score
               ↑                    ↑
               50% lost here         50% lost here
@@ -322,7 +322,7 @@ The evidence extraction step is a **bottleneck** that loses information.
 
 **WHAT 7B WOULD CHANGE**:
 
-```
+```text
 Transcript → Direct LLM Scoring (see full text, score directly)
 ```
 
@@ -366,7 +366,7 @@ Skip evidence extraction entirely. Let the LLM read the whole transcript and sco
 
 ### The Key Insight
 
-> **The current system is NOT fundamentally incorrect—it's fundamentally conservative.**
+> **The current system is NOT fundamentally incorrect—it's conservative by design.**
 
 It was designed to:
 1. Never hallucinate evidence
@@ -379,7 +379,7 @@ This is **methodologically sound** but **practically limiting** for a dataset (D
 
 ## 5. If We Implemented Everything
 
-```
+```text
 ┌─────────────────────────────────────────────────────────────────────────┐
 │                    HYPOTHETICAL "EVERYTHING FIXED" PIPELINE             │
 └─────────────────────────────────────────────────────────────────────────┘
@@ -409,7 +409,7 @@ OPTION B: Bypass the pipeline (7B + 061/062)
 
 ## 6. Recommended Implementation Path
 
-```
+```text
 ┌─────────────────────────────────────────────────────────────────────────┐
 │                        RECOMMENDED PATH                                 │
 └─────────────────────────────────────────────────────────────────────────┘

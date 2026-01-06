@@ -13,7 +13,8 @@
 A prompt confound was discovered and fixed on 2026-01-06 where few-shot mode produced different prompts than zero-shot **even when retrieval returned zero references**.
 
 **What happened**: When `format_for_prompt()` had no valid references, it returned:
-```
+
+```text
 <Reference Examples>
 No valid evidence found
 </Reference Examples>

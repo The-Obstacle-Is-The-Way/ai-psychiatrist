@@ -13,7 +13,7 @@
 
 When few-shot retrieval returns **zero usable references**, the prompt still differs from zero-shot because `format_for_prompt()` returns a wrapper block:
 
-```
+```text
 <Reference Examples>
 No valid evidence found
 </Reference Examples>
@@ -123,7 +123,6 @@ After fix:
 # Verify prompt equality when retrieval is empty
 uv run python -c "
 from ai_psychiatrist.services.embedding import ReferenceBundle
-from ai_psychiatrist.domain.types import PHQ8Item
 
 # Empty bundle
 bundle = ReferenceBundle(item_references={})
