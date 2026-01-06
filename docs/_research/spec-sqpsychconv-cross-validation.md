@@ -1,8 +1,24 @@
 # SPEC: SQPsychConv Cross-Dataset Validation
 
-**Status**: Research Specification
+> **⚠️ SUPERSEDED (2026-01-06)**
+>
+> This research specification has been **implemented** as a separate repository:
+> **[vibe-check](https://github.com/The-Obstacle-Is-The-Way/vibe-check)** — Multi-agent PHQ-8 scoring for synthetic therapy dialogues.
+>
+> vibe-check implements "Path G" from this spec:
+> - Multi-agent jury (3 models × 2 runs = 6 jurors)
+> - Bayesian aggregation of scores
+> - Quality gates (reliability, consistency, separation)
+> - Outputs `scored.jsonl` for downstream retrieval in ai-psychiatrist
+>
+> **Reference copy**: `_reference/vibe-check/`
+>
+> This document is preserved for historical context only.
+
+**Status**: ~~Research Specification~~ **SUPERSEDED**
 **Related Issue**: [#38 - Cross-dataset validation using SQPsychConv](https://github.com/The-Obstacle-Is-The-Way/ai-psychiatrist/issues/38)
 **Created**: 2026-01-01
+**Superseded**: 2026-01-06 (by vibe-check implementation)
 
 ---
 
