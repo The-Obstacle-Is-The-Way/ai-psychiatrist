@@ -1,7 +1,10 @@
 # Hypotheses Explained: Current State vs Future Improvements
 
-**Status**: Research roadmap document
+> **📦 ARCHIVED (2026-01-06)**: This research document has been archived. It captures the pipeline state and improvement hypotheses as of Run 12. See `docs/_specs/` for implementation specs.
+
+**Status**: ~~Research roadmap document~~ **ARCHIVED**
 **Created**: 2026-01-06
+**Archived**: 2026-01-06
 **Purpose**: Explain what we have now, what specs 061-063 will add, and what each remaining hypothesis would change
 
 ---
