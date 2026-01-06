@@ -10,7 +10,13 @@ _No active investigations at this time._
 
 | ID | Title | Status | Impact |
 |----|-------|--------|--------|
-| [BUG-035](./BUG-035-FEW-SHOT-PROMPT-CONFOUND.md) | Few-Shot vs Zero-Shot Prompt Confound | **FIXED** | Invalidated comparative claims between modes; fix deployed |
+_No bugs pending senior review at this time._
+
+## Recently Resolved (2026-01-06)
+
+| ID | Title | Status | Resolution |
+|----|-------|--------|------------|
+| [BUG-035](./BUG-035-FEW-SHOT-PROMPT-CONFOUND.md) | Few-Shot vs Zero-Shot Prompt Confound | ✅ Resolved | Empty retrieval now produces identical prompt to zero-shot; regression tests added |
 
 ## Recently Resolved (2026-01-04)
 

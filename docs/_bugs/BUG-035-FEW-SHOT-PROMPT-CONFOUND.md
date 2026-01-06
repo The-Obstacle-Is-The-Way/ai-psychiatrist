@@ -159,7 +159,9 @@ This bug has existed since the initial few-shot implementation. It was discovere
 
 ## References
 
-- `src/ai_psychiatrist/services/embedding.py:115` (bug location)
+- `src/ai_psychiatrist/services/embedding.py:119` (fix location: empty bundle returns empty string)
 - `src/ai_psychiatrist/agents/prompts/quantitative.py:102` (prompt construction)
+- `tests/unit/services/test_embedding.py:73` (unit regression test)
+- `tests/unit/agents/test_quantitative.py:630` (prompt equality regression test)
 - `docs/results/few-shot-analysis.md` (affected analysis)
 - External validation prompt (discovery source)
