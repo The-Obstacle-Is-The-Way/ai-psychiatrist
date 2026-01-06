@@ -1,7 +1,7 @@
 # RAG Debugging (Audit Logs + Guardrails)
 
 **Audience**: Researchers debugging few-shot performance
-**Last Updated**: 2026-01-03
+**Last Updated**: 2026-01-06
 
 This guide explains how to debug few-shot retrieval using the built-in diagnostic tools:
 - retrieval audit logs (Spec 32)
@@ -33,7 +33,7 @@ You should see `retrieved_reference` log events with fields:
 - `item`, `evidence_key`
 - `rank`, `similarity`
 - `participant_id`, `reference_score`
-- `chunk_preview`, `chunk_chars`
+- `chunk_hash`, `chunk_chars` (no raw transcript text)
 
 This is emitted after retrieval post-processing (threshold + top-k + budgets + CRAG filtering).
 

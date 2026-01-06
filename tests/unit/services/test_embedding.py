@@ -18,6 +18,7 @@ from ai_psychiatrist.domain.exceptions import (
     EmbeddingValidationError,
 )
 from ai_psychiatrist.domain.value_objects import SimilarityMatch, TranscriptChunk
+from ai_psychiatrist.infrastructure.hashing import stable_text_hash
 from ai_psychiatrist.infrastructure.llm.protocols import EmbeddingBatchResponse
 from ai_psychiatrist.services import embedding as embedding_service_module
 from ai_psychiatrist.services.embedding import (
@@ -515,17 +516,20 @@ class TestEmbeddingService:
             if call.args and call.args[0] == "retrieved_reference"
         ]
         assert len(retrieved) == 2
-        logger_mock.info.assert_any_call(
-            "retrieved_reference",
-            item="Sleep",
-            evidence_key="PHQ8_Sleep",
-            rank=1,
-            similarity=0.9,
-            participant_id=111,
-            reference_score=3,
-            chunk_preview=("aaa " * 100)[:160],
-            chunk_chars=len("aaa " * 100),
-        )
+
+        raw_texts = {m.chunk.text for m in matches}
+        expected_hashes = {stable_text_hash(text) for text in raw_texts}
+
+        observed_hashes = set()
+        for call in retrieved:
+            assert call.kwargs.get("chunk_preview") is None
+            chunk_hash = call.kwargs.get("chunk_hash")
+            assert isinstance(chunk_hash, str)
+            observed_hashes.add(chunk_hash)
+            for raw_text in raw_texts:
+                assert raw_text not in str(call.kwargs)
+
+        assert observed_hashes == expected_hashes
 
     @pytest.mark.asyncio
     async def test_reference_threshold_filters_low_similarity(

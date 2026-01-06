@@ -41,6 +41,7 @@ Implemented specs are distilled into canonical (non-archive) documentation under
 ### Other Implemented Specs
 
 - Quantitative severity bounds (BUG-045): [spec](../_archive/specs/spec-045-quantitative-severity-bounds.md) → [PHQ-8 docs](../clinical/phq8.md#severity-bounds-partial-assessments)
+- Retrieval audit redaction (Spec 064): [spec](../_archive/specs/spec-064-retrieval-audit-redaction.md) → [RAG debugging](../rag/debugging.md#step-1-enable-retrieval-audit-logs-spec-32)
 - Feature index + defaults: [features.md](../pipeline-internals/features.md)
 - RAG runtime features (prompt format, CRAG, batch embedding): [runtime-features.md](../rag/runtime-features.md)
 - RAG debugging workflow: [debugging.md](../rag/debugging.md)

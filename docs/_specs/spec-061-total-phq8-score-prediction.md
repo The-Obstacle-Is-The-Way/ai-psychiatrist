@@ -193,4 +193,4 @@ Add to participant results:
 - [Spec 062: Binary Depression Classification](spec-062-binary-depression-classification.md)
 - [Spec 063: Severity Inference Prompt Policy](spec-063-severity-inference-prompt-policy.md)
 - [Task Validity](../clinical/task-validity.md)
-- [HYPOTHESES-FOR-IMPROVEMENT.md](../../HYPOTHESES-FOR-IMPROVEMENT.md) Section 10
+- [Hypotheses for Improvement](../_research/hypotheses-for-improvement.md) Section 10

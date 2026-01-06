@@ -19,6 +19,7 @@ from ai_psychiatrist.domain.exceptions import (
     EmbeddingValidationError,
 )
 from ai_psychiatrist.domain.value_objects import EmbeddedChunk, SimilarityMatch, TranscriptChunk
+from ai_psychiatrist.infrastructure.hashing import stable_text_hash
 from ai_psychiatrist.infrastructure.llm.protocols import EmbeddingBatchRequest, EmbeddingRequest
 from ai_psychiatrist.infrastructure.logging import get_logger
 from ai_psychiatrist.infrastructure.validation import validate_embedding
@@ -384,7 +385,7 @@ class EmbeddingService:
                     similarity=match.similarity,
                     participant_id=match.chunk.participant_id,
                     reference_score=match.reference_score,
-                    chunk_preview=match.chunk.text[:160],
+                    chunk_hash=stable_text_hash(match.chunk.text),
                     chunk_chars=len(match.chunk.text),
                 )
 

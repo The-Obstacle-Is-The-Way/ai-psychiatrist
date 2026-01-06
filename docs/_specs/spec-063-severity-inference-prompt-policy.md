@@ -260,5 +260,5 @@ Different models may interpret inference rules differently.
 
 - [Spec 061: Total PHQ-8 Score Prediction](spec-061-total-phq8-score-prediction.md)
 - [Spec 062: Binary Depression Classification](spec-062-binary-depression-classification.md)
-- [HYPOTHESES-FOR-IMPROVEMENT.md](../../HYPOTHESES-FOR-IMPROVEMENT.md) Hypothesis 2A
+- [Hypotheses for Improvement](../_research/hypotheses-for-improvement.md) Hypothesis 2A
 - [Task Validity](../clinical/task-validity.md)
