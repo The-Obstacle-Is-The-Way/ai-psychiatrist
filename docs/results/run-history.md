@@ -2,13 +2,48 @@
 
 **Purpose**: Comprehensive record of all reproduction runs, code changes, and statistical analyses for posterity.
 
-**Last Updated**: 2026-01-05
+**Last Updated**: 2026-01-06
 
 ---
 
-## ⚠️ CRITICAL: Run Integrity Warning (2026-01-03)
+## ⚠️ CRITICAL: Run Integrity Warnings
 
-### Silent Fallback Bug (ANALYSIS-026)
+### Prompt Confound Bug (BUG-035) - Fixed 2026-01-06
+
+A prompt confound was discovered and fixed on 2026-01-06 where few-shot mode produced different prompts than zero-shot **even when retrieval returned zero references**.
+
+**What happened**: When `format_for_prompt()` had no valid references, it returned:
+```
+<Reference Examples>
+No valid evidence found
+</Reference Examples>
+```
+
+Instead of an empty string. This meant few-shot prompts always differed from zero-shot, even when retrieval contributed nothing.
+
+**Impact on Comparative Claims**:
+- Any claim that "few-shot is worse/better than zero-shot" is **confounded**
+- The observed difference could be due to: (1) actual retrieval effect, (2) the "No valid evidence found" message anchoring the model, or (3) interaction of both
+- The message may have caused the model to be more conservative/abstain more in few-shot mode
+
+**Status by Run**:
+
+| Run | Affected? | Notes |
+|-----|-----------|-------|
+| Run 1-12 | **Yes** | All comparative claims between modes are confounded |
+| Future runs | No | Fix deployed: empty retrieval = identical to zero-shot |
+
+**Fix Applied**: Commit on 2026-01-06
+- `format_for_prompt()` now returns `""` when no valid entries
+- Few-shot with no retrieval results now produces identical prompt to zero-shot
+
+**Recommendation**: Re-run comparative experiments post-fix to measure true retrieval effect.
+
+See: [BUG-035](../_bugs/BUG-035-FEW-SHOT-PROMPT-CONFOUND.md)
+
+---
+
+### Silent Fallback Bug (ANALYSIS-026) - Fixed 2026-01-03
 
 A critical bug was discovered and fixed on 2026-01-03 where `_extract_evidence()` would **silently return `{}` on JSON parse failure** instead of raising an exception.
 
