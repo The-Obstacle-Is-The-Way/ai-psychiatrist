@@ -71,7 +71,7 @@ def compute_total_score_metrics(
 
     tier_correct = 0
     for pred, act in pairs:
-        if SeverityLevel.from_total_score(int(pred)) == SeverityLevel.from_total_score(int(act)):
+        if SeverityLevel.from_total_score(pred) == SeverityLevel.from_total_score(act):
             tier_correct += 1
     severity_tier_accuracy = tier_correct / n_predicted
 

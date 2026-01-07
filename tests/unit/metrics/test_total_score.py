@@ -41,3 +41,8 @@ def test_compute_total_score_metrics_returns_none_for_constant_predictions() -> 
     assert metrics.n_predicted == 3
     assert metrics.coverage == 1.0
     assert metrics.pearson_r is None
+
+
+def test_compute_total_score_metrics_raises_on_length_mismatch() -> None:
+    with pytest.raises(ValueError, match="predicted and actual must have the same length"):
+        compute_total_score_metrics(predicted=[10, None], actual=[10])
