@@ -36,6 +36,11 @@ def compute_total_score_metrics(
     """Compute coverage-aware metrics for total PHQ-8 score prediction.
 
     Metrics are computed on the subset where `predicted` is not None.
+
+    Note:
+        MAE and other error metrics are only directly comparable between
+        models/conditions when coverage is similar. Use the returned `coverage`
+        field to verify comparability or report coverage-adjusted metrics.
     """
     if len(predicted) != len(actual):
         raise ValueError("predicted and actual must have the same length")
