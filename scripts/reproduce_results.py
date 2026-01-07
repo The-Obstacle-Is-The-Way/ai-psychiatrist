@@ -110,6 +110,18 @@ logger = get_logger(__name__)
 ItemSignalValue = int | float | str | None | list[int | None]
 
 
+def _round_if_finite(value: float, ndigits: int) -> float | None:
+    """Round a float for JSON output, returning None for NaN/Inf."""
+    return round(value, ndigits) if math.isfinite(value) else None
+
+
+def _none_if_non_finite(value: float | int | None) -> float | int | None:
+    """Convert NaN/Inf floats to None for strict JSON serialization."""
+    if isinstance(value, float) and not math.isfinite(value):
+        return None
+    return value
+
+
 @dataclass
 class EvaluationResult:
     """Result for a single participant evaluation."""
@@ -184,14 +196,17 @@ class ExperimentResults:
             "failed_subjects": self.failed_subjects,
             "excluded_no_evidence": self.excluded_no_evidence,
             "evaluated_subjects": self.evaluated_subjects,
-            "item_mae_weighted": round(self.item_mae_weighted, 6),
-            "item_mae_by_item": round(self.item_mae_by_item, 6),
-            "item_mae_by_subject": round(self.item_mae_by_subject, 6),
-            "prediction_coverage": round(self.prediction_coverage, 6),
+            "item_mae_weighted": _round_if_finite(self.item_mae_weighted, 6),
+            "item_mae_by_item": _round_if_finite(self.item_mae_by_item, 6),
+            "item_mae_by_subject": _round_if_finite(self.item_mae_by_subject, 6),
+            "prediction_coverage": _round_if_finite(self.prediction_coverage, 6),
             "total_metrics": asdict(self.total_metrics) if self.total_metrics else None,
             "binary_metrics": asdict(self.binary_metrics) if self.binary_metrics else None,
             "total_duration_seconds": round(self.total_duration_seconds, 2),
-            "per_item": {item.value: stats for item, stats in self.per_item.items()},
+            "per_item": {
+                item.value: {k: _none_if_non_finite(v) for k, v in stats.items()}
+                for item, stats in self.per_item.items()
+            },
             "results": [
                 {
                     "participant_id": r.participant_id,
@@ -955,7 +970,7 @@ def save_results(
     }
 
     with output_file.open("w") as f:
-        json.dump(data, f, indent=2)
+        json.dump(data, f, indent=2, allow_nan=False)
 
     print(f"Results saved to: {output_file}")
     return output_file

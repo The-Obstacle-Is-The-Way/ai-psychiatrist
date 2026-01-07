@@ -10,7 +10,7 @@ _No active investigations at this time._
 
 | ID | Title | Status | Impact |
 |----|-------|--------|--------|
-_No bugs pending senior review at this time._
+| BUG-048 | Invalid JSON output when metrics are NaN | FIXED (pending review) | P1 |
 
 ## Archive
 
@@ -30,7 +30,7 @@ All resolved bugs are in `docs/_archive/bugs/`:
 
 1. Check if bug already exists in archive
 2. Create file: `docs/_bugs/BUG-XXX-short-title.md`
-3. Use next available number (currently: BUG-048)
+3. Use next available number (currently: BUG-049)
 4. Include: Severity, Status, File, Description, Impact, Fix
 
 When resolved, move to `docs/_archive/bugs/` with naming convention:

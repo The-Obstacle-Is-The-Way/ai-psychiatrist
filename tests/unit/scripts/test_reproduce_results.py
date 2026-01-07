@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import argparse
 import importlib.util
+import json
 from typing import TYPE_CHECKING, Any, cast
 
 import pytest
@@ -292,6 +293,44 @@ def test_experiment_results_to_dict_includes_binary_metrics_when_binary_mode() -
     assert data["binary_metrics"]["accuracy"] == pytest.approx(0.5)
     assert data["results"][0]["binary_classification"]["predicted"] == "not_depressed"
     assert data["results"][0]["binary_classification"]["actual"] == "depressed"
+
+
+def test_experiment_results_to_dict_is_strict_json_when_item_metrics_nan() -> None:
+    exp = ExperimentResults(
+        mode="zero_shot",
+        model="stub",
+        prediction_mode="item",
+        total_score_min_coverage=0.5,
+        binary_threshold=10,
+        binary_strategy="threshold",
+        results=[],
+        total_subjects=0,
+        successful_subjects=0,
+        failed_subjects=0,
+        excluded_no_evidence=0,
+        evaluated_subjects=0,
+        item_mae_weighted=float("nan"),
+        item_mae_by_item=float("nan"),
+        item_mae_by_subject=float("nan"),
+        prediction_coverage=float("nan"),
+        per_item={
+            PHQ8Item.NO_INTEREST: {
+                "mae": None,
+                "count": 0,
+                "coverage": float("nan"),
+                "na_count": 0,
+            }
+        },
+        total_duration_seconds=0.0,
+    )
+
+    data = cast("dict[str, Any]", exp.to_dict())
+    assert data["item_mae_weighted"] is None
+    assert data["prediction_coverage"] is None
+    assert data["per_item"]["NoInterest"]["coverage"] is None
+
+    # Must be serializable as strict JSON (no NaN/Infinity literals).
+    json.dumps(data, allow_nan=False)
 
 
 @pytest.mark.asyncio
