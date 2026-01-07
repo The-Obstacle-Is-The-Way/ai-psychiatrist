@@ -296,6 +296,33 @@ class TestItemAssessment:
         assert item.evidence_source is None
         assert item.llm_evidence_count == 0
 
+    def test_inference_fields_default_to_not_used(self) -> None:
+        """Inference fields should default to 'not used' for strict scoring."""
+        item = ItemAssessment(
+            item=PHQ8Item.TIRED,
+            score=1,
+            evidence="test",
+            reason="test",
+        )
+        assert item.inference_used is False
+        assert item.inference_type is None
+        assert item.inference_marker is None
+
+    def test_inference_fields_can_be_set(self) -> None:
+        """Inference fields should be settable for infer-mode scoring (Spec 063)."""
+        item = ItemAssessment(
+            item=PHQ8Item.TIRED,
+            score=2,
+            evidence="I'm always exhausted",
+            reason="test",
+            inference_used=True,
+            inference_type="intensity_marker",
+            inference_marker="always",
+        )
+        assert item.inference_used is True
+        assert item.inference_type == "intensity_marker"
+        assert item.inference_marker == "always"
+
 
 class TestEvaluationScore:
     """Tests for EvaluationScore value object."""

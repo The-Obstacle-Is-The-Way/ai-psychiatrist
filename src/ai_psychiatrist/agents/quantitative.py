@@ -199,7 +199,11 @@ class QuantitativeAssessmentAgent:
             logger.debug("Reference bundle built", bundle_length=len(reference_text))
 
         # Step 3: Score with LLM
-        prompt = make_scoring_prompt(transcript.text, reference_text)
+        prompt = make_scoring_prompt(
+            transcript.text,
+            reference_text,
+            severity_inference_mode=self._settings.severity_inference_mode,
+        )
 
         # Model settings (Appendix F: MedGemma; GAP-001: temp=0.0 for reproducibility)
         model = get_model_name(self._model_settings, "quantitative")
@@ -223,17 +227,24 @@ class QuantitativeAssessmentAgent:
                 evidence = parsed.evidence
                 reason = parsed.reason
                 verbalized_confidence = parsed.verbalized_confidence if score is not None else None
-                token_msp = parsed.token_msp
-                token_pe = parsed.token_pe
-                token_energy = parsed.token_energy
+                token_msp, token_pe, token_energy = (
+                    parsed.token_msp,
+                    parsed.token_pe,
+                    parsed.token_energy,
+                )
+                inference_used, inference_type, inference_marker = (
+                    parsed.inference_used,
+                    parsed.inference_type,
+                    parsed.inference_marker,
+                )
             else:
                 score = None
                 evidence = "No relevant evidence found"
                 reason = "Unable to assess"
                 verbalized_confidence = None
-                token_msp = None
-                token_pe = None
-                token_energy = None
+                token_msp = token_pe = token_energy = None
+                inference_used = False
+                inference_type = inference_marker = None
 
             # Determine NA reason and Evidence Source
             na_reason: NAReason | None = None
@@ -260,6 +271,9 @@ class QuantitativeAssessmentAgent:
                 na_reason=na_reason,
                 evidence_source=evidence_source,
                 llm_evidence_count=llm_counts.get(legacy_key, 0),
+                inference_used=inference_used,
+                inference_type=inference_type,
+                inference_marker=inference_marker,
                 retrieval_reference_count=retrieval_stats.retrieval_reference_count,
                 retrieval_similarity_mean=retrieval_stats.retrieval_similarity_mean,
                 retrieval_similarity_max=retrieval_stats.retrieval_similarity_max,
@@ -321,7 +335,11 @@ class QuantitativeAssessmentAgent:
         reference_bundle = await self._maybe_build_reference_bundle(final_evidence)
         reference_text = reference_bundle.format_for_prompt() if reference_bundle else ""
 
-        prompt = make_scoring_prompt(transcript.text, reference_text)
+        prompt = make_scoring_prompt(
+            transcript.text,
+            reference_text,
+            severity_inference_mode=self._settings.severity_inference_mode,
+        )
         model = get_model_name(self._model_settings, "quantitative")
 
         sample_outputs = await self._collect_consistency_samples(
@@ -454,6 +472,9 @@ class QuantitativeAssessmentAgent:
                 na_reason=na_reason,
                 evidence_source=evidence_source,
                 llm_evidence_count=llm_count,
+                inference_used=selected.inference_used,
+                inference_type=selected.inference_type,
+                inference_marker=selected.inference_marker,
                 retrieval_reference_count=retrieval_stats.retrieval_reference_count,
                 retrieval_similarity_mean=retrieval_stats.retrieval_similarity_mean,
                 retrieval_similarity_max=retrieval_stats.retrieval_similarity_max,
@@ -557,6 +578,9 @@ class QuantitativeAssessmentAgent:
                 evidence=evidence_output.evidence,
                 reason=evidence_output.reason,
                 score=evidence_output.score,
+                inference_used=evidence_output.inference_used,
+                inference_type=evidence_output.inference_type,
+                inference_marker=evidence_output.inference_marker,
                 verbalized_confidence=(
                     evidence_output.confidence if evidence_output.score is not None else None
                 ),

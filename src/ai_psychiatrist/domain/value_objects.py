@@ -163,6 +163,15 @@ class ItemAssessment:
     llm_evidence_count: int = 0
     """Number of evidence items found by LLM."""
 
+    inference_used: bool = False
+    """Whether the scorer explicitly used severity inference heuristics (Spec 063)."""
+
+    inference_type: str | None = None
+    """Type of inference used (e.g., temporal_marker, intensity_marker, impact_statement)."""
+
+    inference_marker: str | None = None
+    """The word/phrase that triggered inference (e.g., 'always', 'lately')."""
+
     # SPEC-046 extensions (selective prediction confidence signals)
     retrieval_reference_count: int = 0
     """Number of retrieved reference chunks used for prompt construction (0 if none)."""

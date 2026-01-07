@@ -22,7 +22,7 @@ from functools import lru_cache
 from pathlib import Path
 from typing import Literal
 
-from pydantic import Field, field_validator, model_validator
+from pydantic import AliasChoices, Field, field_validator, model_validator
 from pydantic_settings import BaseSettings, SettingsConfigDict
 
 # Skip reading .env file during testing to use code defaults
@@ -380,6 +380,20 @@ class QuantitativeSettings(BaseSettings):
     track_na_reasons: bool = Field(
         default=True,
         description="Track why items return N/A (for diagnostics).",
+    )
+
+    severity_inference_mode: Literal["strict", "infer"] = Field(
+        default="strict",
+        validation_alias=AliasChoices(
+            "severity_inference_mode",
+            "SEVERITY_INFERENCE_MODE",
+            "QUANTITATIVE_SEVERITY_INFERENCE_MODE",
+        ),
+        description=(
+            "Severity inference prompt policy (Spec 063). "
+            "'strict' requires explicit frequency evidence; "
+            "'infer' allows calibrated inference from temporal/intensity markers."
+        ),
     )
 
     # Spec 053: evidence quote grounding validation

@@ -11,6 +11,8 @@ predicting PHQ-8 scores from interview transcripts.
 
 from __future__ import annotations
 
+from typing import Literal
+
 # The PHQ-8 item keys used throughout the prompts and parsers.
 PHQ8_DOMAIN_KEYS: tuple[str, ...] = (
     "PHQ8_NoInterest",
@@ -89,19 +91,26 @@ Respond with valid JSON matching this structure:
 Important: Extract UNIQUE quotes only and do not reformat them."""
 
 
-def make_scoring_prompt(transcript: str, reference_bundle: str) -> str:
+def make_scoring_prompt(
+    transcript: str,
+    reference_bundle: str,
+    *,
+    severity_inference_mode: Literal["strict", "infer"] = "strict",
+) -> str:
     """Create the main scoring prompt with optional references.
 
     Args:
         transcript: Interview transcript text.
         reference_bundle: Formatted reference examples (empty string for zero-shot).
+        severity_inference_mode: Prompt policy for scoring frequency/severity.
 
     Returns:
         Complete user prompt for PHQ-8 scoring.
     """
     reference_section = f"\n{reference_bundle}\n" if reference_bundle else ""
 
-    return f"""Analyze the following interview transcript and predict PHQ-8 scores for each symptom domain.
+    if severity_inference_mode == "strict":
+        return f"""Analyze the following interview transcript and predict PHQ-8 scores for each symptom domain.
 
 Interview transcript:
 <transcript>
@@ -138,6 +147,69 @@ Return ONLY a JSON object in <answer> tags with these exact keys:
 - "PHQ8_Failure": {{"evidence": "...", "reason": "...", "score": ..., "confidence": ...}}
 - "PHQ8_Concentrating": {{"evidence": "...", "reason": "...", "score": ..., "confidence": ...}}
 - "PHQ8_Moving": {{"evidence": "...", "reason": "...", "score": ..., "confidence": ...}}"""
+
+    if severity_inference_mode == "infer":
+        return f"""Analyze the following interview transcript and predict PHQ-8 scores for each symptom domain.
+
+Interview transcript:
+<transcript>
+{transcript}
+</transcript>
+{reference_section}
+FREQUENCY INFERENCE GUIDE:
+
+When explicit day-counts are not stated, infer approximate frequency:
+
+| Language Pattern | Inferred Frequency | Score |
+|------------------|-------------------|-------|
+| "every day", "constantly", "all the time", "always" | 12-14 days | 3 |
+| "most days", "usually", "often", "frequently" | 7-11 days | 2 |
+| "sometimes", "occasionally", "lately", "recently" | 2-6 days | 1 |
+| "once", "rarely", "not really", "never" | 0-1 days | 0 |
+
+For symptom mentions without temporal markers:
+- If impact is severe (can't function) → Score 2-3
+- If impact is mentioned but manageable → Score 1
+- If mentioned casually without distress → Score 0
+
+IMPORTANT: Document your inference reasoning in the 'reason' field.
+
+Analyze each symptom using the following approach in <thinking> tags:
+1. Search for direct quotes or behavioral evidence related to each PHQ-8 symptom
+2. When reference examples are provided, compare the current evidence with similar reference cases
+3. Evaluate the frequency/severity based on available evidence and reference comparisons
+4. Consider how similar the reference examples are to the current evidence - if highly similar, give more weight to the reference scores; if less similar, rely more on direct analysis
+5. If no relevant evidence exists, mark as "N/A" rather than assuming absence
+6. Assign numeric scores (0-3) based on evidence and the FREQUENCY INFERENCE GUIDE above.
+7. Only output N/A if there is truly no mention of the symptom.
+
+After your analysis, provide your final assessment in <answer> tags as a JSON object.
+
+For each symptom, provide:
+1. "evidence": exact quotes from transcript (use "No relevant evidence found" if not discussed)
+2. "reason": explanation of scoring decision, including cross-reference analysis when applicable and why N/A if applicable
+3. "score": integer 0-3 based on evidence, or "N/A" if no relevant evidence
+4. "confidence": integer 1-5 indicating how confident you are in the score (omit if score is "N/A"):
+   - 1: Very uncertain - guessing based on minimal evidence
+   - 2: Somewhat uncertain - evidence is weak or ambiguous
+   - 3: Moderately confident - some supporting evidence
+   - 4: Fairly confident - clear supporting evidence
+   - 5: Very confident - strong, unambiguous evidence
+5. "inference_used": boolean (true if you inferred frequency/severity; false if explicit day-count evidence)
+6. "inference_type": string or null ("temporal_marker", "intensity_marker", "impact_statement")
+7. "inference_marker": string or null (the word/phrase triggering inference, e.g., "always")
+
+Return ONLY a JSON object in <answer> tags with these exact keys:
+- "PHQ8_NoInterest": {{"evidence": "...", "reason": "...", "score": ..., "confidence": ..., "inference_used": ..., "inference_type": ..., "inference_marker": ...}}
+- "PHQ8_Depressed": {{"evidence": "...", "reason": "...", "score": ..., "confidence": ..., "inference_used": ..., "inference_type": ..., "inference_marker": ...}}
+- "PHQ8_Sleep": {{"evidence": "...", "reason": "...", "score": ..., "confidence": ..., "inference_used": ..., "inference_type": ..., "inference_marker": ...}}
+- "PHQ8_Tired": {{"evidence": "...", "reason": "...", "score": ..., "confidence": ..., "inference_used": ..., "inference_type": ..., "inference_marker": ...}}
+- "PHQ8_Appetite": {{"evidence": "...", "reason": "...", "score": ..., "confidence": ..., "inference_used": ..., "inference_type": ..., "inference_marker": ...}}
+- "PHQ8_Failure": {{"evidence": "...", "reason": "...", "score": ..., "confidence": ..., "inference_used": ..., "inference_type": ..., "inference_marker": ...}}
+- "PHQ8_Concentrating": {{"evidence": "...", "reason": "...", "score": ..., "confidence": ..., "inference_used": ..., "inference_type": ..., "inference_marker": ...}}
+- "PHQ8_Moving": {{"evidence": "...", "reason": "...", "score": ..., "confidence": ..., "inference_used": ..., "inference_type": ..., "inference_marker": ...}}"""
+
+    raise ValueError(f"Unknown severity_inference_mode: {severity_inference_mode!r}")
 
 
 def make_evidence_prompt(transcript: str) -> str:

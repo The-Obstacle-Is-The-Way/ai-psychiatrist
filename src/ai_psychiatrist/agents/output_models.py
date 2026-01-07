@@ -19,6 +19,20 @@ class EvidenceOutput(BaseModel):
         default=None,
         description="Verbalized confidence on a 1-5 scale (optional; omit for N/A)",
     )
+    inference_used: bool = Field(
+        default=False,
+        description="Whether frequency/severity was inferred (Spec 063).",
+    )
+    inference_type: str | None = Field(
+        default=None,
+        description=(
+            "Type of inference used (e.g., temporal_marker, intensity_marker, impact_statement)."
+        ),
+    )
+    inference_marker: str | None = Field(
+        default=None,
+        description="Word/phrase triggering inference (e.g., 'always', 'lately').",
+    )
 
     @field_validator("score", mode="before")
     @classmethod
