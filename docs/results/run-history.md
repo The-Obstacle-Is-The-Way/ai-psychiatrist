@@ -2,7 +2,7 @@
 
 **Purpose**: Comprehensive record of all reproduction runs, code changes, and statistical analyses for posterity.
 
-**Last Updated**: 2026-01-06
+**Last Updated**: 2026-01-07
 
 ---
 
@@ -83,28 +83,32 @@ See: `docs/_archive/bugs/ANALYSIS-026_JSON_PARSING_ARCHITECTURE_AUDIT.md`
 
 ## Quick Reference: Current Best Results
 
-All values below use `loss=abs_norm` and 10,000 participant-level bootstrap resamples.
+All values below use `loss=abs_norm` and 1,000 participant-level bootstrap resamples.
 
-### Default confidence (`llm`)
+### Run 13: First Clean Run POST BUG-035 Fix ✅
 
-| Mode | AURC | AUGRC | Cmax | Run |
-|------|------|-------|------|-----|
-| **Zero-shot** | **0.102** [0.081-0.121] | 0.025 [0.019-0.032] | 48.5% | Run 12 |
-| **Few-shot** | 0.109 [0.084-0.133] | **0.024** [0.018-0.032] | 46.0% | Run 12 |
+**This is the authoritative baseline** for zero-shot vs few-shot comparisons (no prompt confound).
 
-### Best artifact-free confidence (within Run 12)
+| Mode | MAE_item | AURC (`llm`) | Best AURC | Best AUGRC | Cmax |
+|------|----------|--------------|-----------|------------|------|
+| **Zero-shot** | **0.6079** | 0.107 | 0.098 (`consistency_inverse_std`) | 0.024 (`consistency_inverse_std`) | 48.8% |
+| **Few-shot** | 0.6571 | 0.115 | **0.091** (`token_pe`) | 0.025 (`token_pe`) | 48.5% |
 
-| Mode | Best For | Confidence | AURC | AUGRC | Cmax |
-|------|----------|------------|------|-------|------|
-| **Zero-shot** | AURC | `verbalized` | **0.092** [0.065-0.126] | 0.026 [0.018-0.034] | 48.5% |
-| **Zero-shot** | AUGRC | `token_pe` | 0.093 [0.076-0.115] | **0.023** [0.018-0.030] | 48.5% |
-| **Few-shot** | AURC/AUGRC | `token_energy` | **0.086** [0.065-0.110] | **0.022** [0.015-0.029] | 46.0% |
+### Paper Comparison (MAE_item)
 
-**Spec 046 Finding (Run 9)**: Using `retrieval_similarity_mean` as confidence signal improves few-shot AURC by 5.4% (0.1351 → 0.1278) compared to evidence-count-only.
+| Mode | Paper | Run 13 | Delta |
+|------|-------|--------|-------|
+| Zero-shot | 0.796 | **0.6079** | **-24% (we're better)** |
+| Few-shot | 0.619 | 0.6571 | +6% (paper's better) |
 
-**AUGRC Improvement Suite (Specs 048–052)**: Confidence-suite signals are now emitted and measurable; in Run 12, token-level CSFs deliver the largest AURC/AUGRC improvements over `llm` within the same run.
+### Historical Reference (Run 12, pre-BUG-035 fix)
 
-**Note**: Run 8 has much lower coverage ceiling (`Cmax` ~51%) than Run 7 (`Cmax` ~66%). Interpret AURC alongside Cmax.
+| Mode | AURC | AUGRC | Cmax | Notes |
+|------|------|-------|------|-------|
+| Zero-shot | 0.102 [0.081-0.121] | 0.025 [0.019-0.032] | 48.5% | Pre-fix baseline |
+| Few-shot | 0.109 [0.084-0.133] | 0.024 [0.018-0.032] | 46.0% | **Confounded** (BUG-035) |
+
+**Note**: Run 1-12 few-shot results are confounded by BUG-035 (prompt contained "No valid evidence found" message). Use Run 13+ for valid zero-shot vs few-shot comparisons.
 
 **Note**: `Cmax` is the max coverage in the risk–coverage curve (counts participants with 8/8 N/A as 0 coverage). `MAE_w` is computed over evaluated subjects only.
 
@@ -720,6 +724,75 @@ Paired deltas (few-shot − zero-shot, `confidence=llm`): ΔAURC = +0.0149 [-0.0
 - The confidence-suite signals are working and measurably reduce AURC/AUGRC relative to `llm` within a fixed run (selective prediction improvement without changing the underlying predictions).
 - Few-shot does not outperform zero-shot on MAE_item in this run; however, few-shot slightly improves AUGRC at the cost of lower Cmax and slightly worse AURC under `confidence=llm`. Prefer paired + confidence-variant comparisons for selective prediction claims.
 - See [Few-Shot Analysis](few-shot-analysis.md) for first-principles explanation of why few-shot may not outperform zero-shot with strict evidence grounding.
+
+---
+
+### Run 13: Jan 6-7, 2026 - POST BUG-035 (First Clean Comparative Run) ✅ VALID
+
+**File**: `data/outputs/both_paper-test_20260107_134730.json`
+
+**Log**: `data/outputs/run13_20260106_175051.log`
+
+**Run ID**: `7d5eadf0`
+
+**Git Commit**: `01d3124` (clean)
+
+**Timestamp**: 2026-01-06T17:50:52 (started) → 2026-01-07T18:47:30 (completed)
+
+**Why this run is significant**:
+- ✅ **First run POST BUG-035 fix** (prompt confound resolved)
+- ✅ Clean git state
+- ✅ All 41 participants evaluated in both modes (no selection bias)
+- ❌ Does NOT include Spec 061-063 (total score, binary classification, severity inference)
+
+**Code State**:
+- Spec 032-037: Full retrieval stack ✅
+- Spec 046-050: Confidence signals ✅
+- Spec 051-052: Token-level CSFs ✅
+- **BUG-035 fix**: Empty retrieval → identical prompt to zero-shot ✅
+- Consistency: ENABLED (n=5, temp=0.2)
+
+**Results**:
+
+| Mode | N_eval | MAE_w | MAE_item | Coverage | Time |
+|------|--------|-------|----------|----------|------|
+| Zero-shot | 40 | 0.6750 | **0.6079** | 50.0% | ~9.8h |
+| Few-shot | 41 | 0.7107 | 0.6571 | 48.5% | ~10.2h |
+
+**Selective Prediction (Run 13)**:
+
+| Mode | Confidence | AURC | AUGRC | Cmax |
+|------|------------|------|-------|------|
+| Zero-shot | `llm` | 0.1066 [0.087-0.125] | 0.0267 [0.020-0.034] | 48.8% |
+| Zero-shot | `consistency_inverse_std` | **0.0977** [0.077-0.121] | **0.0244** [0.017-0.032] | 48.8% |
+| Few-shot | `llm` | 0.1153 [0.088-0.143] | 0.0279 [0.020-0.038] | 48.5% |
+| Few-shot | `token_pe` | **0.0906** [0.070-0.118] | **0.0246** [0.018-0.034] | 48.5% |
+
+**Comparison to Paper (MAE_item)**:
+
+| Mode | Paper | Run 13 | Delta |
+|------|-------|--------|-------|
+| Zero-shot | 0.796 | **0.6079** | **-24% (better)** |
+| Few-shot | 0.619 | 0.6571 | +6% (worse) |
+
+**Key Findings**:
+1. **Zero-shot beats paper by 24%** (0.6079 vs 0.796) - substantial improvement
+2. **Zero-shot beats few-shot** (0.6079 vs 0.6571) - consistent with prior runs
+3. **Few-shot slightly worse than paper** - retrieval may still be introducing noise
+4. **Token-level CSFs work well for few-shot** (`token_pe` AURC 0.0906)
+5. **Consistency signals work well for zero-shot** (`consistency_inverse_std` AUGRC 0.0244)
+
+**Robustness**:
+- Failures: 8 non-fatal `evidence_hallucination` events (recorded in failure registry)
+- Telemetry: 13 `json_fixups_applied`, 1 `json_repair_fallback` (healthy)
+
+**Artifacts**:
+- Failures: `data/outputs/failures_7d5eadf0.json`
+- Telemetry: `data/outputs/telemetry_7d5eadf0.json`
+- Selective metrics: `data/outputs/selective_prediction_metrics_run13_zero_shot_all.json`, `data/outputs/selective_prediction_metrics_run13_few_shot_all.json`
+
+**Interpretation**:
+This is the **first clean comparative run after the BUG-035 prompt confound fix**. The result confirms that zero-shot outperforms few-shot even when few-shot prompts are no longer contaminated by "No valid evidence found" messages. The few-shot underperformance is therefore due to retrieval quality issues, not prompt confounding.
 
 ---
 
