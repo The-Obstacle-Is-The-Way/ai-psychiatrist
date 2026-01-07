@@ -75,7 +75,7 @@ STEP 4: LLM Scoring
 
 > **BUG-035 Note (2026-01-06)**: Run 12 was affected by a prompt confound where few-shot prompts
 > differed from zero-shot even when retrieval returned nothing. This has been fixed. Post-fix
-> runs are needed to validate true retrieval effects. See [BUG-035](docs/_bugs/BUG-035-FEW-SHOT-PROMPT-CONFOUND.md).
+> runs are needed to validate true retrieval effects. See [BUG-035](../_archive/bugs/BUG-035_FEW_SHOT_PROMPT_CONFOUND.md).
 
 ---
 
@@ -442,7 +442,7 @@ SKIP (Unless research focus):
 
 ## Related Documentation
 
-- [Specs Index](docs/_specs/index.md) — Implementation specs (061-063)
-- [Hypotheses for Improvement](HYPOTHESES-FOR-IMPROVEMENT.md) — Original hypothesis list
-- [Task Validity](docs/clinical/task-validity.md) — Why ~50% coverage is expected
-- [Few-Shot Analysis](docs/results/few-shot-analysis.md) — Why few-shot may not beat zero-shot
+- [Specs Index](../_specs/index.md) — Implementation specs (061-063)
+- [Hypotheses for Improvement](hypotheses-for-improvement.md) — Original hypothesis list
+- [Task Validity](../clinical/task-validity.md) — Why ~50% coverage is expected
+- [Few-Shot Analysis](../results/few-shot-analysis.md) — Why few-shot may not beat zero-shot

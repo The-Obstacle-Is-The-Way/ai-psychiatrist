@@ -352,11 +352,11 @@ These are not DAIC-WOZ-specific, but they provide an empirical anchor: the label
 
 ## 11. Related Documentation
 
-- [Task Validity](docs/clinical/task-validity.md) — **SSOT**: construct mismatch and valid claims
-- [Few-Shot Analysis](docs/results/few-shot-analysis.md) — Why few-shot may not beat zero-shot
-- [RAG Design Rationale](docs/rag/design-rationale.md) — Original design decisions
-- [Metrics and Evaluation](docs/statistics/metrics-and-evaluation.md) — AURC/AUGRC definitions
-- [Specs Index](docs/_specs/index.md) — Implementation specs (061-063 address task validity)
+- [Task Validity](../clinical/task-validity.md) — **SSOT**: construct mismatch and valid claims
+- [Few-Shot Analysis](../results/few-shot-analysis.md) — Why few-shot may not beat zero-shot
+- [RAG Design Rationale](../rag/design-rationale.md) — Original design decisions
+- [Metrics and Evaluation](../statistics/metrics-and-evaluation.md) — AURC/AUGRC definitions
+- [Specs Index](../_specs/index.md) — Implementation specs (061-063 address task validity)
 
 ---
 

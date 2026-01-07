@@ -116,7 +116,7 @@ PHQ-8 item scores are defined by **2-week frequency** (0-3 scale based on days),
 - `N/A` outputs for items without clear frequency evidence
 - Few-shot may not beat zero-shot when evidence is sparse
 
-**SSOT**: [`docs/clinical/task-validity.md`](docs/clinical/task-validity.md)
+**SSOT**: [`docs/clinical/task-validity.md`](../clinical/task-validity.md)
 
 This is **not a bug**. The system correctly implements selective prediction with evidence grounding.
 

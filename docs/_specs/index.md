@@ -34,8 +34,8 @@ Implemented specs are distilled into canonical (non-archive) documentation under
 
 | Spec | Title | Canonical Doc Location |
 |------|-------|------------------------|
-| **058** | [Increase PydanticAI Default Retries](../_archive/specs/spec-058-increase-pydantic-ai-retries.md) | [Configuration](../configs/configuration.md#pydantic-ai-settings), [JSON audit](../_bugs/ANALYSIS-026-JSON-PARSING-ARCHITECTURE-AUDIT.md) |
-| **059** | [json-repair Fallback](../_archive/specs/spec-059-json-repair-fallback.md) | [Evidence Extraction](../pipeline-internals/evidence-extraction.md), [JSON audit](../_bugs/ANALYSIS-026-JSON-PARSING-ARCHITECTURE-AUDIT.md) |
+| **058** | [Increase PydanticAI Default Retries](../_archive/specs/spec-058-increase-pydantic-ai-retries.md) | [Configuration](../configs/configuration.md#pydantic-ai-settings), [JSON audit](../_archive/bugs/ANALYSIS-026_JSON_PARSING_ARCHITECTURE_AUDIT.md) |
+| **059** | [json-repair Fallback](../_archive/specs/spec-059-json-repair-fallback.md) | [Evidence Extraction](../pipeline-internals/evidence-extraction.md), [JSON audit](../_archive/bugs/ANALYSIS-026_JSON_PARSING_ARCHITECTURE_AUDIT.md) |
 | **060** | [Retry Telemetry Metrics](../_archive/specs/spec-060-retry-telemetry-metrics.md) | [Error Handling](../developer/error-handling.md#retry-telemetry-spec-060), [Debugging](../rag/debugging.md#step-5b-check-retry-telemetry-spec-060) |
 
 ### Other Implemented Specs

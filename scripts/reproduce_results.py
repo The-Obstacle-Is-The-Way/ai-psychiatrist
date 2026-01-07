@@ -739,7 +739,7 @@ async def run_experiment(
     )
 
     participant_ids = list(ground_truth.keys())
-    if limit:
+    if limit is not None:
         participant_ids = participant_ids[:limit]
 
     mode_name = mode.value
@@ -1051,6 +1051,57 @@ def apply_cli_overrides(*, settings: Settings, args: argparse.Namespace) -> None
         settings.prediction.binary_strategy = args.binary_strategy
 
 
+def validate_cli_args(args: argparse.Namespace) -> None:
+    """Validate CLI args that can silently change run semantics.
+
+    Pydantic field constraints validate `.env` values, but CLI overrides can bypass them
+    (e.g., by assigning values directly to settings objects or local variables). This
+    validator keeps CLI-driven runs fail-fast and comparable.
+    """
+    if getattr(args, "zero_shot_only", False) and getattr(args, "few_shot_only", False):
+        raise ValueError("Cannot specify both --zero-shot-only and --few-shot-only")
+
+    limit = getattr(args, "limit", None)
+    if limit is not None and int(limit) < 1:
+        raise ValueError("--limit must be >= 1")
+
+    total_min_coverage = getattr(args, "total_min_coverage", None)
+    if total_min_coverage is not None:
+        value = float(total_min_coverage)
+        if value < 0.0 or value > 1.0:
+            raise ValueError("--total-min-coverage must be between 0.0 and 1.0")
+
+    binary_threshold = getattr(args, "binary_threshold", None)
+    if binary_threshold is not None:
+        value = int(binary_threshold)
+        if value < 0 or value > 24:
+            raise ValueError("--binary-threshold must be between 0 and 24")
+
+    consistency_samples = getattr(args, "consistency_samples", None)
+    if consistency_samples is not None:
+        value = int(consistency_samples)
+        if value < 1 or value > 20:
+            raise ValueError("--consistency-samples must be between 1 and 20")
+
+    consistency_temperature = getattr(args, "consistency_temperature", None)
+    if consistency_temperature is not None:
+        value = float(consistency_temperature)
+        if value < 0.0 or value > 2.0:
+            raise ValueError("--consistency-temperature must be between 0.0 and 2.0")
+
+
+def validate_prediction_settings(
+    *,
+    prediction_mode: Literal["item", "total", "binary"],
+    binary_strategy: Literal["threshold", "direct", "ensemble"],
+) -> None:
+    """Fail fast on unsupported prediction configurations (Specs 061/062)."""
+    if prediction_mode == "binary" and binary_strategy != "threshold":
+        raise ValueError(
+            "Invalid prediction configuration: binary_strategy is limited to 'threshold'."
+        )
+
+
 def load_ground_truth_for_split(data_dir: Path, *, split: str) -> dict[int, dict[PHQ8Item, int]]:
     """Load per-item ground truth for a split selection."""
     if split == "train+dev":
@@ -1292,16 +1343,26 @@ async def main_async(args: argparse.Namespace) -> int:
     """Async main entry point."""
     setup_logging(LoggingSettings(level="INFO", format="console"))
 
-    settings = get_settings()
-    run_metadata = RunMetadata.capture(ollama_base_url=settings.ollama.base_url)
-    init_run_observability(run_metadata.run_id)
-    if run_metadata.git_dirty:
-        logger.warning(
-            "Running with uncommitted changes",
-            git_commit=run_metadata.git_commit,
-        )
+    try:
+        validate_cli_args(args)
 
-    apply_cli_overrides(settings=settings, args=args)
+        settings = get_settings()
+        run_metadata = RunMetadata.capture(ollama_base_url=settings.ollama.base_url)
+        init_run_observability(run_metadata.run_id)
+        if run_metadata.git_dirty:
+            logger.warning(
+                "Running with uncommitted changes",
+                git_commit=run_metadata.git_commit,
+            )
+
+        apply_cli_overrides(settings=settings, args=args)
+        validate_prediction_settings(
+            prediction_mode=settings.prediction.prediction_mode,
+            binary_strategy=settings.prediction.binary_strategy,
+        )
+    except ValueError as e:
+        print(f"ERROR: {e}")
+        return 1
 
     (
         data_settings,
@@ -1350,27 +1411,23 @@ async def main_async(args: argparse.Namespace) -> int:
     try:
         ground_truth = load_ground_truth_for_split(data_settings.base_dir, split=args.split)
         print(f"\nLoaded {len(ground_truth)} participants with per-item ground truth")
-    except FileNotFoundError as e:
-        print(f"\nERROR: {e}")
-        return 1
 
-    # Initialize services
-    async with contextlib.AsyncExitStack() as stack:
-        # Chat client (Ollama)
-        ollama_client = await stack.enter_async_context(OllamaClient(ollama_settings))
+        # Initialize services
+        async with contextlib.AsyncExitStack() as stack:
+            # Chat client (Ollama)
+            ollama_client = await stack.enter_async_context(OllamaClient(ollama_settings))
 
-        if not await check_ollama_connectivity(ollama_client):
-            return 1
+            if not await check_ollama_connectivity(ollama_client):
+                return 1
 
-        transcript_service = TranscriptService(data_settings)
+            transcript_service = TranscriptService(data_settings)
 
-        embedding_service = None
-        if not args.zero_shot_only:
-            # Embedding client (Factory)
-            embedding_client = create_embedding_client(settings)
-            stack.push_async_callback(embedding_client.close)
+            embedding_service = None
+            if not args.zero_shot_only:
+                # Embedding client (Factory)
+                embedding_client = create_embedding_client(settings)
+                stack.push_async_callback(embedding_client.close)
 
-            try:
                 embedding_service = init_embedding_service(
                     args=args,
                     data_settings=data_settings,
@@ -1380,40 +1437,40 @@ async def main_async(args: argparse.Namespace) -> int:
                     embedding_client=embedding_client,
                     chat_client=ollama_client,
                 )
-            except FileNotFoundError as e:
-                print(f"\nERROR: {e}")
-                return 1
 
-        experiments = await run_requested_experiments(
-            args=args,
-            ground_truth=ground_truth,
-            ollama_client=ollama_client,
-            transcript_service=transcript_service,
-            embedding_service=embedding_service,
-            model_name=model_settings.quantitative_model,
-            prediction_mode=settings.prediction.prediction_mode,
-            total_score_min_coverage=settings.prediction.total_score_min_coverage,
-            binary_threshold=settings.prediction.binary_threshold,
-            binary_strategy=settings.prediction.binary_strategy,
-            consistency_enabled=consistency_enabled,
-            consistency_n_samples=consistency_n_samples,
-            consistency_temperature=consistency_temperature,
-        )
+            experiments = await run_requested_experiments(
+                args=args,
+                ground_truth=ground_truth,
+                ollama_client=ollama_client,
+                transcript_service=transcript_service,
+                embedding_service=embedding_service,
+                model_name=model_settings.quantitative_model,
+                prediction_mode=settings.prediction.prediction_mode,
+                total_score_min_coverage=settings.prediction.total_score_min_coverage,
+                binary_threshold=settings.prediction.binary_threshold,
+                binary_strategy=settings.prediction.binary_strategy,
+                consistency_enabled=consistency_enabled,
+                consistency_n_samples=consistency_n_samples,
+                consistency_temperature=consistency_temperature,
+            )
 
-        persist_experiment_outputs(
-            args=args,
-            settings=settings,
-            run_metadata=run_metadata,
-            experiments=experiments,
-            participants_requested=len(ground_truth),
-            data_settings=data_settings,
-            embedding_settings=embedding_settings,
-            consistency_enabled=consistency_enabled,
-            consistency_n_samples=consistency_n_samples,
-            consistency_temperature=consistency_temperature,
-        )
+            persist_experiment_outputs(
+                args=args,
+                settings=settings,
+                run_metadata=run_metadata,
+                experiments=experiments,
+                participants_requested=len(ground_truth),
+                data_settings=data_settings,
+                embedding_settings=embedding_settings,
+                consistency_enabled=consistency_enabled,
+                consistency_n_samples=consistency_n_samples,
+                consistency_temperature=consistency_temperature,
+            )
 
-        finalize_run_observability(data_settings.base_dir / "outputs")
+            finalize_run_observability(data_settings.base_dir / "outputs")
+    except FileNotFoundError as e:
+        print(f"\nERROR: {e}")
+        return 1
 
     return 0
 
@@ -1523,8 +1580,10 @@ Examples:
     )
     args = parser.parse_args()
 
-    if args.zero_shot_only and args.few_shot_only:
-        print("ERROR: Cannot specify both --zero-shot-only and --few-shot-only")
+    try:
+        validate_cli_args(args)
+    except ValueError as e:
+        print(f"ERROR: {e}")
         return 1
 
     return asyncio.run(main_async(args))

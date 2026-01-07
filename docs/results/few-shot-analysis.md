@@ -9,7 +9,7 @@
 > When few-shot retrieval returned zero references, the prompt still differed from zero-shot due to
 > an empty `<Reference Examples>No valid evidence found</Reference Examples>` wrapper. This confound
 > has been fixed, but comparative claims from pre-fix runs should be interpreted with caution.
-> See [BUG-035](../_bugs/BUG-035-FEW-SHOT-PROMPT-CONFOUND.md) for details.
+> See [BUG-035](../_archive/bugs/BUG-035_FEW_SHOT_PROMPT_CONFOUND.md) for details.
 
 ---
 

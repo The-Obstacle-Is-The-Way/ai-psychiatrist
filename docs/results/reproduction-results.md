@@ -14,7 +14,7 @@ This page is a high-level, **current-state** summary. The canonical timeline + p
 
 **For publication-quality results, re-run with post-fix code.**
 
-See: `docs/_bugs/ANALYSIS-026-JSON-PARSING-ARCHITECTURE-AUDIT.md` and `docs/results/run-history.md` for details.
+See: `docs/_archive/bugs/ANALYSIS-026_JSON_PARSING_ARCHITECTURE_AUDIT.md` and `docs/results/run-history.md` for details.
 
 **Run 10 (confidence suite attempt) is not a valid comparison point**:
 - Zero-shot evaluated 39/41 participants (2 hard failures).
