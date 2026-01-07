@@ -21,6 +21,7 @@ from ai_psychiatrist.config import (
     LoggingSettings,
     ModelSettings,
     OllamaSettings,
+    PredictionSettings,
     QuantitativeSettings,
     Settings,
     get_model_settings,
@@ -65,6 +66,24 @@ class TestConsistencySettings:
             ConsistencySettings(temperature=-0.1)
         with pytest.raises(ValueError):
             ConsistencySettings(temperature=2.1)
+
+
+class TestPredictionSettings:
+    """Tests for prediction mode configuration (Specs 061/062)."""
+
+    def test_defaults(self) -> None:
+        """Default values should be conservative and backward-compatible."""
+        settings = PredictionSettings()
+        assert settings.prediction_mode == "item"
+        assert settings.total_score_min_coverage == 0.5
+        assert settings.binary_threshold == 10
+        assert settings.binary_strategy == "threshold"
+
+    def test_prediction_mode_env_override(self, monkeypatch: pytest.MonkeyPatch) -> None:
+        """PREDICTION_MODE should override the default behavior."""
+        monkeypatch.setenv("PREDICTION_MODE", "total")
+        settings = get_settings()
+        assert settings.prediction.prediction_mode == "total"
 
 
 class TestOllamaSettings:

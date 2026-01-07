@@ -428,6 +428,58 @@ class QuantitativeSettings(BaseSettings):
     )
 
 
+class PredictionSettings(BaseSettings):
+    """Prediction mode configuration (Specs 061/062).
+
+    These settings control how `scripts/reproduce_results.py` evaluates outputs:
+    - `item`: per-item scores (current default)
+    - `total`: total PHQ-8 score (0-24) derived from items
+    - `binary`: depressed vs not_depressed derived from total score
+    """
+
+    model_config = SettingsConfigDict(
+        env_file=ENV_FILE,
+        env_file_encoding=ENV_FILE_ENCODING,
+        extra="ignore",
+    )
+
+    prediction_mode: Literal["item", "total", "binary"] = Field(
+        default="item",
+        description=(
+            "Prediction evaluation mode (Specs 061/062). "
+            "'item' reports per-item MAE + coverage; "
+            "'total' reports total-score regression metrics; "
+            "'binary' reports threshold-based classification metrics."
+        ),
+    )
+
+    total_score_min_coverage: float = Field(
+        default=0.5,
+        ge=0.0,
+        le=1.0,
+        description=(
+            "Minimum item coverage required to emit a total-score prediction when "
+            "prediction_mode='total' (Spec 061)."
+        ),
+    )
+
+    binary_threshold: int = Field(
+        default=10,
+        ge=0,
+        le=24,
+        description="PHQ-8 total score threshold for binary classification (Spec 062).",
+    )
+
+    binary_strategy: Literal["threshold", "direct", "ensemble"] = Field(
+        default="threshold",
+        description=(
+            "Binary classification strategy (Spec 062). "
+            "'threshold' derives a label from the predicted total score; "
+            "'direct' and 'ensemble' are reserved for future work."
+        ),
+    )
+
+
 class ConsistencySettings(BaseSettings):
     """Consistency-based confidence configuration (Spec 050).
 
@@ -648,6 +700,7 @@ class Settings(BaseSettings):
     embedding: EmbeddingSettings = Field(default_factory=EmbeddingSettings)
     feedback: FeedbackLoopSettings = Field(default_factory=FeedbackLoopSettings)
     quantitative: QuantitativeSettings = Field(default_factory=QuantitativeSettings)
+    prediction: PredictionSettings = Field(default_factory=PredictionSettings)
     consistency: ConsistencySettings = Field(default_factory=ConsistencySettings)
     pydantic_ai: PydanticAISettings = Field(default_factory=PydanticAISettings)
     data: DataSettings = Field(default_factory=DataSettings)
