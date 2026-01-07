@@ -116,6 +116,12 @@ async def test_evaluate_participant_includes_inference_fields_in_item_signals() 
     assert tired_signals["inference_type"] == "intensity_marker"
     assert tired_signals["inference_marker"] == "always"
 
+    # Verify non-inferred items have correct default values
+    interest_signals = result.item_signals[PHQ8Item.NO_INTEREST]
+    assert interest_signals["inference_used"] is False
+    assert interest_signals["inference_type"] is None
+    assert interest_signals["inference_marker"] is None
+
 
 def test_print_run_configuration_displays_embedding_settings(
     capsys: pytest.CaptureFixture[str],
