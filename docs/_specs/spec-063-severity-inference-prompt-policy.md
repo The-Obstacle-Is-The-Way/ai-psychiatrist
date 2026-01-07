@@ -1,7 +1,8 @@
 # Spec 063: Severity Inference Prompt Policy
 
-**Status**: PROPOSED
+**Status**: IMPLEMENTED
 **Created**: 2026-01-05
+**Implemented**: 2026-01-06
 **Rationale**: PHQ-8 scores 0-3 represent severity gradation. Prompts should allow inference from temporal/intensity markers without requiring explicit frequency statements.
 
 ---
