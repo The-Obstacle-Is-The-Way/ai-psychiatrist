@@ -1,27 +1,44 @@
 # Why Few-Shot May Not Beat Zero-Shot: Analysis
 
 **Created**: 2026-01-05
-**Status**: Living document based on Run 12 findings
+**Last Updated**: 2026-01-07
+**Status**: Living document; updated with Run 13 (first clean post-BUG-035 comparison)
 
 ---
 
-> **BUG-035 CAVEAT (2026-01-06)**: Historical runs (including Run 12) were affected by a prompt confound.
-> When few-shot retrieval returned zero references, the prompt still differed from zero-shot due to
-> an empty `<Reference Examples>No valid evidence found</Reference Examples>` wrapper. This confound
-> has been fixed, but comparative claims from pre-fix runs should be interpreted with caution.
-> See [BUG-035](../_archive/bugs/BUG-035_FEW_SHOT_PROMPT_CONFOUND.md) for details.
+> **BUG-035 CONTEXT (Fixed 2026-01-06)**: Runs 1–12 are confounded because few-shot prompts could
+> still differ from zero-shot when retrieval returned zero references (a sentinel wrapper containing
+> “No valid evidence found”). Run 13 is the first clean post-fix comparative run; use it for any
+> zero-shot vs few-shot claims.
+> See [BUG-035](../_archive/bugs/BUG-035_FEW_SHOT_PROMPT_CONFOUND.md) and `docs/results/run-history.md`.
 
 ---
 
 ## Executive Summary
 
-In Run 12, zero-shot **outperformed** few-shot on MAE (0.572 vs 0.616) at similar coverage (48.5% vs 46.0%). This contradicts the paper's claim of 22% improvement but is **not necessarily a bug**. This document explains why few-shot can be neutral or harmful from first principles.
+Run 13 (the first clean post-BUG-035 comparative run) confirms that **zero-shot outperforms few-shot**
+on MAE_item (0.6079 vs 0.6571) at similar coverage (~50.0% vs ~48.5%). Few-shot underperformance is
+therefore attributable to retrieval/reference quality issues and evidence bottlenecks, not prompt
+confounding. This document explains why few-shot can be neutral or harmful from first principles.
 
-**Note**: The BUG-035 prompt confound may have contributed to some of these differences. Post-fix runs are needed to validate the true retrieval effect.
+Run 12 shows the same directional pattern, but is pre-fix and should be treated as historical context.
 
 ---
 
-## Run 12 Results
+## Run 13 Results (Post BUG-035; Clean Comparative Baseline)
+
+From `data/outputs/both_paper-test_20260107_134730.json` (Run 13):
+
+| Mode | N_eval | MAE_item | Coverage |
+|------|--------|----------|----------|
+| Zero-shot | 40/41 | **0.6079** | 50.0% |
+| Few-shot | 41/41 | 0.6571 | 48.5% |
+
+Key confirmation: zero-shot still beats few-shot after the confound fix, so retrieval quality (not prompt contamination) is the bottleneck.
+
+---
+
+## Historical Context: Run 12 (Pre BUG-035 Fix; Confounded)
 
 | Mode | N_eval | MAE_item | Coverage | AURC | AUGRC |
 |------|--------|----------|----------|------|-------|

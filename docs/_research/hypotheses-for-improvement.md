@@ -14,14 +14,17 @@ A first-principles audit of the PHQ-8 scoring pipeline reveals several fundament
 
 > **Task Validity SSOT**: `docs/clinical/task-validity.md` — comprehensive analysis of construct mismatch and valid scientific claims.
 
-**Run 12 SSOT snapshot** (valid comparison; 41/41 evaluated in both modes; no selection bias):
-- **Zero-shot**: item MAE = **0.5715**, coverage (Cmax) = **48.5%**
-- **Few-shot**: item MAE = **0.6159**, coverage (Cmax) = **46.0%**
+**Run 13 SSOT snapshot** (clean post-BUG-035 comparative baseline; 41 participants processed in both modes):
+- **Zero-shot**: item MAE = **0.6079**, coverage = **50.0%** (40/41 evaluated; 1 excluded: no evidence)
+- **Few-shot**: item MAE = **0.6571**, coverage = **48.5%** (41/41 evaluated)
+- **Key result**: zero-shot beats few-shot after the BUG-035 fix, so the gap is not a prompt confound artifact.
+
+**Run 12 pipeline stats snapshot** (pre-BUG-035; useful for evidence/grounding/retrieval distributions):
 - Evidence grounding rejects ~**49.5%** of extracted quotes (deduped across modes).
 - Only **32.0%** of item assessments had any grounded LLM evidence (105/328).
 - Few-shot references are sparse: **15.2%** of item assessments had any references (50/328), receiving **52 total** references.
 
-These numbers are derived from Run 12 artifacts in `data/outputs/` and summarized in `docs/results/few-shot-analysis.md`.
+Run 13 is documented in `docs/results/run-history.md`. The Run 12 pipeline stats above are derived from Run 12 artifacts in `data/outputs/` and summarized in `docs/results/few-shot-analysis.md`.
 
 ---
 
@@ -95,7 +98,7 @@ PHQ-8 is a **frequency-based** instrument asking "Over the last 2 weeks, how oft
 - "I have trouble sleeping sometimes" (vague)
 - "I've been stressed lately" (qualitative)
 
-This explains why (Run 12 SSOT):
+This explains why (see Run 12 pipeline stats snapshot above):
 - Only **32.0%** of item assessments have any grounded evidence (105/328)
 - ~**49.5%** of extracted quotes fail evidence grounding
 - Coverage stabilizes around **46–49%** in both modes

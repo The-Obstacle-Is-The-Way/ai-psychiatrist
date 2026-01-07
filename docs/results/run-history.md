@@ -66,7 +66,7 @@ A critical bug was discovered and fixed on 2026-01-03 where `_extract_evidence()
 
 - The bug only triggers if LLM returns malformed JSON
 - If LLM always returned valid JSON, bug never triggered
-- Results look plausible (few-shot beats zero-shot on MAE with chunk scoring)
+- Results looked plausible at the time (e.g., some runs reported few-shot < zero-shot MAE after chunk scoring), but those runs are pre-BUG-035 and are confounded for cross-mode comparisons
 - But we have NO PROOF the bug never triggered
 
 **Fix Applied**: Commit on 2026-01-03

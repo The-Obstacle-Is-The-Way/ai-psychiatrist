@@ -1,7 +1,7 @@
 # Reproduction Run Output Schema (JSON + Registry)
 
 **Audience**: Researchers parsing outputs and maintaining run provenance
-**Last Updated**: 2026-01-05
+**Last Updated**: 2026-01-07
 
 This repo writes four primary provenance artifacts for quantitative reproduction runs:
 
@@ -30,6 +30,8 @@ Where:
 - `mode` is `zero_shot`, `few_shot`, or `both`
 - `split` is one of: `train`, `dev`, `train+dev`, `paper`, `paper-train`, `paper-val`, `paper-test`
   - `paper` is an alias for `paper-test` in `scripts/reproduce_results.py`
+
+Note: `{mode}` in the filename refers to **scoring mode** (zero-shot vs few-shot vs both). Prediction evaluation mode (Specs 061/062: `item` vs `total` vs `binary`) is recorded inside the JSON as `experiments[].results.prediction_mode`.
 
 ---
 
@@ -68,11 +70,16 @@ Captured per mode (`zero_shot` / `few_shot`):
 
 Per-mode aggregated metrics + per-participant results:
 - counts: total/success/failed/evaluated
-- MAE variants (`item_mae_weighted`, `item_mae_by_item`, `item_mae_by_subject`)
+- MAE variants (`item_mae_weighted`, `item_mae_by_item`, `item_mae_by_subject`) for item-level scoring
 - coverage (`prediction_coverage`)
+- evaluation settings (Specs 061/062): `prediction_mode`, `total_score_min_coverage`, `binary_threshold`, `binary_strategy`
 - per-item breakdowns
 - per-participant predictions
 - `item_signals` (Spec 25/046 confidence signals)
+
+When enabled via `--prediction-mode` (Specs 061/062), additional aggregated metrics are included:
+- `total_metrics` (total score evaluation)
+- `binary_metrics` (binary depression classification)
 
 For downstream AURC/AUGRC evaluation, `scripts/evaluate_selective_prediction.py` consumes:
 - per-participant `success`
@@ -83,6 +90,19 @@ For downstream AURC/AUGRC evaluation, `scripts/evaluate_selective_prediction.py`
   - `verbalized_confidence`
   - `token_msp`, `token_pe`, `token_energy`
   - `consistency_modal_confidence`, `consistency_score_std`, `consistency_na_rate`, `consistency_samples`
+
+### `experiments[].results.results[]` (Per-participant)
+
+Each participant result includes:
+- `participant_id`, `success`, `error`
+- per-item maps: `ground_truth_items`, `predicted_items`
+- totals/bounds: `ground_truth_total`, `predicted_total`, `predicted_total_min`, `predicted_total_max`
+- severity bounds: `severity_lower_bound`, `severity_upper_bound` (and `severity` when available)
+- binary fields (Spec 062): `ground_truth_binary`, `predicted_binary`, `binary_correct` (populated when `prediction_mode="binary"`)
+- optional structured sections when enabled:
+  - `total_score` (when `prediction_mode="total"`)
+  - `binary_classification` (when `prediction_mode="binary"`)
+  - `severity_tier` (when `prediction_mode="total"`)
 
 ---
 

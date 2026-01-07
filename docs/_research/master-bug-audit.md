@@ -120,14 +120,14 @@ PHQ-8 item scores are defined by **2-week frequency** (0-3 scale based on days),
 
 This is **not a bug**. The system correctly implements selective prediction with evidence grounding.
 
-### Run 12 SSOT Metrics (Reference)
+### Run 13 Baseline Metrics (Reference; Post BUG-035)
 
-| Mode | Item MAE | Coverage (Cmax) |
+| Mode | Item MAE | Coverage |
 |------|----------|-----------------|
-| Zero-shot | 0.5715 | 48.5% |
-| Few-shot | 0.6159 | 46.0% |
+| Zero-shot | 0.6079 | 50.0% |
+| Few-shot | 0.6571 | 48.5% |
 
-These metrics are consistent with the task validity constraint.
+These metrics are consistent with the task validity constraint. Run 12 shows the same directional pattern but is pre-BUG-035 and confounded for cross-mode comparisons.
 
 ---
 
