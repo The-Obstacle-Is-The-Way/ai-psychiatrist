@@ -1,352 +1,211 @@
 # Next Steps
 
-**Status**: Run 12 complete (valid); ready for Run 13
-**Last Updated**: 2026-01-05
+**Status**: Run 13 complete (valid baseline); ready for Run 14 (new specs)
+**Last Updated**: 2026-01-07
 
 ---
 
-## Why We Abandoned "Paper-Parity"
+## Current Status Summary
 
-The original paper (Greene et al.) has **severe methodological flaws** that make reproduction impossible. We have built a **robust, independent implementation** that fixes these issues.
+### What's Done ✅
 
-### Documented Failures (see closed GitHub issues)
+| Milestone | Run | Status |
+|-----------|-----|--------|
+| BUG-035 fix (prompt confound) | Run 13 | ✅ Fixed |
+| Confidence suite (Specs 048-052) | Run 12 | ✅ Validated |
+| Chunk-level scoring (Spec 35) | Run 7+ | ✅ Enabled |
+| Participant-only preprocessing | Run 8+ | ✅ Enabled |
+| Evidence grounding (Spec 053) | Run 11+ | ✅ Enabled |
+| Severity inference (Spec 063) | Post-Run 13 | ✅ **Implemented (not yet tested)** |
+| Total score metrics (Spec 061) | Post-Run 13 | ✅ **Implemented (not yet tested)** |
+| Binary classification (Spec 062) | Post-Run 13 | 🔶 Threshold strategy only |
 
-| Issue | Problem |
-|-------|---------|
-| [#81](https://github.com/The-Obstacle-Is-The-Way/ai-psychiatrist/issues/81) | Participant-level PHQ-8 scores assigned to individual chunks (semantic mismatch) |
-| [#69](https://github.com/The-Obstacle-Is-The-Way/ai-psychiatrist/issues/69) | Few-shot retrieval attaches participant scores to arbitrary text chunks |
-| [#66](https://github.com/The-Obstacle-Is-The-Way/ai-psychiatrist/issues/66) | Paper uses invalid statistical comparison (MAE at different coverages) |
-| [#47](https://github.com/The-Obstacle-Is-The-Way/ai-psychiatrist/issues/47) | Paper does not specify model quantization |
-| [#46](https://github.com/The-Obstacle-Is-The-Way/ai-psychiatrist/issues/46) | Paper does not specify temperature/top_k/top_p sampling parameters |
-| [#45](https://github.com/The-Obstacle-Is-The-Way/ai-psychiatrist/issues/45) | Paper uses undocumented custom 58/43/41 split |
+### Run 13 Baseline (Current SSOT)
 
-### Reference Code Quality
+| Mode | MAE_item | AURC (llm) | Best AUGRC | Coverage |
+|------|----------|------------|------------|----------|
+| **Zero-shot** | **0.6079** | 0.107 | 0.024 (`consistency_inverse_std`) | 50.0% |
+| Few-shot | 0.6571 | 0.115 | 0.025 (`token_pe`) | 48.5% |
 
-The paper's reference implementation (`_reference/ai_psychiatrist/`) demonstrates:
-- No configuration system (hardcoded paths)
-- No error handling
-- No tests
-- No typing
-- Inconsistent naming (e.g., `qualitive_evaluator.py`)
-- Single-file "server" with no separation of concerns
-
-**Our implementation** provides: Pydantic configuration, comprehensive tests (80%+ coverage), strict typing, structured logging, modular architecture, and proper experiment tracking.
-
-### Terminology Change
-
-| Old (deprecated) | New (use this) |
-|------------------|----------------|
-| "paper-parity" | "baseline/conservative defaults" |
-| "paper-optimal" | "validated configuration" |
-| "reproduce the paper" | "evaluate PHQ-8 assessment" |
+**Key finding**: Zero-shot beats few-shot (valid after BUG-035 fix). This is a valid research result, not a bug.
 
 ---
 
-## 1. Run 9 Results (Spec 046 Confidence Signals) ✅ COMPLETE
+## What's NEW Since Run 13
 
-**Run 9 completed**: 2026-01-03T02:58:43
+Three specs were implemented **after** Run 13 (commit `01d3124`):
 
-**File**: `data/outputs/both_paper-test_backfill-off_20260102_215843.json`
+### 1. Spec 063: Severity Inference (Implemented 2026-01-06)
 
-### Results Summary
+**What it does**: Allows scoring from temporal/intensity markers without requiring explicit day-counts.
 
-| Mode | MAE_item | AURC | AUGRC | Cmax |
-|------|----------|------|-------|------|
-| Zero-shot | 0.776 | 0.144 | 0.032 | 48.8% |
-| Few-shot | 0.662 | 0.135 | 0.035 | 53.0% |
+| Mode | Coverage (expected) | MAE (expected) |
+|------|---------------------|----------------|
+| `strict` (current) | ~48% | ~0.60 |
+| `infer` (new) | ~70-80% | TBD (needs measurement) |
 
-### Spec 046 Confidence Signal Ablation (few-shot)
+**CLI**: `--severity-inference infer`
 
-| Confidence Signal | AURC | vs baseline |
-|-------------------|------|-------------|
-| `llm` (evidence count) | 0.135 | — |
-| `retrieval_similarity_mean` | **0.128** | **-5.4%** |
-| `retrieval_similarity_max` | **0.128** | **-5.4%** |
-| `hybrid_evidence_similarity` | 0.135 | +0.2% |
+**Why this matters**: The ~50% abstention rate is because transcripts lack explicit frequency. Inference mode may recover 20-30% more coverage.
 
-### Key Findings
+### 2. Spec 061: Total Score Prediction (Implemented 2026-01-07)
 
-1. **Retrieval similarity improves AURC by 5.4%**: `retrieval_similarity_mean` provides better ranking
-2. **AUGRC unchanged**: Still at ~0.031-0.035 (target was <0.020)
-3. **Hybrid signal not helpful**: Multiplying evidence × similarity doesn't help
-4. **GitHub Issue #86 hypothesis partially validated**: Retrieval signals help AURC but don't substantially move AUGRC
+**What it does**: Sum-of-items total score (0-24) with coverage gating.
 
----
+**CLI**: `--prediction-mode total`
 
-## 2. Run 10 Postmortem (Confidence Suite Attempt) ⚠️ INVALID
+**Why this matters**: Item-level errors may average out; clinically useful for severity tiers.
 
-**Log**: `data/outputs/run10_confidence_suite_20260103_111959.log`
-**Output**: `data/outputs/both_paper-test_20260103_182316.json`
-**Run ID**: `3186a50d` (`git_dirty=true`)
+### 3. Spec 062: Binary Classification (Partial)
 
-**What this run was trying to do**: emit the full confidence suite signals (Specs 048–051) and then evaluate AURC/AUGRC deltas.
+**What it does**: PHQ-8 >= 10 threshold for depression screening.
 
-**Why it is not a valid comparison point**:
+**CLI**: `--prediction-mode binary`
 
-- **Zero-shot evaluated 39/41 participants**: PIDs 383 and 427 failed with `Exceeded maximum retries (3) for output validation` due to invalid control characters in LLM JSON output. This was fixed in `tolerant_json_fixups()` by adding step 5 (control char escaping).
-- **Few-shot evaluated 0/41 participants**: every participant failed with missing HuggingFace deps (`torch`), because the run used `EMBEDDING_BACKEND=huggingface` without installing `--extra hf`.
-
-**Never-again prevention** (now enforced):
-- `make dev` installs HuggingFace extras by default (FP16 embeddings).
-- Few-shot runs fail fast with `MissingHuggingFaceDependenciesError` before wasting hours.
-- JSON parsing uses `parse_llm_json()` with `json-repair` as a last-resort fallback (Spec 059) and `PYDANTIC_AI_RETRIES=5` (Spec 058).
-
-**What we can still learn from it** (debugging only):
-- The run artifact contains the new `item_signals` keys (`verbalized_confidence`, `token_*`, `consistency_*`), so the instrumentation path works.
-- Use it only as a “signals present” smoke test; do not interpret AURC/MAE deltas from this run.
-
-**Next**: Run 12 completed and is the current SSOT for confidence-suite results (see below). Run 13 should focus on pushing AUGRC below the target (<0.020) via calibrated confidence (Spec 049) and/or additional robustness improvements.
+**Status**: Only `threshold` strategy implemented; `direct` and `ensemble` fail loudly.
 
 ---
 
-## 3. Run 12 Results (Confidence Suite) ✅ VALID (No Selection Bias)
+## Run 14: What To Test
 
-**Log**: `data/outputs/run12_confidence_suite_20260104_115021.log`
-**Output**: `data/outputs/both_paper-test_20260105_072303.json`
-**Failures**: `data/outputs/failures_05621949.json` (8 non-fatal `evidence_hallucination`)
-**Telemetry**: `data/outputs/telemetry_05621949.json` (`json_fixups_applied` × 9; 0 parse failures)
-**Run ID**: `05621949` (`git_dirty=false`, `git_commit=c0d79c5`)
+### Option A: Severity Inference Ablation (Recommended First)
 
-### Reproduction Summary
+Test whether `--severity-inference infer` improves coverage without destroying accuracy.
 
-| Mode | N_eval | MAE_item | Coverage |
-|------|--------|----------|----------|
-| Zero-shot | 41/41 | 0.5715 | 48.5% |
-| Few-shot | 41/41 | 0.6159 | 46.0% |
+```bash
+tmux new -s run14
 
-### Selective Prediction Summary (`loss=abs_norm`, 10,000 bootstrap resamples)
+# Strict mode (baseline - should match Run 13)
+uv run python scripts/reproduce_results.py \
+  --split paper-test \
+  --severity-inference strict \
+  --zero-shot-only \
+  2>&1 | tee data/outputs/run14_strict_$(date +%Y%m%d_%H%M%S).log
 
-| Mode | Confidence | AURC | AUGRC | Cmax |
-|------|------------|------|-------|------|
-| Zero-shot | `llm` | 0.1019 | 0.0252 | 48.5% |
-| Zero-shot | best AURC: `verbalized` | 0.0917 | 0.0257 | 48.5% |
-| Zero-shot | best AUGRC: `token_pe` | 0.0932 | 0.0234 | 48.5% |
-| Few-shot | `llm` | 0.1085 | 0.0242 | 46.0% |
-| Few-shot | best AURC/AUGRC: `token_energy` | 0.0862 | 0.0216 | 46.0% |
+# Infer mode (intervention)
+uv run python scripts/reproduce_results.py \
+  --split paper-test \
+  --severity-inference infer \
+  --zero-shot-only \
+  2>&1 | tee data/outputs/run14_infer_$(date +%Y%m%d_%H%M%S).log
+```
 
-**All variants**:
-- Zero-shot: `data/outputs/selective_prediction_metrics_run12_zero_shot_all.json`
-- Few-shot: `data/outputs/selective_prediction_metrics_run12_few_shot_all.json`
-- Paired (few − zero, default): `data/outputs/selective_prediction_metrics_run12_paired_default.json`
+**What to look for**:
+- Coverage increase (target: >= 20 percentage points)
+- MAE degradation (acceptable: < 0.15 increase)
+- Inference rate (document in results)
 
----
+### Option B: Total Score Evaluation
 
-## 4. Configuration Summary
+If you want to evaluate sum-of-items total score:
 
-All features are **gated by `.env`**. Copy `.env.example` to `.env` before running.
+```bash
+uv run python scripts/reproduce_results.py \
+  --split paper-test \
+  --prediction-mode total \
+  --total-min-coverage 0.5 \
+  --zero-shot-only \
+  2>&1 | tee data/outputs/run14_total_$(date +%Y%m%d_%H%M%S).log
+```
 
-### Enabled Features (in `.env.example`)
+### Option C: Full Few-Shot + Zero-Shot (Long Run)
 
-| Feature | Setting | Value |
-|---------|---------|-------|
-| Chunk-level scoring | `EMBEDDING_REFERENCE_SCORE_SOURCE` | `chunk` |
-| Item-tag filtering | `EMBEDDING_ENABLE_ITEM_TAG_FILTER` | `true` |
-| Similarity threshold | `EMBEDDING_MIN_REFERENCE_SIMILARITY` | `0.3` |
-| Context limit | `EMBEDDING_MAX_REFERENCE_CHARS_PER_ITEM` | `500` |
-| Participant-only transcripts | `DATA_TRANSCRIPTS_DIR` | `data/transcripts_participant_only` |
-| HuggingFace embeddings (FP16) | `EMBEDDING_BACKEND` | `huggingface` |
+If you want a complete new baseline with post-Run-13 code:
 
-### Code Defaults (conservative baseline)
+```bash
+uv run python scripts/reproduce_results.py \
+  --split paper-test \
+  2>&1 | tee data/outputs/run14_both_$(date +%Y%m%d_%H%M%S).log
+```
 
-Code defaults exist for testing and fallback only. They are NOT recommended for evaluation runs.
-
----
-
-## 5. Spec 046 Implementation Status
-
-**Status**: ✅ IMPLEMENTED AND TESTED (2026-01-03)
-
-**What was added**:
-- New fields in `ItemAssessment`: `retrieval_reference_count`, `retrieval_similarity_mean`, `retrieval_similarity_max`
-- New confidence variants in `evaluate_selective_prediction.py`: `retrieval_similarity_mean`, `retrieval_similarity_max`, `hybrid_evidence_similarity`
-
-**Run 9 Results**:
-- `retrieval_similarity_mean` improves AURC by 5.4% vs `llm` (evidence count only)
-- AUGRC did not materially improve (0.034 vs 0.035)
-- `hybrid_evidence_similarity` did not help
+**Runtime**: ~20 hours (both modes)
 
 ---
 
-## 6. Few-Shot vs Zero-Shot Analysis (Run 12 Finding)
+## Preflight Checklist (Don't Skip)
 
-**Key Finding**: In Run 12, zero-shot **outperformed** few-shot (MAE 0.572 vs 0.616) at similar coverage. This is a valid research result, not a bug.
+```bash
+# 1. Verify HF deps (this was Run 10's failure mode)
+uv run python -c "import torch; print(torch.__version__)"
 
-### Root Cause
+# 2. Verify transcripts exist
+ls -d data/transcripts_participant_only/*_P | wc -l  # Should be ~189
 
-Evidence grounding (Spec 053) rejects ~50% of extracted quotes, starving few-shot of reference data:
+# 3. Verify embeddings + sidecars exist
+ls data/embeddings/huggingface_qwen3_8b_paper_train_participant_only.npz
+ls data/embeddings/huggingface_qwen3_8b_paper_train_participant_only.tags.json
+ls data/embeddings/huggingface_qwen3_8b_paper_train_participant_only.chunk_scores.json
 
-| Metric | Run 8 (few-shot won) | Run 12 (zero-shot won) |
-|--------|---------------------|------------------------|
-| Items with LLM evidence | 61.3% | 32.0% |
-| Items with references | Higher | 15.2% |
-| Consistency sampling | No | Yes |
-
-### Why Few-Shot Can Be Neutral or Harmful
-
-1. **Evidence-limited, not knowledge-limited**: PHQ-8 needs frequency; RAG can't add missing evidence
-2. **Embedding similarity ≠ severity similarity**: Retrieved examples match topic, not severity
-3. **Anchoring harm**: Reference scores can dominate test evidence
-4. **Sparse references**: After guardrails, most items get 0-1 exemplars
-
-See: `docs/results/few-shot-analysis.md` for full analysis.
-
-### Recommendation
-
-For DAIC-WOZ PHQ-8 scoring with strict evidence grounding, **zero-shot with consistency sampling is the recommended approach**.
+# 4. Dry-run to confirm config
+uv run python scripts/reproduce_results.py --split paper-test --dry-run
+# Verify header shows:
+#   - Embeddings: huggingface_qwen3_8b_paper_train_participant_only.npz
+#   - Tags: FOUND
+#   - Chunk Scores: FOUND
+#   - Reference Score Source: chunk
+#   - Item Tag Filter: True
+```
 
 ---
 
-## 7. Future Work (If Pursuing AUGRC <0.020)
+## Configuration Reference
 
-Specs 048–051 are implemented and validated (Run 12). The next step is to push AUGRC further via:
-- **Spec 049 calibrated confidence** (train on non-test data, then evaluate on paper-test)
-- Optional: systematic tuning of consistency sampling settings (n, temperature) and re-run evaluation
-  - Prefer paired comparisons + all-variant evaluation for claims
+### Key `.env` Settings
 
-### What Run 13 should test
+```bash
+# Spec 063: Severity inference
+QUANTITATIVE_SEVERITY_INFERENCE_MODE=strict  # or "infer"
 
-| Spec | Capability | Where it shows up |
-|------|------------|-------------------|
-| 048 | Verbalized confidence (1–5) | `item_signals[*]["verbalized_confidence"]` |
-| 049 | Supervised calibrator | `scripts/evaluate_selective_prediction.py --confidence calibrated --calibration <artifact>` |
-| 050 | Consistency-based confidence (multi-sample) | `item_signals[*]["consistency_*"]` (requires consistency enabled) |
-| 051 | Token-level CSFs from logprobs | `item_signals[*]["token_msp|token_pe|token_energy"]` (backend-dependent) |
+# Spec 061: Prediction mode
+PREDICTION_MODE=item  # or "total" or "binary"
+TOTAL_SCORE_MIN_COVERAGE=0.5
 
-### Run 13 checklist (don’t skip)
+# Spec 062: Binary threshold
+BINARY_THRESHOLD=10
+BINARY_STRATEGY=threshold
+```
 
-1. Preflight: confirm the validated configuration is active
-   - `cp .env.example .env` (if needed)
-   - If `EMBEDDING_BACKEND=huggingface`: install deps + verify they load (this was the Run 10 failure mode):
-     - `make dev`
-     - `uv run python -c "import torch; print(torch.__version__)"`
-   - Confirm transcripts exist: `ls -d data/transcripts_participant_only/*_P | wc -l`
-   - `uv run python scripts/reproduce_results.py --split paper-test --dry-run`
-   - Confirm the header shows:
-     - `Embeddings Artifact: data/embeddings/huggingface_qwen3_8b_paper_train_participant_only.npz`
-     - `Tags Sidecar: ...tags.json (FOUND)`
-     - `Chunk Scores Sidecar: ...chunk_scores.json (FOUND)`
-     - `Reference Score Source: chunk`
-     - `Item Tag Filter: True`
-     - `Min Reference Similarity: 0.3`
-     - `Max Reference Chars Per Item: 500`
+### CLI Overrides
 
-   Token CSF readiness (Spec 051):
-   - Token-level confidence signals require the LLM backend to return per-token logprobs via the OpenAI-compatible `/v1` API.
-   - Verified locally on `ollama` `0.13.5` + `pydantic_ai` `1.39.0`: logprobs are returned and exposed as `result.response.provider_details["logprobs"]`.
-   - The code requests logprobs automatically during scoring; if you are on an older Ollama version or a different backend, logprobs may be absent.
-   - To remove uncertainty, run a 1-participant smoke test and check the output:
-
-     ```bash
-     uv run python scripts/reproduce_results.py --split paper-test --few-shot-only --limit 1
-     # Then confirm token signals exist in the saved JSON:
-     rg -n '\"token_msp\"|\"token_pe\"|\"token_energy\"' data/outputs/both_*.json | head
-     ```
-
-   - If the run artifact contains no `token_*` keys, skip token variants for this run (the evaluator will fail fast by design).
-
-2. Enable consistency signals (Spec 050)
-   - `.env.example` enables consistency by default for the confidence suite:
-     - `CONSISTENCY_ENABLED=true`
-     - `CONSISTENCY_N_SAMPLES=5`
-     - `CONSISTENCY_TEMPERATURE=0.2`
-   - Optional: override via CLI (explicit in the run log):
-     - `--consistency-samples 10` (tighter agreement estimate)
-
-3. Run in tmux
-
-   ```bash
-   tmux new -s run13
-   uv run python scripts/reproduce_results.py \
-     --split paper-test \
-     2>&1 | tee data/outputs/run13_confidence_suite_$(date +%Y%m%d_%H%M%S).log
-   ```
-
-4. Evaluate selective prediction (compare confidence variants)
-
-   Use the JSON output path printed by `reproduce_results.py` (the `both_*.json` file), then run:
-
-   ```bash
-   uv run python scripts/evaluate_selective_prediction.py --input <both_run.json> --mode few_shot --confidence llm
-    uv run python scripts/evaluate_selective_prediction.py --input <both_run.json> --mode few_shot --confidence retrieval_similarity_mean
-    uv run python scripts/evaluate_selective_prediction.py --input <both_run.json> --mode few_shot --confidence verbalized
-    uv run python scripts/evaluate_selective_prediction.py --input <both_run.json> --mode few_shot --confidence hybrid_verbalized
-    uv run python scripts/evaluate_selective_prediction.py --input <both_run.json> --mode few_shot --confidence consistency
-    uv run python scripts/evaluate_selective_prediction.py --input <both_run.json> --mode few_shot --confidence hybrid_consistency
-    ```
-
-   Notes:
-   - `token_msp|token_pe|token_energy` variants only work when the backend returns token logprobs; if the run artifact doesn’t include `item_signals[*][\"token_*\"]`, those variants will fail fast (by design).
-   - If `token_*` keys are present, also evaluate:
-
-     ```bash
-     uv run python scripts/evaluate_selective_prediction.py --input <both_run.json> --mode few_shot --confidence token_msp
-     uv run python scripts/evaluate_selective_prediction.py --input <both_run.json> --mode few_shot --confidence token_pe
-     uv run python scripts/evaluate_selective_prediction.py --input <both_run.json> --mode few_shot --confidence token_energy
-     ```
-
-   - For multi-signal calibration (Spec 049), train a calibrator on a training output and then re-evaluate using `--confidence calibrated`.
+| Setting | CLI Flag |
+|---------|----------|
+| Severity inference | `--severity-inference strict\|infer` |
+| Prediction mode | `--prediction-mode item\|total\|binary` |
+| Total min coverage | `--total-min-coverage 0.5` |
 
 ---
 
-## 8. Definition of Done
+## Definition of Done
 
 | Milestone | Status |
 |-----------|--------|
 | Paper MAE_item parity | ✅ few-shot 0.609 vs paper 0.619 (Run 8) |
-| Chunk-level scoring (Spec 35) | ✅ Implemented |
-| Participant-only preprocessing | ✅ Implemented |
-| Retrieval confidence signals (Spec 046) | ✅ Tested (+5.4% AURC) |
-| Confidence improvement suite (Specs 048–051) | ✅ Implemented + validated (Run 12) |
-| Evidence grounding (Spec 053) | ✅ Implemented |
-| AUGRC < 0.020 target | ❌ Current best: 0.0216 (`token_energy`, Run 12) |
-| Few-shot analysis documented | ✅ See `docs/results/few-shot-analysis.md` |
+| BUG-035 fixed | ✅ Run 13 is clean baseline |
+| Confidence suite validated | ✅ Run 12 |
+| AUGRC < 0.020 target | ❌ Best: 0.0216 (`token_energy`, Run 12) |
+| Spec 063 tested | ❌ **Pending Run 14** |
+| Spec 061 tested | ❌ **Pending Run 14** |
 
 ---
 
-## 9. Future Work: Prediction Modes (Specs 061-063)
+## Historical Context
 
-### Task Validity Context
+### Why We Abandoned "Paper-Parity"
 
-PHQ-8 item-level frequency scoring (0-3) is often underdetermined from DAIC-WOZ transcripts. The dataset was designed to capture behavioral indicators, not elicit explicit frequency statements. See `docs/clinical/task-validity.md`.
+The original paper has **severe methodological flaws** (see closed issues #81, #69, #66, #47, #46, #45). We built a robust, independent implementation.
 
-**Key insight**: The chunk scoring bug (#69, #81) was **fixed** via Spec 35 (chunk-level scoring). Low coverage (~50%) is **expected behavior**, not a bug.
+### Why Few-Shot ≤ Zero-Shot
 
-### Alternative Prediction Modes
+Evidence grounding (Spec 053) rejects ~50% of quotes, starving few-shot of reference data. With strict grounding, zero-shot + consistency sampling is recommended.
 
-These specs propose more defensible tasks that sidestep the frequency problem:
-
-| Spec | Mode | Output | Rationale |
-|------|------|--------|-----------|
-| **061** | Total Score | 0-24 | Errors average out; prior art exists |
-| **062** | Binary | depressed/not | Clinical threshold (PHQ-8 >= 10); paper reports 78% accuracy |
-| **063** | Severity Inference | Allow inference | Infer from "always"/"sometimes" without explicit frequency |
-
-### CLI Flags (To Be Implemented)
-
-```bash
-# Prediction mode
---prediction-mode item     # Default: current behavior (8 items, 0-3)
---prediction-mode total    # Sum-of-items (0-24) or direct prediction
---prediction-mode binary   # PHQ-8 >= 10 threshold classification
-
-# Severity inference (Spec 063)
---severity-inference strict  # Default: require explicit frequency
---severity-inference infer   # Allow temporal/intensity marker inference
-```
-
-### Expected Improvements
-
-| Mode | Coverage | Interpretability | Clinical Utility |
-|------|----------|------------------|------------------|
-| item (current) | ~48% | High | Research only |
-| total | ~90%+ | Medium | Severity tiers |
-| binary | ~95%+ | Low | Screening |
-| item + infer | ~70-80% | High | Research |
-
-### Implementation Priority
-
-1. **Spec 063 (Severity Inference)**: Low-effort prompt change; may improve item coverage significantly
-2. **Spec 061 (Total Score)**: Medium-effort; sum-of-items is trivial, direct prediction needs new prompt
-3. **Spec 062 (Binary)**: Low-effort if using threshold; medium-effort for direct classification
+See: `docs/results/few-shot-analysis.md`
 
 ---
+
+## Related Documentation
+
+- [Run History](docs/results/run-history.md) - All run details and metrics
+- [Few-Shot Analysis](docs/results/few-shot-analysis.md) - Why few-shot may not beat zero-shot
+- [Spec 061](docs/_specs/spec-061-total-phq8-score-prediction.md) - Total score prediction
+- [Spec 063](docs/_specs/spec-063-severity-inference-prompt-policy.md) - Severity inference
+- [Task Validity](docs/clinical/task-validity.md) - Construct mismatch analysis
