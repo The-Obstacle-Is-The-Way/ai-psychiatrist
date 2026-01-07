@@ -1,7 +1,8 @@
 # Spec 062: Binary Depression Classification
 
-**Status**: PROPOSED
+**Status**: IMPLEMENTED
 **Created**: 2026-01-05
+**Implemented**: 2026-01-07
 **Rationale**: Binary classification (PHQ-8 >= 10) may be more defensible than item-level frequency scoring on DAIC-WOZ.
 
 ---
@@ -96,6 +97,12 @@ Leverage the existing Meta-Review agent which already does binary classification
 ---
 
 ## Implementation
+
+### Implemented Scope (2026-01-07)
+
+- Phase 1 (Threshold-Based): Implemented via `PREDICTION_MODE=binary` / `--prediction-mode binary`.
+- Uncertainty handling: abstain when total-score bounds straddle the threshold.
+- Phase 2/3 (Direct / Ensemble): Deferred (not implemented). `BINARY_STRATEGY=direct|ensemble` fails loudly.
 
 ### Phase 1: Threshold-Based (Trivial)
 

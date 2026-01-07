@@ -44,9 +44,10 @@ import asyncio
 import contextlib
 import importlib.util
 import json
+import math
 import sys
 import time
-from dataclasses import dataclass, field
+from dataclasses import asdict, dataclass, field
 from datetime import datetime
 from pathlib import Path
 from typing import TYPE_CHECKING, Literal
@@ -69,7 +70,7 @@ from ai_psychiatrist.config import (
     get_settings,
     resolve_reference_embeddings_path,
 )
-from ai_psychiatrist.domain.enums import AssessmentMode, PHQ8Item
+from ai_psychiatrist.domain.enums import AssessmentMode, PHQ8Item, SeverityLevel
 from ai_psychiatrist.domain.exceptions import LLMError
 from ai_psychiatrist.infrastructure.llm import OllamaClient
 from ai_psychiatrist.infrastructure.llm.factory import create_embedding_client
@@ -83,6 +84,8 @@ from ai_psychiatrist.infrastructure.observability import (
     record_failure,
 )
 from ai_psychiatrist.infrastructure.telemetry import get_telemetry_registry, init_telemetry_registry
+from ai_psychiatrist.metrics.binary_classification import compute_binary_classification_metrics
+from ai_psychiatrist.metrics.total_score import compute_total_score_metrics
 from ai_psychiatrist.services import EmbeddingService, ReferenceStore, TranscriptService
 from ai_psychiatrist.services.experiment_tracking import (
     ExperimentProvenance,
@@ -93,7 +96,13 @@ from ai_psychiatrist.services.experiment_tracking import (
 from ai_psychiatrist.services.reference_validation import LLMReferenceValidator
 
 if TYPE_CHECKING:
+    from ai_psychiatrist.domain.entities import PHQ8Assessment
     from ai_psychiatrist.infrastructure.llm.protocols import EmbeddingClient
+    from ai_psychiatrist.metrics.binary_classification import (
+        BinaryClassificationMetrics,
+        BinaryLabel,
+    )
+    from ai_psychiatrist.metrics.total_score import TotalScoreMetrics
 
 logger = get_logger(__name__)
 
@@ -120,6 +129,9 @@ class EvaluationResult:
     severity: str | None = None
     severity_lower_bound: str | None = None
     severity_upper_bound: str | None = None
+    ground_truth_binary: BinaryLabel | None = None
+    predicted_binary: BinaryLabel | None = None
+    binary_correct: bool | None = None
 
     available_items: int = 0
     na_items: int = 0
@@ -135,6 +147,10 @@ class ExperimentResults:
 
     mode: str
     model: str
+    prediction_mode: Literal["item", "total", "binary"]
+    total_score_min_coverage: float
+    binary_threshold: int
+    binary_strategy: Literal["threshold", "direct", "ensemble"]
     results: list[EvaluationResult]
     total_subjects: int
     successful_subjects: int
@@ -150,11 +166,19 @@ class ExperimentResults:
 
     total_duration_seconds: float
 
+    # Spec 061: total score prediction metrics (when enabled)
+    total_metrics: TotalScoreMetrics | None = None
+    binary_metrics: BinaryClassificationMetrics | None = None
+
     def to_dict(self) -> dict[str, object]:
         """Convert to dictionary for JSON serialization."""
         return {
             "mode": self.mode,
             "model": self.model,
+            "prediction_mode": self.prediction_mode,
+            "total_score_min_coverage": self.total_score_min_coverage,
+            "binary_threshold": self.binary_threshold,
+            "binary_strategy": self.binary_strategy,
             "total_subjects": self.total_subjects,
             "successful_subjects": self.successful_subjects,
             "failed_subjects": self.failed_subjects,
@@ -164,6 +188,8 @@ class ExperimentResults:
             "item_mae_by_item": round(self.item_mae_by_item, 6),
             "item_mae_by_subject": round(self.item_mae_by_subject, 6),
             "prediction_coverage": round(self.prediction_coverage, 6),
+            "total_metrics": asdict(self.total_metrics) if self.total_metrics else None,
+            "binary_metrics": asdict(self.binary_metrics) if self.binary_metrics else None,
             "total_duration_seconds": round(self.total_duration_seconds, 2),
             "per_item": {item.value: stats for item, stats in self.per_item.items()},
             "results": [
@@ -171,6 +197,7 @@ class ExperimentResults:
                     "participant_id": r.participant_id,
                     "success": r.success,
                     "error": r.error,
+                    "prediction_mode": self.prediction_mode,
                     "ground_truth_total": r.ground_truth_total,
                     "predicted_total": r.predicted_total,
                     "predicted_total_min": r.predicted_total_min,
@@ -178,9 +205,61 @@ class ExperimentResults:
                     "severity": r.severity,
                     "severity_lower_bound": r.severity_lower_bound,
                     "severity_upper_bound": r.severity_upper_bound,
+                    "ground_truth_binary": r.ground_truth_binary,
+                    "predicted_binary": r.predicted_binary,
+                    "binary_correct": r.binary_correct,
                     "available_items": r.available_items,
                     "na_items": r.na_items,
                     "mae_available": r.mae_available,
+                    "total_score": (
+                        {
+                            "predicted": r.predicted_total,
+                            "actual": r.ground_truth_total,
+                            "method": "sum_of_items",
+                            "items_covered": r.available_items,
+                            "confidence": round(r.available_items / 8, 6),
+                            "predicted_min": r.predicted_total_min,
+                            "predicted_max": r.predicted_total_max,
+                        }
+                        if self.prediction_mode == "total"
+                        else None
+                    ),
+                    "binary_classification": (
+                        {
+                            "predicted": r.predicted_binary,
+                            "actual": r.ground_truth_binary,
+                            "correct": r.binary_correct,
+                            "strategy": self.binary_strategy,
+                            "threshold_used": self.binary_threshold,
+                            "total_score_predicted": r.predicted_total,
+                            "confidence": round(r.available_items / 8, 6),
+                        }
+                        if self.prediction_mode == "binary"
+                        else None
+                    ),
+                    "severity_tier": (
+                        {
+                            "predicted": (
+                                SeverityLevel.from_total_score(r.predicted_total).value
+                                if r.predicted_total is not None
+                                else None
+                            ),
+                            "actual": (
+                                SeverityLevel.from_total_score(r.ground_truth_total).value
+                                if r.ground_truth_total is not None
+                                else None
+                            ),
+                            "correct": (
+                                SeverityLevel.from_total_score(r.predicted_total)
+                                == SeverityLevel.from_total_score(r.ground_truth_total)
+                                if r.predicted_total is not None
+                                and r.ground_truth_total is not None
+                                else None
+                            ),
+                        }
+                        if self.prediction_mode == "total"
+                        else None
+                    ),
                     "ground_truth_items": {
                         item.value: score for item, score in r.ground_truth_items.items()
                     },
@@ -342,6 +421,49 @@ def finalize_run_observability(output_dir: Path) -> None:
     print(f"Telemetry saved to: {telemetry_path}")
 
 
+def _compute_predicted_total(
+    *,
+    assessment: PHQ8Assessment,
+    prediction_mode: Literal["item", "total", "binary"],
+    total_min_coverage: float,
+) -> int | None:
+    if prediction_mode == "item":
+        return assessment.total_score
+    required_items = max(0, math.ceil(total_min_coverage * 8))
+    return None if assessment.available_count < required_items else assessment.total_score
+
+
+def _compute_binary_fields(
+    *,
+    prediction_mode: Literal["item", "total", "binary"],
+    binary_strategy: Literal["threshold", "direct", "ensemble"],
+    ground_truth_total: int,
+    predicted_total: int | None,
+    predicted_total_min: int,
+    predicted_total_max: int,
+    binary_threshold: int,
+) -> tuple[BinaryLabel, BinaryLabel | None, bool | None]:
+    ground_truth_binary: BinaryLabel = (
+        "depressed" if ground_truth_total >= binary_threshold else "not_depressed"
+    )
+    if prediction_mode != "binary":
+        return (ground_truth_binary, None, None)
+    if binary_strategy != "threshold":
+        raise NotImplementedError("Spec 062: binary_strategy is currently limited to 'threshold'.")
+
+    predicted_binary: BinaryLabel | None = None
+    if predicted_total is not None:
+        if predicted_total_min >= binary_threshold:
+            predicted_binary = "depressed"
+        elif predicted_total_max < binary_threshold:
+            predicted_binary = "not_depressed"
+
+    binary_correct = (
+        (predicted_binary == ground_truth_binary) if predicted_binary is not None else None
+    )
+    return (ground_truth_binary, predicted_binary, binary_correct)
+
+
 async def evaluate_participant(
     participant_id: int,
     ground_truth_items: dict[PHQ8Item, int],
@@ -352,6 +474,10 @@ async def evaluate_participant(
     consistency_enabled: bool,
     consistency_n_samples: int,
     consistency_temperature: float,
+    prediction_mode: Literal["item", "total", "binary"] = "item",
+    total_min_coverage: float = 0.5,
+    binary_threshold: int = 10,
+    binary_strategy: Literal["threshold", "direct", "ensemble"] = "threshold",
 ) -> EvaluationResult:
     """Evaluate a single participant.
 
@@ -419,6 +545,22 @@ async def evaluate_participant(
                 ),
             }
 
+        ground_truth_total = sum(ground_truth_items.values())
+        predicted_total = _compute_predicted_total(
+            assessment=assessment,
+            prediction_mode=prediction_mode,
+            total_min_coverage=total_min_coverage,
+        )
+        ground_truth_binary, predicted_binary, binary_correct = _compute_binary_fields(
+            prediction_mode=prediction_mode,
+            binary_strategy=binary_strategy,
+            ground_truth_total=ground_truth_total,
+            predicted_total=predicted_total,
+            predicted_total_min=assessment.min_total_score,
+            predicted_total_max=assessment.max_total_score,
+            binary_threshold=binary_threshold,
+        )
+
         duration = time.perf_counter() - start
         return EvaluationResult(
             participant_id=participant_id,
@@ -427,13 +569,16 @@ async def evaluate_participant(
             success=True,
             ground_truth_items=ground_truth_items,
             predicted_items=predicted_items,
-            ground_truth_total=sum(ground_truth_items.values()),
-            predicted_total=assessment.total_score,
+            ground_truth_total=ground_truth_total,
+            predicted_total=predicted_total,
             predicted_total_min=assessment.min_total_score,
             predicted_total_max=assessment.max_total_score,
             severity=assessment.severity.name if assessment.severity is not None else None,
             severity_lower_bound=assessment.severity_lower_bound.name,
             severity_upper_bound=assessment.severity_upper_bound.name,
+            ground_truth_binary=ground_truth_binary,
+            predicted_binary=predicted_binary,
+            binary_correct=binary_correct,
             available_items=assessment.available_count,
             na_items=assessment.na_count,
             mae_available=mae_available,
@@ -556,6 +701,10 @@ async def run_experiment(
     model_name: str,
     limit: int | None = None,
     *,
+    prediction_mode: Literal["item", "total", "binary"],
+    total_score_min_coverage: float,
+    binary_threshold: int,
+    binary_strategy: Literal["threshold", "direct", "ensemble"],
     consistency_enabled: bool,
     consistency_n_samples: int,
     consistency_temperature: float,
@@ -615,6 +764,10 @@ async def run_experiment(
             consistency_enabled=consistency_enabled,
             consistency_n_samples=consistency_n_samples,
             consistency_temperature=consistency_temperature,
+            prediction_mode=prediction_mode,
+            total_min_coverage=total_score_min_coverage,
+            binary_threshold=binary_threshold,
+            binary_strategy=binary_strategy,
         )
         results.append(result)
 
@@ -636,9 +789,44 @@ async def run_experiment(
         per_item,
     ) = compute_item_level_metrics(results)
 
+    total_metrics = None
+    if prediction_mode == "total":
+        predicted_totals: list[int | None] = []
+        actual_totals: list[int] = []
+        for r in results:
+            if not r.success or r.ground_truth_total is None:
+                continue
+            predicted_totals.append(r.predicted_total)
+            actual_totals.append(r.ground_truth_total)
+        total_metrics = compute_total_score_metrics(
+            predicted=predicted_totals,
+            actual=actual_totals,
+        )
+
+    binary_metrics = None
+    if prediction_mode == "binary":
+        predicted_labels: list[BinaryLabel | None] = []
+        actual_labels: list[BinaryLabel] = []
+        scores: list[int | None] = []
+        for r in results:
+            if not r.success or r.ground_truth_binary is None:
+                continue
+            predicted_labels.append(r.predicted_binary)
+            actual_labels.append(r.ground_truth_binary)
+            scores.append(r.predicted_total)
+        binary_metrics = compute_binary_classification_metrics(
+            predicted=predicted_labels,
+            actual=actual_labels,
+            scores=scores,
+        )
+
     return ExperimentResults(
         mode=mode_name,
         model=model_name,
+        prediction_mode=prediction_mode,
+        total_score_min_coverage=total_score_min_coverage,
+        binary_threshold=binary_threshold,
+        binary_strategy=binary_strategy,
         results=results,
         total_subjects=len(participant_ids),
         successful_subjects=successful_subjects,
@@ -651,6 +839,8 @@ async def run_experiment(
         prediction_coverage=prediction_coverage,
         per_item=per_item,
         total_duration_seconds=total_duration,
+        total_metrics=total_metrics,
+        binary_metrics=binary_metrics,
     )
 
 
@@ -660,28 +850,94 @@ def print_summary(experiments: list[ExperimentResults]) -> None:
     print("REPRODUCTION RESULTS SUMMARY")
     print("=" * 70)
     print()
-    print(
-        f"{'Mode':<12} {'Model':<22} {'N_eval':>6} {'Cov%':>7} "
-        f"{'MAE_w':>8} {'MAE_i':>8} {'MAE_s':>8} {'Time':>10}"
-    )
-    print("-" * 70)
 
-    for exp in experiments:
-        time_str = f"{exp.total_duration_seconds:.1f}s"
-        print(
-            f"{exp.mode:<12} {exp.model:<22} {exp.evaluated_subjects:>6} "
-            f"{(exp.prediction_coverage * 100):>6.1f}% "
-            f"{exp.item_mae_weighted:>8.4f} {exp.item_mae_by_item:>8.4f} "
-            f"{exp.item_mae_by_subject:>8.4f} {time_str:>10}"
-        )
+    for mode in ("item", "total", "binary"):
+        subset = [exp for exp in experiments if exp.prediction_mode == mode]
+        if not subset:
+            continue
 
-    print("-" * 70)
-    print()
-    print("Paper Reference (Section 3.2, test set, item-level MAE excluding N/A):")
-    print("  Gemma 3 27B few-shot MAE: 0.619")
-    print("  Gemma 3 27B zero-shot MAE: 0.796")
-    print("  MedGemma 27B few-shot MAE: 0.505 (Appendix F; fewer predictions)")
-    print()
+        if mode == "item":
+            print(
+                f"{'Mode':<12} {'Model':<22} {'N_eval':>6} {'Cov%':>7} "
+                f"{'MAE_w':>8} {'MAE_i':>8} {'MAE_s':>8} {'Time':>10}"
+            )
+            print("-" * 70)
+            for exp in subset:
+                time_str = f"{exp.total_duration_seconds:.1f}s"
+                print(
+                    f"{exp.mode:<12} {exp.model:<22} {exp.evaluated_subjects:>6} "
+                    f"{(exp.prediction_coverage * 100):>6.1f}% "
+                    f"{exp.item_mae_weighted:>8.4f} {exp.item_mae_by_item:>8.4f} "
+                    f"{exp.item_mae_by_subject:>8.4f} {time_str:>10}"
+                )
+            print("-" * 70)
+            print()
+            continue
+
+        if mode == "total":
+            print(
+                f"{'Mode':<12} {'Model':<22} {'N_pred':>6} {'Cov%':>7} "
+                f"{'MAE':>8} {'RMSE':>8} {'r':>8} {'TierAcc':>8} {'Time':>10}"
+            )
+            print("-" * 70)
+            for exp in subset:
+                time_str = f"{exp.total_duration_seconds:.1f}s"
+                total_m = exp.total_metrics
+                cov = (total_m.coverage * 100) if total_m else 0.0
+                mae = f"{total_m.mae:.4f}" if total_m and total_m.mae is not None else "n/a"
+                rmse = f"{total_m.rmse:.4f}" if total_m and total_m.rmse is not None else "n/a"
+                r = (
+                    f"{total_m.pearson_r:.4f}"
+                    if total_m and total_m.pearson_r is not None
+                    else "n/a"
+                )
+                tier = (
+                    f"{total_m.severity_tier_accuracy:.4f}"
+                    if total_m and total_m.severity_tier_accuracy is not None
+                    else "n/a"
+                )
+                n_pred = total_m.n_predicted if total_m else 0
+                print(
+                    f"{exp.mode:<12} {exp.model:<22} {n_pred:>6} {cov:>6.1f}% "
+                    f"{mae:>8} {rmse:>8} {r:>8} {tier:>8} {time_str:>10}"
+                )
+            print("-" * 70)
+            print()
+            continue
+
+        if mode == "binary":
+            print(
+                f"{'Mode':<12} {'Model':<22} {'N_pred':>6} {'Cov%':>7} "
+                f"{'Acc':>8} {'Prec':>8} {'Rec':>8} {'F1':>8} {'AUROC':>8} {'Time':>10}"
+            )
+            print("-" * 70)
+            for exp in subset:
+                time_str = f"{exp.total_duration_seconds:.1f}s"
+                binary_m = exp.binary_metrics
+                cov = (binary_m.coverage * 100) if binary_m else 0.0
+                acc = (
+                    f"{binary_m.accuracy:.4f}"
+                    if binary_m and binary_m.accuracy is not None
+                    else "n/a"
+                )
+                prec = (
+                    f"{binary_m.precision:.4f}"
+                    if binary_m and binary_m.precision is not None
+                    else "n/a"
+                )
+                rec = (
+                    f"{binary_m.recall:.4f}" if binary_m and binary_m.recall is not None else "n/a"
+                )
+                f1 = f"{binary_m.f1:.4f}" if binary_m and binary_m.f1 is not None else "n/a"
+                auc = f"{binary_m.auroc:.4f}" if binary_m and binary_m.auroc is not None else "n/a"
+                n_pred = binary_m.n_predicted if binary_m else 0
+                print(
+                    f"{exp.mode:<12} {exp.model:<22} {n_pred:>6} {cov:>6.1f}% "
+                    f"{acc:>8} {prec:>8} {rec:>8} {f1:>8} {auc:>8} {time_str:>10}"
+                )
+            print("-" * 70)
+            print()
+            continue
 
 
 def save_results(
@@ -779,8 +1035,20 @@ def apply_cli_overrides(*, settings: Settings, args: argparse.Namespace) -> None
     if args.embedding_backend:
         settings.embedding_config.backend = EmbeddingBackend(args.embedding_backend)
 
-    if args.severity_inference is not None:
+    if getattr(args, "severity_inference", None) is not None:
         settings.quantitative.severity_inference_mode = args.severity_inference
+
+    if getattr(args, "prediction_mode", None) is not None:
+        settings.prediction.prediction_mode = args.prediction_mode
+
+    if getattr(args, "total_min_coverage", None) is not None:
+        settings.prediction.total_score_min_coverage = float(args.total_min_coverage)
+
+    if getattr(args, "binary_threshold", None) is not None:
+        settings.prediction.binary_threshold = int(args.binary_threshold)
+
+    if getattr(args, "binary_strategy", None) is not None:
+        settings.prediction.binary_strategy = args.binary_strategy
 
 
 def load_ground_truth_for_split(data_dir: Path, *, split: str) -> dict[int, dict[PHQ8Item, int]]:
@@ -891,6 +1159,10 @@ async def run_requested_experiments(
     transcript_service: TranscriptService,
     embedding_service: EmbeddingService | None,
     model_name: str,
+    prediction_mode: Literal["item", "total", "binary"],
+    total_score_min_coverage: float,
+    binary_threshold: int,
+    binary_strategy: Literal["threshold", "direct", "ensemble"],
     consistency_enabled: bool,
     consistency_n_samples: int,
     consistency_temperature: float,
@@ -908,6 +1180,10 @@ async def run_requested_experiments(
                 embedding_service=None,
                 model_name=model_name,
                 limit=args.limit,
+                prediction_mode=prediction_mode,
+                total_score_min_coverage=total_score_min_coverage,
+                binary_threshold=binary_threshold,
+                binary_strategy=binary_strategy,
                 consistency_enabled=consistency_enabled,
                 consistency_n_samples=consistency_n_samples,
                 consistency_temperature=consistency_temperature,
@@ -924,6 +1200,10 @@ async def run_requested_experiments(
                 embedding_service=embedding_service,
                 model_name=model_name,
                 limit=args.limit,
+                prediction_mode=prediction_mode,
+                total_score_min_coverage=total_score_min_coverage,
+                binary_threshold=binary_threshold,
+                binary_strategy=binary_strategy,
                 consistency_enabled=consistency_enabled,
                 consistency_n_samples=consistency_n_samples,
                 consistency_temperature=consistency_temperature,
@@ -1111,6 +1391,10 @@ async def main_async(args: argparse.Namespace) -> int:
             transcript_service=transcript_service,
             embedding_service=embedding_service,
             model_name=model_settings.quantitative_model,
+            prediction_mode=settings.prediction.prediction_mode,
+            total_score_min_coverage=settings.prediction.total_score_min_coverage,
+            binary_threshold=settings.prediction.binary_threshold,
+            binary_strategy=settings.prediction.binary_strategy,
             consistency_enabled=consistency_enabled,
             consistency_n_samples=consistency_n_samples,
             consistency_temperature=consistency_temperature,
@@ -1198,6 +1482,30 @@ Examples:
         choices=["strict", "infer"],
         default=None,
         help="Override severity inference prompt policy (Spec 063).",
+    )
+    parser.add_argument(
+        "--prediction-mode",
+        choices=["item", "total", "binary"],
+        default=None,
+        help="Override prediction evaluation mode (Specs 061/062).",
+    )
+    parser.add_argument(
+        "--total-min-coverage",
+        type=float,
+        default=None,
+        help="Override minimum item coverage for total-score predictions (Spec 061).",
+    )
+    parser.add_argument(
+        "--binary-threshold",
+        type=int,
+        default=None,
+        help="Override PHQ-8 threshold for binary classification (Spec 062).",
+    )
+    parser.add_argument(
+        "--binary-strategy",
+        choices=["threshold", "direct", "ensemble"],
+        default=None,
+        help="Override binary classification strategy (Spec 062).",
     )
     parser.add_argument(
         "--consistency-samples",

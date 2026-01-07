@@ -1,7 +1,8 @@
 # Spec 061: Total PHQ-8 Score Prediction (0-24)
 
-**Status**: PROPOSED
+**Status**: IMPLEMENTED
 **Created**: 2026-01-05
+**Implemented**: 2026-01-07
 **Rationale**: Item-level PHQ-8 frequency scoring (0-3 per item) is often underdetermined from DAIC-WOZ transcripts. Total score prediction (0-24) may be more defensible.
 
 ---
@@ -88,6 +89,11 @@ Output a single integer 0-24, or "N/A" if insufficient evidence.
 ---
 
 ## Implementation
+
+### Implemented Scope (2026-01-07)
+
+- Phase 1 (Sum-of-Items): Implemented via `PREDICTION_MODE=total` / `--prediction-mode total`, with coverage gating via `TOTAL_SCORE_MIN_COVERAGE` / `--total-min-coverage`.
+- Phase 2 (Direct Total Prediction): Deferred (not implemented).
 
 ### Phase 1: Sum-of-Items (Low Effort)
 
