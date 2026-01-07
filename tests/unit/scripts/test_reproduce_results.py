@@ -388,6 +388,76 @@ async def test_evaluate_participant_binary_mode_abstains_when_bounds_straddle_th
 
 
 @pytest.mark.asyncio
+@pytest.mark.parametrize("strategy", ["direct", "ensemble"])
+async def test_evaluate_participant_binary_mode_fails_on_unimplemented_strategy(
+    strategy: str,
+) -> None:
+    """Spec 062: direct/ensemble strategies record failure (not implemented).
+
+    The evaluate_participant function catches exceptions and returns a failed result
+    to avoid aborting full runs. This test verifies the failure is properly recorded.
+    """
+
+    class StubTranscriptService:
+        def __init__(self, text: str) -> None:
+            self._text = text
+
+        def load_transcript(self, participant_id: int) -> Transcript:
+            return Transcript(participant_id=participant_id, text=self._text)
+
+    class StubAgent:
+        def __init__(self, assessment: PHQ8Assessment) -> None:
+            self._assessment = assessment
+
+        async def assess(self, _transcript: Transcript) -> PHQ8Assessment:
+            return self._assessment
+
+    participant_id = 306
+    transcript_service = StubTranscriptService(text="Participant: test.")
+
+    items = {
+        item: ItemAssessment(
+            item=item,
+            evidence="test",
+            reason="test",
+            score=2,
+        )
+        for item in PHQ8Item.all_items()
+    }
+    assessment = PHQ8Assessment(
+        items=items,
+        mode=AssessmentMode.ZERO_SHOT,
+        participant_id=participant_id,
+    )
+    agent = StubAgent(assessment=assessment)
+
+    ground_truth_items = cast(
+        "dict[PHQ8Item, int]",
+        dict.fromkeys(PHQ8Item.all_items(), 2),
+    )
+
+    result = await evaluate_participant(
+        participant_id=participant_id,
+        ground_truth_items=ground_truth_items,
+        agent=cast("QuantitativeAssessmentAgent", agent),
+        transcript_service=cast("TranscriptService", transcript_service),
+        mode="zero_shot",
+        consistency_enabled=False,
+        consistency_n_samples=1,
+        consistency_temperature=0.0,
+        prediction_mode="binary",
+        total_min_coverage=0.5,
+        binary_threshold=10,
+        binary_strategy=strategy,  # type: ignore[arg-type]
+    )
+
+    # Verify the failure is recorded properly
+    assert result.success is False
+    assert result.error is not None
+    assert "binary_strategy is currently limited" in result.error
+
+
+@pytest.mark.asyncio
 async def test_evaluate_participant_includes_inference_fields_in_item_signals() -> None:
     """Inference fields should be included in output JSON (Spec 063)."""
 
