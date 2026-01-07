@@ -10,7 +10,6 @@ _No active investigations at this time._
 
 | ID | Title | Status | Impact |
 |----|-------|--------|--------|
-
 _No bugs pending senior review at this time._
 
 ## Archive
@@ -22,12 +21,16 @@ All resolved bugs are in `docs/_archive/bugs/`:
 - **ANALYSIS-026**: JSON parsing architecture audit (2026-01-03)
 - **BUG-027 to BUG-034**: Various fixes (2026-01-04)
 - **BUG-035**: Few-shot prompt confound fix (2026-01-06)
+- **BUG-036**: CLI arg validation bypass (2026-01-07)
+- **BUG-037**: Non-archive doc link drift fix (2026-01-07)
+- **BUG-046**: score_reference_chunks safety hazards fix (2026-01-07)
+- **BUG-047**: Docs drift after BUG-035 / Spec 064 fix (2026-01-07)
 
 ## Filing New Bugs
 
 1. Check if bug already exists in archive
 2. Create file: `docs/_bugs/BUG-XXX-short-title.md`
-3. Use next available number (currently: BUG-036)
+3. Use next available number (currently: BUG-048)
 4. Include: Severity, Status, File, Description, Impact, Fix
 
 When resolved, move to `docs/_archive/bugs/` with naming convention:

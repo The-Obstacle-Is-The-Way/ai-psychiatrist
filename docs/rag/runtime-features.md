@@ -1,7 +1,7 @@
 # RAG Runtime Features
 
 **Audience**: Researchers configuring few-shot retrieval behavior
-**Last Updated**: 2026-01-03
+**Last Updated**: 2026-01-07
 
 This document covers runtime features that affect how few-shot retrieval operates: prompt formatting, batch embedding, and CRAG validation.
 
@@ -49,11 +49,8 @@ All reference entries across all items are merged into a single block:
 
 If **no entries** survive filtering:
 
-```text
-<Reference Examples>
-No valid evidence found
-</Reference Examples>
-```
+- **Current behavior (post BUG-035)**: emit an empty string (the `<Reference Examples>` block is omitted).
+- **Historical behavior (pre BUG-035)**: some runs inserted a sentinel wrapper containing “No valid evidence found”.
 
 ### Ordering Rules
 

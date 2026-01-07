@@ -131,7 +131,7 @@ The LLM **semantically analyzes** the transcript:
 
 **Code Location**: `src/ai_psychiatrist/infrastructure/llm/responses.py:parse_llm_json()`
 
-**Related**: [ANALYSIS-026](../_bugs/ANALYSIS-026-JSON-PARSING-ARCHITECTURE-AUDIT.md) - Full audit of JSON parsing architecture
+**Related**: [ANALYSIS-026](../_archive/bugs/ANALYSIS-026_JSON_PARSING_ARCHITECTURE_AUDIT.md) - Full audit of JSON parsing architecture
 
 ### ⚠️ CRITICAL: Mode Isolation (Zero-Shot vs Few-Shot)
 

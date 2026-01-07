@@ -14,6 +14,8 @@ from scripts.reproduce_results import (
     evaluate_participant,
     init_embedding_service,
     print_run_configuration,
+    validate_cli_args,
+    validate_prediction_settings,
 )
 
 from ai_psychiatrist.config import (
@@ -76,6 +78,101 @@ def test_apply_cli_overrides_prediction_mode_overrides_env(
     )
     apply_cli_overrides(settings=settings, args=args)
     assert str(settings.prediction.prediction_mode) == "total"
+
+
+def test_validate_cli_args_rejects_invalid_limit() -> None:
+    args = argparse.Namespace(
+        split="dev",
+        dry_run=False,
+        zero_shot_only=False,
+        few_shot_only=False,
+        limit=0,
+        embedding_backend=None,
+        severity_inference=None,
+        prediction_mode=None,
+        total_min_coverage=None,
+        binary_threshold=None,
+        binary_strategy=None,
+        consistency_samples=None,
+        consistency_temperature=None,
+    )
+
+    with pytest.raises(ValueError, match="--limit"):
+        validate_cli_args(args)
+
+
+@pytest.mark.parametrize(
+    ("samples", "temperature"),
+    [
+        (0, None),
+        (21, None),
+        (None, -0.01),
+        (None, 2.01),
+    ],
+)
+def test_validate_cli_args_rejects_invalid_consistency_overrides(
+    samples: int | None,
+    temperature: float | None,
+) -> None:
+    args = argparse.Namespace(
+        split="dev",
+        dry_run=False,
+        zero_shot_only=False,
+        few_shot_only=False,
+        limit=1,
+        embedding_backend=None,
+        severity_inference=None,
+        prediction_mode=None,
+        total_min_coverage=None,
+        binary_threshold=None,
+        binary_strategy=None,
+        consistency_samples=samples,
+        consistency_temperature=temperature,
+    )
+
+    with pytest.raises(ValueError):
+        validate_cli_args(args)
+
+
+@pytest.mark.parametrize(
+    ("total_min_coverage", "binary_threshold"),
+    [
+        (-0.01, None),
+        (1.01, None),
+        (None, -1),
+        (None, 25),
+    ],
+)
+def test_validate_cli_args_rejects_invalid_prediction_overrides(
+    total_min_coverage: float | None,
+    binary_threshold: int | None,
+) -> None:
+    args = argparse.Namespace(
+        split="dev",
+        dry_run=False,
+        zero_shot_only=False,
+        few_shot_only=False,
+        limit=1,
+        embedding_backend=None,
+        severity_inference=None,
+        prediction_mode=None,
+        total_min_coverage=total_min_coverage,
+        binary_threshold=binary_threshold,
+        binary_strategy=None,
+        consistency_samples=None,
+        consistency_temperature=None,
+    )
+
+    with pytest.raises(ValueError):
+        validate_cli_args(args)
+
+
+def test_validate_prediction_settings_rejects_unimplemented_binary_strategy() -> None:
+    with pytest.raises(ValueError, match="binary_strategy"):
+        validate_prediction_settings(
+            prediction_mode="binary",
+            binary_strategy="direct",
+        )
 
 
 def test_experiment_results_to_dict_includes_total_metrics_when_total_mode() -> None:

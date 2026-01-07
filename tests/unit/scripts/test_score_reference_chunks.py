@@ -3,9 +3,11 @@
 from __future__ import annotations
 
 import json
+from argparse import Namespace
+from unittest.mock import MagicMock
 
 import pytest
-from scripts.score_reference_chunks import score_chunk
+from scripts.score_reference_chunks import score_chunk, validate_cli_args
 
 from ai_psychiatrist.services.chunk_scoring import PHQ8_ITEM_KEY_SET
 
@@ -86,3 +88,42 @@ async def test_score_chunk_returns_none_on_invalid_value() -> None:
     result = await score_chunk(client=client, chunk_text="chunk", model="m", temperature=0.0)
 
     assert result is None
+
+
+def test_validate_cli_args_rejects_limit_zero() -> None:
+    with pytest.raises(ValueError, match="--limit"):
+        validate_cli_args(Namespace(limit=0))
+
+
+@pytest.mark.asyncio
+async def test_score_chunk_logs_are_privacy_safe_on_invalid_json(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    """Never log raw chunk text or response previews (privacy-safe observability)."""
+    chunk_text = "CHUNK_SECRET_TEXT_SHOULD_NOT_APPEAR"
+    response = "RESPONSE_SECRET_TEXT_SHOULD_NOT_APPEAR (not json)"
+    client = _FakeChatClient(response)
+
+    logger_mock = MagicMock()
+    monkeypatch.setattr("scripts.score_reference_chunks.logger", logger_mock)
+
+    result = await score_chunk(client=client, chunk_text=chunk_text, model="m", temperature=0.0)
+
+    assert result is None
+
+    warning_calls = [
+        call
+        for call in logger_mock.warning.call_args_list
+        if call.args and call.args[0] == "Scoring failed: invalid JSON response"
+    ]
+    assert len(warning_calls) == 1
+
+    call = warning_calls[0]
+    assert call.kwargs.get("chunk_preview") is None
+    assert call.kwargs.get("response_preview") is None
+    assert chunk_text not in str(call.kwargs)
+    assert response not in str(call.kwargs)
+    assert isinstance(call.kwargs.get("chunk_hash"), str)
+    assert call.kwargs.get("chunk_chars") == len(chunk_text)
+    assert isinstance(call.kwargs.get("response_hash"), str)
+    assert call.kwargs.get("response_chars") == len(response)

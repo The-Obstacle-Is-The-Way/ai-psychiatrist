@@ -1,7 +1,7 @@
 # RAG Debugging (Audit Logs + Guardrails)
 
 **Audience**: Researchers debugging few-shot performance
-**Last Updated**: 2026-01-06
+**Last Updated**: 2026-01-07
 
 This guide explains how to debug few-shot retrieval using the built-in diagnostic tools:
 - retrieval audit logs (Spec 32)
@@ -98,23 +98,21 @@ See:
 
 ---
 
-## Step 4: Interpret “No valid evidence found”
+## Step 4: Interpret Empty Reference Bundles (Missing `<Reference Examples>` Block)
 
-If the reference bundle contains:
+**Current behavior (post BUG-035)**: if no reference entries survive filtering, the reference bundle
+formats to an empty string and the `<Reference Examples>` block is omitted from the scoring prompt.
 
-```text
-<Reference Examples>
-No valid evidence found
-</Reference Examples>
-```
-
-It can mean:
-- evidence extraction returned no evidence for all items (no query embeddings)
-- retrieval found no matches above threshold
+If the scoring prompt contains **no** `<Reference Examples>` section, it can mean:
+- evidence extraction produced no usable evidence (no query embeddings)
+- retrieval found no matches above the similarity threshold
 - all matches had `reference_score=None` (common with chunk scores when the chunk is non-evidentiary)
-- CRAG rejected all references
+- CRAG validation rejected all candidate references
 
-Use audit logs to disambiguate.
+**Historical note**: older runs (pre BUG-035) may show a sentinel wrapper containing the string
+“No valid evidence found”. Treat that as a prompt confound artifact, not current behavior.
+
+Use retrieval audit logs + the failure/telemetry registries to disambiguate which case occurred.
 
 ---
 

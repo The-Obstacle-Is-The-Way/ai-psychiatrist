@@ -40,7 +40,7 @@ Instead of an empty string. This meant few-shot prompts always differed from zer
 
 **Recommendation**: Re-run comparative experiments post-fix to measure true retrieval effect.
 
-See: [BUG-035](../_bugs/BUG-035-FEW-SHOT-PROMPT-CONFOUND.md)
+See: [BUG-035](../_archive/bugs/BUG-035_FEW_SHOT_PROMPT_CONFOUND.md)
 
 ---
 
@@ -77,7 +77,7 @@ A critical bug was discovered and fixed on 2026-01-03 where `_extract_evidence()
 
 **Recommendation**: For publication-quality results, consider re-running with post-fix code.
 
-See: `docs/_bugs/ANALYSIS-026-JSON-PARSING-ARCHITECTURE-AUDIT.md`
+See: `docs/_archive/bugs/ANALYSIS-026_JSON_PARSING_ARCHITECTURE_AUDIT.md`
 
 ---
 
