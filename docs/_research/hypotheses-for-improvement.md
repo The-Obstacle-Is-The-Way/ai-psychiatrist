@@ -36,13 +36,17 @@ These are the issues most likely to trigger rejection on *construct validity* / 
 
 **Implication for claims**: You must frame the task as *selective, evidence-grounded inference* rather than “PHQ-8 from transcripts” in an absolute sense.
 
-### B) Few-shot is not a pure “add references” intervention (Major)
+### B) Few-shot prompt confound (Fixed; historical runs only) (Major)
 
-For few-shot, we always inject a `<Reference Examples>` block; when there are no usable references it contains the string “No valid evidence found” (`src/ai_psychiatrist/services/embedding.py:90-115`). Zero-shot omits the block entirely (`src/ai_psychiatrist/agents/prompts/quantitative.py:102-110`).
+Historical runs had a prompt confound: few-shot prompting could still differ from zero-shot even
+when retrieval returned **zero** usable references (an empty reference wrapper containing the
+string “No valid evidence found”).
 
-This is a *prompt confound* for the “few-shot vs zero-shot” research question: the few-shot condition changes the prompt even when retrieval returns zero references.
+This is now fixed (BUG-035): empty reference bundles format to `""` and the `<Reference Examples>`
+block is omitted, so **few-shot-with-no-refs is byte-identical to zero-shot**.
 
-**Immediate mitigation**: Add an ablation/control where zero-shot uses the same empty `<Reference Examples>` wrapper, or where few-shot omits the wrapper when it contains no references.
+**Implication**: pre-fix “few-shot vs zero-shot” comparative claims are confounded and require
+post-fix reruns to measure the true retrieval effect.
 
 ### C) Participant-only transcripts remove disambiguating question context (Major)
 
@@ -50,11 +54,16 @@ Participant-only transcripts are effective at reducing protocol leakage into emb
 
 **Mitigation**: Ablate against `transcripts_participant_qa` (minimal question context) and quantify the impact on evidence grounding rate, coverage, and MAE/AUGRC.
 
-### D) Privacy/ethics risk: retrieval audit logging can leak transcript text (Major)
+### D) Privacy/ethics risk: log artifacts leaking restricted text (Major)
 
-If retrieval audit logging is enabled, we log `chunk_preview` from retrieved DAIC-WOZ references (`src/ai_psychiatrist/services/embedding.py:376-389`). This risks leaking restricted corpus content into logs/run artifacts.
+Any workflow that logs raw transcript text, retrieved reference text, or LLM outputs can leak
+restricted corpus content into run artifacts.
 
-**Mitigation**: Keep audit logging off for all shareable runs; when enabled locally, redact previews or log only hashes and lengths.
+Current status:
+- Retrieval audit logs in `EmbeddingService` are privacy-safe (Spec 064): they emit `chunk_hash` and
+  `chunk_chars` (no raw chunk previews).
+- Ensure auxiliary scripts follow the same policy (e.g., chunk scoring should avoid logging
+  `chunk_preview` / `response_preview`).
 
 ---
 

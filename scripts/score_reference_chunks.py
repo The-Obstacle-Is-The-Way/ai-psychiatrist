@@ -41,6 +41,7 @@ from ai_psychiatrist.config import (
     resolve_reference_embeddings_path_from_embeddings_file,
 )
 from ai_psychiatrist.domain.exceptions import LLMResponseParseError
+from ai_psychiatrist.infrastructure.hashing import stable_text_hash
 from ai_psychiatrist.infrastructure.llm.factory import create_llm_client
 from ai_psychiatrist.infrastructure.llm.responses import extract_json_from_response
 from ai_psychiatrist.infrastructure.logging import get_logger, setup_logging
@@ -54,6 +55,12 @@ if TYPE_CHECKING:
     from ai_psychiatrist.infrastructure.llm.responses import SimpleChatClient
 
 logger = get_logger(__name__)
+
+
+def validate_cli_args(args: argparse.Namespace) -> None:
+    """Validate CLI args to prevent silent footguns."""
+    if args.limit is not None and args.limit < 1:
+        raise ValueError("--limit must be >= 1 when provided")
 
 
 @dataclass
@@ -88,6 +95,8 @@ async def score_chunk(  # noqa: PLR0911
 ) -> dict[str, int | None] | None:
     """Score a single chunk using the LLM."""
     prompt = render_chunk_scoring_prompt(chunk_text=chunk_text)
+    chunk_hash = stable_text_hash(chunk_text)
+    chunk_chars = len(chunk_text)
 
     try:
         response = await client.simple_chat(
@@ -101,7 +110,8 @@ async def score_chunk(  # noqa: PLR0911
             "Scoring failed: LLM request error",
             error=str(e),
             error_type=type(e).__name__,
-            chunk_preview=chunk_text[:50],
+            chunk_hash=chunk_hash,
+            chunk_chars=chunk_chars,
         )
         return None
 
@@ -112,13 +122,22 @@ async def score_chunk(  # noqa: PLR0911
             "Scoring failed: invalid JSON response",
             error=str(e),
             error_type=type(e).__name__,
-            chunk_preview=chunk_text[:50],
+            chunk_hash=chunk_hash,
+            chunk_chars=chunk_chars,
+            response_hash=stable_text_hash(response),
+            response_chars=len(response),
         )
         return None
 
     try:
         if not isinstance(data, dict):
-            logger.warning("Scorer output is not a dict", response_preview=response[:50])
+            logger.warning(
+                "Scorer output is not a dict",
+                chunk_hash=chunk_hash,
+                chunk_chars=chunk_chars,
+                response_hash=stable_text_hash(response),
+                response_chars=len(response),
+            )
             return None
 
         key_set = set(data)
@@ -129,7 +148,10 @@ async def score_chunk(  # noqa: PLR0911
                 "Scorer output has invalid key set",
                 missing=missing[:3],
                 extra=extra[:3],
-                response_preview=response[:50],
+                chunk_hash=chunk_hash,
+                chunk_chars=chunk_chars,
+                response_hash=stable_text_hash(response),
+                response_chars=len(response),
             )
             return None
 
@@ -154,7 +176,8 @@ async def score_chunk(  # noqa: PLR0911
             "Scoring failed",
             error=str(e),
             error_type=type(e).__name__,
-            chunk_preview=chunk_text[:50],
+            chunk_hash=chunk_hash,
+            chunk_chars=chunk_chars,
         )
         return None
 
@@ -167,11 +190,11 @@ async def process_participant(
 ) -> list[dict[str, int | None]]:
     """Process all chunks for a participant."""
     results: list[dict[str, int | None]] = []
-    total = len(chunks) if not config.limit else min(config.limit, len(chunks))
+    total = len(chunks) if config.limit is None else min(config.limit, len(chunks))
 
     # Process sequentially to avoid rate limits / context pollution
     for i, chunk in enumerate(chunks):
-        if config.limit and i >= config.limit:
+        if config.limit is not None and i >= config.limit:
             break
 
         # Progress indicator every 10 chunks
@@ -194,6 +217,8 @@ async def process_participant(
 
 def prepare_config(args: argparse.Namespace, settings: Settings) -> ScoringConfig:
     """Prepare configuration."""
+    validate_cli_args(args)
+
     embeddings_path = resolve_reference_embeddings_path_from_embeddings_file(
         base_dir=settings.data.base_dir,
         embeddings_file=args.embeddings_file,
@@ -231,7 +256,7 @@ async def main_async(args: argparse.Namespace) -> int:
 
     try:
         config = prepare_config(args, settings)
-    except FileNotFoundError as e:
+    except (FileNotFoundError, ValueError) as e:
         logger.error(str(e))
         return 1
 
