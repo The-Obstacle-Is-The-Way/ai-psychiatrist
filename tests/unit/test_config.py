@@ -42,6 +42,13 @@ class TestQuantitativeSettings:
         """Default values should match baseline defaults."""
         settings = QuantitativeSettings()
         assert settings.track_na_reasons is True
+        assert settings.severity_inference_mode == "strict"
+
+    def test_severity_inference_mode_env_override(self, monkeypatch: pytest.MonkeyPatch) -> None:
+        """SEVERITY_INFERENCE_MODE should override the default prompt policy."""
+        monkeypatch.setenv("SEVERITY_INFERENCE_MODE", "infer")
+        settings = get_settings()
+        assert settings.quantitative.severity_inference_mode == "infer"
 
 
 class TestConsistencySettings:

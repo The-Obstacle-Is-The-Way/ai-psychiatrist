@@ -31,7 +31,7 @@ from ai_psychiatrist.agents.prompts.quantitative import (
     make_scoring_prompt,
 )
 from ai_psychiatrist.agents.quantitative import QuantitativeAssessmentAgent
-from ai_psychiatrist.config import PydanticAISettings
+from ai_psychiatrist.config import PydanticAISettings, QuantitativeSettings
 from ai_psychiatrist.domain.entities import PHQ8Assessment, Transcript
 from ai_psychiatrist.domain.enums import AssessmentMode, PHQ8Item, SeverityLevel
 from ai_psychiatrist.domain.value_objects import ItemAssessment
@@ -511,6 +511,51 @@ class TestQuantitativePrompts:
         assert "score" in prompt
         assert "N/A" in prompt
 
+    def test_make_scoring_prompt_strict_matches_default(self) -> None:
+        """Strict mode should preserve the exact default prompt."""
+        prompt_default = make_scoring_prompt("test transcript", "")
+        prompt_strict = make_scoring_prompt(
+            "test transcript",
+            "",
+            severity_inference_mode="strict",
+        )
+
+        assert prompt_default == prompt_strict
+
+    def test_make_scoring_prompt_strict_omits_inference_guide(self) -> None:
+        """Strict mode should not include frequency inference guidance (Spec 063)."""
+        prompt = make_scoring_prompt(
+            "test transcript",
+            "",
+            severity_inference_mode="strict",
+        )
+
+        assert "FREQUENCY INFERENCE GUIDE" not in prompt
+
+    def test_make_scoring_prompt_infer_includes_inference_guide(self) -> None:
+        """Infer mode should include explicit frequency inference rules (Spec 063)."""
+        prompt = make_scoring_prompt(
+            "test transcript",
+            "",
+            severity_inference_mode="infer",
+        )
+
+        assert "FREQUENCY INFERENCE GUIDE" in prompt
+        assert '"every day"' in prompt
+        assert '"always"' in prompt
+        assert '"sometimes"' in prompt
+        assert '"never"' in prompt
+
+    def test_make_scoring_prompt_infer_changes_na_policy(self) -> None:
+        """Infer mode should discourage N/A when the symptom is mentioned."""
+        prompt = make_scoring_prompt(
+            "test transcript",
+            "",
+            severity_inference_mode="infer",
+        )
+
+        assert "Only output N/A if there is truly no mention of the symptom." in prompt
+
     def test_make_evidence_prompt_includes_transcript(self) -> None:
         """Evidence prompt should include transcript text."""
         transcript = "Interview content here"
@@ -662,3 +707,72 @@ class TestFewShotMode:
 
         assert ReferenceBundle(item_references={}).format_for_prompt() == ""
         assert few_prompt == zero_prompt
+
+    @pytest.mark.asyncio
+    @pytest.mark.usefixtures("mock_agent_factory")
+    async def test_infer_mode_includes_inference_guide_in_agent_prompt(
+        self,
+        mock_agent_factory: AsyncMock,
+        sample_transcript: Transcript,
+    ) -> None:
+        """Infer mode should pass the Spec 063 prompt variant to the scorer."""
+        mock_agent = mock_agent_factory.return_value
+
+        client = MockLLMClient(chat_responses=[SAMPLE_EVIDENCE_RESPONSE])
+        agent = QuantitativeAssessmentAgent(
+            llm_client=client,
+            embedding_service=None,
+            mode=AssessmentMode.ZERO_SHOT,
+            quantitative_settings=QuantitativeSettings(severity_inference_mode="infer"),
+            pydantic_ai_settings=PydanticAISettings(enabled=True),
+            ollama_base_url="http://mock-ollama:11434",
+        )
+        await agent.assess(sample_transcript)
+
+        prompt = mock_agent.run.call_args.args[0]
+        assert "FREQUENCY INFERENCE GUIDE" in prompt
+
+    @pytest.mark.asyncio
+    @pytest.mark.usefixtures("mock_agent_factory")
+    async def test_infer_mode_propagates_inference_fields_from_llm_output(
+        self,
+        mock_agent_factory: AsyncMock,
+        sample_transcript: Transcript,
+    ) -> None:
+        """Inference metadata should round-trip into ItemAssessment (Spec 063)."""
+        mock_agent = mock_agent_factory.return_value
+        mock_agent.run.return_value = AsyncMock(
+            output=QuantitativeOutput(
+                PHQ8_NoInterest=EvidenceOutput(evidence="test", reason="test", score=1),
+                PHQ8_Depressed=EvidenceOutput(evidence="test", reason="test", score=1),
+                PHQ8_Sleep=EvidenceOutput(evidence="test", reason="test", score=1),
+                PHQ8_Tired=EvidenceOutput(
+                    evidence="I'm always exhausted",
+                    reason="Inference from 'always'",
+                    score=2,
+                    inference_used=True,
+                    inference_type="intensity_marker",
+                    inference_marker="always",
+                ),
+                PHQ8_Appetite=EvidenceOutput(evidence="test", reason="test", score=1),
+                PHQ8_Failure=EvidenceOutput(evidence="test", reason="test", score=1),
+                PHQ8_Concentrating=EvidenceOutput(evidence="test", reason="test", score=1),
+                PHQ8_Moving=EvidenceOutput(evidence="test", reason="test", score=1),
+            )
+        )
+
+        client = MockLLMClient(chat_responses=[SAMPLE_EVIDENCE_RESPONSE])
+        agent = QuantitativeAssessmentAgent(
+            llm_client=client,
+            embedding_service=None,
+            mode=AssessmentMode.ZERO_SHOT,
+            quantitative_settings=QuantitativeSettings(severity_inference_mode="infer"),
+            pydantic_ai_settings=PydanticAISettings(enabled=True),
+            ollama_base_url="http://mock-ollama:11434",
+        )
+
+        result = await agent.assess(sample_transcript)
+        tired = result.items[PHQ8Item.TIRED]
+        assert tired.inference_used is True
+        assert tired.inference_type == "intensity_marker"
+        assert tired.inference_marker == "always"

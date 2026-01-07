@@ -393,6 +393,9 @@ async def evaluate_participant(
             item_signals[item] = {
                 "llm_evidence_count": item_assessment.llm_evidence_count,
                 "evidence_source": item_assessment.evidence_source,
+                "inference_used": item_assessment.inference_used,
+                "inference_type": item_assessment.inference_type,
+                "inference_marker": item_assessment.inference_marker,
                 # Spec 046: retrieval-grounded confidence signals
                 "retrieval_reference_count": item_assessment.retrieval_reference_count,
                 "retrieval_similarity_mean": item_assessment.retrieval_similarity_mean,
@@ -771,6 +774,15 @@ def print_run_configuration(*, settings: Settings, split: str) -> None:
     print("=" * 60)
 
 
+def apply_cli_overrides(*, settings: Settings, args: argparse.Namespace) -> None:
+    """Apply CLI overrides to settings in-place."""
+    if args.embedding_backend:
+        settings.embedding_config.backend = EmbeddingBackend(args.embedding_backend)
+
+    if args.severity_inference is not None:
+        settings.quantitative.severity_inference_mode = args.severity_inference
+
+
 def load_ground_truth_for_split(data_dir: Path, *, split: str) -> dict[int, dict[PHQ8Item, int]]:
     """Load per-item ground truth for a split selection."""
     if split == "train+dev":
@@ -1009,9 +1021,7 @@ async def main_async(args: argparse.Namespace) -> int:
             git_commit=run_metadata.git_commit,
         )
 
-    # Override embedding backend if specified
-    if args.embedding_backend:
-        settings.embedding_config.backend = EmbeddingBackend(args.embedding_backend)
+    apply_cli_overrides(settings=settings, args=args)
 
     (
         data_settings,
@@ -1182,6 +1192,12 @@ Examples:
         choices=["ollama", "huggingface"],
         default=None,
         help="Override embedding backend",
+    )
+    parser.add_argument(
+        "--severity-inference",
+        choices=["strict", "infer"],
+        default=None,
+        help="Override severity inference prompt policy (Spec 063).",
     )
     parser.add_argument(
         "--consistency-samples",
