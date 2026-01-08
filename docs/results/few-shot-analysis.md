@@ -1,8 +1,8 @@
 # Why Few-Shot May Not Beat Zero-Shot: Analysis
 
 **Created**: 2026-01-05
-**Last Updated**: 2026-01-07
-**Status**: Living document; updated with Run 13 (first clean post-BUG-035 comparison)
+**Last Updated**: 2026-01-08
+**Status**: Living document; updated with Run 13 baseline + Run 14 severity inference ablation
 
 ---
 
@@ -35,6 +35,26 @@ From `data/outputs/both_paper-test_20260107_134730.json` (Run 13):
 | Few-shot | 41/41 | 0.6571 | 48.5% |
 
 Key confirmation: zero-shot still beats few-shot after the confound fix, so retrieval quality (not prompt contamination) is the bottleneck.
+
+---
+
+## Run 14: Severity Inference (`infer`) Ablation (Spec 063)
+
+From `data/outputs/both_paper-test_20260108_114058.json` (Run 14; `--severity-inference infer`):
+
+| Mode | N_eval | MAE_item | Coverage |
+|------|--------|----------|----------|
+| Zero-shot | 41/41 | 0.7030 | 60.1% |
+| Few-shot | 40/41 | 0.7843 | 57.5% |
+
+Selective prediction (abs_norm, 1,000 bootstrap resamples):
+- Zero-shot best AURC/AUGRC: `hybrid_consistency` (AURC 0.1258, AUGRC 0.0377)
+- Few-shot best AURC: `consistency_inverse_std` (AURC 0.1391)
+- Few-shot best AUGRC: `token_energy` (AUGRC 0.0394)
+
+**Interpretation**:
+- Severity inference increases coverage substantially vs Run 13 (~+8–11 points Cmax), but **degrades AURC/AUGRC** relative to the strict baseline.
+- Few-shot still does not outperform zero-shot under `infer`; the evidence/reference bottleneck remains, and additional “inferred” predictions appear to be harder cases the strict prompt would have abstained on.
 
 ---
 

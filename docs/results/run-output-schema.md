@@ -1,7 +1,7 @@
 # Reproduction Run Output Schema (JSON + Registry)
 
 **Audience**: Researchers parsing outputs and maintaining run provenance
-**Last Updated**: 2026-01-07
+**Last Updated**: 2026-01-08
 
 This repo writes four primary provenance artifacts for quantitative reproduction runs:
 
@@ -76,6 +76,7 @@ Per-mode aggregated metrics + per-participant results:
 - per-item breakdowns
 - per-participant predictions
 - `item_signals` (Spec 25/046 confidence signals)
+  - includes Spec 063 severity inference annotations when enabled: `inference_used`, `inference_type`, `inference_marker`
 
 When enabled via `--prediction-mode` (Specs 061/062), additional aggregated metrics are included:
 - `total_metrics` (total score evaluation)
@@ -90,6 +91,8 @@ For downstream AURC/AUGRC evaluation, `scripts/evaluate_selective_prediction.py`
   - `verbalized_confidence`
   - `token_msp`, `token_pe`, `token_energy`
   - `consistency_modal_confidence`, `consistency_score_std`, `consistency_na_rate`, `consistency_samples`
+
+Note: Outputs are written as strict JSON (no `NaN`/`Infinity`). Undefined aggregate metrics are emitted as `null` (BUG-048).
 
 ### `experiments[].results.results[]` (Per-participant)
 

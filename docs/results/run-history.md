@@ -2,7 +2,7 @@
 
 **Purpose**: Comprehensive record of all reproduction runs, code changes, and statistical analyses for posterity.
 
-**Last Updated**: 2026-01-07
+**Last Updated**: 2026-01-08
 
 ---
 
@@ -81,6 +81,18 @@ See: `docs/_archive/bugs/ANALYSIS-026_JSON_PARSING_ARCHITECTURE_AUDIT.md`
 
 ---
 
+### Invalid JSON Output Bug (BUG-048) - Fixed 2026-01-08
+
+Some historical run artifacts may contain `NaN`/`Infinity` floating-point literals in the JSON output when a metric is undefined (e.g., an evaluation subset is empty). These outputs are **not strict JSON** and will fail parsers like `jq`.
+
+**Fix Applied**:
+- The runner now serializes strict JSON (`allow_nan=False`).
+- Non-finite aggregate metrics are emitted as `null` instead of `NaN`/`Infinity`.
+
+See: `docs/_bugs/BUG-048-invalid-json-output-nan-metrics.md`
+
+---
+
 ## Quick Reference: Current Best Results
 
 All values below use `loss=abs_norm` and 1,000 participant-level bootstrap resamples.
@@ -111,6 +123,19 @@ All values below use `loss=abs_norm` and 1,000 participant-level bootstrap resam
 **Note**: Run 1-12 few-shot results are confounded by BUG-035 (prompt contained "No valid evidence found" message). Use Run 13+ for valid zero-shot vs few-shot comparisons.
 
 **Note**: `Cmax` is the max coverage in the risk–coverage curve (counts participants with 8/8 N/A as 0 coverage). `MAE_w` is computed over evaluated subjects only.
+
+---
+
+### Run 14: Spec 063 Severity Inference (`infer`) Ablation (Coverage ↑; Risk ↑)
+
+Run 14 (`data/outputs/both_paper-test_20260108_114058.json`) enables severity inference (`--severity-inference infer`) while keeping consistency sampling enabled.
+
+| Mode | MAE_item | AURC (`llm`) | Best AURC | Best AUGRC | Cmax |
+|------|----------|--------------|-----------|------------|------|
+| **Zero-shot** | 0.7030 | 0.129 | 0.126 (`hybrid_consistency`) | 0.038 (`hybrid_consistency`) | 60.1% |
+| **Few-shot** | 0.7843 | 0.147 | 0.139 (`consistency_inverse_std`) | 0.039 (`token_energy`) | 57.5% |
+
+**Key result**: Compared to Run 13 (strict baseline), `infer` increases Cmax by ~8–11 points, but **worsens AURC/AUGRC significantly** (paired deltas are positive for most confidence variants).
 
 ---
 
@@ -793,6 +818,61 @@ Paired deltas (few-shot − zero-shot, `confidence=llm`): ΔAURC = +0.0149 [-0.0
 
 **Interpretation**:
 This is the **first clean comparative run after the BUG-035 prompt confound fix**. The result confirms that zero-shot outperforms few-shot even when few-shot prompts are no longer contaminated by "No valid evidence found" messages. The few-shot underperformance is therefore due to retrieval quality issues, not prompt confounding.
+
+---
+
+### Run 14: Jan 7-8, 2026 - Spec 063 Severity Inference (`infer`) ✅ VALID (Coverage ↑; Risk ↑)
+
+**File**: `data/outputs/both_paper-test_20260108_114058.json`
+
+**Log**: `data/outputs/run14_infer_20260107_172234.log`
+
+**Run ID**: `02a0d65e`
+
+**Git Commit**: `e55c00f` (clean)
+
+**Timestamp**: 2026-01-07T17:22:35 (started) → 2026-01-08T11:40:58 (completed)
+
+**Code State**:
+- Spec 063 enabled via CLI: `--severity-inference infer` (default remains `strict`)
+- Consistency: ENABLED (n=5, temp=0.2)
+- Prediction mode: `item` (Specs 061/062 are implemented, but not invoked in this run)
+
+**Results**:
+
+| Mode | N_eval | MAE_w | MAE_item | Coverage | Time |
+|------|--------|-------|----------|----------|------|
+| Zero-shot | 41 | 0.7056 | 0.7030 | 60.1% | ~9.9h |
+| Few-shot | 40 | 0.7772 | 0.7843 | 57.5% | ~8.4h |
+
+**Selective Prediction (Run 14, all variants; abs_norm, 1,000 bootstrap resamples)**:
+- Zero-shot: `data/outputs/selective_prediction_metrics_run14_infer_zero_shot_all.json`
+- Few-shot: `data/outputs/selective_prediction_metrics_run14_infer_few_shot_all.json`
+- Paired (few − zero, default confidences; overlap only): `data/outputs/selective_prediction_metrics_run14_infer_paired_default.json`
+
+| Mode | Confidence | AURC | AUGRC | Cmax |
+|------|------------|------|-------|------|
+| Zero-shot | `llm` | 0.1292 [0.104-0.161] | 0.0409 [0.030-0.057] | 60.1% |
+| Zero-shot | `hybrid_consistency` | **0.1258** [0.102-0.155] | **0.0377** [0.028-0.052] | 60.1% |
+| Few-shot | `llm` | 0.1467 [0.114-0.180] | 0.0421 [0.029-0.059] | 57.5% |
+| Few-shot | `consistency_inverse_std` | **0.1391** [0.107-0.176] | 0.0404 [0.028-0.057] | 57.5% |
+| Few-shot | `token_energy` | 0.1455 [0.111-0.176] | **0.0394** [0.028-0.054] | 57.5% |
+
+**Robustness**:
+- Failures: 9 total (8 `evidence_hallucination` in evidence extraction; 1 HTTP 500 causing a single few-shot participant failure)
+- Failures file: `data/outputs/failures_02a0d65e.json`
+- Telemetry file: `data/outputs/telemetry_02a0d65e.json` (22 `pydantic_retry`, 4 `json_fixups_applied`, 1 `json_python_literal_fallback`)
+
+**Comparison to Run 13 (strict baseline)**:
+- Zero-shot (paired, overlap N=41): Cmax +0.113; AURC(`llm`) +0.023; AUGRC(`llm`) +0.014
+- Few-shot (paired, overlap N=40): Cmax +0.084; AURC(`llm`) +0.029; AUGRC(`llm`) +0.013
+
+Paired deltas artifacts:
+- Zero-shot: `data/outputs/selective_prediction_metrics_run13_vs_run14_zero_shot_all.json`
+- Few-shot: `data/outputs/selective_prediction_metrics_run13_vs_run14_few_shot_all.json`
+
+**Interpretation**:
+Severity inference increases coverage as intended, but in this first ablation it **materially increases risk** (AURC/AUGRC) relative to the strict baseline. Treat `infer` as an experimental setting until additional prompt/guardrail iterations show coverage gains without degrading coverage-aware metrics.
 
 ---
 

@@ -1,6 +1,6 @@
 # Paper Reproduction Results (Current Status)
 
-**Last Updated**: 2026-01-07
+**Last Updated**: 2026-01-08
 
 This page is a high-level, **current-state** summary. The canonical timeline + per-run statistics live in:
 
@@ -36,11 +36,22 @@ Use `docs/results/run-history.md` as the SSOT. Run 11 is diagnostic-only (select
 
 ---
 
+### Invalid JSON Output Bug (BUG-048) - Fixed 2026-01-08
+
+Some historical run artifacts may contain `NaN`/`Infinity` literals in aggregate metrics, which is invalid JSON for strict parsers.
+
+**Fix**: the runner now writes strict JSON (`allow_nan=False`) and emits non-finite aggregate metrics as `null`.
+
+See: `docs/_bugs/BUG-048-invalid-json-output-nan-metrics.md`.
+
+---
+
 ## Current Status
 
 - **Participant-only transcript preprocessing evaluated** (Run 8)
 - **Historical paper reference** (Run 8, pre-BUG-035): few-shot `0.609` vs paper `0.619`; zero-shot `0.776` vs paper `0.796`
 - **Clean comparative baseline established (Run 13, post-BUG-035)**: zero-shot MAE_item `0.6079`; few-shot MAE_item `0.6571` (zero-shot wins)
+- **Severity inference ablation (Run 14, Spec 063 `infer`)**: coverage increased (Cmax ~60%/57.5%) but AURC/AUGRC worsened vs Run 13; treat `infer` as experimental
 - **Selective prediction**: AURC/AUGRC are very similar between modes (paired ΔAURC CI overlaps 0)
 - **Spec 046 evaluated** (Run 9): `retrieval_similarity_mean` improves AURC by 5.4% vs evidence-count-only
 - **Confidence Suite validated (Run 12)**: 41/41 evaluated in both modes; token-level CSFs improve AURC/AUGRC over `llm` (pre-BUG-035)
@@ -61,6 +72,8 @@ See: [Few-Shot Analysis](few-shot-analysis.md) for full details.
 
 For the underlying construct-validity constraint (PHQ-8 frequency vs transcript evidence), see: `docs/clinical/task-validity.md`.
 
+For the first `--severity-inference infer` ablation (Spec 063), see Run 14 in `docs/results/run-history.md`.
+
 ---
 
 ## Current Best Retained Results (Paper-Test)
@@ -76,6 +89,7 @@ From `docs/results/run-history.md` (default `confidence=llm` unless noted). Note
 | Run 9 | Spec 046 confidence signals | 0.144 | 0.135 (0.128 w/ similarity) | 5.4% AURC improvement with retrieval similarity |
 | Run 12 | Confidence suite (Specs 048–052) | **0.102** | 0.109 | Complete run; pre-BUG-035 |
 | Run 13 | Post-BUG-035 baseline | 0.107 | 0.115 | First clean comparative run |
+| Run 14 | Spec 063 severity inference (`infer`) | 0.129 | 0.147 | Coverage ↑, AURC/AUGRC worse vs Run 13 |
 
 **Interpretation**: Run 8 closes the remaining "participant-only preprocessing" lever, but does so by substantially lowering coverage. AURC/Cmax must be interpreted together.
 
@@ -108,6 +122,9 @@ uv run python scripts/reproduce_results.py --split paper-test --few-shot-only
 # Optional evaluation modes (Specs 061/062)
 uv run python scripts/reproduce_results.py --split dev --prediction-mode total
 uv run python scripts/reproduce_results.py --split dev --prediction-mode binary
+
+# Severity inference ablation (Spec 063)
+uv run python scripts/reproduce_results.py --split paper-test --severity-inference infer
 ```
 
 The runner prints the saved path:
