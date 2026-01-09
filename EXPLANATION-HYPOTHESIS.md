@@ -1,10 +1,16 @@
 # Explanation Hypothesis: Why PHQ-8 Item-Level Prediction from DAIC-WOZ is Fundamentally Limited
 
 **Created**: 2026-01-08
-**Context**: After 14 reproduction runs, we observe:
-- Few-shot consistently underperforms zero-shot
-- Severity inference increases coverage but decreases accuracy
-- Best MAE_item ≈ 0.60-0.65 with ~50% coverage
+**Status**: Hypothesis (supported by ablations; not a proof)
+
+**Context (clean post-confound runs)**:
+- Post BUG-035, few-shot underperforms zero-shot in the clean comparative runs we have (Run 13 strict; Run 14 infer)
+- Severity inference (Spec 063, `infer`) increased coverage but decreased accuracy in Run 14 (single ablation so far)
+- Best observed item-level MAE (mean-of-items; `MAE_i`) is ≈ 0.60–0.65 at ~50% coverage under strict mode
+
+**Primary evidence artifacts**:
+- Run 13 (strict): `data/outputs/both_paper-test_20260107_134730.json` (git `01d3124`)
+- Run 14 (infer): `data/outputs/both_paper-test_20260108_114058.json` (git `e55c00f`)
 
 This document explains **why** from first principles.
 
@@ -12,15 +18,15 @@ This document explains **why** from first principles.
 
 ## Executive Summary
 
-**The core problem is a construct mismatch**: PHQ-8 measures **frequency** ("how many days in the past 2 weeks"), but DAIC-WOZ transcripts contain **qualitative symptom discussions** that rarely mention explicit day-counts.
+**The primary bottleneck is a construct mismatch**: PHQ-8 measures **frequency** (“how many days in the past 2 weeks”), while DAIC-WOZ interviews primarily contain **qualitative symptom discussion** and often do not elicit item-by-item 2-week frequency bins.
 
-This is not a model limitation, chunking problem, or embedding issue. It's a **fundamental data limitation** - we're asking an LLM to predict frequency from interviews that weren't designed to elicit frequency information.
+This does not mean model/prompt/retrieval improvements are irrelevant. It means there is a strong **information availability limit**: when the transcript does not contain enough time-windowed frequency evidence, any item score becomes an inference with non-trivial subjectivity (or should abstain).
 
 ---
 
 ## 1. How PHQ-8 Actually Works
 
-The PHQ-8 is a **self-report questionnaire** completed by the patient **before** the clinical interview.
+The PHQ-8 is a **self-report frequency instrument** about the **past two weeks**. In DAIC-WOZ, PHQ-8 is collected as metadata; the interview transcript is not a PHQ administration script.
 
 ### PHQ-8 Response Scale
 
@@ -35,7 +41,7 @@ The PHQ-8 is a **self-report questionnaire** completed by the patient **before**
 
 The PHQ-8 asks: *"Over the past 2 weeks, how often have you been bothered by..."*
 
-This is a **frequency question** answered with **day-count bins**. The patient self-reports this BEFORE sitting down with the clinician.
+This is a **frequency question** answered with **day-count bins**. In DAIC-WOZ, those bins come from questionnaire metadata, not from an explicit PHQ-style administration embedded in the transcript.
 
 ---
 
@@ -44,8 +50,10 @@ This is a **frequency question** answered with **day-count bins**. The patient s
 The [DAIC-WOZ dataset](https://dcapswoz.ict.usc.edu/) contains semi-structured clinical interviews conducted by a virtual agent (Ellie). The interviews:
 
 1. **Discuss symptoms qualitatively** ("Tell me about your sleep")
-2. **Do NOT systematically elicit frequency** for each PHQ-8 domain
-3. **Were not designed for PHQ-8 scoring** - the PHQ-8 was collected separately as metadata
+2. **Do not systematically elicit PHQ-8-style frequency bins** for each item
+3. **Were not designed for item-level PHQ-8 scoring**; PHQ-8 is collected separately as metadata
+
+Additional constraint (by design in this repo): the validated baseline uses **participant-only** transcripts (`data/transcripts_participant_only`), which removes interviewer question context. This reduces protocol leakage but further reduces explicit temporal anchoring (“over the past two weeks…”).
 
 ### Example Transcript Patterns
 
@@ -58,7 +66,7 @@ What we would need for PHQ-8 scoring:
 - "I've been tired for about 10 of the past 14 days" → Score 2
 - "I had trouble sleeping maybe 3-4 nights" → Score 1
 
-**The transcripts simply don't contain this information most of the time.**
+**Often, the transcript does not contain enough information to map a symptom mention into a 2-week day-count bin.**
 
 ---
 
@@ -69,36 +77,41 @@ Our **strict mode** (`--severity-inference strict`) instructs the LLM:
 
 When the transcript says "I've been feeling down" without any temporal markers, the correct behavior is to output **N/A** - because we genuinely don't know if that's 2 days or 12 days.
 
-The ~50% coverage we observe is not a limitation of the model. It's the model **correctly recognizing** that frequency information is absent.
+The ~50% coverage we observe in Run 13 is not a pipeline bug. It reflects a conservative policy: **abstain unless the transcript supports a frequency bin**. It is consistent with the broader task-validity argument in `docs/clinical/task-validity.md`.
 
 ---
 
 ## 4. Why Inference Mode Made Things Worse
 
-Our **infer mode** (`--severity-inference infer`) adds a mapping table:
-- "always" → Score 3
-- "sometimes" → Score 1
-- etc.
+Our **infer mode** (`--severity-inference infer`) adds a heuristic **FREQUENCY INFERENCE GUIDE** to the scoring prompt (see `src/ai_psychiatrist/agents/prompts/quantitative.py`). In particular, it:
+- Maps ambiguous temporal/intensity phrases (e.g., “always”, “all the time”, “lately”) to day-count bins
+- Permits scoring from impact statements (“can’t function”) when no explicit temporal markers exist
+- Explicitly discourages N/A unless the symptom is truly unmentioned
 
 ### What We Expected
 More coverage + similar accuracy = better AURC
 
-### What Actually Happened
-| Mode | Run 13 (strict) | Run 14 (infer) |
+### What Actually Happened (zero-shot; paper-test)
+| Metric | Run 13 (strict) | Run 14 (infer) |
 |------|-----------------|----------------|
-| Coverage | 50% | 60% |
-| MAE_item | 0.608 | 0.703 |
-| AURC | 0.107 | 0.129 |
+| Coverage | 50.0% | 60.1% |
+| MAE_i (mean-of-items) | 0.6079 | 0.7030 |
+| AURC_full (confidence=`llm`) | 0.1066 | 0.1292 |
+
+Notes:
+- MAE_i is `item_mae_by_item` in the output JSON (mean of per-item MAEs).
+- AURC_full is computed by `scripts/evaluate_selective_prediction.py` from run outputs (loss=`abs_norm`).
 
 **Coverage went up, but accuracy went DOWN more than proportionally.**
 
 ### Why?
 
-The inference rules map **intensity** words to **frequency** scores, but these aren't the same thing:
-- "I always feel tired" might mean "I'm tired every day" (Score 3)
-- Or it might mean "Whenever I feel something, it's tiredness" (intensity, not frequency)
+The key failure mode is **unvalidated inference**: the prompt is now authorizing the model to map weak signals into exact 2-week bins. This includes:
+- **Intensity/valence → frequency conflation** (“always”, “all the time” can be rhetorical/intensity, not a count)
+- **Vague recency markers** (“lately”, “recently”) that do not imply a PHQ-8 day-count
+- **Time-window mismatch** (the interview may discuss months/years; PHQ-8 is strictly past 2 weeks)
 
-The mapping is **semantically incorrect**. We're conflating intensity with frequency, and the ground truth PHQ-8 is specifically about frequency.
+These are plausible reasons Run 14 increased coverage but injected enough noise to degrade both MAE and risk-coverage metrics.
 
 ---
 
@@ -107,10 +120,14 @@ The mapping is **semantically incorrect**. We're conflating intensity with frequ
 Few-shot retrieval finds similar transcript chunks from the training set and shows them as examples. But:
 
 ### Problem A: Reference Chunks Also Lack Frequency
-If the training transcripts also rarely mention explicit frequency, the retrieved examples don't provide useful calibration.
+If the training transcripts also often lack explicit PHQ-8-style frequency bins, the retrieved examples may not provide useful calibration.
 
-### Problem B: Evidence Grounding Rejects ~50% of Quotes
-Our evidence grounding system (Spec 053) validates that LLM-extracted quotes actually exist in the transcript. About 50% are rejected as hallucinations, starving few-shot of reference material.
+### Problem B: Evidence Grounding Rejects a Large Fraction of Extracted Quotes
+Our evidence grounding system (Spec 053) validates that LLM-extracted quotes exist verbatim in the transcript (substring mode). In Runs 13–14, about **60%** of extracted quotes were rejected by substring grounding (validated ≈ 40%), which can starve retrieval of usable query evidence.
+
+Operational estimate (from run logs): Run 13 rejected 296/494 extracted quotes; Run 14 rejected 291/486 (both ≈ 60%).
+
+Important nuance: “rejected by substring grounding” is not identical to “hallucinated”. It also includes near-miss formatting issues (punctuation/whitespace) and partial-quote mismatches. The rejection rate is still operationally relevant: rejected quotes do not contribute to retrieval.
 
 ### Problem C: Chunk-Level Scoring is Noisy
 Even with Spec 035 (chunk-level scoring), the scores attached to reference chunks are inferences from the same limited data, propagating the fundamental limitation.
@@ -139,18 +156,18 @@ Research has documented several issues with DAIC-WOZ:
 
 ### Our Best Results in Context
 
-| Metric | Our Best | Paper (Greene et al.) | Clinical Significance |
+| Metric | Our Best | Published baseline (Greene et al.) | Caveat |
 |--------|----------|----------------------|----------------------|
-| MAE_item (zero-shot) | 0.608 | 0.796 | We beat the paper by 24% |
-| Coverage | 50% | ~100% (forced) | We're honest about uncertainty |
-| AURC | 0.107 | Not reported | Selective prediction |
+| MAE_i (item-level; mean-of-items) | 0.608 | 0.796 | Not directly comparable if coverage differs |
+| Coverage | 50% | ~100% (forced) | Selective prediction vs forced scoring |
+| AURC_full (confidence=`llm`) | 0.107 | Not reported | Coverage-aware risk metric |
 
 ### Interpretation
 
-1. **We're doing better than the paper** on items we actually score
-2. **Our abstention is appropriate** - we correctly identify when frequency evidence is missing
-3. **Few-shot doesn't help** because the fundamental limitation is data, not prompting
-4. **Inference mode hurts** because intensity ≠ frequency
+1. On scored items, **our MAE_i is lower than the published baseline**, but the baseline uses forced coverage; treat MAE comparisons as meaningful only at similar coverage.
+2. **Abstention is methodologically appropriate** when the transcript does not support a 2-week frequency bin.
+3. **Few-shot has not helped in clean comparative runs so far**, plausibly because retrieval is bottlenecked by sparse/low-quality frequency evidence and quote validation rejects many extracted quotes.
+4. **Inference mode (as implemented) hurts**, likely because it authorizes unvalidated mappings from weak cues (recency/intensity/impact) into PHQ-8 day-count bins.
 
 ---
 
@@ -189,7 +206,7 @@ The paper reported few-shot MAE 0.619 < zero-shot MAE 0.796. But they didn't hav
 - Strict JSON parsing
 - Coverage tracking
 
-Their "few-shot" may have included hallucinated quotes that happened to be directionally correct by chance.
+Because of these differences, their few-shot comparison is not directly comparable to this repo’s conservative, evidence-grounded selective prediction setting. Post BUG-035, our clean runs show few-shot underperforming zero-shot under the validated baseline configuration.
 
 ---
 
@@ -197,26 +214,25 @@ Their "few-shot" may have included hallucinated quotes that happened to be direc
 
 ### The Bottom Line
 
-1. **~50% coverage with strict mode is correct** - the transcripts genuinely lack frequency information for ~50% of item-participant pairs
-
-2. **Few-shot underperformance is expected** - reference examples also lack frequency information
-
-3. **Inference mode hurts accuracy** - mapping intensity words to frequency scores is semantically incorrect
-
-4. **This is a fundamental data limitation** - not a model, embedding, or chunking problem
+1. **Strict mode produces conservative coverage** (Run 13: ~50% on paper-test), consistent with the claim that transcript-only item-frequency scoring is often underdetermined.
+2. **Few-shot has not helped in clean comparative runs so far**, plausibly due to sparse frequency evidence + high quote rejection + retrieval noise/anchoring.
+3. **Infer mode (as implemented in Spec 063) degraded quality in Run 14**: coverage rose, but both MAE_i and AURC_full worsened. The prompt authorizes unvalidated mappings from weak cues into PHQ-8 bins.
+4. **The primary limitation is information availability**, though model/prompt/retrieval improvements can still matter at the margins or under different transcript variants (e.g., with question context, or multimodal signals).
 
 ### Recommendations
 
-1. **Accept strict mode as the ceiling** for item-level prediction on DAIC-WOZ
-2. **Evaluate binary classification** (Spec 062) - may work better for this dataset
-3. **Evaluate total score prediction** (Spec 061) - item errors may cancel out
-4. **Consider this task partially solved** - we've characterized the fundamental limitations
+1. Treat strict mode as the **current best conservative baseline** for item-level scoring on participant-only transcripts.
+2. When experimenting with inference, prefer policies that are **explicitly conservative** (e.g., restrict to unambiguous temporal markers; separate “impact” from “frequency”; preserve abstention when time window is unclear).
+3. Prioritize evaluating **total score** and **binary** tasks (Specs 061/062 are implemented) because they better match the available signal.
+4. Keep reporting **coverage-aware metrics** (Cmax + AURC/AUGRC) and treat MAE comparisons as valid only at similar coverage.
 
 ---
 
 ## References
 
 - [DAIC-WOZ Database](https://dcapswoz.ict.usc.edu/)
+- [DAIC-WOZ Documentation PDF](https://dcapswoz.ict.usc.edu/wp-content/uploads/2022/02/DAICWOZDepression_Documentation.pdf)
+- [PHQ-8 Description / Validation (PubMed 18752852)](https://pubmed.ncbi.nlm.nih.gov/18752852/)
 - [DAIC-WOZ Validity Study (arXiv:2404.14463)](https://arxiv.org/html/2404.14463v1)
 - [Depression Detection Reproducibility Study (ACM ICMI 2024)](https://dl.acm.org/doi/10.1145/3747327.3763034)
 - [Multi-Instance Learning for Depression (PMC11850819)](https://pmc.ncbi.nlm.nih.gov/articles/PMC11850819/)
