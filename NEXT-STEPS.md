@@ -1,7 +1,7 @@
 # Next Steps
 
-**Status**: Run 14 complete; fundamental task limitations documented; ready for final ablations
-**Last Updated**: 2026-01-08
+**Status**: Run 16 complete; item-level baseline + total-score tested; ready for binary classification ablation
+**Last Updated**: 2026-01-09
 
 ---
 
@@ -18,7 +18,7 @@
 | Participant-only preprocessing | Run 8+ | ✅ Enabled |
 | Evidence grounding (Spec 053) | Run 11+ | ✅ Enabled |
 | **Severity inference (Spec 063)** | **Run 14** | ✅ **Tested - DOES NOT HELP** |
-| Total score metrics (Spec 061) | Implemented | ❌ Not yet tested |
+| **Total score metrics (Spec 061)** | **Run 16** | ✅ **Tested** |
 | Binary classification (Spec 062) | Implemented | ❌ Not yet tested |
 
 ### Key Results Summary
@@ -29,6 +29,17 @@
 | 13 | Few-shot (strict) | 0.657 | 0.115 | 49% | Worse than zero-shot |
 | 14 | Zero-shot (infer) | 0.703 | 0.129 | 60% | Coverage ↑, accuracy ↓ |
 | 14 | Few-shot (infer) | 0.784 | 0.147 | 58% | Even worse |
+
+### Total Score Results (Spec 061; `--prediction-mode total`, `total_score_min_coverage=0.5`)
+
+**Run 16 output**: `data/outputs/both_paper-test_20260109_110840.json` (run_id `b2fd1ce3`, git `e3eb011`)
+
+| Run | Mode | N_pred | MAE_total | RMSE | r | TierAcc |
+|-----|------|--------|-----------|------|---|---------|
+| **16** | Zero-shot (strict) | 26/41 (63.4%) | **4.8846** | 6.3941 | 0.4123 | **0.3462** |
+| 16 | Few-shot (strict) | 22/41 (53.7%) | 5.5455 | 6.5989 | 0.5037 | 0.2727 |
+
+**Caveat**: Coverage differs between modes; on the overlap set where both produced a total (N=21), MAE_total is nearly identical (zero-shot 5.5238 vs few-shot 5.5714).
 
 ### Key Finding: Fundamental Task Limitation
 
@@ -46,9 +57,11 @@ The ~50% coverage with strict mode is **correct behavior**, not a limitation:
 
 We have three remaining experiments to complete the analysis:
 
-### Run 15: Baseline Re-run (Post Bug Fixes)
+### Run 15 (Optional): Item-Level Baseline Re-run (Post Spec 061/062 + BUG-048)
 
-**Purpose**: Establish clean baseline with ALL bug fixes (BUG-035, BUG-048) in the codebase.
+**Purpose**: If we want a dedicated post-PR#96 item-level baseline artifact, re-run `--prediction-mode item` under strict mode.
+
+**Status**: Not executed yet (we ran Run 16 total-score first).
 
 ```bash
 tmux new -s run15
@@ -59,11 +72,11 @@ uv run python scripts/reproduce_results.py \
   2>&1 | tee data/outputs/run15_baseline_$(date +%Y%m%d_%H%M%S).log
 ```
 
-**Expected**: Results similar to Run 13 (validates code stability post-fixes).
+**Expected**: Similar item-level behavior to Run 13/Run 16 (allowing for LLM variance).
 
 **Runtime**: ~20 hours (both modes)
 
-### Run 16: Total Score Prediction (Spec 061)
+### Run 16: Total Score Prediction (Spec 061) ✅ Completed
 
 **Purpose**: Test if sum-of-items is more predictable than individual items (errors may cancel).
 
@@ -82,7 +95,12 @@ uv run python scripts/reproduce_results.py \
 - Coverage (what % of participants get a total score)
 - Correlation with ground truth
 
-**Runtime**: ~20 hours (both modes)
+**Results**:
+- Output: `data/outputs/both_paper-test_20260109_110840.json`
+- Zero-shot: MAE_total 4.8846 @ 63.4% coverage (26/41)
+- Few-shot: MAE_total 5.5455 @ 53.7% coverage (22/41)
+
+**Runtime**: ~13.7 hours (both modes; per-mode ~6.5h / ~7.1h)
 
 ### Run 17: Binary Classification (Spec 062)
 
@@ -115,8 +133,8 @@ After all runs complete:
 |-----|-----------------|-------------------|---------|
 | 13 | item | strict | Original baseline (pre-BUG-048 fix) |
 | 14 | item | infer | Severity inference ablation ❌ |
-| **15** | item | strict | Clean baseline (all fixes) |
-| **16** | total | strict | Total score prediction |
+| **15** | item | strict | Optional clean item baseline (post PR#96) |
+| **16** | total | strict | Total score prediction ✅ |
 | **17** | binary | strict | Binary classification |
 
 ---
@@ -150,7 +168,7 @@ uv run python scripts/reproduce_results.py --split paper-test --dry-run
 | BUG-048 fixed | ✅ Strict JSON output |
 | Confidence suite validated | ✅ Run 12 |
 | **Spec 063 tested** | ✅ Run 14 - **Does not help** |
-| Spec 061 tested | ❌ Pending Run 16 |
+| **Spec 061 tested** | ✅ Run 16 |
 | Spec 062 tested | ❌ Pending Run 17 |
 | Task limitations documented | ✅ EXPLANATION-HYPOTHESIS.md |
 

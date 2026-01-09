@@ -140,7 +140,7 @@ Few-shot helps most when the model is miscalibrated about what a 1 vs 2 vs 3 loo
 | Items with references | Higher (inferred) | **15.2%** |
 | Consistency sampling | No | Yes (n=5, temp=0.2) |
 
-**Key finding**: Evidence grounding (Spec 053) rejects ~50% of extracted quotes as "hallucinated" (substring match fails). This breaks the few-shot retrieval chain:
+**Key finding**: Evidence grounding (Spec 053) rejects ~60% of extracted quotes in recent runs (e.g., Run 13/14; substring match fails). This is often a quote-extraction fidelity problem (near-miss/paraphrase/formatting), not necessarily a true hallucination, but it still breaks the few-shot retrieval chain:
 
 1. Less evidence → fewer embedding queries
 2. Fewer queries → fewer references retrieved

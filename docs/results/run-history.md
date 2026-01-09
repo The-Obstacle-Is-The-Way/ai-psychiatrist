@@ -2,7 +2,7 @@
 
 **Purpose**: Comprehensive record of all reproduction runs, code changes, and statistical analyses for posterity.
 
-**Last Updated**: 2026-01-08
+**Last Updated**: 2026-01-09
 
 ---
 
@@ -95,7 +95,7 @@ See: `docs/_bugs/BUG-048-invalid-json-output-nan-metrics.md`
 
 ## Quick Reference: Current Best Results
 
-All values below use `loss=abs_norm` and 1,000 participant-level bootstrap resamples.
+All **selective prediction** values below use `loss=abs_norm` and 1,000 participant-level bootstrap resamples.
 
 ### Run 13: First Clean Run POST BUG-035 Fix ✅
 
@@ -136,6 +136,19 @@ Run 14 (`data/outputs/both_paper-test_20260108_114058.json`) enables severity in
 | **Few-shot** | 0.7843 | 0.147 | 0.139 (`consistency_inverse_std`) | 0.039 (`token_energy`) | 57.5% |
 
 **Key result**: Compared to Run 13 (strict baseline), `infer` increases Cmax by ~8–11 points, but **worsens AURC/AUGRC significantly** (paired deltas are positive for most confidence variants).
+
+---
+
+### Run 16: Spec 061 Total Score Prediction (Prediction Mode `total`) ✅
+
+Run 16 (`data/outputs/both_paper-test_20260109_110840.json`) evaluates **total PHQ-8 score prediction** (`--prediction-mode total`) using the sum-of-items method with coverage gating (`total_score_min_coverage=0.5`).
+
+| Mode | N_pred (total) | Coverage | MAE_total | RMSE | r | TierAcc |
+|------|----------------|----------|-----------|------|---|---------|
+| **Zero-shot** | 26/41 | 63.4% | **4.8846** | 6.3941 | 0.4123 | **0.3462** |
+| **Few-shot** | 22/41 | 53.7% | 5.5455 | 6.5989 | 0.5037 | 0.2727 |
+
+**Important caveat**: MAE comparisons are only valid at similar coverage. On the overlap set where both modes produced a total (N=21), MAE_total is nearly identical (zero-shot 5.5238 vs few-shot 5.5714).
 
 ---
 
@@ -873,6 +886,45 @@ Paired deltas artifacts:
 
 **Interpretation**:
 Severity inference increases coverage as intended, but in this first ablation it **materially increases risk** (AURC/AUGRC) relative to the strict baseline. Treat `infer` as an experimental setting until additional prompt/guardrail iterations show coverage gains without degrading coverage-aware metrics.
+
+---
+
+### Run 16: Jan 8-9, 2026 - Spec 061 Total Score Prediction (`--prediction-mode total`) ✅ VALID
+
+**File**: `data/outputs/both_paper-test_20260109_110840.json`
+
+**Log**: `data/outputs/run16_total_20260108_210709.log`
+
+**Run ID**: `b2fd1ce3`
+
+**Git Commit**: `e3eb011` (clean)
+
+**Timestamp**: 2026-01-08T21:07:09 (started) → 2026-01-09T11:08:40 (completed)
+
+**Code State**:
+- Prediction mode: `total` (Spec 061)
+- Total score coverage gate: `total_score_min_coverage=0.5` (requires ≥4/8 items scored)
+- Severity inference: `strict` (no inferences used; `inference_used=false` for all items)
+- Consistency: ENABLED (n=5, temp=0.2)
+
+**Total-score results**:
+
+| Mode | N_eval | N_pred | Coverage | MAE_total | RMSE | r | TierAcc | Time |
+|------|--------|--------|----------|-----------|------|---|---------|------|
+| Zero-shot | 41/41 | 26 | 63.4% | **4.8846** | 6.3941 | 0.4123 | **0.3462** | 23554s |
+| Few-shot | 41/41 | 22 | 53.7% | 5.5455 | 6.5989 | 0.5037 | 0.2727 | 25656s |
+
+**Coverage-comparability caveat (paired/overlap only)**:
+- Overlap where both modes produced a total: N=21
+- MAE_total on overlap: zero-shot 5.5238; few-shot 5.5714
+- Severity tier accuracy on overlap: both 0.2857
+
+**Robustness**:
+- Failures: 8 non-fatal `evidence_hallucination` events (4 participants × 2 modes), recorded in `data/outputs/failures_b2fd1ce3.json`
+- Telemetry: 13 `json_fixups_applied`, 1 `json_repair_fallback`, recorded in `data/outputs/telemetry_b2fd1ce3.json`
+
+**Notes**:
+- Item-level metrics in this run are broadly consistent with Run 13/14, suggesting Spec 061 integration did not materially alter the underlying per-item pipeline behavior.
 
 ---
 

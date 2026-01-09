@@ -1,6 +1,6 @@
 # Paper Reproduction Results (Current Status)
 
-**Last Updated**: 2026-01-08
+**Last Updated**: 2026-01-09
 
 This page is a high-level, **current-state** summary. The canonical timeline + per-run statistics live in:
 
@@ -52,6 +52,7 @@ See: `docs/_bugs/BUG-048-invalid-json-output-nan-metrics.md`.
 - **Historical paper reference** (Run 8, pre-BUG-035): few-shot `0.609` vs paper `0.619`; zero-shot `0.776` vs paper `0.796`
 - **Clean comparative baseline established (Run 13, post-BUG-035)**: zero-shot MAE_item `0.6079`; few-shot MAE_item `0.6571` (zero-shot wins)
 - **Severity inference ablation (Run 14, Spec 063 `infer`)**: coverage increased (Cmax ~60%/57.5%) but AURC/AUGRC worsened vs Run 13; treat `infer` as experimental
+- **Total score prediction evaluated (Run 16, Spec 061 `total`)**: zero-shot MAE_total `4.8846` @ 63.4% coverage; few-shot MAE_total `5.5455` @ 53.7% coverage (coverage differs; see caveat below)
 - **Selective prediction**: AURC/AUGRC are very similar between modes (paired ΔAURC CI overlaps 0)
 - **Spec 046 evaluated** (Run 9): `retrieval_similarity_mean` improves AURC by 5.4% vs evidence-count-only
 - **Confidence Suite validated (Run 12)**: 41/41 evaluated in both modes; token-level CSFs improve AURC/AUGRC over `llm` (pre-BUG-035)
@@ -62,7 +63,7 @@ See: `docs/_bugs/BUG-048-invalid-json-output-nan-metrics.md`.
 
 In Run 13 (first clean post-BUG-035 comparative run), **zero-shot outperformed few-shot** (MAE_item 0.6079 vs 0.6571) at similar coverage. This is a valid research result explained by:
 
-1. Evidence grounding (Spec 053) rejects ~50% of quotes, starving few-shot of reference data
+1. Evidence grounding (Spec 053) rejects ~60% of extracted quotes in recent runs (substring match fails), starving few-shot of reference data
 2. Consistency sampling benefits zero-shot more than few-shot
 3. PHQ-8 scoring is evidence-limited, not knowledge-limited
 
@@ -73,6 +74,21 @@ See: [Few-Shot Analysis](few-shot-analysis.md) for full details.
 For the underlying construct-validity constraint (PHQ-8 frequency vs transcript evidence), see: `docs/clinical/task-validity.md`.
 
 For the first `--severity-inference infer` ablation (Spec 063), see Run 14 in `docs/results/run-history.md`.
+
+---
+
+## Total Score Prediction (Spec 061)
+
+Run 16 is the first end-to-end evaluation of `--prediction-mode total`:
+- Output: `data/outputs/both_paper-test_20260109_110840.json` (run_id `b2fd1ce3`, git `e3eb011`)
+- Coverage gate: `total_score_min_coverage=0.5` (requires ≥4/8 items scored)
+
+| Mode | Coverage | MAE_total | RMSE | r | TierAcc |
+|------|----------|-----------|------|---|---------|
+| zero_shot | 63.4% (26/41) | **4.8846** | 6.3941 | 0.4123 | **0.3462** |
+| few_shot | 53.7% (22/41) | 5.5455 | 6.5989 | 0.5037 | 0.2727 |
+
+**Caveat**: MAE comparisons are only valid at similar coverage. On the overlap set where both modes produced a total (N=21), MAE_total is nearly identical (zero-shot 5.5238 vs few-shot 5.5714).
 
 ---
 
