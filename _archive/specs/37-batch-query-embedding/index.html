@@ -1,0 +1,2953 @@
+
+<!doctype html>
+<html lang="en" class="no-js">
+  <head>
+    
+      <meta charset="utf-8">
+      <meta name="viewport" content="width=device-width,initial-scale=1">
+      
+      
+      
+        <link rel="canonical" href="https://the-obstacle-is-the-way.github.io/ai-psychiatrist/_archive/specs/37-batch-query-embedding/">
+      
+      
+      
+      
+        
+      
+      
+      <link rel="icon" href="../../../assets/images/favicon.png">
+      <meta name="generator" content="mkdocs-1.6.1, mkdocs-material-9.7.1">
+    
+    
+      
+        <title>Spec 37: Batch Query Embedding - AI Psychiatrist</title>
+      
+    
+    
+      <link rel="stylesheet" href="../../../assets/stylesheets/main.484c7ddc.min.css">
+      
+      
+
+
+    
+    
+      
+    
+    
+      
+        
+        
+        <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+        <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Roboto:300,300i,400,400i,700,700i%7CRoboto+Mono:400,400i,700,700i&display=fallback">
+        <style>:root{--md-text-font:"Roboto";--md-code-font:"Roboto Mono"}</style>
+      
+    
+    
+    <script>__md_scope=new URL("../../..",location),__md_hash=e=>[...e].reduce(((e,_)=>(e<<5)-e+_.charCodeAt(0)),0),__md_get=(e,_=localStorage,t=__md_scope)=>JSON.parse(_.getItem(t.pathname+"."+e)),__md_set=(e,_,t=localStorage,a=__md_scope)=>{try{t.setItem(a.pathname+"."+e,JSON.stringify(_))}catch(e){}}</script>
+    
+      
+
+    
+    
+  </head>
+  
+  
+    <body dir="ltr">
+  
+    
+    <input class="md-toggle" data-md-toggle="drawer" type="checkbox" id="__drawer" autocomplete="off">
+    <input class="md-toggle" data-md-toggle="search" type="checkbox" id="__search" autocomplete="off">
+    <label class="md-overlay" for="__drawer"></label>
+    <div data-md-component="skip">
+      
+        
+        <a href="#spec-37-batch-query-embedding" class="md-skip">
+          Skip to content
+        </a>
+      
+    </div>
+    <div data-md-component="announce">
+      
+    </div>
+    
+    
+      
+
+  
+
+<header class="md-header md-header--shadow" data-md-component="header">
+  <nav class="md-header__inner md-grid" aria-label="Header">
+    <a href="../../.." title="AI Psychiatrist" class="md-header__button md-logo" aria-label="AI Psychiatrist" data-md-component="logo">
+      
+  
+  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 8a3 3 0 0 0 3-3 3 3 0 0 0-3-3 3 3 0 0 0-3 3 3 3 0 0 0 3 3m0 3.54C9.64 9.35 6.5 8 3 8v11c3.5 0 6.64 1.35 9 3.54 2.36-2.19 5.5-3.54 9-3.54V8c-3.5 0-6.64 1.35-9 3.54"/></svg>
+
+    </a>
+    <label class="md-header__button md-icon" for="__drawer">
+      
+      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M3 6h18v2H3zm0 5h18v2H3zm0 5h18v2H3z"/></svg>
+    </label>
+    <div class="md-header__title" data-md-component="header-title">
+      <div class="md-header__ellipsis">
+        <div class="md-header__topic">
+          <span class="md-ellipsis">
+            AI Psychiatrist
+          </span>
+        </div>
+        <div class="md-header__topic" data-md-component="header-topic">
+          <span class="md-ellipsis">
+            
+              Spec 37: Batch Query Embedding
+            
+          </span>
+        </div>
+      </div>
+    </div>
+    
+    
+      <script>var palette=__md_get("__palette");if(palette&&palette.color){if("(prefers-color-scheme)"===palette.color.media){var media=matchMedia("(prefers-color-scheme: light)"),input=document.querySelector(media.matches?"[data-md-color-media='(prefers-color-scheme: light)']":"[data-md-color-media='(prefers-color-scheme: dark)']");palette.color.media=input.getAttribute("data-md-color-media"),palette.color.scheme=input.getAttribute("data-md-color-scheme"),palette.color.primary=input.getAttribute("data-md-color-primary"),palette.color.accent=input.getAttribute("data-md-color-accent")}for(var[key,value]of Object.entries(palette.color))document.body.setAttribute("data-md-color-"+key,value)}</script>
+    
+    
+    
+      
+      
+        <label class="md-header__button md-icon" for="__search">
+          
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M9.5 3A6.5 6.5 0 0 1 16 9.5c0 1.61-.59 3.09-1.56 4.23l.27.27h.79l5 5-1.5 1.5-5-5v-.79l-.27-.27A6.52 6.52 0 0 1 9.5 16 6.5 6.5 0 0 1 3 9.5 6.5 6.5 0 0 1 9.5 3m0 2C7 5 5 7 5 9.5S7 14 9.5 14 14 12 14 9.5 12 5 9.5 5"/></svg>
+        </label>
+        <div class="md-search" data-md-component="search" role="dialog">
+  <label class="md-search__overlay" for="__search"></label>
+  <div class="md-search__inner" role="search">
+    <form class="md-search__form" name="search">
+      <input type="text" class="md-search__input" name="query" aria-label="Search" placeholder="Search" autocapitalize="off" autocorrect="off" autocomplete="off" spellcheck="false" data-md-component="search-query" required>
+      <label class="md-search__icon md-icon" for="__search">
+        
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M9.5 3A6.5 6.5 0 0 1 16 9.5c0 1.61-.59 3.09-1.56 4.23l.27.27h.79l5 5-1.5 1.5-5-5v-.79l-.27-.27A6.52 6.52 0 0 1 9.5 16 6.5 6.5 0 0 1 3 9.5 6.5 6.5 0 0 1 9.5 3m0 2C7 5 5 7 5 9.5S7 14 9.5 14 14 12 14 9.5 12 5 9.5 5"/></svg>
+        
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M20 11v2H8l5.5 5.5-1.42 1.42L4.16 12l7.92-7.92L13.5 5.5 8 11z"/></svg>
+      </label>
+      <nav class="md-search__options" aria-label="Search">
+        
+        <button type="reset" class="md-search__icon md-icon" title="Clear" aria-label="Clear" tabindex="-1">
+          
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M19 6.41 17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12z"/></svg>
+        </button>
+      </nav>
+      
+    </form>
+    <div class="md-search__output">
+      <div class="md-search__scrollwrap" tabindex="0" data-md-scrollfix>
+        <div class="md-search-result" data-md-component="search-result">
+          <div class="md-search-result__meta">
+            Initializing search
+          </div>
+          <ol class="md-search-result__list" role="presentation"></ol>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+      
+    
+    
+      <div class="md-header__source">
+        <a href="https://github.com/The-Obstacle-Is-The-Way/ai-psychiatrist" title="Go to repository" class="md-source" data-md-component="source">
+  <div class="md-source__icon md-icon">
+    
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 448 512"><!--! Font Awesome Free 7.1.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2025 Fonticons, Inc.--><path d="M439.6 236.1 244 40.5c-5.4-5.5-12.8-8.5-20.4-8.5s-15 3-20.4 8.4L162.5 81l51.5 51.5c27.1-9.1 52.7 16.8 43.4 43.7l49.7 49.7c34.2-11.8 61.2 31 35.5 56.7-26.5 26.5-70.2-2.9-56-37.3L240.3 199v121.9c25.3 12.5 22.3 41.8 9.1 55-6.4 6.4-15.2 10.1-24.3 10.1s-17.8-3.6-24.3-10.1c-17.6-17.6-11.1-46.9 11.2-56v-123c-20.8-8.5-24.6-30.7-18.6-45L142.6 101 8.5 235.1C3 240.6 0 247.9 0 255.5s3 15 8.5 20.4l195.6 195.7c5.4 5.4 12.7 8.4 20.4 8.4s15-3 20.4-8.4l194.7-194.7c5.4-5.4 8.4-12.8 8.4-20.4s-3-15-8.4-20.4"/></svg>
+  </div>
+  <div class="md-source__repository">
+    GitHub
+  </div>
+</a>
+      </div>
+    
+  </nav>
+  
+</header>
+    
+    <div class="md-container" data-md-component="container">
+      
+      
+        
+          
+        
+      
+      <main class="md-main" data-md-component="main">
+        <div class="md-main__inner md-grid">
+          
+            
+              
+              <div class="md-sidebar md-sidebar--primary" data-md-component="sidebar" data-md-type="navigation" >
+                <div class="md-sidebar__scrollwrap">
+                  <div class="md-sidebar__inner">
+                    
+
+
+
+<nav class="md-nav md-nav--primary" aria-label="Navigation" data-md-level="0">
+  <label class="md-nav__title" for="__drawer">
+    <a href="../../.." title="AI Psychiatrist" class="md-nav__button md-logo" aria-label="AI Psychiatrist" data-md-component="logo">
+      
+  
+  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 8a3 3 0 0 0 3-3 3 3 0 0 0-3-3 3 3 0 0 0-3 3 3 3 0 0 0 3 3m0 3.54C9.64 9.35 6.5 8 3 8v11c3.5 0 6.64 1.35 9 3.54 2.36-2.19 5.5-3.54 9-3.54V8c-3.5 0-6.64 1.35-9 3.54"/></svg>
+
+    </a>
+    AI Psychiatrist
+  </label>
+  
+    <div class="md-nav__source">
+      <a href="https://github.com/The-Obstacle-Is-The-Way/ai-psychiatrist" title="Go to repository" class="md-source" data-md-component="source">
+  <div class="md-source__icon md-icon">
+    
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 448 512"><!--! Font Awesome Free 7.1.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2025 Fonticons, Inc.--><path d="M439.6 236.1 244 40.5c-5.4-5.5-12.8-8.5-20.4-8.5s-15 3-20.4 8.4L162.5 81l51.5 51.5c27.1-9.1 52.7 16.8 43.4 43.7l49.7 49.7c34.2-11.8 61.2 31 35.5 56.7-26.5 26.5-70.2-2.9-56-37.3L240.3 199v121.9c25.3 12.5 22.3 41.8 9.1 55-6.4 6.4-15.2 10.1-24.3 10.1s-17.8-3.6-24.3-10.1c-17.6-17.6-11.1-46.9 11.2-56v-123c-20.8-8.5-24.6-30.7-18.6-45L142.6 101 8.5 235.1C3 240.6 0 247.9 0 255.5s3 15 8.5 20.4l195.6 195.7c5.4 5.4 12.7 8.4 20.4 8.4s15-3 20.4-8.4l194.7-194.7c5.4-5.4 8.4-12.8 8.4-20.4s-3-15-8.4-20.4"/></svg>
+  </div>
+  <div class="md-source__repository">
+    GitHub
+  </div>
+</a>
+    </div>
+  
+  <ul class="md-nav__list" data-md-scrollfix>
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../.." class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    AI Psychiatrist Documentation
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    
+    
+    
+    
+      
+        
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--section md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_2" >
+        
+          
+          <label class="md-nav__link" for="__nav_2" id="__nav_2_label" tabindex="">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+     research
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_2_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_2">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+     research
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../_research/hypotheses-explained/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Hypotheses Explained: Current State vs Future Improvements
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../_research/hypotheses-for-improvement/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Hypotheses for Improvement: First-Principles Analysis
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../_research/master-bug-audit/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    MASTER BUG AUDIT
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    
+    
+    
+    
+      
+        
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--section md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_3" >
+        
+          
+          <label class="md-nav__link" for="__nav_3" id="__nav_3_label" tabindex="">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Architecture
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_3_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_3">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    Architecture
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../architecture/architecture/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Architecture
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../architecture/future-architecture/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Future Architecture: Agent Orchestration Options
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../architecture/pipeline/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Pipeline
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    
+    
+    
+    
+      
+        
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--section md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_4" >
+        
+          
+          <label class="md-nav__link" for="__nav_4" id="__nav_4_label" tabindex="">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Clinical
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_4_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_4">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    Clinical
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../clinical/clinical-understanding/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Clinical Understanding: How This System Works
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../clinical/glossary/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Glossary
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../clinical/phq8/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    PHQ-8: Patient Health Questionnaire
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../clinical/task-validity/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Task Validity: What Can (and Cannot) Be Inferred from DAIC-WOZ Transcripts
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    
+    
+    
+    
+      
+        
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--section md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_5" >
+        
+          
+          <label class="md-nav__link" for="__nav_5" id="__nav_5_label" tabindex="">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Configs
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_5_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_5">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    Configs
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../configs/agent-sampling-registry/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Agent Sampling Parameter Registry
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../configs/configuration-philosophy/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Configuration Philosophy
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../configs/configuration/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Configuration Reference
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    
+    
+    
+    
+      
+        
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--section md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_6" >
+        
+          
+          <label class="md-nav__link" for="__nav_6" id="__nav_6_label" tabindex="">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Data
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_6_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_6">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    Data
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../data/artifact-namespace-registry/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Artifact Namespace Registry
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../data/daic-woz-preprocessing/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    DAIC-WOZ Transcript Preprocessing (Bias-Aware, Deterministic)
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../data/daic-woz-schema/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    DAIC-WOZ Dataset Schema
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../data/data-splits-overview/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Data Splits Overview
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    
+    
+    
+    
+      
+        
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--section md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_7" >
+        
+          
+          <label class="md-nav__link" for="__nav_7" id="__nav_7_label" tabindex="">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Developer
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_7_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_7">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    Developer
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../developer/api-endpoints/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    API Reference
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../developer/dependency-registry/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Dependency Registry
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../developer/error-handling/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Error Handling and Fail-Fast Philosophy
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../developer/exceptions/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Exception Reference (Domain + Runtime)
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../developer/testing/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Testing Conventions (Markers, Fixtures, and Test Doubles)
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    
+    
+    
+    
+      
+        
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--section md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_8" >
+        
+          
+          <label class="md-nav__link" for="__nav_8" id="__nav_8_label" tabindex="">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Getting started
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_8_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_8">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    Getting started
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../getting-started/quickstart/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Quickstart Guide
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    
+    
+    
+    
+      
+        
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--section md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_9" >
+        
+          
+          <label class="md-nav__link" for="__nav_9" id="__nav_9_label" tabindex="">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Models
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_9_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_9">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    Models
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../models/model-registry/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    AI Psychiatrist Model Registry
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../models/model-wiring/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Model Wiring: Current State
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    
+    
+    
+    
+      
+        
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--section md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_10" >
+        
+          
+          <label class="md-nav__link" for="__nav_10" id="__nav_10_label" tabindex="">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Pipeline internals
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_10_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_10">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    Pipeline internals
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../pipeline-internals/evidence-extraction/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Evidence Extraction Mechanism: How It Actually Works
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../pipeline-internals/features/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Feature Reference (Non-Archive Canonical)
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    
+    
+    
+    
+      
+        
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--section md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_11" >
+        
+          
+          <label class="md-nav__link" for="__nav_11" id="__nav_11_label" tabindex="">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Preflight checklist
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_11_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_11">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    Preflight checklist
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../preflight-checklist/preflight-checklist-few-shot/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Preflight Checklist: Few-Shot Reproduction
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../preflight-checklist/preflight-checklist-zero-shot/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Preflight Checklist: Zero-Shot Run
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    
+    
+    
+    
+      
+        
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--section md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_12" >
+        
+          
+          <label class="md-nav__link" for="__nav_12" id="__nav_12_label" tabindex="">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Rag
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_12_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_12">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    Rag
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../rag/artifact-generation/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    RAG Artifact Generation
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../rag/chunk-scoring/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Chunk-Level Scoring (Spec 35) — Schema, Workflow, and Gotchas
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../rag/debugging/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    RAG Debugging (Audit Logs + Guardrails)
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../rag/design-rationale/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    RAG Design Rationale
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../rag/overview/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    RAG Overview: Embeddings and Few-Shot Retrieval
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../rag/runtime-features/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    RAG Runtime Features
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    
+    
+    
+    
+      
+        
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--section md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_13" >
+        
+          
+          <label class="md-nav__link" for="__nav_13" id="__nav_13_label" tabindex="">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Results
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_13_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_13">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    Results
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../results/few-shot-analysis/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Why Few-Shot May Not Beat Zero-Shot: Analysis
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../results/reproduction-results/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Paper Reproduction Results (Current Status)
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../results/run-history/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Complete Run History &amp; Statistical Analysis
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../results/run-output-schema/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Reproduction Run Output Schema (JSON + Registry)
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    
+    
+    
+    
+      
+        
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--section md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_14" >
+        
+          
+          <label class="md-nav__link" for="__nav_14" id="__nav_14_label" tabindex="">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Statistics
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_14_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_14">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    Statistics
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../statistics/coverage/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Coverage Explained: What It Is and Why It Matters
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../statistics/metrics-and-evaluation/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Metrics and Evaluation (Exact Definitions + Output Schema)
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../statistics/statistical-methodology-aurc-augrc/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Statistical Methodology: AURC/AUGRC for Selective Prediction
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+  </ul>
+</nav>
+                  </div>
+                </div>
+              </div>
+            
+            
+              
+              <div class="md-sidebar md-sidebar--secondary" data-md-component="sidebar" data-md-type="toc" >
+                <div class="md-sidebar__scrollwrap">
+                  <div class="md-sidebar__inner">
+                    
+
+<nav class="md-nav md-nav--secondary" aria-label="Table of contents">
+  
+  
+  
+    
+  
+  
+    <label class="md-nav__title" for="__toc">
+      <span class="md-nav__icon md-icon"></span>
+      Table of contents
+    </label>
+    <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
+      
+        <li class="md-nav__item">
+  <a href="#problem-statement" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Problem Statement
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#root-cause-code-level-ssot" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Root Cause (Code-Level, SSOT)
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#solution-overview" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Solution Overview
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#goals-non-goals" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Goals / Non-Goals
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#implementation-plan-exact-changes" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Implementation Plan (Exact Changes)
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Implementation Plan (Exact Changes)">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#step-1-add-batch-requestresponse-protocol-method" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Step 1 — Add batch request/response + protocol method
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#step-2-implement-embed_batch-for-huggingfaceclient" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Step 2 — Implement embed_batch() for HuggingFaceClient
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#step-3-implement-embed_batch-for-ollamaclient" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Step 3 — Implement embed_batch() for OllamaClient
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#step-4-add-config-knobs-timeout-feature-flag" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Step 4 — Add config knobs (timeout + feature flag)
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#step-5-use-batch-embeddings-in-embeddingservicebuild_reference_bundle" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Step 5 — Use batch embeddings in EmbeddingService.build_reference_bundle()
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#edge-cases" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Edge Cases
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#tests-implementation-ready-deterministic" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Tests (Implementation-Ready, Deterministic)
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Tests (Implementation-Ready, Deterministic)">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#unit-embeddingservice-uses-batch-once" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Unit: EmbeddingService uses batch once
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#unit-huggingfaceclient-missing-deps-behavior" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Unit: HuggingFaceClient missing deps behavior
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#verification-criteria" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Verification Criteria
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#best-practice-notes-2025" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Best-Practice Notes (2025)
+      
+    </span>
+  </a>
+  
+</li>
+      
+    </ul>
+  
+</nav>
+                  </div>
+                </div>
+              </div>
+            
+          
+          
+            <div class="md-content" data-md-component="content">
+              
+              <article class="md-content__inner md-typeset">
+                
+                  
+
+
+  
+    <a href="https://github.com/The-Obstacle-Is-The-Way/ai-psychiatrist/edit/main/docs/_archive/specs/37-batch-query-embedding.md" title="Edit this page" class="md-content__button md-icon" rel="edit">
+      
+      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M10 20H6V4h7v5h5v3.1l2-2V8l-6-6H6c-1.1 0-2 .9-2 2v16c0 1.1.9 2 2 2h4zm10.2-7c.1 0 .3.1.4.2l1.3 1.3c.2.2.2.6 0 .8l-1 1-2.1-2.1 1-1c.1-.1.2-.2.4-.2m0 3.9L14.1 23H12v-2.1l6.1-6.1z"/></svg>
+    </a>
+  
+  
+    
+      
+    
+    <a href="https://github.com/The-Obstacle-Is-The-Way/ai-psychiatrist/raw/main/docs/_archive/specs/37-batch-query-embedding.md" title="View source of this page" class="md-content__button md-icon">
+      
+      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M17 18c.56 0 1 .44 1 1s-.44 1-1 1-1-.44-1-1 .44-1 1-1m0-3c-2.73 0-5.06 1.66-6 4 .94 2.34 3.27 4 6 4s5.06-1.66 6-4c-.94-2.34-3.27-4-6-4m0 6.5a2.5 2.5 0 0 1-2.5-2.5 2.5 2.5 0 0 1 2.5-2.5 2.5 2.5 0 0 1 2.5 2.5 2.5 2.5 0 0 1-2.5 2.5M9.27 20H6V4h7v5h5v4.07c.7.08 1.36.25 2 .49V8l-6-6H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h4.5a8.2 8.2 0 0 1-1.23-2"/></svg>
+    </a>
+  
+
+
+<h1 id="spec-37-batch-query-embedding">Spec 37: Batch Query Embedding</h1>
+<table>
+<thead>
+<tr>
+<th>Field</th>
+<th>Value</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><strong>Status</strong></td>
+<td>COMPLETE</td>
+</tr>
+<tr>
+<td><strong>Priority</strong></td>
+<td>HIGH</td>
+</tr>
+<tr>
+<td><strong>Addresses</strong></td>
+<td>BUG-033 (timeouts), BUG-034 (participant regression), BUG-036 (no caching), BUG-041 (MockLLMClient)</td>
+</tr>
+<tr>
+<td><strong>Effort</strong></td>
+<td>1–2 days</td>
+</tr>
+<tr>
+<td><strong>Impact</strong></td>
+<td>1 query-embedding op/participant; removes hard-coded 120s failure mode</td>
+</tr>
+</tbody>
+</table>
+<hr />
+<h2 id="problem-statement">Problem Statement</h2>
+<p>Run 4 is failing in <code>few_shot</code> mode with a <strong>22% failure rate</strong>:
+- Output file: <code>data/outputs/both_paper_backfill-off_20251230_053108.json</code>
+- <code>few_shot</code>: 32/41 succeeded, 9/41 failed
+- All 9 failures: <code>LLM request timed out after 120s</code></p>
+<p>This is not a “Gemma scoring timeout” problem — it is a <strong>query embedding timeout</strong> problem:
+- Run provenance shows <code>embedding_backend = huggingface</code> and <code>llm_backend = ollama</code>.
+- The only 120-second default in the embedding path is <code>EmbeddingRequest.timeout_seconds = 120</code>.</p>
+<hr />
+<h2 id="root-cause-code-level-ssot">Root Cause (Code-Level, SSOT)</h2>
+<ol>
+<li><strong>Eight sequential query embeddings per participant (worst-case)</strong>.</li>
+<li><code>EmbeddingService.build_reference_bundle()</code> loops all 8 <code>PHQ8Item</code>s and calls <code>embed_text()</code> for each item that has evidence.</li>
+<li>
+<p>File: <code>src/ai_psychiatrist/services/embedding.py:318</code></p>
+</li>
+<li>
+<p><strong>Hard-coded 120-second timeout is used for query embeddings</strong>.</p>
+</li>
+<li><code>EmbeddingService.embed_text()</code> constructs <code>EmbeddingRequest(...)</code> without passing <code>timeout_seconds</code>.</li>
+<li><code>EmbeddingRequest.timeout_seconds</code> default is <strong>120 seconds</strong>.</li>
+<li>HuggingFace enforces this with <code>asyncio.wait_for(..., timeout=request.timeout_seconds)</code>.</li>
+<li>
+<p>Files:</p>
+<ul>
+<li><code>src/ai_psychiatrist/infrastructure/llm/protocols.py:104</code> (<code>EmbeddingRequest.timeout_seconds: int = 120</code>)</li>
+<li><code>src/ai_psychiatrist/services/embedding.py:121</code> (missing timeout override)</li>
+<li><code>src/ai_psychiatrist/infrastructure/llm/huggingface.py:145</code> (wait_for)</li>
+</ul>
+</li>
+<li>
+<p><strong>Current configuration knob does not affect this path</strong>.</p>
+</li>
+<li><code>HF_DEFAULT_EMBED_TIMEOUT</code> only affects <code>HuggingFaceClient.simple_embed(...)</code>, but the service calls <code>embed(...)</code> directly.</li>
+</ol>
+<hr />
+<h2 id="solution-overview">Solution Overview</h2>
+<p>Batch query embeddings per participant:
+- Build all per-item evidence strings first.
+- Make <strong>one</strong> batch embedding call (instead of up to 8 single calls).
+- Apply a <strong>configurable</strong> query-embedding timeout (no more “stuck at 120s” default).</p>
+<p>This is a performance and reliability change; it must not change retrieval semantics.</p>
+<hr />
+<h2 id="goals-non-goals">Goals / Non-Goals</h2>
+<p><strong>Goals</strong>
+- Reduce query-embedding operations from “up to 8 per participant” → <strong>1 per participant</strong> for HuggingFace.
+- Remove the unconfigurable 120s timeout default from the few-shot query embedding path.
+- Keep outputs deterministic (no semantic caching, no similarity-based cache keys).
+- Make behavior backend-safe (HuggingFace supports true batching; Ollama gets a correct fallback implementation).</p>
+<p><strong>Non-Goals</strong>
+- Semantic caching (vector-similarity cache) — out of scope.
+- Changing reference embeddings formats — out of scope.
+- Changing retrieval algorithm, <code>top_k</code>, or scoring — out of scope.</p>
+<hr />
+<h2 id="implementation-plan-exact-changes">Implementation Plan (Exact Changes)</h2>
+<h3 id="step-1-add-batch-requestresponse-protocol-method">Step 1 — Add batch request/response + protocol method</h3>
+<p><strong>File</strong>: <code>src/ai_psychiatrist/infrastructure/llm/protocols.py</code></p>
+<p><strong>Insert after</strong> <code>EmbeddingResponse</code> (currently around <code>src/ai_psychiatrist/infrastructure/llm/protocols.py:137</code>).</p>
+<p><strong>Add dataclasses</strong></p>
+<div class="highlight"><pre><span></span><code><span class="nd">@dataclass</span><span class="p">(</span><span class="n">frozen</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">slots</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+<span class="k">class</span><span class="w"> </span><span class="nc">EmbeddingBatchRequest</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Request for embedding multiple texts in one operation.&quot;&quot;&quot;</span>
+
+    <span class="n">texts</span><span class="p">:</span> <span class="n">Sequence</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span>
+    <span class="n">model</span><span class="p">:</span> <span class="nb">str</span>
+    <span class="n">dimension</span><span class="p">:</span> <span class="nb">int</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span>
+    <span class="n">timeout_seconds</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">300</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="nf">__post_init__</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="bp">self</span><span class="o">.</span><span class="n">texts</span><span class="p">:</span>
+            <span class="k">return</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="bp">self</span><span class="o">.</span><span class="n">model</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;Model cannot be empty&quot;</span><span class="p">)</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">dimension</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span> <span class="ow">and</span> <span class="bp">self</span><span class="o">.</span><span class="n">dimension</span> <span class="o">&lt;</span> <span class="mi">1</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;dimension </span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">dimension</span><span class="si">}</span><span class="s2"> must be &gt;= 1&quot;</span><span class="p">)</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">timeout_seconds</span> <span class="o">&lt;</span> <span class="mi">1</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;timeout_seconds </span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">timeout_seconds</span><span class="si">}</span><span class="s2"> must be &gt;= 1&quot;</span><span class="p">)</span>
+        <span class="c1"># Fail fast on empty strings (service should not send them).</span>
+        <span class="k">if</span> <span class="nb">any</span><span class="p">(</span><span class="ow">not</span> <span class="n">t</span> <span class="k">for</span> <span class="n">t</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">texts</span><span class="p">):</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;texts cannot contain empty strings&quot;</span><span class="p">)</span>
+
+
+<span class="nd">@dataclass</span><span class="p">(</span><span class="n">frozen</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">slots</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+<span class="k">class</span><span class="w"> </span><span class="nc">EmbeddingBatchResponse</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Response from a batch embedding request.&quot;&quot;&quot;</span>
+
+    <span class="n">embeddings</span><span class="p">:</span> <span class="nb">list</span><span class="p">[</span><span class="nb">tuple</span><span class="p">[</span><span class="nb">float</span><span class="p">,</span> <span class="o">...</span><span class="p">]]</span>
+    <span class="n">model</span><span class="p">:</span> <span class="nb">str</span>
+</code></pre></div>
+<p><strong>Update <code>EmbeddingClient</code> protocol</strong> (add this method):</p>
+<div class="highlight"><pre><span></span><code><span class="nd">@abstractmethod</span>
+<span class="k">async</span> <span class="k">def</span><span class="w"> </span><span class="nf">embed_batch</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">request</span><span class="p">:</span> <span class="n">EmbeddingBatchRequest</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">EmbeddingBatchResponse</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Generate embeddings for multiple texts.</span>
+
+<span class="sd">    Must return embeddings in the same order as request.texts.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="o">...</span>
+</code></pre></div>
+<p><strong>Why this shape</strong>
+- Matches the existing request/response pattern (<code>EmbeddingRequest</code> / <code>EmbeddingResponse</code>).
+- Avoids adding ad-hoc positional params that drift between backends.</p>
+<hr />
+<h3 id="step-2-implement-embed_batch-for-huggingfaceclient">Step 2 — Implement <code>embed_batch()</code> for HuggingFaceClient</h3>
+<p><strong>File</strong>: <code>src/ai_psychiatrist/infrastructure/llm/huggingface.py</code></p>
+<p><strong>Add imports</strong>:
+- <code>EmbeddingBatchRequest</code>, <code>EmbeddingBatchResponse</code> from <code>ai_psychiatrist.infrastructure.llm.protocols</code></p>
+<p><strong>Add method</strong>: <code>HuggingFaceClient.embed_batch(self, request: EmbeddingBatchRequest) -&gt; EmbeddingBatchResponse</code></p>
+<p><strong>Implementation requirements</strong>
+- Must call <code>SentenceTransformer.encode(...)</code> with list input.
+- Must enforce timeout using <code>asyncio.wait_for(..., timeout=request.timeout_seconds)</code>.
+- Must raise <code>LLMTimeoutError(request.timeout_seconds)</code> on timeout.
+- Must truncate each embedding if <code>request.dimension</code> is not <code>None</code>.
+- Must return <code>EmbeddingBatchResponse(embeddings=[...], model=model_id)</code>.</p>
+<p><strong>Pseudo-code (copy/pasteable structure; final code should use existing helpers)</strong></p>
+<div class="highlight"><pre><span></span><code><span class="k">async</span> <span class="k">def</span><span class="w"> </span><span class="nf">embed_batch</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">request</span><span class="p">:</span> <span class="n">EmbeddingBatchRequest</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">EmbeddingBatchResponse</span><span class="p">:</span>
+    <span class="n">model_id</span> <span class="o">=</span> <span class="n">resolve_model_name</span><span class="p">(</span><span class="n">request</span><span class="o">.</span><span class="n">model</span><span class="p">,</span> <span class="n">LLMBackend</span><span class="o">.</span><span class="n">HUGGINGFACE</span><span class="p">)</span>
+    <span class="n">model</span> <span class="o">=</span> <span class="k">await</span> <span class="bp">self</span><span class="o">.</span><span class="n">_get_embedding_model</span><span class="p">(</span><span class="n">model_id</span><span class="p">)</span>
+
+    <span class="k">async</span> <span class="k">def</span><span class="w"> </span><span class="nf">_encode_async</span><span class="p">()</span> <span class="o">-&gt;</span> <span class="nb">list</span><span class="p">[</span><span class="nb">tuple</span><span class="p">[</span><span class="nb">float</span><span class="p">,</span> <span class="o">...</span><span class="p">]]:</span>
+        <span class="k">def</span><span class="w"> </span><span class="nf">_encode</span><span class="p">()</span> <span class="o">-&gt;</span> <span class="nb">list</span><span class="p">[</span><span class="nb">tuple</span><span class="p">[</span><span class="nb">float</span><span class="p">,</span> <span class="o">...</span><span class="p">]]:</span>
+            <span class="n">encoded</span> <span class="o">=</span> <span class="n">model</span><span class="o">.</span><span class="n">encode</span><span class="p">(</span>
+                <span class="nb">list</span><span class="p">(</span><span class="n">request</span><span class="o">.</span><span class="n">texts</span><span class="p">),</span>
+                <span class="n">normalize_embeddings</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
+            <span class="p">)</span>
+            <span class="c1"># sentence-transformers returns numpy array / list-like</span>
+            <span class="k">return</span> <span class="p">[</span><span class="nb">tuple</span><span class="p">(</span><span class="n">row</span><span class="o">.</span><span class="n">tolist</span><span class="p">())</span> <span class="k">for</span> <span class="n">row</span> <span class="ow">in</span> <span class="n">encoded</span><span class="p">]</span>
+
+        <span class="k">return</span> <span class="k">await</span> <span class="n">asyncio</span><span class="o">.</span><span class="n">to_thread</span><span class="p">(</span><span class="n">_encode</span><span class="p">)</span>
+
+    <span class="k">try</span><span class="p">:</span>
+        <span class="n">embeddings</span> <span class="o">=</span> <span class="k">await</span> <span class="n">asyncio</span><span class="o">.</span><span class="n">wait_for</span><span class="p">(</span><span class="n">_encode_async</span><span class="p">(),</span> <span class="n">timeout</span><span class="o">=</span><span class="n">request</span><span class="o">.</span><span class="n">timeout_seconds</span><span class="p">)</span>
+    <span class="k">except</span> <span class="ne">TimeoutError</span> <span class="k">as</span> <span class="n">e</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="n">LLMTimeoutError</span><span class="p">(</span><span class="n">request</span><span class="o">.</span><span class="n">timeout_seconds</span><span class="p">)</span> <span class="kn">from</span><span class="w"> </span><span class="nn">e</span>
+
+    <span class="k">if</span> <span class="n">request</span><span class="o">.</span><span class="n">dimension</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="n">embeddings</span> <span class="o">=</span> <span class="p">[</span><span class="n">emb</span><span class="p">[:</span> <span class="n">request</span><span class="o">.</span><span class="n">dimension</span><span class="p">]</span> <span class="k">for</span> <span class="n">emb</span> <span class="ow">in</span> <span class="n">embeddings</span><span class="p">]</span>
+
+    <span class="k">return</span> <span class="n">EmbeddingBatchResponse</span><span class="p">(</span><span class="n">embeddings</span><span class="o">=</span><span class="n">embeddings</span><span class="p">,</span> <span class="n">model</span><span class="o">=</span><span class="n">model_id</span><span class="p">)</span>
+</code></pre></div>
+<p><strong>Best-practice knobs (optional, but recommended)</strong>
+- Use <code>SentenceTransformer.encode(..., batch_size=...)</code> if we later embed more than 8 texts.
+- Source: SentenceTransformers docs (encode supports <code>batch_size</code>, <code>normalize_embeddings</code>): https://www.sbert.net/</p>
+<hr />
+<h3 id="step-3-implement-embed_batch-for-ollamaclient">Step 3 — Implement <code>embed_batch()</code> for OllamaClient</h3>
+<p><strong>File</strong>: <code>src/ai_psychiatrist/infrastructure/llm/ollama.py</code></p>
+<p>Ollama embeddings API does not accept batches, so this is a correctness fallback:
+- Sequentially call <code>embed(EmbeddingRequest(...))</code> for each text.
+- Enforce an <strong>overall</strong> timeout for the entire batch.</p>
+<p><strong>Required behavior</strong>
+- Preserve request order.
+- Use <code>asyncio.timeout(request.timeout_seconds)</code> (Python 3.11+) to cap total time.</p>
+<p><strong>Pseudo-code</strong></p>
+<div class="highlight"><pre><span></span><code><span class="k">async</span> <span class="k">def</span><span class="w"> </span><span class="nf">embed_batch</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">request</span><span class="p">:</span> <span class="n">EmbeddingBatchRequest</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">EmbeddingBatchResponse</span><span class="p">:</span>
+    <span class="k">if</span> <span class="ow">not</span> <span class="n">request</span><span class="o">.</span><span class="n">texts</span><span class="p">:</span>
+        <span class="k">return</span> <span class="n">EmbeddingBatchResponse</span><span class="p">(</span><span class="n">embeddings</span><span class="o">=</span><span class="p">[],</span> <span class="n">model</span><span class="o">=</span><span class="n">request</span><span class="o">.</span><span class="n">model</span><span class="p">)</span>
+
+    <span class="k">async</span> <span class="k">with</span> <span class="n">asyncio</span><span class="o">.</span><span class="n">timeout</span><span class="p">(</span><span class="n">request</span><span class="o">.</span><span class="n">timeout_seconds</span><span class="p">):</span>
+        <span class="n">embeddings</span><span class="p">:</span> <span class="nb">list</span><span class="p">[</span><span class="nb">tuple</span><span class="p">[</span><span class="nb">float</span><span class="p">,</span> <span class="o">...</span><span class="p">]]</span> <span class="o">=</span> <span class="p">[]</span>
+        <span class="k">for</span> <span class="n">text</span> <span class="ow">in</span> <span class="n">request</span><span class="o">.</span><span class="n">texts</span><span class="p">:</span>
+            <span class="n">resp</span> <span class="o">=</span> <span class="k">await</span> <span class="bp">self</span><span class="o">.</span><span class="n">embed</span><span class="p">(</span>
+                <span class="n">EmbeddingRequest</span><span class="p">(</span>
+                    <span class="n">text</span><span class="o">=</span><span class="n">text</span><span class="p">,</span>
+                    <span class="n">model</span><span class="o">=</span><span class="n">request</span><span class="o">.</span><span class="n">model</span><span class="p">,</span>
+                    <span class="n">dimension</span><span class="o">=</span><span class="n">request</span><span class="o">.</span><span class="n">dimension</span><span class="p">,</span>
+                    <span class="n">timeout_seconds</span><span class="o">=</span><span class="n">request</span><span class="o">.</span><span class="n">timeout_seconds</span><span class="p">,</span>
+                <span class="p">)</span>
+            <span class="p">)</span>
+            <span class="n">embeddings</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">resp</span><span class="o">.</span><span class="n">embedding</span><span class="p">)</span>
+
+    <span class="k">return</span> <span class="n">EmbeddingBatchResponse</span><span class="p">(</span><span class="n">embeddings</span><span class="o">=</span><span class="n">embeddings</span><span class="p">,</span> <span class="n">model</span><span class="o">=</span><span class="n">request</span><span class="o">.</span><span class="n">model</span><span class="p">)</span>
+</code></pre></div>
+<hr />
+<h3 id="step-4-add-config-knobs-timeout-feature-flag">Step 4 — Add config knobs (timeout + feature flag)</h3>
+<p><strong>File</strong>: <code>src/ai_psychiatrist/config.py</code></p>
+<p><strong>Class</strong>: <code>EmbeddingSettings</code> (currently starts around <code>src/ai_psychiatrist/config.py:222</code>)</p>
+<p>Add:</p>
+<div class="highlight"><pre><span></span><code><span class="n">enable_batch_query_embedding</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="n">Field</span><span class="p">(</span>
+    <span class="n">default</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
+    <span class="n">description</span><span class="o">=</span><span class="s2">&quot;Use one batch query embedding call per participant (Spec 37).&quot;</span><span class="p">,</span>
+<span class="p">)</span>
+
+<span class="n">query_embed_timeout_seconds</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="n">Field</span><span class="p">(</span>
+    <span class="n">default</span><span class="o">=</span><span class="mi">300</span><span class="p">,</span>
+    <span class="n">ge</span><span class="o">=</span><span class="mi">30</span><span class="p">,</span>
+    <span class="n">le</span><span class="o">=</span><span class="mi">3600</span><span class="p">,</span>
+    <span class="n">description</span><span class="o">=</span><span class="s2">&quot;Timeout for query embedding (single or batch) in seconds (Spec 37).&quot;</span><span class="p">,</span>
+<span class="p">)</span>
+</code></pre></div>
+<p>Environment variables:
+- <code>EMBEDDING_ENABLE_BATCH_QUERY_EMBEDDING=true|false</code>
+- <code>EMBEDDING_QUERY_EMBED_TIMEOUT_SECONDS=300</code></p>
+<hr />
+<h3 id="step-5-use-batch-embeddings-in-embeddingservicebuild_reference_bundle">Step 5 — Use batch embeddings in <code>EmbeddingService.build_reference_bundle()</code></h3>
+<p><strong>File</strong>: <code>src/ai_psychiatrist/services/embedding.py</code></p>
+<p><strong>Also required</strong>: update imports at top of file
+- Before: <code>from ai_psychiatrist.infrastructure.llm.protocols import EmbeddingRequest</code>
+- After: <code>from ai_psychiatrist.infrastructure.llm.protocols import EmbeddingBatchRequest, EmbeddingRequest</code></p>
+<p><strong>Add fields in <code>EmbeddingService.__init__</code></strong> (store settings):
+- <code>self._enable_batch_query_embedding = settings.enable_batch_query_embedding</code>
+- <code>self._query_embed_timeout_seconds = settings.query_embed_timeout_seconds</code></p>
+<p><strong>Update <code>embed_text()</code></strong> (remove hard-coded 120s default by passing timeout):</p>
+<p><strong>Before</strong> (<code>src/ai_psychiatrist/services/embedding.py:134</code>):
+<div class="highlight"><pre><span></span><code><span class="n">response</span> <span class="o">=</span> <span class="k">await</span> <span class="bp">self</span><span class="o">.</span><span class="n">_llm_client</span><span class="o">.</span><span class="n">embed</span><span class="p">(</span>
+    <span class="n">EmbeddingRequest</span><span class="p">(</span>
+        <span class="n">text</span><span class="o">=</span><span class="n">text</span><span class="p">,</span>
+        <span class="n">model</span><span class="o">=</span><span class="n">model</span><span class="p">,</span>
+        <span class="n">dimension</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">_dimension</span><span class="p">,</span>
+    <span class="p">)</span>
+<span class="p">)</span>
+</code></pre></div></p>
+<p><strong>After</strong>:
+<div class="highlight"><pre><span></span><code><span class="n">response</span> <span class="o">=</span> <span class="k">await</span> <span class="bp">self</span><span class="o">.</span><span class="n">_llm_client</span><span class="o">.</span><span class="n">embed</span><span class="p">(</span>
+    <span class="n">EmbeddingRequest</span><span class="p">(</span>
+        <span class="n">text</span><span class="o">=</span><span class="n">text</span><span class="p">,</span>
+        <span class="n">model</span><span class="o">=</span><span class="n">model</span><span class="p">,</span>
+        <span class="n">dimension</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">_dimension</span><span class="p">,</span>
+        <span class="n">timeout_seconds</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">_query_embed_timeout_seconds</span><span class="p">,</span>
+    <span class="p">)</span>
+<span class="p">)</span>
+</code></pre></div></p>
+<p><strong>Replace the per-item embedding loop in <code>build_reference_bundle()</code></strong> with the following (copy/pasteable “after”):</p>
+<div class="highlight"><pre><span></span><code><span class="k">async</span> <span class="k">def</span><span class="w"> </span><span class="nf">build_reference_bundle</span><span class="p">(</span>
+    <span class="bp">self</span><span class="p">,</span>
+    <span class="n">evidence_dict</span><span class="p">:</span> <span class="nb">dict</span><span class="p">[</span><span class="n">PHQ8Item</span><span class="p">,</span> <span class="nb">list</span><span class="p">[</span><span class="nb">str</span><span class="p">]],</span>
+<span class="p">)</span> <span class="o">-&gt;</span> <span class="n">ReferenceBundle</span><span class="p">:</span>
+    <span class="n">logger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span>
+        <span class="s2">&quot;Building reference bundle&quot;</span><span class="p">,</span>
+        <span class="n">items_with_evidence</span><span class="o">=</span><span class="nb">sum</span><span class="p">(</span><span class="mi">1</span> <span class="k">for</span> <span class="n">v</span> <span class="ow">in</span> <span class="n">evidence_dict</span><span class="o">.</span><span class="n">values</span><span class="p">()</span> <span class="k">if</span> <span class="n">v</span><span class="p">),</span>
+    <span class="p">)</span>
+
+    <span class="n">item_references</span><span class="p">:</span> <span class="nb">dict</span><span class="p">[</span><span class="n">PHQ8Item</span><span class="p">,</span> <span class="nb">list</span><span class="p">[</span><span class="n">SimilarityMatch</span><span class="p">]]</span> <span class="o">=</span> <span class="p">{</span>
+        <span class="n">item</span><span class="p">:</span> <span class="p">[]</span> <span class="k">for</span> <span class="n">item</span> <span class="ow">in</span> <span class="n">PHQ8Item</span><span class="o">.</span><span class="n">all_items</span><span class="p">()</span>
+    <span class="p">}</span>
+
+    <span class="n">item_texts</span><span class="p">:</span> <span class="nb">list</span><span class="p">[</span><span class="nb">tuple</span><span class="p">[</span><span class="n">PHQ8Item</span><span class="p">,</span> <span class="nb">str</span><span class="p">]]</span> <span class="o">=</span> <span class="p">[]</span>
+    <span class="k">for</span> <span class="n">item</span> <span class="ow">in</span> <span class="n">PHQ8Item</span><span class="o">.</span><span class="n">all_items</span><span class="p">():</span>
+        <span class="n">evidence_quotes</span> <span class="o">=</span> <span class="n">evidence_dict</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">item</span><span class="p">,</span> <span class="p">[])</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="n">evidence_quotes</span><span class="p">:</span>
+            <span class="k">continue</span>
+
+        <span class="n">combined_text</span> <span class="o">=</span> <span class="s2">&quot;</span><span class="se">\n</span><span class="s2">&quot;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">evidence_quotes</span><span class="p">)</span>
+        <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">combined_text</span><span class="p">)</span> <span class="o">&lt;</span> <span class="bp">self</span><span class="o">.</span><span class="n">_min_chars</span><span class="p">:</span>
+            <span class="k">continue</span>
+
+        <span class="n">item_texts</span><span class="o">.</span><span class="n">append</span><span class="p">((</span><span class="n">item</span><span class="p">,</span> <span class="n">combined_text</span><span class="p">))</span>
+
+    <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_enable_batch_query_embedding</span> <span class="ow">and</span> <span class="n">item_texts</span><span class="p">:</span>
+        <span class="n">model</span> <span class="o">=</span> <span class="n">get_model_name</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_model_settings</span><span class="p">,</span> <span class="s2">&quot;embedding&quot;</span><span class="p">)</span>
+        <span class="n">batch_request</span> <span class="o">=</span> <span class="n">EmbeddingBatchRequest</span><span class="p">(</span>
+            <span class="n">texts</span><span class="o">=</span><span class="p">[</span><span class="n">text</span> <span class="k">for</span> <span class="n">_</span><span class="p">,</span> <span class="n">text</span> <span class="ow">in</span> <span class="n">item_texts</span><span class="p">],</span>
+            <span class="n">model</span><span class="o">=</span><span class="n">model</span><span class="p">,</span>
+            <span class="n">dimension</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">_dimension</span><span class="p">,</span>
+            <span class="n">timeout_seconds</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">_query_embed_timeout_seconds</span><span class="p">,</span>
+        <span class="p">)</span>
+        <span class="n">batch_response</span> <span class="o">=</span> <span class="k">await</span> <span class="bp">self</span><span class="o">.</span><span class="n">_llm_client</span><span class="o">.</span><span class="n">embed_batch</span><span class="p">(</span><span class="n">batch_request</span><span class="p">)</span>
+
+        <span class="k">for</span> <span class="p">(</span><span class="n">item</span><span class="p">,</span> <span class="n">combined_text</span><span class="p">),</span> <span class="n">query_emb</span> <span class="ow">in</span> <span class="nb">zip</span><span class="p">(</span>
+            <span class="n">item_texts</span><span class="p">,</span>
+            <span class="n">batch_response</span><span class="o">.</span><span class="n">embeddings</span><span class="p">,</span>
+            <span class="n">strict</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
+        <span class="p">):</span>
+            <span class="n">matches</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_compute_similarities</span><span class="p">(</span><span class="n">query_emb</span><span class="p">,</span> <span class="n">item</span><span class="o">=</span><span class="n">item</span><span class="p">)</span>
+            <span class="n">matches</span><span class="o">.</span><span class="n">sort</span><span class="p">(</span><span class="n">key</span><span class="o">=</span><span class="k">lambda</span> <span class="n">x</span><span class="p">:</span> <span class="n">x</span><span class="o">.</span><span class="n">similarity</span><span class="p">,</span> <span class="n">reverse</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+
+            <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_min_reference_similarity</span> <span class="o">&gt;</span> <span class="mf">0.0</span><span class="p">:</span>
+                <span class="n">matches</span> <span class="o">=</span> <span class="p">[</span><span class="n">m</span> <span class="k">for</span> <span class="n">m</span> <span class="ow">in</span> <span class="n">matches</span> <span class="k">if</span> <span class="n">m</span><span class="o">.</span><span class="n">similarity</span> <span class="o">&gt;=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_min_reference_similarity</span><span class="p">]</span>
+
+            <span class="n">top_matches</span> <span class="o">=</span> <span class="n">matches</span><span class="p">[:</span> <span class="bp">self</span><span class="o">.</span><span class="n">_top_k</span><span class="p">]</span>
+            <span class="n">final_matches</span> <span class="o">=</span> <span class="k">await</span> <span class="bp">self</span><span class="o">.</span><span class="n">_validate_matches</span><span class="p">(</span><span class="n">top_matches</span><span class="p">,</span> <span class="n">item</span><span class="p">,</span> <span class="n">combined_text</span><span class="p">)</span>
+
+            <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_enable_retrieval_audit</span><span class="p">:</span>
+                <span class="n">evidence_key</span> <span class="o">=</span> <span class="sa">f</span><span class="s2">&quot;PHQ8_</span><span class="si">{</span><span class="n">item</span><span class="o">.</span><span class="n">value</span><span class="si">}</span><span class="s2">&quot;</span>
+                <span class="k">for</span> <span class="n">rank</span><span class="p">,</span> <span class="n">match</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">final_matches</span><span class="p">,</span> <span class="n">start</span><span class="o">=</span><span class="mi">1</span><span class="p">):</span>
+                    <span class="n">logger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span>
+                        <span class="s2">&quot;retrieved_reference&quot;</span><span class="p">,</span>
+                        <span class="n">item</span><span class="o">=</span><span class="n">item</span><span class="o">.</span><span class="n">value</span><span class="p">,</span>
+                        <span class="n">evidence_key</span><span class="o">=</span><span class="n">evidence_key</span><span class="p">,</span>
+                        <span class="n">rank</span><span class="o">=</span><span class="n">rank</span><span class="p">,</span>
+                        <span class="n">similarity</span><span class="o">=</span><span class="n">match</span><span class="o">.</span><span class="n">similarity</span><span class="p">,</span>
+                        <span class="n">participant_id</span><span class="o">=</span><span class="n">match</span><span class="o">.</span><span class="n">chunk</span><span class="o">.</span><span class="n">participant_id</span><span class="p">,</span>
+                        <span class="n">reference_score</span><span class="o">=</span><span class="n">match</span><span class="o">.</span><span class="n">reference_score</span><span class="p">,</span>
+                        <span class="n">chunk_preview</span><span class="o">=</span><span class="n">match</span><span class="o">.</span><span class="n">chunk</span><span class="o">.</span><span class="n">text</span><span class="p">[:</span><span class="mi">160</span><span class="p">],</span>
+                        <span class="n">chunk_chars</span><span class="o">=</span><span class="nb">len</span><span class="p">(</span><span class="n">match</span><span class="o">.</span><span class="n">chunk</span><span class="o">.</span><span class="n">text</span><span class="p">),</span>
+                    <span class="p">)</span>
+
+            <span class="n">item_references</span><span class="p">[</span><span class="n">item</span><span class="p">]</span> <span class="o">=</span> <span class="n">final_matches</span>
+
+            <span class="n">logger</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span>
+                <span class="s2">&quot;Found references for item&quot;</span><span class="p">,</span>
+                <span class="n">item</span><span class="o">=</span><span class="n">item</span><span class="o">.</span><span class="n">value</span><span class="p">,</span>
+                <span class="n">match_count</span><span class="o">=</span><span class="nb">len</span><span class="p">(</span><span class="n">final_matches</span><span class="p">),</span>
+                <span class="n">top_similarity</span><span class="o">=</span><span class="n">final_matches</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">similarity</span> <span class="k">if</span> <span class="n">final_matches</span> <span class="k">else</span> <span class="mi">0</span><span class="p">,</span>
+            <span class="p">)</span>
+
+        <span class="k">return</span> <span class="n">ReferenceBundle</span><span class="p">(</span><span class="n">item_references</span><span class="o">=</span><span class="n">item_references</span><span class="p">)</span>
+
+    <span class="c1"># Fallback: current sequential behavior (kept for safety / toggle).</span>
+    <span class="k">for</span> <span class="n">item</span> <span class="ow">in</span> <span class="n">PHQ8Item</span><span class="o">.</span><span class="n">all_items</span><span class="p">():</span>
+        <span class="n">evidence_quotes</span> <span class="o">=</span> <span class="n">evidence_dict</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">item</span><span class="p">,</span> <span class="p">[])</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="n">evidence_quotes</span><span class="p">:</span>
+            <span class="k">continue</span>
+
+        <span class="n">combined_text</span> <span class="o">=</span> <span class="s2">&quot;</span><span class="se">\n</span><span class="s2">&quot;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">evidence_quotes</span><span class="p">)</span>
+        <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">combined_text</span><span class="p">)</span> <span class="o">&lt;</span> <span class="bp">self</span><span class="o">.</span><span class="n">_min_chars</span><span class="p">:</span>
+            <span class="k">continue</span>
+
+        <span class="n">query_emb</span> <span class="o">=</span> <span class="k">await</span> <span class="bp">self</span><span class="o">.</span><span class="n">embed_text</span><span class="p">(</span><span class="n">combined_text</span><span class="p">)</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="n">query_emb</span><span class="p">:</span>
+            <span class="k">continue</span>
+
+        <span class="n">matches</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_compute_similarities</span><span class="p">(</span><span class="n">query_emb</span><span class="p">,</span> <span class="n">item</span><span class="o">=</span><span class="n">item</span><span class="p">)</span>
+        <span class="n">matches</span><span class="o">.</span><span class="n">sort</span><span class="p">(</span><span class="n">key</span><span class="o">=</span><span class="k">lambda</span> <span class="n">x</span><span class="p">:</span> <span class="n">x</span><span class="o">.</span><span class="n">similarity</span><span class="p">,</span> <span class="n">reverse</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_min_reference_similarity</span> <span class="o">&gt;</span> <span class="mf">0.0</span><span class="p">:</span>
+            <span class="n">matches</span> <span class="o">=</span> <span class="p">[</span><span class="n">m</span> <span class="k">for</span> <span class="n">m</span> <span class="ow">in</span> <span class="n">matches</span> <span class="k">if</span> <span class="n">m</span><span class="o">.</span><span class="n">similarity</span> <span class="o">&gt;=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_min_reference_similarity</span><span class="p">]</span>
+
+        <span class="n">top_matches</span> <span class="o">=</span> <span class="n">matches</span><span class="p">[:</span> <span class="bp">self</span><span class="o">.</span><span class="n">_top_k</span><span class="p">]</span>
+        <span class="n">final_matches</span> <span class="o">=</span> <span class="k">await</span> <span class="bp">self</span><span class="o">.</span><span class="n">_validate_matches</span><span class="p">(</span><span class="n">top_matches</span><span class="p">,</span> <span class="n">item</span><span class="p">,</span> <span class="n">combined_text</span><span class="p">)</span>
+
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_enable_retrieval_audit</span><span class="p">:</span>
+            <span class="n">evidence_key</span> <span class="o">=</span> <span class="sa">f</span><span class="s2">&quot;PHQ8_</span><span class="si">{</span><span class="n">item</span><span class="o">.</span><span class="n">value</span><span class="si">}</span><span class="s2">&quot;</span>
+            <span class="k">for</span> <span class="n">rank</span><span class="p">,</span> <span class="n">match</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">final_matches</span><span class="p">,</span> <span class="n">start</span><span class="o">=</span><span class="mi">1</span><span class="p">):</span>
+                <span class="n">logger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span>
+                    <span class="s2">&quot;retrieved_reference&quot;</span><span class="p">,</span>
+                    <span class="n">item</span><span class="o">=</span><span class="n">item</span><span class="o">.</span><span class="n">value</span><span class="p">,</span>
+                    <span class="n">evidence_key</span><span class="o">=</span><span class="n">evidence_key</span><span class="p">,</span>
+                    <span class="n">rank</span><span class="o">=</span><span class="n">rank</span><span class="p">,</span>
+                    <span class="n">similarity</span><span class="o">=</span><span class="n">match</span><span class="o">.</span><span class="n">similarity</span><span class="p">,</span>
+                    <span class="n">participant_id</span><span class="o">=</span><span class="n">match</span><span class="o">.</span><span class="n">chunk</span><span class="o">.</span><span class="n">participant_id</span><span class="p">,</span>
+                    <span class="n">reference_score</span><span class="o">=</span><span class="n">match</span><span class="o">.</span><span class="n">reference_score</span><span class="p">,</span>
+                    <span class="n">chunk_preview</span><span class="o">=</span><span class="n">match</span><span class="o">.</span><span class="n">chunk</span><span class="o">.</span><span class="n">text</span><span class="p">[:</span><span class="mi">160</span><span class="p">],</span>
+                    <span class="n">chunk_chars</span><span class="o">=</span><span class="nb">len</span><span class="p">(</span><span class="n">match</span><span class="o">.</span><span class="n">chunk</span><span class="o">.</span><span class="n">text</span><span class="p">),</span>
+                <span class="p">)</span>
+
+        <span class="n">item_references</span><span class="p">[</span><span class="n">item</span><span class="p">]</span> <span class="o">=</span> <span class="n">final_matches</span>
+
+        <span class="n">logger</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span>
+            <span class="s2">&quot;Found references for item&quot;</span><span class="p">,</span>
+            <span class="n">item</span><span class="o">=</span><span class="n">item</span><span class="o">.</span><span class="n">value</span><span class="p">,</span>
+            <span class="n">match_count</span><span class="o">=</span><span class="nb">len</span><span class="p">(</span><span class="n">final_matches</span><span class="p">),</span>
+            <span class="n">top_similarity</span><span class="o">=</span><span class="n">final_matches</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">similarity</span> <span class="k">if</span> <span class="n">final_matches</span> <span class="k">else</span> <span class="mi">0</span><span class="p">,</span>
+        <span class="p">)</span>
+
+    <span class="k">return</span> <span class="n">ReferenceBundle</span><span class="p">(</span><span class="n">item_references</span><span class="o">=</span><span class="n">item_references</span><span class="p">)</span>
+</code></pre></div>
+<p><strong>Acceptance requirement</strong>: HuggingFace backend makes exactly <strong>one</strong> <code>encode()</code> call per participant (for all items with evidence).</p>
+<hr />
+<h2 id="edge-cases">Edge Cases</h2>
+<ul>
+<li><strong>No items have evidence</strong>: <code>embed_batch</code> must not be called; bundle returns all items with empty reference lists.</li>
+<li><strong>Evidence exists but <code>combined_text</code> &lt; <code>min_evidence_chars</code></strong>: treat as no evidence (consistent with current behavior).</li>
+<li><strong>Backend is Ollama</strong>: <code>embed_batch</code> fallback must preserve semantics; performance win may be smaller.</li>
+<li><strong>Timeout</strong>: error must remain surfaced as <code>LLMTimeoutError(timeout_seconds)</code> (same class as today).</li>
+</ul>
+<hr />
+<h2 id="tests-implementation-ready-deterministic">Tests (Implementation-Ready, Deterministic)</h2>
+<h3 id="unit-embeddingservice-uses-batch-once">Unit: EmbeddingService uses batch once</h3>
+<p><strong>File</strong>: <code>tests/unit/services/test_embedding.py</code></p>
+<p>Add a unit test that:
+- Mocks <code>llm_client.embed_batch</code> as <code>AsyncMock</code> returning deterministic vectors.
+- Ensures <code>llm_client.embed</code> is <strong>not</strong> called when <code>enable_batch_query_embedding=True</code>.
+- Ensures <code>embed_batch</code> is called exactly once per <code>build_reference_bundle(...)</code> call.</p>
+<p>Copy/pasteable test skeleton:</p>
+<div class="highlight"><pre><span></span><code><span class="kn">from</span><span class="w"> </span><span class="nn">unittest.mock</span><span class="w"> </span><span class="kn">import</span> <span class="n">AsyncMock</span><span class="p">,</span> <span class="n">MagicMock</span>
+
+<span class="kn">import</span><span class="w"> </span><span class="nn">pytest</span>
+
+<span class="kn">from</span><span class="w"> </span><span class="nn">ai_psychiatrist.config</span><span class="w"> </span><span class="kn">import</span> <span class="n">EmbeddingSettings</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">ai_psychiatrist.domain.enums</span><span class="w"> </span><span class="kn">import</span> <span class="n">PHQ8Item</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">ai_psychiatrist.infrastructure.llm.protocols</span><span class="w"> </span><span class="kn">import</span> <span class="n">EmbeddingBatchResponse</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">ai_psychiatrist.services.embedding</span><span class="w"> </span><span class="kn">import</span> <span class="n">EmbeddingService</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">ai_psychiatrist.services.reference_store</span><span class="w"> </span><span class="kn">import</span> <span class="n">ReferenceStore</span>
+
+
+<span class="nd">@pytest</span><span class="o">.</span><span class="n">mark</span><span class="o">.</span><span class="n">asyncio</span>
+<span class="k">async</span> <span class="k">def</span><span class="w"> </span><span class="nf">test_build_reference_bundle_uses_embed_batch_once</span><span class="p">()</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+    <span class="n">llm_client</span> <span class="o">=</span> <span class="n">MagicMock</span><span class="p">()</span>
+    <span class="n">llm_client</span><span class="o">.</span><span class="n">embed</span> <span class="o">=</span> <span class="n">AsyncMock</span><span class="p">()</span>
+    <span class="n">llm_client</span><span class="o">.</span><span class="n">embed_batch</span> <span class="o">=</span> <span class="n">AsyncMock</span><span class="p">(</span>
+        <span class="n">return_value</span><span class="o">=</span><span class="n">EmbeddingBatchResponse</span><span class="p">(</span>
+            <span class="n">embeddings</span><span class="o">=</span><span class="p">[(</span><span class="mf">1.0</span><span class="p">,</span> <span class="mf">0.0</span><span class="p">),</span> <span class="p">(</span><span class="mf">0.0</span><span class="p">,</span> <span class="mf">1.0</span><span class="p">)],</span>
+            <span class="n">model</span><span class="o">=</span><span class="s2">&quot;mock&quot;</span><span class="p">,</span>
+        <span class="p">)</span>
+    <span class="p">)</span>
+
+    <span class="n">reference_store</span> <span class="o">=</span> <span class="n">MagicMock</span><span class="p">(</span><span class="n">spec</span><span class="o">=</span><span class="n">ReferenceStore</span><span class="p">)</span>
+    <span class="n">settings</span> <span class="o">=</span> <span class="n">EmbeddingSettings</span><span class="p">(</span>
+        <span class="n">dimension</span><span class="o">=</span><span class="mi">2</span><span class="p">,</span>
+        <span class="n">enable_batch_query_embedding</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
+        <span class="n">query_embed_timeout_seconds</span><span class="o">=</span><span class="mi">999</span><span class="p">,</span>
+    <span class="p">)</span>
+
+    <span class="n">service</span> <span class="o">=</span> <span class="n">EmbeddingService</span><span class="p">(</span><span class="n">llm_client</span><span class="p">,</span> <span class="n">reference_store</span><span class="p">,</span> <span class="n">settings</span><span class="p">)</span>
+    <span class="n">service</span><span class="o">.</span><span class="n">_compute_similarities</span> <span class="o">=</span> <span class="n">MagicMock</span><span class="p">(</span><span class="n">return_value</span><span class="o">=</span><span class="p">[])</span>
+    <span class="n">service</span><span class="o">.</span><span class="n">_validate_matches</span> <span class="o">=</span> <span class="n">AsyncMock</span><span class="p">(</span><span class="n">return_value</span><span class="o">=</span><span class="p">[])</span>
+
+    <span class="n">evidence</span> <span class="o">=</span> <span class="p">{</span>
+        <span class="n">PHQ8Item</span><span class="o">.</span><span class="n">SLEEP</span><span class="p">:</span> <span class="p">[</span><span class="s2">&quot;I cannot sleep at night.&quot;</span><span class="p">],</span>
+        <span class="n">PHQ8Item</span><span class="o">.</span><span class="n">TIRED</span><span class="p">:</span> <span class="p">[</span><span class="s2">&quot;I feel exhausted most days.&quot;</span><span class="p">],</span>
+    <span class="p">}</span>
+
+    <span class="n">_</span> <span class="o">=</span> <span class="k">await</span> <span class="n">service</span><span class="o">.</span><span class="n">build_reference_bundle</span><span class="p">(</span><span class="n">evidence</span><span class="p">)</span>
+
+    <span class="n">llm_client</span><span class="o">.</span><span class="n">embed_batch</span><span class="o">.</span><span class="n">assert_awaited_once</span><span class="p">()</span>
+    <span class="n">llm_client</span><span class="o">.</span><span class="n">embed</span><span class="o">.</span><span class="n">assert_not_awaited</span><span class="p">()</span>
+</code></pre></div>
+<p><strong>Also required</strong>: update <code>tests/fixtures/mock_llm.py</code>
+- Add <code>embed_batch(...)</code> that loops over texts and calls <code>embed(...)</code> to generate a per-text embedding.
+- This prevents unrelated tests from failing when they use <code>MockLLMClient</code> with <code>EmbeddingService</code>.</p>
+<h3 id="unit-huggingfaceclient-missing-deps-behavior">Unit: HuggingFaceClient missing deps behavior</h3>
+<p><strong>File</strong>: <code>tests/unit/infrastructure/llm/test_huggingface.py</code></p>
+<p>Add a test mirroring the existing “deps missing” tests:
+- Monkeypatch <code>importlib.import_module</code> to raise.
+- Assert <code>await client.embed_batch(...)</code> raises <code>MissingHuggingFaceDependenciesError</code>.</p>
+<hr />
+<h2 id="verification-criteria">Verification Criteria</h2>
+<ol>
+<li>Unit tests pass:</li>
+<li><code>uv run pytest tests/unit/services/test_embedding.py -v</code></li>
+<li><code>uv run pytest tests/unit/infrastructure/llm/test_huggingface.py -v</code></li>
+<li>Reproduction run passes with zero few-shot failures:</li>
+<li><code>uv run python scripts/reproduce_results.py --mode few_shot --split paper</code></li>
+<li>Run 4 regression is gone:</li>
+<li><code>failed_subjects == 0</code> for <code>few_shot</code></li>
+<li>runtime returns toward ~95 minutes on the same machine (expect variance).</li>
+</ol>
+<hr />
+<h2 id="best-practice-notes-2025">Best-Practice Notes (2025)</h2>
+<ul>
+<li>Batch encode is the standard way to reduce per-call overhead with SentenceTransformers (<code>encode(sentences=[...], batch_size=...)</code>): https://www.sbert.net/</li>
+<li><code>asyncio.wait_for</code> is a standard timeout mechanism, but canceling CPU-bound <code>to_thread</code> work is not instantaneous, so reducing the number of embedding operations is a durable reliability win: https://docs.python.org/3/library/asyncio-task.html#asyncio.wait_for</li>
+</ul>
+
+
+
+
+
+
+
+
+
+
+
+
+                
+              </article>
+            </div>
+          
+          
+<script>var target=document.getElementById(location.hash.slice(1));target&&target.name&&(target.checked=target.name.startsWith("__tabbed_"))</script>
+        </div>
+        
+      </main>
+      
+        <footer class="md-footer">
+  
+    
+  
+  <div class="md-footer-meta md-typeset">
+    <div class="md-footer-meta__inner md-grid">
+      <div class="md-copyright">
+  
+  
+    Made with
+    <a href="https://squidfunk.github.io/mkdocs-material/" target="_blank" rel="noopener">
+      Material for MkDocs
+    </a>
+  
+</div>
+      
+    </div>
+  </div>
+</footer>
+      
+    </div>
+    <div class="md-dialog" data-md-component="dialog">
+      <div class="md-dialog__inner md-typeset"></div>
+    </div>
+    
+    
+    
+      
+      
+      <script id="__config" type="application/json">{"annotate": null, "base": "../../..", "features": ["content.code.copy", "content.action.edit", "content.action.view", "navigation.tracking", "navigation.sections", "navigation.footer", "navigation.instant"], "search": "../../../assets/javascripts/workers/search.2c215733.min.js", "tags": null, "translations": {"clipboard.copied": "Copied to clipboard", "clipboard.copy": "Copy to clipboard", "search.result.more.one": "1 more on this page", "search.result.more.other": "# more on this page", "search.result.none": "No matching documents", "search.result.one": "1 matching document", "search.result.other": "# matching documents", "search.result.placeholder": "Type to start searching", "search.result.term.missing": "Missing", "select.version": "Select version"}, "version": null}</script>
+    
+    
+      <script src="../../../assets/javascripts/bundle.79ae519e.min.js"></script>
+      
+    
+  </body>
+</html>

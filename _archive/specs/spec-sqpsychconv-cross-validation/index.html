@@ -1,0 +1,3593 @@
+
+<!doctype html>
+<html lang="en" class="no-js">
+  <head>
+    
+      <meta charset="utf-8">
+      <meta name="viewport" content="width=device-width,initial-scale=1">
+      
+      
+      
+        <link rel="canonical" href="https://the-obstacle-is-the-way.github.io/ai-psychiatrist/_archive/specs/spec-sqpsychconv-cross-validation/">
+      
+      
+      
+      
+        
+      
+      
+      <link rel="icon" href="../../../assets/images/favicon.png">
+      <meta name="generator" content="mkdocs-1.6.1, mkdocs-material-9.7.1">
+    
+    
+      
+        <title>SPEC: SQPsychConv Cross-Dataset Validation - AI Psychiatrist</title>
+      
+    
+    
+      <link rel="stylesheet" href="../../../assets/stylesheets/main.484c7ddc.min.css">
+      
+      
+
+
+    
+    
+      
+    
+    
+      
+        
+        
+        <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+        <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Roboto:300,300i,400,400i,700,700i%7CRoboto+Mono:400,400i,700,700i&display=fallback">
+        <style>:root{--md-text-font:"Roboto";--md-code-font:"Roboto Mono"}</style>
+      
+    
+    
+    <script>__md_scope=new URL("../../..",location),__md_hash=e=>[...e].reduce(((e,_)=>(e<<5)-e+_.charCodeAt(0)),0),__md_get=(e,_=localStorage,t=__md_scope)=>JSON.parse(_.getItem(t.pathname+"."+e)),__md_set=(e,_,t=localStorage,a=__md_scope)=>{try{t.setItem(a.pathname+"."+e,JSON.stringify(_))}catch(e){}}</script>
+    
+      
+
+    
+    
+  </head>
+  
+  
+    <body dir="ltr">
+  
+    
+    <input class="md-toggle" data-md-toggle="drawer" type="checkbox" id="__drawer" autocomplete="off">
+    <input class="md-toggle" data-md-toggle="search" type="checkbox" id="__search" autocomplete="off">
+    <label class="md-overlay" for="__drawer"></label>
+    <div data-md-component="skip">
+      
+        
+        <a href="#spec-sqpsychconv-cross-dataset-validation" class="md-skip">
+          Skip to content
+        </a>
+      
+    </div>
+    <div data-md-component="announce">
+      
+    </div>
+    
+    
+      
+
+  
+
+<header class="md-header md-header--shadow" data-md-component="header">
+  <nav class="md-header__inner md-grid" aria-label="Header">
+    <a href="../../.." title="AI Psychiatrist" class="md-header__button md-logo" aria-label="AI Psychiatrist" data-md-component="logo">
+      
+  
+  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 8a3 3 0 0 0 3-3 3 3 0 0 0-3-3 3 3 0 0 0-3 3 3 3 0 0 0 3 3m0 3.54C9.64 9.35 6.5 8 3 8v11c3.5 0 6.64 1.35 9 3.54 2.36-2.19 5.5-3.54 9-3.54V8c-3.5 0-6.64 1.35-9 3.54"/></svg>
+
+    </a>
+    <label class="md-header__button md-icon" for="__drawer">
+      
+      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M3 6h18v2H3zm0 5h18v2H3zm0 5h18v2H3z"/></svg>
+    </label>
+    <div class="md-header__title" data-md-component="header-title">
+      <div class="md-header__ellipsis">
+        <div class="md-header__topic">
+          <span class="md-ellipsis">
+            AI Psychiatrist
+          </span>
+        </div>
+        <div class="md-header__topic" data-md-component="header-topic">
+          <span class="md-ellipsis">
+            
+              SPEC: SQPsychConv Cross-Dataset Validation
+            
+          </span>
+        </div>
+      </div>
+    </div>
+    
+    
+      <script>var palette=__md_get("__palette");if(palette&&palette.color){if("(prefers-color-scheme)"===palette.color.media){var media=matchMedia("(prefers-color-scheme: light)"),input=document.querySelector(media.matches?"[data-md-color-media='(prefers-color-scheme: light)']":"[data-md-color-media='(prefers-color-scheme: dark)']");palette.color.media=input.getAttribute("data-md-color-media"),palette.color.scheme=input.getAttribute("data-md-color-scheme"),palette.color.primary=input.getAttribute("data-md-color-primary"),palette.color.accent=input.getAttribute("data-md-color-accent")}for(var[key,value]of Object.entries(palette.color))document.body.setAttribute("data-md-color-"+key,value)}</script>
+    
+    
+    
+      
+      
+        <label class="md-header__button md-icon" for="__search">
+          
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M9.5 3A6.5 6.5 0 0 1 16 9.5c0 1.61-.59 3.09-1.56 4.23l.27.27h.79l5 5-1.5 1.5-5-5v-.79l-.27-.27A6.52 6.52 0 0 1 9.5 16 6.5 6.5 0 0 1 3 9.5 6.5 6.5 0 0 1 9.5 3m0 2C7 5 5 7 5 9.5S7 14 9.5 14 14 12 14 9.5 12 5 9.5 5"/></svg>
+        </label>
+        <div class="md-search" data-md-component="search" role="dialog">
+  <label class="md-search__overlay" for="__search"></label>
+  <div class="md-search__inner" role="search">
+    <form class="md-search__form" name="search">
+      <input type="text" class="md-search__input" name="query" aria-label="Search" placeholder="Search" autocapitalize="off" autocorrect="off" autocomplete="off" spellcheck="false" data-md-component="search-query" required>
+      <label class="md-search__icon md-icon" for="__search">
+        
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M9.5 3A6.5 6.5 0 0 1 16 9.5c0 1.61-.59 3.09-1.56 4.23l.27.27h.79l5 5-1.5 1.5-5-5v-.79l-.27-.27A6.52 6.52 0 0 1 9.5 16 6.5 6.5 0 0 1 3 9.5 6.5 6.5 0 0 1 9.5 3m0 2C7 5 5 7 5 9.5S7 14 9.5 14 14 12 14 9.5 12 5 9.5 5"/></svg>
+        
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M20 11v2H8l5.5 5.5-1.42 1.42L4.16 12l7.92-7.92L13.5 5.5 8 11z"/></svg>
+      </label>
+      <nav class="md-search__options" aria-label="Search">
+        
+        <button type="reset" class="md-search__icon md-icon" title="Clear" aria-label="Clear" tabindex="-1">
+          
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M19 6.41 17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12z"/></svg>
+        </button>
+      </nav>
+      
+    </form>
+    <div class="md-search__output">
+      <div class="md-search__scrollwrap" tabindex="0" data-md-scrollfix>
+        <div class="md-search-result" data-md-component="search-result">
+          <div class="md-search-result__meta">
+            Initializing search
+          </div>
+          <ol class="md-search-result__list" role="presentation"></ol>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+      
+    
+    
+      <div class="md-header__source">
+        <a href="https://github.com/The-Obstacle-Is-The-Way/ai-psychiatrist" title="Go to repository" class="md-source" data-md-component="source">
+  <div class="md-source__icon md-icon">
+    
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 448 512"><!--! Font Awesome Free 7.1.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2025 Fonticons, Inc.--><path d="M439.6 236.1 244 40.5c-5.4-5.5-12.8-8.5-20.4-8.5s-15 3-20.4 8.4L162.5 81l51.5 51.5c27.1-9.1 52.7 16.8 43.4 43.7l49.7 49.7c34.2-11.8 61.2 31 35.5 56.7-26.5 26.5-70.2-2.9-56-37.3L240.3 199v121.9c25.3 12.5 22.3 41.8 9.1 55-6.4 6.4-15.2 10.1-24.3 10.1s-17.8-3.6-24.3-10.1c-17.6-17.6-11.1-46.9 11.2-56v-123c-20.8-8.5-24.6-30.7-18.6-45L142.6 101 8.5 235.1C3 240.6 0 247.9 0 255.5s3 15 8.5 20.4l195.6 195.7c5.4 5.4 12.7 8.4 20.4 8.4s15-3 20.4-8.4l194.7-194.7c5.4-5.4 8.4-12.8 8.4-20.4s-3-15-8.4-20.4"/></svg>
+  </div>
+  <div class="md-source__repository">
+    GitHub
+  </div>
+</a>
+      </div>
+    
+  </nav>
+  
+</header>
+    
+    <div class="md-container" data-md-component="container">
+      
+      
+        
+          
+        
+      
+      <main class="md-main" data-md-component="main">
+        <div class="md-main__inner md-grid">
+          
+            
+              
+              <div class="md-sidebar md-sidebar--primary" data-md-component="sidebar" data-md-type="navigation" >
+                <div class="md-sidebar__scrollwrap">
+                  <div class="md-sidebar__inner">
+                    
+
+
+
+<nav class="md-nav md-nav--primary" aria-label="Navigation" data-md-level="0">
+  <label class="md-nav__title" for="__drawer">
+    <a href="../../.." title="AI Psychiatrist" class="md-nav__button md-logo" aria-label="AI Psychiatrist" data-md-component="logo">
+      
+  
+  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 8a3 3 0 0 0 3-3 3 3 0 0 0-3-3 3 3 0 0 0-3 3 3 3 0 0 0 3 3m0 3.54C9.64 9.35 6.5 8 3 8v11c3.5 0 6.64 1.35 9 3.54 2.36-2.19 5.5-3.54 9-3.54V8c-3.5 0-6.64 1.35-9 3.54"/></svg>
+
+    </a>
+    AI Psychiatrist
+  </label>
+  
+    <div class="md-nav__source">
+      <a href="https://github.com/The-Obstacle-Is-The-Way/ai-psychiatrist" title="Go to repository" class="md-source" data-md-component="source">
+  <div class="md-source__icon md-icon">
+    
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 448 512"><!--! Font Awesome Free 7.1.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2025 Fonticons, Inc.--><path d="M439.6 236.1 244 40.5c-5.4-5.5-12.8-8.5-20.4-8.5s-15 3-20.4 8.4L162.5 81l51.5 51.5c27.1-9.1 52.7 16.8 43.4 43.7l49.7 49.7c34.2-11.8 61.2 31 35.5 56.7-26.5 26.5-70.2-2.9-56-37.3L240.3 199v121.9c25.3 12.5 22.3 41.8 9.1 55-6.4 6.4-15.2 10.1-24.3 10.1s-17.8-3.6-24.3-10.1c-17.6-17.6-11.1-46.9 11.2-56v-123c-20.8-8.5-24.6-30.7-18.6-45L142.6 101 8.5 235.1C3 240.6 0 247.9 0 255.5s3 15 8.5 20.4l195.6 195.7c5.4 5.4 12.7 8.4 20.4 8.4s15-3 20.4-8.4l194.7-194.7c5.4-5.4 8.4-12.8 8.4-20.4s-3-15-8.4-20.4"/></svg>
+  </div>
+  <div class="md-source__repository">
+    GitHub
+  </div>
+</a>
+    </div>
+  
+  <ul class="md-nav__list" data-md-scrollfix>
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../.." class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    AI Psychiatrist Documentation
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    
+    
+    
+    
+      
+        
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--section md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_2" >
+        
+          
+          <label class="md-nav__link" for="__nav_2" id="__nav_2_label" tabindex="">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+     research
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_2_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_2">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+     research
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../_research/hypotheses-explained/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Hypotheses Explained: Current State vs Future Improvements
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../_research/hypotheses-for-improvement/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Hypotheses for Improvement: First-Principles Analysis
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../_research/master-bug-audit/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    MASTER BUG AUDIT
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    
+    
+    
+    
+      
+        
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--section md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_3" >
+        
+          
+          <label class="md-nav__link" for="__nav_3" id="__nav_3_label" tabindex="">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Architecture
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_3_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_3">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    Architecture
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../architecture/architecture/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Architecture
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../architecture/future-architecture/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Future Architecture: Agent Orchestration Options
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../architecture/pipeline/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Pipeline
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    
+    
+    
+    
+      
+        
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--section md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_4" >
+        
+          
+          <label class="md-nav__link" for="__nav_4" id="__nav_4_label" tabindex="">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Clinical
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_4_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_4">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    Clinical
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../clinical/clinical-understanding/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Clinical Understanding: How This System Works
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../clinical/glossary/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Glossary
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../clinical/phq8/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    PHQ-8: Patient Health Questionnaire
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../clinical/task-validity/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Task Validity: What Can (and Cannot) Be Inferred from DAIC-WOZ Transcripts
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    
+    
+    
+    
+      
+        
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--section md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_5" >
+        
+          
+          <label class="md-nav__link" for="__nav_5" id="__nav_5_label" tabindex="">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Configs
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_5_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_5">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    Configs
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../configs/agent-sampling-registry/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Agent Sampling Parameter Registry
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../configs/configuration-philosophy/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Configuration Philosophy
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../configs/configuration/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Configuration Reference
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    
+    
+    
+    
+      
+        
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--section md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_6" >
+        
+          
+          <label class="md-nav__link" for="__nav_6" id="__nav_6_label" tabindex="">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Data
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_6_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_6">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    Data
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../data/artifact-namespace-registry/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Artifact Namespace Registry
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../data/daic-woz-preprocessing/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    DAIC-WOZ Transcript Preprocessing (Bias-Aware, Deterministic)
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../data/daic-woz-schema/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    DAIC-WOZ Dataset Schema
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../data/data-splits-overview/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Data Splits Overview
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    
+    
+    
+    
+      
+        
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--section md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_7" >
+        
+          
+          <label class="md-nav__link" for="__nav_7" id="__nav_7_label" tabindex="">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Developer
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_7_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_7">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    Developer
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../developer/api-endpoints/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    API Reference
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../developer/dependency-registry/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Dependency Registry
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../developer/error-handling/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Error Handling and Fail-Fast Philosophy
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../developer/exceptions/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Exception Reference (Domain + Runtime)
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../developer/testing/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Testing Conventions (Markers, Fixtures, and Test Doubles)
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    
+    
+    
+    
+      
+        
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--section md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_8" >
+        
+          
+          <label class="md-nav__link" for="__nav_8" id="__nav_8_label" tabindex="">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Getting started
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_8_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_8">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    Getting started
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../getting-started/quickstart/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Quickstart Guide
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    
+    
+    
+    
+      
+        
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--section md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_9" >
+        
+          
+          <label class="md-nav__link" for="__nav_9" id="__nav_9_label" tabindex="">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Models
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_9_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_9">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    Models
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../models/model-registry/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    AI Psychiatrist Model Registry
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../models/model-wiring/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Model Wiring: Current State
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    
+    
+    
+    
+      
+        
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--section md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_10" >
+        
+          
+          <label class="md-nav__link" for="__nav_10" id="__nav_10_label" tabindex="">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Pipeline internals
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_10_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_10">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    Pipeline internals
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../pipeline-internals/evidence-extraction/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Evidence Extraction Mechanism: How It Actually Works
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../pipeline-internals/features/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Feature Reference (Non-Archive Canonical)
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    
+    
+    
+    
+      
+        
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--section md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_11" >
+        
+          
+          <label class="md-nav__link" for="__nav_11" id="__nav_11_label" tabindex="">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Preflight checklist
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_11_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_11">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    Preflight checklist
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../preflight-checklist/preflight-checklist-few-shot/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Preflight Checklist: Few-Shot Reproduction
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../preflight-checklist/preflight-checklist-zero-shot/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Preflight Checklist: Zero-Shot Run
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    
+    
+    
+    
+      
+        
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--section md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_12" >
+        
+          
+          <label class="md-nav__link" for="__nav_12" id="__nav_12_label" tabindex="">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Rag
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_12_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_12">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    Rag
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../rag/artifact-generation/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    RAG Artifact Generation
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../rag/chunk-scoring/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Chunk-Level Scoring (Spec 35) — Schema, Workflow, and Gotchas
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../rag/debugging/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    RAG Debugging (Audit Logs + Guardrails)
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../rag/design-rationale/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    RAG Design Rationale
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../rag/overview/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    RAG Overview: Embeddings and Few-Shot Retrieval
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../rag/runtime-features/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    RAG Runtime Features
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    
+    
+    
+    
+      
+        
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--section md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_13" >
+        
+          
+          <label class="md-nav__link" for="__nav_13" id="__nav_13_label" tabindex="">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Results
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_13_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_13">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    Results
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../results/few-shot-analysis/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Why Few-Shot May Not Beat Zero-Shot: Analysis
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../results/reproduction-results/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Paper Reproduction Results (Current Status)
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../results/run-history/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Complete Run History &amp; Statistical Analysis
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../results/run-output-schema/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Reproduction Run Output Schema (JSON + Registry)
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    
+    
+    
+    
+      
+        
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--section md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_14" >
+        
+          
+          <label class="md-nav__link" for="__nav_14" id="__nav_14_label" tabindex="">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Statistics
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_14_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_14">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    Statistics
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../statistics/coverage/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Coverage Explained: What It Is and Why It Matters
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../statistics/metrics-and-evaluation/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Metrics and Evaluation (Exact Definitions + Output Schema)
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../statistics/statistical-methodology-aurc-augrc/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Statistical Methodology: AURC/AUGRC for Selective Prediction
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+  </ul>
+</nav>
+                  </div>
+                </div>
+              </div>
+            
+            
+              
+              <div class="md-sidebar md-sidebar--secondary" data-md-component="sidebar" data-md-type="toc" >
+                <div class="md-sidebar__scrollwrap">
+                  <div class="md-sidebar__inner">
+                    
+
+<nav class="md-nav md-nav--secondary" aria-label="Table of contents">
+  
+  
+  
+    
+  
+  
+    <label class="md-nav__title" for="__toc">
+      <span class="md-nav__icon md-icon"></span>
+      Table of contents
+    </label>
+    <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
+      
+        <li class="md-nav__item">
+  <a href="#executive-summary" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Executive Summary
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#1-dataset-analysis" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        1. Dataset Analysis
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="1. Dataset Analysis">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#11-sqpsychconv-reality-vs-expectations" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        1.1 SQPsychConv Reality vs. Expectations
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#12-dataset-statistics-verified-from-actual-data" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        1.2 Dataset Statistics (Verified from Actual Data)
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#13-data-quality-issues" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        1.3 Data Quality Issues
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#14-phq-8-symptom-coverage-analysis" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        1.4 PHQ-8 Symptom Coverage Analysis
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#15-dialogue-structure" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        1.5 Dialogue Structure
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#2-scale-mapping-research" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        2. Scale Mapping Research
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="2. Scale Mapping Research">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#21-hamd-phq-9-correlation" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        2.1 HAMD ↔ PHQ-9 Correlation
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#22-bdi-phq-9-correlation" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        2.2 BDI ↔ PHQ-9 Correlation
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#23-critical-limitation" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        2.3 Critical Limitation
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#3-architecture-analysis" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        3. Architecture Analysis
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="3. Architecture Analysis">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#31-current-pipeline-daic-woz" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        3.1 Current Pipeline (DAIC-WOZ)
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#32-key-coupling-points" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        3.2 Key Coupling Points
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#4-feasibility-assessment" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        4. Feasibility Assessment
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="4. Feasibility Assessment">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#41-approach-matrix" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        4.1 Approach Matrix
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#42-viable-paths" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        4.2 Viable Paths
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="4.2 Viable Paths">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#path-c-qualitative-evidence-retrieval-low-effort" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Path C: Qualitative Evidence Retrieval (Low Effort)
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#path-d-binary-classification-low-effort" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Path D: Binary Classification (Low Effort)
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#path-e-llm-derived-scores-circular-risk" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Path E: LLM-Derived Scores (Circular Risk)
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#path-f-author-collaboration-best-highest-effort" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Path F: Author Collaboration (Best, Highest Effort)
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#path-g-llm-derived-phq-8-with-daic-woz-validation-recommended" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Path G: LLM-Derived PHQ-8 with DAIC-WOZ Validation (Recommended)
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#5-implementation-spec-path-d-binary-classification" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        5. Implementation Spec (Path D: Binary Classification)
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="5. Implementation Spec (Path D: Binary Classification)">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#51-required-changes" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        5.1 Required Changes
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="5.1 Required Changes">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#new-configuration" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        New Configuration
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#new-data-loader" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        New Data Loader
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#new-evaluation-script" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        New Evaluation Script
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#52-evaluation-metrics" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        5.2 Evaluation Metrics
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#53-baseline-experiment" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        5.3 Baseline Experiment
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#6-circularity-concerns" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        6. Circularity Concerns
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="6. Circularity Concerns">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#61-the-synthetic-data-problem" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        6.1 The Synthetic Data Problem
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#62-mitigation-strategies" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        6.2 Mitigation Strategies
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#7-recommended-next-steps" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        7. Recommended Next Steps
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="7. Recommended Next Steps">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#phase-1-stabilize-daic-woz-baseline-current" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Phase 1: Stabilize DAIC-WOZ Baseline (Current)
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#phase-2-binary-cross-validation-low-effort" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Phase 2: Binary Cross-Validation (Low Effort)
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#phase-3-investigate-severity-signals-medium-effort" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Phase 3: Investigate Severity Signals (Medium Effort)
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#phase-4-publication-ready-validation-high-effort" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Phase 4: Publication-Ready Validation (High Effort)
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#8-references" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        8. References
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="8. References">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#scale-mapping-research" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Scale Mapping Research
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#sqpsychconv" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        SQPsychConv
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#daic-woz" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        DAIC-WOZ
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#9-decision-summary" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        9. Decision Summary
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#10-implementation-recommendation-separate-repository" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        10. Implementation Recommendation: Separate Repository
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="10. Implementation Recommendation: Separate Repository">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#101-why-separate-repo" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        10.1 Why Separate Repo?
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#102-proposed-workflow" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        10.2 Proposed Workflow
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#103-novel-contribution" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        10.3 Novel Contribution
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#11-for2107-data-governance-context" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        11. FOR2107 Data Governance Context
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="11. FOR2107 Data Governance Context">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#111-why-scores-were-stripped" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        11.1 Why Scores Were Stripped
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#112-accessing-the-source-data" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        11.2 Accessing the Source Data
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+    </ul>
+  
+</nav>
+                  </div>
+                </div>
+              </div>
+            
+          
+          
+            <div class="md-content" data-md-component="content">
+              
+              <article class="md-content__inner md-typeset">
+                
+                  
+
+
+  
+    <a href="https://github.com/The-Obstacle-Is-The-Way/ai-psychiatrist/edit/main/docs/_archive/specs/spec-sqpsychconv-cross-validation.md" title="Edit this page" class="md-content__button md-icon" rel="edit">
+      
+      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M10 20H6V4h7v5h5v3.1l2-2V8l-6-6H6c-1.1 0-2 .9-2 2v16c0 1.1.9 2 2 2h4zm10.2-7c.1 0 .3.1.4.2l1.3 1.3c.2.2.2.6 0 .8l-1 1-2.1-2.1 1-1c.1-.1.2-.2.4-.2m0 3.9L14.1 23H12v-2.1l6.1-6.1z"/></svg>
+    </a>
+  
+  
+    
+      
+    
+    <a href="https://github.com/The-Obstacle-Is-The-Way/ai-psychiatrist/raw/main/docs/_archive/specs/spec-sqpsychconv-cross-validation.md" title="View source of this page" class="md-content__button md-icon">
+      
+      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M17 18c.56 0 1 .44 1 1s-.44 1-1 1-1-.44-1-1 .44-1 1-1m0-3c-2.73 0-5.06 1.66-6 4 .94 2.34 3.27 4 6 4s5.06-1.66 6-4c-.94-2.34-3.27-4-6-4m0 6.5a2.5 2.5 0 0 1-2.5-2.5 2.5 2.5 0 0 1 2.5-2.5 2.5 2.5 0 0 1 2.5 2.5 2.5 2.5 0 0 1-2.5 2.5M9.27 20H6V4h7v5h5v4.07c.7.08 1.36.25 2 .49V8l-6-6H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h4.5a8.2 8.2 0 0 1-1.23-2"/></svg>
+    </a>
+  
+
+
+<h1 id="spec-sqpsychconv-cross-dataset-validation">SPEC: SQPsychConv Cross-Dataset Validation</h1>
+<blockquote>
+<p><strong>⚠️ SUPERSEDED (2026-01-06)</strong></p>
+<p>This research specification has been <strong>implemented</strong> as a separate repository:
+<strong><a href="https://github.com/The-Obstacle-Is-The-Way/vibe-check">vibe-check</a></strong> — Multi-agent PHQ-8 scoring for synthetic therapy dialogues.</p>
+<p>vibe-check implements "Path G" from this spec:
+- Multi-agent jury (3 models × 2 runs = 6 jurors)
+- Bayesian aggregation of scores
+- Quality gates (reliability, consistency, separation)
+- Outputs <code>scored.jsonl</code> for downstream retrieval in ai-psychiatrist</p>
+<p><strong>Reference copy</strong>: <code>_reference/vibe-check/</code></p>
+<p>This document is preserved for historical context only.</p>
+</blockquote>
+<p><strong>Status</strong>: ~~Research Specification~~ <strong>SUPERSEDED</strong>
+<strong>Related Issue</strong>: <a href="https://github.com/The-Obstacle-Is-The-Way/ai-psychiatrist/issues/38">#38 - Cross-dataset validation using SQPsychConv</a>
+<strong>Created</strong>: 2026-01-01
+<strong>Superseded</strong>: 2026-01-06 (by vibe-check implementation)</p>
+<hr />
+<h2 id="executive-summary">Executive Summary</h2>
+<p>This spec analyzes the feasibility of using the SQPsychConv synthetic therapy dataset for cross-dataset validation with our DAIC-WOZ-based PHQ-8 prediction pipeline. After deep analysis, we identify <strong>significant challenges</strong> but also <strong>viable pathways forward</strong>.</p>
+<hr />
+<h2 id="1-dataset-analysis">1. Dataset Analysis</h2>
+<h3 id="11-sqpsychconv-reality-vs-expectations">1.1 SQPsychConv Reality vs. Expectations</h3>
+<table>
+<thead>
+<tr>
+<th>Aspect</th>
+<th>Issue #38 Assumed</th>
+<th>Actual Dataset</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Labels</td>
+<td>HAMD/BDI severity scores</td>
+<td><strong>Binary</strong>: <code>mdd</code> vs <code>control</code> only</td>
+</tr>
+<tr>
+<td>Severity Levels</td>
+<td>Continuous/ordinal</td>
+<td><strong>None</strong> (classification only)</td>
+</tr>
+<tr>
+<td>Scale Type</td>
+<td>Clinician-rated (HAMD)</td>
+<td>No scale scores in data</td>
+</tr>
+</tbody>
+</table>
+<p><strong>Critical Finding</strong>: The SQPsychConv dataset (e.g., <code>AIMH/SQPsychConv_qwq</code>) contains:
+- <code>file_id</code>: Unique identifier (e.g., "active436", "control1328")
+- <code>condition</code>: Binary label (<code>mdd</code> or <code>control</code>)
+- <code>client_model</code>: Generator model identifier for the client role (e.g., <code>qwq_qwen</code>)
+- <code>therapist_model</code>: Generator model identifier for the therapist role (e.g., <code>qwq_qwen</code>)
+- <code>dialogue</code>: Full therapy transcript (mean ~5,953 chars; ~35 utterances on average)</p>
+<p>There are <strong>no HAMD, BDI, or severity scores</strong> in the downloadable dataset.</p>
+<h3 id="12-dataset-statistics-verified-from-actual-data">1.2 Dataset Statistics (Verified from Actual Data)</h3>
+<div class="highlight"><pre><span></span><code>Train split: 2,090 conversations
+  - control: 1,178 (56.4%)
+  - mdd: 912 (43.6%)
+
+Test split: 2,090 conversations
+  - control: 1,178 (56.4%)
+  - mdd: 912 (43.6%)
+
+Dialogue structure:
+  - Length: 2,487–12,446 chars (mean ~5,953)
+  - Utterances per dialogue: ~35 on average (≈18 therapist + ≈18 client)
+  - Format: &quot;Therapist: ...&quot; / &quot;Client: ...&quot; alternating
+  - End markers: [/END] tags
+</code></pre></div>
+<p><strong>Important note (HF <code>SQPsychConv_qwq</code>)</strong>: In our local cache, <code>data/sqpsychconv/train_sample.csv</code> and <code>data/sqpsychconv/test_sample.csv</code> are byte-identical (same <code>file_id</code> set and same dialogues). Treat them as a single corpus unless you intentionally re-split.</p>
+<h3 id="13-data-quality-issues">1.3 Data Quality Issues</h3>
+<p><strong>Chinese Character Code-Switching</strong>: 4,019 CJK characters found in dialogues (qwq variant; measured).
+The qwq_qwen model occasionally code-switches mid-sentence:</p>
+<div class="highlight"><pre><span></span><code>&quot;Overthink every word,怕说错话。End up silent, then恨自己不够好。&quot;
+Translation: &quot;...afraid of saying wrong things...hate myself for not being good enough&quot;
+</code></pre></div>
+<p>This is a quality issue but not a blocker for PHQ-8 scoring.</p>
+<h3 id="14-phq-8-symptom-coverage-analysis">1.4 PHQ-8 Symptom Coverage Analysis</h3>
+<p>Keyword analysis of 50 MDD dialogues shows strong symptom coverage:</p>
+<table>
+<thead>
+<tr>
+<th>PHQ-8 Item</th>
+<th>Keyword Coverage</th>
+<th>Example Phrases</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Item 1: Anhedonia</td>
+<td>38%</td>
+<td>"pointless", "no interest", "can't enjoy"</td>
+</tr>
+<tr>
+<td>Item 2: Depressed mood</td>
+<td>94%</td>
+<td>"sad", "hopeless", "empty", "hollow"</td>
+</tr>
+<tr>
+<td>Item 3: Sleep</td>
+<td>62%</td>
+<td>"insomnia", "awake", "tossing", "exhausted"</td>
+</tr>
+<tr>
+<td>Item 4: Fatigue</td>
+<td>54%</td>
+<td>"tired", "drained", "energy"</td>
+</tr>
+<tr>
+<td>Item 5: Appetite</td>
+<td>98%</td>
+<td>"appetite", "eat", "food" (often mentioned)</td>
+</tr>
+<tr>
+<td>Item 6: Guilt</td>
+<td>90%</td>
+<td>"guilt", "failure", "worthless", "burden"</td>
+</tr>
+<tr>
+<td>Item 7: Concentration</td>
+<td>100%</td>
+<td>"concentrate", "focus", "distracted"</td>
+</tr>
+<tr>
+<td>Item 8: Psychomotor</td>
+<td>48%</td>
+<td>"slow", "restless", "agitated"</td>
+</tr>
+</tbody>
+</table>
+<p><strong>Key Finding</strong>: The dialogues contain rich PHQ-8-relevant symptom content, making LLM-based scoring feasible.</p>
+<h3 id="15-dialogue-structure">1.5 Dialogue Structure</h3>
+<p>SQPsychConv dialogues follow a CBT-structured format:
+<div class="highlight"><pre><span></span><code>Therapist: Good morning! I notice you&#39;ve described feeling deeply sad...
+Client: Lately, everything feels pointless. Even small tasks tire me out...
+Therapist: It sounds overwhelming to feel everything lacks purpose...
+Client: I guess I just... fear they&#39;ll suffer without me pushing...
+[~30+ more turns]
+Therapist: Thank you for sharing so openly. Let&#39;s recap today...
+</code></pre></div></p>
+<p>Compare to DAIC-WOZ (our current pipeline):
+<div class="highlight"><pre><span></span><code>Ellie: where are you from originally
+Participant: im from los angeles
+Ellie: how are you doing today
+Participant: im doing okay i guess &lt;laughter&gt; um a bit tired
+</code></pre></div></p>
+<p><strong>Key Differences</strong>:
+- SQPsychConv: CBT-structured, deep therapeutic dialogue
+- DAIC-WOZ: Semi-structured interview, more natural/hesitant speech</p>
+<hr />
+<h2 id="2-scale-mapping-research">2. Scale Mapping Research</h2>
+<h3 id="21-hamd-phq-9-correlation">2.1 HAMD ↔ PHQ-9 Correlation</h3>
+<p>From <a href="https://pmc.ncbi.nlm.nih.gov/articles/PMC8599822/">PMC8599822</a>:
+- <strong>Pearson correlation</strong>: r = 0.61–0.72 (moderate-strong)
+- <strong>ICC</strong>: 0.594 (moderate consistency)
+- <strong>Kappa for severity</strong>: 0.248 (fair agreement only)</p>
+<p><strong>Severity Cutoffs</strong>:
+| Scale | Mild | Moderate | Severe |
+|-------|------|----------|--------|
+| HAMD-17 | 8–16 | 17–23 | ≥24 |
+| PHQ-9 | 5–9 | 10–14 | ≥15 |</p>
+<h3 id="22-bdi-phq-9-correlation">2.2 BDI ↔ PHQ-9 Correlation</h3>
+<p>From <a href="https://pmc.ncbi.nlm.nih.gov/articles/PMC5515387/">PMC5515387</a>:
+- <strong>Pearson correlation</strong>: r = 0.77–0.88 (strong)
+- Thresholds for moderate depression are similar between BDI-II and PHQ-9</p>
+<p><strong>Mapped Cutoffs</strong> (approximate):
+| PHQ-9 Score | BDI-II Equivalent |
+|-------------|-------------------|
+| 6–8 | Mild |
+| 9–14 | Moderate |
+| ≥15 | Severe |</p>
+<h3 id="23-critical-limitation">2.3 Critical Limitation</h3>
+<p><strong>No validated item-to-item mapping exists.</strong> The scales measure related but not identical constructs:
+- PHQ-8: 8 items (anhedonia, depressed mood, sleep, fatigue, appetite, guilt, concentration, psychomotor)
+- HAMD-17: 17 items (includes anxiety, somatic symptoms, insight)
+- BDI-II: 21 items (includes punishment feelings, suicidal ideation)</p>
+<p><strong>Implication</strong>: Even if SQPsychConv had HAMD/BDI scores, we cannot directly map to PHQ-8 item scores (0-3).</p>
+<hr />
+<h2 id="3-architecture-analysis">3. Architecture Analysis</h2>
+<h3 id="31-current-pipeline-daic-woz">3.1 Current Pipeline (DAIC-WOZ)</h3>
+<div class="highlight"><pre><span></span><code>┌─────────────────────────────────────────────────────────────────┐
+│ Data Layer                                                       │
+├─────────────────────────────────────────────────────────────────┤
+│ data/transcripts/{pid}_P/{pid}_TRANSCRIPT.csv                   │
+│ data/paper_splits/paper_split_train.csv (PHQ8_* columns)        │
+│ data/embeddings/*.npz + .json + .tags.json + .chunk_scores.json │
+└─────────────────────────────────────────────────────────────────┘
+                              │
+                              ▼
+┌─────────────────────────────────────────────────────────────────┐
+│ Embedding Generation (scripts/generate_embeddings.py)           │
+├─────────────────────────────────────────────────────────────────┤
+│ 1. Load transcript via TranscriptService                        │
+│ 2. Create sliding chunks (chunk_size=8, step=2)                 │
+│ 3. Generate embeddings via EmbeddingClient                      │
+│ 4. Write .npz + .json + .meta.json + .tags.json                 │
+└─────────────────────────────────────────────────────────────────┘
+                              │
+                              ▼
+┌─────────────────────────────────────────────────────────────────┐
+│ Reference Store (services/reference_store.py)                   │
+├─────────────────────────────────────────────────────────────────┤
+│ • Loads embeddings, texts, tags, chunk_scores                   │
+│ • Provides get_score(participant_id, PHQ8Item) → 0-3 or None    │
+│ • PHQ8_COLUMN_MAP: PHQ8Item → CSV column name                   │
+│ • Ground truth loaded from train/dev CSVs                       │
+└─────────────────────────────────────────────────────────────────┘
+                              │
+                              ▼
+┌─────────────────────────────────────────────────────────────────┐
+│ Embedding Service (services/embedding.py)                       │
+├─────────────────────────────────────────────────────────────────┤
+│ • build_reference_bundle(evidence_dict) → ReferenceBundle       │
+│ • Cosine similarity search against reference store              │
+│ • Returns top-k chunks with reference_score (0-3)               │
+└─────────────────────────────────────────────────────────────────┘
+                              │
+                              ▼
+┌─────────────────────────────────────────────────────────────────┐
+│ Quantitative Agent (agents/quantitative.py)                     │
+├─────────────────────────────────────────────────────────────────┤
+│ • Extracts evidence per PHQ-8 item                              │
+│ • Builds reference bundle via EmbeddingService                  │
+│ • Formats prompt: &quot;&lt;Reference Examples&gt;\n(PHQ8_Sleep Score: 2)&quot; │
+│ • LLM predicts 0-3 score per item                               │
+└─────────────────────────────────────────────────────────────────┘
+</code></pre></div>
+<h3 id="32-key-coupling-points">3.2 Key Coupling Points</h3>
+<p>The pipeline is tightly coupled to PHQ-8 in these locations:</p>
+<table>
+<thead>
+<tr>
+<th>Component</th>
+<th>PHQ-8 Coupling</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>domain/enums.py</code></td>
+<td><code>PHQ8Item</code> enum (8 items)</td>
+</tr>
+<tr>
+<td><code>reference_store.py</code></td>
+<td><code>PHQ8_COLUMN_MAP</code>, <code>get_score()</code> returns 0-3</td>
+</tr>
+<tr>
+<td><code>embedding.py</code></td>
+<td><code>ReferenceBundle.format_for_prompt()</code> uses "PHQ8_*" keys</td>
+</tr>
+<tr>
+<td><code>quantitative.py</code></td>
+<td><code>PHQ8_KEY_MAP</code>, expects 0-3 scores</td>
+</tr>
+<tr>
+<td><code>agents/prompts/quantitative.py</code></td>
+<td>Prompts reference PHQ-8 specifically</td>
+</tr>
+<tr>
+<td>Ground truth CSVs</td>
+<td>Columns named <code>PHQ8_NoInterest</code>, <code>PHQ8_Depressed</code>, etc.</td>
+</tr>
+</tbody>
+</table>
+<hr />
+<h2 id="4-feasibility-assessment">4. Feasibility Assessment</h2>
+<h3 id="41-approach-matrix">4.1 Approach Matrix</h3>
+<table>
+<thead>
+<tr>
+<th>Approach</th>
+<th>Requires</th>
+<th>Feasibility</th>
+<th>Engineering Effort</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><strong>A. Scale Mapping</strong></td>
+<td>HAMD/BDI item scores</td>
+<td>❌ Not available</td>
+<td>N/A</td>
+</tr>
+<tr>
+<td><strong>B. Adapt Pipeline</strong></td>
+<td>Rewrite for HAMD/BDI</td>
+<td>❌ No scores exist</td>
+<td>N/A</td>
+</tr>
+<tr>
+<td><strong>C. Qualitative-Only</strong></td>
+<td>Binary labels only</td>
+<td>✅ Works</td>
+<td>Low</td>
+</tr>
+<tr>
+<td><strong>D. Total Score Binary</strong></td>
+<td>Binary labels only</td>
+<td>✅ Works</td>
+<td>Low</td>
+</tr>
+<tr>
+<td><strong>E. LLM-Derived Scores</strong></td>
+<td>LLM annotation</td>
+<td>⚠️ Circular if evaluated on SQPsychConv</td>
+<td>Medium</td>
+</tr>
+<tr>
+<td><strong>F. Severity-Conditioned</strong></td>
+<td>Regenerate with severity</td>
+<td>⚠️ Requires authors</td>
+<td>High</td>
+</tr>
+<tr>
+<td><strong>G. LLM-Scored + DAIC-WOZ Eval</strong></td>
+<td>Frontier LLM + DAIC-WOZ</td>
+<td>✅ <strong>Recommended</strong></td>
+<td>Medium-High</td>
+</tr>
+</tbody>
+</table>
+<h3 id="42-viable-paths">4.2 Viable Paths</h3>
+<h4 id="path-c-qualitative-evidence-retrieval-low-effort">Path C: Qualitative Evidence Retrieval (Low Effort)</h4>
+<p>Use SQPsychConv dialogues as a <strong>retrieval corpus only</strong>, without using labels:</p>
+<div class="highlight"><pre><span></span><code><span class="c1"># Conceptual: Use SQPsychConv chunks for semantic similarity</span>
+<span class="c1"># but ignore condition labels during retrieval</span>
+
+<span class="k">class</span><span class="w"> </span><span class="nc">SQPsychConvReferenceStore</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Store that provides chunks without scores.&quot;&quot;&quot;</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="nf">get_score</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">participant_id</span><span class="p">,</span> <span class="n">item</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="k">return</span> <span class="kc">None</span>  <span class="c1"># No ground truth available</span>
+</code></pre></div>
+<p><strong>Pros</strong>:
+- Tests if synthetic conversations contain similar linguistic patterns
+- Measures retrieval quality without label dependency</p>
+<p><strong>Cons</strong>:
+- Cannot use for few-shot scoring (no reference scores)
+- Only tests embedding quality, not prediction</p>
+<h4 id="path-d-binary-classification-low-effort">Path D: Binary Classification (Low Effort)</h4>
+<p>Convert our pipeline to predict depressed/not-depressed:</p>
+<div class="highlight"><pre><span></span><code><span class="c1"># Map PHQ-8 total to binary:</span>
+<span class="c1"># PHQ-8 total ≥ 10 → depressed (matches clinical cutoff)</span>
+
+<span class="k">def</span><span class="w"> </span><span class="nf">is_depressed</span><span class="p">(</span><span class="n">phq8_total</span><span class="p">:</span> <span class="nb">int</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">bool</span><span class="p">:</span>
+    <span class="k">return</span> <span class="n">phq8_total</span> <span class="o">&gt;=</span> <span class="mi">10</span>
+
+<span class="c1"># SQPsychConv labels:</span>
+<span class="c1"># mdd → depressed=True</span>
+<span class="c1"># control → depressed=False</span>
+</code></pre></div>
+<p><strong>Pros</strong>:
+- Simple, no scale mapping needed
+- Can compute AUC, sensitivity, specificity</p>
+<p><strong>Cons</strong>:
+- Loses item-level granularity
+- Binary classification is much easier than item scoring</p>
+<h4 id="path-e-llm-derived-scores-circular-risk">Path E: LLM-Derived Scores (Circular Risk)</h4>
+<p>Have an LLM score SQPsychConv dialogues on PHQ-8 scale:</p>
+<div class="highlight"><pre><span></span><code><span class="c1"># 1. For each SQPsychConv dialogue</span>
+<span class="c1"># 2. Run our QuantitativeAssessmentAgent in zero-shot mode</span>
+<span class="c1"># 3. Store predicted scores as &quot;ground truth&quot;</span>
+<span class="c1"># 4. Use these for few-shot retrieval</span>
+
+<span class="c1"># DANGER: Same model scoring what it retrieves = circular</span>
+</code></pre></div>
+<p><strong>Pros</strong>:
+- Creates item-level "scores" for few-shot prompting</p>
+<p><strong>Cons</strong>:
+- <strong>Circular reasoning</strong>: LLM's biases get amplified
+- Scores are predictions, not ground truth
+- Inflates apparent accuracy</p>
+<h4 id="path-f-author-collaboration-best-highest-effort">Path F: Author Collaboration (Best, Highest Effort)</h4>
+<p>Request severity-annotated dialogues from SQPsychConv authors:</p>
+<div class="highlight"><pre><span></span><code>Contact: AIMH (AI for Mental Health) team
+Request: HAMD/BDI scores used for dialogue generation
+Offer: Collaboration on cross-dataset validation
+</code></pre></div>
+<p><strong>Pros</strong>:
+- True severity labels enable proper few-shot prompting
+- Scientific collaboration value</p>
+<p><strong>Cons</strong>:
+- Depends on author response
+- May take weeks/months (and likely blocked by FOR2107 data governance)</p>
+<h4 id="path-g-llm-derived-phq-8-with-daic-woz-validation-recommended">Path G: LLM-Derived PHQ-8 with DAIC-WOZ Validation (Recommended)</h4>
+<p><strong>Key Insight</strong>: Circularity is avoided if ground truth comes from a separate dataset.</p>
+<div class="highlight"><pre><span></span><code>┌─────────────────────────────────────────────────────────────────┐
+│ Step 1: Score SQPsychConv with Frontier LLM                     │
+├─────────────────────────────────────────────────────────────────┤
+│ SQPsychConv dialogue                                            │
+│     → GPT-4/Claude (multi-run, averaged)                        │
+│     → pseudo-PHQ-8 scores (0-3 per item)                        │
+│     → SQPsychConv-Scored dataset                                │
+└─────────────────────────────────────────────────────────────────┘
+                              │
+                              ▼
+┌─────────────────────────────────────────────────────────────────┐
+│ Step 2: Use as Retrieval Corpus                                 │
+├─────────────────────────────────────────────────────────────────┤
+│ Generate embeddings for SQPsychConv-Scored                      │
+│ Use pseudo-PHQ-8 scores for severity-matched retrieval          │
+└─────────────────────────────────────────────────────────────────┘
+                              │
+                              ▼
+┌─────────────────────────────────────────────────────────────────┐
+│ Step 3: Evaluate on DAIC-WOZ (Real Ground Truth)                │
+├─────────────────────────────────────────────────────────────────┤
+│ DAIC-WOZ test case → Retrieve from SQPsychConv-Scored           │
+│     → Few-shot predict PHQ-8                                    │
+│     → Compare to DAIC-WOZ real PHQ-8 labels                     │
+│     → Report MAE, correlation, item-level metrics               │
+└─────────────────────────────────────────────────────────────────┘
+</code></pre></div>
+<p><strong>Why This Is NOT Circular</strong>:
+- Training corpus: SQPsychConv (LLM-scored)
+- Evaluation corpus: DAIC-WOZ (real clinical scores)
+- Ground truth comes from DAIC-WOZ, not from the LLM that scored SQPsychConv</p>
+<p><strong>Pros</strong>:
+- Enables severity-matched retrieval from synthetic corpus
+- Validates whether synthetic data + imputed scores can improve real prediction
+- Empirical validation: if DAIC-WOZ metrics improve, the pipeline works
+- Creates a novel scored dataset as a side effect</p>
+<p><strong>Cons</strong>:
+- Noise in LLM scoring propagates to retrieval
+- Requires multi-agent orchestration for stable scoring
+- API costs for ~4k dialogues × multiple runs</p>
+<p><strong>Stochasticity Mitigation</strong>:
+<div class="highlight"><pre><span></span><code><span class="c1"># Multi-run scoring for stability</span>
+<span class="n">dialogue</span> <span class="err">→</span> <span class="p">[</span><span class="n">Run</span> <span class="mi">1</span><span class="p">,</span> <span class="n">Run</span> <span class="mi">2</span><span class="p">,</span> <span class="n">Run</span> <span class="mi">3</span><span class="p">,</span> <span class="n">Run</span> <span class="mi">4</span><span class="p">,</span> <span class="n">Run</span> <span class="mi">5</span><span class="p">]</span>
+         <span class="err">→</span> <span class="p">[</span><span class="n">PHQ</span><span class="o">-</span><span class="mi">8</span><span class="p">:</span> <span class="mi">14</span><span class="p">,</span> <span class="mi">12</span><span class="p">,</span> <span class="mi">15</span><span class="p">,</span> <span class="mi">13</span><span class="p">,</span> <span class="mi">14</span><span class="p">]</span>
+         <span class="err">→</span> <span class="n">Mean</span><span class="p">:</span> <span class="mf">13.6</span><span class="p">,</span> <span class="n">Std</span><span class="p">:</span> <span class="mf">1.1</span>
+</code></pre></div></p>
+<hr />
+<h2 id="5-implementation-spec-path-d-binary-classification">5. Implementation Spec (Path D: Binary Classification)</h2>
+<h3 id="51-required-changes">5.1 Required Changes</h3>
+<h4 id="new-configuration">New Configuration</h4>
+<div class="highlight"><pre><span></span><code><span class="c1"># config.py addition</span>
+<span class="k">class</span><span class="w"> </span><span class="nc">CrossDatasetSettings</span><span class="p">(</span><span class="n">BaseSettings</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Cross-dataset validation settings.&quot;&quot;&quot;</span>
+
+    <span class="n">sqpsychconv_dir</span><span class="p">:</span> <span class="n">Path</span> <span class="o">=</span> <span class="n">Field</span><span class="p">(</span>
+        <span class="n">default</span><span class="o">=</span><span class="n">Path</span><span class="p">(</span><span class="s2">&quot;data/sqpsychconv&quot;</span><span class="p">),</span>
+        <span class="n">description</span><span class="o">=</span><span class="s2">&quot;Path to SQPsychConv dataset&quot;</span>
+    <span class="p">)</span>
+    <span class="n">prediction_target</span><span class="p">:</span> <span class="n">Literal</span><span class="p">[</span><span class="s2">&quot;binary&quot;</span><span class="p">,</span> <span class="s2">&quot;severity&quot;</span><span class="p">,</span> <span class="s2">&quot;phq8&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="s2">&quot;binary&quot;</span>
+    <span class="n">depressed_threshold</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">10</span>  <span class="c1"># PHQ-8 total ≥ 10</span>
+</code></pre></div>
+<h4 id="new-data-loader">New Data Loader</h4>
+<div class="highlight"><pre><span></span><code><span class="c1"># services/sqpsychconv_loader.py</span>
+<span class="k">class</span><span class="w"> </span><span class="nc">SQPsychConvLoader</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Load SQPsychConv dialogues for evaluation.&quot;&quot;&quot;</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="nf">load_dialogue</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">file_id</span><span class="p">:</span> <span class="nb">str</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Transcript</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Load a single dialogue as a Transcript.&quot;&quot;&quot;</span>
+        <span class="c1"># Parse from train_sample.csv or Arrow format</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="nf">get_label</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">file_id</span><span class="p">:</span> <span class="nb">str</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">bool</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Get depression label (True for &#39;mdd&#39;, False for &#39;control&#39;).&quot;&quot;&quot;</span>
+</code></pre></div>
+<h4 id="new-evaluation-script">New Evaluation Script</h4>
+<div class="highlight"><pre><span></span><code><span class="c1"># scripts/evaluate_cross_dataset.py</span>
+<span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">Evaluate DAIC-WOZ-trained model on SQPsychConv.</span>
+
+<span class="sd">Usage:</span>
+<span class="sd">    python scripts/evaluate_cross_dataset.py \</span>
+<span class="sd">        --mode zero_shot \</span>
+<span class="sd">        --prediction binary \</span>
+<span class="sd">        --output data/outputs/cross_dataset_eval.json</span>
+<span class="sd">&quot;&quot;&quot;</span>
+</code></pre></div>
+<h3 id="52-evaluation-metrics">5.2 Evaluation Metrics</h3>
+<p>For binary classification:
+- <strong>AUC-ROC</strong>: Area under receiver operating characteristic
+- <strong>Sensitivity</strong>: True positive rate (detecting MDD)
+- <strong>Specificity</strong>: True negative rate (detecting control)
+- <strong>F1 Score</strong>: Harmonic mean of precision/recall</p>
+<h3 id="53-baseline-experiment">5.3 Baseline Experiment</h3>
+<div class="highlight"><pre><span></span><code><span class="c1"># 1. Run zero-shot on SQPsychConv test set</span>
+python<span class="w"> </span>scripts/evaluate_cross_dataset.py<span class="w"> </span><span class="se">\</span>
+<span class="w">    </span>--mode<span class="w"> </span>zero_shot<span class="w"> </span><span class="se">\</span>
+<span class="w">    </span>--prediction<span class="w"> </span>binary<span class="w"> </span><span class="se">\</span>
+<span class="w">    </span>--split<span class="w"> </span><span class="nb">test</span>
+
+<span class="c1"># 2. Run few-shot (using DAIC-WOZ embeddings)</span>
+python<span class="w"> </span>scripts/evaluate_cross_dataset.py<span class="w"> </span><span class="se">\</span>
+<span class="w">    </span>--mode<span class="w"> </span>few_shot<span class="w"> </span><span class="se">\</span>
+<span class="w">    </span>--prediction<span class="w"> </span>binary<span class="w"> </span><span class="se">\</span>
+<span class="w">    </span>--embeddings<span class="w"> </span>data/embeddings/huggingface_qwen3_8b_paper_train_participant_only.npz<span class="w"> </span><span class="se">\</span>
+<span class="w">    </span>--split<span class="w"> </span><span class="nb">test</span>
+</code></pre></div>
+<hr />
+<h2 id="6-circularity-concerns">6. Circularity Concerns</h2>
+<h3 id="61-the-synthetic-data-problem">6.1 The Synthetic Data Problem</h3>
+<p>SQPsychConv dialogues are <strong>LLM-generated</strong> conditioned on:
+- Client profiles (possibly with severity indicators)
+- Therapeutic structure (CBT)</p>
+<p><strong>Risk</strong>: An LLM evaluating LLM-generated conversations may recognize stylistic patterns rather than clinical content.</p>
+<h3 id="62-mitigation-strategies">6.2 Mitigation Strategies</h3>
+<ol>
+<li><strong>Use different model families</strong>: If SQPsychConv used Qwen, evaluate with Gemma/LLaMA</li>
+<li><strong>Report synthetic-vs-real gap</strong>: Always compare to DAIC-WOZ baseline</li>
+<li><strong>Human validation subset</strong>: Annotate 50-100 SQPsychConv dialogues with human raters</li>
+<li><strong>Ablation by generation model</strong>: SQPsychConv has variants (gemma, llama3, qwq) - compare</li>
+</ol>
+<hr />
+<h2 id="7-recommended-next-steps">7. Recommended Next Steps</h2>
+<h3 id="phase-1-stabilize-daic-woz-baseline-current">Phase 1: Stabilize DAIC-WOZ Baseline (Current)</h3>
+<ul>
+<li>Complete participant-only preprocessing evaluation</li>
+<li>Finalize chunk-level scoring</li>
+<li>Document reproducible baseline metrics</li>
+</ul>
+<h3 id="phase-2-binary-cross-validation-low-effort">Phase 2: Binary Cross-Validation (Low Effort)</h3>
+<ol>
+<li>Implement <code>SQPsychConvLoader</code></li>
+<li>Create <code>evaluate_cross_dataset.py</code></li>
+<li>Run zero-shot binary classification on SQPsychConv</li>
+<li>Report AUC, sensitivity, specificity</li>
+</ol>
+<h3 id="phase-3-investigate-severity-signals-medium-effort">Phase 3: Investigate Severity Signals (Medium Effort)</h3>
+<ol>
+<li>Contact SQPsychConv authors for severity metadata</li>
+<li>Explore if <code>file_id</code> numbers encode severity</li>
+<li>Try LLM-derived severity (with circularity caveats)</li>
+</ol>
+<h3 id="phase-4-publication-ready-validation-high-effort">Phase 4: Publication-Ready Validation (High Effort)</h3>
+<ol>
+<li>Full cross-dataset protocol with statistical tests</li>
+<li>Human annotation for subset validation</li>
+<li>Multiple model family comparison</li>
+</ol>
+<hr />
+<h2 id="8-references">8. References</h2>
+<h3 id="scale-mapping-research">Scale Mapping Research</h3>
+<ul>
+<li><a href="https://pmc.ncbi.nlm.nih.gov/articles/PMC8599822/">PMC8599822: PHQ-9 vs HAMD</a></li>
+<li><a href="https://pmc.ncbi.nlm.nih.gov/articles/PMC5515387/">PMC5515387: BDI/CES-D/PHQ-9 Common Metric</a></li>
+<li><a href="https://www.ncbi.nlm.nih.gov/pmc/articles/PMC2148236/">PMC2148236: PHQ-9 vs HADS</a></li>
+</ul>
+<h3 id="sqpsychconv">SQPsychConv</h3>
+<ul>
+<li><a href="https://arxiv.org/abs/2510.25384">arXiv:2510.25384</a></li>
+<li><a href="https://huggingface.co/collections/AIMH/sqpsychconv">HuggingFace: AIMH/SQPsychConv</a></li>
+</ul>
+<h3 id="daic-woz">DAIC-WOZ</h3>
+<ul>
+<li><a href="https://dcapswoz.ict.usc.edu/">Dataset Access</a></li>
+</ul>
+<hr />
+<h2 id="9-decision-summary">9. Decision Summary</h2>
+<table>
+<thead>
+<tr>
+<th>Question</th>
+<th>Answer</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Can we use SQPsychConv for item-level PHQ-8 few-shot?</td>
+<td><strong>No</strong> - no item scores in dataset</td>
+</tr>
+<tr>
+<td>Can we use it for severity classification?</td>
+<td><strong>No</strong> - only binary labels</td>
+</tr>
+<tr>
+<td>Can we use it for binary classification?</td>
+<td><strong>Yes</strong> - depressed/control</td>
+</tr>
+<tr>
+<td>Can we use it for embedding quality testing?</td>
+<td><strong>Yes</strong> - semantic similarity</td>
+</tr>
+<tr>
+<td>Is direct HAMD→PHQ-8 mapping possible?</td>
+<td><strong>No</strong> - no validated item mapping</td>
+</tr>
+<tr>
+<td>Can we LLM-score it for PHQ-8?</td>
+<td><strong>Yes</strong> - dialogues have rich symptom content</td>
+</tr>
+<tr>
+<td>Is LLM-scoring circular?</td>
+<td><strong>No</strong> - if evaluated on DAIC-WOZ ground truth</td>
+</tr>
+<tr>
+<td>Should we proceed?</td>
+<td><strong>Yes, with Path G (LLM-scored + DAIC-WOZ eval)</strong></td>
+</tr>
+</tbody>
+</table>
+<hr />
+<h2 id="10-implementation-recommendation-separate-repository">10. Implementation Recommendation: Separate Repository</h2>
+<h3 id="101-why-separate-repo">10.1 Why Separate Repo?</h3>
+<p>The SQPsychConv scoring work is a <strong>distinct dataset creation project</strong>, not a depression prediction project:</p>
+<table>
+<thead>
+<tr>
+<th>Aspect</th>
+<th>ai-psychiatrist (this repo)</th>
+<th>sqpsychconv-scored (new repo)</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><strong>Purpose</strong></td>
+<td>Depression prediction pipeline</td>
+<td>Dataset annotation/creation</td>
+</tr>
+<tr>
+<td><strong>Primary output</strong></td>
+<td>PHQ-8 predictions</td>
+<td>Scored dataset + methodology</td>
+</tr>
+<tr>
+<td><strong>Dependencies</strong></td>
+<td>Ollama, local LLMs</td>
+<td>Frontier APIs (OpenAI, Anthropic)</td>
+</tr>
+<tr>
+<td><strong>Evaluation</strong></td>
+<td>DAIC-WOZ ground truth</td>
+<td>Internal consistency, human validation</td>
+</tr>
+<tr>
+<td><strong>Reusability</strong></td>
+<td>Specific to this paper</td>
+<td>General mental health NLP</td>
+</tr>
+</tbody>
+</table>
+<h3 id="102-proposed-workflow">10.2 Proposed Workflow</h3>
+<div class="highlight"><pre><span></span><code>┌─────────────────────────────────────────────────────────────────┐
+│ sqpsychconv-scored (new repo)                                   │
+├─────────────────────────────────────────────────────────────────┤
+│ 1. Load SQPsychConv from HuggingFace                            │
+│ 2. Multi-agent LLM scoring pipeline (GPT-4/Claude)              │
+│ 3. Generate pseudo-PHQ-8 scores with uncertainty                │
+│ 4. Optional: Human validation on 50-100 samples                 │
+│ 5. Output: scored_sqpsychconv.csv + methodology docs            │
+└─────────────────────────────────────────────────────────────────┘
+                              │
+                              │ (vendor or download)
+                              ▼
+┌─────────────────────────────────────────────────────────────────┐
+│ ai-psychiatrist (this repo)                                     │
+├─────────────────────────────────────────────────────────────────┤
+│ 1. Load scored dataset from sqpsychconv-scored                  │
+│ 2. Generate embeddings                                          │
+│ 3. Use as retrieval corpus                                      │
+│ 4. Evaluate on DAIC-WOZ                                         │
+└─────────────────────────────────────────────────────────────────┘
+</code></pre></div>
+<h3 id="103-novel-contribution">10.3 Novel Contribution</h3>
+<p>If you create <code>sqpsychconv-scored</code>, you've produced:</p>
+<ol>
+<li><strong>A new dataset</strong>: SQPsychConv with PHQ-8 item scores</li>
+<li><strong>A methodology paper</strong>: LLM-based clinical scoring of synthetic dialogues</li>
+<li><strong>Validation data</strong>: Calibration against DAIC-WOZ real scores</li>
+<li><strong>Community resource</strong>: Others can use for retrieval, fine-tuning, etc.</li>
+</ol>
+<p>This is potentially a larger contribution than the original cross-validation experiment.</p>
+<hr />
+<h2 id="11-for2107-data-governance-context">11. FOR2107 Data Governance Context</h2>
+<h3 id="111-why-scores-were-stripped">11.1 Why Scores Were Stripped</h3>
+<p>From the arXiv paper:</p>
+<blockquote>
+<p>"Although the clinical questionnaire dataset from Kircher et al. (2019) is anonymized, the sensitivity of the data and its access terms trigger strict requirements. Specifically, data privacy regulations restrict the use of clinical questionnaire data to controlled, audited environments."</p>
+</blockquote>
+<p>The SQPsychConv authors were bound by German research ethics (FOR2107/MACS consortium) and could not release the conditioning HAMD/BDI scores publicly.</p>
+<h3 id="112-accessing-the-source-data">11.2 Accessing the Source Data</h3>
+<p>The FOR2107 consortium (for2107.de) has formal data access procedures:
+- Principal investigators: Prof. Tilo Kircher (Marburg), Prof. Udo Dannlowski (Münster)
+- Requires institutional collaboration agreement
+- Likely multi-month process</p>
+<p><strong>Recommendation</strong>: Do not wait for this. Path G (LLM-scoring) is faster and creates equivalent value.</p>
+<hr />
+<p><em>This spec will be updated as we learn more about SQPsychConv's hidden metadata and author collaboration opportunities.</em></p>
+
+
+
+
+
+
+
+
+
+
+
+
+                
+              </article>
+            </div>
+          
+          
+<script>var target=document.getElementById(location.hash.slice(1));target&&target.name&&(target.checked=target.name.startsWith("__tabbed_"))</script>
+        </div>
+        
+      </main>
+      
+        <footer class="md-footer">
+  
+    
+  
+  <div class="md-footer-meta md-typeset">
+    <div class="md-footer-meta__inner md-grid">
+      <div class="md-copyright">
+  
+  
+    Made with
+    <a href="https://squidfunk.github.io/mkdocs-material/" target="_blank" rel="noopener">
+      Material for MkDocs
+    </a>
+  
+</div>
+      
+    </div>
+  </div>
+</footer>
+      
+    </div>
+    <div class="md-dialog" data-md-component="dialog">
+      <div class="md-dialog__inner md-typeset"></div>
+    </div>
+    
+    
+    
+      
+      
+      <script id="__config" type="application/json">{"annotate": null, "base": "../../..", "features": ["content.code.copy", "content.action.edit", "content.action.view", "navigation.tracking", "navigation.sections", "navigation.footer", "navigation.instant"], "search": "../../../assets/javascripts/workers/search.2c215733.min.js", "tags": null, "translations": {"clipboard.copied": "Copied to clipboard", "clipboard.copy": "Copy to clipboard", "search.result.more.one": "1 more on this page", "search.result.more.other": "# more on this page", "search.result.none": "No matching documents", "search.result.one": "1 matching document", "search.result.other": "# matching documents", "search.result.placeholder": "Type to start searching", "search.result.term.missing": "Missing", "select.version": "Select version"}, "version": null}</script>
+    
+    
+      <script src="../../../assets/javascripts/bundle.79ae519e.min.js"></script>
+      
+    
+  </body>
+</html>

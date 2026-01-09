@@ -1,0 +1,3178 @@
+
+<!doctype html>
+<html lang="en" class="no-js">
+  <head>
+    
+      <meta charset="utf-8">
+      <meta name="viewport" content="width=device-width,initial-scale=1">
+      
+      
+      
+        <link rel="canonical" href="https://the-obstacle-is-the-way.github.io/ai-psychiatrist/_archive/concepts/backfill-explained/">
+      
+      
+      
+      
+        
+      
+      
+      <link rel="icon" href="../../../assets/images/favicon.png">
+      <meta name="generator" content="mkdocs-1.6.1, mkdocs-material-9.7.1">
+    
+    
+      
+        <title>Keyword Backfill: The Safety Net for Evidence Extraction - AI Psychiatrist</title>
+      
+    
+    
+      <link rel="stylesheet" href="../../../assets/stylesheets/main.484c7ddc.min.css">
+      
+      
+
+
+    
+    
+      
+    
+    
+      
+        
+        
+        <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+        <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Roboto:300,300i,400,400i,700,700i%7CRoboto+Mono:400,400i,700,700i&display=fallback">
+        <style>:root{--md-text-font:"Roboto";--md-code-font:"Roboto Mono"}</style>
+      
+    
+    
+    <script>__md_scope=new URL("../../..",location),__md_hash=e=>[...e].reduce(((e,_)=>(e<<5)-e+_.charCodeAt(0)),0),__md_get=(e,_=localStorage,t=__md_scope)=>JSON.parse(_.getItem(t.pathname+"."+e)),__md_set=(e,_,t=localStorage,a=__md_scope)=>{try{t.setItem(a.pathname+"."+e,JSON.stringify(_))}catch(e){}}</script>
+    
+      
+
+    
+    
+  </head>
+  
+  
+    <body dir="ltr">
+  
+    
+    <input class="md-toggle" data-md-toggle="drawer" type="checkbox" id="__drawer" autocomplete="off">
+    <input class="md-toggle" data-md-toggle="search" type="checkbox" id="__search" autocomplete="off">
+    <label class="md-overlay" for="__drawer"></label>
+    <div data-md-component="skip">
+      
+        
+        <a href="#keyword-backfill-the-safety-net-for-evidence-extraction" class="md-skip">
+          Skip to content
+        </a>
+      
+    </div>
+    <div data-md-component="announce">
+      
+    </div>
+    
+    
+      
+
+  
+
+<header class="md-header md-header--shadow" data-md-component="header">
+  <nav class="md-header__inner md-grid" aria-label="Header">
+    <a href="../../.." title="AI Psychiatrist" class="md-header__button md-logo" aria-label="AI Psychiatrist" data-md-component="logo">
+      
+  
+  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 8a3 3 0 0 0 3-3 3 3 0 0 0-3-3 3 3 0 0 0-3 3 3 3 0 0 0 3 3m0 3.54C9.64 9.35 6.5 8 3 8v11c3.5 0 6.64 1.35 9 3.54 2.36-2.19 5.5-3.54 9-3.54V8c-3.5 0-6.64 1.35-9 3.54"/></svg>
+
+    </a>
+    <label class="md-header__button md-icon" for="__drawer">
+      
+      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M3 6h18v2H3zm0 5h18v2H3zm0 5h18v2H3z"/></svg>
+    </label>
+    <div class="md-header__title" data-md-component="header-title">
+      <div class="md-header__ellipsis">
+        <div class="md-header__topic">
+          <span class="md-ellipsis">
+            AI Psychiatrist
+          </span>
+        </div>
+        <div class="md-header__topic" data-md-component="header-topic">
+          <span class="md-ellipsis">
+            
+              Keyword Backfill: The Safety Net for Evidence Extraction
+            
+          </span>
+        </div>
+      </div>
+    </div>
+    
+    
+      <script>var palette=__md_get("__palette");if(palette&&palette.color){if("(prefers-color-scheme)"===palette.color.media){var media=matchMedia("(prefers-color-scheme: light)"),input=document.querySelector(media.matches?"[data-md-color-media='(prefers-color-scheme: light)']":"[data-md-color-media='(prefers-color-scheme: dark)']");palette.color.media=input.getAttribute("data-md-color-media"),palette.color.scheme=input.getAttribute("data-md-color-scheme"),palette.color.primary=input.getAttribute("data-md-color-primary"),palette.color.accent=input.getAttribute("data-md-color-accent")}for(var[key,value]of Object.entries(palette.color))document.body.setAttribute("data-md-color-"+key,value)}</script>
+    
+    
+    
+      
+      
+        <label class="md-header__button md-icon" for="__search">
+          
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M9.5 3A6.5 6.5 0 0 1 16 9.5c0 1.61-.59 3.09-1.56 4.23l.27.27h.79l5 5-1.5 1.5-5-5v-.79l-.27-.27A6.52 6.52 0 0 1 9.5 16 6.5 6.5 0 0 1 3 9.5 6.5 6.5 0 0 1 9.5 3m0 2C7 5 5 7 5 9.5S7 14 9.5 14 14 12 14 9.5 12 5 9.5 5"/></svg>
+        </label>
+        <div class="md-search" data-md-component="search" role="dialog">
+  <label class="md-search__overlay" for="__search"></label>
+  <div class="md-search__inner" role="search">
+    <form class="md-search__form" name="search">
+      <input type="text" class="md-search__input" name="query" aria-label="Search" placeholder="Search" autocapitalize="off" autocorrect="off" autocomplete="off" spellcheck="false" data-md-component="search-query" required>
+      <label class="md-search__icon md-icon" for="__search">
+        
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M9.5 3A6.5 6.5 0 0 1 16 9.5c0 1.61-.59 3.09-1.56 4.23l.27.27h.79l5 5-1.5 1.5-5-5v-.79l-.27-.27A6.52 6.52 0 0 1 9.5 16 6.5 6.5 0 0 1 3 9.5 6.5 6.5 0 0 1 9.5 3m0 2C7 5 5 7 5 9.5S7 14 9.5 14 14 12 14 9.5 12 5 9.5 5"/></svg>
+        
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M20 11v2H8l5.5 5.5-1.42 1.42L4.16 12l7.92-7.92L13.5 5.5 8 11z"/></svg>
+      </label>
+      <nav class="md-search__options" aria-label="Search">
+        
+        <button type="reset" class="md-search__icon md-icon" title="Clear" aria-label="Clear" tabindex="-1">
+          
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M19 6.41 17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12z"/></svg>
+        </button>
+      </nav>
+      
+    </form>
+    <div class="md-search__output">
+      <div class="md-search__scrollwrap" tabindex="0" data-md-scrollfix>
+        <div class="md-search-result" data-md-component="search-result">
+          <div class="md-search-result__meta">
+            Initializing search
+          </div>
+          <ol class="md-search-result__list" role="presentation"></ol>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+      
+    
+    
+      <div class="md-header__source">
+        <a href="https://github.com/The-Obstacle-Is-The-Way/ai-psychiatrist" title="Go to repository" class="md-source" data-md-component="source">
+  <div class="md-source__icon md-icon">
+    
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 448 512"><!--! Font Awesome Free 7.1.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2025 Fonticons, Inc.--><path d="M439.6 236.1 244 40.5c-5.4-5.5-12.8-8.5-20.4-8.5s-15 3-20.4 8.4L162.5 81l51.5 51.5c27.1-9.1 52.7 16.8 43.4 43.7l49.7 49.7c34.2-11.8 61.2 31 35.5 56.7-26.5 26.5-70.2-2.9-56-37.3L240.3 199v121.9c25.3 12.5 22.3 41.8 9.1 55-6.4 6.4-15.2 10.1-24.3 10.1s-17.8-3.6-24.3-10.1c-17.6-17.6-11.1-46.9 11.2-56v-123c-20.8-8.5-24.6-30.7-18.6-45L142.6 101 8.5 235.1C3 240.6 0 247.9 0 255.5s3 15 8.5 20.4l195.6 195.7c5.4 5.4 12.7 8.4 20.4 8.4s15-3 20.4-8.4l194.7-194.7c5.4-5.4 8.4-12.8 8.4-20.4s-3-15-8.4-20.4"/></svg>
+  </div>
+  <div class="md-source__repository">
+    GitHub
+  </div>
+</a>
+      </div>
+    
+  </nav>
+  
+</header>
+    
+    <div class="md-container" data-md-component="container">
+      
+      
+        
+          
+        
+      
+      <main class="md-main" data-md-component="main">
+        <div class="md-main__inner md-grid">
+          
+            
+              
+              <div class="md-sidebar md-sidebar--primary" data-md-component="sidebar" data-md-type="navigation" >
+                <div class="md-sidebar__scrollwrap">
+                  <div class="md-sidebar__inner">
+                    
+
+
+
+<nav class="md-nav md-nav--primary" aria-label="Navigation" data-md-level="0">
+  <label class="md-nav__title" for="__drawer">
+    <a href="../../.." title="AI Psychiatrist" class="md-nav__button md-logo" aria-label="AI Psychiatrist" data-md-component="logo">
+      
+  
+  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 8a3 3 0 0 0 3-3 3 3 0 0 0-3-3 3 3 0 0 0-3 3 3 3 0 0 0 3 3m0 3.54C9.64 9.35 6.5 8 3 8v11c3.5 0 6.64 1.35 9 3.54 2.36-2.19 5.5-3.54 9-3.54V8c-3.5 0-6.64 1.35-9 3.54"/></svg>
+
+    </a>
+    AI Psychiatrist
+  </label>
+  
+    <div class="md-nav__source">
+      <a href="https://github.com/The-Obstacle-Is-The-Way/ai-psychiatrist" title="Go to repository" class="md-source" data-md-component="source">
+  <div class="md-source__icon md-icon">
+    
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 448 512"><!--! Font Awesome Free 7.1.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2025 Fonticons, Inc.--><path d="M439.6 236.1 244 40.5c-5.4-5.5-12.8-8.5-20.4-8.5s-15 3-20.4 8.4L162.5 81l51.5 51.5c27.1-9.1 52.7 16.8 43.4 43.7l49.7 49.7c34.2-11.8 61.2 31 35.5 56.7-26.5 26.5-70.2-2.9-56-37.3L240.3 199v121.9c25.3 12.5 22.3 41.8 9.1 55-6.4 6.4-15.2 10.1-24.3 10.1s-17.8-3.6-24.3-10.1c-17.6-17.6-11.1-46.9 11.2-56v-123c-20.8-8.5-24.6-30.7-18.6-45L142.6 101 8.5 235.1C3 240.6 0 247.9 0 255.5s3 15 8.5 20.4l195.6 195.7c5.4 5.4 12.7 8.4 20.4 8.4s15-3 20.4-8.4l194.7-194.7c5.4-5.4 8.4-12.8 8.4-20.4s-3-15-8.4-20.4"/></svg>
+  </div>
+  <div class="md-source__repository">
+    GitHub
+  </div>
+</a>
+    </div>
+  
+  <ul class="md-nav__list" data-md-scrollfix>
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../.." class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    AI Psychiatrist Documentation
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    
+    
+    
+    
+      
+        
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--section md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_2" >
+        
+          
+          <label class="md-nav__link" for="__nav_2" id="__nav_2_label" tabindex="">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+     research
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_2_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_2">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+     research
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../_research/hypotheses-explained/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Hypotheses Explained: Current State vs Future Improvements
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../_research/hypotheses-for-improvement/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Hypotheses for Improvement: First-Principles Analysis
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../_research/master-bug-audit/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    MASTER BUG AUDIT
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    
+    
+    
+    
+      
+        
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--section md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_3" >
+        
+          
+          <label class="md-nav__link" for="__nav_3" id="__nav_3_label" tabindex="">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Architecture
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_3_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_3">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    Architecture
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../architecture/architecture/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Architecture
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../architecture/future-architecture/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Future Architecture: Agent Orchestration Options
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../architecture/pipeline/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Pipeline
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    
+    
+    
+    
+      
+        
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--section md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_4" >
+        
+          
+          <label class="md-nav__link" for="__nav_4" id="__nav_4_label" tabindex="">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Clinical
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_4_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_4">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    Clinical
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../clinical/clinical-understanding/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Clinical Understanding: How This System Works
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../clinical/glossary/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Glossary
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../clinical/phq8/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    PHQ-8: Patient Health Questionnaire
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../clinical/task-validity/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Task Validity: What Can (and Cannot) Be Inferred from DAIC-WOZ Transcripts
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    
+    
+    
+    
+      
+        
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--section md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_5" >
+        
+          
+          <label class="md-nav__link" for="__nav_5" id="__nav_5_label" tabindex="">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Configs
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_5_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_5">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    Configs
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../configs/agent-sampling-registry/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Agent Sampling Parameter Registry
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../configs/configuration-philosophy/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Configuration Philosophy
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../configs/configuration/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Configuration Reference
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    
+    
+    
+    
+      
+        
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--section md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_6" >
+        
+          
+          <label class="md-nav__link" for="__nav_6" id="__nav_6_label" tabindex="">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Data
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_6_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_6">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    Data
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../data/artifact-namespace-registry/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Artifact Namespace Registry
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../data/daic-woz-preprocessing/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    DAIC-WOZ Transcript Preprocessing (Bias-Aware, Deterministic)
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../data/daic-woz-schema/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    DAIC-WOZ Dataset Schema
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../data/data-splits-overview/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Data Splits Overview
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    
+    
+    
+    
+      
+        
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--section md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_7" >
+        
+          
+          <label class="md-nav__link" for="__nav_7" id="__nav_7_label" tabindex="">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Developer
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_7_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_7">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    Developer
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../developer/api-endpoints/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    API Reference
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../developer/dependency-registry/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Dependency Registry
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../developer/error-handling/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Error Handling and Fail-Fast Philosophy
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../developer/exceptions/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Exception Reference (Domain + Runtime)
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../developer/testing/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Testing Conventions (Markers, Fixtures, and Test Doubles)
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    
+    
+    
+    
+      
+        
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--section md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_8" >
+        
+          
+          <label class="md-nav__link" for="__nav_8" id="__nav_8_label" tabindex="">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Getting started
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_8_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_8">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    Getting started
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../getting-started/quickstart/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Quickstart Guide
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    
+    
+    
+    
+      
+        
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--section md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_9" >
+        
+          
+          <label class="md-nav__link" for="__nav_9" id="__nav_9_label" tabindex="">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Models
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_9_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_9">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    Models
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../models/model-registry/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    AI Psychiatrist Model Registry
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../models/model-wiring/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Model Wiring: Current State
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    
+    
+    
+    
+      
+        
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--section md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_10" >
+        
+          
+          <label class="md-nav__link" for="__nav_10" id="__nav_10_label" tabindex="">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Pipeline internals
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_10_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_10">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    Pipeline internals
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../pipeline-internals/evidence-extraction/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Evidence Extraction Mechanism: How It Actually Works
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../pipeline-internals/features/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Feature Reference (Non-Archive Canonical)
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    
+    
+    
+    
+      
+        
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--section md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_11" >
+        
+          
+          <label class="md-nav__link" for="__nav_11" id="__nav_11_label" tabindex="">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Preflight checklist
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_11_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_11">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    Preflight checklist
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../preflight-checklist/preflight-checklist-few-shot/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Preflight Checklist: Few-Shot Reproduction
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../preflight-checklist/preflight-checklist-zero-shot/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Preflight Checklist: Zero-Shot Run
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    
+    
+    
+    
+      
+        
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--section md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_12" >
+        
+          
+          <label class="md-nav__link" for="__nav_12" id="__nav_12_label" tabindex="">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Rag
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_12_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_12">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    Rag
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../rag/artifact-generation/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    RAG Artifact Generation
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../rag/chunk-scoring/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Chunk-Level Scoring (Spec 35) — Schema, Workflow, and Gotchas
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../rag/debugging/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    RAG Debugging (Audit Logs + Guardrails)
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../rag/design-rationale/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    RAG Design Rationale
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../rag/overview/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    RAG Overview: Embeddings and Few-Shot Retrieval
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../rag/runtime-features/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    RAG Runtime Features
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    
+    
+    
+    
+      
+        
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--section md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_13" >
+        
+          
+          <label class="md-nav__link" for="__nav_13" id="__nav_13_label" tabindex="">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Results
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_13_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_13">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    Results
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../results/few-shot-analysis/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Why Few-Shot May Not Beat Zero-Shot: Analysis
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../results/reproduction-results/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Paper Reproduction Results (Current Status)
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../results/run-history/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Complete Run History &amp; Statistical Analysis
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../results/run-output-schema/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Reproduction Run Output Schema (JSON + Registry)
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    
+    
+    
+    
+      
+        
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--section md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_14" >
+        
+          
+          <label class="md-nav__link" for="__nav_14" id="__nav_14_label" tabindex="">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Statistics
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_14_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_14">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    Statistics
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../statistics/coverage/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Coverage Explained: What It Is and Why It Matters
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../statistics/metrics-and-evaluation/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Metrics and Evaluation (Exact Definitions + Output Schema)
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../statistics/statistical-methodology-aurc-augrc/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Statistical Methodology: AURC/AUGRC for Selective Prediction
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+  </ul>
+</nav>
+                  </div>
+                </div>
+              </div>
+            
+            
+              
+              <div class="md-sidebar md-sidebar--secondary" data-md-component="sidebar" data-md-type="toc" >
+                <div class="md-sidebar__scrollwrap">
+                  <div class="md-sidebar__inner">
+                    
+
+<nav class="md-nav md-nav--secondary" aria-label="Table of contents">
+  
+  
+  
+    
+  
+  
+    <label class="md-nav__title" for="__toc">
+      <span class="md-nav__icon md-icon"></span>
+      Table of contents
+    </label>
+    <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
+      
+        <li class="md-nav__item">
+  <a href="#what-is-keyword-backfill" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        What Is Keyword Backfill?
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#why-does-backfill-exist" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Why Does Backfill Exist?
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Why Does Backfill Exist?">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#the-problem-llm-extraction-isnt-perfect" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        The Problem: LLM Extraction Isn't Perfect
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#the-solution-rule-based-backup" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        The Solution: Rule-Based Backup
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#how-it-works" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        How It Works
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="How It Works">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#the-algorithm" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        The Algorithm
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#key-properties" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Key Properties
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#detailed-quantitative-agent-pipeline-with-code-references" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Detailed Quantitative Agent Pipeline (With Code References)
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Detailed Quantitative Agent Pipeline (With Code References)">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#the-key-code-assess-method-lines-102-254" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        The Key Code (assess() method, lines 102-254)
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#file-reference-table" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        File Reference Table
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#the-tradeoff-coverage-vs-purity" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        The Tradeoff: Coverage vs Purity
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="The Tradeoff: Coverage vs Purity">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#without-backfill-default-paper-text-parity" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Without Backfill (Default - Paper-Text Parity)
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#with-backfill-higher-coverage" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        With Backfill (Higher Coverage)
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#papers-approach" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Paper's Approach
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Paper&#39;s Approach">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#what-the-paper-text-says" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        What the Paper TEXT Says
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#what-the-paper-code-does-discovery-2025-12-24" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        What the Paper CODE Does (Discovery: 2025-12-24)
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#our-decision-paper-text-parity-by-default" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Our Decision: Paper-Text Parity by Default
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#asking-the-authors" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Asking the Authors
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#when-to-use-each-mode" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        When to Use Each Mode
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="When to Use Each Mode">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#use-backfill-off-default-always" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Use Backfill OFF (Default) — ALWAYS
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#use-backfill-on-never-historical-only" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Use Backfill ON — NEVER (Historical Only)
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#na-reason-tracking" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        N/A Reason Tracking
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#configuration" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Configuration
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#impact-on-results" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Impact on Results
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Impact on Results">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#concrete-runs-local-output-historical-notes" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Concrete Runs (Local Output + Historical Notes)
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#per-item-impact" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Per-Item Impact
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#decision-tree" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Decision Tree
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#related-documentation" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Related Documentation
+      
+    </span>
+  </a>
+  
+</li>
+      
+    </ul>
+  
+</nav>
+                  </div>
+                </div>
+              </div>
+            
+          
+          
+            <div class="md-content" data-md-component="content">
+              
+              <article class="md-content__inner md-typeset">
+                
+                  
+
+
+  
+    <a href="https://github.com/The-Obstacle-Is-The-Way/ai-psychiatrist/edit/main/docs/_archive/concepts/backfill-explained.md" title="Edit this page" class="md-content__button md-icon" rel="edit">
+      
+      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M10 20H6V4h7v5h5v3.1l2-2V8l-6-6H6c-1.1 0-2 .9-2 2v16c0 1.1.9 2 2 2h4zm10.2-7c.1 0 .3.1.4.2l1.3 1.3c.2.2.2.6 0 .8l-1 1-2.1-2.1 1-1c.1-.1.2-.2.4-.2m0 3.9L14.1 23H12v-2.1l6.1-6.1z"/></svg>
+    </a>
+  
+  
+    
+      
+    
+    <a href="https://github.com/The-Obstacle-Is-The-Way/ai-psychiatrist/raw/main/docs/_archive/concepts/backfill-explained.md" title="View source of this page" class="md-content__button md-icon">
+      
+      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M17 18c.56 0 1 .44 1 1s-.44 1-1 1-1-.44-1-1 .44-1 1-1m0-3c-2.73 0-5.06 1.66-6 4 .94 2.34 3.27 4 6 4s5.06-1.66 6-4c-.94-2.34-3.27-4-6-4m0 6.5a2.5 2.5 0 0 1-2.5-2.5 2.5 2.5 0 0 1 2.5-2.5 2.5 2.5 0 0 1 2.5 2.5 2.5 2.5 0 0 1-2.5 2.5M9.27 20H6V4h7v5h5v4.07c.7.08 1.36.25 2 .49V8l-6-6H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h4.5a8.2 8.2 0 0 1-1.23-2"/></svg>
+    </a>
+  
+
+
+<h1 id="keyword-backfill-the-safety-net-for-evidence-extraction">Keyword Backfill: The Safety Net for Evidence Extraction</h1>
+<blockquote>
+<p><strong>DEPRECATED FEATURE - DO NOT ENABLE</strong></p>
+<p>Keyword backfill is a flawed heuristic that inflates coverage metrics without
+improving clinical validity. The feature matches keywords like "sleep" or "tired"
+via simple substring matching, leading to false positives and misleading results.</p>
+<p><strong>This feature is retained for historical comparison only. Keep it OFF.</strong></p>
+<p>The original paper's methodology has fundamental issues that make "paper parity"
+meaningless. See <code>HYPOTHESIS-FEWSHOT-DESIGN-FLAW.md</code> and <code>POST-ABLATION-DEFAULTS.md</code> for details.</p>
+</blockquote>
+<p><strong>Audience</strong>: Researchers and developers wanting to understand the coverage-accuracy tradeoff
+<strong>Related</strong>: <a href="./extraction-mechanism.md">Extraction Mechanism</a> | <a href="../configs/configuration.md">Configuration Reference</a> | <a href="./coverage-explained.md">Coverage Explained</a>
+<strong>Last Updated</strong>: 2026-01-01</p>
+<hr />
+<h2 id="what-is-keyword-backfill">What Is Keyword Backfill?</h2>
+<p>Keyword backfill is a <strong>rule-based safety net</strong> that runs after LLM evidence extraction. When the LLM fails to find evidence for a PHQ-8 symptom, backfill scans the transcript for keyword matches and adds those sentences as evidence.</p>
+<div class="highlight"><pre><span></span><code>┌─────────────────────────────────────────────────────────────────┐
+│                     EVIDENCE EXTRACTION                         │
+├─────────────────────────────────────────────────────────────────┤
+│                                                                 │
+│  1. LLM Extraction (semantic analysis)                          │
+│     └── LLM reads transcript, extracts quotes per PHQ-8 item    │
+│                                                                 │
+│  2. Keyword Backfill (rule-based) ← THIS DOCUMENT               │
+│     └── If LLM missed evidence: scan for keyword matches        │
+│                                                                 │
+│  3. Scoring                                                     │
+│     └── Score items with evidence; N/A for items without        │
+│                                                                 │
+└─────────────────────────────────────────────────────────────────┘
+</code></pre></div>
+<hr />
+<h2 id="why-does-backfill-exist">Why Does Backfill Exist?</h2>
+<h3 id="the-problem-llm-extraction-isnt-perfect">The Problem: LLM Extraction Isn't Perfect</h3>
+<p>LLMs can miss obvious evidence:
+- "I'm so exhausted" might not be mapped to <code>PHQ8_Tired</code>
+- "Can't sleep at night" might be overlooked for <code>PHQ8_Sleep</code>
+- Colloquial language might not trigger semantic matching</p>
+<h3 id="the-solution-rule-based-backup">The Solution: Rule-Based Backup</h3>
+<p>When the LLM returns empty evidence for a symptom, we search for known keywords:</p>
+<table>
+<thead>
+<tr>
+<th>Domain</th>
+<th>Example Keywords</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Sleep</td>
+<td>"can't sleep", "insomnia", "wake up tired"</td>
+</tr>
+<tr>
+<td>Tired</td>
+<td>"exhausted", "no energy", "drained"</td>
+</tr>
+<tr>
+<td>Depressed</td>
+<td>"hopeless", "crying", "feeling down"</td>
+</tr>
+<tr>
+<td>Appetite</td>
+<td>"no appetite", "overeating", "lost weight"</td>
+</tr>
+</tbody>
+</table>
+<p><strong>Source</strong>: <code>src/ai_psychiatrist/resources/phq8_keywords.yaml</code></p>
+<hr />
+<h2 id="how-it-works">How It Works</h2>
+<h3 id="the-algorithm">The Algorithm</h3>
+<p>From <code>src/ai_psychiatrist/agents/quantitative.py</code> (keyword backfill helpers):</p>
+<div class="highlight"><pre><span></span><code><span class="k">def</span><span class="w"> </span><span class="nf">_find_keyword_hits</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">transcript</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="n">cap</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">3</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="nb">list</span><span class="p">[</span><span class="nb">str</span><span class="p">]]:</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Find keyword-matched sentences per PHQ-8 item (substring match).&quot;&quot;&quot;</span>
+    <span class="n">parts</span> <span class="o">=</span> <span class="n">re</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="sa">r</span><span class="s2">&quot;(?&lt;=[.?!])\s+|\n+&quot;</span><span class="p">,</span> <span class="n">transcript</span><span class="o">.</span><span class="n">strip</span><span class="p">())</span>
+    <span class="n">sentences</span> <span class="o">=</span> <span class="p">[</span><span class="n">p</span><span class="o">.</span><span class="n">strip</span><span class="p">()</span> <span class="k">for</span> <span class="n">p</span> <span class="ow">in</span> <span class="n">parts</span> <span class="k">if</span> <span class="n">p</span> <span class="ow">and</span> <span class="nb">len</span><span class="p">(</span><span class="n">p</span><span class="o">.</span><span class="n">strip</span><span class="p">())</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="p">]</span>
+
+    <span class="n">hits</span><span class="p">:</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="nb">list</span><span class="p">[</span><span class="nb">str</span><span class="p">]]</span> <span class="o">=</span> <span class="p">{}</span>
+    <span class="k">for</span> <span class="n">key</span><span class="p">,</span> <span class="n">keywords</span> <span class="ow">in</span> <span class="n">DOMAIN_KEYWORDS</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
+        <span class="n">key_hits</span><span class="p">:</span> <span class="nb">list</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span> <span class="o">=</span> <span class="p">[]</span>
+        <span class="k">for</span> <span class="n">sent</span> <span class="ow">in</span> <span class="n">sentences</span><span class="p">:</span>
+            <span class="n">sent_lower</span> <span class="o">=</span> <span class="n">sent</span><span class="o">.</span><span class="n">lower</span><span class="p">()</span>
+            <span class="k">if</span> <span class="nb">any</span><span class="p">(</span><span class="n">kw</span> <span class="ow">in</span> <span class="n">sent_lower</span> <span class="k">for</span> <span class="n">kw</span> <span class="ow">in</span> <span class="n">keywords</span><span class="p">):</span>
+                <span class="n">key_hits</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">sent</span><span class="p">)</span>
+            <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">key_hits</span><span class="p">)</span> <span class="o">&gt;=</span> <span class="n">cap</span><span class="p">:</span>
+                <span class="k">break</span>
+        <span class="n">hits</span><span class="p">[</span><span class="n">key</span><span class="p">]</span> <span class="o">=</span> <span class="n">key_hits</span>
+    <span class="k">return</span> <span class="n">hits</span>
+
+
+<span class="k">def</span><span class="w"> </span><span class="nf">_merge_evidence</span><span class="p">(</span>
+    <span class="bp">self</span><span class="p">,</span>
+    <span class="n">current</span><span class="p">:</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="nb">list</span><span class="p">[</span><span class="nb">str</span><span class="p">]],</span>
+    <span class="n">hits</span><span class="p">:</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="nb">list</span><span class="p">[</span><span class="nb">str</span><span class="p">]],</span>
+    <span class="n">cap</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">3</span><span class="p">,</span>
+<span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="nb">list</span><span class="p">[</span><span class="nb">str</span><span class="p">]]:</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Merge keyword hits into LLM evidence, respecting a total per-item cap.&quot;&quot;&quot;</span>
+    <span class="n">out</span> <span class="o">=</span> <span class="p">{</span><span class="n">k</span><span class="p">:</span> <span class="nb">list</span><span class="p">(</span><span class="n">v</span><span class="p">)</span> <span class="k">for</span> <span class="n">k</span><span class="p">,</span> <span class="n">v</span> <span class="ow">in</span> <span class="n">current</span><span class="o">.</span><span class="n">items</span><span class="p">()}</span>
+    <span class="k">for</span> <span class="n">key</span><span class="p">,</span> <span class="n">key_hits</span> <span class="ow">in</span> <span class="n">hits</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
+        <span class="n">current_items</span> <span class="o">=</span> <span class="n">out</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">key</span><span class="p">,</span> <span class="p">[])</span>
+        <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">current_items</span><span class="p">)</span> <span class="o">&gt;=</span> <span class="n">cap</span><span class="p">:</span>
+            <span class="k">continue</span>
+        <span class="n">need</span> <span class="o">=</span> <span class="n">cap</span> <span class="o">-</span> <span class="nb">len</span><span class="p">(</span><span class="n">current_items</span><span class="p">)</span>
+        <span class="n">existing</span> <span class="o">=</span> <span class="nb">set</span><span class="p">(</span><span class="n">current_items</span><span class="p">)</span>
+        <span class="n">new_hits</span> <span class="o">=</span> <span class="p">[</span><span class="n">h</span> <span class="k">for</span> <span class="n">h</span> <span class="ow">in</span> <span class="n">key_hits</span> <span class="k">if</span> <span class="n">h</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">existing</span><span class="p">]</span>
+        <span class="n">out</span><span class="p">[</span><span class="n">key</span><span class="p">]</span> <span class="o">=</span> <span class="n">current_items</span> <span class="o">+</span> <span class="n">new_hits</span><span class="p">[:</span><span class="n">need</span><span class="p">]</span>
+    <span class="k">return</span> <span class="n">out</span>
+</code></pre></div>
+<h3 id="key-properties">Key Properties</h3>
+<ol>
+<li><strong>Runs when evidence is insufficient</strong>: If LLM found <code>cap</code> quotes, backfill skips that item</li>
+<li><strong>Caps at <code>cap</code> evidence items per domain</strong> (LLM + keyword; default cap=3): Prevents prompt bloat</li>
+<li><strong>Simple substring matching</strong>: Fast, deterministic, no LLM calls</li>
+<li><strong>Deduplicates</strong>: Won't add the same sentence twice</li>
+</ol>
+<hr />
+<h2 id="detailed-quantitative-agent-pipeline-with-code-references">Detailed Quantitative Agent Pipeline (With Code References)</h2>
+<p>This section shows exactly where backfill fits in the quantitative assessment flow,
+with line number references to <code>src/ai_psychiatrist/agents/quantitative.py</code>.</p>
+<div class="highlight"><pre><span></span><code>┌─────────────────────────────────────────────────────────────────────────┐
+│                    QUANTITATIVE AGENT PIPELINE                          │
+│                    (quantitative.py:102-254)                            │
+├─────────────────────────────────────────────────────────────────────────┤
+│                                                                         │
+│  STEP 1: LLM EVIDENCE EXTRACTION (Lines 256-307)                        │
+│  ─────────────────────────────────────────────────────────────────────  │
+│  • _extract_evidence() calls LLM with transcript                        │
+│  • LLM returns JSON: {&quot;PHQ8_Sleep&quot;: [&quot;I can&#39;t sleep&quot;], ...}             │
+│  • Pure semantic analysis - no keywords involved                        │
+│                                                                         │
+│                              │                                          │
+│                              ▼                                          │
+│                                                                         │
+│  STEP 2: KEYWORD HIT DETECTION (Lines 127-136)                          │
+│  ─────────────────────────────────────────────────────────────────────  │
+│  IF enable_keyword_backfill=TRUE or track_na_reasons=TRUE:              │
+│    • _find_keyword_hits() scans transcript for YAML keywords            │
+│    • Returns: {&quot;PHQ8_Tired&quot;: [&quot;I&#39;m exhausted&quot;], ...}                    │
+│    • Uses substring matching (case-insensitive)                         │
+│                                                                         │
+│                              │                                          │
+│                              ▼                                          │
+│                                                                         │
+│  STEP 3: CONDITIONAL BACKFILL MERGE (Lines 137-145)                     │
+│  ─────────────────────────────────────────────────────────────────────  │
+│  IF enable_keyword_backfill=TRUE:                                       │
+│    • _merge_evidence() adds keyword hits to LLM evidence                │
+│    • Caps at keyword_backfill_cap (default 3) (prevents prompt bloat)   │
+│    • Deduplicates (won&#39;t add same sentence twice)                       │
+│  ELSE:                                                                  │
+│    • final_evidence = llm_evidence (no backfill)                        │
+│                                                                         │
+│                              │                                          │
+│                              ▼                                          │
+│                                                                         │
+│  STEP 4: FEW-SHOT REFERENCE RETRIEVAL (Lines 156-165)                   │
+│  ─────────────────────────────────────────────────────────────────────  │
+│  IF mode=FEW_SHOT and embedding_service exists:                         │
+│    • Embed the extracted evidence                                       │
+│    • Find similar reference chunks from training set                    │
+│    • Build reference bundle with example scores                         │
+│                                                                         │
+│                              │                                          │
+│                              ▼                                          │
+│                                                                         │
+│  STEP 5: LLM SCORING (Lines 167-184)                                    │
+│  ─────────────────────────────────────────────────────────────────────  │
+│  • LLM receives: evidence + reference examples (if few-shot)            │
+│  • Returns: {&quot;PHQ8_Sleep&quot;: {&quot;evidence&quot;: &quot;...&quot;, &quot;score&quot;: 2}, ...}        │
+│  • Items without evidence → &quot;N/A&quot;                                       │
+│                                                                         │
+│                              │                                          │
+│                              ▼                                          │
+│                                                                         │
+│  STEP 6: N/A REASON ASSIGNMENT (Lines 571-584)                          │
+│  ─────────────────────────────────────────────────────────────────────  │
+│  IF score is N/A and track_na_reasons=TRUE:                             │
+│    • _determine_na_reason() classifies why                              │
+│    • NO_MENTION: no LLM evidence AND no keyword hits                    │
+│    • LLM_ONLY_MISSED: keywords existed but backfill was OFF             │
+│    • KEYWORDS_INSUFFICIENT: backfill ON but scorer still said N/A       │
+│    • SCORE_NA_WITH_EVIDENCE: LLM had evidence but still said N/A        │
+│                                                                         │
+└─────────────────────────────────────────────────────────────────────────┘
+</code></pre></div>
+<h3 id="the-key-code-assess-method-lines-102-254">The Key Code (assess() method, lines 102-254)</h3>
+<div class="highlight"><pre><span></span><code><span class="c1"># Step 1: LLM extraction (pure semantic)</span>
+<span class="n">llm_evidence</span> <span class="o">=</span> <span class="k">await</span> <span class="bp">self</span><span class="o">.</span><span class="n">_extract_evidence</span><span class="p">(</span><span class="n">transcript</span><span class="o">.</span><span class="n">text</span><span class="p">)</span>
+<span class="n">llm_counts</span> <span class="o">=</span> <span class="p">{</span><span class="n">k</span><span class="p">:</span> <span class="nb">len</span><span class="p">(</span><span class="n">v</span><span class="p">)</span> <span class="k">for</span> <span class="n">k</span><span class="p">,</span> <span class="n">v</span> <span class="ow">in</span> <span class="n">llm_evidence</span><span class="o">.</span><span class="n">items</span><span class="p">()}</span>
+
+<span class="c1"># Step 2: Find keyword hits (always computed if backfill OR tracking enabled)</span>
+<span class="n">keyword_hits</span><span class="p">:</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="nb">list</span><span class="p">[</span><span class="nb">str</span><span class="p">]]</span> <span class="o">=</span> <span class="p">{}</span>
+<span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_settings</span><span class="o">.</span><span class="n">enable_keyword_backfill</span> <span class="ow">or</span> <span class="bp">self</span><span class="o">.</span><span class="n">_settings</span><span class="o">.</span><span class="n">track_na_reasons</span><span class="p">:</span>
+    <span class="n">keyword_hits</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_find_keyword_hits</span><span class="p">(</span>
+        <span class="n">transcript</span><span class="o">.</span><span class="n">text</span><span class="p">,</span>
+        <span class="n">cap</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">_settings</span><span class="o">.</span><span class="n">keyword_backfill_cap</span><span class="p">,</span>
+    <span class="p">)</span>
+
+<span class="c1"># Step 3: Conditional merge (THE BACKFILL DECISION)</span>
+<span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_settings</span><span class="o">.</span><span class="n">enable_keyword_backfill</span><span class="p">:</span>
+    <span class="n">final_evidence</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_merge_evidence</span><span class="p">(</span>
+        <span class="n">llm_evidence</span><span class="p">,</span>
+        <span class="n">keyword_hits</span><span class="p">,</span>
+        <span class="n">cap</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">_settings</span><span class="o">.</span><span class="n">keyword_backfill_cap</span><span class="p">,</span>
+    <span class="p">)</span>
+<span class="k">else</span><span class="p">:</span>
+    <span class="n">final_evidence</span> <span class="o">=</span> <span class="n">llm_evidence</span>  <span class="c1"># Pure LLM only - paper-text parity mode</span>
+</code></pre></div>
+<h3 id="file-reference-table">File Reference Table</h3>
+<table>
+<thead>
+<tr>
+<th>Component</th>
+<th>File</th>
+<th>Lines</th>
+<th>What It Does</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Backfill toggle</td>
+<td><code>config.py</code></td>
+<td>257-260</td>
+<td><code>enable_keyword_backfill</code> setting</td>
+</tr>
+<tr>
+<td>Main pipeline</td>
+<td><code>quantitative.py</code></td>
+<td>102-254</td>
+<td><code>assess()</code> orchestrates all steps</td>
+</tr>
+<tr>
+<td>LLM extraction</td>
+<td><code>quantitative.py</code></td>
+<td>256-307</td>
+<td><code>_extract_evidence()</code></td>
+</tr>
+<tr>
+<td>Keyword search</td>
+<td><code>quantitative.py</code></td>
+<td>309-339</td>
+<td><code>_find_keyword_hits()</code></td>
+</tr>
+<tr>
+<td>Evidence merge</td>
+<td><code>quantitative.py</code></td>
+<td>341-374</td>
+<td><code>_merge_evidence()</code></td>
+</tr>
+<tr>
+<td>N/A classification</td>
+<td><code>quantitative.py</code></td>
+<td>571-584</td>
+<td><code>_determine_na_reason()</code></td>
+</tr>
+<tr>
+<td>Keyword YAML</td>
+<td><code>resources/phq8_keywords.yaml</code></td>
+<td>all</td>
+<td>200+ curated keyword phrases</td>
+</tr>
+<tr>
+<td>YAML loader</td>
+<td><code>prompts/quantitative.py</code></td>
+<td>~50-70</td>
+<td>Loads YAML as packaged resource</td>
+</tr>
+</tbody>
+</table>
+<hr />
+<h2 id="the-tradeoff-coverage-vs-purity">The Tradeoff: Coverage vs Purity</h2>
+<h3 id="without-backfill-default-paper-text-parity">Without Backfill (Default - Paper-Text Parity)</h3>
+<table>
+<thead>
+<tr>
+<th>Pros</th>
+<th>Cons</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Measures pure LLM capability</td>
+<td>Coverage depends on model/runtime; paper reports “~50% of cases unable to provide a prediction” (denominator unclear), while our observed item-level coverage was 69.2% over evaluated subjects</td>
+</tr>
+<tr>
+<td>Matches paper-text methodology (as written)</td>
+<td>More N/A results than enabling backfill (typical)</td>
+</tr>
+<tr>
+<td>Cleaner research comparison</td>
+<td>Less clinical utility</td>
+</tr>
+<tr>
+<td>What the paper text describes</td>
+<td>Misses some obvious evidence</td>
+</tr>
+</tbody>
+</table>
+<h3 id="with-backfill-higher-coverage">With Backfill (Higher Coverage)</h3>
+<table>
+<thead>
+<tr>
+<th>Pros</th>
+<th>Cons</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Often higher coverage (e.g., 74.1% in one historical run recorded in <code>docs/results/reproduction-results.md</code>)</td>
+<td>Measures "LLM + heuristics"</td>
+</tr>
+<tr>
+<td>Catches LLM blind spots</td>
+<td>May include irrelevant matches</td>
+</tr>
+<tr>
+<td>More clinical utility</td>
+<td>Diverges from paper-text methodology; closer to paper-repo behavior</td>
+</tr>
+<tr>
+<td>More items get assessed</td>
+<td>Harder to compare with paper</td>
+</tr>
+</tbody>
+</table>
+<hr />
+<h2 id="papers-approach">Paper's Approach</h2>
+<h3 id="what-the-paper-text-says">What the Paper TEXT Says</h3>
+<p>The paper does not explicitly describe a keyword backfill mechanism. What it states:</p>
+<blockquote>
+<p>"If no relevant evidence was found for a given PHQ-8 item, the model produced no output."</p>
+</blockquote>
+<p>And in Section 3.2:</p>
+<blockquote>
+<p>"In ~50% of cases, the model was unable to provide a prediction due to insufficient evidence."</p>
+</blockquote>
+<h3 id="what-the-paper-code-does-discovery-2025-12-24">What the Paper CODE Does (Discovery: 2025-12-24)</h3>
+<p><strong>The public repository has backfill ALWAYS ON.</strong> In <code>_reference/agents/quantitative_assessor_f.py</code>,
+the few-shot agent unconditionally calls <code>_keyword_backfill()</code> inside <code>extract_evidence()</code> (~line 478).</p>
+<p>This means:
+- The paper TEXT implies pure LLM extraction
+- The paper CODE uses LLM + keyword heuristics</p>
+<p>We don't know which approach produced the reported MAE of 0.619.</p>
+<h3 id="our-decision-paper-text-parity-by-default">Our Decision: Paper-Text Parity by Default</h3>
+<p>We chose to measure <strong>pure LLM capability</strong> (backfill OFF) because:
+1. The paper doesn't describe keyword backfill as part of the methodology
+2. Scientific reproducibility should match documented methodology
+3. Backfill can still be enabled for historical ablations (not recommended for new work)</p>
+<p><strong>Backfill is OFF by default</strong> (<code>QUANTITATIVE_ENABLE_KEYWORD_BACKFILL=false</code>).</p>
+<h3 id="asking-the-authors">Asking the Authors</h3>
+<p>To resolve this ambiguity, consider asking:</p>
+<blockquote>
+<p>"When the LLM couldn't find evidence for a PHQ-8 item, did you use keyword-based
+fallback to recover missed evidence before scoring? The public repo has
+<code>_keyword_backfill()</code> in the few-shot agent but the paper doesn't mention it.
+Was that used in the reported 0.619 MAE evaluation?"</p>
+</blockquote>
+<hr />
+<h2 id="when-to-use-each-mode">When to Use Each Mode</h2>
+<h3 id="use-backfill-off-default-always">Use Backfill OFF (Default) — ALWAYS</h3>
+<p><strong>This is the only recommended mode.</strong> Backfill is deprecated.</p>
+<ul>
+<li>Evaluating LLM capability</li>
+<li>Running ablation studies</li>
+<li>Comparing different LLM models</li>
+<li>Production use</li>
+</ul>
+<h3 id="use-backfill-on-never-historical-only">Use Backfill ON — NEVER (Historical Only)</h3>
+<p><strong>Do not enable backfill.</strong> The feature is flawed:</p>
+<ul>
+<li>Simple substring matching has no semantic understanding</li>
+<li>Matches "I sleep great" for <code>PHQ8_Sleep</code> (false positive)</li>
+<li>Inflates coverage without improving clinical validity</li>
+<li>The original paper's methodology is not reproducible anyway</li>
+</ul>
+<p>If you need to enable backfill for a specific historical comparison, document
+the reason explicitly. This is not recommended for any new work.</p>
+<hr />
+<h2 id="na-reason-tracking">N/A Reason Tracking</h2>
+<p>When N/A reason tracking is enabled (<code>QUANTITATIVE_TRACK_NA_REASONS=true</code>), each N/A result can include a deterministic reason (independent of backfill):</p>
+<table>
+<thead>
+<tr>
+<th>Reason</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>NO_MENTION</code></td>
+<td>No evidence from LLM and no keyword matches found</td>
+</tr>
+<tr>
+<td><code>LLM_ONLY_MISSED</code></td>
+<td>LLM found no evidence, but keyword hits exist (backfill OFF)</td>
+</tr>
+<tr>
+<td><code>KEYWORDS_INSUFFICIENT</code></td>
+<td>Keywords matched and were provided (backfill ON), but scoring still returned N/A</td>
+</tr>
+<tr>
+<td><code>SCORE_NA_WITH_EVIDENCE</code></td>
+<td>LLM extracted evidence, but scoring still returned N/A</td>
+</tr>
+</tbody>
+</table>
+<p>This enables:
+- Debugging extraction failures
+- Understanding model behavior
+- Comparing backfill ON vs OFF
+- Identifying keyword list gaps</p>
+<hr />
+<h2 id="configuration">Configuration</h2>
+<p>Backfill is <strong>OFF by default</strong> (paper-text parity mode):</p>
+<div class="highlight"><pre><span></span><code><span class="c1"># Default: paper-text parity mode (pure LLM)</span>
+<span class="c1"># QUANTITATIVE_ENABLE_KEYWORD_BACKFILL=false  # (this is the default)</span>
+
+<span class="c1"># Historical ablation only (deprecated):</span>
+<span class="c1"># QUANTITATIVE_ENABLE_KEYWORD_BACKFILL=true</span>
+</code></pre></div>
+<blockquote>
+<p>⚠️ <strong>Deprecated</strong>: Enabling backfill is not recommended. It was used for historical ablation studies only. Keep it OFF for all new runs.</p>
+</blockquote>
+<hr />
+<h2 id="impact-on-results">Impact on Results</h2>
+<h3 id="concrete-runs-local-output-historical-notes">Concrete Runs (Local Output + Historical Notes)</h3>
+<table>
+<thead>
+<tr>
+<th>Run</th>
+<th>Mode</th>
+<th>Coverage</th>
+<th>Item MAE</th>
+<th>Notes</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>2025-12-24 (paper split, backfill OFF)</td>
+<td>Paper-text parity</td>
+<td>69.2% (216/312)</td>
+<td>0.778</td>
+<td>Historical run notes only; the JSON artifact is not tracked in this repo snapshot (older runners used different output naming)</td>
+</tr>
+<tr>
+<td>2025-12-23 (historical, backfill ON)</td>
+<td>Heuristic-augmented</td>
+<td>74.1% (243/328)</td>
+<td>0.757</td>
+<td>Recorded in <code>docs/results/reproduction-results.md</code> (no JSON artifact stored under <code>data/outputs/</code> in this repo snapshot)</td>
+</tr>
+</tbody>
+</table>
+<h3 id="per-item-impact">Per-Item Impact</h3>
+<p>In the 2025-12-24 paper-text-parity run (backfill OFF), these items had the lowest coverage:</p>
+<table>
+<thead>
+<tr>
+<th>Item</th>
+<th>Coverage (backfill OFF)</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Appetite</td>
+<td>25.6%</td>
+</tr>
+<tr>
+<td>Moving</td>
+<td>41.0%</td>
+</tr>
+<tr>
+<td>Concentrating</td>
+<td>43.6%</td>
+</tr>
+</tbody>
+</table>
+<p>Backfill is expected to increase some of these, but that requires a controlled ablation (same split,
+same model/backend, backfill ON vs OFF) to attribute causality.</p>
+<hr />
+<h2 id="decision-tree">Decision Tree</h2>
+<div class="highlight"><pre><span></span><code>Transcript → LLM Evidence Extraction
+                    │
+                    ▼
+         ┌─────────────────────────┐
+         │ LLM found evidence?     │
+         └─────────────────────────┘
+                │           │
+               YES          NO
+                │           │
+                ▼           ▼
+         Use LLM      ┌─────────────────────────┐
+         evidence     │ Backfill enabled?       │
+                      └─────────────────────────┘
+                             │           │
+                            YES          NO
+                             │           │
+                             ▼           ▼
+                      Scan for      Return empty
+                      keywords      evidence
+                             │           │
+                             ▼           ▼
+                      ┌─────────────────────────┐
+                      │ Keywords found?         │
+                      └─────────────────────────┘
+                             │           │
+                            YES          NO
+                             │           │
+                             ▼           ▼
+                      Add keyword    N/A (NO_MENTION
+                      matches to     or LLM_ONLY_MISSED)
+                      evidence
+                             │
+                             ▼
+                      Score with
+                      LLM (0-3 or N/A)
+                             │
+                             ▼
+                   If N/A with evidence:
+                 SCORE_NA_WITH_EVIDENCE
+</code></pre></div>
+<hr />
+<h2 id="related-documentation">Related Documentation</h2>
+<ul>
+<li><a href="./extraction-mechanism.md">Extraction Mechanism</a> - Full extraction pipeline</li>
+<li><a href="../../guides/paper-parity-guide/">Paper Parity Guide</a> - How to reproduce paper results</li>
+<li><a href="../configs/configuration.md">Configuration Reference</a> - All settings</li>
+</ul>
+
+
+
+
+
+
+
+
+
+
+
+
+                
+              </article>
+            </div>
+          
+          
+<script>var target=document.getElementById(location.hash.slice(1));target&&target.name&&(target.checked=target.name.startsWith("__tabbed_"))</script>
+        </div>
+        
+      </main>
+      
+        <footer class="md-footer">
+  
+    
+  
+  <div class="md-footer-meta md-typeset">
+    <div class="md-footer-meta__inner md-grid">
+      <div class="md-copyright">
+  
+  
+    Made with
+    <a href="https://squidfunk.github.io/mkdocs-material/" target="_blank" rel="noopener">
+      Material for MkDocs
+    </a>
+  
+</div>
+      
+    </div>
+  </div>
+</footer>
+      
+    </div>
+    <div class="md-dialog" data-md-component="dialog">
+      <div class="md-dialog__inner md-typeset"></div>
+    </div>
+    
+    
+    
+      
+      
+      <script id="__config" type="application/json">{"annotate": null, "base": "../../..", "features": ["content.code.copy", "content.action.edit", "content.action.view", "navigation.tracking", "navigation.sections", "navigation.footer", "navigation.instant"], "search": "../../../assets/javascripts/workers/search.2c215733.min.js", "tags": null, "translations": {"clipboard.copied": "Copied to clipboard", "clipboard.copy": "Copy to clipboard", "search.result.more.one": "1 more on this page", "search.result.more.other": "# more on this page", "search.result.none": "No matching documents", "search.result.one": "1 matching document", "search.result.other": "# matching documents", "search.result.placeholder": "Type to start searching", "search.result.term.missing": "Missing", "select.version": "Select version"}, "version": null}</script>
+    
+    
+      <script src="../../../assets/javascripts/bundle.79ae519e.min.js"></script>
+      
+    
+  </body>
+</html>

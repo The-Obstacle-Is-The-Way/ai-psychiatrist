@@ -1,0 +1,3647 @@
+
+<!doctype html>
+<html lang="en" class="no-js">
+  <head>
+    
+      <meta charset="utf-8">
+      <meta name="viewport" content="width=device-width,initial-scale=1">
+      
+      
+      
+        <link rel="canonical" href="https://the-obstacle-is-the-way.github.io/ai-psychiatrist/rag/overview/">
+      
+      
+        <link rel="prev" href="../design-rationale/">
+      
+      
+        <link rel="next" href="../runtime-features/">
+      
+      
+        
+      
+      
+      <link rel="icon" href="../../assets/images/favicon.png">
+      <meta name="generator" content="mkdocs-1.6.1, mkdocs-material-9.7.1">
+    
+    
+      
+        <title>RAG Overview: Embeddings and Few-Shot Retrieval - AI Psychiatrist</title>
+      
+    
+    
+      <link rel="stylesheet" href="../../assets/stylesheets/main.484c7ddc.min.css">
+      
+      
+
+
+    
+    
+      
+    
+    
+      
+        
+        
+        <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+        <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Roboto:300,300i,400,400i,700,700i%7CRoboto+Mono:400,400i,700,700i&display=fallback">
+        <style>:root{--md-text-font:"Roboto";--md-code-font:"Roboto Mono"}</style>
+      
+    
+    
+    <script>__md_scope=new URL("../..",location),__md_hash=e=>[...e].reduce(((e,_)=>(e<<5)-e+_.charCodeAt(0)),0),__md_get=(e,_=localStorage,t=__md_scope)=>JSON.parse(_.getItem(t.pathname+"."+e)),__md_set=(e,_,t=localStorage,a=__md_scope)=>{try{t.setItem(a.pathname+"."+e,JSON.stringify(_))}catch(e){}}</script>
+    
+      
+
+    
+    
+  </head>
+  
+  
+    <body dir="ltr">
+  
+    
+    <input class="md-toggle" data-md-toggle="drawer" type="checkbox" id="__drawer" autocomplete="off">
+    <input class="md-toggle" data-md-toggle="search" type="checkbox" id="__search" autocomplete="off">
+    <label class="md-overlay" for="__drawer"></label>
+    <div data-md-component="skip">
+      
+        
+        <a href="#rag-overview-embeddings-and-few-shot-retrieval" class="md-skip">
+          Skip to content
+        </a>
+      
+    </div>
+    <div data-md-component="announce">
+      
+    </div>
+    
+    
+      
+
+  
+
+<header class="md-header md-header--shadow" data-md-component="header">
+  <nav class="md-header__inner md-grid" aria-label="Header">
+    <a href="../.." title="AI Psychiatrist" class="md-header__button md-logo" aria-label="AI Psychiatrist" data-md-component="logo">
+      
+  
+  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 8a3 3 0 0 0 3-3 3 3 0 0 0-3-3 3 3 0 0 0-3 3 3 3 0 0 0 3 3m0 3.54C9.64 9.35 6.5 8 3 8v11c3.5 0 6.64 1.35 9 3.54 2.36-2.19 5.5-3.54 9-3.54V8c-3.5 0-6.64 1.35-9 3.54"/></svg>
+
+    </a>
+    <label class="md-header__button md-icon" for="__drawer">
+      
+      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M3 6h18v2H3zm0 5h18v2H3zm0 5h18v2H3z"/></svg>
+    </label>
+    <div class="md-header__title" data-md-component="header-title">
+      <div class="md-header__ellipsis">
+        <div class="md-header__topic">
+          <span class="md-ellipsis">
+            AI Psychiatrist
+          </span>
+        </div>
+        <div class="md-header__topic" data-md-component="header-topic">
+          <span class="md-ellipsis">
+            
+              RAG Overview: Embeddings and Few-Shot Retrieval
+            
+          </span>
+        </div>
+      </div>
+    </div>
+    
+    
+      <script>var palette=__md_get("__palette");if(palette&&palette.color){if("(prefers-color-scheme)"===palette.color.media){var media=matchMedia("(prefers-color-scheme: light)"),input=document.querySelector(media.matches?"[data-md-color-media='(prefers-color-scheme: light)']":"[data-md-color-media='(prefers-color-scheme: dark)']");palette.color.media=input.getAttribute("data-md-color-media"),palette.color.scheme=input.getAttribute("data-md-color-scheme"),palette.color.primary=input.getAttribute("data-md-color-primary"),palette.color.accent=input.getAttribute("data-md-color-accent")}for(var[key,value]of Object.entries(palette.color))document.body.setAttribute("data-md-color-"+key,value)}</script>
+    
+    
+    
+      
+      
+        <label class="md-header__button md-icon" for="__search">
+          
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M9.5 3A6.5 6.5 0 0 1 16 9.5c0 1.61-.59 3.09-1.56 4.23l.27.27h.79l5 5-1.5 1.5-5-5v-.79l-.27-.27A6.52 6.52 0 0 1 9.5 16 6.5 6.5 0 0 1 3 9.5 6.5 6.5 0 0 1 9.5 3m0 2C7 5 5 7 5 9.5S7 14 9.5 14 14 12 14 9.5 12 5 9.5 5"/></svg>
+        </label>
+        <div class="md-search" data-md-component="search" role="dialog">
+  <label class="md-search__overlay" for="__search"></label>
+  <div class="md-search__inner" role="search">
+    <form class="md-search__form" name="search">
+      <input type="text" class="md-search__input" name="query" aria-label="Search" placeholder="Search" autocapitalize="off" autocorrect="off" autocomplete="off" spellcheck="false" data-md-component="search-query" required>
+      <label class="md-search__icon md-icon" for="__search">
+        
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M9.5 3A6.5 6.5 0 0 1 16 9.5c0 1.61-.59 3.09-1.56 4.23l.27.27h.79l5 5-1.5 1.5-5-5v-.79l-.27-.27A6.52 6.52 0 0 1 9.5 16 6.5 6.5 0 0 1 3 9.5 6.5 6.5 0 0 1 9.5 3m0 2C7 5 5 7 5 9.5S7 14 9.5 14 14 12 14 9.5 12 5 9.5 5"/></svg>
+        
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M20 11v2H8l5.5 5.5-1.42 1.42L4.16 12l7.92-7.92L13.5 5.5 8 11z"/></svg>
+      </label>
+      <nav class="md-search__options" aria-label="Search">
+        
+        <button type="reset" class="md-search__icon md-icon" title="Clear" aria-label="Clear" tabindex="-1">
+          
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M19 6.41 17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12z"/></svg>
+        </button>
+      </nav>
+      
+    </form>
+    <div class="md-search__output">
+      <div class="md-search__scrollwrap" tabindex="0" data-md-scrollfix>
+        <div class="md-search-result" data-md-component="search-result">
+          <div class="md-search-result__meta">
+            Initializing search
+          </div>
+          <ol class="md-search-result__list" role="presentation"></ol>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+      
+    
+    
+      <div class="md-header__source">
+        <a href="https://github.com/The-Obstacle-Is-The-Way/ai-psychiatrist" title="Go to repository" class="md-source" data-md-component="source">
+  <div class="md-source__icon md-icon">
+    
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 448 512"><!--! Font Awesome Free 7.1.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2025 Fonticons, Inc.--><path d="M439.6 236.1 244 40.5c-5.4-5.5-12.8-8.5-20.4-8.5s-15 3-20.4 8.4L162.5 81l51.5 51.5c27.1-9.1 52.7 16.8 43.4 43.7l49.7 49.7c34.2-11.8 61.2 31 35.5 56.7-26.5 26.5-70.2-2.9-56-37.3L240.3 199v121.9c25.3 12.5 22.3 41.8 9.1 55-6.4 6.4-15.2 10.1-24.3 10.1s-17.8-3.6-24.3-10.1c-17.6-17.6-11.1-46.9 11.2-56v-123c-20.8-8.5-24.6-30.7-18.6-45L142.6 101 8.5 235.1C3 240.6 0 247.9 0 255.5s3 15 8.5 20.4l195.6 195.7c5.4 5.4 12.7 8.4 20.4 8.4s15-3 20.4-8.4l194.7-194.7c5.4-5.4 8.4-12.8 8.4-20.4s-3-15-8.4-20.4"/></svg>
+  </div>
+  <div class="md-source__repository">
+    GitHub
+  </div>
+</a>
+      </div>
+    
+  </nav>
+  
+</header>
+    
+    <div class="md-container" data-md-component="container">
+      
+      
+        
+          
+        
+      
+      <main class="md-main" data-md-component="main">
+        <div class="md-main__inner md-grid">
+          
+            
+              
+              <div class="md-sidebar md-sidebar--primary" data-md-component="sidebar" data-md-type="navigation" >
+                <div class="md-sidebar__scrollwrap">
+                  <div class="md-sidebar__inner">
+                    
+
+
+
+<nav class="md-nav md-nav--primary" aria-label="Navigation" data-md-level="0">
+  <label class="md-nav__title" for="__drawer">
+    <a href="../.." title="AI Psychiatrist" class="md-nav__button md-logo" aria-label="AI Psychiatrist" data-md-component="logo">
+      
+  
+  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 8a3 3 0 0 0 3-3 3 3 0 0 0-3-3 3 3 0 0 0-3 3 3 3 0 0 0 3 3m0 3.54C9.64 9.35 6.5 8 3 8v11c3.5 0 6.64 1.35 9 3.54 2.36-2.19 5.5-3.54 9-3.54V8c-3.5 0-6.64 1.35-9 3.54"/></svg>
+
+    </a>
+    AI Psychiatrist
+  </label>
+  
+    <div class="md-nav__source">
+      <a href="https://github.com/The-Obstacle-Is-The-Way/ai-psychiatrist" title="Go to repository" class="md-source" data-md-component="source">
+  <div class="md-source__icon md-icon">
+    
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 448 512"><!--! Font Awesome Free 7.1.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2025 Fonticons, Inc.--><path d="M439.6 236.1 244 40.5c-5.4-5.5-12.8-8.5-20.4-8.5s-15 3-20.4 8.4L162.5 81l51.5 51.5c27.1-9.1 52.7 16.8 43.4 43.7l49.7 49.7c34.2-11.8 61.2 31 35.5 56.7-26.5 26.5-70.2-2.9-56-37.3L240.3 199v121.9c25.3 12.5 22.3 41.8 9.1 55-6.4 6.4-15.2 10.1-24.3 10.1s-17.8-3.6-24.3-10.1c-17.6-17.6-11.1-46.9 11.2-56v-123c-20.8-8.5-24.6-30.7-18.6-45L142.6 101 8.5 235.1C3 240.6 0 247.9 0 255.5s3 15 8.5 20.4l195.6 195.7c5.4 5.4 12.7 8.4 20.4 8.4s15-3 20.4-8.4l194.7-194.7c5.4-5.4 8.4-12.8 8.4-20.4s-3-15-8.4-20.4"/></svg>
+  </div>
+  <div class="md-source__repository">
+    GitHub
+  </div>
+</a>
+    </div>
+  
+  <ul class="md-nav__list" data-md-scrollfix>
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../.." class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    AI Psychiatrist Documentation
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    
+    
+    
+    
+      
+        
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--section md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_2" >
+        
+          
+          <label class="md-nav__link" for="__nav_2" id="__nav_2_label" tabindex="">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+     research
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_2_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_2">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+     research
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../_research/hypotheses-explained/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Hypotheses Explained: Current State vs Future Improvements
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../_research/hypotheses-for-improvement/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Hypotheses for Improvement: First-Principles Analysis
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../_research/master-bug-audit/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    MASTER BUG AUDIT
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    
+    
+    
+    
+      
+        
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--section md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_3" >
+        
+          
+          <label class="md-nav__link" for="__nav_3" id="__nav_3_label" tabindex="">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Architecture
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_3_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_3">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    Architecture
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../architecture/architecture/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Architecture
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../architecture/future-architecture/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Future Architecture: Agent Orchestration Options
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../architecture/pipeline/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Pipeline
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    
+    
+    
+    
+      
+        
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--section md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_4" >
+        
+          
+          <label class="md-nav__link" for="__nav_4" id="__nav_4_label" tabindex="">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Clinical
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_4_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_4">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    Clinical
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../clinical/clinical-understanding/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Clinical Understanding: How This System Works
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../clinical/glossary/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Glossary
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../clinical/phq8/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    PHQ-8: Patient Health Questionnaire
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../clinical/task-validity/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Task Validity: What Can (and Cannot) Be Inferred from DAIC-WOZ Transcripts
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    
+    
+    
+    
+      
+        
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--section md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_5" >
+        
+          
+          <label class="md-nav__link" for="__nav_5" id="__nav_5_label" tabindex="">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Configs
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_5_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_5">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    Configs
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../configs/agent-sampling-registry/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Agent Sampling Parameter Registry
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../configs/configuration-philosophy/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Configuration Philosophy
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../configs/configuration/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Configuration Reference
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    
+    
+    
+    
+      
+        
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--section md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_6" >
+        
+          
+          <label class="md-nav__link" for="__nav_6" id="__nav_6_label" tabindex="">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Data
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_6_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_6">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    Data
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../data/artifact-namespace-registry/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Artifact Namespace Registry
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../data/daic-woz-preprocessing/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    DAIC-WOZ Transcript Preprocessing (Bias-Aware, Deterministic)
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../data/daic-woz-schema/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    DAIC-WOZ Dataset Schema
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../data/data-splits-overview/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Data Splits Overview
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    
+    
+    
+    
+      
+        
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--section md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_7" >
+        
+          
+          <label class="md-nav__link" for="__nav_7" id="__nav_7_label" tabindex="">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Developer
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_7_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_7">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    Developer
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../developer/api-endpoints/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    API Reference
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../developer/dependency-registry/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Dependency Registry
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../developer/error-handling/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Error Handling and Fail-Fast Philosophy
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../developer/exceptions/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Exception Reference (Domain + Runtime)
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../developer/testing/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Testing Conventions (Markers, Fixtures, and Test Doubles)
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    
+    
+    
+    
+      
+        
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--section md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_8" >
+        
+          
+          <label class="md-nav__link" for="__nav_8" id="__nav_8_label" tabindex="">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Getting started
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_8_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_8">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    Getting started
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../getting-started/quickstart/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Quickstart Guide
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    
+    
+    
+    
+      
+        
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--section md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_9" >
+        
+          
+          <label class="md-nav__link" for="__nav_9" id="__nav_9_label" tabindex="">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Models
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_9_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_9">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    Models
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../models/model-registry/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    AI Psychiatrist Model Registry
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../models/model-wiring/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Model Wiring: Current State
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    
+    
+    
+    
+      
+        
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--section md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_10" >
+        
+          
+          <label class="md-nav__link" for="__nav_10" id="__nav_10_label" tabindex="">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Pipeline internals
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_10_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_10">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    Pipeline internals
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../pipeline-internals/evidence-extraction/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Evidence Extraction Mechanism: How It Actually Works
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../pipeline-internals/features/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Feature Reference (Non-Archive Canonical)
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    
+    
+    
+    
+      
+        
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--section md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_11" >
+        
+          
+          <label class="md-nav__link" for="__nav_11" id="__nav_11_label" tabindex="">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Preflight checklist
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_11_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_11">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    Preflight checklist
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../preflight-checklist/preflight-checklist-few-shot/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Preflight Checklist: Few-Shot Reproduction
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../preflight-checklist/preflight-checklist-zero-shot/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Preflight Checklist: Zero-Shot Run
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+    
+  
+  
+  
+    
+    
+    
+    
+      
+        
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--active md-nav__item--section md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_12" checked>
+        
+          
+          <label class="md-nav__link" for="__nav_12" id="__nav_12_label" tabindex="">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Rag
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_12_label" aria-expanded="true">
+          <label class="md-nav__title" for="__nav_12">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    Rag
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../artifact-generation/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    RAG Artifact Generation
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../chunk-scoring/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Chunk-Level Scoring (Spec 35) — Schema, Workflow, and Gotchas
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../debugging/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    RAG Debugging (Audit Logs + Guardrails)
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../design-rationale/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    RAG Design Rationale
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+    
+  
+  
+  
+    <li class="md-nav__item md-nav__item--active">
+      
+      <input class="md-nav__toggle md-toggle" type="checkbox" id="__toc">
+      
+      
+        
+      
+      
+        <label class="md-nav__link md-nav__link--active" for="__toc">
+          
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    RAG Overview: Embeddings and Few-Shot Retrieval
+  
+
+    
+  </span>
+  
+  
+
+          <span class="md-nav__icon md-icon"></span>
+        </label>
+      
+      <a href="./" class="md-nav__link md-nav__link--active">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    RAG Overview: Embeddings and Few-Shot Retrieval
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+      
+        
+
+<nav class="md-nav md-nav--secondary" aria-label="Table of contents">
+  
+  
+  
+    
+  
+  
+    <label class="md-nav__title" for="__toc">
+      <span class="md-nav__icon md-icon"></span>
+      Table of contents
+    </label>
+    <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
+      
+        <li class="md-nav__item">
+  <a href="#the-question-this-answers" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        The Question This Answers
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#the-core-idea" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        The Core Idea
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#part-1-what-is-an-embedding" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Part 1: What is an Embedding?
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Part 1: What is an Embedding?">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#the-analogy-gps-coordinates" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        The Analogy: GPS Coordinates
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#the-technical-reality" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        The Technical Reality
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#why-4096-dimensions" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Why 4096 Dimensions?
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#part-2-how-similarity-is-measured" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Part 2: How Similarity is Measured
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Part 2: How Similarity is Measured">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#the-analogy-distance-on-a-map" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        The Analogy: Distance on a Map
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#cosine-similarity" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Cosine Similarity
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#part-3-the-reference-store-knowledge-base" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Part 3: The Reference Store (Knowledge Base)
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Part 3: The Reference Store (Knowledge Base)">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#what-it-contains" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        What It Contains
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#visualized" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Visualized
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#part-4-few-shot-retrieval" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Part 4: Few-Shot Retrieval
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Part 4: Few-Shot Retrieval">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#the-analogy-show-dont-tell" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        The Analogy: "Show, Don't Tell"
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#how-the-system-does-this" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        How the System Does This
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#visual-example" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Visual Example
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#part-5-why-this-works" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Part 5: Why This Works
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Part 5: Why This Works">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#the-calibration-effect" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        The Calibration Effect
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#the-papers-results" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        The Paper's Results
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#part-6-per-item-retrieval" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Part 6: Per-Item Retrieval
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Part 6: Per-Item Retrieval">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#each-symptom-gets-its-own-examples" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Each Symptom Gets Its Own Examples
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#why-per-item" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Why Per-Item?
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#part-7-the-item-tagging-problem-spec-34" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Part 7: The Item Tagging Problem (Spec 34)
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Part 7: The Item Tagging Problem (Spec 34)">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#the-problem-topic-vs-item-mismatch" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        The Problem: Topic vs. Item Mismatch
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#the-solution-item-tagging" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        The Solution: Item Tagging
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#how-tagging-works" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        How Tagging Works
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#visual-example_1" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Visual Example
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#the-artifacts" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        The Artifacts
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#why-this-matters" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Why This Matters
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#part-8-when-it-doesnt-help" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Part 8: When It Doesn't Help
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Part 8: When It Doesn&#39;t Help">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#the-appetite-problem" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        The Appetite Problem
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#summary-the-complete-picture" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Summary: The Complete Picture
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#glossary" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Glossary
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#related-documentation" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Related Documentation
+      
+    </span>
+  </a>
+  
+</li>
+      
+    </ul>
+  
+</nav>
+      
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../runtime-features/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    RAG Runtime Features
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    
+    
+    
+    
+      
+        
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--section md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_13" >
+        
+          
+          <label class="md-nav__link" for="__nav_13" id="__nav_13_label" tabindex="">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Results
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_13_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_13">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    Results
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../results/few-shot-analysis/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Why Few-Shot May Not Beat Zero-Shot: Analysis
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../results/reproduction-results/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Paper Reproduction Results (Current Status)
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../results/run-history/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Complete Run History &amp; Statistical Analysis
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../results/run-output-schema/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Reproduction Run Output Schema (JSON + Registry)
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    
+    
+    
+    
+      
+        
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--section md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_14" >
+        
+          
+          <label class="md-nav__link" for="__nav_14" id="__nav_14_label" tabindex="">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Statistics
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_14_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_14">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    Statistics
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../statistics/coverage/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Coverage Explained: What It Is and Why It Matters
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../statistics/metrics-and-evaluation/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Metrics and Evaluation (Exact Definitions + Output Schema)
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../statistics/statistical-methodology-aurc-augrc/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Statistical Methodology: AURC/AUGRC for Selective Prediction
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+  </ul>
+</nav>
+                  </div>
+                </div>
+              </div>
+            
+            
+              
+              <div class="md-sidebar md-sidebar--secondary" data-md-component="sidebar" data-md-type="toc" >
+                <div class="md-sidebar__scrollwrap">
+                  <div class="md-sidebar__inner">
+                    
+
+<nav class="md-nav md-nav--secondary" aria-label="Table of contents">
+  
+  
+  
+    
+  
+  
+    <label class="md-nav__title" for="__toc">
+      <span class="md-nav__icon md-icon"></span>
+      Table of contents
+    </label>
+    <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
+      
+        <li class="md-nav__item">
+  <a href="#the-question-this-answers" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        The Question This Answers
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#the-core-idea" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        The Core Idea
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#part-1-what-is-an-embedding" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Part 1: What is an Embedding?
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Part 1: What is an Embedding?">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#the-analogy-gps-coordinates" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        The Analogy: GPS Coordinates
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#the-technical-reality" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        The Technical Reality
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#why-4096-dimensions" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Why 4096 Dimensions?
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#part-2-how-similarity-is-measured" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Part 2: How Similarity is Measured
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Part 2: How Similarity is Measured">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#the-analogy-distance-on-a-map" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        The Analogy: Distance on a Map
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#cosine-similarity" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Cosine Similarity
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#part-3-the-reference-store-knowledge-base" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Part 3: The Reference Store (Knowledge Base)
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Part 3: The Reference Store (Knowledge Base)">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#what-it-contains" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        What It Contains
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#visualized" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Visualized
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#part-4-few-shot-retrieval" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Part 4: Few-Shot Retrieval
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Part 4: Few-Shot Retrieval">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#the-analogy-show-dont-tell" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        The Analogy: "Show, Don't Tell"
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#how-the-system-does-this" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        How the System Does This
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#visual-example" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Visual Example
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#part-5-why-this-works" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Part 5: Why This Works
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Part 5: Why This Works">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#the-calibration-effect" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        The Calibration Effect
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#the-papers-results" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        The Paper's Results
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#part-6-per-item-retrieval" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Part 6: Per-Item Retrieval
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Part 6: Per-Item Retrieval">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#each-symptom-gets-its-own-examples" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Each Symptom Gets Its Own Examples
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#why-per-item" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Why Per-Item?
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#part-7-the-item-tagging-problem-spec-34" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Part 7: The Item Tagging Problem (Spec 34)
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Part 7: The Item Tagging Problem (Spec 34)">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#the-problem-topic-vs-item-mismatch" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        The Problem: Topic vs. Item Mismatch
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#the-solution-item-tagging" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        The Solution: Item Tagging
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#how-tagging-works" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        How Tagging Works
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#visual-example_1" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Visual Example
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#the-artifacts" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        The Artifacts
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#why-this-matters" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Why This Matters
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#part-8-when-it-doesnt-help" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Part 8: When It Doesn't Help
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Part 8: When It Doesn&#39;t Help">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#the-appetite-problem" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        The Appetite Problem
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#summary-the-complete-picture" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Summary: The Complete Picture
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#glossary" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Glossary
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#related-documentation" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Related Documentation
+      
+    </span>
+  </a>
+  
+</li>
+      
+    </ul>
+  
+</nav>
+                  </div>
+                </div>
+              </div>
+            
+          
+          
+            <div class="md-content" data-md-component="content">
+              
+              <article class="md-content__inner md-typeset">
+                
+                  
+
+
+  
+    <a href="https://github.com/The-Obstacle-Is-The-Way/ai-psychiatrist/edit/main/docs/rag/overview.md" title="Edit this page" class="md-content__button md-icon" rel="edit">
+      
+      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M10 20H6V4h7v5h5v3.1l2-2V8l-6-6H6c-1.1 0-2 .9-2 2v16c0 1.1.9 2 2 2h4zm10.2-7c.1 0 .3.1.4.2l1.3 1.3c.2.2.2.6 0 .8l-1 1-2.1-2.1 1-1c.1-.1.2-.2.4-.2m0 3.9L14.1 23H12v-2.1l6.1-6.1z"/></svg>
+    </a>
+  
+  
+    
+      
+    
+    <a href="https://github.com/The-Obstacle-Is-The-Way/ai-psychiatrist/raw/main/docs/rag/overview.md" title="View source of this page" class="md-content__button md-icon">
+      
+      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M17 18c.56 0 1 .44 1 1s-.44 1-1 1-1-.44-1-1 .44-1 1-1m0-3c-2.73 0-5.06 1.66-6 4 .94 2.34 3.27 4 6 4s5.06-1.66 6-4c-.94-2.34-3.27-4-6-4m0 6.5a2.5 2.5 0 0 1-2.5-2.5 2.5 2.5 0 0 1 2.5-2.5 2.5 2.5 0 0 1 2.5 2.5 2.5 2.5 0 0 1-2.5 2.5M9.27 20H6V4h7v5h5v4.07c.7.08 1.36.25 2 .49V8l-6-6H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h4.5a8.2 8.2 0 0 1-1.23-2"/></svg>
+    </a>
+  
+
+
+<h1 id="rag-overview-embeddings-and-few-shot-retrieval">RAG Overview: Embeddings and Few-Shot Retrieval</h1>
+<p><strong>Audience</strong>: Clinicians and non-CS folks who want to understand the "magic"
+<strong>Last Updated</strong>: 2026-01-03</p>
+<hr />
+<h2 id="the-question-this-answers">The Question This Answers</h2>
+<p>"How does the system find similar patients to help score new ones?"</p>
+<p>This document explains <strong>embeddings</strong> and <strong>few-shot retrieval</strong> without requiring any computer science background.</p>
+<blockquote>
+<p><strong>Task validity note</strong>: PHQ-8 is a 2-week <strong>frequency</strong> self-report instrument, while DAIC-WOZ interviews are not structured as PHQ administration. Few-shot retrieval can only help when there is grounded, item-relevant evidence to embed; otherwise the system often abstains (<code>N/A</code>). See: <code>docs/clinical/task-validity.md</code>.</p>
+</blockquote>
+<hr />
+<h2 id="the-core-idea">The Core Idea</h2>
+<p>When you read a patient's interview, you might think:</p>
+<blockquote>
+<p>"This reminds me of Patient X from last year who also couldn't sleep and felt hopeless. That patient had moderate depression."</p>
+</blockquote>
+<p>The system does the same thing, but mathematically.</p>
+<hr />
+<h2 id="part-1-what-is-an-embedding">Part 1: What is an Embedding?</h2>
+<h3 id="the-analogy-gps-coordinates">The Analogy: GPS Coordinates</h3>
+<p>Imagine every sentence in the world has a "location" in a giant map of meaning.</p>
+<ul>
+<li>"I can't sleep at night" → Location A</li>
+<li>"I have insomnia" → Location B (very close to A - similar meaning)</li>
+<li>"I love pizza" → Location C (far from A and B - different meaning)</li>
+</ul>
+<p>An <strong>embedding</strong> is like GPS coordinates for a sentence's meaning.</p>
+<h3 id="the-technical-reality">The Technical Reality</h3>
+<p>Instead of 2D coordinates (latitude, longitude), embeddings use 4096 dimensions. But the principle is the same: <strong>similar meanings have similar coordinates</strong>.</p>
+<table>
+<thead>
+<tr>
+<th>Sentence</th>
+<th>"Meaning Location" (simplified)</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>"I can't sleep"</td>
+<td>[0.8, 0.2, 0.9, ...4096 numbers...]</td>
+</tr>
+<tr>
+<td>"I have insomnia"</td>
+<td>[0.79, 0.21, 0.88, ...very similar...]</td>
+</tr>
+<tr>
+<td>"I love pizza"</td>
+<td>[0.1, 0.7, 0.3, ...very different...]</td>
+</tr>
+</tbody>
+</table>
+<h3 id="why-4096-dimensions">Why 4096 Dimensions?</h3>
+<p>More dimensions = more nuance captured. The paper reports 4096 performed best among the tested values (64, 256, 1024, 4096), and this repo defaults to 4096.</p>
+<p>Think of it like describing a patient:
+- 2 dimensions: "depressed" and "anxious"
+- 10 dimensions: add "sleep quality", "energy", "appetite", etc.
+- 4096 dimensions: captures extremely subtle differences in meaning</p>
+<hr />
+<h2 id="part-2-how-similarity-is-measured">Part 2: How Similarity is Measured</h2>
+<h3 id="the-analogy-distance-on-a-map">The Analogy: Distance on a Map</h3>
+<p>If two places have similar GPS coordinates, they're close together.</p>
+<p>Same with embeddings: if two sentences have similar "meaning coordinates," they're <strong>semantically similar</strong>.</p>
+<h3 id="cosine-similarity">Cosine Similarity</h3>
+<p><strong>Raw cosine similarity</strong> ranges from <strong>-1 to 1</strong>:
+- <strong>1.0</strong> = identical direction (very similar meaning)
+- <strong>0.0</strong> = orthogonal (no directional similarity)
+- <strong>-1.0</strong> = opposite direction (very dissimilar)</p>
+<p>In this codebase, we store similarity in a <strong>0 to 1</strong> range by applying a simple,
+monotonic transform:</p>
+<div class="highlight"><pre><span></span><code>similarity = (1 + raw_cosine) / 2
+</code></pre></div>
+<p>So in the stored similarity scale:
+- <strong>1.0</strong> = identical (<code>raw_cosine = 1.0</code>)
+- <strong>0.5</strong> = neutral / orthogonal (<code>raw_cosine = 0.0</code>)
+- <strong>0.0</strong> = opposite (<code>raw_cosine = -1.0</code>)</p>
+<table>
+<thead>
+<tr>
+<th>Comparison</th>
+<th>Similarity</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>"I can't sleep" vs "I have insomnia"</td>
+<td>0.92</td>
+</tr>
+<tr>
+<td>"I can't sleep" vs "I feel tired"</td>
+<td>0.75</td>
+</tr>
+<tr>
+<td>"I can't sleep" vs "I love hiking"</td>
+<td>0.15</td>
+</tr>
+</tbody>
+</table>
+<p>These numbers are illustrative; exact values depend on the embedding model.</p>
+<hr />
+<h2 id="part-3-the-reference-store-knowledge-base">Part 3: The Reference Store (Knowledge Base)</h2>
+<h3 id="what-it-contains">What It Contains</h3>
+<p>Before running on new patients, we processed all <strong>training patients</strong>:</p>
+<ol>
+<li>Split each transcript into chunks (8 lines each)</li>
+<li>Computed embeddings for each chunk</li>
+<li>Stored them with PHQ-8 reference scores (participant-level ground truth by default; optionally chunk-level estimates when enabled)</li>
+</ol>
+<p><strong>Result</strong>: A database of thousands of chunks from the training split. In the paper-style split, the
+training set is 58 participants; in the AVEC2017 split, it is 107 participants. The exact chunk
+count depends on the chosen split and chunking parameters, but the contents are always:
+- The text itself
+- Its embedding (4096 numbers)
+- A PHQ-8 item score used as the reference label (participant ground truth or chunk-level estimate, depending on configuration)</p>
+<h3 id="visualized">Visualized</h3>
+<div class="highlight"><pre><span></span><code>REFERENCE STORE
+┌──────────────────────────────────────────────────────────────┐
+│ Patient 101, Chunk 3                                         │
+│ Text: &quot;I haven&#39;t been able to sleep... I&#39;m so exhausted&quot;     │
+│ Embedding: [0.45, 0.82, 0.31, ... 4096 numbers ...]          │
+│ PHQ8_Sleep score: 2                                          │
+├──────────────────────────────────────────────────────────────┤
+│ Patient 142, Chunk 7                                         │
+│ Text: &quot;Nothing brings me joy anymore, I don&#39;t care&quot;          │
+│ Embedding: [0.71, 0.23, 0.88, ... 4096 numbers ...]          │
+│ PHQ8_NoInterest score: 3                                     │
+├──────────────────────────────────────────────────────────────┤
+│ ... ~7,000 more chunks ...                                   │
+└──────────────────────────────────────────────────────────────┘
+</code></pre></div>
+<hr />
+<h2 id="part-4-few-shot-retrieval">Part 4: Few-Shot Retrieval</h2>
+<h3 id="the-analogy-show-dont-tell">The Analogy: "Show, Don't Tell"</h3>
+<p>Imagine training a new resident to score PHQ-8. You could:</p>
+<p><strong>Option A (Zero-Shot)</strong>: Give them the PHQ-8 manual and say "score this patient."</p>
+<p><strong>Option B (Few-Shot)</strong>: Show them 2-3 examples first:</p>
+<blockquote>
+<p>"Here's Patient A who said 'I can't sleep' and had a score of 2.
+Here's Patient B who said 'I sleep too much' and had a score of 2.
+Now, this new patient says 'I wake up every night.' What's your score?"</p>
+</blockquote>
+<p>Option B is better because examples calibrate their judgment.</p>
+<h3 id="how-the-system-does-this">How the System Does This</h3>
+<p>For each PHQ-8 item in a new patient:</p>
+<ol>
+<li><strong>Extract evidence</strong>: "The patient said: 'I wake up at 3am every night'"</li>
+<li><strong>Embed the evidence</strong>: Convert to 4096-dimension coordinates</li>
+<li><strong>Find similar chunks</strong>: Search reference store for closest matches</li>
+<li><strong>Retrieve examples</strong>: Get the 2 most similar chunks with their scores</li>
+<li><strong>Score with examples</strong>: LLM sees the new evidence PLUS similar examples</li>
+</ol>
+<h3 id="visual-example">Visual Example</h3>
+<div class="highlight"><pre><span></span><code>NEW PATIENT&#39;S EVIDENCE (Sleep):
+&quot;I wake up at 3am every night and can&#39;t get back to sleep&quot;
+                    │
+                    ▼ Compute embedding + search reference store
+                    │
+    ┌───────────────┴───────────────┐
+    │                               │
+    ▼                               ▼
+REFERENCE 1 (similarity: 0.89)   REFERENCE 2 (similarity: 0.85)
+&quot;I keep waking up at night&quot;      &quot;Can&#39;t stay asleep, up at 4am&quot;
+Score: 2                         Score: 2
+    │                               │
+    └───────────────┬───────────────┘
+                    │
+                    ▼
+LLM PROMPT:
+&quot;Here are similar examples:
+ - &#39;I keep waking up at night&#39; → Score 2
+ - &#39;Can&#39;t stay asleep, up at 4am&#39; → Score 2
+
+ Now score: &#39;I wake up at 3am every night and can&#39;t get back to sleep&#39;&quot;
+
+LLM OUTPUT: Score 2
+</code></pre></div>
+<hr />
+<h2 id="part-5-why-this-works">Part 5: Why This Works</h2>
+<h3 id="the-calibration-effect">The Calibration Effect</h3>
+<p>Without examples, the LLM must infer what "2" means on the PHQ-8 scale from the rubric and the transcript evidence.</p>
+<p>With examples (when there is item-relevant evidence to retrieve), the LLM can calibrate:</p>
+<blockquote>
+<p>"Oh, 'waking up at night' is a 2, not a 3. Got it."</p>
+</blockquote>
+<h3 id="the-papers-results">The Paper's Results</h3>
+<table>
+<thead>
+<tr>
+<th>Mode</th>
+<th>MAE</th>
+<th>Explanation</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Zero-shot</td>
+<td>0.796</td>
+<td>No examples, rubric-only calibration</td>
+</tr>
+<tr>
+<td>Few-shot</td>
+<td>0.619</td>
+<td>2 examples per item, calibrated</td>
+</tr>
+</tbody>
+</table>
+<p>That is a <strong>22% lower item-level MAE</strong> vs zero-shot (paper-reported). In this repository, few-shot performance is sensitive to retrieval quality and can underperform zero-shot; see <code>docs/results/reproduction-results.md</code> and <code>docs/results/run-history.md</code>.</p>
+<hr />
+<h2 id="part-6-per-item-retrieval">Part 6: Per-Item Retrieval</h2>
+<h3 id="each-symptom-gets-its-own-examples">Each Symptom Gets Its Own Examples</h3>
+<p>The system doesn't find "similar patients overall." It finds similar evidence <strong>per PHQ-8 item</strong>:</p>
+<table>
+<thead>
+<tr>
+<th>Item</th>
+<th>Evidence Extracted</th>
+<th>Similar References Found</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Sleep</td>
+<td>"I wake up at 3am"</td>
+<td>2 sleep-related chunks</td>
+</tr>
+<tr>
+<td>Tired</td>
+<td>"I have no energy"</td>
+<td>2 fatigue-related chunks</td>
+</tr>
+<tr>
+<td>Appetite</td>
+<td>(none found)</td>
+<td>(none) → N/A</td>
+</tr>
+</tbody>
+</table>
+<h3 id="why-per-item">Why Per-Item?</h3>
+<p>A patient might have severe sleep problems but mild appetite issues. Using overall similarity would miss this nuance.</p>
+<hr />
+<h2 id="part-7-the-item-tagging-problem-spec-34">Part 7: The Item Tagging Problem (Spec 34)</h2>
+<h3 id="the-problem-topic-vs-item-mismatch">The Problem: Topic vs. Item Mismatch</h3>
+<p>Embedding similarity finds chunks that are <strong>semantically similar</strong> overall, but similarity doesn't guarantee the chunk is about the <strong>same PHQ-8 item</strong>.</p>
+<p><strong>Example of the problem:</strong></p>
+<p>You're scoring Sleep for a new patient. Your extracted evidence is:</p>
+<blockquote>
+<p>"I can't sleep, I'm up all night worrying"</p>
+</blockquote>
+<p>The embedding search might return:</p>
+<blockquote>
+<p>Reference 1: "I worry constantly about money" (high similarity - both mention worry)
+Reference 2: "I toss and turn at night" (moderate similarity - about sleep)</p>
+</blockquote>
+<p>The first reference is semantically similar (both express anxiety/worry), but it's tagged with PHQ8_Failure or PHQ8_Concentrating—not PHQ8_Sleep. Using it as a few-shot example for Sleep could confuse the model.</p>
+<h3 id="the-solution-item-tagging">The Solution: Item Tagging</h3>
+<p>We now tag each reference chunk with which PHQ-8 items it actually discusses:</p>
+<div class="highlight"><pre><span></span><code>BEFORE (untagged):
+┌─────────────────────────────────────────────┐
+│ Chunk: &quot;I worry constantly about money&quot;     │
+│ Embedding: [0.45, 0.82, ...]                │
+│ PHQ8 scores: (participant-level only)       │
+└─────────────────────────────────────────────┘
+
+AFTER (tagged):
+┌─────────────────────────────────────────────┐
+│ Chunk: &quot;I worry constantly about money&quot;     │
+│ Embedding: [0.45, 0.82, ...]                │
+│ PHQ8 scores: (participant-level only)       │
+│ Tags: [&quot;PHQ8_Failure&quot;, &quot;PHQ8_Concentrating&quot;]│  ← NEW
+└─────────────────────────────────────────────┘
+</code></pre></div>
+<h3 id="how-tagging-works">How Tagging Works</h3>
+<p>At <strong>index time</strong> (when embeddings are generated):
+1. Each chunk is analyzed for PHQ-8-related keywords
+2. Keywords are matched against a curated keyword list (<code>phq8_keywords.yaml</code>)
+3. Matching items are stored in a <code>.tags.json</code> sidecar file</p>
+<p>At <strong>retrieval time</strong> (when scoring a new patient):
+1. If item tag filtering is enabled (<code>EMBEDDING_ENABLE_ITEM_TAG_FILTER=true</code>)
+2. When retrieving references for PHQ8_Sleep, only chunks tagged with <code>PHQ8_Sleep</code> are considered
+3. This eliminates semantically-similar-but-wrong-item references</p>
+<h3 id="visual-example_1">Visual Example</h3>
+<div class="highlight"><pre><span></span><code>RETRIEVING REFERENCES FOR PHQ8_Sleep (with filtering)
+
+New Evidence: &quot;I can&#39;t sleep, I&#39;m up all night&quot;
+                    │
+                    ▼ Search with item filter
+                    │
+    ┌───────────────┼───────────────────────────────┐
+    │               │                               │
+    ▼               ▼                               ▼
+Chunk A          Chunk B                         Chunk C
+&quot;I worry about   &quot;I toss and turn               &quot;Up every night
+ money&quot;           at night&quot;                      can&#39;t sleep&quot;
+Tags: [Failure]  Tags: [Sleep]                  Tags: [Sleep]
+                    │                               │
+    ✗ FILTERED      ▼                               ▼
+    (no Sleep tag)  ✓ INCLUDED                      ✓ INCLUDED
+</code></pre></div>
+<h3 id="the-artifacts">The Artifacts</h3>
+<p>Item tagging creates a new sidecar file alongside embeddings:</p>
+<table>
+<thead>
+<tr>
+<th>File</th>
+<th>Contents</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>{name}.npz</code></td>
+<td>Embedding vectors (unchanged)</td>
+</tr>
+<tr>
+<td><code>{name}.json</code></td>
+<td>Chunk text (unchanged)</td>
+</tr>
+<tr>
+<td><code>{name}.meta.json</code></td>
+<td>Generation metadata (unchanged)</td>
+</tr>
+<tr>
+<td><code>{name}.tags.json</code></td>
+<td><strong>NEW</strong>: Per-chunk PHQ-8 item tags</td>
+</tr>
+</tbody>
+</table>
+<p>The <code>.tags.json</code> format:
+<div class="highlight"><pre><span></span><code><span class="p">{</span>
+<span class="w">  </span><span class="nt">&quot;303&quot;</span><span class="p">:</span><span class="w"> </span><span class="p">[</span>
+<span class="w">    </span><span class="p">[</span><span class="s2">&quot;PHQ8_Sleep&quot;</span><span class="p">,</span><span class="w"> </span><span class="s2">&quot;PHQ8_Tired&quot;</span><span class="p">],</span>
+<span class="w">    </span><span class="p">[],</span>
+<span class="w">    </span><span class="p">[</span><span class="s2">&quot;PHQ8_Depressed&quot;</span><span class="p">]</span>
+<span class="w">  </span><span class="p">],</span>
+<span class="w">  </span><span class="nt">&quot;304&quot;</span><span class="p">:</span><span class="w"> </span><span class="p">[</span><span class="err">...</span><span class="p">]</span>
+<span class="p">}</span>
+</code></pre></div></p>
+<h3 id="why-this-matters">Why This Matters</h3>
+<p>Without item tagging, few-shot retrieval can inject noise:
+- High-similarity chunks about the wrong symptom
+- Calibration examples that confuse rather than help</p>
+<p>With item tagging, references are both:
+1. <strong>Semantically similar</strong> (embedding-based)
+2. <strong>Topically relevant</strong> (item-tagged)</p>
+<p>Goal: reduce semantically-similar-but-wrong-item references. Whether this improves metrics depends on the model/run.</p>
+<hr />
+<h2 id="part-8-when-it-doesnt-help">Part 8: When It Doesn't Help</h2>
+<h3 id="the-appetite-problem">The Appetite Problem</h3>
+<p>The paper (Appendix E) found:</p>
+<blockquote>
+<p>"PHQ-8-Appetite had no successfully retrieved reference chunks"</p>
+</blockquote>
+<p>Important: this statement is about <strong>few-shot reference retrieval</strong> (“no retrieved reference chunks”),
+not prediction coverage directly.</p>
+<p>The paper continues (Appendix E) that Gemma 3 27B <em>“did not identify any evidence related to appetite
+issues in the available transcripts, resulting in no reference for that symptom.”</em> In our pipeline,
+reference retrieval is driven by embedding the <strong>extracted evidence</strong> per item. If the evidence
+extraction step returns no appetite evidence, there’s nothing to embed/query, so reference retrieval
+returns no appetite examples.</p>
+<p>This often correlates with low appetite coverage (more N/A), but the two are not identical metrics.
+Appetite coverage varies by run/model; see <code>docs/results/run-history.md</code> for concrete runs.</p>
+<hr />
+<h2 id="summary-the-complete-picture">Summary: The Complete Picture</h2>
+<ol>
+<li><strong>Embeddings</strong> = Mathematical representation of meaning (like GPS for sentences)</li>
+<li><strong>Reference Store</strong> = Database of training chunks with known scores</li>
+<li><strong>Similarity Search</strong> = Find chunks with similar meaning to new evidence</li>
+<li><strong>Few-Shot</strong> = Show the LLM similar examples before asking it to score</li>
+</ol>
+<p><strong>The key insight</strong>: Instead of telling the LLM "here's what a 2 means," we SHOW it examples of labeled chunks. The paper reports a large few-shot improvement, but in this repo few-shot performance depends heavily on retrieval quality (and can underperform zero-shot in some runs). See <code>docs/results/reproduction-results.md</code> and <code>docs/results/run-history.md</code>.</p>
+<hr />
+<h2 id="glossary">Glossary</h2>
+<table>
+<thead>
+<tr>
+<th>Term</th>
+<th>Plain Definition</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><strong>Embedding</strong></td>
+<td>A list of ~4000 numbers representing a sentence's meaning</td>
+</tr>
+<tr>
+<td><strong>Similarity (transformed cosine)</strong></td>
+<td>A 0–1 score derived from cosine similarity: 1=identical, 0.5=neutral, 0=opposite</td>
+</tr>
+<tr>
+<td><strong>Reference Store</strong></td>
+<td>Database of training examples with known scores</td>
+</tr>
+<tr>
+<td><strong>Few-Shot</strong></td>
+<td>Showing examples before asking for a prediction</td>
+</tr>
+<tr>
+<td><strong>Zero-Shot</strong></td>
+<td>Predicting without any examples</td>
+</tr>
+<tr>
+<td><strong>Chunk</strong></td>
+<td>A small section of a transcript (~8 lines)</td>
+</tr>
+</tbody>
+</table>
+<hr />
+<h2 id="related-documentation">Related Documentation</h2>
+<ul>
+<li><a href="../../pipeline-internals/evidence-extraction/">Evidence extraction</a> - How evidence is found</li>
+<li><a href="../../statistics/coverage/">Coverage explained</a> - Why some items get N/A</li>
+<li><a href="../../clinical/clinical-understanding/">Clinical understanding</a> - Clinical context</li>
+</ul>
+
+
+
+
+
+
+
+
+
+
+
+
+                
+              </article>
+            </div>
+          
+          
+<script>var target=document.getElementById(location.hash.slice(1));target&&target.name&&(target.checked=target.name.startsWith("__tabbed_"))</script>
+        </div>
+        
+      </main>
+      
+        <footer class="md-footer">
+  
+    
+      
+      <nav class="md-footer__inner md-grid" aria-label="Footer" >
+        
+          
+          <a href="../design-rationale/" class="md-footer__link md-footer__link--prev" aria-label="Previous: RAG Design Rationale">
+            <div class="md-footer__button md-icon">
+              
+              <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M20 11v2H8l5.5 5.5-1.42 1.42L4.16 12l7.92-7.92L13.5 5.5 8 11z"/></svg>
+            </div>
+            <div class="md-footer__title">
+              <span class="md-footer__direction">
+                Previous
+              </span>
+              <div class="md-ellipsis">
+                RAG Design Rationale
+              </div>
+            </div>
+          </a>
+        
+        
+          
+          <a href="../runtime-features/" class="md-footer__link md-footer__link--next" aria-label="Next: RAG Runtime Features">
+            <div class="md-footer__title">
+              <span class="md-footer__direction">
+                Next
+              </span>
+              <div class="md-ellipsis">
+                RAG Runtime Features
+              </div>
+            </div>
+            <div class="md-footer__button md-icon">
+              
+              <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M4 11v2h12l-5.5 5.5 1.42 1.42L19.84 12l-7.92-7.92L10.5 5.5 16 11z"/></svg>
+            </div>
+          </a>
+        
+      </nav>
+    
+  
+  <div class="md-footer-meta md-typeset">
+    <div class="md-footer-meta__inner md-grid">
+      <div class="md-copyright">
+  
+  
+    Made with
+    <a href="https://squidfunk.github.io/mkdocs-material/" target="_blank" rel="noopener">
+      Material for MkDocs
+    </a>
+  
+</div>
+      
+    </div>
+  </div>
+</footer>
+      
+    </div>
+    <div class="md-dialog" data-md-component="dialog">
+      <div class="md-dialog__inner md-typeset"></div>
+    </div>
+    
+    
+    
+      
+      
+      <script id="__config" type="application/json">{"annotate": null, "base": "../..", "features": ["content.code.copy", "content.action.edit", "content.action.view", "navigation.tracking", "navigation.sections", "navigation.footer", "navigation.instant"], "search": "../../assets/javascripts/workers/search.2c215733.min.js", "tags": null, "translations": {"clipboard.copied": "Copied to clipboard", "clipboard.copy": "Copy to clipboard", "search.result.more.one": "1 more on this page", "search.result.more.other": "# more on this page", "search.result.none": "No matching documents", "search.result.one": "1 matching document", "search.result.other": "# matching documents", "search.result.placeholder": "Type to start searching", "search.result.term.missing": "Missing", "select.version": "Select version"}, "version": null}</script>
+    
+    
+      <script src="../../assets/javascripts/bundle.79ae519e.min.js"></script>
+      
+    
+  </body>
+</html>

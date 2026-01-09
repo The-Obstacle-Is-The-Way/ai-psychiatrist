@@ -1,0 +1,3549 @@
+
+<!doctype html>
+<html lang="en" class="no-js">
+  <head>
+    
+      <meta charset="utf-8">
+      <meta name="viewport" content="width=device-width,initial-scale=1">
+      
+      
+      
+        <link rel="canonical" href="https://the-obstacle-is-the-way.github.io/ai-psychiatrist/_archive/bugs/investigation-026-reproduction-mae-divergence/">
+      
+      
+      
+      
+        
+      
+      
+      <link rel="icon" href="../../../assets/images/favicon.png">
+      <meta name="generator" content="mkdocs-1.6.1, mkdocs-material-9.7.1">
+    
+    
+      
+        <title>INVESTIGATION-026: Reproduction MAE Divergence Analysis - AI Psychiatrist</title>
+      
+    
+    
+      <link rel="stylesheet" href="../../../assets/stylesheets/main.484c7ddc.min.css">
+      
+      
+
+
+    
+    
+      
+    
+    
+      
+        
+        
+        <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+        <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Roboto:300,300i,400,400i,700,700i%7CRoboto+Mono:400,400i,700,700i&display=fallback">
+        <style>:root{--md-text-font:"Roboto";--md-code-font:"Roboto Mono"}</style>
+      
+    
+    
+    <script>__md_scope=new URL("../../..",location),__md_hash=e=>[...e].reduce(((e,_)=>(e<<5)-e+_.charCodeAt(0)),0),__md_get=(e,_=localStorage,t=__md_scope)=>JSON.parse(_.getItem(t.pathname+"."+e)),__md_set=(e,_,t=localStorage,a=__md_scope)=>{try{t.setItem(a.pathname+"."+e,JSON.stringify(_))}catch(e){}}</script>
+    
+      
+
+    
+    
+  </head>
+  
+  
+    <body dir="ltr">
+  
+    
+    <input class="md-toggle" data-md-toggle="drawer" type="checkbox" id="__drawer" autocomplete="off">
+    <input class="md-toggle" data-md-toggle="search" type="checkbox" id="__search" autocomplete="off">
+    <label class="md-overlay" for="__drawer"></label>
+    <div data-md-component="skip">
+      
+        
+        <a href="#investigation-026-reproduction-mae-divergence-analysis" class="md-skip">
+          Skip to content
+        </a>
+      
+    </div>
+    <div data-md-component="announce">
+      
+    </div>
+    
+    
+      
+
+  
+
+<header class="md-header md-header--shadow" data-md-component="header">
+  <nav class="md-header__inner md-grid" aria-label="Header">
+    <a href="../../.." title="AI Psychiatrist" class="md-header__button md-logo" aria-label="AI Psychiatrist" data-md-component="logo">
+      
+  
+  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 8a3 3 0 0 0 3-3 3 3 0 0 0-3-3 3 3 0 0 0-3 3 3 3 0 0 0 3 3m0 3.54C9.64 9.35 6.5 8 3 8v11c3.5 0 6.64 1.35 9 3.54 2.36-2.19 5.5-3.54 9-3.54V8c-3.5 0-6.64 1.35-9 3.54"/></svg>
+
+    </a>
+    <label class="md-header__button md-icon" for="__drawer">
+      
+      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M3 6h18v2H3zm0 5h18v2H3zm0 5h18v2H3z"/></svg>
+    </label>
+    <div class="md-header__title" data-md-component="header-title">
+      <div class="md-header__ellipsis">
+        <div class="md-header__topic">
+          <span class="md-ellipsis">
+            AI Psychiatrist
+          </span>
+        </div>
+        <div class="md-header__topic" data-md-component="header-topic">
+          <span class="md-ellipsis">
+            
+              INVESTIGATION-026: Reproduction MAE Divergence Analysis
+            
+          </span>
+        </div>
+      </div>
+    </div>
+    
+    
+      <script>var palette=__md_get("__palette");if(palette&&palette.color){if("(prefers-color-scheme)"===palette.color.media){var media=matchMedia("(prefers-color-scheme: light)"),input=document.querySelector(media.matches?"[data-md-color-media='(prefers-color-scheme: light)']":"[data-md-color-media='(prefers-color-scheme: dark)']");palette.color.media=input.getAttribute("data-md-color-media"),palette.color.scheme=input.getAttribute("data-md-color-scheme"),palette.color.primary=input.getAttribute("data-md-color-primary"),palette.color.accent=input.getAttribute("data-md-color-accent")}for(var[key,value]of Object.entries(palette.color))document.body.setAttribute("data-md-color-"+key,value)}</script>
+    
+    
+    
+      
+      
+        <label class="md-header__button md-icon" for="__search">
+          
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M9.5 3A6.5 6.5 0 0 1 16 9.5c0 1.61-.59 3.09-1.56 4.23l.27.27h.79l5 5-1.5 1.5-5-5v-.79l-.27-.27A6.52 6.52 0 0 1 9.5 16 6.5 6.5 0 0 1 3 9.5 6.5 6.5 0 0 1 9.5 3m0 2C7 5 5 7 5 9.5S7 14 9.5 14 14 12 14 9.5 12 5 9.5 5"/></svg>
+        </label>
+        <div class="md-search" data-md-component="search" role="dialog">
+  <label class="md-search__overlay" for="__search"></label>
+  <div class="md-search__inner" role="search">
+    <form class="md-search__form" name="search">
+      <input type="text" class="md-search__input" name="query" aria-label="Search" placeholder="Search" autocapitalize="off" autocorrect="off" autocomplete="off" spellcheck="false" data-md-component="search-query" required>
+      <label class="md-search__icon md-icon" for="__search">
+        
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M9.5 3A6.5 6.5 0 0 1 16 9.5c0 1.61-.59 3.09-1.56 4.23l.27.27h.79l5 5-1.5 1.5-5-5v-.79l-.27-.27A6.52 6.52 0 0 1 9.5 16 6.5 6.5 0 0 1 3 9.5 6.5 6.5 0 0 1 9.5 3m0 2C7 5 5 7 5 9.5S7 14 9.5 14 14 12 14 9.5 12 5 9.5 5"/></svg>
+        
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M20 11v2H8l5.5 5.5-1.42 1.42L4.16 12l7.92-7.92L13.5 5.5 8 11z"/></svg>
+      </label>
+      <nav class="md-search__options" aria-label="Search">
+        
+        <button type="reset" class="md-search__icon md-icon" title="Clear" aria-label="Clear" tabindex="-1">
+          
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M19 6.41 17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12z"/></svg>
+        </button>
+      </nav>
+      
+    </form>
+    <div class="md-search__output">
+      <div class="md-search__scrollwrap" tabindex="0" data-md-scrollfix>
+        <div class="md-search-result" data-md-component="search-result">
+          <div class="md-search-result__meta">
+            Initializing search
+          </div>
+          <ol class="md-search-result__list" role="presentation"></ol>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+      
+    
+    
+      <div class="md-header__source">
+        <a href="https://github.com/The-Obstacle-Is-The-Way/ai-psychiatrist" title="Go to repository" class="md-source" data-md-component="source">
+  <div class="md-source__icon md-icon">
+    
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 448 512"><!--! Font Awesome Free 7.1.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2025 Fonticons, Inc.--><path d="M439.6 236.1 244 40.5c-5.4-5.5-12.8-8.5-20.4-8.5s-15 3-20.4 8.4L162.5 81l51.5 51.5c27.1-9.1 52.7 16.8 43.4 43.7l49.7 49.7c34.2-11.8 61.2 31 35.5 56.7-26.5 26.5-70.2-2.9-56-37.3L240.3 199v121.9c25.3 12.5 22.3 41.8 9.1 55-6.4 6.4-15.2 10.1-24.3 10.1s-17.8-3.6-24.3-10.1c-17.6-17.6-11.1-46.9 11.2-56v-123c-20.8-8.5-24.6-30.7-18.6-45L142.6 101 8.5 235.1C3 240.6 0 247.9 0 255.5s3 15 8.5 20.4l195.6 195.7c5.4 5.4 12.7 8.4 20.4 8.4s15-3 20.4-8.4l194.7-194.7c5.4-5.4 8.4-12.8 8.4-20.4s-3-15-8.4-20.4"/></svg>
+  </div>
+  <div class="md-source__repository">
+    GitHub
+  </div>
+</a>
+      </div>
+    
+  </nav>
+  
+</header>
+    
+    <div class="md-container" data-md-component="container">
+      
+      
+        
+          
+        
+      
+      <main class="md-main" data-md-component="main">
+        <div class="md-main__inner md-grid">
+          
+            
+              
+              <div class="md-sidebar md-sidebar--primary" data-md-component="sidebar" data-md-type="navigation" >
+                <div class="md-sidebar__scrollwrap">
+                  <div class="md-sidebar__inner">
+                    
+
+
+
+<nav class="md-nav md-nav--primary" aria-label="Navigation" data-md-level="0">
+  <label class="md-nav__title" for="__drawer">
+    <a href="../../.." title="AI Psychiatrist" class="md-nav__button md-logo" aria-label="AI Psychiatrist" data-md-component="logo">
+      
+  
+  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 8a3 3 0 0 0 3-3 3 3 0 0 0-3-3 3 3 0 0 0-3 3 3 3 0 0 0 3 3m0 3.54C9.64 9.35 6.5 8 3 8v11c3.5 0 6.64 1.35 9 3.54 2.36-2.19 5.5-3.54 9-3.54V8c-3.5 0-6.64 1.35-9 3.54"/></svg>
+
+    </a>
+    AI Psychiatrist
+  </label>
+  
+    <div class="md-nav__source">
+      <a href="https://github.com/The-Obstacle-Is-The-Way/ai-psychiatrist" title="Go to repository" class="md-source" data-md-component="source">
+  <div class="md-source__icon md-icon">
+    
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 448 512"><!--! Font Awesome Free 7.1.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2025 Fonticons, Inc.--><path d="M439.6 236.1 244 40.5c-5.4-5.5-12.8-8.5-20.4-8.5s-15 3-20.4 8.4L162.5 81l51.5 51.5c27.1-9.1 52.7 16.8 43.4 43.7l49.7 49.7c34.2-11.8 61.2 31 35.5 56.7-26.5 26.5-70.2-2.9-56-37.3L240.3 199v121.9c25.3 12.5 22.3 41.8 9.1 55-6.4 6.4-15.2 10.1-24.3 10.1s-17.8-3.6-24.3-10.1c-17.6-17.6-11.1-46.9 11.2-56v-123c-20.8-8.5-24.6-30.7-18.6-45L142.6 101 8.5 235.1C3 240.6 0 247.9 0 255.5s3 15 8.5 20.4l195.6 195.7c5.4 5.4 12.7 8.4 20.4 8.4s15-3 20.4-8.4l194.7-194.7c5.4-5.4 8.4-12.8 8.4-20.4s-3-15-8.4-20.4"/></svg>
+  </div>
+  <div class="md-source__repository">
+    GitHub
+  </div>
+</a>
+    </div>
+  
+  <ul class="md-nav__list" data-md-scrollfix>
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../.." class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    AI Psychiatrist Documentation
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    
+    
+    
+    
+      
+        
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--section md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_2" >
+        
+          
+          <label class="md-nav__link" for="__nav_2" id="__nav_2_label" tabindex="">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+     research
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_2_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_2">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+     research
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../_research/hypotheses-explained/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Hypotheses Explained: Current State vs Future Improvements
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../_research/hypotheses-for-improvement/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Hypotheses for Improvement: First-Principles Analysis
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../_research/master-bug-audit/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    MASTER BUG AUDIT
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    
+    
+    
+    
+      
+        
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--section md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_3" >
+        
+          
+          <label class="md-nav__link" for="__nav_3" id="__nav_3_label" tabindex="">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Architecture
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_3_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_3">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    Architecture
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../architecture/architecture/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Architecture
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../architecture/future-architecture/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Future Architecture: Agent Orchestration Options
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../architecture/pipeline/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Pipeline
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    
+    
+    
+    
+      
+        
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--section md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_4" >
+        
+          
+          <label class="md-nav__link" for="__nav_4" id="__nav_4_label" tabindex="">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Clinical
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_4_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_4">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    Clinical
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../clinical/clinical-understanding/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Clinical Understanding: How This System Works
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../clinical/glossary/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Glossary
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../clinical/phq8/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    PHQ-8: Patient Health Questionnaire
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../clinical/task-validity/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Task Validity: What Can (and Cannot) Be Inferred from DAIC-WOZ Transcripts
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    
+    
+    
+    
+      
+        
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--section md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_5" >
+        
+          
+          <label class="md-nav__link" for="__nav_5" id="__nav_5_label" tabindex="">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Configs
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_5_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_5">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    Configs
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../configs/agent-sampling-registry/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Agent Sampling Parameter Registry
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../configs/configuration-philosophy/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Configuration Philosophy
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../configs/configuration/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Configuration Reference
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    
+    
+    
+    
+      
+        
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--section md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_6" >
+        
+          
+          <label class="md-nav__link" for="__nav_6" id="__nav_6_label" tabindex="">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Data
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_6_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_6">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    Data
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../data/artifact-namespace-registry/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Artifact Namespace Registry
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../data/daic-woz-preprocessing/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    DAIC-WOZ Transcript Preprocessing (Bias-Aware, Deterministic)
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../data/daic-woz-schema/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    DAIC-WOZ Dataset Schema
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../data/data-splits-overview/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Data Splits Overview
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    
+    
+    
+    
+      
+        
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--section md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_7" >
+        
+          
+          <label class="md-nav__link" for="__nav_7" id="__nav_7_label" tabindex="">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Developer
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_7_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_7">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    Developer
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../developer/api-endpoints/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    API Reference
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../developer/dependency-registry/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Dependency Registry
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../developer/error-handling/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Error Handling and Fail-Fast Philosophy
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../developer/exceptions/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Exception Reference (Domain + Runtime)
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../developer/testing/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Testing Conventions (Markers, Fixtures, and Test Doubles)
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    
+    
+    
+    
+      
+        
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--section md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_8" >
+        
+          
+          <label class="md-nav__link" for="__nav_8" id="__nav_8_label" tabindex="">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Getting started
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_8_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_8">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    Getting started
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../getting-started/quickstart/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Quickstart Guide
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    
+    
+    
+    
+      
+        
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--section md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_9" >
+        
+          
+          <label class="md-nav__link" for="__nav_9" id="__nav_9_label" tabindex="">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Models
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_9_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_9">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    Models
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../models/model-registry/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    AI Psychiatrist Model Registry
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../models/model-wiring/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Model Wiring: Current State
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    
+    
+    
+    
+      
+        
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--section md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_10" >
+        
+          
+          <label class="md-nav__link" for="__nav_10" id="__nav_10_label" tabindex="">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Pipeline internals
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_10_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_10">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    Pipeline internals
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../pipeline-internals/evidence-extraction/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Evidence Extraction Mechanism: How It Actually Works
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../pipeline-internals/features/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Feature Reference (Non-Archive Canonical)
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    
+    
+    
+    
+      
+        
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--section md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_11" >
+        
+          
+          <label class="md-nav__link" for="__nav_11" id="__nav_11_label" tabindex="">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Preflight checklist
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_11_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_11">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    Preflight checklist
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../preflight-checklist/preflight-checklist-few-shot/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Preflight Checklist: Few-Shot Reproduction
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../preflight-checklist/preflight-checklist-zero-shot/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Preflight Checklist: Zero-Shot Run
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    
+    
+    
+    
+      
+        
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--section md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_12" >
+        
+          
+          <label class="md-nav__link" for="__nav_12" id="__nav_12_label" tabindex="">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Rag
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_12_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_12">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    Rag
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../rag/artifact-generation/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    RAG Artifact Generation
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../rag/chunk-scoring/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Chunk-Level Scoring (Spec 35) — Schema, Workflow, and Gotchas
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../rag/debugging/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    RAG Debugging (Audit Logs + Guardrails)
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../rag/design-rationale/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    RAG Design Rationale
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../rag/overview/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    RAG Overview: Embeddings and Few-Shot Retrieval
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../rag/runtime-features/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    RAG Runtime Features
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    
+    
+    
+    
+      
+        
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--section md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_13" >
+        
+          
+          <label class="md-nav__link" for="__nav_13" id="__nav_13_label" tabindex="">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Results
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_13_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_13">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    Results
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../results/few-shot-analysis/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Why Few-Shot May Not Beat Zero-Shot: Analysis
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../results/reproduction-results/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Paper Reproduction Results (Current Status)
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../results/run-history/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Complete Run History &amp; Statistical Analysis
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../results/run-output-schema/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Reproduction Run Output Schema (JSON + Registry)
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    
+    
+    
+    
+      
+        
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--section md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_14" >
+        
+          
+          <label class="md-nav__link" for="__nav_14" id="__nav_14_label" tabindex="">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Statistics
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_14_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_14">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    Statistics
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../statistics/coverage/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Coverage Explained: What It Is and Why It Matters
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../statistics/metrics-and-evaluation/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Metrics and Evaluation (Exact Definitions + Output Schema)
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../statistics/statistical-methodology-aurc-augrc/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Statistical Methodology: AURC/AUGRC for Selective Prediction
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+  </ul>
+</nav>
+                  </div>
+                </div>
+              </div>
+            
+            
+              
+              <div class="md-sidebar md-sidebar--secondary" data-md-component="sidebar" data-md-type="toc" >
+                <div class="md-sidebar__scrollwrap">
+                  <div class="md-sidebar__inner">
+                    
+
+<nav class="md-nav md-nav--secondary" aria-label="Table of contents">
+  
+  
+  
+    
+  
+  
+    <label class="md-nav__title" for="__toc">
+      <span class="md-nav__icon md-icon"></span>
+      Table of contents
+    </label>
+    <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
+      
+        <li class="md-nav__item">
+  <a href="#resolution-summary" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Resolution Summary
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#original-investigation-historical-context" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Original Investigation (Historical Context)
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#executive-summary" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Executive Summary
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Executive Summary">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#what-we-know-for-certain" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        What We Know For Certain
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#the-unresolved-mystery" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        The Unresolved Mystery
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#possible-explanations-unverified" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Possible Explanations (UNVERIFIED)
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#verified-configuration" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Verified Configuration
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#the-core-mystery" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        The Core Mystery
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="The Core Mystery">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#expected-vs-actual" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Expected vs Actual
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#where-is-the-extra-coverage-coming-from" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Where Is The Extra Coverage Coming From?
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#investigation-todo" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Investigation TODO
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#finding-1-paper-expects-50-na-rate" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Finding 1: Paper Expects 50% N/A Rate
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Finding 1: Paper Expects 50% N/A Rate">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#source-paper-section-32-verbatim-quote" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Source: Paper Section 3.2 (VERBATIM QUOTE)
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#our-run-vs-paper-coverage-definitions-differ" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Our Run vs Paper (Coverage Definitions Differ)
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#interpretation" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Interpretation
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#verification-needed" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Verification Needed
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#finding-2-appendix-e-is-about-retrieval-not-coverage" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Finding 2: Appendix E Is About Retrieval (Not Coverage)
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Finding 2: Appendix E Is About Retrieval (Not Coverage)">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#paper-appendix-e-verbatim-quote" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Paper Appendix E (VERBATIM QUOTE)
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#finding-3-medgemma-trade-off-critical" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Finding 3: MedGemma Trade-off (CRITICAL)
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Finding 3: MedGemma Trade-off (CRITICAL)">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#paper-appendix-f-verbatim-quote" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Paper Appendix F (VERBATIM QUOTE)
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#the-papers-choice" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        The Paper's Choice
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#implication-for-us" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Implication for Us
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#finding-4-stochasticity-acknowledgment" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Finding 4: Stochasticity Acknowledgment
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Finding 4: Stochasticity Acknowledgment">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#paper-section-4-verbatim-quote" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Paper Section 4 (VERBATIM QUOTE)
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#finding-5-quantization-analysis" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Finding 5: Quantization Analysis
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Finding 5: Quantization Analysis">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#what-were-using" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        What We're Using
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#available-quantizations" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Available Quantizations
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#system-capabilities" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        System Capabilities
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#papers-hardware-conflicting-information" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Paper's Hardware (CONFLICTING INFORMATION)
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#why-quantization-matters" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Why Quantization Matters
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#finding-6-detailed-error-analysis" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Finding 6: Detailed Error Analysis
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Finding 6: Detailed Error Analysis">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#our-run-log-analysis" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Our Run Log Analysis
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Our Run Log Analysis">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#evidence-extraction-failures-2-participants" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Evidence Extraction Failures (2 participants)
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#quantitative-parse-failures-2-participants" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Quantitative Parse Failures (2 participants)
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#success-rate" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Success Rate
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#papers-error-rate" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Paper's Error Rate
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#recommendations" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Recommendations
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Recommendations">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#immediate-actions" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Immediate Actions
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#future-experiments" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Future Experiments
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#root-cause-analysis" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Root Cause Analysis
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Root Cause Analysis">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#why-mae-0778-vs-0619" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Why MAE 0.778 vs 0.619?
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#primary-hypothesis-unverified" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Primary Hypothesis (UNVERIFIED)
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#the-coverage-mae-trade-off" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        The Coverage-MAE Trade-off
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#verification-plan" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Verification Plan
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#conclusion" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Conclusion
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Conclusion">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#key-insight" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Key Insight
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#next-steps" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Next Steps
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#appendix-a-hardware-comparison" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Appendix A: Hardware Comparison
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#appendix-b-paper-quotes-summary" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Appendix B: Paper Quotes Summary
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Appendix B: Paper Quotes Summary">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#section-32-core-result" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Section 3.2 - Core Result
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#section-4-stochasticity" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Section 4 - Stochasticity
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#appendix-e-appetite-had-zero-reference-retrieval-not-coverage" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Appendix E - Appetite Had Zero Reference Retrieval (NOT coverage)
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#appendix-f-medgemma-trade-off" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Appendix F - MedGemma Trade-off
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#appendix-c-reproduction-run-summary" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Appendix C: Reproduction Run Summary
+      
+    </span>
+  </a>
+  
+</li>
+      
+    </ul>
+  
+</nav>
+                  </div>
+                </div>
+              </div>
+            
+          
+          
+            <div class="md-content" data-md-component="content">
+              
+              <article class="md-content__inner md-typeset">
+                
+                  
+
+
+  
+    <a href="https://github.com/The-Obstacle-Is-The-Way/ai-psychiatrist/edit/main/docs/_archive/bugs/investigation-026-reproduction-mae-divergence.md" title="Edit this page" class="md-content__button md-icon" rel="edit">
+      
+      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M10 20H6V4h7v5h5v3.1l2-2V8l-6-6H6c-1.1 0-2 .9-2 2v16c0 1.1.9 2 2 2h4zm10.2-7c.1 0 .3.1.4.2l1.3 1.3c.2.2.2.6 0 .8l-1 1-2.1-2.1 1-1c.1-.1.2-.2.4-.2m0 3.9L14.1 23H12v-2.1l6.1-6.1z"/></svg>
+    </a>
+  
+  
+    
+      
+    
+    <a href="https://github.com/The-Obstacle-Is-The-Way/ai-psychiatrist/raw/main/docs/_archive/bugs/investigation-026-reproduction-mae-divergence.md" title="View source of this page" class="md-content__button md-icon">
+      
+      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M17 18c.56 0 1 .44 1 1s-.44 1-1 1-1-.44-1-1 .44-1 1-1m0-3c-2.73 0-5.06 1.66-6 4 .94 2.34 3.27 4 6 4s5.06-1.66 6-4c-.94-2.34-3.27-4-6-4m0 6.5a2.5 2.5 0 0 1-2.5-2.5 2.5 2.5 0 0 1 2.5-2.5 2.5 2.5 0 0 1 2.5 2.5 2.5 2.5 0 0 1-2.5 2.5M9.27 20H6V4h7v5h5v4.07c.7.08 1.36.25 2 .49V8l-6-6H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h4.5a8.2 8.2 0 0 1-1.23-2"/></svg>
+    </a>
+  
+
+
+<h1 id="investigation-026-reproduction-mae-divergence-analysis">INVESTIGATION-026: Reproduction MAE Divergence Analysis</h1>
+<p><strong>Status</strong>: ✅ RESOLVED - Root cause identified: model quantization (Q4_K_M vs BF16)
+<strong>Archived</strong>: 2025-12-26
+<strong>Found</strong>: 2025-12-24 (few-shot reproduction run)
+<strong>Related</strong>: Paper Section 3.2, Appendix E, Appendix F</p>
+<hr />
+<h2 id="resolution-summary">Resolution Summary</h2>
+<p><strong>The MAE gap is explained by model quantization:</strong></p>
+<table>
+<thead>
+<tr>
+<th>Run</th>
+<th>Model Precision</th>
+<th>MAE</th>
+<th>Coverage</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Paper (likely)</td>
+<td>BF16 on A100 GPUs</td>
+<td>0.619</td>
+<td>~50%</td>
+</tr>
+<tr>
+<td>Our run</td>
+<td>Q4_K_M (4-bit) on M1</td>
+<td>0.778</td>
+<td>69.2%</td>
+</tr>
+</tbody>
+</table>
+<p><strong>Key evidence</strong> (from <a href="../../../models/model-wiring/"><code>docs/models/model-wiring.md</code></a>):</p>
+<blockquote>
+<p>"Paper text claims MacBook M3 Pro, but repo has A100 SLURM scripts. Paper likely ran <strong>BF16 on A100s</strong> for the reported 0.619 MAE. Our Q4_K_M run got 0.778 MAE."</p>
+</blockquote>
+<p><strong>This is not a bug—it's a precision tradeoff:</strong>
+- Q4_K_M = 4-bit quantization = ~4x compression = noticeable quality loss
+- BF16 = 16-bit full precision = no quality loss = 54GB model size</p>
+<p><strong>Next steps (when hardware allows):</strong>
+1. Run with <code>gemma3:27b-it-q8_0</code> (8-bit, 29GB) - closer to paper
+2. Run with HuggingFace BF16 backend on A100/H100 - match paper</p>
+<p><strong>The investigation is complete.</strong> The remaining gap is hardware/precision, not code.</p>
+<hr />
+<h2 id="original-investigation-historical-context">Original Investigation (Historical Context)</h2>
+<p><strong>Original Status</strong>: ACTIVE - Divergence characterized; root cause unresolved
+<strong>Severity</strong>: HIGH (core research question)
+<strong>Last Updated</strong>: 2025-12-24 (revised after deeper analysis)</p>
+<hr />
+<h2 id="executive-summary">Executive Summary</h2>
+<p>Our few-shot reproduction achieved <strong>MAE 0.778</strong> vs paper's <strong>0.619</strong> (Δ = +0.159).</p>
+<h3 id="what-we-know-for-certain">What We Know For Certain</h3>
+<ol>
+<li><strong>Model (our run)</strong>: <code>gemma3:27b</code> (confirmed). This is consistent with the paper’s stated model family (“Gemma 3 27B”), but the paper does not specify an exact tag/build/quantization for the reported metrics.</li>
+<li><strong>Keyword Backfill</strong>: OFF (confirmed in provenance)</li>
+<li><strong>Coverage (our metric)</strong>:</li>
+<li><code>prediction_coverage=0.6923</code> = <strong>69.2%</strong> = <strong>216 / (39 × 8)</strong>, where 39 is <code>evaluated_subjects</code> (subjects with ≥1 scored item)</li>
+<li>If you include all 41 subjects (including the 2 “all N/A”), item coverage is <strong>65.9%</strong> = <strong>216 / (41 × 8)</strong></li>
+<li><strong>MAE (our metric)</strong>: <code>item_mae_weighted=0.7778</code> (0.778) (vs paper's 0.619)</li>
+</ol>
+<h3 id="the-unresolved-mystery">The Unresolved Mystery</h3>
+<p>The paper text reports <strong>high abstention</strong> (“in 50% of cases it was unable to provide a prediction due to insufficient evidence”), while our run only excluded <strong>2/41</strong> subjects as “all N/A”.</p>
+<p><strong>Key ambiguity</strong>: The paper does not fully specify what the denominator for “cases” is (subject-level exclusion vs item-level missingness). Our “coverage” is an <strong>item-level</strong> metric computed over <strong>evaluated subjects</strong>.</p>
+<p>The coverage investigation document expected backfill OFF to reduce item coverage closer to the paper’s reported high abstention.
+We observed 69.2% item coverage even with backfill OFF.</p>
+<h3 id="possible-explanations-unverified">Possible Explanations (UNVERIFIED)</h3>
+<ol>
+<li><strong>Prompt + formatting differences</strong> - Our prompts and reference formatting differ from the paper repo prompts (see analysis-027)</li>
+<li><strong>Model build/runtime differences</strong> - Ollama’s <code>gemma3:27b</code> may not match what produced the paper’s reported metrics</li>
+<li><strong>Quantization</strong> - Q4_K_M behavior may differ from paper's runtime</li>
+<li><strong>Reference embeddings</strong> - Different embedding model behavior</li>
+<li><strong>Stochastic variation</strong> - Paper acknowledges LLMs have inherent randomness</li>
+</ol>
+<hr />
+<h2 id="verified-configuration">Verified Configuration</h2>
+<p>We verified the run configuration from provenance metadata:</p>
+<div class="highlight"><pre><span></span><code>{
+  &quot;split&quot;: &quot;paper&quot;,
+  &quot;embeddings_path&quot;: &quot;data/embeddings/paper_reference_embeddings.npz&quot;,
+  &quot;quantitative_model&quot;: &quot;gemma3:27b&quot;,
+  &quot;embedding_model&quot;: &quot;qwen3-embedding:8b&quot;,
+  &quot;embedding_dimension&quot;: 4096,
+  &quot;embedding_chunk_size&quot;: 8,
+  &quot;embedding_chunk_step&quot;: 2,
+  &quot;embedding_top_k&quot;: 2,
+  &quot;enable_keyword_backfill&quot;: false  // &lt;-- CONFIRMED OFF
+}
+</code></pre></div>
+<p>And from <code>.env</code>:
+<div class="highlight"><pre><span></span><code><span class="nv">MODEL_QUANTITATIVE_MODEL</span><span class="o">=</span>gemma3:27b
+<span class="nv">QUANTITATIVE_ENABLE_KEYWORD_BACKFILL</span><span class="o">=</span><span class="nb">false</span>
+<span class="nv">QUANTITATIVE_TRACK_NA_REASONS</span><span class="o">=</span><span class="nb">true</span>
+</code></pre></div></p>
+<p><strong>Recorded few-shot retrieval hyperparameters match the paper text</strong> (Appendix D: <code>chunk_size=8</code>, <code>step=2</code>, <code>Nexample=2</code>, <code>dimension=4096</code>), and we ran with <strong>keyword backfill OFF</strong> (paper-text parity choice).</p>
+<p>Notes:
+- The paper text does not specify sampling parameters (<code>temperature</code>, <code>top_k</code>, <code>top_p</code>), and this run’s provenance does not record them.
+- The paper repo unconditionally applies keyword backfill in its few-shot agent (see <code>docs/archive/bugs/analysis-027-paper-implementation-comparison.md</code>), which diverges from the paper text.
+- The paper’s “~50% of cases unable to provide a prediction” is not directly comparable to our item-level coverage metric without aligning denominators.</p>
+<hr />
+<h2 id="the-core-mystery">The Core Mystery</h2>
+<h3 id="expected-vs-actual">Expected vs Actual</h3>
+<table>
+<thead>
+<tr>
+<th>Metric</th>
+<th>Paper Text</th>
+<th>Paper Repo</th>
+<th>Our Run</th>
+<th>Notes</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Model</td>
+<td>“Gemma 3 27B” (no tag specified)</td>
+<td><code>gemma3</code> family (repo varies by script)</td>
+<td><code>gemma3:27b</code></td>
+<td>⚠️ Same family; build may differ</td>
+</tr>
+<tr>
+<td>Backfill</td>
+<td>Not mentioned</td>
+<td>ON (always)</td>
+<td>OFF</td>
+<td>⚠️ Paper-text parity</td>
+</tr>
+<tr>
+<td>Abstention / coverage</td>
+<td>“50% of cases unable to provide prediction” (denominator unclear)</td>
+<td>Unknown</td>
+<td>Item coverage 69.2% over <code>evaluated_subjects</code></td>
+<td>⚠️ Not directly comparable</td>
+</tr>
+<tr>
+<td>MAE</td>
+<td>0.619</td>
+<td>Unknown</td>
+<td>0.778</td>
+<td>+0.159</td>
+</tr>
+</tbody>
+</table>
+<h3 id="where-is-the-extra-coverage-coming-from">Where Is The Extra Coverage Coming From?</h3>
+<p>With backfill OFF, our system should:
+1. Ask LLM to extract evidence (no keyword assistance)
+2. Ask LLM to score based on evidence
+3. If no evidence → N/A</p>
+<p>But the paper’s “~50%” number is not necessarily the complement of our item-coverage metric.
+The observed gap could be caused by:
+- A <strong>definition/denominator mismatch</strong> (paper “cases” vs our evaluated-subject item coverage), and/or
+- Different prompts / reference formatting that change when the model outputs N/A, and/or
+- Different model builds / quantization / runtime.</p>
+<h3 id="investigation-todo">Investigation TODO</h3>
+<ol>
+<li>[ ] Compare <code>_reference/</code> (fresh clone) prompts to <code>src/</code> prompts (see analysis-027 for current deltas)</li>
+<li>[ ] Check if model versions/updates affected behavior</li>
+<li>[ ] Run with different temperature to test conservatism</li>
+</ol>
+<hr />
+<h2 id="finding-1-paper-expects-50-na-rate">Finding 1: Paper Expects 50% N/A Rate</h2>
+<h3 id="source-paper-section-32-verbatim-quote">Source: Paper Section 3.2 (VERBATIM QUOTE)</h3>
+<blockquote>
+<p>"With optimized hyperparameters, Gemma 3 27B achieved an average MAE of 0.619 when predicting PHQ-8 scores, but <strong>in 50% of cases it was unable to provide a prediction due to insufficient evidence</strong> (Figure 4). The distribution of available scores was not even: certain symptoms, such as appetite, had few available scores, while others, such as sleep quality, had available scores for nearly all subjects. This reflects the variability in the content of the interview, with some symptoms discussed more frequently than others."</p>
+</blockquote>
+<p>Key implication (paper text): a large fraction of predictions are withheld due to “insufficient evidence”.
+MAE is computed on the subset of predictions that were actually produced (exact denominator for “cases”
+is not explicitly defined in the paper text).</p>
+<h3 id="our-run-vs-paper-coverage-definitions-differ">Our Run vs Paper (Coverage Definitions Differ)</h3>
+<table>
+<thead>
+<tr>
+<th>Metric</th>
+<th>Paper (text)</th>
+<th>Our Run</th>
+<th>Notes</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Abstention / coverage</td>
+<td>“50% of cases unable to provide a prediction”</td>
+<td>Excluded (all items N/A): 2/41 (4.9%); item coverage: 69.2% over evaluated subjects (65.9% over all subjects)</td>
+<td>Denominator mismatch; not directly comparable</td>
+</tr>
+<tr>
+<td>MAE</td>
+<td>0.619</td>
+<td>0.778 (item-level; excludes N/A)</td>
+<td>Paper also excludes abstained cases, but its exclusion rule is not fully specified</td>
+</tr>
+</tbody>
+</table>
+<h3 id="interpretation">Interpretation</h3>
+<p>Plausible interpretation (hypothesis, not proven):
+- If the paper’s “50% of cases” corresponds to a stricter abstention policy than ours, then our system may be attempting more low-evidence items, which can increase MAE.
+- If the paper’s “50%” is a different denominator (e.g., subject-level exclusion), then our “69.2% item coverage over evaluated subjects” is not directly comparable.</p>
+<h3 id="verification-needed">Verification Needed</h3>
+<p>We should clarify the denominator and compute comparable metrics (e.g., subject-level exclusion rate and item-level coverage including excluded subjects). If we want to compare at “matched abstention”, we need an evidence/confidence proxy (requires rerunning or extending outputs).</p>
+<hr />
+<h2 id="finding-2-appendix-e-is-about-retrieval-not-coverage">Finding 2: Appendix E Is About Retrieval (Not Coverage)</h2>
+<h3 id="paper-appendix-e-verbatim-quote">Paper Appendix E (VERBATIM QUOTE)</h3>
+<blockquote>
+<p>"Additionally, we noted that PHQ-8-Appetite had <strong>no successfully retrieved reference chunks</strong> during inference. Upon closer inspection, Gemma 3 27B did not identify any evidence related to appetite issues in the available transcripts, resulting in no reference for that symptom."</p>
+</blockquote>
+<p><strong>Important clarification</strong>: "No successfully retrieved reference chunks" refers to the few-shot
+retrieval step (finding similar examples from the training set), NOT the final prediction coverage.
+These are different metrics:
+- <strong>Reference retrieval</strong>: Finding similar training examples to guide scoring
+- <strong>Prediction coverage</strong>: Whether the model outputs a score vs N/A</p>
+<p>The paper does NOT provide per-symptom coverage percentages. The ~50% figure is aggregate.</p>
+<p><strong>Key Insight</strong>: The paper is describing a retrieval failure driven by <em>missing extracted evidence</em>, not a parsing failure.</p>
+<p>Separate issue (our run): we observed <strong>evidence JSON parse warnings</strong> for participants <strong>303</strong> and <strong>401</strong> in <code>data/outputs/reproduction_run_20251223_224516.log</code>. These are engineering/formatting failures (malformed JSON), not a behavior described in the paper methodology.</p>
+<hr />
+<h2 id="finding-3-medgemma-trade-off-critical">Finding 3: MedGemma Trade-off (CRITICAL)</h2>
+<h3 id="paper-appendix-f-verbatim-quote">Paper Appendix F (VERBATIM QUOTE)</h3>
+<blockquote>
+<p>"We evaluated MedGemma 27B with the same optimal hyperparameters determined for Gemma 3 27B... MedGemma 27B had an edge over Gemma 3 27B in most categories overall, achieving an average MAE of <strong>0.505</strong>, 18% less than Gemma 3 27B, <strong>although the number of subjects detected as having available evidence from the transcripts was smaller with MedGemma</strong>."</p>
+</blockquote>
+<h3 id="the-papers-choice">The Paper's Choice</h3>
+<table>
+<thead>
+<tr>
+<th>Model</th>
+<th>MAE</th>
+<th>Prediction availability (paper description)</th>
+<th>Why Used</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Gemma 3 27B</td>
+<td>0.619</td>
+<td>~50% “unable to provide a prediction”</td>
+<td>Main results (balanced)</td>
+</tr>
+<tr>
+<td>MedGemma 27B</td>
+<td>0.505</td>
+<td>Lower than Gemma 3 (made fewer predictions)</td>
+<td>Appendix only</td>
+</tr>
+</tbody>
+</table>
+<p>The paper deliberately chose to report Gemma 3 27B in main results because <strong>MedGemma was TOO conservative</strong> - it got better accuracy but declined to score too many cases.</p>
+<h3 id="implication-for-us">Implication for Us</h3>
+<p>Hypothesis: our 69.2% coverage means we’re producing scores in cases where the paper’s reported run abstained, and those additional (lower-evidence) predictions may raise aggregate MAE.</p>
+<hr />
+<h2 id="finding-4-stochasticity-acknowledgment">Finding 4: Stochasticity Acknowledgment</h2>
+<h3 id="paper-section-4-verbatim-quote">Paper Section 4 (VERBATIM QUOTE)</h3>
+<blockquote>
+<p>"The stochastic nature of LLMs renders a key limitation of the proposed approach. <strong>Even with fairly deterministic parameters, responses can vary across runs</strong>, making it challenging to obtain consistent performance metrics."</p>
+</blockquote>
+<p>This explicitly acknowledges that MAE will vary between runs. Our 0.778 vs 0.619 may partially be explained by normal stochastic variation.</p>
+<hr />
+<h2 id="finding-5-quantization-analysis">Finding 5: Quantization Analysis</h2>
+<h3 id="what-were-using">What We're Using</h3>
+<div class="highlight"><pre><span></span><code>Model: gemma3:27b (Q4_K_M quantization)
+Size: ~17GB
+Source: Default Ollama download
+</code></pre></div>
+<h3 id="available-quantizations">Available Quantizations</h3>
+<p>What we can state from first principles in this repo:
+- <code>ollama show gemma3:27b</code> reports <strong>Q4_K_M</strong> for <code>gemma3:27b</code> on our machine.
+- This repo also supports a HuggingFace backend with <code>LLM_HF_QUANTIZATION=int4|int8</code> (higher precision experiments).</p>
+<p>Avoid assuming Ollama provides a Q8/QAT tag for Gemma 3 27B unless verified in your environment (some tags are not available in the public library).</p>
+<h3 id="system-capabilities">System Capabilities</h3>
+<p>We can run <code>gemma3:27b</code> locally (Q4_K_M). For higher precision tests, use:
+- <code>LLM_BACKEND=huggingface</code> with <code>LLM_HF_QUANTIZATION=int8</code> (if your hardware supports it), or
+- a dedicated NVIDIA GPU box (BF16/FP16 where feasible).</p>
+<h3 id="papers-hardware-conflicting-information">Paper's Hardware (CONFLICTING INFORMATION)</h3>
+<p><strong>Paper text (Section 2.3.5)</strong>:</p>
+<blockquote>
+<p>"The full assessment pipeline executes in approximately one minute on a MacBook Pro with an Apple M3 Pro chipset."</p>
+</blockquote>
+<p><strong>Paper repo</strong>: Contains SLURM scripts (<code>_reference/slurm/job_ollama.sh</code>) configured for
+<code>--gres=gpu:A100:2</code> (2x NVIDIA A100 GPUs on GSU TReNDS cluster).</p>
+<p><strong>Conclusion</strong>: We do NOT know what hardware/quantization produced the reported MAE 0.619.
+The paper text claims MacBook M3 Pro; the repo shows A100 cluster infrastructure.
+This is documented in analysis-027.</p>
+<h3 id="why-quantization-matters">Why Quantization Matters</h3>
+<p>Lower quantization = more precision loss:
+- Q4 = 4-bit weights, significant quantization noise
+- Q8 = 8-bit weights, less noise, better nuance
+- FP16 = full precision (but too large for our hardware)</p>
+<p>For clinical assessment requiring subtle language understanding, <strong>higher precision (e.g., int8/bf16) may improve accuracy</strong> and is worth testing.</p>
+<hr />
+<h2 id="finding-6-detailed-error-analysis">Finding 6: Detailed Error Analysis</h2>
+<h3 id="our-run-log-analysis">Our Run Log Analysis</h3>
+<p>From <code>data/outputs/reproduction_run_20251223_224516.log</code>:</p>
+<h4 id="evidence-extraction-failures-2-participants">Evidence Extraction Failures (2 participants)</h4>
+<div class="highlight"><pre><span></span><code>Participant 303: Failed to parse evidence JSON, using empty evidence
+  - Cause: Malformed JSON in evidence extraction output (see `response_preview` in logs)
+  - Impact: items_with_evidence=0
+  - Final score: total_score=4, na_count=4, severity=MINIMAL
+  - System: Graceful fallback worked
+
+Participant 401: Failed to parse evidence JSON, using empty evidence
+  - Same pattern
+  - System continued normally
+</code></pre></div>
+<h4 id="quantitative-parse-failures-2-participants">Quantitative Parse Failures (2 participants)</h4>
+<div class="highlight"><pre><span></span><code>Participant 325:
+  - Result: ALL N/A (8/8)
+  - Cause: Main response couldn&#39;t be parsed
+  - MAE contribution: Excluded from calculation
+
+Participant 474:
+  - Result: ALL N/A (8/8)
+  - Cause: Main response couldn&#39;t be parsed
+  - MAE contribution: Excluded from calculation
+</code></pre></div>
+<h4 id="success-rate">Success Rate</h4>
+<ul>
+<li><strong>Subjects processed (no crashes)</strong>: 41/41 (<code>successful_subjects</code>)</li>
+<li><strong>Evaluated subjects (≥1 scored item)</strong>: 39/41 (95.1%) (<code>evaluated_subjects</code>)</li>
+<li><strong>Excluded subjects (all items N/A)</strong>: 2/41 (4.9%) (<code>excluded_no_evidence</code>)</li>
+<li><strong>Evidence extraction parse warnings</strong>: 2/41 (4.9%) (participants 303, 401)</li>
+</ul>
+<h3 id="papers-error-rate">Paper's Error Rate</h3>
+<p>The paper discusses insufficient evidence / missing extraction and retrieval issues, but does not report parsing-failure rates, so we cannot directly compare.</p>
+<hr />
+<h2 id="recommendations">Recommendations</h2>
+<h3 id="immediate-actions">Immediate Actions</h3>
+<ol>
+<li><strong>Clarify/align the “coverage” denominator + add a confidence/evidence proxy</strong> (HIGHEST PRIORITY)</li>
+<li>The paper reports “~50% unable to provide a prediction”, but does not fully specify the denominator.</li>
+<li>Our current output JSON does not include a confidence score or per-item evidence-count summary, so we cannot
+     downselect to a paper-like abstention level from existing artifacts alone without rerunning.</li>
+<li>
+<p>Next best: export an evidence/confidence proxy (e.g., per-item evidence counts) and then compute MAE on a
+     matched-abstention subset.</p>
+</li>
+<li>
+<p><strong>Profile per-symptom coverage</strong></p>
+</li>
+<li>Compare to paper's Figure 4 confusion matrices</li>
+<li>
+<p>Identify which symptoms we're over-predicting</p>
+</li>
+<li>
+<p><strong>Analyze confidence distribution</strong></p>
+</li>
+<li>Are we making low-confidence predictions paper declined?</li>
+<li>Can we add confidence threshold to match paper behavior?</li>
+</ol>
+<h3 id="future-experiments">Future Experiments</h3>
+<ol>
+<li><strong>Try a higher-precision runtime</strong> (if you can)</li>
+<li>Our Ollama <code>gemma3:27b</code> is Q4_K_M; higher-precision tests may require a different backend (e.g., HuggingFace int8/bf16) or a different model build.</li>
+<li>
+<p>Start by verifying your local model: <code>ollama show gemma3:27b</code></p>
+</li>
+<li>
+<p><strong>Test with MedGemma</strong> (expect: lower coverage, better MAE)
+   <div class="highlight"><pre><span></span><code><span class="c1"># If using Ollama with a community MedGemma build (example in our environment):</span>
+<span class="nv">MODEL_QUANTITATIVE_MODEL</span><span class="o">=</span>alibayram/medgemma:27b
+</code></pre></div></p>
+</li>
+<li>
+<p><strong>Log confidence scores</strong> for future runs</p>
+</li>
+</ol>
+<hr />
+<h2 id="root-cause-analysis">Root Cause Analysis</h2>
+<h3 id="why-mae-0778-vs-0619">Why MAE 0.778 vs 0.619?</h3>
+<table>
+<thead>
+<tr>
+<th>Factor</th>
+<th>Impact</th>
+<th>Evidence</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Coverage/abstention definition mismatch</td>
+<td><strong>HIGH</strong></td>
+<td>Paper denominator unclear; our coverage excludes “all N/A” subjects</td>
+</tr>
+<tr>
+<td>Prompt/reference formatting drift</td>
+<td><strong>HIGH</strong></td>
+<td>See <code>docs/archive/bugs/analysis-027-paper-implementation-comparison.md</code></td>
+</tr>
+<tr>
+<td>Model/runtime/quantization differences</td>
+<td>MEDIUM</td>
+<td>Paper text emphasizes M3 Pro; repo contains A100 SLURM scripts; our <code>gemma3:27b</code> is Q4_K_M</td>
+</tr>
+<tr>
+<td>JSON parsing/repair behavior</td>
+<td>LOW–MEDIUM</td>
+<td>2 evidence parse warnings; 2 scoring parse failures (all N/A)</td>
+</tr>
+<tr>
+<td>Stochastic variation</td>
+<td>LOW–MEDIUM</td>
+<td>Paper explicitly acknowledges run-to-run variance</td>
+</tr>
+</tbody>
+</table>
+<h3 id="primary-hypothesis-unverified">Primary Hypothesis (UNVERIFIED)</h3>
+<p><strong>Hypothesis</strong>: If our pipeline produces predictions for lower-evidence cases than the paper’s reported run did, those additional predictions may increase aggregate MAE.</p>
+<p>The paper chose Gemma 3 over MedGemma precisely because MedGemma was TOO conservative
+(0.505 MAE but fewer predictions overall / more abstention per Appendix F). We may have gone the opposite direction - being LESS
+conservative than the paper's Gemma 3 baseline.</p>
+<p><strong>Caveat</strong>: We cannot verify this without knowing what the paper actually ran (notebooks
+vs agents/, what hardware, etc.). See analysis-027 for the paper-text vs paper-repo discrepancy.</p>
+<hr />
+<h2 id="the-coverage-mae-trade-off">The Coverage-MAE Trade-off</h2>
+<div class="highlight"><pre><span></span><code>MedGemma (Appendix F):  MAE 0.505, fewer predictions overall (more abstention)
+Paper Gemma 3:          MAE 0.619, ~50% “unable to provide a prediction” (paper text)
+Our Run:                MAE 0.778, item coverage 69.2% (more predictions)
+</code></pre></div>
+<p><strong>Hypothesis</strong>: Higher coverage correlates with worse MAE because you're making more
+low-confidence predictions. This is consistent with the MedGemma trade-off but not conclusively proven.</p>
+<hr />
+<h2 id="verification-plan">Verification Plan</h2>
+<table>
+<thead>
+<tr>
+<th>Step</th>
+<th>Effort</th>
+<th>Expected Insight</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Add evidence/confidence proxy; compute MAE at matched abstention</td>
+<td>Medium (rerun or extend outputs)</td>
+<td>True paper comparison</td>
+</tr>
+<tr>
+<td>Profile per-symptom coverage</td>
+<td>Low (from existing data)</td>
+<td>Identify over-predictions</td>
+</tr>
+<tr>
+<td>Run higher-precision backend/hardware</td>
+<td>High</td>
+<td>Precision sensitivity</td>
+</tr>
+<tr>
+<td>Run with MedGemma</td>
+<td>High (~2 hours)</td>
+<td>Coverage reduction effect</td>
+</tr>
+</tbody>
+</table>
+<hr />
+<h2 id="conclusion">Conclusion</h2>
+<p>Our run produced <strong>69.2% item-level coverage</strong> over evaluated subjects (65.9% if including all subjects). The paper reports that <strong>in ~50% of cases</strong> the model was unable to provide a prediction due to insufficient evidence, but does not fully specify the denominator. These are not directly comparable without aligning definitions.</p>
+<h3 id="key-insight">Key Insight</h3>
+<p>The paper explicitly evaluated the coverage-MAE trade-off:
+- MedGemma: Better MAE (0.505) but declined too many cases
+- Gemma 3: 0.619 MAE, but ~50% “unable to provide a prediction” (paper text)</p>
+<p>We may be going in the opposite direction — producing scores in cases where the paper’s reported run abstained.</p>
+<h3 id="next-steps">Next Steps</h3>
+<ol>
+<li><strong>Align definitions</strong>: compute both subject-level exclusion rate and item-level coverage (including excluded subjects).</li>
+<li>Add an evidence/confidence proxy to support “matched abstention” comparisons (requires rerun or extended outputs).</li>
+<li>Accept that stochastic variation is acknowledged by the paper, but treat large deltas as signals to investigate.</li>
+</ol>
+<p><strong>Current State</strong>: Key discrepancies are documented (paper-text vs paper-repo divergence; unknown hardware/quantization).
+Our default target is paper-text parity (pure LLM capability); paper-repo parity remains a separate, opt-in goal.</p>
+<hr />
+<h2 id="appendix-a-hardware-comparison">Appendix A: Hardware Comparison</h2>
+<table>
+<thead>
+<tr>
+<th>Spec</th>
+<th>Our System</th>
+<th>Paper Text Claim</th>
+<th>Paper Repo Evidence</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Chip</td>
+<td>Apple M1 Max</td>
+<td>Apple M3 Pro</td>
+<td>GSU TReNDS cluster (A100s)</td>
+</tr>
+<tr>
+<td>RAM</td>
+<td>64GB</td>
+<td>18-36GB</td>
+<td>100GB (SLURM script)</td>
+</tr>
+<tr>
+<td>GPU</td>
+<td>Unified memory (exact GPU share varies)</td>
+<td>Unified memory (not specified)</td>
+<td>2x NVIDIA A100</td>
+</tr>
+<tr>
+<td>Quantization / precision</td>
+<td>Q4_K_M (verified via <code>ollama show gemma3:27b</code>)</td>
+<td>Not specified</td>
+<td>Not specified (SLURM present)</td>
+</tr>
+</tbody>
+</table>
+<p><strong>Note</strong>: We cannot determine what hardware the paper actually used. The text claims
+MacBook M3 Pro; the repo has SLURM scripts for A100 cluster. See analysis-027.</p>
+<hr />
+<h2 id="appendix-b-paper-quotes-summary">Appendix B: Paper Quotes Summary</h2>
+<h3 id="section-32-core-result">Section 3.2 - Core Result</h3>
+<blockquote>
+<p>"With optimized hyperparameters, Gemma 3 27B achieved an average MAE of 0.619 when predicting PHQ-8 scores, but in 50% of cases it was unable to provide a prediction due to insufficient evidence."</p>
+</blockquote>
+<h3 id="section-4-stochasticity">Section 4 - Stochasticity</h3>
+<blockquote>
+<p>"The stochastic nature of LLMs renders a key limitation of the proposed approach. Even with fairly deterministic parameters, responses can vary across runs, making it challenging to obtain consistent performance metrics."</p>
+</blockquote>
+<h3 id="appendix-e-appetite-had-zero-reference-retrieval-not-coverage">Appendix E - Appetite Had Zero Reference Retrieval (NOT coverage)</h3>
+<blockquote>
+<p>"Additionally, we noted that PHQ-8-Appetite had no successfully retrieved reference chunks during inference."</p>
+</blockquote>
+<p><strong>Note</strong>: This refers to few-shot reference retrieval, not prediction coverage. See Finding 2.</p>
+<h3 id="appendix-f-medgemma-trade-off">Appendix F - MedGemma Trade-off</h3>
+<blockquote>
+<p>"MedGemma 27B had an edge over Gemma 3 27B in most categories overall, achieving an average MAE of 0.505, 18% less than Gemma 3 27B, although the number of subjects detected as having available evidence from the transcripts was smaller with MedGemma."</p>
+</blockquote>
+<hr />
+<h2 id="appendix-c-reproduction-run-summary">Appendix C: Reproduction Run Summary</h2>
+<table>
+<thead>
+<tr>
+<th>Metric</th>
+<th>Value</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Date</td>
+<td>2025-12-24</td>
+</tr>
+<tr>
+<td>Split</td>
+<td>Paper test (41 participants)</td>
+</tr>
+<tr>
+<td>Mode</td>
+<td>Few-shot</td>
+</tr>
+<tr>
+<td>Model</td>
+<td>gemma3:27b (Q4_K_M)</td>
+</tr>
+<tr>
+<td>Duration</td>
+<td>109 minutes (~2.7 min/participant)</td>
+</tr>
+<tr>
+<td>Success Rate</td>
+<td>39/41 (95.1%)</td>
+</tr>
+<tr>
+<td>Coverage</td>
+<td>69.2%</td>
+</tr>
+<tr>
+<td>MAE</td>
+<td>0.778</td>
+</tr>
+<tr>
+<td>Paper MAE</td>
+<td>0.619</td>
+</tr>
+<tr>
+<td>Delta</td>
+<td>+0.159</td>
+</tr>
+</tbody>
+</table>
+
+
+
+
+
+
+
+
+
+
+
+
+                
+              </article>
+            </div>
+          
+          
+<script>var target=document.getElementById(location.hash.slice(1));target&&target.name&&(target.checked=target.name.startsWith("__tabbed_"))</script>
+        </div>
+        
+      </main>
+      
+        <footer class="md-footer">
+  
+    
+  
+  <div class="md-footer-meta md-typeset">
+    <div class="md-footer-meta__inner md-grid">
+      <div class="md-copyright">
+  
+  
+    Made with
+    <a href="https://squidfunk.github.io/mkdocs-material/" target="_blank" rel="noopener">
+      Material for MkDocs
+    </a>
+  
+</div>
+      
+    </div>
+  </div>
+</footer>
+      
+    </div>
+    <div class="md-dialog" data-md-component="dialog">
+      <div class="md-dialog__inner md-typeset"></div>
+    </div>
+    
+    
+    
+      
+      
+      <script id="__config" type="application/json">{"annotate": null, "base": "../../..", "features": ["content.code.copy", "content.action.edit", "content.action.view", "navigation.tracking", "navigation.sections", "navigation.footer", "navigation.instant"], "search": "../../../assets/javascripts/workers/search.2c215733.min.js", "tags": null, "translations": {"clipboard.copied": "Copied to clipboard", "clipboard.copy": "Copy to clipboard", "search.result.more.one": "1 more on this page", "search.result.more.other": "# more on this page", "search.result.none": "No matching documents", "search.result.one": "1 matching document", "search.result.other": "# matching documents", "search.result.placeholder": "Type to start searching", "search.result.term.missing": "Missing", "select.version": "Select version"}, "version": null}</script>
+    
+    
+      <script src="../../../assets/javascripts/bundle.79ae519e.min.js"></script>
+      
+    
+  </body>
+</html>

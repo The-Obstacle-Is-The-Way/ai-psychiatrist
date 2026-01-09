@@ -1,0 +1,3348 @@
+
+<!doctype html>
+<html lang="en" class="no-js">
+  <head>
+    
+      <meta charset="utf-8">
+      <meta name="viewport" content="width=device-width,initial-scale=1">
+      
+      
+      
+        <link rel="canonical" href="https://the-obstacle-is-the-way.github.io/ai-psychiatrist/_archive/specs/08_EMBEDDING_SERVICE/">
+      
+      
+      
+      
+        
+      
+      
+      <link rel="icon" href="../../../assets/images/favicon.png">
+      <meta name="generator" content="mkdocs-1.6.1, mkdocs-material-9.7.1">
+    
+    
+      
+        <title>Spec 08: Embedding Service - AI Psychiatrist</title>
+      
+    
+    
+      <link rel="stylesheet" href="../../../assets/stylesheets/main.484c7ddc.min.css">
+      
+      
+
+
+    
+    
+      
+    
+    
+      
+        
+        
+        <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+        <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Roboto:300,300i,400,400i,700,700i%7CRoboto+Mono:400,400i,700,700i&display=fallback">
+        <style>:root{--md-text-font:"Roboto";--md-code-font:"Roboto Mono"}</style>
+      
+    
+    
+    <script>__md_scope=new URL("../../..",location),__md_hash=e=>[...e].reduce(((e,_)=>(e<<5)-e+_.charCodeAt(0)),0),__md_get=(e,_=localStorage,t=__md_scope)=>JSON.parse(_.getItem(t.pathname+"."+e)),__md_set=(e,_,t=localStorage,a=__md_scope)=>{try{t.setItem(a.pathname+"."+e,JSON.stringify(_))}catch(e){}}</script>
+    
+      
+
+    
+    
+  </head>
+  
+  
+    <body dir="ltr">
+  
+    
+    <input class="md-toggle" data-md-toggle="drawer" type="checkbox" id="__drawer" autocomplete="off">
+    <input class="md-toggle" data-md-toggle="search" type="checkbox" id="__search" autocomplete="off">
+    <label class="md-overlay" for="__drawer"></label>
+    <div data-md-component="skip">
+      
+        
+        <a href="#spec-08-embedding-service" class="md-skip">
+          Skip to content
+        </a>
+      
+    </div>
+    <div data-md-component="announce">
+      
+    </div>
+    
+    
+      
+
+  
+
+<header class="md-header md-header--shadow" data-md-component="header">
+  <nav class="md-header__inner md-grid" aria-label="Header">
+    <a href="../../.." title="AI Psychiatrist" class="md-header__button md-logo" aria-label="AI Psychiatrist" data-md-component="logo">
+      
+  
+  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 8a3 3 0 0 0 3-3 3 3 0 0 0-3-3 3 3 0 0 0-3 3 3 3 0 0 0 3 3m0 3.54C9.64 9.35 6.5 8 3 8v11c3.5 0 6.64 1.35 9 3.54 2.36-2.19 5.5-3.54 9-3.54V8c-3.5 0-6.64 1.35-9 3.54"/></svg>
+
+    </a>
+    <label class="md-header__button md-icon" for="__drawer">
+      
+      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M3 6h18v2H3zm0 5h18v2H3zm0 5h18v2H3z"/></svg>
+    </label>
+    <div class="md-header__title" data-md-component="header-title">
+      <div class="md-header__ellipsis">
+        <div class="md-header__topic">
+          <span class="md-ellipsis">
+            AI Psychiatrist
+          </span>
+        </div>
+        <div class="md-header__topic" data-md-component="header-topic">
+          <span class="md-ellipsis">
+            
+              Spec 08: Embedding Service
+            
+          </span>
+        </div>
+      </div>
+    </div>
+    
+    
+      <script>var palette=__md_get("__palette");if(palette&&palette.color){if("(prefers-color-scheme)"===palette.color.media){var media=matchMedia("(prefers-color-scheme: light)"),input=document.querySelector(media.matches?"[data-md-color-media='(prefers-color-scheme: light)']":"[data-md-color-media='(prefers-color-scheme: dark)']");palette.color.media=input.getAttribute("data-md-color-media"),palette.color.scheme=input.getAttribute("data-md-color-scheme"),palette.color.primary=input.getAttribute("data-md-color-primary"),palette.color.accent=input.getAttribute("data-md-color-accent")}for(var[key,value]of Object.entries(palette.color))document.body.setAttribute("data-md-color-"+key,value)}</script>
+    
+    
+    
+      
+      
+        <label class="md-header__button md-icon" for="__search">
+          
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M9.5 3A6.5 6.5 0 0 1 16 9.5c0 1.61-.59 3.09-1.56 4.23l.27.27h.79l5 5-1.5 1.5-5-5v-.79l-.27-.27A6.52 6.52 0 0 1 9.5 16 6.5 6.5 0 0 1 3 9.5 6.5 6.5 0 0 1 9.5 3m0 2C7 5 5 7 5 9.5S7 14 9.5 14 14 12 14 9.5 12 5 9.5 5"/></svg>
+        </label>
+        <div class="md-search" data-md-component="search" role="dialog">
+  <label class="md-search__overlay" for="__search"></label>
+  <div class="md-search__inner" role="search">
+    <form class="md-search__form" name="search">
+      <input type="text" class="md-search__input" name="query" aria-label="Search" placeholder="Search" autocapitalize="off" autocorrect="off" autocomplete="off" spellcheck="false" data-md-component="search-query" required>
+      <label class="md-search__icon md-icon" for="__search">
+        
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M9.5 3A6.5 6.5 0 0 1 16 9.5c0 1.61-.59 3.09-1.56 4.23l.27.27h.79l5 5-1.5 1.5-5-5v-.79l-.27-.27A6.52 6.52 0 0 1 9.5 16 6.5 6.5 0 0 1 3 9.5 6.5 6.5 0 0 1 9.5 3m0 2C7 5 5 7 5 9.5S7 14 9.5 14 14 12 14 9.5 12 5 9.5 5"/></svg>
+        
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M20 11v2H8l5.5 5.5-1.42 1.42L4.16 12l7.92-7.92L13.5 5.5 8 11z"/></svg>
+      </label>
+      <nav class="md-search__options" aria-label="Search">
+        
+        <button type="reset" class="md-search__icon md-icon" title="Clear" aria-label="Clear" tabindex="-1">
+          
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M19 6.41 17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12z"/></svg>
+        </button>
+      </nav>
+      
+    </form>
+    <div class="md-search__output">
+      <div class="md-search__scrollwrap" tabindex="0" data-md-scrollfix>
+        <div class="md-search-result" data-md-component="search-result">
+          <div class="md-search-result__meta">
+            Initializing search
+          </div>
+          <ol class="md-search-result__list" role="presentation"></ol>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+      
+    
+    
+      <div class="md-header__source">
+        <a href="https://github.com/The-Obstacle-Is-The-Way/ai-psychiatrist" title="Go to repository" class="md-source" data-md-component="source">
+  <div class="md-source__icon md-icon">
+    
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 448 512"><!--! Font Awesome Free 7.1.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2025 Fonticons, Inc.--><path d="M439.6 236.1 244 40.5c-5.4-5.5-12.8-8.5-20.4-8.5s-15 3-20.4 8.4L162.5 81l51.5 51.5c27.1-9.1 52.7 16.8 43.4 43.7l49.7 49.7c34.2-11.8 61.2 31 35.5 56.7-26.5 26.5-70.2-2.9-56-37.3L240.3 199v121.9c25.3 12.5 22.3 41.8 9.1 55-6.4 6.4-15.2 10.1-24.3 10.1s-17.8-3.6-24.3-10.1c-17.6-17.6-11.1-46.9 11.2-56v-123c-20.8-8.5-24.6-30.7-18.6-45L142.6 101 8.5 235.1C3 240.6 0 247.9 0 255.5s3 15 8.5 20.4l195.6 195.7c5.4 5.4 12.7 8.4 20.4 8.4s15-3 20.4-8.4l194.7-194.7c5.4-5.4 8.4-12.8 8.4-20.4s-3-15-8.4-20.4"/></svg>
+  </div>
+  <div class="md-source__repository">
+    GitHub
+  </div>
+</a>
+      </div>
+    
+  </nav>
+  
+</header>
+    
+    <div class="md-container" data-md-component="container">
+      
+      
+        
+          
+        
+      
+      <main class="md-main" data-md-component="main">
+        <div class="md-main__inner md-grid">
+          
+            
+              
+              <div class="md-sidebar md-sidebar--primary" data-md-component="sidebar" data-md-type="navigation" >
+                <div class="md-sidebar__scrollwrap">
+                  <div class="md-sidebar__inner">
+                    
+
+
+
+<nav class="md-nav md-nav--primary" aria-label="Navigation" data-md-level="0">
+  <label class="md-nav__title" for="__drawer">
+    <a href="../../.." title="AI Psychiatrist" class="md-nav__button md-logo" aria-label="AI Psychiatrist" data-md-component="logo">
+      
+  
+  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 8a3 3 0 0 0 3-3 3 3 0 0 0-3-3 3 3 0 0 0-3 3 3 3 0 0 0 3 3m0 3.54C9.64 9.35 6.5 8 3 8v11c3.5 0 6.64 1.35 9 3.54 2.36-2.19 5.5-3.54 9-3.54V8c-3.5 0-6.64 1.35-9 3.54"/></svg>
+
+    </a>
+    AI Psychiatrist
+  </label>
+  
+    <div class="md-nav__source">
+      <a href="https://github.com/The-Obstacle-Is-The-Way/ai-psychiatrist" title="Go to repository" class="md-source" data-md-component="source">
+  <div class="md-source__icon md-icon">
+    
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 448 512"><!--! Font Awesome Free 7.1.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2025 Fonticons, Inc.--><path d="M439.6 236.1 244 40.5c-5.4-5.5-12.8-8.5-20.4-8.5s-15 3-20.4 8.4L162.5 81l51.5 51.5c27.1-9.1 52.7 16.8 43.4 43.7l49.7 49.7c34.2-11.8 61.2 31 35.5 56.7-26.5 26.5-70.2-2.9-56-37.3L240.3 199v121.9c25.3 12.5 22.3 41.8 9.1 55-6.4 6.4-15.2 10.1-24.3 10.1s-17.8-3.6-24.3-10.1c-17.6-17.6-11.1-46.9 11.2-56v-123c-20.8-8.5-24.6-30.7-18.6-45L142.6 101 8.5 235.1C3 240.6 0 247.9 0 255.5s3 15 8.5 20.4l195.6 195.7c5.4 5.4 12.7 8.4 20.4 8.4s15-3 20.4-8.4l194.7-194.7c5.4-5.4 8.4-12.8 8.4-20.4s-3-15-8.4-20.4"/></svg>
+  </div>
+  <div class="md-source__repository">
+    GitHub
+  </div>
+</a>
+    </div>
+  
+  <ul class="md-nav__list" data-md-scrollfix>
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../.." class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    AI Psychiatrist Documentation
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    
+    
+    
+    
+      
+        
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--section md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_2" >
+        
+          
+          <label class="md-nav__link" for="__nav_2" id="__nav_2_label" tabindex="">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+     research
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_2_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_2">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+     research
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../_research/hypotheses-explained/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Hypotheses Explained: Current State vs Future Improvements
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../_research/hypotheses-for-improvement/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Hypotheses for Improvement: First-Principles Analysis
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../_research/master-bug-audit/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    MASTER BUG AUDIT
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    
+    
+    
+    
+      
+        
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--section md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_3" >
+        
+          
+          <label class="md-nav__link" for="__nav_3" id="__nav_3_label" tabindex="">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Architecture
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_3_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_3">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    Architecture
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../architecture/architecture/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Architecture
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../architecture/future-architecture/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Future Architecture: Agent Orchestration Options
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../architecture/pipeline/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Pipeline
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    
+    
+    
+    
+      
+        
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--section md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_4" >
+        
+          
+          <label class="md-nav__link" for="__nav_4" id="__nav_4_label" tabindex="">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Clinical
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_4_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_4">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    Clinical
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../clinical/clinical-understanding/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Clinical Understanding: How This System Works
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../clinical/glossary/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Glossary
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../clinical/phq8/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    PHQ-8: Patient Health Questionnaire
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../clinical/task-validity/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Task Validity: What Can (and Cannot) Be Inferred from DAIC-WOZ Transcripts
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    
+    
+    
+    
+      
+        
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--section md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_5" >
+        
+          
+          <label class="md-nav__link" for="__nav_5" id="__nav_5_label" tabindex="">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Configs
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_5_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_5">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    Configs
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../configs/agent-sampling-registry/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Agent Sampling Parameter Registry
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../configs/configuration-philosophy/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Configuration Philosophy
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../configs/configuration/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Configuration Reference
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    
+    
+    
+    
+      
+        
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--section md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_6" >
+        
+          
+          <label class="md-nav__link" for="__nav_6" id="__nav_6_label" tabindex="">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Data
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_6_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_6">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    Data
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../data/artifact-namespace-registry/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Artifact Namespace Registry
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../data/daic-woz-preprocessing/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    DAIC-WOZ Transcript Preprocessing (Bias-Aware, Deterministic)
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../data/daic-woz-schema/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    DAIC-WOZ Dataset Schema
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../data/data-splits-overview/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Data Splits Overview
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    
+    
+    
+    
+      
+        
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--section md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_7" >
+        
+          
+          <label class="md-nav__link" for="__nav_7" id="__nav_7_label" tabindex="">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Developer
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_7_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_7">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    Developer
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../developer/api-endpoints/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    API Reference
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../developer/dependency-registry/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Dependency Registry
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../developer/error-handling/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Error Handling and Fail-Fast Philosophy
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../developer/exceptions/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Exception Reference (Domain + Runtime)
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../developer/testing/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Testing Conventions (Markers, Fixtures, and Test Doubles)
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    
+    
+    
+    
+      
+        
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--section md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_8" >
+        
+          
+          <label class="md-nav__link" for="__nav_8" id="__nav_8_label" tabindex="">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Getting started
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_8_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_8">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    Getting started
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../getting-started/quickstart/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Quickstart Guide
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    
+    
+    
+    
+      
+        
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--section md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_9" >
+        
+          
+          <label class="md-nav__link" for="__nav_9" id="__nav_9_label" tabindex="">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Models
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_9_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_9">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    Models
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../models/model-registry/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    AI Psychiatrist Model Registry
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../models/model-wiring/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Model Wiring: Current State
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    
+    
+    
+    
+      
+        
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--section md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_10" >
+        
+          
+          <label class="md-nav__link" for="__nav_10" id="__nav_10_label" tabindex="">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Pipeline internals
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_10_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_10">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    Pipeline internals
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../pipeline-internals/evidence-extraction/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Evidence Extraction Mechanism: How It Actually Works
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../pipeline-internals/features/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Feature Reference (Non-Archive Canonical)
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    
+    
+    
+    
+      
+        
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--section md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_11" >
+        
+          
+          <label class="md-nav__link" for="__nav_11" id="__nav_11_label" tabindex="">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Preflight checklist
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_11_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_11">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    Preflight checklist
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../preflight-checklist/preflight-checklist-few-shot/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Preflight Checklist: Few-Shot Reproduction
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../preflight-checklist/preflight-checklist-zero-shot/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Preflight Checklist: Zero-Shot Run
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    
+    
+    
+    
+      
+        
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--section md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_12" >
+        
+          
+          <label class="md-nav__link" for="__nav_12" id="__nav_12_label" tabindex="">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Rag
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_12_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_12">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    Rag
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../rag/artifact-generation/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    RAG Artifact Generation
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../rag/chunk-scoring/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Chunk-Level Scoring (Spec 35) — Schema, Workflow, and Gotchas
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../rag/debugging/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    RAG Debugging (Audit Logs + Guardrails)
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../rag/design-rationale/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    RAG Design Rationale
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../rag/overview/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    RAG Overview: Embeddings and Few-Shot Retrieval
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../rag/runtime-features/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    RAG Runtime Features
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    
+    
+    
+    
+      
+        
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--section md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_13" >
+        
+          
+          <label class="md-nav__link" for="__nav_13" id="__nav_13_label" tabindex="">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Results
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_13_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_13">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    Results
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../results/few-shot-analysis/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Why Few-Shot May Not Beat Zero-Shot: Analysis
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../results/reproduction-results/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Paper Reproduction Results (Current Status)
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../results/run-history/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Complete Run History &amp; Statistical Analysis
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../results/run-output-schema/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Reproduction Run Output Schema (JSON + Registry)
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    
+    
+    
+    
+      
+        
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--section md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_14" >
+        
+          
+          <label class="md-nav__link" for="__nav_14" id="__nav_14_label" tabindex="">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Statistics
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_14_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_14">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    Statistics
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../statistics/coverage/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Coverage Explained: What It Is and Why It Matters
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../statistics/metrics-and-evaluation/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Metrics and Evaluation (Exact Definitions + Output Schema)
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../statistics/statistical-methodology-aurc-augrc/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Statistical Methodology: AURC/AUGRC for Selective Prediction
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+  </ul>
+</nav>
+                  </div>
+                </div>
+              </div>
+            
+            
+              
+              <div class="md-sidebar md-sidebar--secondary" data-md-component="sidebar" data-md-type="toc" >
+                <div class="md-sidebar__scrollwrap">
+                  <div class="md-sidebar__inner">
+                    
+
+<nav class="md-nav md-nav--secondary" aria-label="Table of contents">
+  
+  
+  
+    
+  
+  
+    <label class="md-nav__title" for="__toc">
+      <span class="md-nav__icon md-icon"></span>
+      Table of contents
+    </label>
+    <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
+      
+        <li class="md-nav__item">
+  <a href="#objective" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Objective
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#paper-reference" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Paper Reference
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#target-configuration-paper-optimal" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Target Configuration (Paper-Optimal)
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#as-is-implementation-repo" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        As-Is Implementation (Repo)
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="As-Is Implementation (Repo)">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#as-is-reference-formatting-verbatim" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        As-Is Reference Formatting (Verbatim)
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#key-technical-details" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Key Technical Details
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Key Technical Details">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#dimension-truncation-repo-behavior" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Dimension Truncation (Repo Behavior)
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#embedding-processing-pipeline" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Embedding Processing Pipeline
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#deliverables" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Deliverables
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#implementation" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Implementation
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Implementation">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#1-embedding-service-embeddingpy" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        1. Embedding Service (embedding.py)
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#2-reference-store-reference_storepy" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        2. Reference Store (reference_store.py)
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#3-tests-test_embeddingpy" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        3. Tests (test_embedding.py)
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#acceptance-criteria" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Acceptance Criteria
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#dependencies" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Dependencies
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#specs-that-depend-on-this" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Specs That Depend on This
+      
+    </span>
+  </a>
+  
+</li>
+      
+    </ul>
+  
+</nav>
+                  </div>
+                </div>
+              </div>
+            
+          
+          
+            <div class="md-content" data-md-component="content">
+              
+              <article class="md-content__inner md-typeset">
+                
+                  
+
+
+  
+    <a href="https://github.com/The-Obstacle-Is-The-Way/ai-psychiatrist/edit/main/docs/_archive/specs/08_EMBEDDING_SERVICE.md" title="Edit this page" class="md-content__button md-icon" rel="edit">
+      
+      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M10 20H6V4h7v5h5v3.1l2-2V8l-6-6H6c-1.1 0-2 .9-2 2v16c0 1.1.9 2 2 2h4zm10.2-7c.1 0 .3.1.4.2l1.3 1.3c.2.2.2.6 0 .8l-1 1-2.1-2.1 1-1c.1-.1.2-.2.4-.2m0 3.9L14.1 23H12v-2.1l6.1-6.1z"/></svg>
+    </a>
+  
+  
+    
+      
+    
+    <a href="https://github.com/The-Obstacle-Is-The-Way/ai-psychiatrist/raw/main/docs/_archive/specs/08_EMBEDDING_SERVICE.md" title="View source of this page" class="md-content__button md-icon">
+      
+      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M17 18c.56 0 1 .44 1 1s-.44 1-1 1-1-.44-1-1 .44-1 1-1m0-3c-2.73 0-5.06 1.66-6 4 .94 2.34 3.27 4 6 4s5.06-1.66 6-4c-.94-2.34-3.27-4-6-4m0 6.5a2.5 2.5 0 0 1-2.5-2.5 2.5 2.5 0 0 1 2.5-2.5 2.5 2.5 0 0 1 2.5 2.5 2.5 2.5 0 0 1-2.5 2.5M9.27 20H6V4h7v5h5v4.07c.7.08 1.36.25 2 .49V8l-6-6H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h4.5a8.2 8.2 0 0 1-1.23-2"/></svg>
+    </a>
+  
+
+
+<h1 id="spec-08-embedding-service">Spec 08: Embedding Service</h1>
+<h2 id="objective">Objective</h2>
+<p>Implement the embedding-based similarity search service for few-shot reference retrieval, as described in Section 2.4.2 of the paper.</p>
+<h2 id="paper-reference">Paper Reference</h2>
+<ul>
+<li><strong>Section 2.4.2</strong>: Few-shot prompting workflow</li>
+<li><strong>Appendix D</strong>: Optimal hyperparameters (chunk_size=8, N_example=2, dim=4096)</li>
+<li><strong>Appendix E</strong>: Retrieval statistics and t-SNE visualization</li>
+</ul>
+<h2 id="target-configuration-paper-optimal">Target Configuration (Paper-Optimal)</h2>
+<table>
+<thead>
+<tr>
+<th>Parameter</th>
+<th>Value</th>
+<th>Paper Reference</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Embedding model family</td>
+<td>Qwen 3 8B Embedding (example Ollama tag: <code>qwen3-embedding:8b</code>; quantization not specified in paper)</td>
+<td>Section 2.2</td>
+</tr>
+<tr>
+<td>Dimension</td>
+<td>4096</td>
+<td>Appendix D</td>
+</tr>
+<tr>
+<td>Chunk size</td>
+<td>8 lines</td>
+<td>Appendix D</td>
+</tr>
+<tr>
+<td>Step size</td>
+<td>2 lines</td>
+<td>Appendix D</td>
+</tr>
+<tr>
+<td>top_k references</td>
+<td>2 per item</td>
+<td>Appendix D</td>
+</tr>
+</tbody>
+</table>
+<h2 id="as-is-implementation-repo">As-Is Implementation (Repo)</h2>
+<p>The current repo’s few-shot retrieval is implemented inside the quantitative agent (not as a standalone service):</p>
+<ul>
+<li>File: <code>agents/quantitative_assessor_f.py</code></li>
+<li>Reference store: NPZ + JSON sidecar loaded from <code>data/embeddings/reference_embeddings.npz</code> and
+  <code>data/embeddings/reference_embeddings.json</code> (generated via <code>scripts/generate_embeddings.py</code>; the artifact is not checked into the repo)</li>
+<li>Embedding endpoint: <code>POST /api/embeddings</code></li>
+<li>Similarity: cosine similarity (<code>sklearn.metrics.pairwise.cosine_similarity</code>)</li>
+<li>Default demo <code>top_k</code>: <strong>3</strong> (paper optimal: <strong>2</strong>)</li>
+</ul>
+<h3 id="as-is-reference-formatting-verbatim">As-Is Reference Formatting (Verbatim)</h3>
+<p>The reference bundle inserted into the scoring prompt is formatted with a pseudo-tag that is <strong>not valid XML</strong> (opening and “closing” markers are both <code>&lt;Reference Examples&gt;</code>):</p>
+<div class="highlight"><pre><span></span><code><span class="c1"># agents/quantitative_assessor_f.py</span>
+<span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">text</span><span class="p">)</span> <span class="o">&lt;</span> <span class="n">min_chars</span><span class="p">:</span>
+    <span class="k">return</span> <span class="s2">&quot;&lt;Reference Examples&gt;</span><span class="se">\n</span><span class="s2">No valid evidence found</span><span class="se">\n</span><span class="s2">&lt;Reference Examples&gt;&quot;</span><span class="p">,</span> <span class="p">[]</span>
+
+<span class="o">...</span>
+<span class="n">lines</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;(</span><span class="si">{</span><span class="n">item_key</span><span class="si">}</span><span class="s2"> Score: </span><span class="si">{</span><span class="n">val</span><span class="si">}</span><span class="s2">)</span><span class="se">\n</span><span class="si">{</span><span class="n">h</span><span class="p">[</span><span class="s1">&#39;raw_text&#39;</span><span class="p">]</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+
+<span class="o">...</span>
+<span class="n">block</span> <span class="o">=</span> <span class="s2">&quot;&lt;Reference Examples&gt;</span><span class="se">\n\n</span><span class="s2">&quot;</span> <span class="o">+</span> <span class="s2">&quot;</span><span class="se">\n\n</span><span class="s2">&quot;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">lines</span><span class="p">)</span> <span class="o">+</span> <span class="s2">&quot;</span><span class="se">\n\n</span><span class="s2">&lt;Reference Examples&gt;&quot;</span>
+<span class="k">return</span> <span class="n">block</span><span class="p">,</span> <span class="n">sims</span>
+</code></pre></div>
+<h2 id="key-technical-details">Key Technical Details</h2>
+<h3 id="dimension-truncation-repo-behavior">Dimension Truncation (Repo Behavior)</h3>
+<p>Both the demo quantitative agent and the research embedding scripts support <strong>dimension truncation</strong> by slicing the embedding vector to <code>dim</code> and then L2-normalizing:</p>
+<ul>
+<li><code>agents/quantitative_assessor_f.py:ollama_embed(..., dim=...)</code></li>
+<li><code>quantitative_assessment/embedding_batch_script.py:get_embedding(..., dim=...)</code></li>
+</ul>
+<p>The paper evaluated multiple dimensions (64/256/1024/4096) and selected 4096 as optimal (Appendix D).</p>
+<h3 id="embedding-processing-pipeline">Embedding Processing Pipeline</h3>
+<ol>
+<li>Generate raw embedding from LLM</li>
+<li>Truncate to target dimension (4096 optimal per paper)</li>
+<li>L2 normalize for cosine similarity calculations</li>
+</ol>
+<h2 id="deliverables">Deliverables</h2>
+<ol>
+<li><code>src/ai_psychiatrist/services/embedding.py</code> - Embedding generation and search</li>
+<li><code>src/ai_psychiatrist/services/reference_store.py</code> - Pre-computed embeddings store</li>
+<li><code>tests/unit/services/test_embedding.py</code> - Comprehensive tests</li>
+</ol>
+<h2 id="implementation">Implementation</h2>
+<h3 id="1-embedding-service-embeddingpy">1. Embedding Service (embedding.py)</h3>
+<div class="highlight"><pre><span></span><code><span class="sd">&quot;&quot;&quot;Embedding generation and similarity search service.&quot;&quot;&quot;</span>
+
+<span class="kn">from</span><span class="w"> </span><span class="nn">__future__</span><span class="w"> </span><span class="kn">import</span> <span class="n">annotations</span>
+
+<span class="kn">from</span><span class="w"> </span><span class="nn">dataclasses</span><span class="w"> </span><span class="kn">import</span> <span class="n">dataclass</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">typing</span><span class="w"> </span><span class="kn">import</span> <span class="n">TYPE_CHECKING</span>
+
+<span class="kn">import</span><span class="w"> </span><span class="nn">numpy</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">np</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">sklearn.metrics.pairwise</span><span class="w"> </span><span class="kn">import</span> <span class="n">cosine_similarity</span>
+
+<span class="kn">from</span><span class="w"> </span><span class="nn">ai_psychiatrist.domain.enums</span><span class="w"> </span><span class="kn">import</span> <span class="n">PHQ8Item</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">ai_psychiatrist.domain.exceptions</span><span class="w"> </span><span class="kn">import</span> <span class="n">EmbeddingDimensionMismatchError</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">ai_psychiatrist.domain.value_objects</span><span class="w"> </span><span class="kn">import</span> <span class="n">EmbeddedChunk</span><span class="p">,</span> <span class="n">SimilarityMatch</span><span class="p">,</span> <span class="n">TranscriptChunk</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">ai_psychiatrist.infrastructure.logging</span><span class="w"> </span><span class="kn">import</span> <span class="n">get_logger</span>
+
+<span class="k">if</span> <span class="n">TYPE_CHECKING</span><span class="p">:</span>
+    <span class="kn">from</span><span class="w"> </span><span class="nn">ai_psychiatrist.config</span><span class="w"> </span><span class="kn">import</span> <span class="n">EmbeddingSettings</span>
+    <span class="kn">from</span><span class="w"> </span><span class="nn">ai_psychiatrist.infrastructure.llm.ollama</span><span class="w"> </span><span class="kn">import</span> <span class="n">OllamaClient</span>
+    <span class="kn">from</span><span class="w"> </span><span class="nn">ai_psychiatrist.services.reference_store</span><span class="w"> </span><span class="kn">import</span> <span class="n">ReferenceStore</span>
+
+<span class="n">logger</span> <span class="o">=</span> <span class="n">get_logger</span><span class="p">(</span><span class="vm">__name__</span><span class="p">)</span>
+
+
+<span class="nd">@dataclass</span>
+<span class="k">class</span><span class="w"> </span><span class="nc">ReferenceBundle</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Bundle of reference examples for all PHQ-8 items.&quot;&quot;&quot;</span>
+
+    <span class="n">item_references</span><span class="p">:</span> <span class="nb">dict</span><span class="p">[</span><span class="n">PHQ8Item</span><span class="p">,</span> <span class="nb">list</span><span class="p">[</span><span class="n">SimilarityMatch</span><span class="p">]]</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="nf">format_for_prompt</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Format references as prompt text.</span>
+
+<span class="sd">        Returns:</span>
+<span class="sd">            Formatted reference string for LLM prompt.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">blocks</span> <span class="o">=</span> <span class="p">[]</span>
+        <span class="k">for</span> <span class="n">item</span> <span class="ow">in</span> <span class="n">PHQ8Item</span><span class="o">.</span><span class="n">all_items</span><span class="p">():</span>
+            <span class="n">matches</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">item_references</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">item</span><span class="p">,</span> <span class="p">[])</span>
+            <span class="k">if</span> <span class="ow">not</span> <span class="n">matches</span><span class="p">:</span>
+                <span class="n">block</span> <span class="o">=</span> <span class="sa">f</span><span class="s2">&quot;[</span><span class="si">{</span><span class="n">item</span><span class="o">.</span><span class="n">value</span><span class="si">}</span><span class="s2">]</span><span class="se">\n</span><span class="s2">&lt;Reference Examples&gt;</span><span class="se">\n</span><span class="s2">No valid evidence found</span><span class="se">\n</span><span class="s2">&lt;/Reference Examples&gt;&quot;</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="n">lines</span> <span class="o">=</span> <span class="p">[]</span>
+                <span class="k">for</span> <span class="n">match</span> <span class="ow">in</span> <span class="n">matches</span><span class="p">:</span>
+                    <span class="n">score_text</span> <span class="o">=</span> <span class="p">(</span>
+                        <span class="sa">f</span><span class="s2">&quot;(Score: </span><span class="si">{</span><span class="n">match</span><span class="o">.</span><span class="n">reference_score</span><span class="si">}</span><span class="s2">)&quot;</span>
+                        <span class="k">if</span> <span class="n">match</span><span class="o">.</span><span class="n">reference_score</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span>
+                        <span class="k">else</span> <span class="s2">&quot;(Score: N/A)&quot;</span>
+                    <span class="p">)</span>
+                    <span class="n">lines</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">score_text</span><span class="si">}</span><span class="se">\n</span><span class="si">{</span><span class="n">match</span><span class="o">.</span><span class="n">chunk</span><span class="o">.</span><span class="n">text</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+                <span class="n">block</span> <span class="o">=</span> <span class="p">(</span>
+                    <span class="sa">f</span><span class="s2">&quot;[</span><span class="si">{</span><span class="n">item</span><span class="o">.</span><span class="n">value</span><span class="si">}</span><span class="s2">]</span><span class="se">\n</span><span class="s2">&lt;Reference Examples&gt;</span><span class="se">\n\n</span><span class="s2">&quot;</span>
+                    <span class="o">+</span> <span class="s2">&quot;</span><span class="se">\n\n</span><span class="s2">&quot;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">lines</span><span class="p">)</span>
+                    <span class="o">+</span> <span class="s2">&quot;</span><span class="se">\n\n</span><span class="s2">&lt;/Reference Examples&gt;&quot;</span>
+                <span class="p">)</span>
+            <span class="n">blocks</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">block</span><span class="p">)</span>
+        <span class="k">return</span> <span class="s2">&quot;</span><span class="se">\n\n</span><span class="s2">&quot;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">blocks</span><span class="p">)</span>
+
+
+<span class="k">class</span><span class="w"> </span><span class="nc">EmbeddingService</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Service for generating embeddings and finding similar chunks.</span>
+
+<span class="sd">    Implements the embedding-based few-shot prompting approach from Section 2.4.2.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="fm">__init__</span><span class="p">(</span>
+        <span class="bp">self</span><span class="p">,</span>
+        <span class="n">llm_client</span><span class="p">:</span> <span class="n">OllamaClient</span><span class="p">,</span>
+        <span class="n">reference_store</span><span class="p">:</span> <span class="n">ReferenceStore</span><span class="p">,</span>
+        <span class="n">settings</span><span class="p">:</span> <span class="n">EmbeddingSettings</span><span class="p">,</span>
+    <span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Initialize embedding service.</span>
+
+<span class="sd">        Args:</span>
+<span class="sd">            llm_client: LLM client for generating embeddings.</span>
+<span class="sd">            reference_store: Pre-computed reference embeddings.</span>
+<span class="sd">            settings: Embedding configuration.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_llm_client</span> <span class="o">=</span> <span class="n">llm_client</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_reference_store</span> <span class="o">=</span> <span class="n">reference_store</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_dimension</span> <span class="o">=</span> <span class="n">settings</span><span class="o">.</span><span class="n">dimension</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_top_k</span> <span class="o">=</span> <span class="n">settings</span><span class="o">.</span><span class="n">top_k_references</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_min_chars</span> <span class="o">=</span> <span class="n">settings</span><span class="o">.</span><span class="n">min_evidence_chars</span>
+
+    <span class="k">async</span> <span class="k">def</span><span class="w"> </span><span class="nf">embed_text</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">text</span><span class="p">:</span> <span class="nb">str</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">tuple</span><span class="p">[</span><span class="nb">float</span><span class="p">,</span> <span class="o">...</span><span class="p">]:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Generate embedding for text.</span>
+
+<span class="sd">        Args:</span>
+<span class="sd">            text: Text to embed.</span>
+
+<span class="sd">        Returns:</span>
+<span class="sd">            L2-normalized embedding vector.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">text</span><span class="p">)</span> <span class="o">&lt;</span> <span class="bp">self</span><span class="o">.</span><span class="n">_min_chars</span><span class="p">:</span>
+            <span class="n">logger</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="s2">&quot;Text too short for embedding&quot;</span><span class="p">,</span> <span class="n">length</span><span class="o">=</span><span class="nb">len</span><span class="p">(</span><span class="n">text</span><span class="p">))</span>
+            <span class="k">return</span> <span class="p">()</span>
+
+        <span class="n">embedding</span> <span class="o">=</span> <span class="k">await</span> <span class="bp">self</span><span class="o">.</span><span class="n">_llm_client</span><span class="o">.</span><span class="n">simple_embed</span><span class="p">(</span>
+            <span class="n">text</span><span class="o">=</span><span class="n">text</span><span class="p">,</span>
+            <span class="n">dimension</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">_dimension</span><span class="p">,</span>
+        <span class="p">)</span>
+
+        <span class="n">logger</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span>
+            <span class="s2">&quot;Generated embedding&quot;</span><span class="p">,</span>
+            <span class="n">text_length</span><span class="o">=</span><span class="nb">len</span><span class="p">(</span><span class="n">text</span><span class="p">),</span>
+            <span class="n">dimension</span><span class="o">=</span><span class="nb">len</span><span class="p">(</span><span class="n">embedding</span><span class="p">),</span>
+        <span class="p">)</span>
+
+        <span class="k">return</span> <span class="n">embedding</span>
+
+    <span class="k">async</span> <span class="k">def</span><span class="w"> </span><span class="nf">embed_chunk</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">chunk</span><span class="p">:</span> <span class="n">TranscriptChunk</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">EmbeddedChunk</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Generate embedding for a transcript chunk.</span>
+
+<span class="sd">        Args:</span>
+<span class="sd">            chunk: Transcript chunk to embed.</span>
+
+<span class="sd">        Returns:</span>
+<span class="sd">            Embedded chunk with vector.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">embedding</span> <span class="o">=</span> <span class="k">await</span> <span class="bp">self</span><span class="o">.</span><span class="n">embed_text</span><span class="p">(</span><span class="n">chunk</span><span class="o">.</span><span class="n">text</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">EmbeddedChunk</span><span class="p">(</span><span class="n">chunk</span><span class="o">=</span><span class="n">chunk</span><span class="p">,</span> <span class="n">embedding</span><span class="o">=</span><span class="n">embedding</span><span class="p">)</span>
+
+    <span class="k">async</span> <span class="k">def</span><span class="w"> </span><span class="nf">find_similar_chunks</span><span class="p">(</span>
+        <span class="bp">self</span><span class="p">,</span>
+        <span class="n">query_embedding</span><span class="p">:</span> <span class="nb">tuple</span><span class="p">[</span><span class="nb">float</span><span class="p">,</span> <span class="o">...</span><span class="p">],</span>
+        <span class="n">top_k</span><span class="p">:</span> <span class="nb">int</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+    <span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">list</span><span class="p">[</span><span class="n">SimilarityMatch</span><span class="p">]:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Find most similar chunks from reference store.</span>
+
+<span class="sd">        Args:</span>
+<span class="sd">            query_embedding: Query embedding vector.</span>
+<span class="sd">            top_k: Number of results (defaults to configured value).</span>
+
+<span class="sd">        Returns:</span>
+<span class="sd">            List of similarity matches sorted by similarity (descending).</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="n">query_embedding</span><span class="p">:</span>
+            <span class="k">return</span> <span class="p">[]</span>
+
+        <span class="n">k</span> <span class="o">=</span> <span class="n">top_k</span> <span class="ow">or</span> <span class="bp">self</span><span class="o">.</span><span class="n">_top_k</span>
+
+        <span class="c1"># Get all reference embeddings</span>
+        <span class="n">all_refs</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_reference_store</span><span class="o">.</span><span class="n">get_all_embeddings</span><span class="p">()</span>
+
+        <span class="k">if</span> <span class="ow">not</span> <span class="n">all_refs</span><span class="p">:</span>
+            <span class="n">logger</span><span class="o">.</span><span class="n">warning</span><span class="p">(</span><span class="s2">&quot;No reference embeddings available&quot;</span><span class="p">)</span>
+            <span class="k">return</span> <span class="p">[]</span>
+
+        <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">query_embedding</span><span class="p">)</span> <span class="o">!=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_dimension</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="n">EmbeddingDimensionMismatchError</span><span class="p">(</span>
+                <span class="n">expected</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">_dimension</span><span class="p">,</span>
+                <span class="n">actual</span><span class="o">=</span><span class="nb">len</span><span class="p">(</span><span class="n">query_embedding</span><span class="p">),</span>
+            <span class="p">)</span>
+
+        <span class="c1"># Compute similarities</span>
+        <span class="n">query_array</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">([</span><span class="n">query_embedding</span><span class="p">])</span>
+        <span class="n">similarities</span> <span class="o">=</span> <span class="p">[]</span>
+
+        <span class="k">for</span> <span class="n">participant_id</span><span class="p">,</span> <span class="n">chunks</span> <span class="ow">in</span> <span class="n">all_refs</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
+            <span class="k">for</span> <span class="n">chunk</span><span class="p">,</span> <span class="n">embedding</span> <span class="ow">in</span> <span class="n">chunks</span><span class="p">:</span>
+                <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">embedding</span><span class="p">)</span> <span class="o">!=</span> <span class="nb">len</span><span class="p">(</span><span class="n">query_embedding</span><span class="p">):</span>
+                    <span class="n">logger</span><span class="o">.</span><span class="n">warning</span><span class="p">(</span>
+                        <span class="s2">&quot;Dimension mismatch between query and reference&quot;</span><span class="p">,</span>
+                        <span class="n">query_dim</span><span class="o">=</span><span class="nb">len</span><span class="p">(</span><span class="n">query_embedding</span><span class="p">),</span>
+                        <span class="n">ref_dim</span><span class="o">=</span><span class="nb">len</span><span class="p">(</span><span class="n">embedding</span><span class="p">),</span>
+                        <span class="n">participant_id</span><span class="o">=</span><span class="n">participant_id</span><span class="p">,</span>
+                    <span class="p">)</span>
+                    <span class="k">continue</span>
+
+                <span class="n">ref_array</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">([</span><span class="n">embedding</span><span class="p">])</span>
+                <span class="n">raw_cos</span> <span class="o">=</span> <span class="nb">float</span><span class="p">(</span><span class="n">cosine_similarity</span><span class="p">(</span><span class="n">query_array</span><span class="p">,</span> <span class="n">ref_array</span><span class="p">)[</span><span class="mi">0</span><span class="p">][</span><span class="mi">0</span><span class="p">])</span>
+                <span class="c1"># Transform cosine similarity from [-1, 1] to [0, 1] to match SimilarityMatch validation.</span>
+                <span class="n">sim</span> <span class="o">=</span> <span class="p">(</span><span class="mf">1.0</span> <span class="o">+</span> <span class="n">raw_cos</span><span class="p">)</span> <span class="o">/</span> <span class="mf">2.0</span>
+
+                <span class="n">similarities</span><span class="o">.</span><span class="n">append</span><span class="p">(</span>
+                    <span class="n">SimilarityMatch</span><span class="p">(</span>
+                        <span class="n">chunk</span><span class="o">=</span><span class="n">TranscriptChunk</span><span class="p">(</span>
+                            <span class="n">text</span><span class="o">=</span><span class="n">chunk</span><span class="p">,</span>
+                            <span class="n">participant_id</span><span class="o">=</span><span class="n">participant_id</span><span class="p">,</span>
+                        <span class="p">),</span>
+                        <span class="n">similarity</span><span class="o">=</span><span class="n">sim</span><span class="p">,</span>
+                        <span class="n">reference_score</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">_reference_store</span><span class="o">.</span><span class="n">get_score</span><span class="p">(</span>
+                            <span class="n">participant_id</span><span class="p">,</span> <span class="n">PHQ8Item</span><span class="o">.</span><span class="n">NO_INTEREST</span>  <span class="c1"># placeholder</span>
+                        <span class="p">),</span>
+                    <span class="p">)</span>
+                <span class="p">)</span>
+
+        <span class="c1"># Sort by similarity (descending) and take top k</span>
+        <span class="n">similarities</span><span class="o">.</span><span class="n">sort</span><span class="p">(</span><span class="n">key</span><span class="o">=</span><span class="k">lambda</span> <span class="n">x</span><span class="p">:</span> <span class="n">x</span><span class="o">.</span><span class="n">similarity</span><span class="p">,</span> <span class="n">reverse</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">similarities</span><span class="p">[:</span><span class="n">k</span><span class="p">]</span>
+
+    <span class="k">async</span> <span class="k">def</span><span class="w"> </span><span class="nf">build_reference_bundle</span><span class="p">(</span>
+        <span class="bp">self</span><span class="p">,</span>
+        <span class="n">evidence_dict</span><span class="p">:</span> <span class="nb">dict</span><span class="p">[</span><span class="n">PHQ8Item</span><span class="p">,</span> <span class="nb">list</span><span class="p">[</span><span class="nb">str</span><span class="p">]],</span>
+    <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">ReferenceBundle</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Build reference bundle for all PHQ-8 items.</span>
+
+<span class="sd">        Args:</span>
+<span class="sd">            evidence_dict: Dictionary of PHQ8Item -&gt; list of evidence quotes.</span>
+
+<span class="sd">        Returns:</span>
+<span class="sd">            ReferenceBundle with similar references for each item.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">logger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span>
+            <span class="s2">&quot;Building reference bundle&quot;</span><span class="p">,</span>
+            <span class="n">items_with_evidence</span><span class="o">=</span><span class="nb">sum</span><span class="p">(</span><span class="mi">1</span> <span class="k">for</span> <span class="n">v</span> <span class="ow">in</span> <span class="n">evidence_dict</span><span class="o">.</span><span class="n">values</span><span class="p">()</span> <span class="k">if</span> <span class="n">v</span><span class="p">),</span>
+        <span class="p">)</span>
+
+        <span class="n">item_references</span><span class="p">:</span> <span class="nb">dict</span><span class="p">[</span><span class="n">PHQ8Item</span><span class="p">,</span> <span class="nb">list</span><span class="p">[</span><span class="n">SimilarityMatch</span><span class="p">]]</span> <span class="o">=</span> <span class="p">{}</span>
+
+        <span class="k">for</span> <span class="n">item</span> <span class="ow">in</span> <span class="n">PHQ8Item</span><span class="o">.</span><span class="n">all_items</span><span class="p">():</span>
+            <span class="n">evidence_quotes</span> <span class="o">=</span> <span class="n">evidence_dict</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">item</span><span class="p">,</span> <span class="p">[])</span>
+
+            <span class="k">if</span> <span class="ow">not</span> <span class="n">evidence_quotes</span><span class="p">:</span>
+                <span class="n">item_references</span><span class="p">[</span><span class="n">item</span><span class="p">]</span> <span class="o">=</span> <span class="p">[]</span>
+                <span class="k">continue</span>
+
+            <span class="c1"># Concatenate evidence for embedding</span>
+            <span class="n">combined_text</span> <span class="o">=</span> <span class="s2">&quot;</span><span class="se">\n</span><span class="s2">&quot;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">evidence_quotes</span><span class="p">)</span>
+
+            <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">combined_text</span><span class="p">)</span> <span class="o">&lt;</span> <span class="bp">self</span><span class="o">.</span><span class="n">_min_chars</span><span class="p">:</span>
+                <span class="n">item_references</span><span class="p">[</span><span class="n">item</span><span class="p">]</span> <span class="o">=</span> <span class="p">[]</span>
+                <span class="k">continue</span>
+
+            <span class="c1"># Get embedding and find similar</span>
+            <span class="n">query_emb</span> <span class="o">=</span> <span class="k">await</span> <span class="bp">self</span><span class="o">.</span><span class="n">embed_text</span><span class="p">(</span><span class="n">combined_text</span><span class="p">)</span>
+            <span class="n">matches</span> <span class="o">=</span> <span class="k">await</span> <span class="bp">self</span><span class="o">.</span><span class="n">_find_similar_for_item</span><span class="p">(</span><span class="n">query_emb</span><span class="p">,</span> <span class="n">item</span><span class="p">)</span>
+
+            <span class="n">item_references</span><span class="p">[</span><span class="n">item</span><span class="p">]</span> <span class="o">=</span> <span class="n">matches</span>
+
+            <span class="n">logger</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span>
+                <span class="s2">&quot;Found references for item&quot;</span><span class="p">,</span>
+                <span class="n">item</span><span class="o">=</span><span class="n">item</span><span class="o">.</span><span class="n">value</span><span class="p">,</span>
+                <span class="n">match_count</span><span class="o">=</span><span class="nb">len</span><span class="p">(</span><span class="n">matches</span><span class="p">),</span>
+                <span class="n">top_similarity</span><span class="o">=</span><span class="n">matches</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">similarity</span> <span class="k">if</span> <span class="n">matches</span> <span class="k">else</span> <span class="mi">0</span><span class="p">,</span>
+            <span class="p">)</span>
+
+        <span class="k">return</span> <span class="n">ReferenceBundle</span><span class="p">(</span><span class="n">item_references</span><span class="o">=</span><span class="n">item_references</span><span class="p">)</span>
+
+    <span class="k">async</span> <span class="k">def</span><span class="w"> </span><span class="nf">_find_similar_for_item</span><span class="p">(</span>
+        <span class="bp">self</span><span class="p">,</span>
+        <span class="n">query_embedding</span><span class="p">:</span> <span class="nb">tuple</span><span class="p">[</span><span class="nb">float</span><span class="p">,</span> <span class="o">...</span><span class="p">],</span>
+        <span class="n">item</span><span class="p">:</span> <span class="n">PHQ8Item</span><span class="p">,</span>
+    <span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">list</span><span class="p">[</span><span class="n">SimilarityMatch</span><span class="p">]:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Find similar chunks with item-specific scores.</span>
+
+<span class="sd">        Args:</span>
+<span class="sd">            query_embedding: Query embedding.</span>
+<span class="sd">            item: PHQ-8 item for score lookup.</span>
+
+<span class="sd">        Returns:</span>
+<span class="sd">            List of matches with item-specific reference scores.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="n">query_embedding</span><span class="p">:</span>
+            <span class="k">return</span> <span class="p">[]</span>
+
+        <span class="n">all_refs</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_reference_store</span><span class="o">.</span><span class="n">get_all_embeddings</span><span class="p">()</span>
+        <span class="n">matches</span> <span class="o">=</span> <span class="p">[]</span>
+
+        <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">query_embedding</span><span class="p">)</span> <span class="o">!=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_dimension</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="n">EmbeddingDimensionMismatchError</span><span class="p">(</span>
+                <span class="n">expected</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">_dimension</span><span class="p">,</span>
+                <span class="n">actual</span><span class="o">=</span><span class="nb">len</span><span class="p">(</span><span class="n">query_embedding</span><span class="p">),</span>
+            <span class="p">)</span>
+
+        <span class="n">query_array</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">([</span><span class="n">query_embedding</span><span class="p">])</span>
+
+        <span class="k">for</span> <span class="n">participant_id</span><span class="p">,</span> <span class="n">chunks</span> <span class="ow">in</span> <span class="n">all_refs</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
+            <span class="k">for</span> <span class="n">chunk_text</span><span class="p">,</span> <span class="n">embedding</span> <span class="ow">in</span> <span class="n">chunks</span><span class="p">:</span>
+                <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">embedding</span><span class="p">)</span> <span class="o">!=</span> <span class="nb">len</span><span class="p">(</span><span class="n">query_embedding</span><span class="p">):</span>
+                    <span class="n">logger</span><span class="o">.</span><span class="n">warning</span><span class="p">(</span>
+                        <span class="s2">&quot;Dimension mismatch between query and reference&quot;</span><span class="p">,</span>
+                        <span class="n">query_dim</span><span class="o">=</span><span class="nb">len</span><span class="p">(</span><span class="n">query_embedding</span><span class="p">),</span>
+                        <span class="n">ref_dim</span><span class="o">=</span><span class="nb">len</span><span class="p">(</span><span class="n">embedding</span><span class="p">),</span>
+                        <span class="n">participant_id</span><span class="o">=</span><span class="n">participant_id</span><span class="p">,</span>
+                    <span class="p">)</span>
+                    <span class="k">continue</span>
+
+                <span class="n">ref_array</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">([</span><span class="n">embedding</span><span class="p">])</span>
+                <span class="n">raw_cos</span> <span class="o">=</span> <span class="nb">float</span><span class="p">(</span><span class="n">cosine_similarity</span><span class="p">(</span><span class="n">query_array</span><span class="p">,</span> <span class="n">ref_array</span><span class="p">)[</span><span class="mi">0</span><span class="p">][</span><span class="mi">0</span><span class="p">])</span>
+                <span class="c1"># Transform cosine similarity from [-1, 1] to [0, 1] to match SimilarityMatch validation.</span>
+                <span class="n">sim</span> <span class="o">=</span> <span class="p">(</span><span class="mf">1.0</span> <span class="o">+</span> <span class="n">raw_cos</span><span class="p">)</span> <span class="o">/</span> <span class="mf">2.0</span>
+
+                <span class="c1"># Get item-specific score for this participant</span>
+                <span class="n">score</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_reference_store</span><span class="o">.</span><span class="n">get_score</span><span class="p">(</span><span class="n">participant_id</span><span class="p">,</span> <span class="n">item</span><span class="p">)</span>
+
+                <span class="n">matches</span><span class="o">.</span><span class="n">append</span><span class="p">(</span>
+                    <span class="n">SimilarityMatch</span><span class="p">(</span>
+                        <span class="n">chunk</span><span class="o">=</span><span class="n">TranscriptChunk</span><span class="p">(</span>
+                            <span class="n">text</span><span class="o">=</span><span class="n">chunk_text</span><span class="p">,</span>
+                            <span class="n">participant_id</span><span class="o">=</span><span class="n">participant_id</span><span class="p">,</span>
+                        <span class="p">),</span>
+                        <span class="n">similarity</span><span class="o">=</span><span class="n">sim</span><span class="p">,</span>
+                        <span class="n">reference_score</span><span class="o">=</span><span class="n">score</span><span class="p">,</span>
+                    <span class="p">)</span>
+                <span class="p">)</span>
+
+        <span class="n">matches</span><span class="o">.</span><span class="n">sort</span><span class="p">(</span><span class="n">key</span><span class="o">=</span><span class="k">lambda</span> <span class="n">x</span><span class="p">:</span> <span class="n">x</span><span class="o">.</span><span class="n">similarity</span><span class="p">,</span> <span class="n">reverse</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">matches</span><span class="p">[:</span> <span class="bp">self</span><span class="o">.</span><span class="n">_top_k</span><span class="p">]</span>
+</code></pre></div>
+<h3 id="2-reference-store-reference_storepy">2. Reference Store (reference_store.py)</h3>
+<div class="highlight"><pre><span></span><code><span class="sd">&quot;&quot;&quot;Pre-computed reference embeddings store.&quot;&quot;&quot;</span>
+
+<span class="kn">from</span><span class="w"> </span><span class="nn">__future__</span><span class="w"> </span><span class="kn">import</span> <span class="n">annotations</span>
+
+<span class="kn">import</span><span class="w"> </span><span class="nn">json</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">pathlib</span><span class="w"> </span><span class="kn">import</span> <span class="n">Path</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">typing</span><span class="w"> </span><span class="kn">import</span> <span class="n">TYPE_CHECKING</span>
+
+<span class="kn">import</span><span class="w"> </span><span class="nn">numpy</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">np</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">pandas</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">pd</span>
+
+<span class="kn">from</span><span class="w"> </span><span class="nn">ai_psychiatrist.domain.enums</span><span class="w"> </span><span class="kn">import</span> <span class="n">PHQ8Item</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">ai_psychiatrist.domain.exceptions</span><span class="w"> </span><span class="kn">import</span> <span class="n">EmbeddingDimensionMismatchError</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">ai_psychiatrist.infrastructure.logging</span><span class="w"> </span><span class="kn">import</span> <span class="n">get_logger</span>
+
+<span class="k">if</span> <span class="n">TYPE_CHECKING</span><span class="p">:</span>
+    <span class="kn">from</span><span class="w"> </span><span class="nn">ai_psychiatrist.config</span><span class="w"> </span><span class="kn">import</span> <span class="n">DataSettings</span><span class="p">,</span> <span class="n">EmbeddingSettings</span>
+
+<span class="n">logger</span> <span class="o">=</span> <span class="n">get_logger</span><span class="p">(</span><span class="vm">__name__</span><span class="p">)</span>
+
+
+<span class="c1"># Mapping from PHQ8Item to CSV column names</span>
+<span class="n">PHQ8_COLUMN_MAP</span> <span class="o">=</span> <span class="p">{</span>
+    <span class="n">PHQ8Item</span><span class="o">.</span><span class="n">NO_INTEREST</span><span class="p">:</span> <span class="s2">&quot;PHQ8_NoInterest&quot;</span><span class="p">,</span>
+    <span class="n">PHQ8Item</span><span class="o">.</span><span class="n">DEPRESSED</span><span class="p">:</span> <span class="s2">&quot;PHQ8_Depressed&quot;</span><span class="p">,</span>
+    <span class="n">PHQ8Item</span><span class="o">.</span><span class="n">SLEEP</span><span class="p">:</span> <span class="s2">&quot;PHQ8_Sleep&quot;</span><span class="p">,</span>
+    <span class="n">PHQ8Item</span><span class="o">.</span><span class="n">TIRED</span><span class="p">:</span> <span class="s2">&quot;PHQ8_Tired&quot;</span><span class="p">,</span>
+    <span class="n">PHQ8Item</span><span class="o">.</span><span class="n">APPETITE</span><span class="p">:</span> <span class="s2">&quot;PHQ8_Appetite&quot;</span><span class="p">,</span>
+    <span class="n">PHQ8Item</span><span class="o">.</span><span class="n">FAILURE</span><span class="p">:</span> <span class="s2">&quot;PHQ8_Failure&quot;</span><span class="p">,</span>
+    <span class="n">PHQ8Item</span><span class="o">.</span><span class="n">CONCENTRATING</span><span class="p">:</span> <span class="s2">&quot;PHQ8_Concentrating&quot;</span><span class="p">,</span>
+    <span class="n">PHQ8Item</span><span class="o">.</span><span class="n">MOVING</span><span class="p">:</span> <span class="s2">&quot;PHQ8_Moving&quot;</span><span class="p">,</span>
+<span class="p">}</span>
+
+
+<span class="k">class</span><span class="w"> </span><span class="nc">ReferenceStore</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Store for pre-computed reference embeddings and scores.</span>
+
+<span class="sd">    Loads and manages the knowledge base of embedded transcript chunks</span>
+<span class="sd">    with their associated PHQ-8 scores.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="fm">__init__</span><span class="p">(</span>
+        <span class="bp">self</span><span class="p">,</span>
+        <span class="n">data_settings</span><span class="p">:</span> <span class="n">DataSettings</span><span class="p">,</span>
+        <span class="n">embedding_settings</span><span class="p">:</span> <span class="n">EmbeddingSettings</span><span class="p">,</span>
+    <span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Initialize reference store.</span>
+
+<span class="sd">        Args:</span>
+<span class="sd">            data_settings: Data path configuration.</span>
+<span class="sd">            embedding_settings: Embedding configuration.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_embeddings_path</span> <span class="o">=</span> <span class="n">data_settings</span><span class="o">.</span><span class="n">embeddings_path</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_train_csv</span> <span class="o">=</span> <span class="n">data_settings</span><span class="o">.</span><span class="n">train_csv</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_dev_csv</span> <span class="o">=</span> <span class="n">data_settings</span><span class="o">.</span><span class="n">dev_csv</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_dimension</span> <span class="o">=</span> <span class="n">embedding_settings</span><span class="o">.</span><span class="n">dimension</span>
+
+        <span class="c1"># Lazy-loaded data</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_embeddings</span><span class="p">:</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">int</span><span class="p">,</span> <span class="nb">list</span><span class="p">[</span><span class="nb">tuple</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="nb">list</span><span class="p">[</span><span class="nb">float</span><span class="p">]]]]</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_scores_df</span><span class="p">:</span> <span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="nf">_load_embeddings</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">int</span><span class="p">,</span> <span class="nb">list</span><span class="p">[</span><span class="nb">tuple</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="nb">list</span><span class="p">[</span><span class="nb">float</span><span class="p">]]]]:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Load pre-computed embeddings from NPZ + JSON sidecar files.&quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_embeddings</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_embeddings</span>
+
+        <span class="k">if</span> <span class="ow">not</span> <span class="bp">self</span><span class="o">.</span><span class="n">_embeddings_path</span><span class="o">.</span><span class="n">exists</span><span class="p">():</span>
+            <span class="n">logger</span><span class="o">.</span><span class="n">warning</span><span class="p">(</span>
+                <span class="s2">&quot;Embeddings file not found&quot;</span><span class="p">,</span>
+                <span class="n">path</span><span class="o">=</span><span class="nb">str</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_embeddings_path</span><span class="p">),</span>
+            <span class="p">)</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_embeddings</span> <span class="o">=</span> <span class="p">{}</span>
+            <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_embeddings</span>
+
+        <span class="n">logger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="s2">&quot;Loading reference embeddings&quot;</span><span class="p">,</span> <span class="n">path</span><span class="o">=</span><span class="nb">str</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_embeddings_path</span><span class="p">))</span>
+
+        <span class="n">json_path</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_embeddings_path</span><span class="o">.</span><span class="n">with_suffix</span><span class="p">(</span><span class="s2">&quot;.json&quot;</span><span class="p">)</span>
+        <span class="k">with</span> <span class="n">json_path</span><span class="o">.</span><span class="n">open</span><span class="p">(</span><span class="s2">&quot;r&quot;</span><span class="p">,</span> <span class="n">encoding</span><span class="o">=</span><span class="s2">&quot;utf-8&quot;</span><span class="p">)</span> <span class="k">as</span> <span class="n">f</span><span class="p">:</span>
+            <span class="n">texts_data</span> <span class="o">=</span> <span class="n">json</span><span class="o">.</span><span class="n">load</span><span class="p">(</span><span class="n">f</span><span class="p">)</span>
+
+        <span class="n">npz_data</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">load</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_embeddings_path</span><span class="p">,</span> <span class="n">allow_pickle</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span>
+
+        <span class="c1"># Normalize embeddings and convert participant IDs to int</span>
+        <span class="n">normalized</span><span class="p">:</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">int</span><span class="p">,</span> <span class="nb">list</span><span class="p">[</span><span class="nb">tuple</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="nb">list</span><span class="p">[</span><span class="nb">float</span><span class="p">]]]]</span> <span class="o">=</span> <span class="p">{}</span>
+        <span class="n">skipped_chunks</span> <span class="o">=</span> <span class="mi">0</span>
+        <span class="n">total_chunks</span> <span class="o">=</span> <span class="mi">0</span>
+
+        <span class="k">for</span> <span class="n">pid</span><span class="p">,</span> <span class="n">texts</span> <span class="ow">in</span> <span class="n">texts_data</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
+            <span class="n">pid_int</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="n">pid</span><span class="p">)</span>
+            <span class="n">emb_key</span> <span class="o">=</span> <span class="sa">f</span><span class="s2">&quot;emb_</span><span class="si">{</span><span class="n">pid_int</span><span class="si">}</span><span class="s2">&quot;</span>
+            <span class="k">if</span> <span class="n">emb_key</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">npz_data</span><span class="p">:</span>
+                <span class="k">continue</span>
+            <span class="n">embeddings</span> <span class="o">=</span> <span class="n">npz_data</span><span class="p">[</span><span class="n">emb_key</span><span class="p">]</span>
+            <span class="n">norm_pairs</span><span class="p">:</span> <span class="nb">list</span><span class="p">[</span><span class="nb">tuple</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="nb">list</span><span class="p">[</span><span class="nb">float</span><span class="p">]]]</span> <span class="o">=</span> <span class="p">[]</span>
+            <span class="k">for</span> <span class="n">text</span><span class="p">,</span> <span class="n">embedding</span> <span class="ow">in</span> <span class="nb">zip</span><span class="p">(</span><span class="n">texts</span><span class="p">,</span> <span class="n">embeddings</span><span class="p">,</span> <span class="n">strict</span><span class="o">=</span><span class="kc">True</span><span class="p">):</span>
+                <span class="n">total_chunks</span> <span class="o">+=</span> <span class="mi">1</span>
+                <span class="c1"># Validate dimension - embeddings must be at least as long as configured</span>
+                <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">embedding</span><span class="p">)</span> <span class="o">&lt;</span> <span class="bp">self</span><span class="o">.</span><span class="n">_dimension</span><span class="p">:</span>
+                    <span class="n">skipped_chunks</span> <span class="o">+=</span> <span class="mi">1</span>
+                    <span class="n">logger</span><span class="o">.</span><span class="n">warning</span><span class="p">(</span>
+                        <span class="s2">&quot;Skipping embedding with insufficient dimension&quot;</span><span class="p">,</span>
+                        <span class="n">participant_id</span><span class="o">=</span><span class="n">pid_int</span><span class="p">,</span>
+                        <span class="n">expected</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">_dimension</span><span class="p">,</span>
+                        <span class="n">actual</span><span class="o">=</span><span class="nb">len</span><span class="p">(</span><span class="n">embedding</span><span class="p">),</span>
+                    <span class="p">)</span>
+                    <span class="k">continue</span>
+                <span class="c1"># Truncate to configured dimension</span>
+                <span class="n">emb</span> <span class="o">=</span> <span class="n">embedding</span><span class="p">[:</span> <span class="bp">self</span><span class="o">.</span><span class="n">_dimension</span><span class="p">]</span>
+                <span class="c1"># L2 normalize</span>
+                <span class="n">emb</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_l2_normalize</span><span class="p">(</span><span class="n">emb</span><span class="p">)</span>
+                <span class="n">norm_pairs</span><span class="o">.</span><span class="n">append</span><span class="p">((</span><span class="n">text</span><span class="p">,</span> <span class="n">emb</span><span class="p">))</span>
+            <span class="k">if</span> <span class="n">norm_pairs</span><span class="p">:</span>
+                <span class="n">normalized</span><span class="p">[</span><span class="n">pid_int</span><span class="p">]</span> <span class="o">=</span> <span class="n">norm_pairs</span>
+
+        <span class="c1"># Fail loudly if ALL embeddings are mismatched (BUG-009 fix)</span>
+        <span class="k">if</span> <span class="n">total_chunks</span> <span class="o">&gt;</span> <span class="mi">0</span> <span class="ow">and</span> <span class="n">skipped_chunks</span> <span class="o">==</span> <span class="n">total_chunks</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="n">EmbeddingDimensionMismatchError</span><span class="p">(</span><span class="n">expected</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">_dimension</span><span class="p">,</span> <span class="n">actual</span><span class="o">=</span><span class="n">actual_dim_sample</span><span class="p">)</span>
+
+        <span class="k">if</span> <span class="n">skipped_chunks</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="p">:</span>
+            <span class="n">logger</span><span class="o">.</span><span class="n">error</span><span class="p">(</span>
+                <span class="s2">&quot;Some reference embeddings had dimension mismatch&quot;</span><span class="p">,</span>
+                <span class="n">skipped</span><span class="o">=</span><span class="n">skipped_chunks</span><span class="p">,</span>
+                <span class="n">total</span><span class="o">=</span><span class="n">total_chunks</span><span class="p">,</span>
+                <span class="n">expected_dimension</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">_dimension</span><span class="p">,</span>
+            <span class="p">)</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">_embeddings</span> <span class="o">=</span> <span class="n">normalized</span>
+
+        <span class="n">loaded_chunks</span> <span class="o">=</span> <span class="nb">sum</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">v</span><span class="p">)</span> <span class="k">for</span> <span class="n">v</span> <span class="ow">in</span> <span class="n">normalized</span><span class="o">.</span><span class="n">values</span><span class="p">())</span>
+        <span class="n">logger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span>
+            <span class="s2">&quot;Embeddings loaded&quot;</span><span class="p">,</span>
+            <span class="n">participants</span><span class="o">=</span><span class="nb">len</span><span class="p">(</span><span class="n">normalized</span><span class="p">),</span>
+            <span class="n">total_chunks</span><span class="o">=</span><span class="n">loaded_chunks</span><span class="p">,</span>
+            <span class="n">dimension</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">_dimension</span><span class="p">,</span>
+        <span class="p">)</span>
+
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_embeddings</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="nf">_load_scores</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Load ground truth PHQ-8 scores.&quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_scores_df</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_scores_df</span>
+
+        <span class="n">dfs</span> <span class="o">=</span> <span class="p">[]</span>
+        <span class="k">for</span> <span class="n">path</span> <span class="ow">in</span> <span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">_train_csv</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">_dev_csv</span><span class="p">]:</span>
+            <span class="k">if</span> <span class="n">path</span><span class="o">.</span><span class="n">exists</span><span class="p">():</span>
+                <span class="n">df</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">read_csv</span><span class="p">(</span><span class="n">path</span><span class="p">)</span>
+                <span class="n">df</span><span class="p">[</span><span class="s2">&quot;Participant_ID&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">df</span><span class="p">[</span><span class="s2">&quot;Participant_ID&quot;</span><span class="p">]</span><span class="o">.</span><span class="n">astype</span><span class="p">(</span><span class="nb">int</span><span class="p">)</span>
+                <span class="n">dfs</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">df</span><span class="p">)</span>
+
+        <span class="k">if</span> <span class="ow">not</span> <span class="n">dfs</span><span class="p">:</span>
+            <span class="n">logger</span><span class="o">.</span><span class="n">warning</span><span class="p">(</span><span class="s2">&quot;No ground truth files found&quot;</span><span class="p">)</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_scores_df</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">()</span>
+            <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_scores_df</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">_scores_df</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">concat</span><span class="p">(</span><span class="n">dfs</span><span class="p">,</span> <span class="n">ignore_index</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_scores_df</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_scores_df</span><span class="o">.</span><span class="n">sort_values</span><span class="p">(</span><span class="s2">&quot;Participant_ID&quot;</span><span class="p">)</span>
+
+        <span class="n">logger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="s2">&quot;Scores loaded&quot;</span><span class="p">,</span> <span class="n">participants</span><span class="o">=</span><span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_scores_df</span><span class="p">))</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_scores_df</span>
+
+    <span class="nd">@staticmethod</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">_l2_normalize</span><span class="p">(</span><span class="n">embedding</span><span class="p">:</span> <span class="nb">list</span><span class="p">[</span><span class="nb">float</span><span class="p">])</span> <span class="o">-&gt;</span> <span class="nb">list</span><span class="p">[</span><span class="nb">float</span><span class="p">]:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;L2 normalize an embedding vector.&quot;&quot;&quot;</span>
+        <span class="n">arr</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="n">embedding</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">float32</span><span class="p">)</span>
+        <span class="n">norm</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">linalg</span><span class="o">.</span><span class="n">norm</span><span class="p">(</span><span class="n">arr</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">norm</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="p">:</span>
+            <span class="n">arr</span> <span class="o">=</span> <span class="n">arr</span> <span class="o">/</span> <span class="n">norm</span>
+        <span class="k">return</span> <span class="n">arr</span><span class="o">.</span><span class="n">tolist</span><span class="p">()</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="nf">get_all_embeddings</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">int</span><span class="p">,</span> <span class="nb">list</span><span class="p">[</span><span class="nb">tuple</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="nb">list</span><span class="p">[</span><span class="nb">float</span><span class="p">]]]]:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Get all reference embeddings.</span>
+
+<span class="sd">        Returns:</span>
+<span class="sd">            Dictionary mapping participant_id -&gt; list of (text, embedding) pairs.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_load_embeddings</span><span class="p">()</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="nf">get_participant_embeddings</span><span class="p">(</span>
+        <span class="bp">self</span><span class="p">,</span> <span class="n">participant_id</span><span class="p">:</span> <span class="nb">int</span>
+    <span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">list</span><span class="p">[</span><span class="nb">tuple</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="nb">list</span><span class="p">[</span><span class="nb">float</span><span class="p">]]]:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Get embeddings for a specific participant.</span>
+
+<span class="sd">        Args:</span>
+<span class="sd">            participant_id: Participant ID.</span>
+
+<span class="sd">        Returns:</span>
+<span class="sd">            List of (text, embedding) pairs.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">embeddings</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_load_embeddings</span><span class="p">()</span>
+        <span class="k">return</span> <span class="n">embeddings</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">participant_id</span><span class="p">,</span> <span class="p">[])</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="nf">get_score</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">participant_id</span><span class="p">:</span> <span class="nb">int</span><span class="p">,</span> <span class="n">item</span><span class="p">:</span> <span class="n">PHQ8Item</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">int</span> <span class="o">|</span> <span class="kc">None</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Get PHQ-8 item score for a participant.</span>
+
+<span class="sd">        Args:</span>
+<span class="sd">            participant_id: Participant ID.</span>
+<span class="sd">            item: PHQ-8 item.</span>
+
+<span class="sd">        Returns:</span>
+<span class="sd">            Score (0-3) or None if unavailable.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">df</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_load_scores</span><span class="p">()</span>
+        <span class="n">row</span> <span class="o">=</span> <span class="n">df</span><span class="p">[</span><span class="n">df</span><span class="p">[</span><span class="s2">&quot;Participant_ID&quot;</span><span class="p">]</span> <span class="o">==</span> <span class="n">participant_id</span><span class="p">]</span>
+
+        <span class="k">if</span> <span class="n">row</span><span class="o">.</span><span class="n">empty</span><span class="p">:</span>
+            <span class="k">return</span> <span class="kc">None</span>
+
+        <span class="n">col_name</span> <span class="o">=</span> <span class="n">PHQ8_COLUMN_MAP</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">item</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">col_name</span> <span class="ow">is</span> <span class="kc">None</span> <span class="ow">or</span> <span class="n">col_name</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">row</span><span class="o">.</span><span class="n">columns</span><span class="p">:</span>
+            <span class="k">return</span> <span class="kc">None</span>
+
+        <span class="k">try</span><span class="p">:</span>
+            <span class="k">return</span> <span class="nb">int</span><span class="p">(</span><span class="n">row</span><span class="p">[</span><span class="n">col_name</span><span class="p">]</span><span class="o">.</span><span class="n">iloc</span><span class="p">[</span><span class="mi">0</span><span class="p">])</span>
+        <span class="k">except</span> <span class="p">(</span><span class="ne">ValueError</span><span class="p">,</span> <span class="ne">TypeError</span><span class="p">):</span>
+            <span class="k">return</span> <span class="kc">None</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="nf">list_participants</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">list</span><span class="p">[</span><span class="nb">int</span><span class="p">]:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;List all participant IDs with embeddings.</span>
+
+<span class="sd">        Returns:</span>
+<span class="sd">            Sorted list of participant IDs.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">embeddings</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_load_embeddings</span><span class="p">()</span>
+        <span class="k">return</span> <span class="nb">sorted</span><span class="p">(</span><span class="n">embeddings</span><span class="o">.</span><span class="n">keys</span><span class="p">())</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">is_loaded</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">bool</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Check if embeddings are loaded.&quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_embeddings</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">participant_count</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">int</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Get number of participants with embeddings.&quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_load_embeddings</span><span class="p">())</span>
+</code></pre></div>
+<h3 id="3-tests-test_embeddingpy">3. Tests (test_embedding.py)</h3>
+<div class="highlight"><pre><span></span><code><span class="sd">&quot;&quot;&quot;Tests for embedding service.&quot;&quot;&quot;</span>
+
+<span class="kn">from</span><span class="w"> </span><span class="nn">__future__</span><span class="w"> </span><span class="kn">import</span> <span class="n">annotations</span>
+
+<span class="kn">import</span><span class="w"> </span><span class="nn">pytest</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">numpy</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">np</span>
+
+<span class="kn">from</span><span class="w"> </span><span class="nn">ai_psychiatrist.domain.enums</span><span class="w"> </span><span class="kn">import</span> <span class="n">PHQ8Item</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">ai_psychiatrist.services.embedding</span><span class="w"> </span><span class="kn">import</span> <span class="n">EmbeddingService</span><span class="p">,</span> <span class="n">ReferenceBundle</span>
+
+
+<span class="k">class</span><span class="w"> </span><span class="nc">TestReferenceBundle</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Tests for ReferenceBundle.&quot;&quot;&quot;</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="nf">test_format_empty_bundle</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Should format empty bundle correctly.&quot;&quot;&quot;</span>
+        <span class="n">bundle</span> <span class="o">=</span> <span class="n">ReferenceBundle</span><span class="p">(</span><span class="n">item_references</span><span class="o">=</span><span class="p">{})</span>
+        <span class="n">formatted</span> <span class="o">=</span> <span class="n">bundle</span><span class="o">.</span><span class="n">format_for_prompt</span><span class="p">()</span>
+
+        <span class="c1"># Should have sections for all items</span>
+        <span class="k">for</span> <span class="n">item</span> <span class="ow">in</span> <span class="n">PHQ8Item</span><span class="o">.</span><span class="n">all_items</span><span class="p">():</span>
+            <span class="k">assert</span> <span class="sa">f</span><span class="s2">&quot;[</span><span class="si">{</span><span class="n">item</span><span class="o">.</span><span class="n">value</span><span class="si">}</span><span class="s2">]&quot;</span> <span class="ow">in</span> <span class="n">formatted</span>
+            <span class="k">assert</span> <span class="s2">&quot;No valid evidence found&quot;</span> <span class="ow">in</span> <span class="n">formatted</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="nf">test_format_with_matches</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Should format bundle with matches.&quot;&quot;&quot;</span>
+        <span class="kn">from</span><span class="w"> </span><span class="nn">ai_psychiatrist.domain.value_objects</span><span class="w"> </span><span class="kn">import</span> <span class="n">SimilarityMatch</span><span class="p">,</span> <span class="n">TranscriptChunk</span>
+
+        <span class="n">match</span> <span class="o">=</span> <span class="n">SimilarityMatch</span><span class="p">(</span>
+            <span class="n">chunk</span><span class="o">=</span><span class="n">TranscriptChunk</span><span class="p">(</span><span class="n">text</span><span class="o">=</span><span class="s2">&quot;Test evidence&quot;</span><span class="p">,</span> <span class="n">participant_id</span><span class="o">=</span><span class="mi">123</span><span class="p">),</span>
+            <span class="n">similarity</span><span class="o">=</span><span class="mf">0.95</span><span class="p">,</span>
+            <span class="n">reference_score</span><span class="o">=</span><span class="mi">2</span><span class="p">,</span>
+        <span class="p">)</span>
+
+        <span class="n">bundle</span> <span class="o">=</span> <span class="n">ReferenceBundle</span><span class="p">(</span>
+            <span class="n">item_references</span><span class="o">=</span><span class="p">{</span><span class="n">PHQ8Item</span><span class="o">.</span><span class="n">NO_INTEREST</span><span class="p">:</span> <span class="p">[</span><span class="n">match</span><span class="p">]}</span>
+        <span class="p">)</span>
+        <span class="n">formatted</span> <span class="o">=</span> <span class="n">bundle</span><span class="o">.</span><span class="n">format_for_prompt</span><span class="p">()</span>
+
+        <span class="k">assert</span> <span class="s2">&quot;[NoInterest]&quot;</span> <span class="ow">in</span> <span class="n">formatted</span>
+        <span class="k">assert</span> <span class="s2">&quot;(Score: 2)&quot;</span> <span class="ow">in</span> <span class="n">formatted</span>
+        <span class="k">assert</span> <span class="s2">&quot;Test evidence&quot;</span> <span class="ow">in</span> <span class="n">formatted</span>
+
+
+<span class="k">class</span><span class="w"> </span><span class="nc">TestEmbeddingService</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Tests for EmbeddingService.&quot;&quot;&quot;</span>
+
+    <span class="nd">@pytest</span><span class="o">.</span><span class="n">fixture</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">mock_llm_client</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Create mock LLM client.&quot;&quot;&quot;</span>
+        <span class="kn">from</span><span class="w"> </span><span class="nn">tests.fixtures.mock_llm</span><span class="w"> </span><span class="kn">import</span> <span class="n">MockLLMClient</span>
+
+        <span class="k">def</span><span class="w"> </span><span class="nf">embed_func</span><span class="p">(</span><span class="n">req</span><span class="p">):</span>
+            <span class="c1"># Return deterministic embedding based on text length</span>
+            <span class="n">dim</span> <span class="o">=</span> <span class="n">req</span><span class="o">.</span><span class="n">dimension</span> <span class="ow">or</span> <span class="mi">256</span>
+            <span class="k">return</span> <span class="nb">tuple</span><span class="p">(</span><span class="nb">float</span><span class="p">(</span><span class="n">i</span> <span class="o">%</span> <span class="mi">10</span><span class="p">)</span> <span class="o">/</span> <span class="mi">10</span> <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">dim</span><span class="p">))</span>
+
+        <span class="k">return</span> <span class="n">MockLLMClient</span><span class="p">(</span><span class="n">embedding_function</span><span class="o">=</span><span class="n">embed_func</span><span class="p">)</span>
+
+    <span class="nd">@pytest</span><span class="o">.</span><span class="n">fixture</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">mock_reference_store</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Create mock reference store.&quot;&quot;&quot;</span>
+        <span class="kn">from</span><span class="w"> </span><span class="nn">unittest.mock</span><span class="w"> </span><span class="kn">import</span> <span class="n">MagicMock</span>
+
+        <span class="n">store</span> <span class="o">=</span> <span class="n">MagicMock</span><span class="p">()</span>
+        <span class="n">store</span><span class="o">.</span><span class="n">get_all_embeddings</span><span class="o">.</span><span class="n">return_value</span> <span class="o">=</span> <span class="p">{</span>
+            <span class="mi">100</span><span class="p">:</span> <span class="p">[</span>
+                <span class="p">(</span><span class="s2">&quot;Sample reference text&quot;</span><span class="p">,</span> <span class="p">[</span><span class="mf">0.1</span><span class="p">]</span> <span class="o">*</span> <span class="mi">256</span><span class="p">),</span>
+                <span class="p">(</span><span class="s2">&quot;Another reference&quot;</span><span class="p">,</span> <span class="p">[</span><span class="mf">0.2</span><span class="p">]</span> <span class="o">*</span> <span class="mi">256</span><span class="p">),</span>
+            <span class="p">],</span>
+            <span class="mi">101</span><span class="p">:</span> <span class="p">[</span>
+                <span class="p">(</span><span class="s2">&quot;Different participant&quot;</span><span class="p">,</span> <span class="p">[</span><span class="mf">0.3</span><span class="p">]</span> <span class="o">*</span> <span class="mi">256</span><span class="p">),</span>
+            <span class="p">],</span>
+        <span class="p">}</span>
+        <span class="n">store</span><span class="o">.</span><span class="n">get_score</span><span class="o">.</span><span class="n">return_value</span> <span class="o">=</span> <span class="mi">2</span>
+        <span class="k">return</span> <span class="n">store</span>
+
+    <span class="nd">@pytest</span><span class="o">.</span><span class="n">fixture</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">mock_settings</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Create mock embedding settings.&quot;&quot;&quot;</span>
+        <span class="kn">from</span><span class="w"> </span><span class="nn">unittest.mock</span><span class="w"> </span><span class="kn">import</span> <span class="n">MagicMock</span>
+
+        <span class="n">settings</span> <span class="o">=</span> <span class="n">MagicMock</span><span class="p">()</span>
+        <span class="n">settings</span><span class="o">.</span><span class="n">dimension</span> <span class="o">=</span> <span class="mi">256</span>
+        <span class="n">settings</span><span class="o">.</span><span class="n">top_k_references</span> <span class="o">=</span> <span class="mi">2</span>
+        <span class="n">settings</span><span class="o">.</span><span class="n">min_evidence_chars</span> <span class="o">=</span> <span class="mi">8</span>
+        <span class="k">return</span> <span class="n">settings</span>
+
+    <span class="nd">@pytest</span><span class="o">.</span><span class="n">mark</span><span class="o">.</span><span class="n">asyncio</span>
+    <span class="k">async</span> <span class="k">def</span><span class="w"> </span><span class="nf">test_embed_text</span><span class="p">(</span>
+        <span class="bp">self</span><span class="p">,</span>
+        <span class="n">mock_llm_client</span><span class="p">,</span>
+        <span class="n">mock_reference_store</span><span class="p">,</span>
+        <span class="n">mock_settings</span><span class="p">,</span>
+    <span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Should generate embedding for text.&quot;&quot;&quot;</span>
+        <span class="n">service</span> <span class="o">=</span> <span class="n">EmbeddingService</span><span class="p">(</span>
+            <span class="n">mock_llm_client</span><span class="p">,</span>
+            <span class="n">mock_reference_store</span><span class="p">,</span>
+            <span class="n">mock_settings</span><span class="p">,</span>
+        <span class="p">)</span>
+
+        <span class="n">embedding</span> <span class="o">=</span> <span class="k">await</span> <span class="n">service</span><span class="o">.</span><span class="n">embed_text</span><span class="p">(</span><span class="s2">&quot;Test text to embed&quot;</span><span class="p">)</span>
+
+        <span class="k">assert</span> <span class="nb">len</span><span class="p">(</span><span class="n">embedding</span><span class="p">)</span> <span class="o">==</span> <span class="mi">256</span>
+        <span class="k">assert</span> <span class="n">mock_llm_client</span><span class="o">.</span><span class="n">embedding_call_count</span> <span class="o">==</span> <span class="mi">1</span>
+
+    <span class="nd">@pytest</span><span class="o">.</span><span class="n">mark</span><span class="o">.</span><span class="n">asyncio</span>
+    <span class="k">async</span> <span class="k">def</span><span class="w"> </span><span class="nf">test_embed_short_text_returns_empty</span><span class="p">(</span>
+        <span class="bp">self</span><span class="p">,</span>
+        <span class="n">mock_llm_client</span><span class="p">,</span>
+        <span class="n">mock_reference_store</span><span class="p">,</span>
+        <span class="n">mock_settings</span><span class="p">,</span>
+    <span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Should return empty tuple for text below minimum chars.&quot;&quot;&quot;</span>
+        <span class="n">service</span> <span class="o">=</span> <span class="n">EmbeddingService</span><span class="p">(</span>
+            <span class="n">mock_llm_client</span><span class="p">,</span>
+            <span class="n">mock_reference_store</span><span class="p">,</span>
+            <span class="n">mock_settings</span><span class="p">,</span>
+        <span class="p">)</span>
+
+        <span class="n">embedding</span> <span class="o">=</span> <span class="k">await</span> <span class="n">service</span><span class="o">.</span><span class="n">embed_text</span><span class="p">(</span><span class="s2">&quot;short&quot;</span><span class="p">)</span>
+
+        <span class="k">assert</span> <span class="n">embedding</span> <span class="o">==</span> <span class="p">()</span>
+        <span class="k">assert</span> <span class="n">mock_llm_client</span><span class="o">.</span><span class="n">embedding_call_count</span> <span class="o">==</span> <span class="mi">0</span>
+
+    <span class="nd">@pytest</span><span class="o">.</span><span class="n">mark</span><span class="o">.</span><span class="n">asyncio</span>
+    <span class="k">async</span> <span class="k">def</span><span class="w"> </span><span class="nf">test_find_similar_chunks</span><span class="p">(</span>
+        <span class="bp">self</span><span class="p">,</span>
+        <span class="n">mock_llm_client</span><span class="p">,</span>
+        <span class="n">mock_reference_store</span><span class="p">,</span>
+        <span class="n">mock_settings</span><span class="p">,</span>
+    <span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Should find similar chunks from reference store.&quot;&quot;&quot;</span>
+        <span class="n">service</span> <span class="o">=</span> <span class="n">EmbeddingService</span><span class="p">(</span>
+            <span class="n">mock_llm_client</span><span class="p">,</span>
+            <span class="n">mock_reference_store</span><span class="p">,</span>
+            <span class="n">mock_settings</span><span class="p">,</span>
+        <span class="p">)</span>
+
+        <span class="n">query_emb</span> <span class="o">=</span> <span class="nb">tuple</span><span class="p">([</span><span class="mf">0.1</span><span class="p">]</span> <span class="o">*</span> <span class="mi">256</span><span class="p">)</span>
+        <span class="n">matches</span> <span class="o">=</span> <span class="k">await</span> <span class="n">service</span><span class="o">.</span><span class="n">find_similar_chunks</span><span class="p">(</span><span class="n">query_emb</span><span class="p">)</span>
+
+        <span class="k">assert</span> <span class="nb">len</span><span class="p">(</span><span class="n">matches</span><span class="p">)</span> <span class="o">&lt;=</span> <span class="mi">2</span>  <span class="c1"># top_k = 2</span>
+        <span class="k">assert</span> <span class="nb">all</span><span class="p">(</span><span class="mi">0</span> <span class="o">&lt;=</span> <span class="n">m</span><span class="o">.</span><span class="n">similarity</span> <span class="o">&lt;=</span> <span class="mi">1</span> <span class="k">for</span> <span class="n">m</span> <span class="ow">in</span> <span class="n">matches</span><span class="p">)</span>
+        <span class="c1"># Should be sorted by similarity descending</span>
+        <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">matches</span><span class="p">)</span> <span class="o">&gt;</span> <span class="mi">1</span><span class="p">:</span>
+            <span class="k">assert</span> <span class="n">matches</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">similarity</span> <span class="o">&gt;=</span> <span class="n">matches</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span><span class="o">.</span><span class="n">similarity</span>
+
+    <span class="nd">@pytest</span><span class="o">.</span><span class="n">mark</span><span class="o">.</span><span class="n">asyncio</span>
+    <span class="k">async</span> <span class="k">def</span><span class="w"> </span><span class="nf">test_build_reference_bundle</span><span class="p">(</span>
+        <span class="bp">self</span><span class="p">,</span>
+        <span class="n">mock_llm_client</span><span class="p">,</span>
+        <span class="n">mock_reference_store</span><span class="p">,</span>
+        <span class="n">mock_settings</span><span class="p">,</span>
+    <span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Should build reference bundle for evidence.&quot;&quot;&quot;</span>
+        <span class="n">service</span> <span class="o">=</span> <span class="n">EmbeddingService</span><span class="p">(</span>
+            <span class="n">mock_llm_client</span><span class="p">,</span>
+            <span class="n">mock_reference_store</span><span class="p">,</span>
+            <span class="n">mock_settings</span><span class="p">,</span>
+        <span class="p">)</span>
+
+        <span class="n">evidence</span> <span class="o">=</span> <span class="p">{</span>
+            <span class="n">PHQ8Item</span><span class="o">.</span><span class="n">NO_INTEREST</span><span class="p">:</span> <span class="p">[</span><span class="s2">&quot;I can&#39;t enjoy anything anymore&quot;</span><span class="p">],</span>
+            <span class="n">PHQ8Item</span><span class="o">.</span><span class="n">SLEEP</span><span class="p">:</span> <span class="p">[</span><span class="s2">&quot;I wake up at 4am every night&quot;</span><span class="p">],</span>
+            <span class="n">PHQ8Item</span><span class="o">.</span><span class="n">APPETITE</span><span class="p">:</span> <span class="p">[],</span>  <span class="c1"># No evidence</span>
+        <span class="p">}</span>
+
+        <span class="n">bundle</span> <span class="o">=</span> <span class="k">await</span> <span class="n">service</span><span class="o">.</span><span class="n">build_reference_bundle</span><span class="p">(</span><span class="n">evidence</span><span class="p">)</span>
+
+        <span class="c1"># Items with evidence should have references</span>
+        <span class="k">assert</span> <span class="nb">len</span><span class="p">(</span><span class="n">bundle</span><span class="o">.</span><span class="n">item_references</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">PHQ8Item</span><span class="o">.</span><span class="n">NO_INTEREST</span><span class="p">,</span> <span class="p">[]))</span> <span class="o">&gt;</span> <span class="mi">0</span>
+        <span class="k">assert</span> <span class="nb">len</span><span class="p">(</span><span class="n">bundle</span><span class="o">.</span><span class="n">item_references</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">PHQ8Item</span><span class="o">.</span><span class="n">SLEEP</span><span class="p">,</span> <span class="p">[]))</span> <span class="o">&gt;</span> <span class="mi">0</span>
+        <span class="c1"># Items without evidence should be empty</span>
+        <span class="k">assert</span> <span class="nb">len</span><span class="p">(</span><span class="n">bundle</span><span class="o">.</span><span class="n">item_references</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">PHQ8Item</span><span class="o">.</span><span class="n">APPETITE</span><span class="p">,</span> <span class="p">[]))</span> <span class="o">==</span> <span class="mi">0</span>
+
+
+<span class="k">class</span><span class="w"> </span><span class="nc">TestReferenceStore</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Tests for ReferenceStore.&quot;&quot;&quot;</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="nf">test_l2_normalize</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Should correctly L2 normalize vectors.&quot;&quot;&quot;</span>
+        <span class="kn">from</span><span class="w"> </span><span class="nn">ai_psychiatrist.services.reference_store</span><span class="w"> </span><span class="kn">import</span> <span class="n">ReferenceStore</span>
+
+        <span class="c1"># Unit vector should stay the same</span>
+        <span class="n">unit</span> <span class="o">=</span> <span class="p">[</span><span class="mf">1.0</span><span class="p">,</span> <span class="mf">0.0</span><span class="p">,</span> <span class="mf">0.0</span><span class="p">]</span>
+        <span class="n">normalized</span> <span class="o">=</span> <span class="n">ReferenceStore</span><span class="o">.</span><span class="n">_l2_normalize</span><span class="p">(</span><span class="n">unit</span><span class="p">)</span>
+        <span class="n">np</span><span class="o">.</span><span class="n">testing</span><span class="o">.</span><span class="n">assert_array_almost_equal</span><span class="p">(</span><span class="n">normalized</span><span class="p">,</span> <span class="p">[</span><span class="mf">1.0</span><span class="p">,</span> <span class="mf">0.0</span><span class="p">,</span> <span class="mf">0.0</span><span class="p">])</span>
+
+        <span class="c1"># General vector</span>
+        <span class="n">vec</span> <span class="o">=</span> <span class="p">[</span><span class="mf">3.0</span><span class="p">,</span> <span class="mf">4.0</span><span class="p">,</span> <span class="mf">0.0</span><span class="p">]</span>
+        <span class="n">normalized</span> <span class="o">=</span> <span class="n">ReferenceStore</span><span class="o">.</span><span class="n">_l2_normalize</span><span class="p">(</span><span class="n">vec</span><span class="p">)</span>
+        <span class="n">expected</span> <span class="o">=</span> <span class="p">[</span><span class="mf">0.6</span><span class="p">,</span> <span class="mf">0.8</span><span class="p">,</span> <span class="mf">0.0</span><span class="p">]</span>  <span class="c1"># 3/5, 4/5, 0</span>
+        <span class="n">np</span><span class="o">.</span><span class="n">testing</span><span class="o">.</span><span class="n">assert_array_almost_equal</span><span class="p">(</span><span class="n">normalized</span><span class="p">,</span> <span class="n">expected</span><span class="p">)</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="nf">test_zero_vector_unchanged</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Zero vector should remain zero (avoid division by zero).&quot;&quot;&quot;</span>
+        <span class="kn">from</span><span class="w"> </span><span class="nn">ai_psychiatrist.services.reference_store</span><span class="w"> </span><span class="kn">import</span> <span class="n">ReferenceStore</span>
+
+        <span class="n">zero</span> <span class="o">=</span> <span class="p">[</span><span class="mf">0.0</span><span class="p">,</span> <span class="mf">0.0</span><span class="p">,</span> <span class="mf">0.0</span><span class="p">]</span>
+        <span class="n">normalized</span> <span class="o">=</span> <span class="n">ReferenceStore</span><span class="o">.</span><span class="n">_l2_normalize</span><span class="p">(</span><span class="n">zero</span><span class="p">)</span>
+        <span class="n">np</span><span class="o">.</span><span class="n">testing</span><span class="o">.</span><span class="n">assert_array_almost_equal</span><span class="p">(</span><span class="n">normalized</span><span class="p">,</span> <span class="p">[</span><span class="mf">0.0</span><span class="p">,</span> <span class="mf">0.0</span><span class="p">,</span> <span class="mf">0.0</span><span class="p">])</span>
+</code></pre></div>
+<h2 id="acceptance-criteria">Acceptance Criteria</h2>
+<ul>
+<li>[ ] Generates embeddings via Ollama API</li>
+<li>[ ] Embeddings are L2-normalized</li>
+<li>[ ] Dimension truncation works (paper optimal: 4096)</li>
+<li>[ ] Cosine similarity search finds top-k matches</li>
+<li>[ ] Reference bundle formats correctly for prompts</li>
+<li>[ ] Loads pre-computed embeddings from NPZ + JSON sidecar files</li>
+<li>[ ] Handles missing embeddings gracefully</li>
+<li>[ ] Comprehensive test coverage</li>
+</ul>
+<h2 id="dependencies">Dependencies</h2>
+<ul>
+<li><strong>Spec 03</strong>: Configuration (EmbeddingSettings, DataSettings)</li>
+<li><strong>Spec 04</strong>: LLM infrastructure (embedding generation)</li>
+<li><strong>Spec 05</strong>: Transcript service (TranscriptChunk)</li>
+</ul>
+<h2 id="specs-that-depend-on-this">Specs That Depend on This</h2>
+<ul>
+<li><strong>Spec 09</strong>: Quantitative Agent (uses reference bundle)</li>
+</ul>
+
+
+
+
+
+
+
+
+
+
+
+
+                
+              </article>
+            </div>
+          
+          
+<script>var target=document.getElementById(location.hash.slice(1));target&&target.name&&(target.checked=target.name.startsWith("__tabbed_"))</script>
+        </div>
+        
+      </main>
+      
+        <footer class="md-footer">
+  
+    
+  
+  <div class="md-footer-meta md-typeset">
+    <div class="md-footer-meta__inner md-grid">
+      <div class="md-copyright">
+  
+  
+    Made with
+    <a href="https://squidfunk.github.io/mkdocs-material/" target="_blank" rel="noopener">
+      Material for MkDocs
+    </a>
+  
+</div>
+      
+    </div>
+  </div>
+</footer>
+      
+    </div>
+    <div class="md-dialog" data-md-component="dialog">
+      <div class="md-dialog__inner md-typeset"></div>
+    </div>
+    
+    
+    
+      
+      
+      <script id="__config" type="application/json">{"annotate": null, "base": "../../..", "features": ["content.code.copy", "content.action.edit", "content.action.view", "navigation.tracking", "navigation.sections", "navigation.footer", "navigation.instant"], "search": "../../../assets/javascripts/workers/search.2c215733.min.js", "tags": null, "translations": {"clipboard.copied": "Copied to clipboard", "clipboard.copy": "Copy to clipboard", "search.result.more.one": "1 more on this page", "search.result.more.other": "# more on this page", "search.result.none": "No matching documents", "search.result.one": "1 matching document", "search.result.other": "# matching documents", "search.result.placeholder": "Type to start searching", "search.result.term.missing": "Missing", "select.version": "Select version"}, "version": null}</script>
+    
+    
+      <script src="../../../assets/javascripts/bundle.79ae519e.min.js"></script>
+      
+    
+  </body>
+</html>

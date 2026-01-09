@@ -1,0 +1,2867 @@
+
+<!doctype html>
+<html lang="en" class="no-js">
+  <head>
+    
+      <meta charset="utf-8">
+      <meta name="viewport" content="width=device-width,initial-scale=1">
+      
+      
+      
+        <link rel="canonical" href="https://the-obstacle-is-the-way.github.io/ai-psychiatrist/_archive/specs/REMOVE_LEGACY_SPEC/">
+      
+      
+      
+      
+        
+      
+      
+      <link rel="icon" href="../../../assets/images/favicon.png">
+      <meta name="generator" content="mkdocs-1.6.1, mkdocs-material-9.7.1">
+    
+    
+      
+        <title>Spec: Remove Legacy Fallback Architecture - AI Psychiatrist</title>
+      
+    
+    
+      <link rel="stylesheet" href="../../../assets/stylesheets/main.484c7ddc.min.css">
+      
+      
+
+
+    
+    
+      
+    
+    
+      
+        
+        
+        <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+        <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Roboto:300,300i,400,400i,700,700i%7CRoboto+Mono:400,400i,700,700i&display=fallback">
+        <style>:root{--md-text-font:"Roboto";--md-code-font:"Roboto Mono"}</style>
+      
+    
+    
+    <script>__md_scope=new URL("../../..",location),__md_hash=e=>[...e].reduce(((e,_)=>(e<<5)-e+_.charCodeAt(0)),0),__md_get=(e,_=localStorage,t=__md_scope)=>JSON.parse(_.getItem(t.pathname+"."+e)),__md_set=(e,_,t=localStorage,a=__md_scope)=>{try{t.setItem(a.pathname+"."+e,JSON.stringify(_))}catch(e){}}</script>
+    
+      
+
+    
+    
+  </head>
+  
+  
+    <body dir="ltr">
+  
+    
+    <input class="md-toggle" data-md-toggle="drawer" type="checkbox" id="__drawer" autocomplete="off">
+    <input class="md-toggle" data-md-toggle="search" type="checkbox" id="__search" autocomplete="off">
+    <label class="md-overlay" for="__drawer"></label>
+    <div data-md-component="skip">
+      
+        
+        <a href="#spec-remove-legacy-fallback-architecture" class="md-skip">
+          Skip to content
+        </a>
+      
+    </div>
+    <div data-md-component="announce">
+      
+    </div>
+    
+    
+      
+
+  
+
+<header class="md-header md-header--shadow" data-md-component="header">
+  <nav class="md-header__inner md-grid" aria-label="Header">
+    <a href="../../.." title="AI Psychiatrist" class="md-header__button md-logo" aria-label="AI Psychiatrist" data-md-component="logo">
+      
+  
+  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 8a3 3 0 0 0 3-3 3 3 0 0 0-3-3 3 3 0 0 0-3 3 3 3 0 0 0 3 3m0 3.54C9.64 9.35 6.5 8 3 8v11c3.5 0 6.64 1.35 9 3.54 2.36-2.19 5.5-3.54 9-3.54V8c-3.5 0-6.64 1.35-9 3.54"/></svg>
+
+    </a>
+    <label class="md-header__button md-icon" for="__drawer">
+      
+      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M3 6h18v2H3zm0 5h18v2H3zm0 5h18v2H3z"/></svg>
+    </label>
+    <div class="md-header__title" data-md-component="header-title">
+      <div class="md-header__ellipsis">
+        <div class="md-header__topic">
+          <span class="md-ellipsis">
+            AI Psychiatrist
+          </span>
+        </div>
+        <div class="md-header__topic" data-md-component="header-topic">
+          <span class="md-ellipsis">
+            
+              Spec: Remove Legacy Fallback Architecture
+            
+          </span>
+        </div>
+      </div>
+    </div>
+    
+    
+      <script>var palette=__md_get("__palette");if(palette&&palette.color){if("(prefers-color-scheme)"===palette.color.media){var media=matchMedia("(prefers-color-scheme: light)"),input=document.querySelector(media.matches?"[data-md-color-media='(prefers-color-scheme: light)']":"[data-md-color-media='(prefers-color-scheme: dark)']");palette.color.media=input.getAttribute("data-md-color-media"),palette.color.scheme=input.getAttribute("data-md-color-scheme"),palette.color.primary=input.getAttribute("data-md-color-primary"),palette.color.accent=input.getAttribute("data-md-color-accent")}for(var[key,value]of Object.entries(palette.color))document.body.setAttribute("data-md-color-"+key,value)}</script>
+    
+    
+    
+      
+      
+        <label class="md-header__button md-icon" for="__search">
+          
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M9.5 3A6.5 6.5 0 0 1 16 9.5c0 1.61-.59 3.09-1.56 4.23l.27.27h.79l5 5-1.5 1.5-5-5v-.79l-.27-.27A6.52 6.52 0 0 1 9.5 16 6.5 6.5 0 0 1 3 9.5 6.5 6.5 0 0 1 9.5 3m0 2C7 5 5 7 5 9.5S7 14 9.5 14 14 12 14 9.5 12 5 9.5 5"/></svg>
+        </label>
+        <div class="md-search" data-md-component="search" role="dialog">
+  <label class="md-search__overlay" for="__search"></label>
+  <div class="md-search__inner" role="search">
+    <form class="md-search__form" name="search">
+      <input type="text" class="md-search__input" name="query" aria-label="Search" placeholder="Search" autocapitalize="off" autocorrect="off" autocomplete="off" spellcheck="false" data-md-component="search-query" required>
+      <label class="md-search__icon md-icon" for="__search">
+        
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M9.5 3A6.5 6.5 0 0 1 16 9.5c0 1.61-.59 3.09-1.56 4.23l.27.27h.79l5 5-1.5 1.5-5-5v-.79l-.27-.27A6.52 6.52 0 0 1 9.5 16 6.5 6.5 0 0 1 3 9.5 6.5 6.5 0 0 1 9.5 3m0 2C7 5 5 7 5 9.5S7 14 9.5 14 14 12 14 9.5 12 5 9.5 5"/></svg>
+        
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M20 11v2H8l5.5 5.5-1.42 1.42L4.16 12l7.92-7.92L13.5 5.5 8 11z"/></svg>
+      </label>
+      <nav class="md-search__options" aria-label="Search">
+        
+        <button type="reset" class="md-search__icon md-icon" title="Clear" aria-label="Clear" tabindex="-1">
+          
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M19 6.41 17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12z"/></svg>
+        </button>
+      </nav>
+      
+    </form>
+    <div class="md-search__output">
+      <div class="md-search__scrollwrap" tabindex="0" data-md-scrollfix>
+        <div class="md-search-result" data-md-component="search-result">
+          <div class="md-search-result__meta">
+            Initializing search
+          </div>
+          <ol class="md-search-result__list" role="presentation"></ol>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+      
+    
+    
+      <div class="md-header__source">
+        <a href="https://github.com/The-Obstacle-Is-The-Way/ai-psychiatrist" title="Go to repository" class="md-source" data-md-component="source">
+  <div class="md-source__icon md-icon">
+    
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 448 512"><!--! Font Awesome Free 7.1.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2025 Fonticons, Inc.--><path d="M439.6 236.1 244 40.5c-5.4-5.5-12.8-8.5-20.4-8.5s-15 3-20.4 8.4L162.5 81l51.5 51.5c27.1-9.1 52.7 16.8 43.4 43.7l49.7 49.7c34.2-11.8 61.2 31 35.5 56.7-26.5 26.5-70.2-2.9-56-37.3L240.3 199v121.9c25.3 12.5 22.3 41.8 9.1 55-6.4 6.4-15.2 10.1-24.3 10.1s-17.8-3.6-24.3-10.1c-17.6-17.6-11.1-46.9 11.2-56v-123c-20.8-8.5-24.6-30.7-18.6-45L142.6 101 8.5 235.1C3 240.6 0 247.9 0 255.5s3 15 8.5 20.4l195.6 195.7c5.4 5.4 12.7 8.4 20.4 8.4s15-3 20.4-8.4l194.7-194.7c5.4-5.4 8.4-12.8 8.4-20.4s-3-15-8.4-20.4"/></svg>
+  </div>
+  <div class="md-source__repository">
+    GitHub
+  </div>
+</a>
+      </div>
+    
+  </nav>
+  
+</header>
+    
+    <div class="md-container" data-md-component="container">
+      
+      
+        
+          
+        
+      
+      <main class="md-main" data-md-component="main">
+        <div class="md-main__inner md-grid">
+          
+            
+              
+              <div class="md-sidebar md-sidebar--primary" data-md-component="sidebar" data-md-type="navigation" >
+                <div class="md-sidebar__scrollwrap">
+                  <div class="md-sidebar__inner">
+                    
+
+
+
+<nav class="md-nav md-nav--primary" aria-label="Navigation" data-md-level="0">
+  <label class="md-nav__title" for="__drawer">
+    <a href="../../.." title="AI Psychiatrist" class="md-nav__button md-logo" aria-label="AI Psychiatrist" data-md-component="logo">
+      
+  
+  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 8a3 3 0 0 0 3-3 3 3 0 0 0-3-3 3 3 0 0 0-3 3 3 3 0 0 0 3 3m0 3.54C9.64 9.35 6.5 8 3 8v11c3.5 0 6.64 1.35 9 3.54 2.36-2.19 5.5-3.54 9-3.54V8c-3.5 0-6.64 1.35-9 3.54"/></svg>
+
+    </a>
+    AI Psychiatrist
+  </label>
+  
+    <div class="md-nav__source">
+      <a href="https://github.com/The-Obstacle-Is-The-Way/ai-psychiatrist" title="Go to repository" class="md-source" data-md-component="source">
+  <div class="md-source__icon md-icon">
+    
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 448 512"><!--! Font Awesome Free 7.1.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2025 Fonticons, Inc.--><path d="M439.6 236.1 244 40.5c-5.4-5.5-12.8-8.5-20.4-8.5s-15 3-20.4 8.4L162.5 81l51.5 51.5c27.1-9.1 52.7 16.8 43.4 43.7l49.7 49.7c34.2-11.8 61.2 31 35.5 56.7-26.5 26.5-70.2-2.9-56-37.3L240.3 199v121.9c25.3 12.5 22.3 41.8 9.1 55-6.4 6.4-15.2 10.1-24.3 10.1s-17.8-3.6-24.3-10.1c-17.6-17.6-11.1-46.9 11.2-56v-123c-20.8-8.5-24.6-30.7-18.6-45L142.6 101 8.5 235.1C3 240.6 0 247.9 0 255.5s3 15 8.5 20.4l195.6 195.7c5.4 5.4 12.7 8.4 20.4 8.4s15-3 20.4-8.4l194.7-194.7c5.4-5.4 8.4-12.8 8.4-20.4s-3-15-8.4-20.4"/></svg>
+  </div>
+  <div class="md-source__repository">
+    GitHub
+  </div>
+</a>
+    </div>
+  
+  <ul class="md-nav__list" data-md-scrollfix>
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../.." class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    AI Psychiatrist Documentation
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    
+    
+    
+    
+      
+        
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--section md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_2" >
+        
+          
+          <label class="md-nav__link" for="__nav_2" id="__nav_2_label" tabindex="">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+     research
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_2_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_2">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+     research
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../_research/hypotheses-explained/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Hypotheses Explained: Current State vs Future Improvements
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../_research/hypotheses-for-improvement/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Hypotheses for Improvement: First-Principles Analysis
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../_research/master-bug-audit/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    MASTER BUG AUDIT
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    
+    
+    
+    
+      
+        
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--section md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_3" >
+        
+          
+          <label class="md-nav__link" for="__nav_3" id="__nav_3_label" tabindex="">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Architecture
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_3_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_3">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    Architecture
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../architecture/architecture/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Architecture
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../architecture/future-architecture/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Future Architecture: Agent Orchestration Options
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../architecture/pipeline/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Pipeline
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    
+    
+    
+    
+      
+        
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--section md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_4" >
+        
+          
+          <label class="md-nav__link" for="__nav_4" id="__nav_4_label" tabindex="">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Clinical
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_4_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_4">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    Clinical
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../clinical/clinical-understanding/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Clinical Understanding: How This System Works
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../clinical/glossary/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Glossary
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../clinical/phq8/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    PHQ-8: Patient Health Questionnaire
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../clinical/task-validity/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Task Validity: What Can (and Cannot) Be Inferred from DAIC-WOZ Transcripts
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    
+    
+    
+    
+      
+        
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--section md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_5" >
+        
+          
+          <label class="md-nav__link" for="__nav_5" id="__nav_5_label" tabindex="">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Configs
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_5_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_5">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    Configs
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../configs/agent-sampling-registry/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Agent Sampling Parameter Registry
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../configs/configuration-philosophy/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Configuration Philosophy
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../configs/configuration/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Configuration Reference
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    
+    
+    
+    
+      
+        
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--section md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_6" >
+        
+          
+          <label class="md-nav__link" for="__nav_6" id="__nav_6_label" tabindex="">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Data
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_6_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_6">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    Data
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../data/artifact-namespace-registry/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Artifact Namespace Registry
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../data/daic-woz-preprocessing/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    DAIC-WOZ Transcript Preprocessing (Bias-Aware, Deterministic)
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../data/daic-woz-schema/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    DAIC-WOZ Dataset Schema
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../data/data-splits-overview/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Data Splits Overview
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    
+    
+    
+    
+      
+        
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--section md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_7" >
+        
+          
+          <label class="md-nav__link" for="__nav_7" id="__nav_7_label" tabindex="">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Developer
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_7_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_7">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    Developer
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../developer/api-endpoints/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    API Reference
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../developer/dependency-registry/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Dependency Registry
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../developer/error-handling/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Error Handling and Fail-Fast Philosophy
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../developer/exceptions/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Exception Reference (Domain + Runtime)
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../developer/testing/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Testing Conventions (Markers, Fixtures, and Test Doubles)
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    
+    
+    
+    
+      
+        
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--section md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_8" >
+        
+          
+          <label class="md-nav__link" for="__nav_8" id="__nav_8_label" tabindex="">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Getting started
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_8_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_8">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    Getting started
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../getting-started/quickstart/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Quickstart Guide
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    
+    
+    
+    
+      
+        
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--section md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_9" >
+        
+          
+          <label class="md-nav__link" for="__nav_9" id="__nav_9_label" tabindex="">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Models
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_9_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_9">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    Models
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../models/model-registry/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    AI Psychiatrist Model Registry
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../models/model-wiring/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Model Wiring: Current State
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    
+    
+    
+    
+      
+        
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--section md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_10" >
+        
+          
+          <label class="md-nav__link" for="__nav_10" id="__nav_10_label" tabindex="">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Pipeline internals
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_10_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_10">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    Pipeline internals
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../pipeline-internals/evidence-extraction/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Evidence Extraction Mechanism: How It Actually Works
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../pipeline-internals/features/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Feature Reference (Non-Archive Canonical)
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    
+    
+    
+    
+      
+        
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--section md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_11" >
+        
+          
+          <label class="md-nav__link" for="__nav_11" id="__nav_11_label" tabindex="">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Preflight checklist
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_11_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_11">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    Preflight checklist
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../preflight-checklist/preflight-checklist-few-shot/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Preflight Checklist: Few-Shot Reproduction
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../preflight-checklist/preflight-checklist-zero-shot/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Preflight Checklist: Zero-Shot Run
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    
+    
+    
+    
+      
+        
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--section md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_12" >
+        
+          
+          <label class="md-nav__link" for="__nav_12" id="__nav_12_label" tabindex="">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Rag
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_12_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_12">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    Rag
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../rag/artifact-generation/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    RAG Artifact Generation
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../rag/chunk-scoring/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Chunk-Level Scoring (Spec 35) — Schema, Workflow, and Gotchas
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../rag/debugging/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    RAG Debugging (Audit Logs + Guardrails)
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../rag/design-rationale/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    RAG Design Rationale
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../rag/overview/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    RAG Overview: Embeddings and Few-Shot Retrieval
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../rag/runtime-features/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    RAG Runtime Features
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    
+    
+    
+    
+      
+        
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--section md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_13" >
+        
+          
+          <label class="md-nav__link" for="__nav_13" id="__nav_13_label" tabindex="">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Results
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_13_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_13">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    Results
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../results/few-shot-analysis/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Why Few-Shot May Not Beat Zero-Shot: Analysis
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../results/reproduction-results/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Paper Reproduction Results (Current Status)
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../results/run-history/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Complete Run History &amp; Statistical Analysis
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../results/run-output-schema/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Reproduction Run Output Schema (JSON + Registry)
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    
+    
+    
+    
+      
+        
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--section md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_14" >
+        
+          
+          <label class="md-nav__link" for="__nav_14" id="__nav_14_label" tabindex="">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Statistics
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_14_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_14">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    Statistics
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../statistics/coverage/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Coverage Explained: What It Is and Why It Matters
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../statistics/metrics-and-evaluation/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Metrics and Evaluation (Exact Definitions + Output Schema)
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../statistics/statistical-methodology-aurc-augrc/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Statistical Methodology: AURC/AUGRC for Selective Prediction
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+  </ul>
+</nav>
+                  </div>
+                </div>
+              </div>
+            
+            
+              
+              <div class="md-sidebar md-sidebar--secondary" data-md-component="sidebar" data-md-type="toc" >
+                <div class="md-sidebar__scrollwrap">
+                  <div class="md-sidebar__inner">
+                    
+
+<nav class="md-nav md-nav--secondary" aria-label="Table of contents">
+  
+  
+  
+    
+  
+  
+    <label class="md-nav__title" for="__toc">
+      <span class="md-nav__icon md-icon"></span>
+      Table of contents
+    </label>
+    <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
+      
+        <li class="md-nav__item">
+  <a href="#context" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Context
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#scope-explicit" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Scope (Explicit)
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Scope (Explicit)">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#in-scope" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        In Scope
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#out-of-scope-non-goals" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Out of Scope (Non-Goals)
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#objective" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Objective
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#preconditions-required-post-conditions" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Preconditions / Required Post-Conditions
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#implementation-plan" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Implementation Plan
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Implementation Plan">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#1-quantitativeassessmentagent-srcai_psychiatristagentsquantitativepy" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        1. QuantitativeAssessmentAgent (src/ai_psychiatrist/agents/quantitative.py)
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#2-qualitativeassessmentagent-srcai_psychiatristagentsqualitativepy" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        2. QualitativeAssessmentAgent (src/ai_psychiatrist/agents/qualitative.py)
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#3-judgeagent-srcai_psychiatristagentsjudgepy" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        3. JudgeAgent (src/ai_psychiatrist/agents/judge.py)
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#4-metareviewagent-srcai_psychiatristagentsmeta_reviewpy" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        4. MetaReviewAgent (src/ai_psychiatrist/agents/meta_review.py)
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#5-simplechatclient-usage" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        5. SimpleChatClient Usage
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#6-config-initialization" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        6. Config &amp; Initialization
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#7-test-impacts" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        7. Test Impacts
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#verification" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Verification
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#estimated-diff-size" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Estimated Diff Size
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#risks" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Risks
+      
+    </span>
+  </a>
+  
+</li>
+      
+    </ul>
+  
+</nav>
+                  </div>
+                </div>
+              </div>
+            
+          
+          
+            <div class="md-content" data-md-component="content">
+              
+              <article class="md-content__inner md-typeset">
+                
+                  
+
+
+  
+    <a href="https://github.com/The-Obstacle-Is-The-Way/ai-psychiatrist/edit/main/docs/_archive/specs/REMOVE_LEGACY_SPEC.md" title="Edit this page" class="md-content__button md-icon" rel="edit">
+      
+      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M10 20H6V4h7v5h5v3.1l2-2V8l-6-6H6c-1.1 0-2 .9-2 2v16c0 1.1.9 2 2 2h4zm10.2-7c.1 0 .3.1.4.2l1.3 1.3c.2.2.2.6 0 .8l-1 1-2.1-2.1 1-1c.1-.1.2-.2.4-.2m0 3.9L14.1 23H12v-2.1l6.1-6.1z"/></svg>
+    </a>
+  
+  
+    
+      
+    
+    <a href="https://github.com/The-Obstacle-Is-The-Way/ai-psychiatrist/raw/main/docs/_archive/specs/REMOVE_LEGACY_SPEC.md" title="View source of this page" class="md-content__button md-icon">
+      
+      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M17 18c.56 0 1 .44 1 1s-.44 1-1 1-1-.44-1-1 .44-1 1-1m0-3c-2.73 0-5.06 1.66-6 4 .94 2.34 3.27 4 6 4s5.06-1.66 6-4c-.94-2.34-3.27-4-6-4m0 6.5a2.5 2.5 0 0 1-2.5-2.5 2.5 2.5 0 0 1 2.5-2.5 2.5 2.5 0 0 1 2.5 2.5 2.5 2.5 0 0 1-2.5 2.5M9.27 20H6V4h7v5h5v4.07c.7.08 1.36.25 2 .49V8l-6-6H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h4.5a8.2 8.2 0 0 1-1.23-2"/></svg>
+    </a>
+  
+
+
+<h1 id="spec-remove-legacy-fallback-architecture">Spec: Remove Legacy Fallback Architecture</h1>
+<blockquote>
+<p><strong>Status</strong>: IMPLEMENTED (BREAKING)
+<strong>Date</strong>: 2025-12-29
+<strong>Goal</strong>: Remove the legacy fallback path (and legacy primary path) for all <strong>structured-output</strong> agent calls, making Pydantic AI the only scoring/evaluation mechanism.</p>
+</blockquote>
+<h2 id="context">Context</h2>
+<p>The current agent architecture employs a "fallback" mechanism: if the Pydantic AI agent fails (validation error, timeout, etc.), it catches the exception and attempts a "legacy" run using <code>SimpleChatClient</code> and manual string parsing/repair.</p>
+<p>As documented in <code>PYDANTIC_AI_FALLBACK_ARCHITECTURE.md</code>, this fallback is:
+1.  <strong>Redundant</strong>: It calls the same underlying model.
+2.  <strong>Ineffective for Timeouts</strong>: If the model times out via Pydantic AI, it will likely timeout via legacy.
+3.  <strong>Maintenance Burden</strong>: It requires maintaining duplicate parsing logic (repair ladders, regex extractors) that drifts from the Pydantic AI extractors.
+4.  <strong>Behaviorally Divergent</strong>: Legacy parsing is looser and may yield different results than the strictly validated Pydantic AI output.</p>
+<h2 id="scope-explicit">Scope (Explicit)</h2>
+<h3 id="in-scope">In Scope</h3>
+<ul>
+<li>Remove <strong>all legacy scoring/evaluation/meta-review paths</strong> from these agents:</li>
+<li><code>QuantitativeAssessmentAgent</code> (scoring step only; evidence extraction stays legacy for now)</li>
+<li><code>QualitativeAssessmentAgent</code> (assess + refine)</li>
+<li><code>JudgeAgent</code> (metric evaluation)</li>
+<li><code>MetaReviewAgent</code> (review)</li>
+<li>Remove the associated legacy parsing/repair helpers that become unreachable.</li>
+<li>Update configuration text and call sites so Pydantic AI is always configured (no “silent fallback”).</li>
+<li>Rewrite affected tests (unit, integration, e2e) to mock Pydantic AI agents instead of legacy parsing.</li>
+</ul>
+<h3 id="out-of-scope-non-goals">Out of Scope (Non-Goals)</h3>
+<ul>
+<li>Rewriting <code>QuantitativeAssessmentAgent._extract_evidence()</code> to use Pydantic AI. It still uses <code>SimpleChatClient</code> + tolerant JSON parsing and is NOT removed by this spec.</li>
+<li>Changing the research/clinical prompts themselves (beyond removing legacy-only parsing helpers).</li>
+<li>Implementing “smart fallback” by exception type. This spec removes fallback entirely.</li>
+</ul>
+<h2 id="objective">Objective</h2>
+<p>Remove all legacy scoring/evaluation/meta-review logic from <code>QuantitativeAssessmentAgent</code>, <code>QualitativeAssessmentAgent</code>, <code>JudgeAgent</code>, and <code>MetaReviewAgent</code>. The system should fail fast (raise exceptions) when Pydantic AI fails, rather than degrading to a deprecated codepath.</p>
+<h2 id="preconditions-required-post-conditions">Preconditions / Required Post-Conditions</h2>
+<p>These are <strong>hard requirements</strong> to prevent accidental silent legacy execution:</p>
+<ol>
+<li><strong>No “fall back to legacy” in <code>__init__</code></strong></li>
+<li>Today, each agent logs <code>"Pydantic AI enabled but no ollama_base_url provided; falling back to legacy"</code>.</li>
+<li>After implementation, this must become a hard failure: raise <code>ValueError</code> (or a domain <code>ConfigurationError</code>) with an actionable message.</li>
+<li><strong>No legacy <code>simple_chat()</code> calls for structured outputs</strong></li>
+<li>After implementation, the following must NOT happen:<ul>
+<li>Quantitative scoring via <code>self._llm.simple_chat(...)</code></li>
+<li>Qualitative assess/refine via <code>self._llm_client.simple_chat(...)</code></li>
+<li>Judge evaluation via <code>self._llm_client.simple_chat(...)</code></li>
+<li>Meta-review via <code>self._llm.simple_chat(...)</code></li>
+</ul>
+</li>
+<li><strong>If the Pydantic AI <code>Agent.run()</code> raises, the agent method raises</strong></li>
+<li>No <code>except Exception: ... fall back ...</code> blocks remain.</li>
+<li><code>asyncio.CancelledError</code> must continue to propagate unmodified.</li>
+</ol>
+<h2 id="implementation-plan">Implementation Plan</h2>
+<h3 id="1-quantitativeassessmentagent-srcai_psychiatristagentsquantitativepy">1. <code>QuantitativeAssessmentAgent</code> (<code>src/ai_psychiatrist/agents/quantitative.py</code>)</h3>
+<p><strong>Action:</strong> Remove fallback block in <code>_score_items</code> and delete unused legacy methods.</p>
+<ul>
+<li>
+<p><strong>Modify <code>__init__</code></strong> (lines 111-116):</p>
+<ul>
+<li>Replace the warning <code>"Pydantic AI enabled but no ollama_base_url provided; falling back to legacy"</code> with a raised configuration error (no legacy).</li>
+</ul>
+</li>
+<li>
+<p><strong>Modify <code>_score_items</code></strong> (lines 275-313):</p>
+<ul>
+<li>Remove <code>if self._scoring_agent is not None: try ... except ...</code> (lines 283-303).</li>
+<li>Remove the legacy <code>self._llm.simple_chat</code> call (lines 304-309).</li>
+<li>Remove call to <code>_parse_response</code> (line 313).</li>
+<li>Replace with:
+    1) explicit guard <code>if self._scoring_agent is None: raise ...</code>
+    2) direct <code>await self._scoring_agent.run(...)</code> with no broad fallback.</li>
+</ul>
+</li>
+<li>
+<p><strong>Remove Methods</strong>:</p>
+<ul>
+<li><code>_parse_response</code> (lines 445-483; used only by legacy scoring)</li>
+<li><code>_llm_repair</code> (lines 485-523; used only by <code>_parse_response</code>)</li>
+<li><code>_validate_and_normalize</code> (lines 586-634; used only by <code>_parse_response</code>)</li>
+</ul>
+</li>
+<li>
+<p><strong>Keep Methods</strong> (<strong>CRITICAL</strong> - verify these are NOT removed):</p>
+<ul>
+<li><code>_strip_json_block</code> (lines 525-562; used by <code>_extract_evidence</code> at line 355)</li>
+<li><code>_tolerant_fixups</code> (lines 564-584; used by <code>_extract_evidence</code> at line 356)</li>
+<li><code>_extract_evidence</code> (lines 329-376; Step 1 of pipeline, uses <code>SimpleChatClient</code>)</li>
+<li><code>_determine_na_reason</code> (lines 636-649)</li>
+<li><code>_determine_evidence_source</code> (lines 651-661)</li>
+<li><code>_from_quantitative_output</code> (lines 316-327)</li>
+<li><code>_find_keyword_hits</code> (lines 378-408)</li>
+<li><code>_merge_evidence</code> (lines 410-443)</li>
+</ul>
+</li>
+</ul>
+<h3 id="2-qualitativeassessmentagent-srcai_psychiatristagentsqualitativepy">2. <code>QualitativeAssessmentAgent</code> (<code>src/ai_psychiatrist/agents/qualitative.py</code>)</h3>
+<p><strong>Action:</strong> Remove fallback block in <code>assess</code> and <code>refine</code> and delete unused legacy methods.</p>
+<ul>
+<li>
+<p><strong>Modify <code>__init__</code></strong> (lines 89-94):</p>
+<ul>
+<li>Replace the warning <code>"Pydantic AI enabled but no ollama_base_url provided; falling back to legacy"</code> with a raised configuration error (no legacy).</li>
+</ul>
+</li>
+<li>
+<p><strong>Modify <code>assess</code></strong> (lines 116-182):</p>
+<ul>
+<li>Remove <code>try ... except</code> fallback block (lines 155-163).</li>
+<li>Remove <code>self._llm_client.simple_chat</code> call (lines 165-171).</li>
+<li>Remove call to <code>_parse_response</code> (line 174).</li>
+</ul>
+</li>
+<li>
+<p><strong>Modify <code>refine</code></strong> (lines 184-256):</p>
+<ul>
+<li>Remove <code>try ... except</code> fallback block (lines 232-240).</li>
+<li>Remove <code>self._llm_client.simple_chat</code> call (lines 242-247).</li>
+<li>Remove call to <code>_parse_response</code> (line 249).</li>
+</ul>
+</li>
+<li>
+<p><strong>Remove Methods/Constants</strong>:</p>
+<ul>
+<li><code>ASSESSMENT_TAGS</code> (ClassVar, lines 59-65)</li>
+<li><code>_parse_response</code> (lines 274-303)</li>
+<li><code>_extract_quotes</code> (lines 304-336)</li>
+<li><code>_clean_quote_line</code> (static, lines 339-346)</li>
+<li><code>_extract_inline_quotes</code> (static, lines 349-365)</li>
+</ul>
+</li>
+<li>
+<p><strong>Remove Imports</strong> (will become unused):</p>
+<ul>
+<li><code>extract_xml_tags</code> from <code>ai_psychiatrist.infrastructure.llm.responses</code> (line 27)</li>
+<li><code>re</code> (line 15) - only used by <code>_extract_inline_quotes</code></li>
+</ul>
+</li>
+<li>
+<p><strong>Keep Methods</strong>:</p>
+<ul>
+<li><code>_from_qualitative_output</code> (lines 258-272)</li>
+<li><code>_get_llm_params</code> (lines 106-114)</li>
+</ul>
+</li>
+</ul>
+<h3 id="3-judgeagent-srcai_psychiatristagentsjudgepy">3. <code>JudgeAgent</code> (<code>src/ai_psychiatrist/agents/judge.py</code>)</h3>
+<p><strong>Action:</strong> Remove fallback block in <code>_evaluate_metric</code> and clean up unused imports.</p>
+<ul>
+<li>
+<p><strong>Modify <code>__init__</code></strong> (lines 57-61):</p>
+<ul>
+<li>Replace the warning <code>"Pydantic AI enabled but no ollama_base_url provided; falling back to legacy"</code> with a raised configuration error (no legacy).</li>
+</ul>
+</li>
+<li>
+<p><strong>Modify <code>_evaluate_metric</code></strong>:</p>
+<ul>
+<li>Remove <code>try ... except</code> fallback block (lines 150-175).</li>
+<li>Remove <code>self._llm_client.simple_chat</code> call (lines 177-182).</li>
+<li>Remove <code>extract_score_from_text</code> usage and score extraction logic (lines 196-211).</li>
+<li>Remove <code>LLMError</code> catch block that returns default score 3 (lines 183-194).</li>
+<li><strong>Behavior Change</strong>: Previously returned default score <code>3</code> on parsing failure or <code>LLMError</code>. Now it will raise. This is intentional (fail fast).</li>
+</ul>
+</li>
+<li>
+<p><strong>Remove Imports</strong> (will become unused):</p>
+<ul>
+<li><code>extract_score_from_text</code> from <code>ai_psychiatrist.infrastructure.llm.responses</code> (line 18)</li>
+<li><code>LLMError</code> from <code>ai_psychiatrist.domain.exceptions</code> (line 16)</li>
+</ul>
+</li>
+<li>
+<p><strong>Keep Methods</strong>:</p>
+<ul>
+<li><code>evaluate</code> (Orchestrator)</li>
+<li><code>get_feedback_for_low_scores</code></li>
+</ul>
+</li>
+</ul>
+<h3 id="4-metareviewagent-srcai_psychiatristagentsmeta_reviewpy">4. <code>MetaReviewAgent</code> (<code>src/ai_psychiatrist/agents/meta_review.py</code>)</h3>
+<p><strong>Action:</strong> Remove fallback block in <code>review</code> and clean up unused imports.</p>
+<ul>
+<li>
+<p><strong>Modify <code>__init__</code></strong> (lines 76-80):</p>
+<ul>
+<li>Replace the warning <code>"Pydantic AI enabled but no ollama_base_url provided; falling back to legacy"</code> with a raised configuration error (no legacy).</li>
+</ul>
+</li>
+<li>
+<p><strong>Modify <code>review</code></strong> (lines 93-191):</p>
+<ul>
+<li>Remove <code>try ... except</code> fallback block (lines 158-167).</li>
+<li>Remove <code>self._llm.simple_chat</code> call (lines 169-174).</li>
+<li>Remove call to <code>_parse_response</code> (line 176).</li>
+</ul>
+</li>
+<li>
+<p><strong>Remove Methods</strong>:</p>
+<ul>
+<li><code>_parse_response</code> (lines 217-253)</li>
+</ul>
+</li>
+<li>
+<p><strong>Remove Imports</strong> (will become unused):</p>
+<ul>
+<li><code>extract_xml_tags</code> from <code>ai_psychiatrist.infrastructure.llm.responses</code> (line 30)</li>
+</ul>
+</li>
+<li>
+<p><strong>Keep Methods</strong>:</p>
+<ul>
+<li><code>_format_quantitative</code> (lines 193-215; used for prompt construction at line 117)</li>
+</ul>
+</li>
+</ul>
+<h3 id="5-simplechatclient-usage">5. <code>SimpleChatClient</code> Usage</h3>
+<ul>
+<li><code>SimpleChatClient</code> remains required for <code>QuantitativeAssessmentAgent._extract_evidence</code>. Do NOT delete it or its imports.</li>
+</ul>
+<h3 id="6-config-initialization">6. Config &amp; Initialization</h3>
+<p><strong>This spec MUST NOT rely on <code>AttributeError</code>.</strong> That’s a footgun and makes failures non-actionable.</p>
+<p>Required config/docs updates:</p>
+<ul>
+<li><code>src/ai_psychiatrist/config.py</code> (<code>PydanticAISettings.enabled</code> docstring at lines 347-354):<ul>
+<li>Remove the claim: “Fallback to legacy parsing occurs automatically on failure.”</li>
+<li>Update scope list to include qualitative agents (it’s currently incomplete).</li>
+</ul>
+</li>
+<li>Any call site that constructs these agents must pass <code>ollama_base_url</code> when Pydantic AI is enabled (production already does; tests must be updated).</li>
+</ul>
+<h3 id="7-test-impacts">7. Test Impacts</h3>
+<p>This is the biggest blast radius. Today, most tests intentionally exercise the <strong>legacy</strong> paths by constructing agents without <code>ollama_base_url</code>, which triggers “falling back to legacy”.</p>
+<p>After implementing this spec, those tests must be rewritten to <strong>mock Pydantic AI agent outputs</strong> instead of mocking raw LLM strings.</p>
+<p><strong>Affected test files (must be updated):</strong></p>
+<ul>
+<li><code>tests/unit/agents/test_quantitative.py</code> (multiple legacy-parsing suites, plus <code>test_score_items_fallback_on_cancel</code>)</li>
+<li><code>tests/unit/agents/test_quantitative_backfill.py</code> (all tests assume legacy scoring response JSON)</li>
+<li><code>tests/unit/agents/test_quantitative_coverage.py</code> (all parse/repair coverage tests; keep/adapt evidence-extraction coverage)</li>
+<li><code>tests/unit/agents/test_qualitative.py</code> (all XML parsing + quote extraction tests; keep prompt-template tests)</li>
+<li><code>tests/unit/agents/test_judge.py</code> (all legacy “Score: X” parsing tests)</li>
+<li><code>tests/unit/agents/test_meta_review.py</code> (all legacy severity XML parsing + fallback tests)</li>
+<li><code>tests/integration/test_qualitative_pipeline.py</code> (feedback loop integration currently uses legacy)</li>
+<li><code>tests/integration/test_dual_path_pipeline.py</code> (dual-path integration currently uses legacy)</li>
+<li><code>tests/e2e/test_agents_real_ollama.py</code> (currently runs legacy because no <code>ollama_base_url</code> is passed)</li>
+</ul>
+<p><strong>Agent constructor call-site inventory (line-accurate as of 2025-12-29):</strong></p>
+<ul>
+<li>Quantitative: <code>tests/unit/agents/test_quantitative.py</code> (lines 121, 139, 158, 173, 188, 204, 220, 237, 267, 282, 318, 344, 366, 392, 410, 433, 473, 618, 641, 659)</li>
+<li>Quantitative: <code>tests/unit/agents/test_quantitative_backfill.py</code> (lines 34, 65, 91, 117, 151, 178, 204)</li>
+<li>Quantitative: <code>tests/unit/agents/test_quantitative_coverage.py</code> (lines 36, 60, 78, 95, 121, 153, 191)</li>
+<li>Quantitative: <code>tests/integration/test_dual_path_pipeline.py</code> (lines 226, 262, 285, 305, 331, 392, 431, 465, 485, 505, 522)</li>
+<li>
+<p>Quantitative: <code>tests/e2e/test_agents_real_ollama.py</code> (line 76)</p>
+</li>
+<li>
+<p>Qualitative: <code>tests/unit/agents/test_qualitative.py</code> (lines 108, 126, 156, 169, 185, 208, 225, 249, 269, 296, 312, 343, 452)</p>
+</li>
+<li>Qualitative: <code>tests/integration/test_qualitative_pipeline.py</code> (line 98)</li>
+<li>Qualitative: <code>tests/integration/test_dual_path_pipeline.py</code> (lines 196, 256, 325, 385, 430)</li>
+<li>
+<p>Qualitative: <code>tests/e2e/test_agents_real_ollama.py</code> (lines 31, 52)</p>
+</li>
+<li>
+<p>Judge: <code>tests/unit/agents/test_judge.py</code> (lines 72, 105, 140, 175, 194, 221, 243)</p>
+</li>
+<li>Judge: <code>tests/integration/test_qualitative_pipeline.py</code> (line 99)</li>
+<li>Judge: <code>tests/integration/test_dual_path_pipeline.py</code> (lines 197, 257, 326)</li>
+<li>
+<p>Judge: <code>tests/e2e/test_agents_real_ollama.py</code> (line 56)</p>
+</li>
+<li>
+<p>Meta-review: <code>tests/unit/agents/test_meta_review.py</code> (lines 86, 120, 142, 156, 178, 201, 221, 242, 270, 298, 323, 337, 366)</p>
+</li>
+</ul>
+<p><strong>Tests to remove (legacy-only behavior):</strong></p>
+<ul>
+<li><code>tests/unit/agents/test_judge.py</code>:<ul>
+<li><code>test_default_score_on_failure</code> (lines 186-199) — legacy “default to 3” parsing</li>
+<li><code>test_default_score_on_llm_error</code> (lines 201-226) — legacy <code>LLMError</code> fallback</li>
+</ul>
+</li>
+<li><code>tests/unit/agents/test_quantitative.py</code>:<ul>
+<li><code>test_score_items_fallback_on_cancel</code> (lines 279-288) — specifically tests fallback behavior</li>
+<li>Entire <code>TestQuantitativeAgentParsing</code> class (starts at line 290) — legacy JSON parsing/repair</li>
+</ul>
+</li>
+<li><code>tests/unit/agents/test_quantitative_coverage.py</code>:<ul>
+<li><code>test_parse_response_answer_block_failure</code> (line 43)</li>
+<li><code>test_parse_response_llm_repair_failure</code> (line 68)</li>
+<li><code>test_parse_response_non_dict_json</code> (line 86)</li>
+<li><code>test_validate_and_normalize_float_scores</code> (line 102)</li>
+<li><code>test_validate_and_normalize_score_types</code> (line 134)</li>
+<li><code>test_strip_json_block_variations</code> (line 166) — currently exercises legacy scoring parsing, not evidence extraction</li>
+</ul>
+</li>
+<li><code>tests/unit/agents/test_qualitative.py</code>:<ul>
+<li>All tests that assert XML-tag parsing/quote extraction results (most of <code>TestQualitativeAssessmentAgent</code>), since those methods are removed.</li>
+</ul>
+</li>
+<li>
+<p><code>tests/unit/agents/test_meta_review.py</code>:</p>
+<ul>
+<li>All tests that assert XML severity parsing, clamping, and fallback to quantitative severity (lines 100-229).</li>
+</ul>
+</li>
+<li>
+<p><strong><code>tests/unit/infrastructure/llm/test_responses.py</code></strong>:</p>
+<ul>
+<li>Tests for <code>extract_score_from_text</code> (lines 198-256): <strong>Keep</strong> - this function is still used elsewhere (E2E tests, potentially other code). Do NOT remove.</li>
+</ul>
+</li>
+</ul>
+<p><strong>E2E note:</strong> <code>tests/e2e/test_agents_real_ollama.py</code> will need refactoring:
+* If Judge now returns <code>score</code> structurally via Pydantic AI (and <code>explanation</code> no longer embeds “Score: X”), then the assertion <code>extract_score_from_text(score.explanation) is not None</code> is no longer a valid requirement.</p>
+<h2 id="verification">Verification</h2>
+<ol>
+<li><strong>Static Analysis</strong>: Ensure no undefined references.</li>
+<li><strong>Unit Tests</strong>: Run <code>pytest tests/unit/agents</code> after rewriting mocks to use Pydantic AI outputs (no legacy parsing).</li>
+<li><strong>Manual Check</strong>: Verify that <code>_extract_evidence</code> in Quantitative agent still works (since it uses <code>SimpleChatClient</code> and the retained helper methods).</li>
+</ol>
+<h2 id="estimated-diff-size">Estimated Diff Size</h2>
+<table>
+<thead>
+<tr>
+<th>Agent</th>
+<th>Lines Removed</th>
+<th>Lines Modified</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>quantitative.py</code></td>
+<td>~200 (<code>_parse_response</code>, <code>_llm_repair</code>, <code>_validate_and_normalize</code>, fallback block)</td>
+<td>~20</td>
+</tr>
+<tr>
+<td><code>qualitative.py</code></td>
+<td>~120 (<code>_parse_response</code>, <code>_extract_quotes</code>, <code>_clean_quote_line</code>, <code>_extract_inline_quotes</code>, <code>ASSESSMENT_TAGS</code>, fallback blocks)</td>
+<td>~30</td>
+</tr>
+<tr>
+<td><code>judge.py</code></td>
+<td>~35 (fallback block, <code>LLMError</code> handling, score extraction)</td>
+<td>~15</td>
+</tr>
+<tr>
+<td><code>meta_review.py</code></td>
+<td>~50 (<code>_parse_response</code>, fallback block)</td>
+<td>~15</td>
+</tr>
+<tr>
+<td><strong>Tests</strong></td>
+<td><strong>Large rewrite</strong> (unit + integration + e2e)</td>
+<td><strong>Large rewrite</strong></td>
+</tr>
+<tr>
+<td><strong>Total</strong></td>
+<td><strong>~400-500 lines removed</strong></td>
+<td><strong>~600-1200 lines changed</strong></td>
+</tr>
+</tbody>
+</table>
+<p>Net reduction: <strong>significant code removal</strong>, but expect churn in tests due to migrating assertions from “parse raw LLM text” → “mock structured outputs”.</p>
+<h2 id="risks">Risks</h2>
+<ul>
+<li><strong>Strictness</strong>: Pydantic AI validation is stricter. "Good enough" responses that legacy parsing accepted might now fail. This is acceptable for correctness.</li>
+<li><strong>Availability</strong>: If Pydantic AI factory fails (e.g. <code>ImportError</code> or config issue), the system will break immediately instead of silently falling back. This is desired.</li>
+</ul>
+
+
+
+
+
+
+
+
+
+
+
+
+                
+              </article>
+            </div>
+          
+          
+<script>var target=document.getElementById(location.hash.slice(1));target&&target.name&&(target.checked=target.name.startsWith("__tabbed_"))</script>
+        </div>
+        
+      </main>
+      
+        <footer class="md-footer">
+  
+    
+  
+  <div class="md-footer-meta md-typeset">
+    <div class="md-footer-meta__inner md-grid">
+      <div class="md-copyright">
+  
+  
+    Made with
+    <a href="https://squidfunk.github.io/mkdocs-material/" target="_blank" rel="noopener">
+      Material for MkDocs
+    </a>
+  
+</div>
+      
+    </div>
+  </div>
+</footer>
+      
+    </div>
+    <div class="md-dialog" data-md-component="dialog">
+      <div class="md-dialog__inner md-typeset"></div>
+    </div>
+    
+    
+    
+      
+      
+      <script id="__config" type="application/json">{"annotate": null, "base": "../../..", "features": ["content.code.copy", "content.action.edit", "content.action.view", "navigation.tracking", "navigation.sections", "navigation.footer", "navigation.instant"], "search": "../../../assets/javascripts/workers/search.2c215733.min.js", "tags": null, "translations": {"clipboard.copied": "Copied to clipboard", "clipboard.copy": "Copy to clipboard", "search.result.more.one": "1 more on this page", "search.result.more.other": "# more on this page", "search.result.none": "No matching documents", "search.result.one": "1 matching document", "search.result.other": "# matching documents", "search.result.placeholder": "Type to start searching", "search.result.term.missing": "Missing", "select.version": "Select version"}, "version": null}</script>
+    
+    
+      <script src="../../../assets/javascripts/bundle.79ae519e.min.js"></script>
+      
+    
+  </body>
+</html>

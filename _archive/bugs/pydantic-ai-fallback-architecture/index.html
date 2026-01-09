@@ -1,0 +1,3645 @@
+
+<!doctype html>
+<html lang="en" class="no-js">
+  <head>
+    
+      <meta charset="utf-8">
+      <meta name="viewport" content="width=device-width,initial-scale=1">
+      
+      
+      
+        <link rel="canonical" href="https://the-obstacle-is-the-way.github.io/ai-psychiatrist/_archive/bugs/pydantic-ai-fallback-architecture/">
+      
+      
+      
+      
+        
+      
+      
+      <link rel="icon" href="../../../assets/images/favicon.png">
+      <meta name="generator" content="mkdocs-1.6.1, mkdocs-material-9.7.1">
+    
+    
+      
+        <title>Pydantic AI Fallback Architecture: Deep Analysis - AI Psychiatrist</title>
+      
+    
+    
+      <link rel="stylesheet" href="../../../assets/stylesheets/main.484c7ddc.min.css">
+      
+      
+
+
+    
+    
+      
+    
+    
+      
+        
+        
+        <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+        <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Roboto:300,300i,400,400i,700,700i%7CRoboto+Mono:400,400i,700,700i&display=fallback">
+        <style>:root{--md-text-font:"Roboto";--md-code-font:"Roboto Mono"}</style>
+      
+    
+    
+    <script>__md_scope=new URL("../../..",location),__md_hash=e=>[...e].reduce(((e,_)=>(e<<5)-e+_.charCodeAt(0)),0),__md_get=(e,_=localStorage,t=__md_scope)=>JSON.parse(_.getItem(t.pathname+"."+e)),__md_set=(e,_,t=localStorage,a=__md_scope)=>{try{t.setItem(a.pathname+"."+e,JSON.stringify(_))}catch(e){}}</script>
+    
+      
+
+    
+    
+  </head>
+  
+  
+    <body dir="ltr">
+  
+    
+    <input class="md-toggle" data-md-toggle="drawer" type="checkbox" id="__drawer" autocomplete="off">
+    <input class="md-toggle" data-md-toggle="search" type="checkbox" id="__search" autocomplete="off">
+    <label class="md-overlay" for="__drawer"></label>
+    <div data-md-component="skip">
+      
+        
+        <a href="#pydantic-ai-fallback-architecture-deep-analysis" class="md-skip">
+          Skip to content
+        </a>
+      
+    </div>
+    <div data-md-component="announce">
+      
+    </div>
+    
+    
+      
+
+  
+
+<header class="md-header md-header--shadow" data-md-component="header">
+  <nav class="md-header__inner md-grid" aria-label="Header">
+    <a href="../../.." title="AI Psychiatrist" class="md-header__button md-logo" aria-label="AI Psychiatrist" data-md-component="logo">
+      
+  
+  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 8a3 3 0 0 0 3-3 3 3 0 0 0-3-3 3 3 0 0 0-3 3 3 3 0 0 0 3 3m0 3.54C9.64 9.35 6.5 8 3 8v11c3.5 0 6.64 1.35 9 3.54 2.36-2.19 5.5-3.54 9-3.54V8c-3.5 0-6.64 1.35-9 3.54"/></svg>
+
+    </a>
+    <label class="md-header__button md-icon" for="__drawer">
+      
+      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M3 6h18v2H3zm0 5h18v2H3zm0 5h18v2H3z"/></svg>
+    </label>
+    <div class="md-header__title" data-md-component="header-title">
+      <div class="md-header__ellipsis">
+        <div class="md-header__topic">
+          <span class="md-ellipsis">
+            AI Psychiatrist
+          </span>
+        </div>
+        <div class="md-header__topic" data-md-component="header-topic">
+          <span class="md-ellipsis">
+            
+              Pydantic AI Fallback Architecture: Deep Analysis
+            
+          </span>
+        </div>
+      </div>
+    </div>
+    
+    
+      <script>var palette=__md_get("__palette");if(palette&&palette.color){if("(prefers-color-scheme)"===palette.color.media){var media=matchMedia("(prefers-color-scheme: light)"),input=document.querySelector(media.matches?"[data-md-color-media='(prefers-color-scheme: light)']":"[data-md-color-media='(prefers-color-scheme: dark)']");palette.color.media=input.getAttribute("data-md-color-media"),palette.color.scheme=input.getAttribute("data-md-color-scheme"),palette.color.primary=input.getAttribute("data-md-color-primary"),palette.color.accent=input.getAttribute("data-md-color-accent")}for(var[key,value]of Object.entries(palette.color))document.body.setAttribute("data-md-color-"+key,value)}</script>
+    
+    
+    
+      
+      
+        <label class="md-header__button md-icon" for="__search">
+          
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M9.5 3A6.5 6.5 0 0 1 16 9.5c0 1.61-.59 3.09-1.56 4.23l.27.27h.79l5 5-1.5 1.5-5-5v-.79l-.27-.27A6.52 6.52 0 0 1 9.5 16 6.5 6.5 0 0 1 3 9.5 6.5 6.5 0 0 1 9.5 3m0 2C7 5 5 7 5 9.5S7 14 9.5 14 14 12 14 9.5 12 5 9.5 5"/></svg>
+        </label>
+        <div class="md-search" data-md-component="search" role="dialog">
+  <label class="md-search__overlay" for="__search"></label>
+  <div class="md-search__inner" role="search">
+    <form class="md-search__form" name="search">
+      <input type="text" class="md-search__input" name="query" aria-label="Search" placeholder="Search" autocapitalize="off" autocorrect="off" autocomplete="off" spellcheck="false" data-md-component="search-query" required>
+      <label class="md-search__icon md-icon" for="__search">
+        
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M9.5 3A6.5 6.5 0 0 1 16 9.5c0 1.61-.59 3.09-1.56 4.23l.27.27h.79l5 5-1.5 1.5-5-5v-.79l-.27-.27A6.52 6.52 0 0 1 9.5 16 6.5 6.5 0 0 1 3 9.5 6.5 6.5 0 0 1 9.5 3m0 2C7 5 5 7 5 9.5S7 14 9.5 14 14 12 14 9.5 12 5 9.5 5"/></svg>
+        
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M20 11v2H8l5.5 5.5-1.42 1.42L4.16 12l7.92-7.92L13.5 5.5 8 11z"/></svg>
+      </label>
+      <nav class="md-search__options" aria-label="Search">
+        
+        <button type="reset" class="md-search__icon md-icon" title="Clear" aria-label="Clear" tabindex="-1">
+          
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M19 6.41 17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12z"/></svg>
+        </button>
+      </nav>
+      
+    </form>
+    <div class="md-search__output">
+      <div class="md-search__scrollwrap" tabindex="0" data-md-scrollfix>
+        <div class="md-search-result" data-md-component="search-result">
+          <div class="md-search-result__meta">
+            Initializing search
+          </div>
+          <ol class="md-search-result__list" role="presentation"></ol>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+      
+    
+    
+      <div class="md-header__source">
+        <a href="https://github.com/The-Obstacle-Is-The-Way/ai-psychiatrist" title="Go to repository" class="md-source" data-md-component="source">
+  <div class="md-source__icon md-icon">
+    
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 448 512"><!--! Font Awesome Free 7.1.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2025 Fonticons, Inc.--><path d="M439.6 236.1 244 40.5c-5.4-5.5-12.8-8.5-20.4-8.5s-15 3-20.4 8.4L162.5 81l51.5 51.5c27.1-9.1 52.7 16.8 43.4 43.7l49.7 49.7c34.2-11.8 61.2 31 35.5 56.7-26.5 26.5-70.2-2.9-56-37.3L240.3 199v121.9c25.3 12.5 22.3 41.8 9.1 55-6.4 6.4-15.2 10.1-24.3 10.1s-17.8-3.6-24.3-10.1c-17.6-17.6-11.1-46.9 11.2-56v-123c-20.8-8.5-24.6-30.7-18.6-45L142.6 101 8.5 235.1C3 240.6 0 247.9 0 255.5s3 15 8.5 20.4l195.6 195.7c5.4 5.4 12.7 8.4 20.4 8.4s15-3 20.4-8.4l194.7-194.7c5.4-5.4 8.4-12.8 8.4-20.4s-3-15-8.4-20.4"/></svg>
+  </div>
+  <div class="md-source__repository">
+    GitHub
+  </div>
+</a>
+      </div>
+    
+  </nav>
+  
+</header>
+    
+    <div class="md-container" data-md-component="container">
+      
+      
+        
+          
+        
+      
+      <main class="md-main" data-md-component="main">
+        <div class="md-main__inner md-grid">
+          
+            
+              
+              <div class="md-sidebar md-sidebar--primary" data-md-component="sidebar" data-md-type="navigation" >
+                <div class="md-sidebar__scrollwrap">
+                  <div class="md-sidebar__inner">
+                    
+
+
+
+<nav class="md-nav md-nav--primary" aria-label="Navigation" data-md-level="0">
+  <label class="md-nav__title" for="__drawer">
+    <a href="../../.." title="AI Psychiatrist" class="md-nav__button md-logo" aria-label="AI Psychiatrist" data-md-component="logo">
+      
+  
+  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 8a3 3 0 0 0 3-3 3 3 0 0 0-3-3 3 3 0 0 0-3 3 3 3 0 0 0 3 3m0 3.54C9.64 9.35 6.5 8 3 8v11c3.5 0 6.64 1.35 9 3.54 2.36-2.19 5.5-3.54 9-3.54V8c-3.5 0-6.64 1.35-9 3.54"/></svg>
+
+    </a>
+    AI Psychiatrist
+  </label>
+  
+    <div class="md-nav__source">
+      <a href="https://github.com/The-Obstacle-Is-The-Way/ai-psychiatrist" title="Go to repository" class="md-source" data-md-component="source">
+  <div class="md-source__icon md-icon">
+    
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 448 512"><!--! Font Awesome Free 7.1.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2025 Fonticons, Inc.--><path d="M439.6 236.1 244 40.5c-5.4-5.5-12.8-8.5-20.4-8.5s-15 3-20.4 8.4L162.5 81l51.5 51.5c27.1-9.1 52.7 16.8 43.4 43.7l49.7 49.7c34.2-11.8 61.2 31 35.5 56.7-26.5 26.5-70.2-2.9-56-37.3L240.3 199v121.9c25.3 12.5 22.3 41.8 9.1 55-6.4 6.4-15.2 10.1-24.3 10.1s-17.8-3.6-24.3-10.1c-17.6-17.6-11.1-46.9 11.2-56v-123c-20.8-8.5-24.6-30.7-18.6-45L142.6 101 8.5 235.1C3 240.6 0 247.9 0 255.5s3 15 8.5 20.4l195.6 195.7c5.4 5.4 12.7 8.4 20.4 8.4s15-3 20.4-8.4l194.7-194.7c5.4-5.4 8.4-12.8 8.4-20.4s-3-15-8.4-20.4"/></svg>
+  </div>
+  <div class="md-source__repository">
+    GitHub
+  </div>
+</a>
+    </div>
+  
+  <ul class="md-nav__list" data-md-scrollfix>
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../.." class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    AI Psychiatrist Documentation
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    
+    
+    
+    
+      
+        
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--section md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_2" >
+        
+          
+          <label class="md-nav__link" for="__nav_2" id="__nav_2_label" tabindex="">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+     research
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_2_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_2">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+     research
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../_research/hypotheses-explained/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Hypotheses Explained: Current State vs Future Improvements
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../_research/hypotheses-for-improvement/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Hypotheses for Improvement: First-Principles Analysis
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../_research/master-bug-audit/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    MASTER BUG AUDIT
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    
+    
+    
+    
+      
+        
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--section md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_3" >
+        
+          
+          <label class="md-nav__link" for="__nav_3" id="__nav_3_label" tabindex="">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Architecture
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_3_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_3">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    Architecture
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../architecture/architecture/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Architecture
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../architecture/future-architecture/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Future Architecture: Agent Orchestration Options
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../architecture/pipeline/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Pipeline
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    
+    
+    
+    
+      
+        
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--section md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_4" >
+        
+          
+          <label class="md-nav__link" for="__nav_4" id="__nav_4_label" tabindex="">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Clinical
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_4_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_4">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    Clinical
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../clinical/clinical-understanding/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Clinical Understanding: How This System Works
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../clinical/glossary/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Glossary
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../clinical/phq8/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    PHQ-8: Patient Health Questionnaire
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../clinical/task-validity/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Task Validity: What Can (and Cannot) Be Inferred from DAIC-WOZ Transcripts
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    
+    
+    
+    
+      
+        
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--section md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_5" >
+        
+          
+          <label class="md-nav__link" for="__nav_5" id="__nav_5_label" tabindex="">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Configs
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_5_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_5">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    Configs
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../configs/agent-sampling-registry/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Agent Sampling Parameter Registry
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../configs/configuration-philosophy/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Configuration Philosophy
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../configs/configuration/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Configuration Reference
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    
+    
+    
+    
+      
+        
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--section md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_6" >
+        
+          
+          <label class="md-nav__link" for="__nav_6" id="__nav_6_label" tabindex="">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Data
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_6_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_6">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    Data
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../data/artifact-namespace-registry/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Artifact Namespace Registry
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../data/daic-woz-preprocessing/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    DAIC-WOZ Transcript Preprocessing (Bias-Aware, Deterministic)
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../data/daic-woz-schema/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    DAIC-WOZ Dataset Schema
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../data/data-splits-overview/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Data Splits Overview
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    
+    
+    
+    
+      
+        
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--section md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_7" >
+        
+          
+          <label class="md-nav__link" for="__nav_7" id="__nav_7_label" tabindex="">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Developer
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_7_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_7">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    Developer
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../developer/api-endpoints/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    API Reference
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../developer/dependency-registry/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Dependency Registry
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../developer/error-handling/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Error Handling and Fail-Fast Philosophy
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../developer/exceptions/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Exception Reference (Domain + Runtime)
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../developer/testing/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Testing Conventions (Markers, Fixtures, and Test Doubles)
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    
+    
+    
+    
+      
+        
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--section md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_8" >
+        
+          
+          <label class="md-nav__link" for="__nav_8" id="__nav_8_label" tabindex="">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Getting started
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_8_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_8">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    Getting started
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../getting-started/quickstart/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Quickstart Guide
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    
+    
+    
+    
+      
+        
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--section md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_9" >
+        
+          
+          <label class="md-nav__link" for="__nav_9" id="__nav_9_label" tabindex="">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Models
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_9_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_9">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    Models
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../models/model-registry/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    AI Psychiatrist Model Registry
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../models/model-wiring/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Model Wiring: Current State
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    
+    
+    
+    
+      
+        
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--section md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_10" >
+        
+          
+          <label class="md-nav__link" for="__nav_10" id="__nav_10_label" tabindex="">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Pipeline internals
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_10_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_10">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    Pipeline internals
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../pipeline-internals/evidence-extraction/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Evidence Extraction Mechanism: How It Actually Works
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../pipeline-internals/features/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Feature Reference (Non-Archive Canonical)
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    
+    
+    
+    
+      
+        
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--section md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_11" >
+        
+          
+          <label class="md-nav__link" for="__nav_11" id="__nav_11_label" tabindex="">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Preflight checklist
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_11_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_11">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    Preflight checklist
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../preflight-checklist/preflight-checklist-few-shot/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Preflight Checklist: Few-Shot Reproduction
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../preflight-checklist/preflight-checklist-zero-shot/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Preflight Checklist: Zero-Shot Run
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    
+    
+    
+    
+      
+        
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--section md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_12" >
+        
+          
+          <label class="md-nav__link" for="__nav_12" id="__nav_12_label" tabindex="">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Rag
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_12_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_12">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    Rag
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../rag/artifact-generation/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    RAG Artifact Generation
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../rag/chunk-scoring/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Chunk-Level Scoring (Spec 35) — Schema, Workflow, and Gotchas
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../rag/debugging/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    RAG Debugging (Audit Logs + Guardrails)
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../rag/design-rationale/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    RAG Design Rationale
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../rag/overview/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    RAG Overview: Embeddings and Few-Shot Retrieval
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../rag/runtime-features/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    RAG Runtime Features
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    
+    
+    
+    
+      
+        
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--section md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_13" >
+        
+          
+          <label class="md-nav__link" for="__nav_13" id="__nav_13_label" tabindex="">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Results
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_13_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_13">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    Results
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../results/few-shot-analysis/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Why Few-Shot May Not Beat Zero-Shot: Analysis
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../results/reproduction-results/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Paper Reproduction Results (Current Status)
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../results/run-history/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Complete Run History &amp; Statistical Analysis
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../results/run-output-schema/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Reproduction Run Output Schema (JSON + Registry)
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    
+    
+    
+    
+      
+        
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--section md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_14" >
+        
+          
+          <label class="md-nav__link" for="__nav_14" id="__nav_14_label" tabindex="">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Statistics
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_14_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_14">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    Statistics
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../statistics/coverage/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Coverage Explained: What It Is and Why It Matters
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../statistics/metrics-and-evaluation/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Metrics and Evaluation (Exact Definitions + Output Schema)
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../statistics/statistical-methodology-aurc-augrc/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Statistical Methodology: AURC/AUGRC for Selective Prediction
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+  </ul>
+</nav>
+                  </div>
+                </div>
+              </div>
+            
+            
+              
+              <div class="md-sidebar md-sidebar--secondary" data-md-component="sidebar" data-md-type="toc" >
+                <div class="md-sidebar__scrollwrap">
+                  <div class="md-sidebar__inner">
+                    
+
+<nav class="md-nav md-nav--secondary" aria-label="Table of contents">
+  
+  
+  
+    
+  
+  
+    <label class="md-nav__title" for="__toc">
+      <span class="md-nav__icon md-icon"></span>
+      Table of contents
+    </label>
+    <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
+      
+        <li class="md-nav__item">
+  <a href="#executive-summary" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Executive Summary
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#the-error-message-explained" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        The Error Message Explained
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="The Error Message Explained">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#whats-actually-happening" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        What's Actually Happening
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#the-fundamental-problem" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        The Fundamental Problem
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#current-state-post-remove_legacy_specmd" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Current State (post-REMOVE_LEGACY_SPEC.md)
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#historical-architecture-diagram-pre-remove_legacy_specmd" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Historical Architecture Diagram (pre-REMOVE_LEGACY_SPEC.md)
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#when-fallback-is-useful" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        When Fallback IS Useful
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#when-fallback-is-useless-or-harmful" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        When Fallback is USELESS (or Harmful)
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="When Fallback is USELESS (or Harmful)">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#real-example-participant-390" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Real Example (Participant 390)
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#the-timeout-configuration-gap" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        The Timeout Configuration Gap
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="The Timeout Configuration Gap">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#current-state-fixed-via-bug-027" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Current State (Fixed via BUG-027)
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#the-problem-historical" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        The Problem (Historical)
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#the-fix-bug-027" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        The Fix (BUG-027)
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#the-broad-exception-catch-problem" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        The Broad Exception Catch Problem
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="The Broad Exception Catch Problem">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#current-code-all-4-agents" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Current Code (All 4 Agents)
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#why-this-is-problematic" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Why This is Problematic
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#the-fix-discriminate-by-exception-type" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        The Fix: Discriminate by Exception Type
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#complete-fallback-inventory" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Complete Fallback Inventory
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Complete Fallback Inventory">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#1-pydantic-ai-legacy-all-4-agents" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        1. Pydantic AI → Legacy (All 4 Agents)
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#2-quantitative-parsing-repair-ladder" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        2. Quantitative Parsing Repair Ladder
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#3-meta-review-severity-fallback" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        3. Meta-Review Severity Fallback
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#4-judge-default-score-on-failure" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        4. Judge Default Score on Failure
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#5-batch-continue-on-error" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        5. Batch Continue-on-Error
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#pipeline-path-tracking-gap" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Pipeline Path Tracking Gap
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Pipeline Path Tracking Gap">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#current-problem" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Current Problem
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#proposed-fix" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Proposed Fix
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#root-cause-analysis-why-does-validation-keep-failing" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Root Cause Analysis: Why Does Validation Keep Failing?
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Root Cause Analysis: Why Does Validation Keep Failing?">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#the-llm-output-problem" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        The LLM Output Problem
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#why-pydantic-ai-retries-dont-help" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Why Pydantic AI Retries Don't Help
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#recommendations" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Recommendations
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Recommendations">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#a-immediate-unify-timeout-configuration-bug-027-implemented-2025-12-29" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        A. ~~Immediate: Unify Timeout Configuration (BUG-027)~~ ✅ IMPLEMENTED (2025-12-29)
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#b-short-term-dont-fallback-on-timeouts" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        B. Short-Term: Don't Fallback on Timeouts
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#c-medium-term-record-pipeline-path" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        C. Medium-Term: Record Pipeline Path
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#d-long-term-remove-legacy-fallback" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        D. Long-Term: Remove Legacy Fallback
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#backward-compatibility-shims-good-ones" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Backward Compatibility Shims (Good Ones)
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#decision-is-this-fixable" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Decision: Is This Fixable?
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Decision: Is This Fixable?">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#whats-truly-unfixable-first-principles" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        What's Truly Unfixable (First Principles)
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#what-is-fixable" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        What IS Fixable
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#the-honest-answer" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        The Honest Answer
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#files-referenced" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Files Referenced
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#summary-table" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Summary Table
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#2025-industry-best-practices-research" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        2025 Industry Best Practices (Research)
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="2025 Industry Best Practices (Research)">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#the-core-problem-with-smaller-models" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        The Core Problem with Smaller Models
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#recommended-strategies" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Recommended Strategies
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Recommended Strategies">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#1-instructor-library-industry-standard" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        1. Instructor Library (Industry Standard)
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#2-pydantic-ai-textoutput-mode-our-current-approach" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        2. Pydantic AI TextOutput Mode (Our Current Approach)
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#3-grammar-based-constraints-future-option" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        3. Grammar-Based Constraints (Future Option)
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#4-two-step-self-correction-recommended-for-small-models" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        4. Two-Step Self-Correction (Recommended for Small Models)
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#known-issues-with-gemma-3-27b" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Known Issues with Gemma 3 27B
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#model-size-reality-check" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Model Size Reality Check
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#recommendation-keep-current-architecture" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Recommendation: Keep Current Architecture
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#sources" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Sources
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#document-history" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Document History
+      
+    </span>
+  </a>
+  
+</li>
+      
+    </ul>
+  
+</nav>
+                  </div>
+                </div>
+              </div>
+            
+          
+          
+            <div class="md-content" data-md-component="content">
+              
+              <article class="md-content__inner md-typeset">
+                
+                  
+
+
+  
+    <a href="https://github.com/The-Obstacle-Is-The-Way/ai-psychiatrist/edit/main/docs/_archive/bugs/pydantic-ai-fallback-architecture.md" title="Edit this page" class="md-content__button md-icon" rel="edit">
+      
+      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M10 20H6V4h7v5h5v3.1l2-2V8l-6-6H6c-1.1 0-2 .9-2 2v16c0 1.1.9 2 2 2h4zm10.2-7c.1 0 .3.1.4.2l1.3 1.3c.2.2.2.6 0 .8l-1 1-2.1-2.1 1-1c.1-.1.2-.2.4-.2m0 3.9L14.1 23H12v-2.1l6.1-6.1z"/></svg>
+    </a>
+  
+  
+    
+      
+    
+    <a href="https://github.com/The-Obstacle-Is-The-Way/ai-psychiatrist/raw/main/docs/_archive/bugs/pydantic-ai-fallback-architecture.md" title="View source of this page" class="md-content__button md-icon">
+      
+      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M17 18c.56 0 1 .44 1 1s-.44 1-1 1-1-.44-1-1 .44-1 1-1m0-3c-2.73 0-5.06 1.66-6 4 .94 2.34 3.27 4 6 4s5.06-1.66 6-4c-.94-2.34-3.27-4-6-4m0 6.5a2.5 2.5 0 0 1-2.5-2.5 2.5 2.5 0 0 1 2.5-2.5 2.5 2.5 0 0 1 2.5 2.5 2.5 2.5 0 0 1-2.5 2.5M9.27 20H6V4h7v5h5v4.07c.7.08 1.36.25 2 .49V8l-6-6H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h4.5a8.2 8.2 0 0 1-1.23-2"/></svg>
+    </a>
+  
+
+
+<h1 id="pydantic-ai-fallback-architecture-deep-analysis">Pydantic AI Fallback Architecture: Deep Analysis</h1>
+<blockquote>
+<p><strong>Status</strong>: SSOT (Updated post-<code>REMOVE_LEGACY_SPEC.md</code>)
+<strong>Date</strong>: 2025-12-29
+<strong>Supersedes</strong>: <code>docs/archive/bugs/fallback-architecture-audit.md</code>
+<strong>Scope</strong>: Historical analysis of the removed fallback + current Pydantic AI-only behavior</p>
+</blockquote>
+<hr />
+<h2 id="executive-summary">Executive Summary</h2>
+<p><strong>The error you keep seeing is NOT a bug—it's working as designed.</strong> Historically, the system attempted a "legacy fallback" after Pydantic AI failures. That fallback has now been removed for all structured-output agent calls (see <code>REMOVE_LEGACY_SPEC.md</code>).</p>
+<p>Both independent investigations converged on the same findings:</p>
+<ol>
+<li>
+<p><strong>The fallback did NOT switch models.</strong> Both paths called the same LLM (Gemma 3 27B) via Ollama. The difference was the Python wrapper layer and parsing/repair behavior.</p>
+</li>
+<li>
+<p><strong>The fallback was backward compatibility cruft.</strong> Legacy code existed before Pydantic AI. The fallback was kept "just in case" but was rarely helpful.</p>
+</li>
+<li>
+<p><strong>For timeouts (the common failure), fallback was USELESS.</strong> It called the same overloaded LLM and also timed out, wasting time.</p>
+</li>
+<li>
+<p><strong>The real research risk was unrecorded pipeline divergence.</strong> Per-participant path differences (Pydantic AI vs legacy vs repair ladder) could cause run-to-run drift.</p>
+</li>
+<li>
+<p><strong>Timeouts ARE configurable.</strong> Pydantic AI accepts <code>model_settings={"timeout": ...}</code> and we now pass it (BUG-027).</p>
+</li>
+</ol>
+<hr />
+<h2 id="the-error-message-explained">The Error Message Explained</h2>
+<div class="highlight"><pre><span></span><code>Exceeded maximum retries (3) for output validation for: ...
+Pydantic AI scoring failed: ...
+</code></pre></div>
+<h3 id="whats-actually-happening">What's Actually Happening</h3>
+<ol>
+<li>Pydantic AI tries to get structured output from the LLM</li>
+<li>LLM returns malformed/incomplete response (validation fails)</li>
+<li>Pydantic AI retries 3 times (per <code>PydanticAISettings.retries</code>)</li>
+<li>All retries fail → <code>Agent.run(...)</code> raises</li>
+<li>Agent layer logs and raises (no legacy fallback)</li>
+</ol>
+<h3 id="the-fundamental-problem">The Fundamental Problem</h3>
+<p><strong>Both paths called the SAME LLM.</strong> The fallback didn't switch models—it just changed the Python wrapper layer. If the LLM was misbehaving (timeout, overloaded, bad output), the fallback also failed. This was a primary rationale for removing fallback.</p>
+<hr />
+<h2 id="current-state-post-remove_legacy_specmd">Current State (post-<code>REMOVE_LEGACY_SPEC.md</code>)</h2>
+<ul>
+<li>Structured-output calls use Pydantic AI only (quantitative scoring, qualitative assess/refine, judge, meta-review).</li>
+<li>Misconfiguration is fail-fast: when Pydantic AI is enabled, <code>ollama_base_url</code> must be provided (no silent fallback).</li>
+<li>If Pydantic AI raises (validation errors, timeouts, etc.), the agent method raises (no secondary "legacy" attempt).</li>
+</ul>
+<hr />
+<h2 id="historical-architecture-diagram-pre-remove_legacy_specmd">Historical Architecture Diagram (pre-<code>REMOVE_LEGACY_SPEC.md</code>)</h2>
+<div class="highlight"><pre><span></span><code>┌─────────────────────────────────────────────────────────────────────┐
+│                        Agent Layer (Python)                         │
+├─────────────────────────────────────────────────────────────────────┤
+│                                                                     │
+│  ┌─────────────────────────┐    ┌─────────────────────────────┐    │
+│  │    PRIMARY PATH         │    │     FALLBACK PATH           │    │
+│  │    (Pydantic AI)        │    │     (Legacy)                │    │
+│  ├─────────────────────────┤    ├─────────────────────────────┤    │
+│  │ • pydantic_ai.Agent     │    │ • httpx.AsyncClient         │    │
+│  │ • TextOutput extractor  │    │ • OllamaClient              │    │
+│  │ • ModelRetry mechanism  │    │ • Manual JSON/XML parsing   │    │
+│  │ • 3 retries (default)   │    │ • Multi-level repair        │    │
+│  └───────────┬─────────────┘    └──────────────┬──────────────┘    │
+│              │                                  │                   │
+│              │  /v1/chat/completions           │  /api/chat        │
+│              │  (OpenAI-compatible)            │  (Ollama native)  │
+│              │                                  │                   │
+└──────────────┼──────────────────────────────────┼───────────────────┘
+               │                                  │
+               └─────────────┬────────────────────┘
+                             │
+                             ▼
+               ┌─────────────────────────────────┐
+               │       Ollama Server             │
+               │       (localhost:11434)         │
+               ├─────────────────────────────────┤
+               │                                 │
+               │      Gemma 3 27B Model          │
+               │      (SAME MODEL)               │
+               │                                 │
+               └─────────────────────────────────┘
+</code></pre></div>
+<p><strong>Key Insight</strong>: Both arrows point to the same box. The fallback doesn't help if the model itself is the problem.</p>
+<hr />
+<h2 id="when-fallback-is-useful">When Fallback IS Useful</h2>
+<table>
+<thead>
+<tr>
+<th>Scenario</th>
+<th>Why Fallback Helps</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><strong>Validation Error</strong></td>
+<td>LLM output is valid JSON but fails Pydantic validation; legacy parsing is more tolerant</td>
+</tr>
+<tr>
+<td><strong>Format Mismatch</strong></td>
+<td>LLM omits <code>&lt;answer&gt;</code> tags but includes valid JSON; legacy extracts it anyway</td>
+</tr>
+<tr>
+<td><strong>Pydantic AI Library Bug</strong></td>
+<td>Some edge case in pydantic_ai crashes; legacy uses plain httpx</td>
+</tr>
+<tr>
+<td><strong>Partial Output</strong></td>
+<td>LLM returns truncated response; legacy's repair ladder might fix it</td>
+</tr>
+</tbody>
+</table>
+<p><strong>Success Rate</strong>: ~20-30% of Pydantic AI failures are rescued by legacy fallback.</p>
+<hr />
+<h2 id="when-fallback-is-useless-or-harmful">When Fallback is USELESS (or Harmful)</h2>
+<table>
+<thead>
+<tr>
+<th>Scenario</th>
+<th>Why Fallback Fails</th>
+<th>Time Wasted</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><strong>GPU Timeout</strong></td>
+<td>Same LLM, same compute constraint</td>
+<td>5-10 minutes</td>
+</tr>
+<tr>
+<td><strong>Connection Error</strong></td>
+<td>Same Ollama server is unreachable</td>
+<td>30+ seconds</td>
+</tr>
+<tr>
+<td><strong>Model Overloaded</strong></td>
+<td>GPU memory exhausted; both paths queue</td>
+<td>5-10 minutes</td>
+</tr>
+<tr>
+<td><strong>Ollama Crash</strong></td>
+<td>Server is down; both paths fail</td>
+<td>60+ seconds</td>
+</tr>
+</tbody>
+</table>
+<h3 id="real-example-participant-390">Real Example (Participant 390)</h3>
+<div class="highlight"><pre><span></span><code>04:05:06 - Started (2371-word transcript)
+04:37:13 - Pydantic AI timeout (~32 min with 3 retries × 600s)
+04:42:13 - Legacy fallback timeout (historical run: 300s)
+04:42:13 - Participant marked as failed
+</code></pre></div>
+<p><strong>Result</strong>: Fallback added 5 minutes of wasted waiting. Both paths timed out because the GPU was overloaded.</p>
+<hr />
+<h2 id="the-timeout-configuration-gap">The Timeout Configuration Gap</h2>
+<h3 id="current-state-fixed-via-bug-027">Current State (Fixed via BUG-027)</h3>
+<table>
+<thead>
+<tr>
+<th>Path</th>
+<th>Default Timeout</th>
+<th>Configurable?</th>
+<th>Source</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Pydantic AI</td>
+<td>600s (default)</td>
+<td>YES via <code>PYDANTIC_AI_TIMEOUT_SECONDS</code></td>
+<td><code>model_settings</code></td>
+</tr>
+<tr>
+<td>Legacy</td>
+<td>600s (default)</td>
+<td>YES via <code>OLLAMA_TIMEOUT_SECONDS</code></td>
+<td><code>OllamaSettings</code></td>
+</tr>
+</tbody>
+</table>
+<h3 id="the-problem-historical">The Problem (Historical)</h3>
+<p>We used to <strong>not pass</strong> the timeout to Pydantic AI agents. The code looked like:</p>
+<div class="highlight"><pre><span></span><code><span class="c1"># Historical (pre-BUG-027)</span>
+<span class="n">result</span> <span class="o">=</span> <span class="k">await</span> <span class="bp">self</span><span class="o">.</span><span class="n">_scoring_agent</span><span class="o">.</span><span class="n">run</span><span class="p">(</span>
+    <span class="n">prompt</span><span class="p">,</span>
+    <span class="n">model_settings</span><span class="o">=</span><span class="p">{</span><span class="s2">&quot;temperature&quot;</span><span class="p">:</span> <span class="n">temperature</span><span class="p">},</span>  <span class="c1"># No timeout!</span>
+<span class="p">)</span>
+</code></pre></div>
+<p>So Pydantic AI used its hardcoded 600s default, while legacy used a different configured default.</p>
+<h3 id="the-fix-bug-027">The Fix (BUG-027)</h3>
+<div class="highlight"><pre><span></span><code><span class="c1"># Fixed</span>
+<span class="n">timeout</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_pydantic_ai</span><span class="o">.</span><span class="n">timeout_seconds</span>
+<span class="n">result</span> <span class="o">=</span> <span class="k">await</span> <span class="bp">self</span><span class="o">.</span><span class="n">_scoring_agent</span><span class="o">.</span><span class="n">run</span><span class="p">(</span>
+    <span class="n">prompt</span><span class="p">,</span>
+    <span class="n">model_settings</span><span class="o">=</span><span class="p">{</span>
+        <span class="s2">&quot;temperature&quot;</span><span class="p">:</span> <span class="n">temperature</span><span class="p">,</span>
+        <span class="o">**</span><span class="p">({</span><span class="s2">&quot;timeout&quot;</span><span class="p">:</span> <span class="n">timeout</span><span class="p">}</span> <span class="k">if</span> <span class="n">timeout</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span> <span class="k">else</span> <span class="p">{}),</span>  <span class="c1"># Pass configurable timeout</span>
+    <span class="p">},</span>
+<span class="p">)</span>
+</code></pre></div>
+<p>Add to <code>PydanticAISettings</code>:</p>
+<div class="highlight"><pre><span></span><code><span class="n">timeout_seconds</span><span class="p">:</span> <span class="nb">float</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="n">Field</span><span class="p">(</span>
+    <span class="n">default</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>  <span class="c1"># None = use pydantic_ai library default (600s)</span>
+    <span class="n">ge</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span>
+    <span class="n">description</span><span class="o">=</span><span class="s2">&quot;Timeout for Pydantic AI LLM calls. None = use library default.&quot;</span><span class="p">,</span>
+<span class="p">)</span>
+</code></pre></div>
+<p>For GPU-limited research runs, give the LLM as much time as it needs:</p>
+<div class="highlight"><pre><span></span><code><span class="c1"># Option 1: Via model_settings (preferred)</span>
+<span class="n">result</span> <span class="o">=</span> <span class="k">await</span> <span class="n">agent</span><span class="o">.</span><span class="n">run</span><span class="p">(</span><span class="n">prompt</span><span class="p">,</span> <span class="n">model_settings</span><span class="o">=</span><span class="p">{</span><span class="s2">&quot;timeout&quot;</span><span class="p">:</span> <span class="mi">3600</span><span class="p">})</span>  <span class="c1"># 1 hour</span>
+
+<span class="c1"># Option 2: Custom httpx client</span>
+<span class="n">http_client</span> <span class="o">=</span> <span class="n">httpx</span><span class="o">.</span><span class="n">AsyncClient</span><span class="p">(</span><span class="n">timeout</span><span class="o">=</span><span class="kc">None</span><span class="p">)</span>  <span class="c1"># Infinite</span>
+<span class="n">provider</span> <span class="o">=</span> <span class="n">OllamaProvider</span><span class="p">(</span><span class="n">base_url</span><span class="o">=...</span><span class="p">,</span> <span class="n">http_client</span><span class="o">=</span><span class="n">http_client</span><span class="p">)</span>
+</code></pre></div>
+<hr />
+<h2 id="the-broad-exception-catch-problem">The Broad Exception Catch Problem</h2>
+<h3 id="current-code-all-4-agents">Current Code (All 4 Agents)</h3>
+<p>Verified at these exact locations:</p>
+<ul>
+<li><code>quantitative.py:296</code></li>
+<li><code>qualitative.py:157, 234</code></li>
+<li><code>judge.py:168</code></li>
+<li><code>meta_review.py:160</code></li>
+</ul>
+<div class="highlight"><pre><span></span><code><span class="k">try</span><span class="p">:</span>
+    <span class="n">result</span> <span class="o">=</span> <span class="k">await</span> <span class="bp">self</span><span class="o">.</span><span class="n">_scoring_agent</span><span class="o">.</span><span class="n">run</span><span class="p">(</span><span class="n">prompt</span><span class="p">,</span> <span class="n">model_settings</span><span class="o">=</span><span class="p">{</span><span class="o">...</span><span class="p">})</span>
+    <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_from_quantitative_output</span><span class="p">(</span><span class="n">result</span><span class="o">.</span><span class="n">output</span><span class="p">)</span>
+<span class="k">except</span> <span class="n">asyncio</span><span class="o">.</span><span class="n">CancelledError</span><span class="p">:</span>
+    <span class="k">raise</span>  <span class="c1"># Don&#39;t mask cancellations</span>
+<span class="k">except</span> <span class="ne">Exception</span> <span class="k">as</span> <span class="n">e</span><span class="p">:</span>  <span class="c1"># &lt;-- CATCHES EVERYTHING</span>
+    <span class="c1"># Intentionally broad: Fallback for any Pydantic AI error</span>
+    <span class="c1"># (see docs/specs/21-broad-exception-handling.md)</span>
+    <span class="n">logger</span><span class="o">.</span><span class="n">error</span><span class="p">(</span><span class="s2">&quot;Pydantic AI call failed; falling back to legacy&quot;</span><span class="p">,</span> <span class="n">error</span><span class="o">=</span><span class="nb">str</span><span class="p">(</span><span class="n">e</span><span class="p">))</span>
+    <span class="c1"># Falls through to legacy path</span>
+</code></pre></div>
+<h3 id="why-this-is-problematic">Why This is Problematic</h3>
+<p>The broad <code>except Exception</code> catches:</p>
+<ul>
+<li><code>asyncio.TimeoutError</code> → Fallback will also timeout (USELESS)</li>
+<li><code>httpx.TimeoutException</code> → Fallback will also timeout (USELESS)</li>
+<li><code>httpx.ConnectError</code> → Fallback will also fail (USELESS)</li>
+<li><code>pydantic.ValidationError</code> → Fallback might help (USEFUL)</li>
+<li><code>pydantic_ai.ModelRetry</code> exhausted → Fallback might help (USEFUL)</li>
+</ul>
+<h3 id="the-fix-discriminate-by-exception-type">The Fix: Discriminate by Exception Type</h3>
+<div class="highlight"><pre><span></span><code><span class="k">try</span><span class="p">:</span>
+    <span class="n">result</span> <span class="o">=</span> <span class="k">await</span> <span class="bp">self</span><span class="o">.</span><span class="n">_scoring_agent</span><span class="o">.</span><span class="n">run</span><span class="p">(</span><span class="n">prompt</span><span class="p">,</span> <span class="n">model_settings</span><span class="o">=</span><span class="p">{</span><span class="o">...</span><span class="p">})</span>
+    <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_from_quantitative_output</span><span class="p">(</span><span class="n">result</span><span class="o">.</span><span class="n">output</span><span class="p">)</span>
+<span class="k">except</span> <span class="n">asyncio</span><span class="o">.</span><span class="n">CancelledError</span><span class="p">:</span>
+    <span class="k">raise</span>
+<span class="k">except</span> <span class="p">(</span><span class="n">asyncio</span><span class="o">.</span><span class="n">TimeoutError</span><span class="p">,</span> <span class="n">httpx</span><span class="o">.</span><span class="n">TimeoutException</span><span class="p">)</span> <span class="k">as</span> <span class="n">e</span><span class="p">:</span>
+    <span class="c1"># Don&#39;t waste time - LLM is overloaded, fallback will also timeout</span>
+    <span class="n">logger</span><span class="o">.</span><span class="n">error</span><span class="p">(</span><span class="s2">&quot;Pydantic AI timed out; NOT falling back (would also timeout)&quot;</span><span class="p">,</span> <span class="n">error</span><span class="o">=</span><span class="nb">str</span><span class="p">(</span><span class="n">e</span><span class="p">))</span>
+    <span class="k">raise</span> <span class="n">LLMTimeoutError</span><span class="p">(</span><span class="n">timeout_seconds</span><span class="p">)</span> <span class="kn">from</span><span class="w"> </span><span class="nn">e</span>
+<span class="k">except</span> <span class="p">(</span><span class="n">pydantic</span><span class="o">.</span><span class="n">ValidationError</span><span class="p">,</span> <span class="n">pydantic_ai</span><span class="o">.</span><span class="n">ModelRetry</span><span class="p">)</span> <span class="k">as</span> <span class="n">e</span><span class="p">:</span>
+    <span class="c1"># Fallback makes sense - maybe legacy parsing is more tolerant</span>
+    <span class="n">logger</span><span class="o">.</span><span class="n">warning</span><span class="p">(</span><span class="s2">&quot;Pydantic AI validation failed; trying legacy parser&quot;</span><span class="p">,</span> <span class="n">error</span><span class="o">=</span><span class="nb">str</span><span class="p">(</span><span class="n">e</span><span class="p">))</span>
+    <span class="c1"># Fall through to legacy</span>
+<span class="k">except</span> <span class="ne">Exception</span> <span class="k">as</span> <span class="n">e</span><span class="p">:</span>
+    <span class="c1"># Library bug or unexpected error - try fallback as last resort</span>
+    <span class="n">logger</span><span class="o">.</span><span class="n">error</span><span class="p">(</span><span class="s2">&quot;Pydantic AI error; falling back to legacy&quot;</span><span class="p">,</span> <span class="n">error</span><span class="o">=</span><span class="nb">str</span><span class="p">(</span><span class="n">e</span><span class="p">))</span>
+    <span class="c1"># Fall through to legacy</span>
+</code></pre></div>
+<hr />
+<h2 id="complete-fallback-inventory">Complete Fallback Inventory</h2>
+<h3 id="1-pydantic-ai-legacy-all-4-agents">1. Pydantic AI → Legacy (All 4 Agents)</h3>
+<table>
+<thead>
+<tr>
+<th>Agent</th>
+<th>Location</th>
+<th>Trigger</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Quantitative</td>
+<td><code>quantitative.py:296</code></td>
+<td>Any exception after retries</td>
+</tr>
+<tr>
+<td>Qualitative</td>
+<td><code>qualitative.py:157, 234</code></td>
+<td>Any exception (assess/refine)</td>
+</tr>
+<tr>
+<td>Judge</td>
+<td><code>judge.py:168</code></td>
+<td>Any exception</td>
+</tr>
+<tr>
+<td>Meta-Review</td>
+<td><code>meta_review.py:160</code></td>
+<td>Any exception</td>
+</tr>
+</tbody>
+</table>
+<p><strong>When helpful</strong>: Library bugs, validation failures where legacy parsing succeeds.</p>
+<p><strong>When useless</strong>: Timeouts, connection errors (same LLM/server).</p>
+<h3 id="2-quantitative-parsing-repair-ladder">2. Quantitative Parsing Repair Ladder</h3>
+<p><strong>Location</strong>: <code>quantitative.py:445-483</code> (<code>_parse_response()</code>) + <code>_llm_repair()</code></p>
+<div class="highlight"><pre><span></span><code>Strategy 1: Direct Parse
+    └── Strip markdown, apply tolerant fixups, json.loads()
+    └── If fails → Strategy 2
+
+Strategy 2: LLM Repair (RESEARCH RISK: Different prompt!)
+    └── Ask LLM to fix malformed JSON
+    └── If fails → Strategy 3
+
+Strategy 3: Fallback Skeleton
+    └── Return empty dict → All items get N/A scores
+</code></pre></div>
+<p><strong>Research Risk</strong>: Strategy 2 uses a repair prompt that's different from the assessment prompt. This can shift outputs in unpredictable ways.</p>
+<h3 id="3-meta-review-severity-fallback">3. Meta-Review Severity Fallback</h3>
+<p><strong>Location</strong>: <code>meta_review.py:233-246</code> (<code>_parse_response()</code>)</p>
+<div class="highlight"><pre><span></span><code><span class="n">severity_str</span> <span class="o">=</span> <span class="n">tags</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;severity&quot;</span><span class="p">,</span> <span class="s2">&quot;&quot;</span><span class="p">)</span><span class="o">.</span><span class="n">strip</span><span class="p">()</span>
+<span class="k">try</span><span class="p">:</span>
+    <span class="n">severity_int</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="n">severity_str</span><span class="p">)</span>
+    <span class="c1"># Clamp to valid range 0-4</span>
+    <span class="n">severity</span> <span class="o">=</span> <span class="n">SeverityLevel</span><span class="p">(</span><span class="nb">max</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="nb">min</span><span class="p">(</span><span class="mi">4</span><span class="p">,</span> <span class="n">severity_int</span><span class="p">)))</span>
+<span class="k">except</span> <span class="p">(</span><span class="ne">ValueError</span><span class="p">,</span> <span class="ne">TypeError</span><span class="p">):</span>
+    <span class="c1"># Fall back to quantitative-derived severity</span>
+    <span class="n">logger</span><span class="o">.</span><span class="n">warning</span><span class="p">(</span>
+        <span class="s2">&quot;Failed to parse severity from response, using quantitative fallback&quot;</span><span class="p">,</span>
+        <span class="n">raw_severity</span><span class="o">=</span><span class="n">severity_str</span><span class="p">[:</span><span class="mi">50</span><span class="p">]</span> <span class="k">if</span> <span class="n">severity_str</span> <span class="k">else</span> <span class="s2">&quot;empty&quot;</span><span class="p">,</span>
+    <span class="p">)</span>
+    <span class="n">severity</span> <span class="o">=</span> <span class="n">quantitative</span><span class="o">.</span><span class="n">severity</span>
+</code></pre></div>
+<p><strong>Research Risk</strong>: This is a genuine semantic fallback—the severity source changes from LLM opinion to PHQ-8 score calculation.</p>
+<h3 id="4-judge-default-score-on-failure">4. Judge Default Score on Failure</h3>
+<p><strong>Location</strong>: <code>judge.py:183-206</code></p>
+<div class="highlight"><pre><span></span><code><span class="k">except</span> <span class="n">LLMError</span> <span class="k">as</span> <span class="n">e</span><span class="p">:</span>
+    <span class="n">logger</span><span class="o">.</span><span class="n">error</span><span class="p">(</span><span class="s2">&quot;LLM call failed during metric evaluation&quot;</span><span class="p">,</span> <span class="n">metric</span><span class="o">=</span><span class="n">metric</span><span class="o">.</span><span class="n">value</span><span class="p">,</span> <span class="n">error</span><span class="o">=</span><span class="nb">str</span><span class="p">(</span><span class="n">e</span><span class="p">))</span>
+    <span class="c1"># Return default score on LLM failure (triggers refinement as fail-safe)</span>
+    <span class="k">return</span> <span class="n">EvaluationScore</span><span class="p">(</span>
+        <span class="n">metric</span><span class="o">=</span><span class="n">metric</span><span class="p">,</span>
+        <span class="n">score</span><span class="o">=</span><span class="mi">3</span><span class="p">,</span>  <span class="c1"># Hardcoded default</span>
+        <span class="n">explanation</span><span class="o">=</span><span class="s2">&quot;LLM evaluation failed; default score used.&quot;</span><span class="p">,</span>
+    <span class="p">)</span>
+</code></pre></div>
+<p><strong>Research Risk</strong>: Score 3 is below threshold (4), so this triggers refinement. The feedback loop behavior depends on this default.</p>
+<h3 id="5-batch-continue-on-error">5. Batch Continue-on-Error</h3>
+<p><strong>Location</strong>: <code>reproduce_results.py::evaluate_participant()</code></p>
+<p>Participant evaluation failures → <code>success=False</code> → run continues.</p>
+<p><strong>Research Risk</strong>: Acceptable, but must record which participants failed.</p>
+<hr />
+<h2 id="pipeline-path-tracking-gap">Pipeline Path Tracking Gap</h2>
+<h3 id="current-problem">Current Problem</h3>
+<p>We don't record which path was used per-participant. A "successful" run might have:</p>
+<ul>
+<li>30 participants via Pydantic AI primary</li>
+<li>8 participants via legacy fallback</li>
+<li>2 participants via legacy LLM repair</li>
+<li>1 participant failed entirely</li>
+</ul>
+<p>Without tracking, we can't:</p>
+<ul>
+<li>Reproduce results deterministically</li>
+<li>Debug why certain participants behave differently</li>
+<li>Measure Pydantic AI stability over time</li>
+</ul>
+<h3 id="proposed-fix">Proposed Fix</h3>
+<p>Log per-participant which path was used:</p>
+<ul>
+<li><code>pydantic_ai_primary</code></li>
+<li><code>legacy_primary</code></li>
+<li><code>legacy_fallback_after_pydantic_failure</code></li>
+<li><code>legacy_llm_repair_used</code></li>
+</ul>
+<p>Add to output JSON:</p>
+<div class="highlight"><pre><span></span><code><span class="p">{</span>
+<span class="w">  </span><span class="nt">&quot;participant_id&quot;</span><span class="p">:</span><span class="w"> </span><span class="mi">301</span><span class="p">,</span>
+<span class="w">  </span><span class="nt">&quot;pipeline_path&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;pydantic_ai_primary&quot;</span><span class="p">,</span>
+<span class="w">  </span><span class="nt">&quot;fallback_reason&quot;</span><span class="p">:</span><span class="w"> </span><span class="kc">null</span><span class="p">,</span>
+<span class="w">  </span><span class="err">...</span>
+<span class="p">}</span>
+</code></pre></div>
+<hr />
+<h2 id="root-cause-analysis-why-does-validation-keep-failing">Root Cause Analysis: Why Does Validation Keep Failing?</h2>
+<h3 id="the-llm-output-problem">The LLM Output Problem</h3>
+<p>The LLM (Gemma 3 27B) sometimes produces output that doesn't match our expected format:</p>
+<ol>
+<li><strong>Missing <code>&lt;answer&gt;</code> tags</strong>: LLM starts with JSON directly</li>
+<li><strong>Malformed JSON</strong>: Trailing commas, smart quotes, unclosed brackets</li>
+<li><strong>Wrong field names</strong>: <code>PHQ8_sleep</code> instead of <code>PHQ8_Sleep</code></li>
+<li><strong>Invalid values</strong>: Score of "moderate" instead of 2</li>
+<li><strong>Truncated output</strong>: Long transcripts → GPU memory → cut off mid-response</li>
+</ol>
+<h3 id="why-pydantic-ai-retries-dont-help">Why Pydantic AI Retries Don't Help</h3>
+<p>When the LLM is struggling (GPU throttled, complex transcript), retrying with the same prompt usually fails again. The <code>ModelRetry</code> mechanism:</p>
+<ol>
+<li>Sends the same prompt back to the LLM</li>
+<li>Appends a hint about what went wrong</li>
+<li>LLM tries again (but is still struggling)</li>
+<li>Repeat until max retries exhausted</li>
+</ol>
+<p><strong>This works for</strong>: Minor formatting issues the LLM can self-correct.</p>
+<p><strong>This fails for</strong>: GPU constraints, model confusion, genuinely hard inputs.</p>
+<hr />
+<h2 id="recommendations">Recommendations</h2>
+<h3 id="a-immediate-unify-timeout-configuration-bug-027-implemented-2025-12-29">A. ~~Immediate: Unify Timeout Configuration (BUG-027)~~ ✅ IMPLEMENTED (2025-12-29)</h3>
+<p>Configurable timeout added to Pydantic AI agents:</p>
+<ul>
+<li><code>PydanticAISettings.timeout_seconds: float | None</code> (default=None = use library default)</li>
+<li>All 4 agents pass timeout via <code>model_settings</code></li>
+<li>Defaults aligned at 600s; no upper bound on <code>OLLAMA_TIMEOUT_SECONDS</code></li>
+<li>Usage: set either <code>PYDANTIC_AI_TIMEOUT_SECONDS=3600</code> or <code>OLLAMA_TIMEOUT_SECONDS=3600</code> (Settings syncs if the other is unset)</li>
+</ul>
+<p>See <code>docs/archive/bugs/bug-027-timeout-configuration.md</code> for implementation details.</p>
+<h3 id="b-short-term-dont-fallback-on-timeouts">B. Short-Term: Don't Fallback on Timeouts</h3>
+<p><strong>Change all agents to discriminate exception types.</strong></p>
+<ul>
+<li>Timeout/connection errors → Raise immediately (don't waste time)</li>
+<li>Validation errors → Try fallback (might help)</li>
+<li>Unknown errors → Try fallback (last resort)</li>
+</ul>
+<h3 id="c-medium-term-record-pipeline-path">C. Medium-Term: Record Pipeline Path</h3>
+<p><strong>Add to experiment output:</strong></p>
+<ul>
+<li>Which path was used (pydantic_ai_primary, legacy_fallback, etc.)</li>
+<li>Why fallback was triggered (timeout, validation_error, etc.)</li>
+<li>How many retries occurred before fallback</li>
+</ul>
+<h3 id="d-long-term-remove-legacy-fallback">D. Long-Term: Remove Legacy Fallback</h3>
+<p><strong>Deprecate and remove the legacy fallback.</strong></p>
+<p>After Pydantic AI proves stable:</p>
+<ol>
+<li>Add feature flag: <code>PYDANTIC_AI_FALLBACK_ENABLED=false</code></li>
+<li>Run experiments without fallback to measure impact</li>
+<li>If acceptable, remove legacy code paths (~500 LOC per agent)</li>
+</ol>
+<hr />
+<h2 id="backward-compatibility-shims-good-ones">Backward Compatibility Shims (Good Ones)</h2>
+<p>These are fine and should be kept:</p>
+<table>
+<thead>
+<tr>
+<th>Shim</th>
+<th>Location</th>
+<th>Purpose</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Embedding metadata semantic hash</td>
+<td><code>reference_store.py</code></td>
+<td>Avoid false positives from CSV rewrites</td>
+</tr>
+<tr>
+<td>API mode accepts 0/1 integers</td>
+<td><code>server.py</code></td>
+<td>Backward compat for clients</td>
+</tr>
+<tr>
+<td>PHQ8Item enum values</td>
+<td><code>enums.py</code></td>
+<td>Match legacy artifact format</td>
+</tr>
+</tbody>
+</table>
+<hr />
+<h2 id="decision-is-this-fixable">Decision: Is This Fixable?</h2>
+<h3 id="whats-truly-unfixable-first-principles">What's Truly Unfixable (First Principles)</h3>
+<ol>
+<li><strong>GPU compute limits</strong>: Large transcripts take time. No code change helps.</li>
+<li><strong>LLM stochasticity</strong>: The model sometimes produces malformed output. We can only retry or fallback.</li>
+<li><strong>Validation strictness tradeoff</strong>: Strict validation catches errors but causes more retries. Loose validation accepts garbage.</li>
+</ol>
+<h3 id="what-is-fixable">What IS Fixable</h3>
+<ol>
+<li><strong>Timeout configuration</strong>: Pass it through! (BUG-027)</li>
+<li><strong>Smart fallback</strong>: Don't waste time on doomed retries (timeout detection)</li>
+<li><strong>Better prompts</strong>: Clearer instructions → fewer format errors</li>
+<li><strong>Pipeline tracking</strong>: Know what path was used per-participant</li>
+</ol>
+<h3 id="the-honest-answer">The Honest Answer</h3>
+<p><strong>The error will never completely go away.</strong> LLMs are stochastic. Sometimes they produce garbage. The fallback exists to handle this gracefully.</p>
+<p><strong>But we CAN make it less annoying:</strong></p>
+<ol>
+<li>Don't fallback on timeouts (saves 5+ minutes per failure)</li>
+<li>Record when fallback happens (reproducibility)</li>
+<li>Set infinite timeout for research runs (let it finish eventually)</li>
+</ol>
+<hr />
+<h2 id="files-referenced">Files Referenced</h2>
+<table>
+<thead>
+<tr>
+<th>File</th>
+<th>Purpose</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>src/ai_psychiatrist/config.py</code></td>
+<td><code>PydanticAISettings</code> (needs <code>timeout_seconds</code>)</td>
+</tr>
+<tr>
+<td><code>src/ai_psychiatrist/agents/quantitative.py</code></td>
+<td>Quantitative agent + fallback + repair ladder</td>
+</tr>
+<tr>
+<td><code>src/ai_psychiatrist/agents/qualitative.py</code></td>
+<td>Qualitative agent + fallback</td>
+</tr>
+<tr>
+<td><code>src/ai_psychiatrist/agents/judge.py</code></td>
+<td>Judge agent + fallback + default score</td>
+</tr>
+<tr>
+<td><code>src/ai_psychiatrist/agents/meta_review.py</code></td>
+<td>Meta-review agent + fallback + severity fallback</td>
+</tr>
+<tr>
+<td><code>src/ai_psychiatrist/agents/pydantic_agents.py</code></td>
+<td>Agent factories used by agents</td>
+</tr>
+<tr>
+<td><code>src/ai_psychiatrist/agents/extractors.py</code></td>
+<td>TextOutput extractors with <code>ModelRetry</code></td>
+</tr>
+<tr>
+<td><code>docs/archive/bugs/bug-027-timeout-configuration.md</code></td>
+<td>Timeout gap documentation</td>
+</tr>
+<tr>
+<td><code>docs/specs/21-broad-exception-handling.md</code></td>
+<td>Why broad exception catches are intentional</td>
+</tr>
+</tbody>
+</table>
+<hr />
+<h2 id="summary-table">Summary Table</h2>
+<table>
+<thead>
+<tr>
+<th>Question</th>
+<th>Answer</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Is this error a bug?</td>
+<td><strong>No</strong> — it's graceful degradation working as designed</td>
+</tr>
+<tr>
+<td>Is the fallback useful?</td>
+<td><strong>Sometimes</strong> — for validation errors, not timeouts</td>
+</tr>
+<tr>
+<td>Does fallback use different model?</td>
+<td><strong>No</strong> — same Gemma 3 27B</td>
+</tr>
+<tr>
+<td>Does fallback help for timeouts?</td>
+<td><strong>No</strong> — wastes time</td>
+</tr>
+<tr>
+<td>Does fallback help for validation?</td>
+<td><strong>Maybe</strong> — legacy parsing more tolerant</td>
+</tr>
+<tr>
+<td>Is fallback backward compat cruft?</td>
+<td><strong>Yes</strong> — legacy code predates Pydantic AI</td>
+</tr>
+<tr>
+<td>Should we remove fallback?</td>
+<td><strong>Eventually</strong> — after Pydantic AI proves stable</td>
+</tr>
+<tr>
+<td>Is timeout configurable?</td>
+<td><strong>Yes</strong> — via <code>model_settings={"timeout": ...}</code></td>
+</tr>
+<tr>
+<td>Can we remove the fallback?</td>
+<td><strong>Eventually</strong> — after Pydantic AI proves stable</td>
+</tr>
+<tr>
+<td>What should we fix now?</td>
+<td>~~BUG-027~~ ✅ DONE + smart fallback (discriminate exception types)</td>
+</tr>
+<tr>
+<td>Will the error ever stop appearing?</td>
+<td><strong>No</strong> — LLMs are stochastic; we can only reduce frequency and waste</td>
+</tr>
+</tbody>
+</table>
+<hr />
+<hr />
+<h2 id="2025-industry-best-practices-research">2025 Industry Best Practices (Research)</h2>
+<p>Based on web research conducted 2025-12-28, here are current industry best practices for handling LLM structured output validation—particularly relevant for smaller models like Gemma 3 27B.</p>
+<h3 id="the-core-problem-with-smaller-models">The Core Problem with Smaller Models</h3>
+<blockquote>
+<p>"Small-size large language models (LLMs) are becoming a popular choice for running AI locally. However, when using an LLM for serious tasks, structured output becomes a critical requirement. Take, for example, Llama 3:8B. This small-sized model is capable of generating JSON data, but <strong>it often produces errors</strong>. Common issues include missing closing braces, additional unintended content, or malformed structures despite carefully crafted prompts."</p>
+<p>— <a href="https://watchsound.medium.com/handle-invalid-json-output-for-small-size-llm-a2dc455993bd">Handle Invalid JSON Output for Small Size LLM</a></p>
+</blockquote>
+<p><strong>Key insight</strong>: Smaller models (&lt; 70B) are inherently more prone to structured output errors. This is not a bug in our code—it's a characteristic of the model size.</p>
+<h3 id="recommended-strategies">Recommended Strategies</h3>
+<h4 id="1-instructor-library-industry-standard">1. Instructor Library (Industry Standard)</h4>
+<p><a href="https://python.useinstructor.com/">Instructor</a> is the most popular Python library for structured LLM output with:
+- 3M+ monthly downloads, 11k+ GitHub stars
+- Automatic retry with self-correction
+- Works with Ollama and 15+ providers</p>
+<p><strong>Key feature</strong>: Automatic self-correction loop. When validation fails, Instructor sends a second request with: "The previous response failed with this error. Next time, be sure to include {field} in your response."</p>
+<p><strong>Trade-offs</strong>:
+- Every retry resends the entire prompt (cost + latency)
+- Retries can unexpectedly increase costs
+- Only works with instruction-tuned models</p>
+<h4 id="2-pydantic-ai-textoutput-mode-our-current-approach">2. Pydantic AI TextOutput Mode (Our Current Approach)</h4>
+<p>We use <a href="https://ai.pydantic.dev/output/">Pydantic AI</a> with TextOutput extractors. This is similar to Instructor but integrated with our agent architecture.</p>
+<p><strong>Current configuration</strong>:
+- 3 retries (configurable via <code>PYDANTIC_AI_RETRIES</code>)
+- Fallback to legacy parsing on exhaustion
+- Temperature = 0 for determinism</p>
+<h4 id="3-grammar-based-constraints-future-option">3. Grammar-Based Constraints (Future Option)</h4>
+<p>For Ollama/llama.cpp, <a href="https://docs.vllm.ai/en/latest/features/structured_outputs/">grammar files</a> can constrain output at the token level—guaranteeing valid JSON syntax.</p>
+<p><strong>Consideration</strong>: May not be compatible with our <code>&lt;thinking&gt;</code> + <code>&lt;answer&gt;</code> pattern.</p>
+<h4 id="4-two-step-self-correction-recommended-for-small-models">4. Two-Step Self-Correction (Recommended for Small Models)</h4>
+<p>From <a href="https://watchsound.medium.com/handle-invalid-json-output-for-small-size-llm-a2dc455993bd">Medium article on small LLM JSON handling</a>:</p>
+<ol>
+<li><strong>Programmatic fix first</strong>: Try tolerant fixups (trailing commas, smart quotes, bracket matching)</li>
+<li><strong>LLM self-correction second</strong>: Ask the LLM to fix its own malformed output (our <code>_llm_repair()</code>)</li>
+<li><strong>Fallback to skeleton third</strong>: Return N/A for all items if unfixable</li>
+</ol>
+<p><strong>We already implement this</strong> in <code>quantitative.py:445-483</code>.</p>
+<h3 id="known-issues-with-gemma-3-27b">Known Issues with Gemma 3 27B</h3>
+<blockquote>
+<p>"Users have reported structured output API errors with gemma-3-27b-it when using vLLM v0.8.2 with guided decoding (xgrammar backend), resulting in assertion errors during token acceptance."</p>
+<p>— <a href="https://github.com/vllm-project/vllm/issues/15766">vLLM GitHub Issue #15766</a></p>
+</blockquote>
+<p>This suggests Gemma 3 27B specifically has known issues with constrained decoding. Our approach (validate after generation, retry on failure) is more robust for this model.</p>
+<h3 id="model-size-reality-check">Model Size Reality Check</h3>
+<table>
+<thead>
+<tr>
+<th>Size</th>
+<th>Structured Output Capability</th>
+<th>Notes</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>&lt; 7B</td>
+<td>Poor</td>
+<td>Often cannot produce valid JSON reliably</td>
+</tr>
+<tr>
+<td>7B-13B</td>
+<td>Moderate</td>
+<td>Good balance of speed/accuracy, some errors</td>
+</tr>
+<tr>
+<td>27B</td>
+<td>Good with errors</td>
+<td>Our model—expect occasional failures</td>
+</tr>
+<tr>
+<td>70B+</td>
+<td>Excellent</td>
+<td>Negligible performance degradation</td>
+</tr>
+</tbody>
+</table>
+<p><strong>Our situation</strong>: Gemma 3 27B is in the "good with errors" category. The fallback/retry architecture is appropriate for this model size.</p>
+<h3 id="recommendation-keep-current-architecture">Recommendation: Keep Current Architecture</h3>
+<p>Based on 2025 best practices research:</p>
+<ol>
+<li><strong>Our retry mechanism is correct</strong>: 3 retries with self-correction matches Instructor pattern</li>
+<li><strong>Our tolerant parsing is correct</strong>: Programmatic fixes before LLM repair matches recommendations</li>
+<li><strong>Our fallback is partially correct</strong>: Useful for validation errors, useless for timeouts</li>
+<li><strong>Model choice is appropriate</strong>: 27B is the sweet spot for local inference with acceptable error rates</li>
+</ol>
+<p><strong>What we should change</strong>:
+1. Don't fallback on timeouts (BUG-027 fix + exception discrimination)
+2. Consider Instructor library for future refactoring (more battle-tested)
+3. Track pipeline path per-participant for reproducibility</p>
+<h3 id="sources">Sources</h3>
+<ul>
+<li><a href="https://python.useinstructor.com/">Instructor Library</a> - Industry standard for structured LLM output</li>
+<li><a href="https://watchsound.medium.com/handle-invalid-json-output-for-small-size-llm-a2dc455993bd">Handle Invalid JSON Output for Small Size LLM</a> - Two-step self-correction approach</li>
+<li><a href="https://ai.pydantic.dev/output/">Pydantic AI Output Documentation</a> - Our current framework</li>
+<li><a href="https://docs.vllm.ai/en/latest/features/structured_outputs/">vLLM Structured Outputs</a> - Grammar-based constraints</li>
+<li><a href="https://learn.deeplearning.ai/courses/getting-structured-llm-output/lesson/ilrpq/retry-based-structured-output">DeepLearning.AI - Retry-Based Structured Output</a> - Retry pattern explanation</li>
+<li><a href="https://langfuse.com/blog/2025-03-04-llm-evaluation-101-best-practices-and-challenges">LLM Evaluation Best Practices</a> - Large-scale validation</li>
+</ul>
+<hr />
+<h2 id="document-history">Document History</h2>
+<ul>
+<li><strong>2025-12-28</strong>: Created as SSOT, incorporating <code>docs/archive/bugs/fallback-architecture-audit.md</code></li>
+<li><strong>2025-12-28</strong>: Added 2025 industry best practices section from web research</li>
+<li>Verified line numbers against actual codebase</li>
+<li>Added root cause analysis and LLM output problem section</li>
+</ul>
+
+
+
+
+
+
+
+
+
+
+
+
+                
+              </article>
+            </div>
+          
+          
+<script>var target=document.getElementById(location.hash.slice(1));target&&target.name&&(target.checked=target.name.startsWith("__tabbed_"))</script>
+        </div>
+        
+      </main>
+      
+        <footer class="md-footer">
+  
+    
+  
+  <div class="md-footer-meta md-typeset">
+    <div class="md-footer-meta__inner md-grid">
+      <div class="md-copyright">
+  
+  
+    Made with
+    <a href="https://squidfunk.github.io/mkdocs-material/" target="_blank" rel="noopener">
+      Material for MkDocs
+    </a>
+  
+</div>
+      
+    </div>
+  </div>
+</footer>
+      
+    </div>
+    <div class="md-dialog" data-md-component="dialog">
+      <div class="md-dialog__inner md-typeset"></div>
+    </div>
+    
+    
+    
+      
+      
+      <script id="__config" type="application/json">{"annotate": null, "base": "../../..", "features": ["content.code.copy", "content.action.edit", "content.action.view", "navigation.tracking", "navigation.sections", "navigation.footer", "navigation.instant"], "search": "../../../assets/javascripts/workers/search.2c215733.min.js", "tags": null, "translations": {"clipboard.copied": "Copied to clipboard", "clipboard.copy": "Copy to clipboard", "search.result.more.one": "1 more on this page", "search.result.more.other": "# more on this page", "search.result.none": "No matching documents", "search.result.one": "1 matching document", "search.result.other": "# matching documents", "search.result.placeholder": "Type to start searching", "search.result.term.missing": "Missing", "select.version": "Select version"}, "version": null}</script>
+    
+    
+      <script src="../../../assets/javascripts/bundle.79ae519e.min.js"></script>
+      
+    
+  </body>
+</html>

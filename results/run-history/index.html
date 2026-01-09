@@ -1,0 +1,5127 @@
+
+<!doctype html>
+<html lang="en" class="no-js">
+  <head>
+    
+      <meta charset="utf-8">
+      <meta name="viewport" content="width=device-width,initial-scale=1">
+      
+      
+      
+        <link rel="canonical" href="https://the-obstacle-is-the-way.github.io/ai-psychiatrist/results/run-history/">
+      
+      
+        <link rel="prev" href="../reproduction-results/">
+      
+      
+        <link rel="next" href="../run-output-schema/">
+      
+      
+        
+      
+      
+      <link rel="icon" href="../../assets/images/favicon.png">
+      <meta name="generator" content="mkdocs-1.6.1, mkdocs-material-9.7.1">
+    
+    
+      
+        <title>Complete Run History & Statistical Analysis - AI Psychiatrist</title>
+      
+    
+    
+      <link rel="stylesheet" href="../../assets/stylesheets/main.484c7ddc.min.css">
+      
+      
+
+
+    
+    
+      
+    
+    
+      
+        
+        
+        <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+        <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Roboto:300,300i,400,400i,700,700i%7CRoboto+Mono:400,400i,700,700i&display=fallback">
+        <style>:root{--md-text-font:"Roboto";--md-code-font:"Roboto Mono"}</style>
+      
+    
+    
+    <script>__md_scope=new URL("../..",location),__md_hash=e=>[...e].reduce(((e,_)=>(e<<5)-e+_.charCodeAt(0)),0),__md_get=(e,_=localStorage,t=__md_scope)=>JSON.parse(_.getItem(t.pathname+"."+e)),__md_set=(e,_,t=localStorage,a=__md_scope)=>{try{t.setItem(a.pathname+"."+e,JSON.stringify(_))}catch(e){}}</script>
+    
+      
+
+    
+    
+  </head>
+  
+  
+    <body dir="ltr">
+  
+    
+    <input class="md-toggle" data-md-toggle="drawer" type="checkbox" id="__drawer" autocomplete="off">
+    <input class="md-toggle" data-md-toggle="search" type="checkbox" id="__search" autocomplete="off">
+    <label class="md-overlay" for="__drawer"></label>
+    <div data-md-component="skip">
+      
+        
+        <a href="#complete-run-history-statistical-analysis" class="md-skip">
+          Skip to content
+        </a>
+      
+    </div>
+    <div data-md-component="announce">
+      
+    </div>
+    
+    
+      
+
+  
+
+<header class="md-header md-header--shadow" data-md-component="header">
+  <nav class="md-header__inner md-grid" aria-label="Header">
+    <a href="../.." title="AI Psychiatrist" class="md-header__button md-logo" aria-label="AI Psychiatrist" data-md-component="logo">
+      
+  
+  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 8a3 3 0 0 0 3-3 3 3 0 0 0-3-3 3 3 0 0 0-3 3 3 3 0 0 0 3 3m0 3.54C9.64 9.35 6.5 8 3 8v11c3.5 0 6.64 1.35 9 3.54 2.36-2.19 5.5-3.54 9-3.54V8c-3.5 0-6.64 1.35-9 3.54"/></svg>
+
+    </a>
+    <label class="md-header__button md-icon" for="__drawer">
+      
+      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M3 6h18v2H3zm0 5h18v2H3zm0 5h18v2H3z"/></svg>
+    </label>
+    <div class="md-header__title" data-md-component="header-title">
+      <div class="md-header__ellipsis">
+        <div class="md-header__topic">
+          <span class="md-ellipsis">
+            AI Psychiatrist
+          </span>
+        </div>
+        <div class="md-header__topic" data-md-component="header-topic">
+          <span class="md-ellipsis">
+            
+              Complete Run History &amp; Statistical Analysis
+            
+          </span>
+        </div>
+      </div>
+    </div>
+    
+    
+      <script>var palette=__md_get("__palette");if(palette&&palette.color){if("(prefers-color-scheme)"===palette.color.media){var media=matchMedia("(prefers-color-scheme: light)"),input=document.querySelector(media.matches?"[data-md-color-media='(prefers-color-scheme: light)']":"[data-md-color-media='(prefers-color-scheme: dark)']");palette.color.media=input.getAttribute("data-md-color-media"),palette.color.scheme=input.getAttribute("data-md-color-scheme"),palette.color.primary=input.getAttribute("data-md-color-primary"),palette.color.accent=input.getAttribute("data-md-color-accent")}for(var[key,value]of Object.entries(palette.color))document.body.setAttribute("data-md-color-"+key,value)}</script>
+    
+    
+    
+      
+      
+        <label class="md-header__button md-icon" for="__search">
+          
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M9.5 3A6.5 6.5 0 0 1 16 9.5c0 1.61-.59 3.09-1.56 4.23l.27.27h.79l5 5-1.5 1.5-5-5v-.79l-.27-.27A6.52 6.52 0 0 1 9.5 16 6.5 6.5 0 0 1 3 9.5 6.5 6.5 0 0 1 9.5 3m0 2C7 5 5 7 5 9.5S7 14 9.5 14 14 12 14 9.5 12 5 9.5 5"/></svg>
+        </label>
+        <div class="md-search" data-md-component="search" role="dialog">
+  <label class="md-search__overlay" for="__search"></label>
+  <div class="md-search__inner" role="search">
+    <form class="md-search__form" name="search">
+      <input type="text" class="md-search__input" name="query" aria-label="Search" placeholder="Search" autocapitalize="off" autocorrect="off" autocomplete="off" spellcheck="false" data-md-component="search-query" required>
+      <label class="md-search__icon md-icon" for="__search">
+        
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M9.5 3A6.5 6.5 0 0 1 16 9.5c0 1.61-.59 3.09-1.56 4.23l.27.27h.79l5 5-1.5 1.5-5-5v-.79l-.27-.27A6.52 6.52 0 0 1 9.5 16 6.5 6.5 0 0 1 3 9.5 6.5 6.5 0 0 1 9.5 3m0 2C7 5 5 7 5 9.5S7 14 9.5 14 14 12 14 9.5 12 5 9.5 5"/></svg>
+        
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M20 11v2H8l5.5 5.5-1.42 1.42L4.16 12l7.92-7.92L13.5 5.5 8 11z"/></svg>
+      </label>
+      <nav class="md-search__options" aria-label="Search">
+        
+        <button type="reset" class="md-search__icon md-icon" title="Clear" aria-label="Clear" tabindex="-1">
+          
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M19 6.41 17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12z"/></svg>
+        </button>
+      </nav>
+      
+    </form>
+    <div class="md-search__output">
+      <div class="md-search__scrollwrap" tabindex="0" data-md-scrollfix>
+        <div class="md-search-result" data-md-component="search-result">
+          <div class="md-search-result__meta">
+            Initializing search
+          </div>
+          <ol class="md-search-result__list" role="presentation"></ol>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+      
+    
+    
+      <div class="md-header__source">
+        <a href="https://github.com/The-Obstacle-Is-The-Way/ai-psychiatrist" title="Go to repository" class="md-source" data-md-component="source">
+  <div class="md-source__icon md-icon">
+    
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 448 512"><!--! Font Awesome Free 7.1.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2025 Fonticons, Inc.--><path d="M439.6 236.1 244 40.5c-5.4-5.5-12.8-8.5-20.4-8.5s-15 3-20.4 8.4L162.5 81l51.5 51.5c27.1-9.1 52.7 16.8 43.4 43.7l49.7 49.7c34.2-11.8 61.2 31 35.5 56.7-26.5 26.5-70.2-2.9-56-37.3L240.3 199v121.9c25.3 12.5 22.3 41.8 9.1 55-6.4 6.4-15.2 10.1-24.3 10.1s-17.8-3.6-24.3-10.1c-17.6-17.6-11.1-46.9 11.2-56v-123c-20.8-8.5-24.6-30.7-18.6-45L142.6 101 8.5 235.1C3 240.6 0 247.9 0 255.5s3 15 8.5 20.4l195.6 195.7c5.4 5.4 12.7 8.4 20.4 8.4s15-3 20.4-8.4l194.7-194.7c5.4-5.4 8.4-12.8 8.4-20.4s-3-15-8.4-20.4"/></svg>
+  </div>
+  <div class="md-source__repository">
+    GitHub
+  </div>
+</a>
+      </div>
+    
+  </nav>
+  
+</header>
+    
+    <div class="md-container" data-md-component="container">
+      
+      
+        
+          
+        
+      
+      <main class="md-main" data-md-component="main">
+        <div class="md-main__inner md-grid">
+          
+            
+              
+              <div class="md-sidebar md-sidebar--primary" data-md-component="sidebar" data-md-type="navigation" >
+                <div class="md-sidebar__scrollwrap">
+                  <div class="md-sidebar__inner">
+                    
+
+
+
+<nav class="md-nav md-nav--primary" aria-label="Navigation" data-md-level="0">
+  <label class="md-nav__title" for="__drawer">
+    <a href="../.." title="AI Psychiatrist" class="md-nav__button md-logo" aria-label="AI Psychiatrist" data-md-component="logo">
+      
+  
+  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 8a3 3 0 0 0 3-3 3 3 0 0 0-3-3 3 3 0 0 0-3 3 3 3 0 0 0 3 3m0 3.54C9.64 9.35 6.5 8 3 8v11c3.5 0 6.64 1.35 9 3.54 2.36-2.19 5.5-3.54 9-3.54V8c-3.5 0-6.64 1.35-9 3.54"/></svg>
+
+    </a>
+    AI Psychiatrist
+  </label>
+  
+    <div class="md-nav__source">
+      <a href="https://github.com/The-Obstacle-Is-The-Way/ai-psychiatrist" title="Go to repository" class="md-source" data-md-component="source">
+  <div class="md-source__icon md-icon">
+    
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 448 512"><!--! Font Awesome Free 7.1.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2025 Fonticons, Inc.--><path d="M439.6 236.1 244 40.5c-5.4-5.5-12.8-8.5-20.4-8.5s-15 3-20.4 8.4L162.5 81l51.5 51.5c27.1-9.1 52.7 16.8 43.4 43.7l49.7 49.7c34.2-11.8 61.2 31 35.5 56.7-26.5 26.5-70.2-2.9-56-37.3L240.3 199v121.9c25.3 12.5 22.3 41.8 9.1 55-6.4 6.4-15.2 10.1-24.3 10.1s-17.8-3.6-24.3-10.1c-17.6-17.6-11.1-46.9 11.2-56v-123c-20.8-8.5-24.6-30.7-18.6-45L142.6 101 8.5 235.1C3 240.6 0 247.9 0 255.5s3 15 8.5 20.4l195.6 195.7c5.4 5.4 12.7 8.4 20.4 8.4s15-3 20.4-8.4l194.7-194.7c5.4-5.4 8.4-12.8 8.4-20.4s-3-15-8.4-20.4"/></svg>
+  </div>
+  <div class="md-source__repository">
+    GitHub
+  </div>
+</a>
+    </div>
+  
+  <ul class="md-nav__list" data-md-scrollfix>
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../.." class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    AI Psychiatrist Documentation
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    
+    
+    
+    
+      
+        
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--section md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_2" >
+        
+          
+          <label class="md-nav__link" for="__nav_2" id="__nav_2_label" tabindex="">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+     research
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_2_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_2">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+     research
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../_research/hypotheses-explained/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Hypotheses Explained: Current State vs Future Improvements
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../_research/hypotheses-for-improvement/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Hypotheses for Improvement: First-Principles Analysis
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../_research/master-bug-audit/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    MASTER BUG AUDIT
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    
+    
+    
+    
+      
+        
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--section md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_3" >
+        
+          
+          <label class="md-nav__link" for="__nav_3" id="__nav_3_label" tabindex="">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Architecture
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_3_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_3">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    Architecture
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../architecture/architecture/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Architecture
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../architecture/future-architecture/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Future Architecture: Agent Orchestration Options
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../architecture/pipeline/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Pipeline
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    
+    
+    
+    
+      
+        
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--section md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_4" >
+        
+          
+          <label class="md-nav__link" for="__nav_4" id="__nav_4_label" tabindex="">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Clinical
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_4_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_4">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    Clinical
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../clinical/clinical-understanding/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Clinical Understanding: How This System Works
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../clinical/glossary/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Glossary
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../clinical/phq8/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    PHQ-8: Patient Health Questionnaire
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../clinical/task-validity/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Task Validity: What Can (and Cannot) Be Inferred from DAIC-WOZ Transcripts
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    
+    
+    
+    
+      
+        
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--section md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_5" >
+        
+          
+          <label class="md-nav__link" for="__nav_5" id="__nav_5_label" tabindex="">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Configs
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_5_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_5">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    Configs
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../configs/agent-sampling-registry/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Agent Sampling Parameter Registry
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../configs/configuration-philosophy/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Configuration Philosophy
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../configs/configuration/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Configuration Reference
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    
+    
+    
+    
+      
+        
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--section md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_6" >
+        
+          
+          <label class="md-nav__link" for="__nav_6" id="__nav_6_label" tabindex="">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Data
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_6_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_6">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    Data
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../data/artifact-namespace-registry/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Artifact Namespace Registry
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../data/daic-woz-preprocessing/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    DAIC-WOZ Transcript Preprocessing (Bias-Aware, Deterministic)
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../data/daic-woz-schema/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    DAIC-WOZ Dataset Schema
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../data/data-splits-overview/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Data Splits Overview
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    
+    
+    
+    
+      
+        
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--section md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_7" >
+        
+          
+          <label class="md-nav__link" for="__nav_7" id="__nav_7_label" tabindex="">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Developer
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_7_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_7">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    Developer
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../developer/api-endpoints/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    API Reference
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../developer/dependency-registry/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Dependency Registry
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../developer/error-handling/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Error Handling and Fail-Fast Philosophy
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../developer/exceptions/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Exception Reference (Domain + Runtime)
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../developer/testing/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Testing Conventions (Markers, Fixtures, and Test Doubles)
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    
+    
+    
+    
+      
+        
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--section md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_8" >
+        
+          
+          <label class="md-nav__link" for="__nav_8" id="__nav_8_label" tabindex="">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Getting started
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_8_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_8">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    Getting started
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../getting-started/quickstart/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Quickstart Guide
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    
+    
+    
+    
+      
+        
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--section md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_9" >
+        
+          
+          <label class="md-nav__link" for="__nav_9" id="__nav_9_label" tabindex="">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Models
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_9_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_9">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    Models
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../models/model-registry/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    AI Psychiatrist Model Registry
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../models/model-wiring/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Model Wiring: Current State
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    
+    
+    
+    
+      
+        
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--section md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_10" >
+        
+          
+          <label class="md-nav__link" for="__nav_10" id="__nav_10_label" tabindex="">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Pipeline internals
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_10_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_10">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    Pipeline internals
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../pipeline-internals/evidence-extraction/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Evidence Extraction Mechanism: How It Actually Works
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../pipeline-internals/features/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Feature Reference (Non-Archive Canonical)
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    
+    
+    
+    
+      
+        
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--section md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_11" >
+        
+          
+          <label class="md-nav__link" for="__nav_11" id="__nav_11_label" tabindex="">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Preflight checklist
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_11_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_11">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    Preflight checklist
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../preflight-checklist/preflight-checklist-few-shot/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Preflight Checklist: Few-Shot Reproduction
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../preflight-checklist/preflight-checklist-zero-shot/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Preflight Checklist: Zero-Shot Run
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    
+    
+    
+    
+      
+        
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--section md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_12" >
+        
+          
+          <label class="md-nav__link" for="__nav_12" id="__nav_12_label" tabindex="">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Rag
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_12_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_12">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    Rag
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../rag/artifact-generation/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    RAG Artifact Generation
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../rag/chunk-scoring/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Chunk-Level Scoring (Spec 35) — Schema, Workflow, and Gotchas
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../rag/debugging/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    RAG Debugging (Audit Logs + Guardrails)
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../rag/design-rationale/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    RAG Design Rationale
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../rag/overview/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    RAG Overview: Embeddings and Few-Shot Retrieval
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../rag/runtime-features/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    RAG Runtime Features
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+    
+  
+  
+  
+    
+    
+    
+    
+      
+        
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--active md-nav__item--section md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_13" checked>
+        
+          
+          <label class="md-nav__link" for="__nav_13" id="__nav_13_label" tabindex="">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Results
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_13_label" aria-expanded="true">
+          <label class="md-nav__title" for="__nav_13">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    Results
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../few-shot-analysis/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Why Few-Shot May Not Beat Zero-Shot: Analysis
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../reproduction-results/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Paper Reproduction Results (Current Status)
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+    
+  
+  
+  
+    <li class="md-nav__item md-nav__item--active">
+      
+      <input class="md-nav__toggle md-toggle" type="checkbox" id="__toc">
+      
+      
+        
+      
+      
+        <label class="md-nav__link md-nav__link--active" for="__toc">
+          
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Complete Run History &amp; Statistical Analysis
+  
+
+    
+  </span>
+  
+  
+
+          <span class="md-nav__icon md-icon"></span>
+        </label>
+      
+      <a href="./" class="md-nav__link md-nav__link--active">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Complete Run History &amp; Statistical Analysis
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+      
+        
+
+<nav class="md-nav md-nav--secondary" aria-label="Table of contents">
+  
+  
+  
+    
+  
+  
+    <label class="md-nav__title" for="__toc">
+      <span class="md-nav__icon md-icon"></span>
+      Table of contents
+    </label>
+    <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
+      
+        <li class="md-nav__item">
+  <a href="#critical-run-integrity-warnings" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        ⚠️ CRITICAL: Run Integrity Warnings
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="⚠️ CRITICAL: Run Integrity Warnings">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#prompt-confound-bug-bug-035-fixed-2026-01-06" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Prompt Confound Bug (BUG-035) - Fixed 2026-01-06
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#silent-fallback-bug-analysis-026-fixed-2026-01-03" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Silent Fallback Bug (ANALYSIS-026) - Fixed 2026-01-03
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#invalid-json-output-bug-bug-048-fixed-2026-01-08" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Invalid JSON Output Bug (BUG-048) - Fixed 2026-01-08
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#quick-reference-current-best-results" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Quick Reference: Current Best Results
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Quick Reference: Current Best Results">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#run-13-first-clean-run-post-bug-035-fix" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Run 13: First Clean Run POST BUG-035 Fix ✅
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#paper-comparison-mae_item" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Paper Comparison (MAE_item)
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#historical-reference-run-12-pre-bug-035-fix" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Historical Reference (Run 12, pre-BUG-035 fix)
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#run-14-spec-063-severity-inference-infer-ablation-coverage-risk" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Run 14: Spec 063 Severity Inference (infer) Ablation (Coverage ↑; Risk ↑)
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#why-aurcaugrc-instead-of-mae" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Why AURC/AUGRC Instead of MAE?
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#run-timeline-chronological" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Run Timeline (Chronological)
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Run Timeline (Chronological)">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#run-1-dec-26-2025-initial-validated-runs" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Run 1: Dec 26, 2025 - Initial Validated Runs
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#run-2-dec-27-2025-pre-spec-3132-full-run" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Run 2: Dec 27, 2025 - Pre-Spec 31/32 Full Run
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#run-3-dec-29-2025-post-spec-3132-legacy-prompt-format" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Run 3: Dec 29, 2025 - Post-Spec 31/32 (Legacy Prompt Format)
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#run-4-dec-29-2025-spec-33-development-snapshot-pre-merge" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Run 4: Dec 29, 2025 - Spec 33 Development Snapshot (Pre-merge)
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#run-4b-dec-30-2025-post-spec-34-regression-query-embedding-timeouts" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Run 4b: Dec 30, 2025 - Post-Spec 34 Regression (Query Embedding Timeouts)
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#run-5-dec-30-2025-post-spec-3334-full-ablation" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Run 5: Dec 30, 2025 - Post-Spec 33+34 (Full Ablation)
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#spec-3132-impact-analysis" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Spec 31/32 Impact Analysis
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Spec 31/32 Impact Analysis">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#what-changed" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        What Changed
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#impact-on-metrics" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Impact on Metrics
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#interpretation" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Interpretation
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#key-findings" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Key Findings
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Key Findings">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#1-few-shot-vs-zero-shot-paper-claim" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        1. Few-Shot vs Zero-Shot (Paper Claim)
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#2-papers-mae-comparison-was-not-coverage-adjusted" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        2. Paper's MAE Comparison Was Not Coverage-Adjusted
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#3-formatting-matters-but-isnt-everything" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        3. Formatting Matters But Isn't Everything
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#pending-work" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Pending Work
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Pending Work">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#specs-33-36-retrieval-quality-fixes" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Specs 33-36: Retrieval Quality Fixes
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#run-6-dec-31-2025-spec-35-chunk-scoring-preprocessing" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Run 6: Dec 31, 2025 - Spec 35 Chunk Scoring Preprocessing
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#run-7-jan-1-2026-post-spec-35-chunk-scoring-full-run" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Run 7: Jan 1, 2026 - Post-Spec 35 Chunk Scoring (Full Run)
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#run-8-jan-2-2026-participant-only-transcript-preprocessing-full-run" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Run 8: Jan 2, 2026 - Participant-Only Transcript Preprocessing (Full Run)
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#run-9-jan-2-3-2026-spec-046-confidence-signals-ablation" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Run 9: Jan 2-3, 2026 - Spec 046 Confidence Signals Ablation
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#run-10-jan-3-2026-confidence-suite-specs-048051-attempt-invalid" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Run 10: Jan 3, 2026 - Confidence Suite (Specs 048–051) Attempt (INVALID)
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#run-11-jan-4-2026-confidence-suite-specs-048051-diagnostic-not-comparable" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Run 11: Jan 4, 2026 - Confidence Suite (Specs 048–051) (DIAGNOSTIC; NOT COMPARABLE)
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#run-12-jan-4-5-2026-confidence-suite-specs-048052-valid-n41" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Run 12: Jan 4-5, 2026 - Confidence Suite (Specs 048–052) ✅ VALID (N=41)
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#run-13-jan-6-7-2026-post-bug-035-first-clean-comparative-run-valid" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Run 13: Jan 6-7, 2026 - POST BUG-035 (First Clean Comparative Run) ✅ VALID
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#run-14-jan-7-8-2026-spec-063-severity-inference-infer-valid-coverage-risk" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Run 14: Jan 7-8, 2026 - Spec 063 Severity Inference (infer) ✅ VALID (Coverage ↑; Risk ↑)
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#reproduction-commands" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Reproduction Commands
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Reproduction Commands">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#run-evaluation" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Run Evaluation
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#compute-aurcaugrc" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Compute AURC/AUGRC
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#generate-embeddings-for-few-shot" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Generate Embeddings (for few-shot)
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#file-locations" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        File Locations
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#references" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        References
+      
+    </span>
+  </a>
+  
+</li>
+      
+    </ul>
+  
+</nav>
+      
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../run-output-schema/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Reproduction Run Output Schema (JSON + Registry)
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    
+    
+    
+    
+      
+        
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--section md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_14" >
+        
+          
+          <label class="md-nav__link" for="__nav_14" id="__nav_14_label" tabindex="">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Statistics
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_14_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_14">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    Statistics
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../statistics/coverage/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Coverage Explained: What It Is and Why It Matters
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../statistics/metrics-and-evaluation/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Metrics and Evaluation (Exact Definitions + Output Schema)
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../statistics/statistical-methodology-aurc-augrc/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Statistical Methodology: AURC/AUGRC for Selective Prediction
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+  </ul>
+</nav>
+                  </div>
+                </div>
+              </div>
+            
+            
+              
+              <div class="md-sidebar md-sidebar--secondary" data-md-component="sidebar" data-md-type="toc" >
+                <div class="md-sidebar__scrollwrap">
+                  <div class="md-sidebar__inner">
+                    
+
+<nav class="md-nav md-nav--secondary" aria-label="Table of contents">
+  
+  
+  
+    
+  
+  
+    <label class="md-nav__title" for="__toc">
+      <span class="md-nav__icon md-icon"></span>
+      Table of contents
+    </label>
+    <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
+      
+        <li class="md-nav__item">
+  <a href="#critical-run-integrity-warnings" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        ⚠️ CRITICAL: Run Integrity Warnings
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="⚠️ CRITICAL: Run Integrity Warnings">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#prompt-confound-bug-bug-035-fixed-2026-01-06" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Prompt Confound Bug (BUG-035) - Fixed 2026-01-06
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#silent-fallback-bug-analysis-026-fixed-2026-01-03" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Silent Fallback Bug (ANALYSIS-026) - Fixed 2026-01-03
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#invalid-json-output-bug-bug-048-fixed-2026-01-08" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Invalid JSON Output Bug (BUG-048) - Fixed 2026-01-08
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#quick-reference-current-best-results" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Quick Reference: Current Best Results
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Quick Reference: Current Best Results">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#run-13-first-clean-run-post-bug-035-fix" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Run 13: First Clean Run POST BUG-035 Fix ✅
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#paper-comparison-mae_item" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Paper Comparison (MAE_item)
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#historical-reference-run-12-pre-bug-035-fix" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Historical Reference (Run 12, pre-BUG-035 fix)
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#run-14-spec-063-severity-inference-infer-ablation-coverage-risk" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Run 14: Spec 063 Severity Inference (infer) Ablation (Coverage ↑; Risk ↑)
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#why-aurcaugrc-instead-of-mae" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Why AURC/AUGRC Instead of MAE?
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#run-timeline-chronological" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Run Timeline (Chronological)
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Run Timeline (Chronological)">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#run-1-dec-26-2025-initial-validated-runs" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Run 1: Dec 26, 2025 - Initial Validated Runs
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#run-2-dec-27-2025-pre-spec-3132-full-run" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Run 2: Dec 27, 2025 - Pre-Spec 31/32 Full Run
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#run-3-dec-29-2025-post-spec-3132-legacy-prompt-format" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Run 3: Dec 29, 2025 - Post-Spec 31/32 (Legacy Prompt Format)
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#run-4-dec-29-2025-spec-33-development-snapshot-pre-merge" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Run 4: Dec 29, 2025 - Spec 33 Development Snapshot (Pre-merge)
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#run-4b-dec-30-2025-post-spec-34-regression-query-embedding-timeouts" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Run 4b: Dec 30, 2025 - Post-Spec 34 Regression (Query Embedding Timeouts)
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#run-5-dec-30-2025-post-spec-3334-full-ablation" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Run 5: Dec 30, 2025 - Post-Spec 33+34 (Full Ablation)
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#spec-3132-impact-analysis" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Spec 31/32 Impact Analysis
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Spec 31/32 Impact Analysis">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#what-changed" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        What Changed
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#impact-on-metrics" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Impact on Metrics
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#interpretation" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Interpretation
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#key-findings" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Key Findings
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Key Findings">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#1-few-shot-vs-zero-shot-paper-claim" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        1. Few-Shot vs Zero-Shot (Paper Claim)
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#2-papers-mae-comparison-was-not-coverage-adjusted" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        2. Paper's MAE Comparison Was Not Coverage-Adjusted
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#3-formatting-matters-but-isnt-everything" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        3. Formatting Matters But Isn't Everything
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#pending-work" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Pending Work
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Pending Work">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#specs-33-36-retrieval-quality-fixes" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Specs 33-36: Retrieval Quality Fixes
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#run-6-dec-31-2025-spec-35-chunk-scoring-preprocessing" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Run 6: Dec 31, 2025 - Spec 35 Chunk Scoring Preprocessing
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#run-7-jan-1-2026-post-spec-35-chunk-scoring-full-run" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Run 7: Jan 1, 2026 - Post-Spec 35 Chunk Scoring (Full Run)
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#run-8-jan-2-2026-participant-only-transcript-preprocessing-full-run" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Run 8: Jan 2, 2026 - Participant-Only Transcript Preprocessing (Full Run)
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#run-9-jan-2-3-2026-spec-046-confidence-signals-ablation" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Run 9: Jan 2-3, 2026 - Spec 046 Confidence Signals Ablation
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#run-10-jan-3-2026-confidence-suite-specs-048051-attempt-invalid" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Run 10: Jan 3, 2026 - Confidence Suite (Specs 048–051) Attempt (INVALID)
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#run-11-jan-4-2026-confidence-suite-specs-048051-diagnostic-not-comparable" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Run 11: Jan 4, 2026 - Confidence Suite (Specs 048–051) (DIAGNOSTIC; NOT COMPARABLE)
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#run-12-jan-4-5-2026-confidence-suite-specs-048052-valid-n41" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Run 12: Jan 4-5, 2026 - Confidence Suite (Specs 048–052) ✅ VALID (N=41)
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#run-13-jan-6-7-2026-post-bug-035-first-clean-comparative-run-valid" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Run 13: Jan 6-7, 2026 - POST BUG-035 (First Clean Comparative Run) ✅ VALID
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#run-14-jan-7-8-2026-spec-063-severity-inference-infer-valid-coverage-risk" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Run 14: Jan 7-8, 2026 - Spec 063 Severity Inference (infer) ✅ VALID (Coverage ↑; Risk ↑)
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#reproduction-commands" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Reproduction Commands
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Reproduction Commands">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#run-evaluation" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Run Evaluation
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#compute-aurcaugrc" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Compute AURC/AUGRC
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#generate-embeddings-for-few-shot" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Generate Embeddings (for few-shot)
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#file-locations" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        File Locations
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#references" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        References
+      
+    </span>
+  </a>
+  
+</li>
+      
+    </ul>
+  
+</nav>
+                  </div>
+                </div>
+              </div>
+            
+          
+          
+            <div class="md-content" data-md-component="content">
+              
+              <article class="md-content__inner md-typeset">
+                
+                  
+
+
+  
+    <a href="https://github.com/The-Obstacle-Is-The-Way/ai-psychiatrist/edit/main/docs/results/run-history.md" title="Edit this page" class="md-content__button md-icon" rel="edit">
+      
+      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M10 20H6V4h7v5h5v3.1l2-2V8l-6-6H6c-1.1 0-2 .9-2 2v16c0 1.1.9 2 2 2h4zm10.2-7c.1 0 .3.1.4.2l1.3 1.3c.2.2.2.6 0 .8l-1 1-2.1-2.1 1-1c.1-.1.2-.2.4-.2m0 3.9L14.1 23H12v-2.1l6.1-6.1z"/></svg>
+    </a>
+  
+  
+    
+      
+    
+    <a href="https://github.com/The-Obstacle-Is-The-Way/ai-psychiatrist/raw/main/docs/results/run-history.md" title="View source of this page" class="md-content__button md-icon">
+      
+      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M17 18c.56 0 1 .44 1 1s-.44 1-1 1-1-.44-1-1 .44-1 1-1m0-3c-2.73 0-5.06 1.66-6 4 .94 2.34 3.27 4 6 4s5.06-1.66 6-4c-.94-2.34-3.27-4-6-4m0 6.5a2.5 2.5 0 0 1-2.5-2.5 2.5 2.5 0 0 1 2.5-2.5 2.5 2.5 0 0 1 2.5 2.5 2.5 2.5 0 0 1-2.5 2.5M9.27 20H6V4h7v5h5v4.07c.7.08 1.36.25 2 .49V8l-6-6H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h4.5a8.2 8.2 0 0 1-1.23-2"/></svg>
+    </a>
+  
+
+
+<h1 id="complete-run-history-statistical-analysis">Complete Run History &amp; Statistical Analysis</h1>
+<p><strong>Purpose</strong>: Comprehensive record of all reproduction runs, code changes, and statistical analyses for posterity.</p>
+<p><strong>Last Updated</strong>: 2026-01-08</p>
+<hr />
+<h2 id="critical-run-integrity-warnings">⚠️ CRITICAL: Run Integrity Warnings</h2>
+<h3 id="prompt-confound-bug-bug-035-fixed-2026-01-06">Prompt Confound Bug (BUG-035) - Fixed 2026-01-06</h3>
+<p>A prompt confound was discovered and fixed on 2026-01-06 where few-shot mode produced different prompts than zero-shot <strong>even when retrieval returned zero references</strong>.</p>
+<p><strong>What happened</strong>: When <code>format_for_prompt()</code> had no valid references, it returned:</p>
+<div class="highlight"><pre><span></span><code>&lt;Reference Examples&gt;
+No valid evidence found
+&lt;/Reference Examples&gt;
+</code></pre></div>
+<p>Instead of an empty string. This meant few-shot prompts always differed from zero-shot, even when retrieval contributed nothing.</p>
+<p><strong>Impact on Comparative Claims</strong>:
+- Any claim that "few-shot is worse/better than zero-shot" is <strong>confounded</strong>
+- The observed difference could be due to: (1) actual retrieval effect, (2) the "No valid evidence found" message anchoring the model, or (3) interaction of both
+- The message may have caused the model to be more conservative/abstain more in few-shot mode</p>
+<p><strong>Status by Run</strong>:</p>
+<table>
+<thead>
+<tr>
+<th>Run</th>
+<th>Affected?</th>
+<th>Notes</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Run 1-12</td>
+<td><strong>Yes</strong></td>
+<td>All comparative claims between modes are confounded</td>
+</tr>
+<tr>
+<td>Future runs</td>
+<td>No</td>
+<td>Fix deployed: empty retrieval = identical to zero-shot</td>
+</tr>
+</tbody>
+</table>
+<p><strong>Fix Applied</strong>: Commit on 2026-01-06
+- <code>format_for_prompt()</code> now returns <code>""</code> when no valid entries
+- Few-shot with no retrieval results now produces identical prompt to zero-shot</p>
+<p><strong>Recommendation</strong>: Re-run comparative experiments post-fix to measure true retrieval effect.</p>
+<p>See: <a href="../../_archive/bugs/BUG-035_FEW_SHOT_PROMPT_CONFOUND/">BUG-035</a></p>
+<hr />
+<h3 id="silent-fallback-bug-analysis-026-fixed-2026-01-03">Silent Fallback Bug (ANALYSIS-026) - Fixed 2026-01-03</h3>
+<p>A critical bug was discovered and fixed on 2026-01-03 where <code>_extract_evidence()</code> would <strong>silently return <code>{}</code> on JSON parse failure</strong> instead of raising an exception.</p>
+<p><strong>Impact on Mode Isolation</strong>:</p>
+<ul>
+<li>Few-shot mode with empty evidence <code>{}</code> → no reference bundle → effectively zero-shot</li>
+<li>This violated the independence of zero-shot and few-shot as research methodologies</li>
+<li>Published results claiming "few-shot" could have been partially zero-shot</li>
+</ul>
+<p><strong>Status by Run</strong>:</p>
+<table>
+<thead>
+<tr>
+<th>Run</th>
+<th>Code Version</th>
+<th>Affected?</th>
+<th>Notes</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Run 1-9</td>
+<td>Pre-fix</td>
+<td><strong>Unknown</strong></td>
+<td>Bug was SILENT - no way to know without re-running</td>
+</tr>
+<tr>
+<td>Run 10</td>
+<td>Pre-fix (git dirty)</td>
+<td><strong>Yes</strong></td>
+<td>Completed but invalid (zero-shot partial, few-shot failed entirely)</td>
+</tr>
+<tr>
+<td>Future runs</td>
+<td>Post-fix</td>
+<td>No</td>
+<td>Will fail loudly if JSON parsing fails</td>
+</tr>
+</tbody>
+</table>
+<p><strong>Why we can't be certain about Run 1-9</strong>:</p>
+<ul>
+<li>The bug only triggers if LLM returns malformed JSON</li>
+<li>If LLM always returned valid JSON, bug never triggered</li>
+<li>Results looked plausible at the time (e.g., some runs reported few-shot &lt; zero-shot MAE after chunk scoring), but those runs are pre-BUG-035 and are confounded for cross-mode comparisons</li>
+<li>But we have NO PROOF the bug never triggered</li>
+</ul>
+<p><strong>Fix Applied</strong>: Commit on 2026-01-03</p>
+<ul>
+<li><code>_extract_evidence()</code> now raises <code>json.JSONDecodeError</code> on failure</li>
+<li>Uses <code>format="json"</code> for grammar-level JSON constraint</li>
+<li>All parsers use canonical <code>parse_llm_json()</code> function</li>
+</ul>
+<p><strong>Recommendation</strong>: For publication-quality results, consider re-running with post-fix code.</p>
+<p>See: <code>docs/_archive/bugs/ANALYSIS-026_JSON_PARSING_ARCHITECTURE_AUDIT.md</code></p>
+<hr />
+<h3 id="invalid-json-output-bug-bug-048-fixed-2026-01-08">Invalid JSON Output Bug (BUG-048) - Fixed 2026-01-08</h3>
+<p>Some historical run artifacts may contain <code>NaN</code>/<code>Infinity</code> floating-point literals in the JSON output when a metric is undefined (e.g., an evaluation subset is empty). These outputs are <strong>not strict JSON</strong> and will fail parsers like <code>jq</code>.</p>
+<p><strong>Fix Applied</strong>:
+- The runner now serializes strict JSON (<code>allow_nan=False</code>).
+- Non-finite aggregate metrics are emitted as <code>null</code> instead of <code>NaN</code>/<code>Infinity</code>.</p>
+<p>See: <code>docs/_bugs/BUG-048-invalid-json-output-nan-metrics.md</code></p>
+<hr />
+<h2 id="quick-reference-current-best-results">Quick Reference: Current Best Results</h2>
+<p>All values below use <code>loss=abs_norm</code> and 1,000 participant-level bootstrap resamples.</p>
+<h3 id="run-13-first-clean-run-post-bug-035-fix">Run 13: First Clean Run POST BUG-035 Fix ✅</h3>
+<p><strong>This is the authoritative baseline</strong> for zero-shot vs few-shot comparisons (no prompt confound).</p>
+<table>
+<thead>
+<tr>
+<th>Mode</th>
+<th>MAE_item</th>
+<th>AURC (<code>llm</code>)</th>
+<th>Best AURC</th>
+<th>Best AUGRC</th>
+<th>Cmax</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><strong>Zero-shot</strong></td>
+<td><strong>0.6079</strong></td>
+<td>0.107</td>
+<td>0.098 (<code>consistency_inverse_std</code>)</td>
+<td>0.024 (<code>consistency_inverse_std</code>)</td>
+<td>48.8%</td>
+</tr>
+<tr>
+<td><strong>Few-shot</strong></td>
+<td>0.6571</td>
+<td>0.115</td>
+<td><strong>0.091</strong> (<code>token_pe</code>)</td>
+<td>0.025 (<code>token_pe</code>)</td>
+<td>48.5%</td>
+</tr>
+</tbody>
+</table>
+<h3 id="paper-comparison-mae_item">Paper Comparison (MAE_item)</h3>
+<table>
+<thead>
+<tr>
+<th>Mode</th>
+<th>Paper</th>
+<th>Run 13</th>
+<th>Delta</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Zero-shot</td>
+<td>0.796</td>
+<td><strong>0.6079</strong></td>
+<td><strong>-24% (we're better)</strong></td>
+</tr>
+<tr>
+<td>Few-shot</td>
+<td>0.619</td>
+<td>0.6571</td>
+<td>+6% (paper's better)</td>
+</tr>
+</tbody>
+</table>
+<h3 id="historical-reference-run-12-pre-bug-035-fix">Historical Reference (Run 12, pre-BUG-035 fix)</h3>
+<table>
+<thead>
+<tr>
+<th>Mode</th>
+<th>AURC</th>
+<th>AUGRC</th>
+<th>Cmax</th>
+<th>Notes</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Zero-shot</td>
+<td>0.102 [0.081-0.121]</td>
+<td>0.025 [0.019-0.032]</td>
+<td>48.5%</td>
+<td>Pre-fix baseline</td>
+</tr>
+<tr>
+<td>Few-shot</td>
+<td>0.109 [0.084-0.133]</td>
+<td>0.024 [0.018-0.032]</td>
+<td>46.0%</td>
+<td><strong>Confounded</strong> (BUG-035)</td>
+</tr>
+</tbody>
+</table>
+<p><strong>Note</strong>: Run 1-12 few-shot results are confounded by BUG-035 (prompt contained "No valid evidence found" message). Use Run 13+ for valid zero-shot vs few-shot comparisons.</p>
+<p><strong>Note</strong>: <code>Cmax</code> is the max coverage in the risk–coverage curve (counts participants with 8/8 N/A as 0 coverage). <code>MAE_w</code> is computed over evaluated subjects only.</p>
+<hr />
+<h3 id="run-14-spec-063-severity-inference-infer-ablation-coverage-risk">Run 14: Spec 063 Severity Inference (<code>infer</code>) Ablation (Coverage ↑; Risk ↑)</h3>
+<p>Run 14 (<code>data/outputs/both_paper-test_20260108_114058.json</code>) enables severity inference (<code>--severity-inference infer</code>) while keeping consistency sampling enabled.</p>
+<table>
+<thead>
+<tr>
+<th>Mode</th>
+<th>MAE_item</th>
+<th>AURC (<code>llm</code>)</th>
+<th>Best AURC</th>
+<th>Best AUGRC</th>
+<th>Cmax</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><strong>Zero-shot</strong></td>
+<td>0.7030</td>
+<td>0.129</td>
+<td>0.126 (<code>hybrid_consistency</code>)</td>
+<td>0.038 (<code>hybrid_consistency</code>)</td>
+<td>60.1%</td>
+</tr>
+<tr>
+<td><strong>Few-shot</strong></td>
+<td>0.7843</td>
+<td>0.147</td>
+<td>0.139 (<code>consistency_inverse_std</code>)</td>
+<td>0.039 (<code>token_energy</code>)</td>
+<td>57.5%</td>
+</tr>
+</tbody>
+</table>
+<p><strong>Key result</strong>: Compared to Run 13 (strict baseline), <code>infer</code> increases Cmax by ~8–11 points, but <strong>worsens AURC/AUGRC significantly</strong> (paired deltas are positive for most confidence variants).</p>
+<hr />
+<h2 id="why-aurcaugrc-instead-of-mae">Why AURC/AUGRC Instead of MAE?</h2>
+<p><strong>MAE comparisons are not coverage-adjusted when coverages differ.</strong></p>
+<ul>
+<li>Run 7 <code>Cmax</code>: zero-shot 56.9%, few-shot 65.9%</li>
+<li>Run 8 <code>Cmax</code>: zero-shot 48.8%, few-shot 50.9%</li>
+</ul>
+<p>When one system predicts on more items, those additional items are inherently harder cases that another system abstained from. Comparing raw MAE without a coverage-adjusted metric is like comparing a surgeon who only takes easy cases vs one who takes hard cases.</p>
+<p><strong>AURC/AUGRC integrate over the entire risk-coverage curve</strong>, providing a fair comparison regardless of coverage differences.</p>
+<p>See: <code>docs/statistics/statistical-methodology-aurc-augrc.md</code></p>
+<hr />
+<h2 id="run-timeline-chronological">Run Timeline (Chronological)</h2>
+<h3 id="run-1-dec-26-2025-initial-validated-runs">Run 1: Dec 26, 2025 - Initial Validated Runs</h3>
+<p><strong>Artifacts</strong>: Not retained in this repo snapshot (early outputs used different naming and were not committed). Treat this run as historical context only; later runs include stored JSON artifacts under <code>data/outputs/</code>.</p>
+<p><strong>Git Commits</strong>: Various (<code>5b8f588</code>, <code>f6d2653</code>)</p>
+<p><strong>Code State</strong>:
+- Pre-Spec 31/32 (old reference format)
+- 8 separate <code>&lt;Reference Examples&gt;</code> blocks per PHQ-8 item
+- Per-item headers like <code>[Sleep]</code>
+- XML-style closing tags <code>&lt;/Reference Examples&gt;</code>
+- Empty items showed "No valid evidence found"</p>
+<p><strong>Results</strong>:</p>
+<table>
+<thead>
+<tr>
+<th>Mode</th>
+<th>AURC</th>
+<th>AUGRC</th>
+<th>Cmax</th>
+<th>MAE_w</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Zero-shot</td>
+<td>~0.134</td>
+<td>~0.037</td>
+<td>55.5%</td>
+<td>0.698</td>
+</tr>
+<tr>
+<td>Few-shot</td>
+<td>~0.21</td>
+<td>~0.07</td>
+<td>71.6%</td>
+<td>0.860</td>
+</tr>
+</tbody>
+</table>
+<p><strong>Notes</strong>: Initial baseline. Few-shot significantly worse than zero-shot.</p>
+<hr />
+<h3 id="run-2-dec-27-2025-pre-spec-3132-full-run">Run 2: Dec 27, 2025 - Pre-Spec 31/32 Full Run</h3>
+<p><strong>File</strong>: <code>paper_test_full_run_20251228.json</code> (filename misleading - actually Dec 27)</p>
+<p><strong>Git Commit</strong>: <code>0a98662</code></p>
+<p><strong>Timestamp</strong>: 2025-12-27T23:10:45</p>
+<p><strong>Code State</strong>: Same as Run 1 (pre-Spec 31/32)</p>
+<p><strong>Results</strong>:</p>
+<table>
+<thead>
+<tr>
+<th>Mode</th>
+<th>AURC</th>
+<th>AUGRC</th>
+<th>Cmax</th>
+<th>MAE_w</th>
+<th>MAE_item</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Zero-shot</td>
+<td>0.134</td>
+<td>0.037</td>
+<td>55.5%</td>
+<td>0.698</td>
+<td>0.717</td>
+</tr>
+<tr>
+<td>Few-shot</td>
+<td>0.214</td>
+<td>0.074</td>
+<td>71.9%</td>
+<td>0.804</td>
+<td>N/A</td>
+</tr>
+</tbody>
+</table>
+<p><strong>Statistical Analysis</strong>: AURC computed via <code>scripts/evaluate_selective_prediction.py</code></p>
+<hr />
+<h3 id="run-3-dec-29-2025-post-spec-3132-legacy-prompt-format">Run 3: Dec 29, 2025 - Post-Spec 31/32 (Legacy Prompt Format)</h3>
+<p><strong>File</strong>: <code>both_paper-test_backfill-off_20251229_003543.json</code></p>
+<p><strong>Git Commit</strong>: <code>7d54d98</code></p>
+<p><strong>Timestamp</strong>: 2025-12-28T21:39:32</p>
+<p><strong>Code Changes (Spec 31/32)</strong>:
+- Single unified <code>&lt;Reference Examples&gt;</code> block
+- Inline labels: <code>(PHQ8_Sleep Score: 2)</code> instead of <code>(Score: 2)</code>
+- Empty items skipped entirely (no per-item blocks)
+- Same opening/closing tag: <code>&lt;Reference Examples&gt;</code> (not XML-style)</p>
+<p><strong>Results</strong>:</p>
+<table>
+<thead>
+<tr>
+<th>Mode</th>
+<th>AURC</th>
+<th>AUGRC</th>
+<th>Cmax</th>
+<th>MAE_w</th>
+<th>MAE_item</th>
+<th>MAE_subj</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Zero-shot</td>
+<td>0.134</td>
+<td>0.037</td>
+<td>55.5%</td>
+<td>0.698</td>
+<td>0.717</td>
+<td>0.640</td>
+</tr>
+<tr>
+<td>Few-shot</td>
+<td>0.193</td>
+<td>0.065</td>
+<td>70.1%</td>
+<td>0.774</td>
+<td>0.762</td>
+<td>0.712</td>
+</tr>
+</tbody>
+</table>
+<p><strong>95% Bootstrap CIs</strong> (10,000 resamples, participant-level):</p>
+<table>
+<thead>
+<tr>
+<th>Mode</th>
+<th>AURC CI</th>
+<th>AUGRC CI</th>
+<th>Cmax CI</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Zero-shot</td>
+<td>[0.094, 0.176]</td>
+<td>[0.024, 0.053]</td>
+<td>[0.473, 0.640]</td>
+</tr>
+<tr>
+<td>Few-shot</td>
+<td>[0.142, 0.244]</td>
+<td>[0.043, 0.091]</td>
+<td>[0.604, 0.799]</td>
+</tr>
+</tbody>
+</table>
+<p><strong>Statistical Analysis</strong>:
+- Computed 2025-12-29 via <code>scripts/evaluate_selective_prediction.py --seed 42</code>
+- Metrics files: <code>selective_prediction_metrics_20251229T164344Z.json</code> (zero-shot), <code>selective_prediction_metrics_20251229T164403Z.json</code> (few-shot)
+- Paired comparison: <code>selective_prediction_metrics_20251229T1644_paired.json</code> (ΔAURC = +0.058 [0.016, 0.107], few-shot − zero-shot)</p>
+<hr />
+<h3 id="run-4-dec-29-2025-spec-33-development-snapshot-pre-merge">Run 4: Dec 29, 2025 - Spec 33 Development Snapshot (Pre-merge)</h3>
+<p><strong>File</strong>: <code>both_paper-test_backfill-off_20251229_173727.json</code></p>
+<p><strong>Git Commit</strong>: <code>5e62455</code> (pre-merge dev commit; not on <code>main</code>)</p>
+<p><strong>Timestamp</strong>: 2025-12-29T14:41:44</p>
+<p><strong>Code Changes (Spec 33)</strong>:
+- Retrieval quality guardrails (similarity threshold + per-item reference budget)
+- XML-style closing tag: <code>&lt;/Reference Examples&gt;</code> (deviates from notebook tag mirroring)</p>
+<p><strong>Results</strong> (single-run metrics; note different included-N due to one zero-shot failure):</p>
+<table>
+<thead>
+<tr>
+<th>Mode</th>
+<th>AURC</th>
+<th>AUGRC</th>
+<th>Cmax</th>
+<th>MAE_w</th>
+<th>N_included (AURC)</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Zero-shot</td>
+<td>0.138</td>
+<td>0.039</td>
+<td>56.9%</td>
+<td>0.698</td>
+<td>40</td>
+</tr>
+<tr>
+<td>Few-shot</td>
+<td>0.192</td>
+<td>0.058</td>
+<td>65.5%</td>
+<td>0.777</td>
+<td>41</td>
+</tr>
+</tbody>
+</table>
+<p><strong>95% Bootstrap CIs</strong> (10,000 resamples, participant-level):</p>
+<table>
+<thead>
+<tr>
+<th>Mode</th>
+<th>AURC CI</th>
+<th>AUGRC CI</th>
+<th>Cmax CI</th>
+<th>N_included (AURC)</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Zero-shot</td>
+<td>[0.097, 0.180]</td>
+<td>[0.025, 0.055]</td>
+<td>[0.491, 0.650]</td>
+<td>40</td>
+</tr>
+<tr>
+<td>Few-shot</td>
+<td>[0.144, 0.243]</td>
+<td>[0.039, 0.081]</td>
+<td>[0.555, 0.753]</td>
+<td>41</td>
+</tr>
+</tbody>
+</table>
+<p><strong>Statistical Analysis</strong>:
+- Computed 2025-12-29 via <code>scripts/evaluate_selective_prediction.py --seed 42</code>
+- Metrics files: <code>selective_prediction_metrics_20251229T231237Z.json</code> (zero-shot), <code>selective_prediction_metrics_20251229T231302Z.json</code> (few-shot)
+- Paired comparison (overlap N=40 due to one zero-shot failure): <code>selective_prediction_metrics_20251229T233314Z.json</code> (ΔAURC = +0.058 [0.010, 0.109], few-shot − zero-shot)</p>
+<p><strong>Note on comparability</strong>: The paired comparison recomputes both modes on the overlap only (N=40). On that overlap, few-shot is slightly worse than the single-mode table above (AURC ≈ 0.196, AUGRC ≈ 0.060) because the dropped participant only affects the paired analysis, not the standalone few-shot evaluation.</p>
+<p><strong>Note</strong>: This was a pre-merge development snapshot. See Run 5 for the clean, post-merge Spec 33+34 ablation run.</p>
+<hr />
+<h3 id="run-4b-dec-30-2025-post-spec-34-regression-query-embedding-timeouts">Run 4b: Dec 30, 2025 - Post-Spec 34 Regression (Query Embedding Timeouts)</h3>
+<p><strong>File</strong>: <code>both_paper_backfill-off_20251230_053108.json</code></p>
+<p><strong>Git Commit</strong>: <code>be35e35</code> (dirty)</p>
+<p><strong>Timestamp</strong>: 2025-12-29T23:34:42</p>
+<p><strong>What went wrong</strong>:
+- Few-shot had <strong>9/41 failures (22%)</strong>, all <code>"LLM request timed out after 120s"</code>.
+- Runtime roughly doubled vs the expected ~95 minutes.</p>
+<p><strong>Root cause (since fixed)</strong>:
+- Spec 37 was required (batch query embedding + configurable query embedding timeout).</p>
+<p><strong>Results</strong> (includes failures; do not treat as a valid baseline):</p>
+<table>
+<thead>
+<tr>
+<th>Mode</th>
+<th>AURC</th>
+<th>AUGRC</th>
+<th>Cmax</th>
+<th>MAE_w</th>
+<th>N_included (AURC)</th>
+<th>Failed</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Zero-shot</td>
+<td>0.138</td>
+<td>0.039</td>
+<td>56.9%</td>
+<td>0.698</td>
+<td>40</td>
+<td>1</td>
+</tr>
+<tr>
+<td>Few-shot</td>
+<td>0.163</td>
+<td>0.037</td>
+<td>53.5%</td>
+<td>0.745</td>
+<td>32</td>
+<td>9</td>
+</tr>
+</tbody>
+</table>
+<p><strong>95% Bootstrap CIs</strong> (10,000 resamples, participant-level):</p>
+<table>
+<thead>
+<tr>
+<th>Mode</th>
+<th>AURC CI</th>
+<th>AUGRC CI</th>
+<th>Cmax CI</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Zero-shot</td>
+<td>[0.097, 0.180]</td>
+<td>[0.025, 0.055]</td>
+<td>[0.491, 0.650]</td>
+</tr>
+<tr>
+<td>Few-shot</td>
+<td>[0.098, 0.217]</td>
+<td>[0.020, 0.060]</td>
+<td>[0.426, 0.648]</td>
+</tr>
+</tbody>
+</table>
+<p><strong>Paired comparison</strong> (overlap N=31 due to failures): ΔAURC = +0.037 [-0.028, +0.087] (few-shot − zero-shot).</p>
+<hr />
+<h3 id="run-5-dec-30-2025-post-spec-3334-full-ablation">Run 5: Dec 30, 2025 - Post-Spec 33+34 (Full Ablation)</h3>
+<p><strong>File</strong>: <code>both_paper-test_backfill-off_20251230_230349.json</code></p>
+<p><strong>Git Commit</strong>: <code>36995f0</code> (clean)</p>
+<p><strong>Timestamp</strong>: 2025-12-30T20:27:38</p>
+<p><strong>Code Changes (Spec 33+34)</strong>:
+- Spec 33: Retrieval quality guardrails (min_similarity=0.3, max_chars_per_item=500)
+- Spec 34: Item-tag filtering (only retrieve domain-matched chunks)
+- Spec 35/36: NOT enabled (chunk scores file doesn't exist)</p>
+<p><strong>Results</strong>:</p>
+<table>
+<thead>
+<tr>
+<th>Mode</th>
+<th>AURC</th>
+<th>AUGRC</th>
+<th>Cmax</th>
+<th>MAE_w</th>
+<th>N_included</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Zero-shot</td>
+<td>0.138</td>
+<td>0.039</td>
+<td>56.9%</td>
+<td>0.698</td>
+<td>40</td>
+</tr>
+<tr>
+<td>Few-shot</td>
+<td>0.213</td>
+<td>0.073</td>
+<td>71.0%</td>
+<td>0.807</td>
+<td>41</td>
+</tr>
+</tbody>
+</table>
+<p><strong>95% Bootstrap CIs</strong> (10,000 resamples, participant-level):</p>
+<table>
+<thead>
+<tr>
+<th>Mode</th>
+<th>AURC CI</th>
+<th>AUGRC CI</th>
+<th>Cmax CI</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Zero-shot</td>
+<td>[0.097, 0.180]</td>
+<td>[0.025, 0.055]</td>
+<td>[0.491, 0.650]</td>
+</tr>
+<tr>
+<td>Few-shot</td>
+<td>[0.153, 0.276]</td>
+<td>[0.047, 0.103]</td>
+<td>[0.610, 0.805]</td>
+</tr>
+</tbody>
+</table>
+<p><strong>Statistical Analysis</strong>:
+- Computed 2025-12-30 via <code>scripts/evaluate_selective_prediction.py --seed 42</code>
+- Metrics files: <code>selective_prediction_metrics_run5_zero_shot.json</code>, <code>selective_prediction_metrics_run5_few_shot.json</code></p>
+<p><strong>Comparison vs Run 3 (Spec 31/32 baseline)</strong>:</p>
+<table>
+<thead>
+<tr>
+<th>Metric</th>
+<th>Run 3</th>
+<th>Run 5</th>
+<th>Delta</th>
+<th>% Change</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>few_shot AURC</td>
+<td>0.193</td>
+<td>0.213</td>
+<td>+0.020</td>
+<td><strong>+10% (worse)</strong></td>
+</tr>
+<tr>
+<td>few_shot AUGRC</td>
+<td>0.065</td>
+<td>0.073</td>
+<td>+0.008</td>
+<td><strong>+12% (worse)</strong></td>
+</tr>
+<tr>
+<td>zero_shot AURC</td>
+<td>0.134</td>
+<td>0.138</td>
+<td>+0.004</td>
+<td>+3% (noise)</td>
+</tr>
+</tbody>
+</table>
+<p><strong>Key Finding</strong>: Spec 33+34 did NOT improve few-shot. Performance regressed ~10%.</p>
+<p><strong>Interpretation</strong>: Domain filtering (Spec 34) and quality guardrails (Spec 33) cannot fix the fundamental chunk-scoring problem documented in <code>HYPOTHESIS-FEWSHOT-DESIGN-FLAW.md</code>. Chunks still have participant-level scores, not chunk-specific scores. Filtering by domain helps retrieval precision but doesn't fix the misleading score labels.</p>
+<p><strong>Conclusion</strong>: Spec 35 (chunk-level scoring) is required before further ablations are meaningful.</p>
+<hr />
+<h2 id="spec-3132-impact-analysis">Spec 31/32 Impact Analysis</h2>
+<h3 id="what-changed">What Changed</h3>
+<table>
+<thead>
+<tr>
+<th>Aspect</th>
+<th>Before (Old Format)</th>
+<th>After (Spec 31/32)</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Block structure</td>
+<td>8 separate blocks</td>
+<td>1 unified block</td>
+</tr>
+<tr>
+<td>Item labels</td>
+<td><code>[Sleep]</code> header</td>
+<td><code>(PHQ8_Sleep Score: X)</code> inline</td>
+</tr>
+<tr>
+<td>Empty items</td>
+<td>"No valid evidence found"</td>
+<td>Omitted entirely</td>
+</tr>
+<tr>
+<td>Closing tag</td>
+<td><code>&lt;/Reference Examples&gt;</code></td>
+<td><code>&lt;Reference Examples&gt;</code></td>
+</tr>
+</tbody>
+</table>
+<h3 id="impact-on-metrics">Impact on Metrics</h3>
+<table>
+<thead>
+<tr>
+<th>Metric</th>
+<th>Pre-Spec 31</th>
+<th>Post-Spec 31</th>
+<th>Delta</th>
+<th>% Change</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><strong>Zero-shot AURC</strong></td>
+<td>0.134</td>
+<td>0.134</td>
+<td>0</td>
+<td>0%</td>
+</tr>
+<tr>
+<td><strong>Zero-shot AUGRC</strong></td>
+<td>0.037</td>
+<td>0.037</td>
+<td>0</td>
+<td>0%</td>
+</tr>
+<tr>
+<td><strong>Few-shot AURC</strong></td>
+<td>0.214</td>
+<td>0.193</td>
+<td>-0.021</td>
+<td><strong>-10%</strong></td>
+</tr>
+<tr>
+<td><strong>Few-shot AUGRC</strong></td>
+<td>0.074</td>
+<td>0.065</td>
+<td>-0.009</td>
+<td><strong>-12%</strong></td>
+</tr>
+<tr>
+<td>Few-shot MAE_w</td>
+<td>0.804</td>
+<td>0.774</td>
+<td>-0.030</td>
+<td>-3.7%</td>
+</tr>
+<tr>
+<td>Few-shot Cmax</td>
+<td>71.9%</td>
+<td>70.1%</td>
+<td>-1.8%</td>
+<td>-2.5%</td>
+</tr>
+</tbody>
+</table>
+<h3 id="interpretation">Interpretation</h3>
+<ol>
+<li><strong>Zero-shot unchanged</strong>: Expected - doesn't use reference examples</li>
+<li><strong>Few-shot improved 10-12%</strong>: Legacy prompt format helps</li>
+<li><strong>Gap remains ~30%</strong>: Zero-shot still significantly better (0.134 vs 0.193)</li>
+<li><strong>Paired bootstrap delta excludes 0</strong>: Statistically significant difference at α=0.05</li>
+</ol>
+<hr />
+<h2 id="key-findings">Key Findings</h2>
+<h3 id="1-few-shot-vs-zero-shot-paper-claim">1. Few-Shot vs Zero-Shot (Paper Claim)</h3>
+<p>The paper claims few-shot beats zero-shot (by item-level MAE).</p>
+<p><strong>Update (Run 8)</strong>: With participant-only transcript preprocessing + chunk scoring enabled, few-shot matches the paper’s reported MAE_item and slightly beats it:</p>
+<table>
+<thead>
+<tr>
+<th>Metric</th>
+<th>Paper (reported)</th>
+<th>Run 8 (participant-only)</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Better mode (by MAE_item)</td>
+<td>Few-shot</td>
+<td><strong>Few-shot</strong></td>
+</tr>
+<tr>
+<td>Few-shot MAE_item</td>
+<td>0.619</td>
+<td>0.609</td>
+</tr>
+<tr>
+<td>Zero-shot MAE_item</td>
+<td>0.796</td>
+<td>0.776</td>
+</tr>
+</tbody>
+</table>
+<p><strong>Note</strong>: Earlier runs (Run 3 / Run 7) still showed zero-shot as better on AURC due to the confidence/coverage tradeoff; Run 8 changes the retrieval setting but lowers Cmax substantially.</p>
+<p><strong>Possible explanations</strong> (partially addressed by Specs 33-35 and transcript preprocessing):
+1. Reference example quality issues
+2. Embedding similarity matches topic, not severity
+3. Low-similarity references inject noise
+4. Model overconfidence with few-shot</p>
+<h3 id="2-papers-mae-comparison-was-not-coverage-adjusted">2. Paper's MAE Comparison Was Not Coverage-Adjusted</h3>
+<p>The paper compared MAE at different coverages without analyzing the risk–coverage tradeoff. MAE alone does not establish dominance when abstention rates differ.</p>
+<h3 id="3-formatting-matters-but-isnt-everything">3. Formatting Matters But Isn't Everything</h3>
+<p>Spec 31/32 improved few-shot by ~10%, proving formatting matters. Retrieval quality still dominates: chunk scoring (Spec 35) and participant-only transcripts (Run 8) substantially change outcomes, but coverage/confidence tradeoffs remain.</p>
+<hr />
+<h2 id="pending-work">Pending Work</h2>
+<h3 id="specs-33-36-retrieval-quality-fixes">Specs 33-36: Retrieval Quality Fixes</h3>
+<table>
+<thead>
+<tr>
+<th>Spec</th>
+<th>Description</th>
+<th>Status</th>
+<th>Result</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>33</td>
+<td>Similarity threshold + context budget</td>
+<td>✅ Implemented + tested</td>
+<td>No improvement (Run 5)</td>
+</tr>
+<tr>
+<td>34</td>
+<td>Item-tagged reference embeddings</td>
+<td>✅ Implemented + tested</td>
+<td>No improvement (Run 5)</td>
+</tr>
+<tr>
+<td>35</td>
+<td>Offline chunk-level PHQ-8 scoring</td>
+<td>✅ Implemented + tested</td>
+<td><strong>29% improvement (Run 7)</strong></td>
+</tr>
+<tr>
+<td>36</td>
+<td>CRAG reference validation</td>
+<td>✅ Implemented (optional)</td>
+<td>Pending ablation (runtime cost)</td>
+</tr>
+</tbody>
+</table>
+<p><strong>Run 5 Conclusion</strong>: Spec 33+34 alone did not improve few-shot.</p>
+<p><strong>Run 7 Conclusion</strong>: Spec 35 chunk-level scoring improved few-shot AURC by 29% (0.213 → 0.151). Gap to zero-shot closed to 9% (CIs overlap).</p>
+<p><strong>Run 8 Conclusion</strong>: Participant-only transcript preprocessing reaches paper MAE_item parity, but reduces <code>Cmax</code> substantially; next work is improving confidence signals for AURC/AUGRC (Spec 046: <code>docs/_specs/spec-046-selective-prediction-confidence-signals.md</code>) and then revisiting coverage.</p>
+<hr />
+<h3 id="run-6-dec-31-2025-spec-35-chunk-scoring-preprocessing">Run 6: Dec 31, 2025 - Spec 35 Chunk Scoring Preprocessing</h3>
+<p><strong>Log File</strong>: <code>data/outputs/run6_spec35_20251231_122458.log</code></p>
+<p><strong>Purpose</strong>: Generate chunk-level PHQ-8 scores (Spec 35 preprocessing step)</p>
+<p><strong>Configuration</strong>:
+- Embeddings: <code>ollama_qwen3_8b_paper_train.npz</code>
+- Scorer model: <code>gemma3:27b-it-qat</code>
+- Backend: Ollama
+- Temperature: 0.0</p>
+<p><strong>Output</strong>: <code>data/embeddings/ollama_qwen3_8b_paper_train.chunk_scores.json</code></p>
+<p><strong>Notes</strong>: This was a preprocessing run to generate chunk scores, not an evaluation run. See Run 7 for the subsequent evaluation.</p>
+<hr />
+<h3 id="run-7-jan-1-2026-post-spec-35-chunk-scoring-full-run">Run 7: Jan 1, 2026 - Post-Spec 35 Chunk Scoring (Full Run)</h3>
+<p><strong>File</strong>: <code>both_paper-test_backfill-off_20260101_111354.json</code></p>
+<p><strong>Git Commit</strong>: Current <code>dev</code> branch</p>
+<p><strong>Timestamp</strong>: 2026-01-01T11:13:54</p>
+<p><strong>Code State</strong>:
+- Spec 33: Retrieval quality guardrails ✅
+- Spec 34: Item-tag filtering ✅
+- Spec 35: Chunk-level scoring ✅ (<code>EMBEDDING_REFERENCE_SCORE_SOURCE=chunk</code>)
+- Spec 37: Batch query embedding ✅</p>
+<p><strong>Results</strong>:</p>
+<table>
+<thead>
+<tr>
+<th>Mode</th>
+<th>AURC</th>
+<th>AUGRC</th>
+<th>Cmax</th>
+<th>MAE_w</th>
+<th>MAE_item</th>
+<th>MAE_subj</th>
+<th>N_included</th>
+<th>Failed</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Zero-shot</td>
+<td>0.138</td>
+<td>0.039</td>
+<td>56.9%</td>
+<td>0.698</td>
+<td>0.717</td>
+<td>0.640</td>
+<td>40</td>
+<td>1</td>
+</tr>
+<tr>
+<td>Few-shot</td>
+<td>0.151</td>
+<td>0.048</td>
+<td>65.9%</td>
+<td>0.639</td>
+<td>0.636</td>
+<td>0.606</td>
+<td>41</td>
+<td>0</td>
+</tr>
+</tbody>
+</table>
+<p><strong>95% Bootstrap CIs</strong> (10,000 resamples, participant-level):</p>
+<table>
+<thead>
+<tr>
+<th>Mode</th>
+<th>AURC CI</th>
+<th>AUGRC CI</th>
+<th>Cmax CI</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Zero-shot</td>
+<td>[0.097, 0.180]</td>
+<td>[0.025, 0.055]</td>
+<td>[0.491, 0.650]</td>
+</tr>
+<tr>
+<td>Few-shot</td>
+<td>[0.109, 0.194]</td>
+<td>[0.033, 0.065]</td>
+<td>[0.570, 0.747]</td>
+</tr>
+</tbody>
+</table>
+<p><strong>Statistical Analysis</strong>:
+- Computed 2026-01-01 via <code>scripts/evaluate_selective_prediction.py --seed 42</code>
+- Metrics files: <code>selective_prediction_metrics_20260101T165303Z.json</code> (zero-shot), <code>selective_prediction_metrics_20260101T165328Z.json</code> (few-shot)</p>
+<p><strong>Known Issue</strong>: Participant 339 failed in zero-shot mode due to JSON parsing error (missing comma). See <a href="https://github.com/The-Obstacle-Is-The-Way/ai-psychiatrist/issues/84">GitHub Issue #84</a>.</p>
+<p><strong>Comparison vs Run 5</strong>:</p>
+<table>
+<thead>
+<tr>
+<th>Metric</th>
+<th>Run 5</th>
+<th>Run 7</th>
+<th>Delta</th>
+<th>% Change</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>few_shot AURC</td>
+<td>0.213</td>
+<td>0.151</td>
+<td>-0.062</td>
+<td><strong>-29% (better)</strong></td>
+</tr>
+<tr>
+<td>few_shot AUGRC</td>
+<td>0.073</td>
+<td>0.048</td>
+<td>-0.025</td>
+<td><strong>-34% (better)</strong></td>
+</tr>
+<tr>
+<td>zero_shot AURC</td>
+<td>0.138</td>
+<td>0.138</td>
+<td>0.000</td>
+<td>0% (unchanged)</td>
+</tr>
+</tbody>
+</table>
+<p><strong>Key Finding</strong>: With Spec 35 chunk-level scoring enabled, few-shot improved 29% on AURC vs Run 5. Few-shot now has <strong>better MAE</strong> (0.639 vs 0.698) but AURC is still slightly worse due to confidence calibration.</p>
+<p><strong>Interpretation</strong>: Spec 35 significantly improved few-shot performance. The remaining gap is now within statistical noise (CIs overlap). The next lever was participant-only transcript preprocessing (implemented in Run 8).</p>
+<hr />
+<h3 id="run-8-jan-2-2026-participant-only-transcript-preprocessing-full-run">Run 8: Jan 2, 2026 - Participant-Only Transcript Preprocessing (Full Run)</h3>
+<p><strong>File</strong>: <code>both_paper-test_backfill-off_20260102_065249.json</code></p>
+<p><strong>Log</strong>: <code>repro_post_preprocessing_20260101_183533.log</code></p>
+<p><strong>Run ID</strong>: <code>19b42478</code></p>
+<p><strong>Git Commit</strong>: <code>1b48d7a</code> (dirty)</p>
+<p><strong>Timestamp</strong>: 2026-01-02T04:22:43</p>
+<p><strong>Code State</strong>:
+- Spec 33: Retrieval quality guardrails ✅
+- Spec 34: Item-tag filtering ✅
+- Spec 35: Chunk-level scoring ✅ (<code>EMBEDDING_REFERENCE_SCORE_SOURCE=chunk</code>)
+- Spec 37: Batch query embedding ✅
+- Transcript preprocessing: participant-only turns ✅ (<code>data/transcripts_participant_only/</code>)</p>
+<p><strong>Reference Artifacts</strong>:
+- Few-shot embeddings: <code>data/embeddings/huggingface_qwen3_8b_paper_train_participant_only.npz</code>
+- Chunk scores sidecar: <code>data/embeddings/huggingface_qwen3_8b_paper_train_participant_only.chunk_scores.json</code> (loaded; train participants=58)</p>
+<p><strong>Results</strong>:</p>
+<table>
+<thead>
+<tr>
+<th>Mode</th>
+<th>AURC</th>
+<th>AUGRC</th>
+<th>Cmax</th>
+<th>MAE_w</th>
+<th>MAE_item</th>
+<th>MAE_subj</th>
+<th>N_included</th>
+<th>Failed</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Zero-shot</td>
+<td>0.141</td>
+<td>0.031</td>
+<td>48.8%</td>
+<td>0.744</td>
+<td>0.776</td>
+<td>0.736</td>
+<td>41</td>
+<td>0</td>
+</tr>
+<tr>
+<td>Few-shot</td>
+<td>0.125</td>
+<td>0.031</td>
+<td>50.9%</td>
+<td>0.706</td>
+<td>0.609</td>
+<td>0.688</td>
+<td>40</td>
+<td>1</td>
+</tr>
+</tbody>
+</table>
+<p><strong>95% Bootstrap CIs</strong> (10,000 resamples, participant-level):</p>
+<table>
+<thead>
+<tr>
+<th>Mode</th>
+<th>AURC CI</th>
+<th>AUGRC CI</th>
+<th>Cmax CI</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Zero-shot</td>
+<td>[0.108, 0.174]</td>
+<td>[0.022, 0.043]</td>
+<td>[0.412, 0.567]</td>
+</tr>
+<tr>
+<td>Few-shot</td>
+<td>[0.099, 0.151]</td>
+<td>[0.022, 0.041]</td>
+<td>[0.447, 0.575]</td>
+</tr>
+</tbody>
+</table>
+<p><strong>Statistical Analysis</strong>:
+- Computed 2026-01-02 via <code>scripts/evaluate_selective_prediction.py --loss abs_norm --seed 42</code>
+- Metrics files: <code>selective_prediction_metrics_20260102T132843Z.json</code> (zero-shot), <code>selective_prediction_metrics_20260102T132902Z.json</code> (few-shot)
+- Paired comparison (overlap N=40; <code>--intersection-only</code>): <code>selective_prediction_metrics_20260102T132930Z_paired.json</code> (ΔAURC = -0.020 [-0.053, +0.014], few-shot − zero-shot)</p>
+<p><strong>Paper MAE comparison (MAE_item)</strong>:
+- Zero-shot: <code>0.776</code> vs paper <code>0.796</code> (better)
+- Few-shot: <code>0.609</code> vs paper <code>0.619</code> (better)</p>
+<p><strong>Interpretation (first principles)</strong>:
+- <strong>Accuracy vs abstention</strong>: In Run 8, both modes abstain at similar rates (<code>Cmax</code> ~49% vs ~51%), so the large MAE_item gap (0.776 → 0.609) is less likely to be an artifact of one mode simply “skipping harder items”.
+- <strong>Calibration unchanged</strong>: AURC/AUGRC CIs overlap, and the paired ΔAURC CI includes 0. This suggests few-shot improves <em>scores on predicted items</em> but does not materially improve the model’s <em>ranking of confidence / abstention decisions</em>.
+- <strong>Practical takeaway</strong>: If the goal is “predict more items correctly”, retrieval helps; if the goal is “know when not to predict”, focus on evidence availability + confidence signals (e.g., evaluate <code>participant_qa</code>, tune thresholds, improve confidence estimation).</p>
+<p><strong>Known Issues</strong>:
+- Few-shot had 1/41 participant failure (PID 383): <code>Exceeded maximum retries (3) for output validation</code>.
+- Zero-shot excluded 1/41 participant from MAE aggregation due to 8/8 N/A (counted as 0 coverage for Cmax).</p>
+<hr />
+<h3 id="run-9-jan-2-3-2026-spec-046-confidence-signals-ablation">Run 9: Jan 2-3, 2026 - Spec 046 Confidence Signals Ablation</h3>
+<p><strong>File</strong>: <code>both_paper-test_backfill-off_20260102_215843.json</code></p>
+<p><strong>Log</strong>: <code>data/outputs/run9_spec046_20260102_181114.log</code></p>
+<p><strong>Git Commit</strong>: Post Spec 046 + 047 (retrieval signals + keyword backfill removal)</p>
+<p><strong>Timestamp</strong>: 2026-01-03T02:58:43</p>
+<p><strong>Code State</strong>:
+- Spec 33-35: Full retrieval stack ✅
+- Spec 37: Batch query embedding ✅
+- Spec 046: Retrieval similarity fields ✅
+- Spec 047: Keyword backfill removal ✅</p>
+<p><strong>Results</strong>:</p>
+<table>
+<thead>
+<tr>
+<th>Mode</th>
+<th>AURC</th>
+<th>AUGRC</th>
+<th>Cmax</th>
+<th>MAE_w</th>
+<th>MAE_item</th>
+<th>N_included</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Zero-shot</td>
+<td>0.144</td>
+<td>0.032</td>
+<td>48.8%</td>
+<td>0.744</td>
+<td>0.776</td>
+<td>40</td>
+</tr>
+<tr>
+<td>Few-shot</td>
+<td>0.135</td>
+<td>0.035</td>
+<td>53.0%</td>
+<td>0.718</td>
+<td>0.662</td>
+<td>41</td>
+</tr>
+</tbody>
+</table>
+<p><strong>95% Bootstrap CIs</strong> (10,000 resamples, participant-level):</p>
+<table>
+<thead>
+<tr>
+<th>Mode</th>
+<th>AURC CI</th>
+<th>AUGRC CI</th>
+<th>Cmax CI</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Zero-shot</td>
+<td>[0.110, 0.178]</td>
+<td>[0.022, 0.045]</td>
+<td>[0.412, 0.567]</td>
+</tr>
+<tr>
+<td>Few-shot</td>
+<td>[0.107, 0.165]</td>
+<td>[0.025, 0.047]</td>
+<td>[0.460, 0.604]</td>
+</tr>
+</tbody>
+</table>
+<p><strong>Spec 046 Confidence Signal Ablation (few-shot)</strong>:</p>
+<table>
+<thead>
+<tr>
+<th>Confidence Signal</th>
+<th>AURC</th>
+<th>AUGRC</th>
+<th>vs llm baseline</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>llm</code> (evidence count)</td>
+<td>0.135</td>
+<td>0.035</td>
+<td>—</td>
+</tr>
+<tr>
+<td><code>retrieval_similarity_mean</code></td>
+<td><strong>0.128</strong></td>
+<td>0.034</td>
+<td><strong>-5.4% AURC</strong></td>
+</tr>
+<tr>
+<td><code>retrieval_similarity_max</code></td>
+<td><strong>0.128</strong></td>
+<td>0.034</td>
+<td><strong>-5.4% AURC</strong></td>
+</tr>
+<tr>
+<td><code>hybrid_evidence_similarity</code></td>
+<td>0.135</td>
+<td>0.035</td>
+<td>+0.2% AURC</td>
+</tr>
+</tbody>
+</table>
+<p><strong>Key Findings</strong>:
+1. <strong>Retrieval similarity improves AURC 5.4%</strong>: <code>retrieval_similarity_mean</code> provides better ranking than evidence count alone
+2. <strong>AUGRC unchanged</strong>: Improvement within noise (0.034 vs 0.035)
+3. <strong>Hybrid signal not helpful</strong>: Multiplying evidence × similarity doesn't improve over either alone
+4. <strong>GitHub Issue #86 hypothesis partially validated</strong>: Retrieval signals help AURC but don't substantially move AUGRC</p>
+<p><strong>Interpretation</strong>: The retrieval similarity signal provides modest but measurable improvement in selective prediction ranking. However, the AUGRC target of &lt;0.020 (from Issue #86) was not achieved. Further improvements would require Phase 2 (verbalized confidence) or Phase 3 (multi-signal calibration) approaches.</p>
+<hr />
+<h3 id="run-10-jan-3-2026-confidence-suite-specs-048051-attempt-invalid">Run 10: Jan 3, 2026 - Confidence Suite (Specs 048–051) Attempt (INVALID)</h3>
+<p><strong>File</strong>: <code>data/outputs/both_paper-test_20260103_182316.json</code></p>
+<p><strong>Log</strong>: <code>data/outputs/run10_confidence_suite_20260103_111959.log</code></p>
+<p><strong>Run ID</strong>: <code>3186a50d</code></p>
+<p><strong>Git Commit</strong>: <code>064ed30</code> (dirty)</p>
+<p><strong>Timestamp</strong>: 2026-01-03T11:20:01</p>
+<p><strong>Goal</strong>: Emit confidence-suite signals (verbalized confidence, token-level CSFs, consistency) and re-evaluate AURC/AUGRC.</p>
+<p><strong>What went wrong</strong> (why this run is invalid for comparisons):</p>
+<ol>
+<li><strong>Zero-shot had 2/41 hard failures</strong> (PIDs 383, 427): <code>Exceeded maximum retries (3) for output validation</code>.</li>
+<li>This was caused by deterministic malformed “JSON-like” outputs in the scoring step (pre-ANALYSIS-026 JSON hardening).</li>
+<li><strong>Few-shot evaluated 0/41 participants</strong>: every participant failed with:</li>
+<li><code>HuggingFace backend requires optional dependencies. Install with: pip install 'ai-psychiatrist[hf]'</code></li>
+<li>Root cause: the run used <code>EMBEDDING_BACKEND=huggingface</code> but <code>torch</code> was not installed, so query embeddings could not be computed.</li>
+</ol>
+<p><strong>Results</strong> (retain for debugging only; not a publication-quality run):</p>
+<table>
+<thead>
+<tr>
+<th>Mode</th>
+<th>N_eval</th>
+<th>MAE_w</th>
+<th>MAE_item</th>
+<th>Coverage</th>
+<th>Notes</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Zero-shot</td>
+<td>39/41</td>
+<td>0.632</td>
+<td>0.597</td>
+<td>48.7%</td>
+<td>Partial; biased by failures</td>
+</tr>
+<tr>
+<td>Few-shot</td>
+<td>0/41</td>
+<td>n/a</td>
+<td>n/a</td>
+<td>n/a</td>
+<td>Invalid (missing HF deps)</td>
+</tr>
+</tbody>
+</table>
+<p><strong>Selective prediction (zero-shot only; 39 participants)</strong>:</p>
+<p>Computed via:
+<code>uv run python scripts/evaluate_selective_prediction.py --input data/outputs/both_paper-test_20260103_182316.json --mode zero_shot</code></p>
+<table>
+<thead>
+<tr>
+<th>Confidence</th>
+<th>AURC</th>
+<th>AUGRC</th>
+<th>Cmax</th>
+<th>Notes</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>llm</code></td>
+<td>0.101</td>
+<td>0.026</td>
+<td>48.7%</td>
+<td>Baseline for this partial run</td>
+</tr>
+<tr>
+<td><code>verbalized</code></td>
+<td>0.092</td>
+<td>0.026</td>
+<td>48.7%</td>
+<td>Lower AURC than <code>llm</code></td>
+</tr>
+<tr>
+<td><code>token_pe</code></td>
+<td>0.100</td>
+<td>0.024</td>
+<td>48.7%</td>
+<td>Lower AUGRC than <code>llm</code></td>
+</tr>
+</tbody>
+</table>
+<p><strong>Action items before Run 11</strong>:
+- Use a clean git state for the run (commit or stash).
+- If using HuggingFace embeddings (<code>EMBEDDING_BACKEND=huggingface</code>), install deps first: <code>make dev</code> (or <code>uv sync --extra hf</code>) and verify <code>uv run python -c "import torch"</code>.
+- Re-run the confidence suite on a valid run artifact (both modes evaluated) before interpreting deltas.</p>
+<hr />
+<h3 id="run-11-jan-4-2026-confidence-suite-specs-048051-diagnostic-not-comparable">Run 11: Jan 4, 2026 - Confidence Suite (Specs 048–051) (DIAGNOSTIC; NOT COMPARABLE)</h3>
+<p><strong>File</strong>: <code>data/outputs/both_paper-test_20260104_102031.json</code></p>
+<p><strong>Log</strong>: <code>data/outputs/run11_confidence_suite_20260103_215102.log</code></p>
+<p><strong>Run ID</strong>: <code>d4c78527</code></p>
+<p><strong>Git Commit</strong>: <code>056d3be</code> (clean)</p>
+<p><strong>Timestamp</strong>: 2026-01-03T21:51:02</p>
+<p><strong>Goal</strong>: Emit confidence-suite signals (verbalized confidence, token-level CSFs, consistency) and re-evaluate AURC/AUGRC for both modes.</p>
+<p><strong>What went wrong</strong> (why this run is not comparable to prior baselines):</p>
+<ul>
+<li><strong>5/41 participants failed in both modes</strong> due to <code>evidence_hallucination</code> (10 total failures, all fatal).</li>
+<li>Failure artifact: <code>data/outputs/failures_d4c78527.json</code></li>
+<li>Most failing participants: 367, 386, 409, 456, 487 (each failed in both modes)</li>
+</ul>
+<p>This creates selection bias (N=36 instead of N=41). Treat this run as <strong>diagnostic-only</strong> for confidence-signal ranking, not as a publication-quality benchmark.</p>
+<p><strong>Results</strong> (diagnostic-only; N=36):</p>
+<table>
+<thead>
+<tr>
+<th>Mode</th>
+<th>N_eval</th>
+<th>MAE_w</th>
+<th>MAE_item</th>
+<th>Coverage</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Zero-shot</td>
+<td>36/41</td>
+<td>0.617</td>
+<td>0.534</td>
+<td>49.0%</td>
+</tr>
+<tr>
+<td>Few-shot</td>
+<td>36/41</td>
+<td>0.715</td>
+<td>0.663</td>
+<td>47.6%</td>
+</tr>
+</tbody>
+</table>
+<p><strong>Selective prediction (Run 11)</strong>:</p>
+<p>Computed via:
+- <code>data/outputs/selective_prediction_metrics_run11_zero_shot_all.json</code>
+- <code>data/outputs/selective_prediction_metrics_run11_few_shot_all.json</code>
+- Paired (few − zero, overlap only): <code>data/outputs/selective_prediction_metrics_run11_paired_default.json</code></p>
+<p>Key takeaways (abs_norm):</p>
+<table>
+<thead>
+<tr>
+<th>Mode</th>
+<th>Confidence</th>
+<th>AURC</th>
+<th>AUGRC</th>
+<th>Cmax</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Zero-shot</td>
+<td><code>llm</code></td>
+<td>0.1035</td>
+<td>0.0253</td>
+<td>48.96%</td>
+</tr>
+<tr>
+<td>Zero-shot</td>
+<td><code>verbalized</code></td>
+<td><strong>0.0878</strong></td>
+<td>0.0257</td>
+<td>48.96%</td>
+</tr>
+<tr>
+<td>Few-shot</td>
+<td><code>llm</code></td>
+<td>0.1184</td>
+<td>0.0270</td>
+<td>47.57%</td>
+</tr>
+<tr>
+<td>Few-shot</td>
+<td><code>token_pe</code></td>
+<td><strong>0.0861</strong></td>
+<td><strong>0.0235</strong></td>
+<td>47.57%</td>
+</tr>
+</tbody>
+</table>
+<p>Paired deltas (few-shot − zero-shot, <code>confidence=llm</code>): ΔAURC = +0.0149 [-0.0136, +0.0445], ΔAUGRC = +0.0017 [-0.0069, +0.0114].</p>
+<hr />
+<h3 id="run-12-jan-4-5-2026-confidence-suite-specs-048052-valid-n41">Run 12: Jan 4-5, 2026 - Confidence Suite (Specs 048–052) ✅ VALID (N=41)</h3>
+<p><strong>File</strong>: <code>data/outputs/both_paper-test_20260105_072303.json</code></p>
+<p><strong>Log</strong>: <code>data/outputs/run12_confidence_suite_20260104_115021.log</code></p>
+<p><strong>Run ID</strong>: <code>05621949</code></p>
+<p><strong>Git Commit</strong>: <code>c0d79c5</code> (clean)</p>
+<p><strong>Timestamp</strong>: 2026-01-04T11:50:22</p>
+<p><strong>What changed vs Run 11</strong>:
+- Evidence grounding failures are recorded as non-fatal (failure registry) instead of aborting participant evaluation, eliminating selection bias (N=41/41).
+- JSON parsing hardening and retry improvements are present at run start; the run completes with 0 JSON parse failures (telemetry records fixups without failures).</p>
+<p><strong>Results</strong>:</p>
+<table>
+<thead>
+<tr>
+<th>Mode</th>
+<th>N_eval</th>
+<th>MAE_w</th>
+<th>MAE_item</th>
+<th>Coverage</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Zero-shot</td>
+<td>41/41</td>
+<td>0.642</td>
+<td>0.572</td>
+<td>48.5%</td>
+</tr>
+<tr>
+<td>Few-shot</td>
+<td>41/41</td>
+<td>0.676</td>
+<td>0.616</td>
+<td>46.0%</td>
+</tr>
+</tbody>
+</table>
+<p><strong>Selective prediction (Run 12, <code>confidence=llm</code>)</strong>:</p>
+<table>
+<thead>
+<tr>
+<th>Mode</th>
+<th>AURC</th>
+<th>AUGRC</th>
+<th>Cmax</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Zero-shot</td>
+<td>0.1019 [0.0806-0.1214]</td>
+<td>0.0252 [0.0186-0.0323]</td>
+<td>48.5%</td>
+</tr>
+<tr>
+<td>Few-shot</td>
+<td>0.1085 [0.0835-0.1327]</td>
+<td>0.0242 [0.0175-0.0319]</td>
+<td>46.0%</td>
+</tr>
+</tbody>
+</table>
+<p><strong>Best artifact-free confidence variants (within the same run)</strong>:
+- Zero-shot (best AURC): <code>verbalized</code> (AURC 0.0917)
+- Zero-shot (best AUGRC): <code>token_pe</code> (AUGRC 0.0234)
+- Few-shot (best AURC/AUGRC): <code>token_energy</code> (AURC 0.0862, AUGRC 0.0216)</p>
+<p><strong>Artifacts</strong>:
+- Failures: <code>data/outputs/failures_05621949.json</code> (8 non-fatal <code>evidence_hallucination</code> events)
+- Telemetry: <code>data/outputs/telemetry_05621949.json</code> (<code>json_fixups_applied</code>)
+- Selective metrics (all variants): <code>data/outputs/selective_prediction_metrics_run12_zero_shot_all.json</code>, <code>data/outputs/selective_prediction_metrics_run12_few_shot_all.json</code>
+- Paired (few − zero, default): <code>data/outputs/selective_prediction_metrics_run12_paired_default.json</code>
+- Paired (Run 11 → Run 12, overlap only): <code>data/outputs/selective_prediction_metrics_run11_vs_run12_zero_shot_llm.json</code>, <code>data/outputs/selective_prediction_metrics_run11_vs_run12_few_shot_llm.json</code></p>
+<p><strong>Interpretation</strong>:
+- The confidence-suite signals are working and measurably reduce AURC/AUGRC relative to <code>llm</code> within a fixed run (selective prediction improvement without changing the underlying predictions).
+- Few-shot does not outperform zero-shot on MAE_item in this run; however, few-shot slightly improves AUGRC at the cost of lower Cmax and slightly worse AURC under <code>confidence=llm</code>. Prefer paired + confidence-variant comparisons for selective prediction claims.
+- See <a href="../few-shot-analysis/">Few-Shot Analysis</a> for first-principles explanation of why few-shot may not outperform zero-shot with strict evidence grounding.</p>
+<hr />
+<h3 id="run-13-jan-6-7-2026-post-bug-035-first-clean-comparative-run-valid">Run 13: Jan 6-7, 2026 - POST BUG-035 (First Clean Comparative Run) ✅ VALID</h3>
+<p><strong>File</strong>: <code>data/outputs/both_paper-test_20260107_134730.json</code></p>
+<p><strong>Log</strong>: <code>data/outputs/run13_20260106_175051.log</code></p>
+<p><strong>Run ID</strong>: <code>7d5eadf0</code></p>
+<p><strong>Git Commit</strong>: <code>01d3124</code> (clean)</p>
+<p><strong>Timestamp</strong>: 2026-01-06T17:50:52 (started) → 2026-01-07T18:47:30 (completed)</p>
+<p><strong>Why this run is significant</strong>:
+- ✅ <strong>First run POST BUG-035 fix</strong> (prompt confound resolved)
+- ✅ Clean git state
+- ✅ All 41 participants evaluated in both modes (no selection bias)
+- ❌ Does NOT include Spec 061-063 (total score, binary classification, severity inference)</p>
+<p><strong>Code State</strong>:
+- Spec 032-037: Full retrieval stack ✅
+- Spec 046-050: Confidence signals ✅
+- Spec 051-052: Token-level CSFs ✅
+- <strong>BUG-035 fix</strong>: Empty retrieval → identical prompt to zero-shot ✅
+- Consistency: ENABLED (n=5, temp=0.2)</p>
+<p><strong>Results</strong>:</p>
+<table>
+<thead>
+<tr>
+<th>Mode</th>
+<th>N_eval</th>
+<th>MAE_w</th>
+<th>MAE_item</th>
+<th>Coverage</th>
+<th>Time</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Zero-shot</td>
+<td>40</td>
+<td>0.6750</td>
+<td><strong>0.6079</strong></td>
+<td>50.0%</td>
+<td>~9.8h</td>
+</tr>
+<tr>
+<td>Few-shot</td>
+<td>41</td>
+<td>0.7107</td>
+<td>0.6571</td>
+<td>48.5%</td>
+<td>~10.2h</td>
+</tr>
+</tbody>
+</table>
+<p><strong>Selective Prediction (Run 13)</strong>:</p>
+<table>
+<thead>
+<tr>
+<th>Mode</th>
+<th>Confidence</th>
+<th>AURC</th>
+<th>AUGRC</th>
+<th>Cmax</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Zero-shot</td>
+<td><code>llm</code></td>
+<td>0.1066 [0.087-0.125]</td>
+<td>0.0267 [0.020-0.034]</td>
+<td>48.8%</td>
+</tr>
+<tr>
+<td>Zero-shot</td>
+<td><code>consistency_inverse_std</code></td>
+<td><strong>0.0977</strong> [0.077-0.121]</td>
+<td><strong>0.0244</strong> [0.017-0.032]</td>
+<td>48.8%</td>
+</tr>
+<tr>
+<td>Few-shot</td>
+<td><code>llm</code></td>
+<td>0.1153 [0.088-0.143]</td>
+<td>0.0279 [0.020-0.038]</td>
+<td>48.5%</td>
+</tr>
+<tr>
+<td>Few-shot</td>
+<td><code>token_pe</code></td>
+<td><strong>0.0906</strong> [0.070-0.118]</td>
+<td><strong>0.0246</strong> [0.018-0.034]</td>
+<td>48.5%</td>
+</tr>
+</tbody>
+</table>
+<p><strong>Comparison to Paper (MAE_item)</strong>:</p>
+<table>
+<thead>
+<tr>
+<th>Mode</th>
+<th>Paper</th>
+<th>Run 13</th>
+<th>Delta</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Zero-shot</td>
+<td>0.796</td>
+<td><strong>0.6079</strong></td>
+<td><strong>-24% (better)</strong></td>
+</tr>
+<tr>
+<td>Few-shot</td>
+<td>0.619</td>
+<td>0.6571</td>
+<td>+6% (worse)</td>
+</tr>
+</tbody>
+</table>
+<p><strong>Key Findings</strong>:
+1. <strong>Zero-shot beats paper by 24%</strong> (0.6079 vs 0.796) - substantial improvement
+2. <strong>Zero-shot beats few-shot</strong> (0.6079 vs 0.6571) - consistent with prior runs
+3. <strong>Few-shot slightly worse than paper</strong> - retrieval may still be introducing noise
+4. <strong>Token-level CSFs work well for few-shot</strong> (<code>token_pe</code> AURC 0.0906)
+5. <strong>Consistency signals work well for zero-shot</strong> (<code>consistency_inverse_std</code> AUGRC 0.0244)</p>
+<p><strong>Robustness</strong>:
+- Failures: 8 non-fatal <code>evidence_hallucination</code> events (recorded in failure registry)
+- Telemetry: 13 <code>json_fixups_applied</code>, 1 <code>json_repair_fallback</code> (healthy)</p>
+<p><strong>Artifacts</strong>:
+- Failures: <code>data/outputs/failures_7d5eadf0.json</code>
+- Telemetry: <code>data/outputs/telemetry_7d5eadf0.json</code>
+- Selective metrics: <code>data/outputs/selective_prediction_metrics_run13_zero_shot_all.json</code>, <code>data/outputs/selective_prediction_metrics_run13_few_shot_all.json</code></p>
+<p><strong>Interpretation</strong>:
+This is the <strong>first clean comparative run after the BUG-035 prompt confound fix</strong>. The result confirms that zero-shot outperforms few-shot even when few-shot prompts are no longer contaminated by "No valid evidence found" messages. The few-shot underperformance is therefore due to retrieval quality issues, not prompt confounding.</p>
+<hr />
+<h3 id="run-14-jan-7-8-2026-spec-063-severity-inference-infer-valid-coverage-risk">Run 14: Jan 7-8, 2026 - Spec 063 Severity Inference (<code>infer</code>) ✅ VALID (Coverage ↑; Risk ↑)</h3>
+<p><strong>File</strong>: <code>data/outputs/both_paper-test_20260108_114058.json</code></p>
+<p><strong>Log</strong>: <code>data/outputs/run14_infer_20260107_172234.log</code></p>
+<p><strong>Run ID</strong>: <code>02a0d65e</code></p>
+<p><strong>Git Commit</strong>: <code>e55c00f</code> (clean)</p>
+<p><strong>Timestamp</strong>: 2026-01-07T17:22:35 (started) → 2026-01-08T11:40:58 (completed)</p>
+<p><strong>Code State</strong>:
+- Spec 063 enabled via CLI: <code>--severity-inference infer</code> (default remains <code>strict</code>)
+- Consistency: ENABLED (n=5, temp=0.2)
+- Prediction mode: <code>item</code> (Specs 061/062 are implemented, but not invoked in this run)</p>
+<p><strong>Results</strong>:</p>
+<table>
+<thead>
+<tr>
+<th>Mode</th>
+<th>N_eval</th>
+<th>MAE_w</th>
+<th>MAE_item</th>
+<th>Coverage</th>
+<th>Time</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Zero-shot</td>
+<td>41</td>
+<td>0.7056</td>
+<td>0.7030</td>
+<td>60.1%</td>
+<td>~9.9h</td>
+</tr>
+<tr>
+<td>Few-shot</td>
+<td>40</td>
+<td>0.7772</td>
+<td>0.7843</td>
+<td>57.5%</td>
+<td>~8.4h</td>
+</tr>
+</tbody>
+</table>
+<p><strong>Selective Prediction (Run 14, all variants; abs_norm, 1,000 bootstrap resamples)</strong>:
+- Zero-shot: <code>data/outputs/selective_prediction_metrics_run14_infer_zero_shot_all.json</code>
+- Few-shot: <code>data/outputs/selective_prediction_metrics_run14_infer_few_shot_all.json</code>
+- Paired (few − zero, default confidences; overlap only): <code>data/outputs/selective_prediction_metrics_run14_infer_paired_default.json</code></p>
+<table>
+<thead>
+<tr>
+<th>Mode</th>
+<th>Confidence</th>
+<th>AURC</th>
+<th>AUGRC</th>
+<th>Cmax</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Zero-shot</td>
+<td><code>llm</code></td>
+<td>0.1292 [0.104-0.161]</td>
+<td>0.0409 [0.030-0.057]</td>
+<td>60.1%</td>
+</tr>
+<tr>
+<td>Zero-shot</td>
+<td><code>hybrid_consistency</code></td>
+<td><strong>0.1258</strong> [0.102-0.155]</td>
+<td><strong>0.0377</strong> [0.028-0.052]</td>
+<td>60.1%</td>
+</tr>
+<tr>
+<td>Few-shot</td>
+<td><code>llm</code></td>
+<td>0.1467 [0.114-0.180]</td>
+<td>0.0421 [0.029-0.059]</td>
+<td>57.5%</td>
+</tr>
+<tr>
+<td>Few-shot</td>
+<td><code>consistency_inverse_std</code></td>
+<td><strong>0.1391</strong> [0.107-0.176]</td>
+<td>0.0404 [0.028-0.057]</td>
+<td>57.5%</td>
+</tr>
+<tr>
+<td>Few-shot</td>
+<td><code>token_energy</code></td>
+<td>0.1455 [0.111-0.176]</td>
+<td><strong>0.0394</strong> [0.028-0.054]</td>
+<td>57.5%</td>
+</tr>
+</tbody>
+</table>
+<p><strong>Robustness</strong>:
+- Failures: 9 total (8 <code>evidence_hallucination</code> in evidence extraction; 1 HTTP 500 causing a single few-shot participant failure)
+- Failures file: <code>data/outputs/failures_02a0d65e.json</code>
+- Telemetry file: <code>data/outputs/telemetry_02a0d65e.json</code> (22 <code>pydantic_retry</code>, 4 <code>json_fixups_applied</code>, 1 <code>json_python_literal_fallback</code>)</p>
+<p><strong>Comparison to Run 13 (strict baseline)</strong>:
+- Zero-shot (paired, overlap N=41): Cmax +0.113; AURC(<code>llm</code>) +0.023; AUGRC(<code>llm</code>) +0.014
+- Few-shot (paired, overlap N=40): Cmax +0.084; AURC(<code>llm</code>) +0.029; AUGRC(<code>llm</code>) +0.013</p>
+<p>Paired deltas artifacts:
+- Zero-shot: <code>data/outputs/selective_prediction_metrics_run13_vs_run14_zero_shot_all.json</code>
+- Few-shot: <code>data/outputs/selective_prediction_metrics_run13_vs_run14_few_shot_all.json</code></p>
+<p><strong>Interpretation</strong>:
+Severity inference increases coverage as intended, but in this first ablation it <strong>materially increases risk</strong> (AURC/AUGRC) relative to the strict baseline. Treat <code>infer</code> as an experimental setting until additional prompt/guardrail iterations show coverage gains without degrading coverage-aware metrics.</p>
+<hr />
+<h2 id="reproduction-commands">Reproduction Commands</h2>
+<h3 id="run-evaluation">Run Evaluation</h3>
+<div class="highlight"><pre><span></span><code><span class="c1"># Full reproduction (both modes)</span>
+uv<span class="w"> </span>run<span class="w"> </span>python<span class="w"> </span>scripts/reproduce_results.py<span class="w"> </span>--split<span class="w"> </span>paper-test
+
+<span class="c1"># Zero-shot only</span>
+uv<span class="w"> </span>run<span class="w"> </span>python<span class="w"> </span>scripts/reproduce_results.py<span class="w"> </span>--split<span class="w"> </span>paper-test<span class="w"> </span>--zero-shot-only
+
+<span class="c1"># Few-shot only (requires embeddings)</span>
+uv<span class="w"> </span>run<span class="w"> </span>python<span class="w"> </span>scripts/reproduce_results.py<span class="w"> </span>--split<span class="w"> </span>paper-test<span class="w"> </span>--few-shot-only
+</code></pre></div>
+<h3 id="compute-aurcaugrc">Compute AURC/AUGRC</h3>
+<div class="highlight"><pre><span></span><code><span class="c1"># Single mode (writes `data/outputs/selective_prediction_metrics_*.json`)</span>
+uv<span class="w"> </span>run<span class="w"> </span>python<span class="w"> </span>scripts/evaluate_selective_prediction.py<span class="w"> </span><span class="se">\</span>
+<span class="w">  </span>--input<span class="w"> </span>data/outputs/YOUR_OUTPUT.json<span class="w"> </span><span class="se">\</span>
+<span class="w">  </span>--mode<span class="w"> </span>zero_shot<span class="w"> </span><span class="se">\</span>
+<span class="w">  </span>--seed<span class="w"> </span><span class="m">42</span>
+
+<span class="c1"># Paired comparison (recommended): pass the same run file twice with different modes</span>
+uv<span class="w"> </span>run<span class="w"> </span>python<span class="w"> </span>scripts/evaluate_selective_prediction.py<span class="w"> </span><span class="se">\</span>
+<span class="w">  </span>--input<span class="w"> </span>data/outputs/YOUR_OUTPUT.json<span class="w"> </span><span class="se">\</span>
+<span class="w">  </span>--mode<span class="w"> </span>zero_shot<span class="w"> </span><span class="se">\</span>
+<span class="w">  </span>--input<span class="w"> </span>data/outputs/YOUR_OUTPUT.json<span class="w"> </span><span class="se">\</span>
+<span class="w">  </span>--mode<span class="w"> </span>few_shot<span class="w"> </span><span class="se">\</span>
+<span class="w">  </span>--seed<span class="w"> </span><span class="m">42</span>
+
+<span class="c1"># Or run separately for each mode</span>
+uv<span class="w"> </span>run<span class="w"> </span>python<span class="w"> </span>scripts/evaluate_selective_prediction.py<span class="w"> </span><span class="se">\</span>
+<span class="w">  </span>--input<span class="w"> </span>data/outputs/YOUR_OUTPUT.json<span class="w"> </span><span class="se">\</span>
+<span class="w">  </span>--mode<span class="w"> </span>few_shot<span class="w"> </span><span class="se">\</span>
+<span class="w">  </span>--seed<span class="w"> </span><span class="m">42</span>
+</code></pre></div>
+<h3 id="generate-embeddings-for-few-shot">Generate Embeddings (for few-shot)</h3>
+<div class="highlight"><pre><span></span><code>uv<span class="w"> </span>run<span class="w"> </span>python<span class="w"> </span>scripts/generate_embeddings.py<span class="w"> </span>--split<span class="w"> </span>paper-train
+<span class="c1"># Optional (Spec 34): add `--write-item-tags` to generate a `.tags.json` sidecar for item-tag filtering, then set `EMBEDDING_ENABLE_ITEM_TAG_FILTER=true` for runs.</span>
+</code></pre></div>
+<hr />
+<h2 id="file-locations">File Locations</h2>
+<table>
+<thead>
+<tr>
+<th>Type</th>
+<th>Path</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Run outputs</td>
+<td><code>data/outputs/*.json</code></td>
+</tr>
+<tr>
+<td>AURC metrics</td>
+<td><code>data/outputs/selective_prediction_metrics_*.json</code></td>
+</tr>
+<tr>
+<td>Run log (gitignored)</td>
+<td><code>data/outputs/RUN_LOG.md</code></td>
+</tr>
+<tr>
+<td>Embeddings</td>
+<td><code>data/embeddings/*.npz</code></td>
+</tr>
+<tr>
+<td>Experiment registry</td>
+<td><code>data/experiments/registry.yaml</code></td>
+</tr>
+</tbody>
+</table>
+<hr />
+<h2 id="references">References</h2>
+<ul>
+<li>Statistical methodology: <code>docs/statistics/statistical-methodology-aurc-augrc.md</code></li>
+<li>Feature index + defaults: <code>docs/pipeline-internals/features.md</code></li>
+<li>RAG runtime features: <code>docs/rag/runtime-features.md</code></li>
+<li>RAG debugging: <code>docs/rag/debugging.md</code></li>
+<li>RAG artifact generation: <code>docs/rag/artifact-generation.md</code></li>
+<li>Paper analysis: <code>docs/_archive/misc/paper-reproduction-analysis.md</code></li>
+</ul>
+
+
+
+
+
+
+
+
+
+
+
+
+                
+              </article>
+            </div>
+          
+          
+<script>var target=document.getElementById(location.hash.slice(1));target&&target.name&&(target.checked=target.name.startsWith("__tabbed_"))</script>
+        </div>
+        
+      </main>
+      
+        <footer class="md-footer">
+  
+    
+      
+      <nav class="md-footer__inner md-grid" aria-label="Footer" >
+        
+          
+          <a href="../reproduction-results/" class="md-footer__link md-footer__link--prev" aria-label="Previous: Paper Reproduction Results (Current Status)">
+            <div class="md-footer__button md-icon">
+              
+              <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M20 11v2H8l5.5 5.5-1.42 1.42L4.16 12l7.92-7.92L13.5 5.5 8 11z"/></svg>
+            </div>
+            <div class="md-footer__title">
+              <span class="md-footer__direction">
+                Previous
+              </span>
+              <div class="md-ellipsis">
+                Paper Reproduction Results (Current Status)
+              </div>
+            </div>
+          </a>
+        
+        
+          
+          <a href="../run-output-schema/" class="md-footer__link md-footer__link--next" aria-label="Next: Reproduction Run Output Schema (JSON + Registry)">
+            <div class="md-footer__title">
+              <span class="md-footer__direction">
+                Next
+              </span>
+              <div class="md-ellipsis">
+                Reproduction Run Output Schema (JSON + Registry)
+              </div>
+            </div>
+            <div class="md-footer__button md-icon">
+              
+              <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M4 11v2h12l-5.5 5.5 1.42 1.42L19.84 12l-7.92-7.92L10.5 5.5 16 11z"/></svg>
+            </div>
+          </a>
+        
+      </nav>
+    
+  
+  <div class="md-footer-meta md-typeset">
+    <div class="md-footer-meta__inner md-grid">
+      <div class="md-copyright">
+  
+  
+    Made with
+    <a href="https://squidfunk.github.io/mkdocs-material/" target="_blank" rel="noopener">
+      Material for MkDocs
+    </a>
+  
+</div>
+      
+    </div>
+  </div>
+</footer>
+      
+    </div>
+    <div class="md-dialog" data-md-component="dialog">
+      <div class="md-dialog__inner md-typeset"></div>
+    </div>
+    
+    
+    
+      
+      
+      <script id="__config" type="application/json">{"annotate": null, "base": "../..", "features": ["content.code.copy", "content.action.edit", "content.action.view", "navigation.tracking", "navigation.sections", "navigation.footer", "navigation.instant"], "search": "../../assets/javascripts/workers/search.2c215733.min.js", "tags": null, "translations": {"clipboard.copied": "Copied to clipboard", "clipboard.copy": "Copy to clipboard", "search.result.more.one": "1 more on this page", "search.result.more.other": "# more on this page", "search.result.none": "No matching documents", "search.result.one": "1 matching document", "search.result.other": "# matching documents", "search.result.placeholder": "Type to start searching", "search.result.term.missing": "Missing", "select.version": "Select version"}, "version": null}</script>
+    
+    
+      <script src="../../assets/javascripts/bundle.79ae519e.min.js"></script>
+      
+    
+  </body>
+</html>

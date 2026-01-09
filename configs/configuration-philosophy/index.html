@@ -1,0 +1,3778 @@
+
+<!doctype html>
+<html lang="en" class="no-js">
+  <head>
+    
+      <meta charset="utf-8">
+      <meta name="viewport" content="width=device-width,initial-scale=1">
+      
+      
+      
+        <link rel="canonical" href="https://the-obstacle-is-the-way.github.io/ai-psychiatrist/configs/configuration-philosophy/">
+      
+      
+        <link rel="prev" href="../agent-sampling-registry/">
+      
+      
+        <link rel="next" href="../configuration/">
+      
+      
+        
+      
+      
+      <link rel="icon" href="../../assets/images/favicon.png">
+      <meta name="generator" content="mkdocs-1.6.1, mkdocs-material-9.7.1">
+    
+    
+      
+        <title>Configuration Philosophy - AI Psychiatrist</title>
+      
+    
+    
+      <link rel="stylesheet" href="../../assets/stylesheets/main.484c7ddc.min.css">
+      
+      
+
+
+    
+    
+      
+    
+    
+      
+        
+        
+        <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+        <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Roboto:300,300i,400,400i,700,700i%7CRoboto+Mono:400,400i,700,700i&display=fallback">
+        <style>:root{--md-text-font:"Roboto";--md-code-font:"Roboto Mono"}</style>
+      
+    
+    
+    <script>__md_scope=new URL("../..",location),__md_hash=e=>[...e].reduce(((e,_)=>(e<<5)-e+_.charCodeAt(0)),0),__md_get=(e,_=localStorage,t=__md_scope)=>JSON.parse(_.getItem(t.pathname+"."+e)),__md_set=(e,_,t=localStorage,a=__md_scope)=>{try{t.setItem(a.pathname+"."+e,JSON.stringify(_))}catch(e){}}</script>
+    
+      
+
+    
+    
+  </head>
+  
+  
+    <body dir="ltr">
+  
+    
+    <input class="md-toggle" data-md-toggle="drawer" type="checkbox" id="__drawer" autocomplete="off">
+    <input class="md-toggle" data-md-toggle="search" type="checkbox" id="__search" autocomplete="off">
+    <label class="md-overlay" for="__drawer"></label>
+    <div data-md-component="skip">
+      
+        
+        <a href="#configuration-philosophy" class="md-skip">
+          Skip to content
+        </a>
+      
+    </div>
+    <div data-md-component="announce">
+      
+    </div>
+    
+    
+      
+
+  
+
+<header class="md-header md-header--shadow" data-md-component="header">
+  <nav class="md-header__inner md-grid" aria-label="Header">
+    <a href="../.." title="AI Psychiatrist" class="md-header__button md-logo" aria-label="AI Psychiatrist" data-md-component="logo">
+      
+  
+  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 8a3 3 0 0 0 3-3 3 3 0 0 0-3-3 3 3 0 0 0-3 3 3 3 0 0 0 3 3m0 3.54C9.64 9.35 6.5 8 3 8v11c3.5 0 6.64 1.35 9 3.54 2.36-2.19 5.5-3.54 9-3.54V8c-3.5 0-6.64 1.35-9 3.54"/></svg>
+
+    </a>
+    <label class="md-header__button md-icon" for="__drawer">
+      
+      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M3 6h18v2H3zm0 5h18v2H3zm0 5h18v2H3z"/></svg>
+    </label>
+    <div class="md-header__title" data-md-component="header-title">
+      <div class="md-header__ellipsis">
+        <div class="md-header__topic">
+          <span class="md-ellipsis">
+            AI Psychiatrist
+          </span>
+        </div>
+        <div class="md-header__topic" data-md-component="header-topic">
+          <span class="md-ellipsis">
+            
+              Configuration Philosophy
+            
+          </span>
+        </div>
+      </div>
+    </div>
+    
+    
+      <script>var palette=__md_get("__palette");if(palette&&palette.color){if("(prefers-color-scheme)"===palette.color.media){var media=matchMedia("(prefers-color-scheme: light)"),input=document.querySelector(media.matches?"[data-md-color-media='(prefers-color-scheme: light)']":"[data-md-color-media='(prefers-color-scheme: dark)']");palette.color.media=input.getAttribute("data-md-color-media"),palette.color.scheme=input.getAttribute("data-md-color-scheme"),palette.color.primary=input.getAttribute("data-md-color-primary"),palette.color.accent=input.getAttribute("data-md-color-accent")}for(var[key,value]of Object.entries(palette.color))document.body.setAttribute("data-md-color-"+key,value)}</script>
+    
+    
+    
+      
+      
+        <label class="md-header__button md-icon" for="__search">
+          
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M9.5 3A6.5 6.5 0 0 1 16 9.5c0 1.61-.59 3.09-1.56 4.23l.27.27h.79l5 5-1.5 1.5-5-5v-.79l-.27-.27A6.52 6.52 0 0 1 9.5 16 6.5 6.5 0 0 1 3 9.5 6.5 6.5 0 0 1 9.5 3m0 2C7 5 5 7 5 9.5S7 14 9.5 14 14 12 14 9.5 12 5 9.5 5"/></svg>
+        </label>
+        <div class="md-search" data-md-component="search" role="dialog">
+  <label class="md-search__overlay" for="__search"></label>
+  <div class="md-search__inner" role="search">
+    <form class="md-search__form" name="search">
+      <input type="text" class="md-search__input" name="query" aria-label="Search" placeholder="Search" autocapitalize="off" autocorrect="off" autocomplete="off" spellcheck="false" data-md-component="search-query" required>
+      <label class="md-search__icon md-icon" for="__search">
+        
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M9.5 3A6.5 6.5 0 0 1 16 9.5c0 1.61-.59 3.09-1.56 4.23l.27.27h.79l5 5-1.5 1.5-5-5v-.79l-.27-.27A6.52 6.52 0 0 1 9.5 16 6.5 6.5 0 0 1 3 9.5 6.5 6.5 0 0 1 9.5 3m0 2C7 5 5 7 5 9.5S7 14 9.5 14 14 12 14 9.5 12 5 9.5 5"/></svg>
+        
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M20 11v2H8l5.5 5.5-1.42 1.42L4.16 12l7.92-7.92L13.5 5.5 8 11z"/></svg>
+      </label>
+      <nav class="md-search__options" aria-label="Search">
+        
+        <button type="reset" class="md-search__icon md-icon" title="Clear" aria-label="Clear" tabindex="-1">
+          
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M19 6.41 17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12z"/></svg>
+        </button>
+      </nav>
+      
+    </form>
+    <div class="md-search__output">
+      <div class="md-search__scrollwrap" tabindex="0" data-md-scrollfix>
+        <div class="md-search-result" data-md-component="search-result">
+          <div class="md-search-result__meta">
+            Initializing search
+          </div>
+          <ol class="md-search-result__list" role="presentation"></ol>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+      
+    
+    
+      <div class="md-header__source">
+        <a href="https://github.com/The-Obstacle-Is-The-Way/ai-psychiatrist" title="Go to repository" class="md-source" data-md-component="source">
+  <div class="md-source__icon md-icon">
+    
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 448 512"><!--! Font Awesome Free 7.1.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2025 Fonticons, Inc.--><path d="M439.6 236.1 244 40.5c-5.4-5.5-12.8-8.5-20.4-8.5s-15 3-20.4 8.4L162.5 81l51.5 51.5c27.1-9.1 52.7 16.8 43.4 43.7l49.7 49.7c34.2-11.8 61.2 31 35.5 56.7-26.5 26.5-70.2-2.9-56-37.3L240.3 199v121.9c25.3 12.5 22.3 41.8 9.1 55-6.4 6.4-15.2 10.1-24.3 10.1s-17.8-3.6-24.3-10.1c-17.6-17.6-11.1-46.9 11.2-56v-123c-20.8-8.5-24.6-30.7-18.6-45L142.6 101 8.5 235.1C3 240.6 0 247.9 0 255.5s3 15 8.5 20.4l195.6 195.7c5.4 5.4 12.7 8.4 20.4 8.4s15-3 20.4-8.4l194.7-194.7c5.4-5.4 8.4-12.8 8.4-20.4s-3-15-8.4-20.4"/></svg>
+  </div>
+  <div class="md-source__repository">
+    GitHub
+  </div>
+</a>
+      </div>
+    
+  </nav>
+  
+</header>
+    
+    <div class="md-container" data-md-component="container">
+      
+      
+        
+          
+        
+      
+      <main class="md-main" data-md-component="main">
+        <div class="md-main__inner md-grid">
+          
+            
+              
+              <div class="md-sidebar md-sidebar--primary" data-md-component="sidebar" data-md-type="navigation" >
+                <div class="md-sidebar__scrollwrap">
+                  <div class="md-sidebar__inner">
+                    
+
+
+
+<nav class="md-nav md-nav--primary" aria-label="Navigation" data-md-level="0">
+  <label class="md-nav__title" for="__drawer">
+    <a href="../.." title="AI Psychiatrist" class="md-nav__button md-logo" aria-label="AI Psychiatrist" data-md-component="logo">
+      
+  
+  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 8a3 3 0 0 0 3-3 3 3 0 0 0-3-3 3 3 0 0 0-3 3 3 3 0 0 0 3 3m0 3.54C9.64 9.35 6.5 8 3 8v11c3.5 0 6.64 1.35 9 3.54 2.36-2.19 5.5-3.54 9-3.54V8c-3.5 0-6.64 1.35-9 3.54"/></svg>
+
+    </a>
+    AI Psychiatrist
+  </label>
+  
+    <div class="md-nav__source">
+      <a href="https://github.com/The-Obstacle-Is-The-Way/ai-psychiatrist" title="Go to repository" class="md-source" data-md-component="source">
+  <div class="md-source__icon md-icon">
+    
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 448 512"><!--! Font Awesome Free 7.1.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2025 Fonticons, Inc.--><path d="M439.6 236.1 244 40.5c-5.4-5.5-12.8-8.5-20.4-8.5s-15 3-20.4 8.4L162.5 81l51.5 51.5c27.1-9.1 52.7 16.8 43.4 43.7l49.7 49.7c34.2-11.8 61.2 31 35.5 56.7-26.5 26.5-70.2-2.9-56-37.3L240.3 199v121.9c25.3 12.5 22.3 41.8 9.1 55-6.4 6.4-15.2 10.1-24.3 10.1s-17.8-3.6-24.3-10.1c-17.6-17.6-11.1-46.9 11.2-56v-123c-20.8-8.5-24.6-30.7-18.6-45L142.6 101 8.5 235.1C3 240.6 0 247.9 0 255.5s3 15 8.5 20.4l195.6 195.7c5.4 5.4 12.7 8.4 20.4 8.4s15-3 20.4-8.4l194.7-194.7c5.4-5.4 8.4-12.8 8.4-20.4s-3-15-8.4-20.4"/></svg>
+  </div>
+  <div class="md-source__repository">
+    GitHub
+  </div>
+</a>
+    </div>
+  
+  <ul class="md-nav__list" data-md-scrollfix>
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../.." class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    AI Psychiatrist Documentation
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    
+    
+    
+    
+      
+        
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--section md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_2" >
+        
+          
+          <label class="md-nav__link" for="__nav_2" id="__nav_2_label" tabindex="">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+     research
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_2_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_2">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+     research
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../_research/hypotheses-explained/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Hypotheses Explained: Current State vs Future Improvements
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../_research/hypotheses-for-improvement/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Hypotheses for Improvement: First-Principles Analysis
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../_research/master-bug-audit/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    MASTER BUG AUDIT
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    
+    
+    
+    
+      
+        
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--section md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_3" >
+        
+          
+          <label class="md-nav__link" for="__nav_3" id="__nav_3_label" tabindex="">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Architecture
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_3_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_3">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    Architecture
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../architecture/architecture/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Architecture
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../architecture/future-architecture/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Future Architecture: Agent Orchestration Options
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../architecture/pipeline/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Pipeline
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    
+    
+    
+    
+      
+        
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--section md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_4" >
+        
+          
+          <label class="md-nav__link" for="__nav_4" id="__nav_4_label" tabindex="">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Clinical
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_4_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_4">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    Clinical
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../clinical/clinical-understanding/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Clinical Understanding: How This System Works
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../clinical/glossary/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Glossary
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../clinical/phq8/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    PHQ-8: Patient Health Questionnaire
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../clinical/task-validity/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Task Validity: What Can (and Cannot) Be Inferred from DAIC-WOZ Transcripts
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+    
+  
+  
+  
+    
+    
+    
+    
+      
+        
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--active md-nav__item--section md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_5" checked>
+        
+          
+          <label class="md-nav__link" for="__nav_5" id="__nav_5_label" tabindex="">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Configs
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_5_label" aria-expanded="true">
+          <label class="md-nav__title" for="__nav_5">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    Configs
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../agent-sampling-registry/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Agent Sampling Parameter Registry
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+    
+  
+  
+  
+    <li class="md-nav__item md-nav__item--active">
+      
+      <input class="md-nav__toggle md-toggle" type="checkbox" id="__toc">
+      
+      
+        
+      
+      
+        <label class="md-nav__link md-nav__link--active" for="__toc">
+          
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Configuration Philosophy
+  
+
+    
+  </span>
+  
+  
+
+          <span class="md-nav__icon md-icon"></span>
+        </label>
+      
+      <a href="./" class="md-nav__link md-nav__link--active">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Configuration Philosophy
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+      
+        
+
+<nav class="md-nav md-nav--secondary" aria-label="Table of contents">
+  
+  
+  
+    
+  
+  
+    <label class="md-nav__title" for="__toc">
+      <span class="md-nav__icon md-icon"></span>
+      Table of contents
+    </label>
+    <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
+      
+        <li class="md-nav__item">
+  <a href="#core-principle" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Core Principle
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#ssot-terminology" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        SSOT + Terminology
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#on-the-legacy-baseline-paper-derived" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        On the Legacy Baseline (Paper-Derived)
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#configuration-categories" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Configuration Categories
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Configuration Categories">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#1-always-on-correctness-invariants-do-not-tune" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        1. Always-On Correctness Invariants (Do Not "Tune")
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#2-post-ablation-defaults-will-be-baked-in" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        2. Post-Ablation Defaults (Will Be Baked In)
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="2. Post-Ablation Defaults (Will Be Baked In)">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#why-crag-spec-36-should-be-default-on" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Why CRAG (Spec 36) Should Be Default ON
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#3-tunable-hyperparameters-keep-configurable" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        3. Tunable Hyperparameters (Keep Configurable)
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#4-model-selection-always-configurable" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        4. Model Selection (Always Configurable)
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#5-infrastructure-always-configurable" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        5. Infrastructure (Always Configurable)
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#6-embedding-artifact-selection-critical" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        6. Embedding Artifact Selection (Critical)
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#7-removed-features" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        7. Removed Features
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#8-safety-overrides-danger-zone" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        8. Safety Overrides (Danger Zone)
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#decision-framework" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Decision Framework
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#anti-patterns" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Anti-Patterns
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Anti-Patterns">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#dont-add-flags-for-flexibility" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        DON'T: Add flags for "flexibility"
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#dont-default-broken-behavior" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        DON'T: Default broken behavior
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#dont-hide-correctness-behind-opt-in" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        DON'T: Hide correctness behind opt-in
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#do-make-correct-behavior-the-default" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        DO: Make correct behavior the default
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#current-state-vs-target-state" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Current State vs Target State
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Current State vs Target State">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#current-pre-ablation" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Current (Pre-Ablation)
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#target-post-ablation" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Target (Post-Ablation)
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#post-ablation-migration" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Post-Ablation Migration
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Post-Ablation Migration">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#validation-gates-before-consolidation" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Validation Gates (Before Consolidation)
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#configpy-changes-required" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        config.py Changes Required
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#artifact-requirements" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Artifact Requirements
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#summary-table" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Summary Table
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#related-documentation" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Related Documentation
+      
+    </span>
+  </a>
+  
+</li>
+      
+    </ul>
+  
+</nav>
+      
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../configuration/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Configuration Reference
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    
+    
+    
+    
+      
+        
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--section md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_6" >
+        
+          
+          <label class="md-nav__link" for="__nav_6" id="__nav_6_label" tabindex="">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Data
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_6_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_6">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    Data
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../data/artifact-namespace-registry/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Artifact Namespace Registry
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../data/daic-woz-preprocessing/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    DAIC-WOZ Transcript Preprocessing (Bias-Aware, Deterministic)
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../data/daic-woz-schema/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    DAIC-WOZ Dataset Schema
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../data/data-splits-overview/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Data Splits Overview
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    
+    
+    
+    
+      
+        
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--section md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_7" >
+        
+          
+          <label class="md-nav__link" for="__nav_7" id="__nav_7_label" tabindex="">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Developer
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_7_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_7">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    Developer
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../developer/api-endpoints/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    API Reference
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../developer/dependency-registry/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Dependency Registry
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../developer/error-handling/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Error Handling and Fail-Fast Philosophy
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../developer/exceptions/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Exception Reference (Domain + Runtime)
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../developer/testing/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Testing Conventions (Markers, Fixtures, and Test Doubles)
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    
+    
+    
+    
+      
+        
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--section md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_8" >
+        
+          
+          <label class="md-nav__link" for="__nav_8" id="__nav_8_label" tabindex="">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Getting started
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_8_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_8">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    Getting started
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../getting-started/quickstart/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Quickstart Guide
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    
+    
+    
+    
+      
+        
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--section md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_9" >
+        
+          
+          <label class="md-nav__link" for="__nav_9" id="__nav_9_label" tabindex="">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Models
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_9_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_9">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    Models
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../models/model-registry/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    AI Psychiatrist Model Registry
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../models/model-wiring/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Model Wiring: Current State
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    
+    
+    
+    
+      
+        
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--section md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_10" >
+        
+          
+          <label class="md-nav__link" for="__nav_10" id="__nav_10_label" tabindex="">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Pipeline internals
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_10_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_10">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    Pipeline internals
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../pipeline-internals/evidence-extraction/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Evidence Extraction Mechanism: How It Actually Works
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../pipeline-internals/features/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Feature Reference (Non-Archive Canonical)
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    
+    
+    
+    
+      
+        
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--section md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_11" >
+        
+          
+          <label class="md-nav__link" for="__nav_11" id="__nav_11_label" tabindex="">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Preflight checklist
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_11_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_11">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    Preflight checklist
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../preflight-checklist/preflight-checklist-few-shot/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Preflight Checklist: Few-Shot Reproduction
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../preflight-checklist/preflight-checklist-zero-shot/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Preflight Checklist: Zero-Shot Run
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    
+    
+    
+    
+      
+        
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--section md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_12" >
+        
+          
+          <label class="md-nav__link" for="__nav_12" id="__nav_12_label" tabindex="">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Rag
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_12_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_12">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    Rag
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../rag/artifact-generation/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    RAG Artifact Generation
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../rag/chunk-scoring/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Chunk-Level Scoring (Spec 35) — Schema, Workflow, and Gotchas
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../rag/debugging/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    RAG Debugging (Audit Logs + Guardrails)
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../rag/design-rationale/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    RAG Design Rationale
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../rag/overview/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    RAG Overview: Embeddings and Few-Shot Retrieval
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../rag/runtime-features/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    RAG Runtime Features
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    
+    
+    
+    
+      
+        
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--section md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_13" >
+        
+          
+          <label class="md-nav__link" for="__nav_13" id="__nav_13_label" tabindex="">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Results
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_13_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_13">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    Results
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../results/few-shot-analysis/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Why Few-Shot May Not Beat Zero-Shot: Analysis
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../results/reproduction-results/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Paper Reproduction Results (Current Status)
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../results/run-history/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Complete Run History &amp; Statistical Analysis
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../results/run-output-schema/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Reproduction Run Output Schema (JSON + Registry)
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    
+    
+    
+    
+      
+        
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--section md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_14" >
+        
+          
+          <label class="md-nav__link" for="__nav_14" id="__nav_14_label" tabindex="">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Statistics
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_14_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_14">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    Statistics
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../statistics/coverage/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Coverage Explained: What It Is and Why It Matters
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../statistics/metrics-and-evaluation/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Metrics and Evaluation (Exact Definitions + Output Schema)
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../statistics/statistical-methodology-aurc-augrc/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Statistical Methodology: AURC/AUGRC for Selective Prediction
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+  </ul>
+</nav>
+                  </div>
+                </div>
+              </div>
+            
+            
+              
+              <div class="md-sidebar md-sidebar--secondary" data-md-component="sidebar" data-md-type="toc" >
+                <div class="md-sidebar__scrollwrap">
+                  <div class="md-sidebar__inner">
+                    
+
+<nav class="md-nav md-nav--secondary" aria-label="Table of contents">
+  
+  
+  
+    
+  
+  
+    <label class="md-nav__title" for="__toc">
+      <span class="md-nav__icon md-icon"></span>
+      Table of contents
+    </label>
+    <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
+      
+        <li class="md-nav__item">
+  <a href="#core-principle" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Core Principle
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#ssot-terminology" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        SSOT + Terminology
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#on-the-legacy-baseline-paper-derived" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        On the Legacy Baseline (Paper-Derived)
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#configuration-categories" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Configuration Categories
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Configuration Categories">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#1-always-on-correctness-invariants-do-not-tune" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        1. Always-On Correctness Invariants (Do Not "Tune")
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#2-post-ablation-defaults-will-be-baked-in" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        2. Post-Ablation Defaults (Will Be Baked In)
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="2. Post-Ablation Defaults (Will Be Baked In)">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#why-crag-spec-36-should-be-default-on" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Why CRAG (Spec 36) Should Be Default ON
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#3-tunable-hyperparameters-keep-configurable" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        3. Tunable Hyperparameters (Keep Configurable)
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#4-model-selection-always-configurable" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        4. Model Selection (Always Configurable)
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#5-infrastructure-always-configurable" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        5. Infrastructure (Always Configurable)
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#6-embedding-artifact-selection-critical" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        6. Embedding Artifact Selection (Critical)
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#7-removed-features" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        7. Removed Features
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#8-safety-overrides-danger-zone" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        8. Safety Overrides (Danger Zone)
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#decision-framework" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Decision Framework
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#anti-patterns" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Anti-Patterns
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Anti-Patterns">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#dont-add-flags-for-flexibility" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        DON'T: Add flags for "flexibility"
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#dont-default-broken-behavior" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        DON'T: Default broken behavior
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#dont-hide-correctness-behind-opt-in" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        DON'T: Hide correctness behind opt-in
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#do-make-correct-behavior-the-default" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        DO: Make correct behavior the default
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#current-state-vs-target-state" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Current State vs Target State
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Current State vs Target State">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#current-pre-ablation" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Current (Pre-Ablation)
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#target-post-ablation" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Target (Post-Ablation)
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#post-ablation-migration" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Post-Ablation Migration
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Post-Ablation Migration">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#validation-gates-before-consolidation" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Validation Gates (Before Consolidation)
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#configpy-changes-required" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        config.py Changes Required
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#artifact-requirements" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Artifact Requirements
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#summary-table" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Summary Table
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#related-documentation" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Related Documentation
+      
+    </span>
+  </a>
+  
+</li>
+      
+    </ul>
+  
+</nav>
+                  </div>
+                </div>
+              </div>
+            
+          
+          
+            <div class="md-content" data-md-component="content">
+              
+              <article class="md-content__inner md-typeset">
+                
+                  
+
+
+  
+    <a href="https://github.com/The-Obstacle-Is-The-Way/ai-psychiatrist/edit/main/docs/configs/configuration-philosophy.md" title="Edit this page" class="md-content__button md-icon" rel="edit">
+      
+      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M10 20H6V4h7v5h5v3.1l2-2V8l-6-6H6c-1.1 0-2 .9-2 2v16c0 1.1.9 2 2 2h4zm10.2-7c.1 0 .3.1.4.2l1.3 1.3c.2.2.2.6 0 .8l-1 1-2.1-2.1 1-1c.1-.1.2-.2.4-.2m0 3.9L14.1 23H12v-2.1l6.1-6.1z"/></svg>
+    </a>
+  
+  
+    
+      
+    
+    <a href="https://github.com/The-Obstacle-Is-The-Way/ai-psychiatrist/raw/main/docs/configs/configuration-philosophy.md" title="View source of this page" class="md-content__button md-icon">
+      
+      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M17 18c.56 0 1 .44 1 1s-.44 1-1 1-1-.44-1-1 .44-1 1-1m0-3c-2.73 0-5.06 1.66-6 4 .94 2.34 3.27 4 6 4s5.06-1.66 6-4c-.94-2.34-3.27-4-6-4m0 6.5a2.5 2.5 0 0 1-2.5-2.5 2.5 2.5 0 0 1 2.5-2.5 2.5 2.5 0 0 1 2.5 2.5 2.5 2.5 0 0 1-2.5 2.5M9.27 20H6V4h7v5h5v4.07c.7.08 1.36.25 2 .49V8l-6-6H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h4.5a8.2 8.2 0 0 1-1.23-2"/></svg>
+    </a>
+  
+
+
+<h1 id="configuration-philosophy">Configuration Philosophy</h1>
+<p><strong>Date</strong>: 2026-01-02
+<strong>Purpose</strong>: Define what should be configurable vs baked-in defaults.</p>
+<hr />
+<h2 id="core-principle">Core Principle</h2>
+<blockquote>
+<p><strong>Correct behavior is the default. Broken behavior requires explicit opt-in.</strong></p>
+</blockquote>
+<p>Not everything needs a flag. Flags add cognitive load and misconfiguration risk.</p>
+<hr />
+<h2 id="ssot-terminology">SSOT + Terminology</h2>
+<ul>
+<li><strong>SSOT for config names + code defaults</strong>: <code>src/ai_psychiatrist/config.py</code>.</li>
+<li><strong>Recommended runtime baseline</strong>: <code>.env.example</code> (what most runs use once copied to <code>.env</code>).</li>
+<li>When this doc says "default", it should be read as:</li>
+<li><strong>Code default</strong> = what happens with no <code>.env</code> overrides (or in tests where <code>.env</code> is ignored).</li>
+<li><strong>Recommended <code>.env</code> baseline</strong> = what we expect for normal research runs.</li>
+</ul>
+<hr />
+<h2 id="on-the-legacy-baseline-paper-derived">On the Legacy Baseline (Paper-Derived)</h2>
+<p><strong>The paper's few-shot method (as described) introduces a fundamental label mismatch.</strong></p>
+<p>We initially aimed to match the paper's reported methodology. Through
+rigorous investigation, we discovered critical issues:</p>
+<ol>
+<li>
+<p><strong>Participant-level scores attached to retrieved chunks</strong>: In the legacy baseline pipeline,
+   the score shown for a retrieved reference chunk is a <strong>participant-level PHQ-8 item score</strong>.
+   This creates label noise: a chunk about "career goals" can be shown as <code>(PHQ8_Sleep Score: 2)</code>
+   even if it contains no sleep evidence. This is not chunk-level ground truth.</p>
+</li>
+<li>
+<p><strong>Keyword backfill was a heuristic</strong>: Keyword triggers ("sleep", "tired", etc.) can increase
+   apparent coverage but may introduce false positives and distort selective-prediction metrics.
+   This feature was removed in Spec 047; historical context is kept under <code>docs/_archive/</code>.</p>
+</li>
+<li>
+<p><strong>Reproducibility is ambiguous</strong>: Despite extensive effort, we have not reproduced the
+   paper's headline improvements in our environment. This could be due to methodology gaps
+   (under-specified prompts, artifacts, split details) and/or implementation differences.</p>
+</li>
+</ol>
+<p><strong>Our stance</strong>: the legacy baseline is still useful as a <strong>historical baseline</strong>, but should not be
+the default behavior. We aim for <strong>research-honest behavior</strong>: minimize label noise, avoid
+silent heuristics, and fail fast when enabled features are broken.</p>
+<p>See <code>_archive/misc/HYPOTHESIS-FEWSHOT-DESIGN-FLAW.md</code> for the full analysis.</p>
+<hr />
+<h2 id="configuration-categories">Configuration Categories</h2>
+<h3 id="1-always-on-correctness-invariants-do-not-tune">1. Always-On Correctness Invariants (Do Not "Tune")</h3>
+<p>These are <strong>correctness behaviors</strong>. Some have knobs in the codebase, but treating them as "tunable"
+creates misconfiguration risk and can corrupt research runs.</p>
+<table>
+<thead>
+<tr>
+<th>Behavior</th>
+<th>Where Enforced</th>
+<th>Config Knob?</th>
+<th>Notes</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><strong>Skip-if-disabled, crash-if-broken</strong> (Spec 38)</td>
+<td><code>ReferenceStore</code> + <code>ReferenceValidation</code></td>
+<td>No (automatic)</td>
+<td>Disabled feature = no file I/O; enabled feature = strict load + validate</td>
+</tr>
+<tr>
+<td><strong>Preserve exception types</strong> (Spec 39)</td>
+<td>Agents</td>
+<td>No (automatic)</td>
+<td>Log <code>error_type</code>, then <code>raise</code> to preserve the original exception</td>
+</tr>
+<tr>
+<td><strong>Fail-fast embedding generation</strong> (Spec 40)</td>
+<td><code>scripts/generate_embeddings.py</code></td>
+<td>CLI (<code>--allow-partial</code>)</td>
+<td>Strict-by-default; partial is for debugging only</td>
+</tr>
+<tr>
+<td><strong>Evidence schema validation</strong> (Spec 54)</td>
+<td><code>_extract_evidence()</code></td>
+<td>No (automatic)</td>
+<td>Raises <code>EvidenceSchemaError</code> on wrong types</td>
+</tr>
+<tr>
+<td><strong>Evidence grounding validation</strong> (Spec 53)</td>
+<td><code>_extract_evidence()</code></td>
+<td>Yes (<code>QUANTITATIVE_EVIDENCE_QUOTE_VALIDATION_*</code>)</td>
+<td>Default ON; validates quotes exist in transcript</td>
+</tr>
+<tr>
+<td><strong>Embedding NaN/Inf/zero detection</strong> (Spec 55)</td>
+<td>Query + reference embeddings</td>
+<td>No (automatic)</td>
+<td>Raises <code>EmbeddingValidationError</code></td>
+</tr>
+<tr>
+<td><strong>Dimension strict mode</strong> (Spec 57)</td>
+<td><code>ReferenceStore</code></td>
+<td>Yes (<code>EMBEDDING_ALLOW_INSUFFICIENT_DIMENSION_EMBEDDINGS</code>)</td>
+<td>Default: fail on dimension &lt; expected</td>
+</tr>
+<tr>
+<td><strong>Failure pattern observability</strong> (Spec 56)</td>
+<td><code>reproduce_results.py</code></td>
+<td>No (automatic)</td>
+<td>Writes <code>failures_{run_id}.json</code></td>
+</tr>
+<tr>
+<td><strong>Pydantic AI structured output</strong></td>
+<td>Agents</td>
+<td>Yes (<code>PYDANTIC_AI_ENABLED</code>)</td>
+<td>Disabling is <strong>not supported</strong> (agents will raise; legacy fallback removed)</td>
+</tr>
+<tr>
+<td><strong>Track N/A reasons</strong></td>
+<td>Quantitative agent</td>
+<td>Yes (<code>QUANTITATIVE_TRACK_NA_REASONS</code>)</td>
+<td>Default ON; small runtime cost but improves run diagnostics</td>
+</tr>
+</tbody>
+</table>
+<p><strong>Rule</strong>: if disabling a "correctness invariant" is possible, it must either:
+- be clearly documented as <strong>unsupported</strong>, or
+- be restricted to a <strong>debug-only</strong> escape hatch (explicit, noisy, and off by default).</p>
+<hr />
+<h3 id="2-post-ablation-defaults-will-be-baked-in">2. Post-Ablation Defaults (Will Be Baked In)</h3>
+<p>After ablations complete, these become baked-in defaults:</p>
+<table>
+<thead>
+<tr>
+<th>Setting</th>
+<th>Code Default</th>
+<th><code>.env.example</code> Baseline</th>
+<th>Post-Ablation Default</th>
+<th>Why</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>EMBEDDING_REFERENCE_SCORE_SOURCE</code></td>
+<td><code>participant</code></td>
+<td><code>participant</code></td>
+<td><code>chunk</code></td>
+<td>Fixes participant-score-on-chunk mismatch (Spec 35)</td>
+</tr>
+<tr>
+<td><code>EMBEDDING_ENABLE_ITEM_TAG_FILTER</code></td>
+<td><code>false</code></td>
+<td><code>true</code></td>
+<td><code>true</code></td>
+<td>Improves item-level retrieval precision (Spec 34)</td>
+</tr>
+<tr>
+<td><code>EMBEDDING_MIN_REFERENCE_SIMILARITY</code></td>
+<td><code>0.0</code></td>
+<td><code>0.3</code></td>
+<td><code>0.3</code></td>
+<td>Drops low-similarity references (Spec 33)</td>
+</tr>
+<tr>
+<td><code>EMBEDDING_MAX_REFERENCE_CHARS_PER_ITEM</code></td>
+<td><code>0</code></td>
+<td><code>500</code></td>
+<td><code>500</code></td>
+<td>Prevents context bloat (Spec 33)</td>
+</tr>
+<tr>
+<td><code>EMBEDDING_ENABLE_REFERENCE_VALIDATION</code></td>
+<td><code>false</code></td>
+<td><code>false</code></td>
+<td><code>true</code></td>
+<td>CRAG validation to reject irrelevant references (Spec 36)</td>
+</tr>
+</tbody>
+</table>
+<p><strong>Post-ablation</strong>: These become defaults. Flags remain ONLY for legacy baseline reproduction.</p>
+<h4 id="why-crag-spec-36-should-be-default-on">Why CRAG (Spec 36) Should Be Default ON</h4>
+<p>If our goal is <strong>research-honest retrieval</strong> (not the legacy baseline), reference validation is part of the
+"correct" pipeline:</p>
+<ul>
+<li>Spec 34 (item tags) is a <strong>static heuristic</strong> and will miss symptom mentions that don't match keywords.</li>
+<li>Spec 33 (similarity threshold/budget) is a <strong>quality guardrail</strong>, not a relevance proof.</li>
+<li>Spec 35 fixes <strong>label correctness</strong>, but does not prevent "semantically similar but clinically irrelevant" chunks.</li>
+<li>Spec 36 is the only layer that asks an LLM directly: "Is this reference actually about the target PHQ-8 item?"</li>
+</ul>
+<p>In this repo's research workflow (local Ollama, long-running ablations), <strong>correctness outweighs latency</strong>.</p>
+<hr />
+<h3 id="3-tunable-hyperparameters-keep-configurable">3. Tunable Hyperparameters (Keep Configurable)</h3>
+<p>Researchers should experiment with these. They affect results, not correctness.</p>
+<p><strong>Important</strong>: Some "hyperparameters" are <strong>index-time</strong> and require regenerating artifacts.
+Changing them without regenerating embeddings/tags/chunk-scores will either crash or silently change
+the retrieval universe.</p>
+<table>
+<thead>
+<tr>
+<th>Setting</th>
+<th>Code Default</th>
+<th><code>.env.example</code> Baseline</th>
+<th>Runtime-Only?</th>
+<th>Notes</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>EMBEDDING_DIMENSION</code></td>
+<td>4096</td>
+<td>4096</td>
+<td>No</td>
+<td>Must match embedding model + stored artifact dimension</td>
+</tr>
+<tr>
+<td><code>EMBEDDING_CHUNK_SIZE</code></td>
+<td>8</td>
+<td>8</td>
+<td>No</td>
+<td>Requires regenerating <code>.npz</code> + sidecars</td>
+</tr>
+<tr>
+<td><code>EMBEDDING_CHUNK_STEP</code></td>
+<td>2</td>
+<td>2</td>
+<td>No</td>
+<td>Requires regenerating <code>.npz</code> + sidecars</td>
+</tr>
+<tr>
+<td><code>EMBEDDING_TOP_K_REFERENCES</code></td>
+<td>2</td>
+<td>2</td>
+<td>Yes</td>
+<td>Paper Appendix D chose <code>2</code>; can be tuned without reindex</td>
+</tr>
+<tr>
+<td><code>EMBEDDING_ENABLE_BATCH_QUERY_EMBEDDING</code></td>
+<td><code>true</code></td>
+<td><code>true</code></td>
+<td>Yes</td>
+<td>Spec 37 stability/perf default</td>
+</tr>
+<tr>
+<td><code>EMBEDDING_QUERY_EMBED_TIMEOUT_SECONDS</code></td>
+<td>300</td>
+<td>300</td>
+<td>Yes</td>
+<td>Stability knob (Spec 37)</td>
+</tr>
+<tr>
+<td><code>EMBEDDING_ENABLE_RETRIEVAL_AUDIT</code></td>
+<td><code>false</code></td>
+<td><code>true</code></td>
+<td>Yes</td>
+<td>Diagnostics only (Spec 32); recommended ON for research runs</td>
+</tr>
+<tr>
+<td><code>EMBEDDING_MIN_REFERENCE_SIMILARITY</code></td>
+<td>0.0</td>
+<td>0.3</td>
+<td>Yes</td>
+<td>Retrieval-time filter; safe to tune</td>
+</tr>
+<tr>
+<td><code>EMBEDDING_MAX_REFERENCE_CHARS_PER_ITEM</code></td>
+<td>0</td>
+<td>500</td>
+<td>Yes</td>
+<td>Retrieval-time budget; safe to tune</td>
+</tr>
+<tr>
+<td><code>FEEDBACK_MAX_ITERATIONS</code></td>
+<td>10</td>
+<td>10</td>
+<td>Yes</td>
+<td>More iterations increases runtime and can change outputs</td>
+</tr>
+<tr>
+<td><code>FEEDBACK_SCORE_THRESHOLD</code></td>
+<td>3</td>
+<td>3</td>
+<td>Yes</td>
+<td>Controls when refinement triggers</td>
+</tr>
+<tr>
+<td><code>EMBEDDING_VALIDATION_MAX_REFS_PER_ITEM</code></td>
+<td>2</td>
+<td>2</td>
+<td>Yes</td>
+<td>Bounds CRAG keep-set per item</td>
+</tr>
+</tbody>
+</table>
+<p><strong>These stay as env vars.</strong> Researchers tune them for ablation studies.</p>
+<hr />
+<h3 id="4-model-selection-always-configurable">4. Model Selection (Always Configurable)</h3>
+<p>Users must be able to swap models:</p>
+<table>
+<thead>
+<tr>
+<th>Setting</th>
+<th>Code Default</th>
+<th><code>.env.example</code> Baseline</th>
+<th>Purpose</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>MODEL_QUALITATIVE_MODEL</code></td>
+<td><code>gemma3:27b</code></td>
+<td><code>gemma3:27b-it-qat</code></td>
+<td>Qualitative agent</td>
+</tr>
+<tr>
+<td><code>MODEL_JUDGE_MODEL</code></td>
+<td><code>gemma3:27b</code></td>
+<td><code>gemma3:27b-it-qat</code></td>
+<td>Judge agent</td>
+</tr>
+<tr>
+<td><code>MODEL_META_REVIEW_MODEL</code></td>
+<td><code>gemma3:27b</code></td>
+<td><code>gemma3:27b-it-qat</code></td>
+<td>Meta-review agent</td>
+</tr>
+<tr>
+<td><code>MODEL_QUANTITATIVE_MODEL</code></td>
+<td><code>gemma3:27b</code></td>
+<td><code>gemma3:27b-it-qat</code></td>
+<td>Quantitative agent</td>
+</tr>
+<tr>
+<td><code>MODEL_EMBEDDING_MODEL</code></td>
+<td><code>qwen3-embedding:8b</code></td>
+<td><code>qwen3-embedding:8b</code></td>
+<td>Embedding model</td>
+</tr>
+<tr>
+<td><code>MODEL_TEMPERATURE</code></td>
+<td><code>0.0</code></td>
+<td><code>0.0</code></td>
+<td>Keep <code>0.0</code> for reproducibility</td>
+</tr>
+<tr>
+<td><code>EMBEDDING_VALIDATION_MODEL</code></td>
+<td><code>""</code> (falls back)</td>
+<td>(unset)</td>
+<td>Effective default is <code>MODEL_JUDGE_MODEL</code> when validation is enabled</td>
+</tr>
+</tbody>
+</table>
+<p><strong>These are always configurable.</strong> Different hardware = different models.</p>
+<hr />
+<h3 id="5-infrastructure-always-configurable">5. Infrastructure (Always Configurable)</h3>
+<p>Environment-specific setup:</p>
+<table>
+<thead>
+<tr>
+<th>Setting</th>
+<th>Default</th>
+<th>Purpose</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>OLLAMA_HOST</code></td>
+<td><code>127.0.0.1</code></td>
+<td>Ollama server</td>
+</tr>
+<tr>
+<td><code>OLLAMA_PORT</code></td>
+<td><code>11434</code></td>
+<td>Ollama port</td>
+</tr>
+<tr>
+<td><code>OLLAMA_TIMEOUT_SECONDS</code></td>
+<td><code>600</code></td>
+<td>Request timeout</td>
+</tr>
+<tr>
+<td><code>PYDANTIC_AI_TIMEOUT_SECONDS</code></td>
+<td>(unset)</td>
+<td>Timeout for Pydantic AI calls</td>
+</tr>
+<tr>
+<td><code>LLM_BACKEND</code></td>
+<td><code>ollama</code></td>
+<td>Chat backend</td>
+</tr>
+<tr>
+<td><code>EMBEDDING_BACKEND</code></td>
+<td><code>huggingface</code></td>
+<td>Embedding backend</td>
+</tr>
+<tr>
+<td><code>HF_DEFAULT_CHAT_TIMEOUT</code></td>
+<td><code>180</code></td>
+<td>HuggingFace chat timeout</td>
+</tr>
+<tr>
+<td><code>HF_DEFAULT_EMBED_TIMEOUT</code></td>
+<td><code>120</code></td>
+<td>HuggingFace embed timeout</td>
+</tr>
+<tr>
+<td><code>DATA_*</code> paths</td>
+<td><code>data/...</code></td>
+<td>Data locations</td>
+</tr>
+<tr>
+<td><code>LOG_LEVEL</code></td>
+<td><code>INFO</code></td>
+<td>Logging verbosity</td>
+</tr>
+<tr>
+<td><code>API_HOST</code>, <code>API_PORT</code></td>
+<td><code>0.0.0.0:8000</code></td>
+<td>Server binding</td>
+</tr>
+</tbody>
+</table>
+<p><strong>These are always configurable.</strong> Infrastructure varies by deployment.</p>
+<hr />
+<h3 id="6-embedding-artifact-selection-critical">6. Embedding Artifact Selection (Critical)</h3>
+<p><strong>Problem Identified</strong>: Embedding artifacts and chunk scores must be generated separately for each backend.
+HuggingFace embeddings (FP16) produce higher quality similarity scores than Ollama (Q4_K_M).</p>
+<table>
+<thead>
+<tr>
+<th>Embeddings File</th>
+<th>Backend</th>
+<th>Precision</th>
+<th>Quality</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>huggingface_qwen3_8b_paper_train_participant_only</code></td>
+<td>HuggingFace</td>
+<td>FP16</td>
+<td><strong>Higher</strong></td>
+</tr>
+<tr>
+<td><code>ollama_qwen3_8b_paper_train_participant_only</code></td>
+<td>Ollama</td>
+<td>Q4_K_M</td>
+<td>Lower</td>
+</tr>
+</tbody>
+</table>
+<p><strong>Recommendation</strong>:</p>
+<ol>
+<li><strong>For best quality</strong>: Use HuggingFace embeddings (<code>EMBEDDING_BACKEND=huggingface</code>)</li>
+<li><strong>For accessibility</strong>: Use Ollama if HuggingFace deps unavailable</li>
+</ol>
+<p><strong>Important</strong>: <code>EMBEDDING_EMBEDDINGS_FILE</code> and <code>EMBEDDING_BACKEND</code> should be coherent:
+- HuggingFace backend → <code>huggingface_*</code> embeddings file
+- Ollama backend → <code>ollama_*</code> embeddings file</p>
+<p><strong>Chunk Scores Dependency</strong>: If <code>EMBEDDING_REFERENCE_SCORE_SOURCE=chunk</code>, the corresponding
+<code>.chunk_scores.json</code> file must exist for the selected embeddings file.</p>
+<hr />
+<h3 id="7-removed-features">7. Removed Features</h3>
+<p>These are no longer present in the codebase (historical context is kept under <code>docs/_archive/</code>):</p>
+<ul>
+<li>Keyword backfill (Spec 047)</li>
+</ul>
+<hr />
+<h3 id="8-safety-overrides-danger-zone">8. Safety Overrides (Danger Zone)</h3>
+<p>These bypass safety checks. Require explicit acknowledgment:</p>
+<table>
+<thead>
+<tr>
+<th>Setting</th>
+<th>Default</th>
+<th>What It Bypasses</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>EMBEDDING_ALLOW_CHUNK_SCORES_PROMPT_HASH_MISMATCH</code></td>
+<td><code>false</code></td>
+<td>Prompt change detection</td>
+</tr>
+<tr>
+<td><code>EMBEDDING_ALLOW_INSUFFICIENT_DIMENSION_EMBEDDINGS</code></td>
+<td><code>false</code></td>
+<td>Dimension strict mode (Spec 57)</td>
+</tr>
+<tr>
+<td><code>--allow-same-model</code> (CLI)</td>
+<td>N/A</td>
+<td>Scorer circularity check</td>
+</tr>
+<tr>
+<td><code>--allow-partial</code> (CLI)</td>
+<td>N/A</td>
+<td>Fail-fast embedding generation</td>
+</tr>
+</tbody>
+</table>
+<p><strong>These should be OFF by default.</strong> Explicit opt-in for known risks.</p>
+<hr />
+<h2 id="decision-framework">Decision Framework</h2>
+<p>When adding a new setting, ask:</p>
+<div class="highlight"><pre><span></span><code>1. Is this CORRECT BEHAVIOR vs BROKEN BEHAVIOR?
+   → Correct = bake it in, no flag
+   → Broken = require explicit opt-in (for legacy only)
+
+2. Is this a RESEARCH HYPERPARAMETER?
+   → Yes = make it tunable with env var
+   → No = don&#39;t add a flag
+
+3. Is this INFRASTRUCTURE-SPECIFIC?
+   → Yes = make it configurable
+   → No = use sensible default
+
+4. Does this BYPASS SAFETY CHECKS?
+   → Yes = default OFF, require explicit opt-in
+   → No = default ON if it&#39;s correct behavior
+</code></pre></div>
+<hr />
+<h2 id="anti-patterns">Anti-Patterns</h2>
+<h3 id="dont-add-flags-for-flexibility">DON'T: Add flags for "flexibility"</h3>
+<div class="highlight"><pre><span></span><code><span class="c1"># BAD: Flag for something that should always be true</span>
+<span class="n">ENABLE_STRUCTURED_OUTPUT</span> <span class="o">=</span> <span class="kc">True</span>  <span class="c1"># Why would you disable this?</span>
+</code></pre></div>
+<h3 id="dont-default-broken-behavior">DON'T: Default broken behavior</h3>
+<div class="highlight"><pre><span></span><code><span class="c1"># BAD: Broken behavior as default</span>
+<span class="n">reference_score_source</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s2">&quot;participant&quot;</span>  <span class="c1"># Known to be wrong</span>
+</code></pre></div>
+<h3 id="dont-hide-correctness-behind-opt-in">DON'T: Hide correctness behind opt-in</h3>
+<div class="highlight"><pre><span></span><code><span class="c1"># BAD: Correct behavior requires user action</span>
+<span class="n">enable_reference_validation</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span>  <span class="c1"># CRAG is &quot;gold standard&quot; but OFF?</span>
+</code></pre></div>
+<h3 id="do-make-correct-behavior-the-default">DO: Make correct behavior the default</h3>
+<div class="highlight"><pre><span></span><code><span class="c1"># GOOD: Correct behavior, opt-out for legacy</span>
+<span class="n">reference_score_source</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s2">&quot;chunk&quot;</span>  <span class="c1"># Correct default</span>
+<span class="c1"># Legacy baseline (paper-derived, known flawed): EMBEDDING_REFERENCE_SCORE_SOURCE=participant</span>
+</code></pre></div>
+<hr />
+<h2 id="current-state-vs-target-state">Current State vs Target State</h2>
+<h3 id="current-pre-ablation">Current (Pre-Ablation)</h3>
+<div class="highlight"><pre><span></span><code><span class="c1"># To run the full &quot;correct&quot; retrieval pipeline today, ensure these are set.</span>
+<span class="nv">EMBEDDING_REFERENCE_SCORE_SOURCE</span><span class="o">=</span>chunk
+<span class="nv">EMBEDDING_ENABLE_ITEM_TAG_FILTER</span><span class="o">=</span><span class="nb">true</span>
+<span class="nv">EMBEDDING_MIN_REFERENCE_SIMILARITY</span><span class="o">=</span><span class="m">0</span>.3
+<span class="nv">EMBEDDING_MAX_REFERENCE_CHARS_PER_ITEM</span><span class="o">=</span><span class="m">500</span>
+<span class="nv">EMBEDDING_ENABLE_REFERENCE_VALIDATION</span><span class="o">=</span><span class="nb">true</span>
+</code></pre></div>
+<p><strong>Problem</strong>: 5 flags to get correct behavior. Easy to misconfigure.</p>
+<h3 id="target-post-ablation">Target (Post-Ablation)</h3>
+<div class="highlight"><pre><span></span><code><span class="c1"># User runs system - it works correctly by default</span>
+<span class="c1"># (no flags needed)</span>
+
+<span class="c1"># ONLY if reproducing paper (broken) baseline:</span>
+<span class="nv">EMBEDDING_REFERENCE_SCORE_SOURCE</span><span class="o">=</span>participant
+<span class="nv">EMBEDDING_ENABLE_ITEM_TAG_FILTER</span><span class="o">=</span><span class="nb">false</span>
+<span class="nv">EMBEDDING_MIN_REFERENCE_SIMILARITY</span><span class="o">=</span><span class="m">0</span>.0
+<span class="nv">EMBEDDING_MAX_REFERENCE_CHARS_PER_ITEM</span><span class="o">=</span><span class="m">0</span>
+<span class="nv">EMBEDDING_ENABLE_REFERENCE_VALIDATION</span><span class="o">=</span><span class="nb">false</span>
+</code></pre></div>
+<p><strong>Better</strong>: Correct by default. Flags only for legacy reproduction.</p>
+<hr />
+<h2 id="post-ablation-migration">Post-Ablation Migration</h2>
+<h3 id="validation-gates-before-consolidation">Validation Gates (Before Consolidation)</h3>
+<p>Do NOT consolidate defaults until all of these are verified:</p>
+<ul>
+<li>[ ] <strong>Spec 35 ablation complete</strong>: Chunk scoring vs participant scoring comparison</li>
+<li>[ ] <strong>chunk_scores.json artifact exists</strong>: Generated by <code>score_reference_chunks.py</code></li>
+<li>[ ] <strong>No regressions</strong>: Primary metrics (AURC/AUGRC + MAE + coverage) meet or beat baseline</li>
+<li>[ ] <strong>CI passes</strong>: All tests green with new defaults</li>
+</ul>
+<h3 id="configpy-changes-required">config.py Changes Required</h3>
+<div class="highlight"><pre><span></span><code><span class="c1"># === EmbeddingSettings ===</span>
+
+<span class="c1"># Spec 35: Chunk-level scoring (label-noise reduction)</span>
+<span class="n">reference_score_source</span><span class="p">:</span> <span class="n">Literal</span><span class="p">[</span><span class="s2">&quot;participant&quot;</span><span class="p">,</span> <span class="s2">&quot;chunk&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">Field</span><span class="p">(</span>
+    <span class="n">default</span><span class="o">=</span><span class="s2">&quot;chunk&quot;</span><span class="p">,</span>  <span class="c1"># CHANGED from &quot;participant&quot;</span>
+<span class="p">)</span>
+
+<span class="c1"># Spec 34: Item-tag filtering</span>
+<span class="n">enable_item_tag_filter</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="n">Field</span><span class="p">(</span>
+    <span class="n">default</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>  <span class="c1"># CHANGED from False</span>
+<span class="p">)</span>
+
+<span class="c1"># Spec 33: Retrieval quality guardrails</span>
+<span class="n">min_reference_similarity</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="n">Field</span><span class="p">(</span>
+    <span class="n">default</span><span class="o">=</span><span class="mf">0.3</span><span class="p">,</span>  <span class="c1"># CHANGED from 0.0</span>
+<span class="p">)</span>
+
+<span class="n">max_reference_chars_per_item</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="n">Field</span><span class="p">(</span>
+    <span class="n">default</span><span class="o">=</span><span class="mi">500</span><span class="p">,</span>  <span class="c1"># CHANGED from 0</span>
+<span class="p">)</span>
+
+<span class="c1"># Spec 36: CRAG-style runtime reference validation</span>
+<span class="n">enable_reference_validation</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="n">Field</span><span class="p">(</span>
+    <span class="n">default</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>  <span class="c1"># CHANGED from False</span>
+<span class="p">)</span>
+</code></pre></div>
+<h3 id="artifact-requirements">Artifact Requirements</h3>
+<p>For the consolidated defaults to work, these artifacts MUST exist:</p>
+<table>
+<thead>
+<tr>
+<th>Artifact</th>
+<th>Required For</th>
+<th>Generated By</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>*.npz</code></td>
+<td>All few-shot</td>
+<td><code>generate_embeddings.py</code></td>
+</tr>
+<tr>
+<td><code>*.json</code></td>
+<td>All few-shot</td>
+<td><code>generate_embeddings.py</code></td>
+</tr>
+<tr>
+<td><code>*.meta.json</code></td>
+<td>All few-shot</td>
+<td><code>generate_embeddings.py</code></td>
+</tr>
+<tr>
+<td><code>*.tags.json</code></td>
+<td>Spec 34</td>
+<td><code>generate_embeddings.py --write-item-tags</code></td>
+</tr>
+<tr>
+<td><code>*.chunk_scores.json</code></td>
+<td>Spec 35</td>
+<td><code>score_reference_chunks.py</code></td>
+</tr>
+<tr>
+<td><code>*.chunk_scores.meta.json</code></td>
+<td>Spec 35</td>
+<td><code>score_reference_chunks.py</code></td>
+</tr>
+</tbody>
+</table>
+<hr />
+<h2 id="summary-table">Summary Table</h2>
+<table>
+<thead>
+<tr>
+<th>Category</th>
+<th>Example</th>
+<th>Configurable?</th>
+<th>Default</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><strong>Invariants</strong></td>
+<td>Spec 38/39/40 semantics</td>
+<td>No</td>
+<td>Always ON</td>
+</tr>
+<tr>
+<td><strong>Post-ablation retrieval</strong></td>
+<td>CRAG, chunk scores, tag filter</td>
+<td>Yes (for now)</td>
+<td>Will be ON</td>
+</tr>
+<tr>
+<td><strong>Performance/stability</strong></td>
+<td>batch query embedding, timeouts</td>
+<td>Yes</td>
+<td>Default ON</td>
+</tr>
+<tr>
+<td><strong>Hyperparameters</strong></td>
+<td>top_k, thresholds, feedback</td>
+<td>Yes</td>
+<td>Baseline values</td>
+</tr>
+<tr>
+<td><strong>Models</strong></td>
+<td>quantitative_model</td>
+<td>Yes</td>
+<td>Code: <code>gemma3:27b</code></td>
+</tr>
+<tr>
+<td><strong>Infrastructure</strong></td>
+<td>OLLAMA_HOST</td>
+<td>Yes</td>
+<td>localhost</td>
+</tr>
+<tr>
+<td><strong>Removed</strong></td>
+<td>keyword_backfill (Spec 047)</td>
+<td>No</td>
+<td>Removed</td>
+</tr>
+<tr>
+<td><strong>Safety overrides</strong></td>
+<td>allow_prompt_mismatch</td>
+<td>Yes</td>
+<td>Always OFF</td>
+</tr>
+</tbody>
+</table>
+<hr />
+<h2 id="related-documentation">Related Documentation</h2>
+<ul>
+<li><a href="../configuration/">Configuration Reference</a> — Full settings reference</li>
+<li><code>.env.example</code> (repository root) — Example configuration</li>
+<li><code>_archive/misc/HYPOTHESIS-FEWSHOT-DESIGN-FLAW.md</code> — Why participant-level scoring is broken</li>
+</ul>
+<hr />
+<p><em>"Make the right thing easy and the wrong thing hard."</em></p>
+
+
+
+
+
+
+
+
+
+
+
+
+                
+              </article>
+            </div>
+          
+          
+<script>var target=document.getElementById(location.hash.slice(1));target&&target.name&&(target.checked=target.name.startsWith("__tabbed_"))</script>
+        </div>
+        
+      </main>
+      
+        <footer class="md-footer">
+  
+    
+      
+      <nav class="md-footer__inner md-grid" aria-label="Footer" >
+        
+          
+          <a href="../agent-sampling-registry/" class="md-footer__link md-footer__link--prev" aria-label="Previous: Agent Sampling Parameter Registry">
+            <div class="md-footer__button md-icon">
+              
+              <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M20 11v2H8l5.5 5.5-1.42 1.42L4.16 12l7.92-7.92L13.5 5.5 8 11z"/></svg>
+            </div>
+            <div class="md-footer__title">
+              <span class="md-footer__direction">
+                Previous
+              </span>
+              <div class="md-ellipsis">
+                Agent Sampling Parameter Registry
+              </div>
+            </div>
+          </a>
+        
+        
+          
+          <a href="../configuration/" class="md-footer__link md-footer__link--next" aria-label="Next: Configuration Reference">
+            <div class="md-footer__title">
+              <span class="md-footer__direction">
+                Next
+              </span>
+              <div class="md-ellipsis">
+                Configuration Reference
+              </div>
+            </div>
+            <div class="md-footer__button md-icon">
+              
+              <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M4 11v2h12l-5.5 5.5 1.42 1.42L19.84 12l-7.92-7.92L10.5 5.5 16 11z"/></svg>
+            </div>
+          </a>
+        
+      </nav>
+    
+  
+  <div class="md-footer-meta md-typeset">
+    <div class="md-footer-meta__inner md-grid">
+      <div class="md-copyright">
+  
+  
+    Made with
+    <a href="https://squidfunk.github.io/mkdocs-material/" target="_blank" rel="noopener">
+      Material for MkDocs
+    </a>
+  
+</div>
+      
+    </div>
+  </div>
+</footer>
+      
+    </div>
+    <div class="md-dialog" data-md-component="dialog">
+      <div class="md-dialog__inner md-typeset"></div>
+    </div>
+    
+    
+    
+      
+      
+      <script id="__config" type="application/json">{"annotate": null, "base": "../..", "features": ["content.code.copy", "content.action.edit", "content.action.view", "navigation.tracking", "navigation.sections", "navigation.footer", "navigation.instant"], "search": "../../assets/javascripts/workers/search.2c215733.min.js", "tags": null, "translations": {"clipboard.copied": "Copied to clipboard", "clipboard.copy": "Copy to clipboard", "search.result.more.one": "1 more on this page", "search.result.more.other": "# more on this page", "search.result.none": "No matching documents", "search.result.one": "1 matching document", "search.result.other": "# matching documents", "search.result.placeholder": "Type to start searching", "search.result.term.missing": "Missing", "select.version": "Select version"}, "version": null}</script>
+    
+    
+      <script src="../../assets/javascripts/bundle.79ae519e.min.js"></script>
+      
+    
+  </body>
+</html>

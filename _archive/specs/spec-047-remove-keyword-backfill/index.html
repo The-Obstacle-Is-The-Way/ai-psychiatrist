@@ -1,0 +1,3395 @@
+
+<!doctype html>
+<html lang="en" class="no-js">
+  <head>
+    
+      <meta charset="utf-8">
+      <meta name="viewport" content="width=device-width,initial-scale=1">
+      
+      
+      
+        <link rel="canonical" href="https://the-obstacle-is-the-way.github.io/ai-psychiatrist/_archive/specs/spec-047-remove-keyword-backfill/">
+      
+      
+      
+      
+        
+      
+      
+      <link rel="icon" href="../../../assets/images/favicon.png">
+      <meta name="generator" content="mkdocs-1.6.1, mkdocs-material-9.7.1">
+    
+    
+      
+        <title>Spec 047: Remove Deprecated Keyword Backfill Feature - AI Psychiatrist</title>
+      
+    
+    
+      <link rel="stylesheet" href="../../../assets/stylesheets/main.484c7ddc.min.css">
+      
+      
+
+
+    
+    
+      
+    
+    
+      
+        
+        
+        <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+        <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Roboto:300,300i,400,400i,700,700i%7CRoboto+Mono:400,400i,700,700i&display=fallback">
+        <style>:root{--md-text-font:"Roboto";--md-code-font:"Roboto Mono"}</style>
+      
+    
+    
+    <script>__md_scope=new URL("../../..",location),__md_hash=e=>[...e].reduce(((e,_)=>(e<<5)-e+_.charCodeAt(0)),0),__md_get=(e,_=localStorage,t=__md_scope)=>JSON.parse(_.getItem(t.pathname+"."+e)),__md_set=(e,_,t=localStorage,a=__md_scope)=>{try{t.setItem(a.pathname+"."+e,JSON.stringify(_))}catch(e){}}</script>
+    
+      
+
+    
+    
+  </head>
+  
+  
+    <body dir="ltr">
+  
+    
+    <input class="md-toggle" data-md-toggle="drawer" type="checkbox" id="__drawer" autocomplete="off">
+    <input class="md-toggle" data-md-toggle="search" type="checkbox" id="__search" autocomplete="off">
+    <label class="md-overlay" for="__drawer"></label>
+    <div data-md-component="skip">
+      
+        
+        <a href="#spec-047-remove-deprecated-keyword-backfill-feature" class="md-skip">
+          Skip to content
+        </a>
+      
+    </div>
+    <div data-md-component="announce">
+      
+    </div>
+    
+    
+      
+
+  
+
+<header class="md-header md-header--shadow" data-md-component="header">
+  <nav class="md-header__inner md-grid" aria-label="Header">
+    <a href="../../.." title="AI Psychiatrist" class="md-header__button md-logo" aria-label="AI Psychiatrist" data-md-component="logo">
+      
+  
+  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 8a3 3 0 0 0 3-3 3 3 0 0 0-3-3 3 3 0 0 0-3 3 3 3 0 0 0 3 3m0 3.54C9.64 9.35 6.5 8 3 8v11c3.5 0 6.64 1.35 9 3.54 2.36-2.19 5.5-3.54 9-3.54V8c-3.5 0-6.64 1.35-9 3.54"/></svg>
+
+    </a>
+    <label class="md-header__button md-icon" for="__drawer">
+      
+      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M3 6h18v2H3zm0 5h18v2H3zm0 5h18v2H3z"/></svg>
+    </label>
+    <div class="md-header__title" data-md-component="header-title">
+      <div class="md-header__ellipsis">
+        <div class="md-header__topic">
+          <span class="md-ellipsis">
+            AI Psychiatrist
+          </span>
+        </div>
+        <div class="md-header__topic" data-md-component="header-topic">
+          <span class="md-ellipsis">
+            
+              Spec 047: Remove Deprecated Keyword Backfill Feature
+            
+          </span>
+        </div>
+      </div>
+    </div>
+    
+    
+      <script>var palette=__md_get("__palette");if(palette&&palette.color){if("(prefers-color-scheme)"===palette.color.media){var media=matchMedia("(prefers-color-scheme: light)"),input=document.querySelector(media.matches?"[data-md-color-media='(prefers-color-scheme: light)']":"[data-md-color-media='(prefers-color-scheme: dark)']");palette.color.media=input.getAttribute("data-md-color-media"),palette.color.scheme=input.getAttribute("data-md-color-scheme"),palette.color.primary=input.getAttribute("data-md-color-primary"),palette.color.accent=input.getAttribute("data-md-color-accent")}for(var[key,value]of Object.entries(palette.color))document.body.setAttribute("data-md-color-"+key,value)}</script>
+    
+    
+    
+      
+      
+        <label class="md-header__button md-icon" for="__search">
+          
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M9.5 3A6.5 6.5 0 0 1 16 9.5c0 1.61-.59 3.09-1.56 4.23l.27.27h.79l5 5-1.5 1.5-5-5v-.79l-.27-.27A6.52 6.52 0 0 1 9.5 16 6.5 6.5 0 0 1 3 9.5 6.5 6.5 0 0 1 9.5 3m0 2C7 5 5 7 5 9.5S7 14 9.5 14 14 12 14 9.5 12 5 9.5 5"/></svg>
+        </label>
+        <div class="md-search" data-md-component="search" role="dialog">
+  <label class="md-search__overlay" for="__search"></label>
+  <div class="md-search__inner" role="search">
+    <form class="md-search__form" name="search">
+      <input type="text" class="md-search__input" name="query" aria-label="Search" placeholder="Search" autocapitalize="off" autocorrect="off" autocomplete="off" spellcheck="false" data-md-component="search-query" required>
+      <label class="md-search__icon md-icon" for="__search">
+        
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M9.5 3A6.5 6.5 0 0 1 16 9.5c0 1.61-.59 3.09-1.56 4.23l.27.27h.79l5 5-1.5 1.5-5-5v-.79l-.27-.27A6.52 6.52 0 0 1 9.5 16 6.5 6.5 0 0 1 3 9.5 6.5 6.5 0 0 1 9.5 3m0 2C7 5 5 7 5 9.5S7 14 9.5 14 14 12 14 9.5 12 5 9.5 5"/></svg>
+        
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M20 11v2H8l5.5 5.5-1.42 1.42L4.16 12l7.92-7.92L13.5 5.5 8 11z"/></svg>
+      </label>
+      <nav class="md-search__options" aria-label="Search">
+        
+        <button type="reset" class="md-search__icon md-icon" title="Clear" aria-label="Clear" tabindex="-1">
+          
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M19 6.41 17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12z"/></svg>
+        </button>
+      </nav>
+      
+    </form>
+    <div class="md-search__output">
+      <div class="md-search__scrollwrap" tabindex="0" data-md-scrollfix>
+        <div class="md-search-result" data-md-component="search-result">
+          <div class="md-search-result__meta">
+            Initializing search
+          </div>
+          <ol class="md-search-result__list" role="presentation"></ol>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+      
+    
+    
+      <div class="md-header__source">
+        <a href="https://github.com/The-Obstacle-Is-The-Way/ai-psychiatrist" title="Go to repository" class="md-source" data-md-component="source">
+  <div class="md-source__icon md-icon">
+    
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 448 512"><!--! Font Awesome Free 7.1.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2025 Fonticons, Inc.--><path d="M439.6 236.1 244 40.5c-5.4-5.5-12.8-8.5-20.4-8.5s-15 3-20.4 8.4L162.5 81l51.5 51.5c27.1-9.1 52.7 16.8 43.4 43.7l49.7 49.7c34.2-11.8 61.2 31 35.5 56.7-26.5 26.5-70.2-2.9-56-37.3L240.3 199v121.9c25.3 12.5 22.3 41.8 9.1 55-6.4 6.4-15.2 10.1-24.3 10.1s-17.8-3.6-24.3-10.1c-17.6-17.6-11.1-46.9 11.2-56v-123c-20.8-8.5-24.6-30.7-18.6-45L142.6 101 8.5 235.1C3 240.6 0 247.9 0 255.5s3 15 8.5 20.4l195.6 195.7c5.4 5.4 12.7 8.4 20.4 8.4s15-3 20.4-8.4l194.7-194.7c5.4-5.4 8.4-12.8 8.4-20.4s-3-15-8.4-20.4"/></svg>
+  </div>
+  <div class="md-source__repository">
+    GitHub
+  </div>
+</a>
+      </div>
+    
+  </nav>
+  
+</header>
+    
+    <div class="md-container" data-md-component="container">
+      
+      
+        
+          
+        
+      
+      <main class="md-main" data-md-component="main">
+        <div class="md-main__inner md-grid">
+          
+            
+              
+              <div class="md-sidebar md-sidebar--primary" data-md-component="sidebar" data-md-type="navigation" >
+                <div class="md-sidebar__scrollwrap">
+                  <div class="md-sidebar__inner">
+                    
+
+
+
+<nav class="md-nav md-nav--primary" aria-label="Navigation" data-md-level="0">
+  <label class="md-nav__title" for="__drawer">
+    <a href="../../.." title="AI Psychiatrist" class="md-nav__button md-logo" aria-label="AI Psychiatrist" data-md-component="logo">
+      
+  
+  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 8a3 3 0 0 0 3-3 3 3 0 0 0-3-3 3 3 0 0 0-3 3 3 3 0 0 0 3 3m0 3.54C9.64 9.35 6.5 8 3 8v11c3.5 0 6.64 1.35 9 3.54 2.36-2.19 5.5-3.54 9-3.54V8c-3.5 0-6.64 1.35-9 3.54"/></svg>
+
+    </a>
+    AI Psychiatrist
+  </label>
+  
+    <div class="md-nav__source">
+      <a href="https://github.com/The-Obstacle-Is-The-Way/ai-psychiatrist" title="Go to repository" class="md-source" data-md-component="source">
+  <div class="md-source__icon md-icon">
+    
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 448 512"><!--! Font Awesome Free 7.1.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2025 Fonticons, Inc.--><path d="M439.6 236.1 244 40.5c-5.4-5.5-12.8-8.5-20.4-8.5s-15 3-20.4 8.4L162.5 81l51.5 51.5c27.1-9.1 52.7 16.8 43.4 43.7l49.7 49.7c34.2-11.8 61.2 31 35.5 56.7-26.5 26.5-70.2-2.9-56-37.3L240.3 199v121.9c25.3 12.5 22.3 41.8 9.1 55-6.4 6.4-15.2 10.1-24.3 10.1s-17.8-3.6-24.3-10.1c-17.6-17.6-11.1-46.9 11.2-56v-123c-20.8-8.5-24.6-30.7-18.6-45L142.6 101 8.5 235.1C3 240.6 0 247.9 0 255.5s3 15 8.5 20.4l195.6 195.7c5.4 5.4 12.7 8.4 20.4 8.4s15-3 20.4-8.4l194.7-194.7c5.4-5.4 8.4-12.8 8.4-20.4s-3-15-8.4-20.4"/></svg>
+  </div>
+  <div class="md-source__repository">
+    GitHub
+  </div>
+</a>
+    </div>
+  
+  <ul class="md-nav__list" data-md-scrollfix>
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../.." class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    AI Psychiatrist Documentation
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    
+    
+    
+    
+      
+        
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--section md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_2" >
+        
+          
+          <label class="md-nav__link" for="__nav_2" id="__nav_2_label" tabindex="">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+     research
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_2_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_2">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+     research
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../_research/hypotheses-explained/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Hypotheses Explained: Current State vs Future Improvements
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../_research/hypotheses-for-improvement/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Hypotheses for Improvement: First-Principles Analysis
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../_research/master-bug-audit/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    MASTER BUG AUDIT
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    
+    
+    
+    
+      
+        
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--section md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_3" >
+        
+          
+          <label class="md-nav__link" for="__nav_3" id="__nav_3_label" tabindex="">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Architecture
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_3_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_3">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    Architecture
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../architecture/architecture/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Architecture
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../architecture/future-architecture/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Future Architecture: Agent Orchestration Options
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../architecture/pipeline/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Pipeline
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    
+    
+    
+    
+      
+        
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--section md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_4" >
+        
+          
+          <label class="md-nav__link" for="__nav_4" id="__nav_4_label" tabindex="">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Clinical
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_4_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_4">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    Clinical
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../clinical/clinical-understanding/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Clinical Understanding: How This System Works
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../clinical/glossary/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Glossary
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../clinical/phq8/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    PHQ-8: Patient Health Questionnaire
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../clinical/task-validity/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Task Validity: What Can (and Cannot) Be Inferred from DAIC-WOZ Transcripts
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    
+    
+    
+    
+      
+        
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--section md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_5" >
+        
+          
+          <label class="md-nav__link" for="__nav_5" id="__nav_5_label" tabindex="">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Configs
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_5_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_5">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    Configs
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../configs/agent-sampling-registry/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Agent Sampling Parameter Registry
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../configs/configuration-philosophy/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Configuration Philosophy
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../configs/configuration/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Configuration Reference
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    
+    
+    
+    
+      
+        
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--section md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_6" >
+        
+          
+          <label class="md-nav__link" for="__nav_6" id="__nav_6_label" tabindex="">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Data
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_6_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_6">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    Data
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../data/artifact-namespace-registry/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Artifact Namespace Registry
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../data/daic-woz-preprocessing/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    DAIC-WOZ Transcript Preprocessing (Bias-Aware, Deterministic)
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../data/daic-woz-schema/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    DAIC-WOZ Dataset Schema
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../data/data-splits-overview/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Data Splits Overview
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    
+    
+    
+    
+      
+        
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--section md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_7" >
+        
+          
+          <label class="md-nav__link" for="__nav_7" id="__nav_7_label" tabindex="">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Developer
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_7_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_7">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    Developer
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../developer/api-endpoints/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    API Reference
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../developer/dependency-registry/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Dependency Registry
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../developer/error-handling/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Error Handling and Fail-Fast Philosophy
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../developer/exceptions/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Exception Reference (Domain + Runtime)
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../developer/testing/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Testing Conventions (Markers, Fixtures, and Test Doubles)
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    
+    
+    
+    
+      
+        
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--section md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_8" >
+        
+          
+          <label class="md-nav__link" for="__nav_8" id="__nav_8_label" tabindex="">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Getting started
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_8_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_8">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    Getting started
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../getting-started/quickstart/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Quickstart Guide
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    
+    
+    
+    
+      
+        
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--section md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_9" >
+        
+          
+          <label class="md-nav__link" for="__nav_9" id="__nav_9_label" tabindex="">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Models
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_9_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_9">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    Models
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../models/model-registry/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    AI Psychiatrist Model Registry
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../models/model-wiring/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Model Wiring: Current State
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    
+    
+    
+    
+      
+        
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--section md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_10" >
+        
+          
+          <label class="md-nav__link" for="__nav_10" id="__nav_10_label" tabindex="">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Pipeline internals
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_10_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_10">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    Pipeline internals
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../pipeline-internals/evidence-extraction/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Evidence Extraction Mechanism: How It Actually Works
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../pipeline-internals/features/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Feature Reference (Non-Archive Canonical)
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    
+    
+    
+    
+      
+        
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--section md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_11" >
+        
+          
+          <label class="md-nav__link" for="__nav_11" id="__nav_11_label" tabindex="">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Preflight checklist
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_11_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_11">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    Preflight checklist
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../preflight-checklist/preflight-checklist-few-shot/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Preflight Checklist: Few-Shot Reproduction
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../preflight-checklist/preflight-checklist-zero-shot/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Preflight Checklist: Zero-Shot Run
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    
+    
+    
+    
+      
+        
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--section md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_12" >
+        
+          
+          <label class="md-nav__link" for="__nav_12" id="__nav_12_label" tabindex="">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Rag
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_12_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_12">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    Rag
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../rag/artifact-generation/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    RAG Artifact Generation
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../rag/chunk-scoring/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Chunk-Level Scoring (Spec 35) — Schema, Workflow, and Gotchas
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../rag/debugging/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    RAG Debugging (Audit Logs + Guardrails)
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../rag/design-rationale/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    RAG Design Rationale
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../rag/overview/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    RAG Overview: Embeddings and Few-Shot Retrieval
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../rag/runtime-features/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    RAG Runtime Features
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    
+    
+    
+    
+      
+        
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--section md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_13" >
+        
+          
+          <label class="md-nav__link" for="__nav_13" id="__nav_13_label" tabindex="">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Results
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_13_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_13">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    Results
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../results/few-shot-analysis/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Why Few-Shot May Not Beat Zero-Shot: Analysis
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../results/reproduction-results/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Paper Reproduction Results (Current Status)
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../results/run-history/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Complete Run History &amp; Statistical Analysis
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../results/run-output-schema/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Reproduction Run Output Schema (JSON + Registry)
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    
+    
+    
+    
+      
+        
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--section md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_14" >
+        
+          
+          <label class="md-nav__link" for="__nav_14" id="__nav_14_label" tabindex="">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Statistics
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_14_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_14">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    Statistics
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../statistics/coverage/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Coverage Explained: What It Is and Why It Matters
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../statistics/metrics-and-evaluation/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Metrics and Evaluation (Exact Definitions + Output Schema)
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../statistics/statistical-methodology-aurc-augrc/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Statistical Methodology: AURC/AUGRC for Selective Prediction
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+  </ul>
+</nav>
+                  </div>
+                </div>
+              </div>
+            
+            
+              
+              <div class="md-sidebar md-sidebar--secondary" data-md-component="sidebar" data-md-type="toc" >
+                <div class="md-sidebar__scrollwrap">
+                  <div class="md-sidebar__inner">
+                    
+
+<nav class="md-nav md-nav--secondary" aria-label="Table of contents">
+  
+  
+  
+    
+  
+  
+    <label class="md-nav__title" for="__toc">
+      <span class="md-nav__icon md-icon"></span>
+      Table of contents
+    </label>
+    <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
+      
+        <li class="md-nav__item">
+  <a href="#overview" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Overview
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#components-to-remove" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Components to Remove
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Components to Remove">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#phase-1-core-implementation-breaking-changes" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Phase 1: Core Implementation (Breaking Changes)
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Phase 1: Core Implementation (Breaking Changes)">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#11-configuration-srcai_psychiatristconfigpy" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        1.1 Configuration (src/ai_psychiatrist/config.py)
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#12-quantitative-agent-srcai_psychiatristagentsquantitativepy" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        1.2 Quantitative Agent (src/ai_psychiatrist/agents/quantitative.py)
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#13-nareason-enum-srcai_psychiatristdomainenumspy" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        1.3 NAReason Enum (src/ai_psychiatrist/domain/enums.py)
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#14-value-objects-srcai_psychiatristdomainvalue_objectspy" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        1.4 Value Objects (src/ai_psychiatrist/domain/value_objects.py)
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#15-prompts-srcai_psychiatristagentspromptsquantitativepy" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        1.5 Prompts (src/ai_psychiatrist/agents/prompts/quantitative.py)
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#16-resources" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        1.6 Resources
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#phase-2-supporting-code" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Phase 2: Supporting Code
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Phase 2: Supporting Code">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#21-tests" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        2.1 Tests
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#22-experiment-tracking-srcai_psychiatristservicesexperiment_trackingpy" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        2.2 Experiment Tracking (src/ai_psychiatrist/services/experiment_tracking.py)
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#23-reproduce-results-script-scriptsreproduce_resultspy" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        2.3 Reproduce Results Script (scripts/reproduce_results.py)
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#24-selective-prediction-evaluation-script-scriptsevaluate_selective_predictionpy" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        2.4 Selective Prediction Evaluation Script (scripts/evaluate_selective_prediction.py)
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#phase-3-documentation" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Phase 3: Documentation
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Phase 3: Documentation">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#31-active-documentation-updates" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        3.1 Active Documentation Updates
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#32-archive-documentation-leave-as-is" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        3.2 Archive Documentation (Leave As-Is)
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#output-schema-changes" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Output Schema Changes
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Output Schema Changes">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#before-with-backfill-fields" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Before (with backfill fields)
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#after" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        After
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#breaking-changes" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Breaking Changes
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#migration" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Migration
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Migration">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#for-users" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        For Users
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#for-downstream-analysis-scripts" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        For Downstream Analysis Scripts
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#implementation-order" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Implementation Order
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Implementation Order">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#step-1-remove-enum-values-and-narrow-types-domain-layer" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Step 1: Remove enum values and narrow types (domain layer)
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#step-2-update-configuration-config-layer" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Step 2: Update configuration (config layer)
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#step-3-delete-keyword-infrastructure-resources-prompts" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Step 3: Delete keyword infrastructure (resources + prompts)
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#step-4-update-agent-implementation-agents-layer" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Step 4: Update agent implementation (agents layer)
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#step-5-delete-and-update-tests" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Step 5: Delete and update tests
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#step-6-update-services-and-scripts" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Step 6: Update services and scripts
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#step-7-update-documentation" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Step 7: Update documentation
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#step-8-verify" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Step 8: Verify
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#verification" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Verification
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#risk-assessment" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Risk Assessment
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#code-metrics" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Code Metrics
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#estimated-effort" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Estimated Effort
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#approval-checklist" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Approval Checklist
+      
+    </span>
+  </a>
+  
+</li>
+      
+    </ul>
+  
+</nav>
+                  </div>
+                </div>
+              </div>
+            
+          
+          
+            <div class="md-content" data-md-component="content">
+              
+              <article class="md-content__inner md-typeset">
+                
+                  
+
+
+  
+    <a href="https://github.com/The-Obstacle-Is-The-Way/ai-psychiatrist/edit/main/docs/_archive/specs/spec-047-remove-keyword-backfill.md" title="Edit this page" class="md-content__button md-icon" rel="edit">
+      
+      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M10 20H6V4h7v5h5v3.1l2-2V8l-6-6H6c-1.1 0-2 .9-2 2v16c0 1.1.9 2 2 2h4zm10.2-7c.1 0 .3.1.4.2l1.3 1.3c.2.2.2.6 0 .8l-1 1-2.1-2.1 1-1c.1-.1.2-.2.4-.2m0 3.9L14.1 23H12v-2.1l6.1-6.1z"/></svg>
+    </a>
+  
+  
+    
+      
+    
+    <a href="https://github.com/The-Obstacle-Is-The-Way/ai-psychiatrist/raw/main/docs/_archive/specs/spec-047-remove-keyword-backfill.md" title="View source of this page" class="md-content__button md-icon">
+      
+      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M17 18c.56 0 1 .44 1 1s-.44 1-1 1-1-.44-1-1 .44-1 1-1m0-3c-2.73 0-5.06 1.66-6 4 .94 2.34 3.27 4 6 4s5.06-1.66 6-4c-.94-2.34-3.27-4-6-4m0 6.5a2.5 2.5 0 0 1-2.5-2.5 2.5 2.5 0 0 1 2.5-2.5 2.5 2.5 0 0 1 2.5 2.5 2.5 2.5 0 0 1-2.5 2.5M9.27 20H6V4h7v5h5v4.07c.7.08 1.36.25 2 .49V8l-6-6H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h4.5a8.2 8.2 0 0 1-1.23-2"/></svg>
+    </a>
+  
+
+
+<h1 id="spec-047-remove-deprecated-keyword-backfill-feature">Spec 047: Remove Deprecated Keyword Backfill Feature</h1>
+<p><strong>Status</strong>: Implemented (2026-01-03)
+<strong>Issue</strong>: #82 - Remove deprecated keyword backfill feature
+<strong>Author</strong>: Claude
+<strong>Date</strong>: 2026-01-02</p>
+<hr />
+<h2 id="overview">Overview</h2>
+<p>The keyword backfill feature is a flawed heuristic that matches keywords like "sleep" or "tired" without semantic understanding. It was retained for historical comparison but should now be completely removed to reduce code complexity and eliminate dead code paths.</p>
+<p><strong>Why Remove Now?</strong>
+1. Feature was OFF by default and documented as deprecated
+2. Enabling it harms validity without improving clinical outcomes
+3. It adds ~200 lines of code that are never executed in production
+4. It creates confusion for new contributors</p>
+<hr />
+<h2 id="components-to-remove">Components to Remove</h2>
+<h3 id="phase-1-core-implementation-breaking-changes">Phase 1: Core Implementation (Breaking Changes)</h3>
+<h4 id="11-configuration-srcai_psychiatristconfigpy">1.1 Configuration (<code>src/ai_psychiatrist/config.py</code>)</h4>
+<p><strong>Remove these fields from <code>QuantitativeSettings</code>:</strong></p>
+<div class="highlight"><pre><span></span><code><span class="c1"># DELETE lines 383-396</span>
+<span class="n">enable_keyword_backfill</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="n">Field</span><span class="p">(</span>
+    <span class="n">default</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
+    <span class="n">description</span><span class="o">=</span><span class="s2">&quot;DEPRECATED: Do NOT enable. Flawed heuristic retained for ablation only.&quot;</span><span class="p">,</span>
+<span class="p">)</span>
+<span class="n">track_na_reasons</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="n">Field</span><span class="p">(</span>  <span class="c1"># KEEP THIS ONE</span>
+    <span class="n">default</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
+    <span class="n">description</span><span class="o">=</span><span class="s2">&quot;Track why items return N/A&quot;</span><span class="p">,</span>
+<span class="p">)</span>
+<span class="n">keyword_backfill_cap</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="n">Field</span><span class="p">(</span>  <span class="c1"># DELETE</span>
+    <span class="n">default</span><span class="o">=</span><span class="mi">3</span><span class="p">,</span>
+    <span class="n">ge</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span>
+    <span class="n">le</span><span class="o">=</span><span class="mi">10</span><span class="p">,</span>
+    <span class="n">description</span><span class="o">=</span><span class="s2">&quot;DEPRECATED: Irrelevant since backfill should remain OFF.&quot;</span><span class="p">,</span>
+<span class="p">)</span>
+</code></pre></div>
+<p><strong>Update docstring:</strong></p>
+<div class="highlight"><pre><span></span><code><span class="k">class</span><span class="w"> </span><span class="nc">QuantitativeSettings</span><span class="p">(</span><span class="n">BaseSettings</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Quantitative assessment configuration.&quot;&quot;&quot;</span>
+
+    <span class="n">model_config</span> <span class="o">=</span> <span class="n">SettingsConfigDict</span><span class="p">(</span>
+        <span class="n">env_prefix</span><span class="o">=</span><span class="s2">&quot;QUANTITATIVE_&quot;</span><span class="p">,</span>
+        <span class="n">env_file</span><span class="o">=</span><span class="n">ENV_FILE</span><span class="p">,</span>
+        <span class="n">env_file_encoding</span><span class="o">=</span><span class="n">ENV_FILE_ENCODING</span><span class="p">,</span>
+        <span class="n">extra</span><span class="o">=</span><span class="s2">&quot;ignore&quot;</span><span class="p">,</span>
+    <span class="p">)</span>
+
+    <span class="n">track_na_reasons</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="n">Field</span><span class="p">(</span>
+        <span class="n">default</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
+        <span class="n">description</span><span class="o">=</span><span class="s2">&quot;Track why items return N/A (for diagnostics)&quot;</span><span class="p">,</span>
+    <span class="p">)</span>
+</code></pre></div>
+<h4 id="12-quantitative-agent-srcai_psychiatristagentsquantitativepy">1.2 Quantitative Agent (<code>src/ai_psychiatrist/agents/quantitative.py</code>)</h4>
+<p><strong>Remove these methods entirely:</strong></p>
+<table>
+<thead>
+<tr>
+<th>Method</th>
+<th>Lines</th>
+<th>Purpose</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>_find_keyword_hits()</code></td>
+<td>388-418</td>
+<td>Find keyword matches in transcript</td>
+</tr>
+<tr>
+<td><code>_merge_evidence()</code></td>
+<td>420-453</td>
+<td>Merge LLM + keyword evidence</td>
+</tr>
+</tbody>
+</table>
+<p><strong>Simplify these methods:</strong></p>
+<table>
+<thead>
+<tr>
+<th>Method</th>
+<th>Lines</th>
+<th>Change</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>_determine_na_reason()</code></td>
+<td>494-507</td>
+<td>Remove <code>LLM_ONLY_MISSED</code> and <code>KEYWORDS_INSUFFICIENT</code> cases</td>
+</tr>
+<tr>
+<td><code>_determine_evidence_source()</code></td>
+<td>509-519</td>
+<td>Remove, always return <code>"llm"</code> or <code>None</code></td>
+</tr>
+</tbody>
+</table>
+<p><strong>Remove from <code>assess()</code> method (lines 163-185):</strong></p>
+<p><strong>IMPORTANT:</strong> The keyword hit computation (line 166) is triggered by EITHER <code>enable_keyword_backfill=True</code> OR <code>track_na_reasons=True</code>. This is because <code>_determine_na_reason()</code> uses keyword counts to distinguish <code>NO_MENTION</code> from <code>LLM_ONLY_MISSED</code>.</p>
+<p>After removing backfill, we no longer need keyword counts for N/A reason tracking because we're removing the <code>LLM_ONLY_MISSED</code> reason entirely.</p>
+<div class="highlight"><pre><span></span><code><span class="c1"># DELETE this entire block (lines 163-185)</span>
+<span class="c1"># Step 2: Find keyword hits (always computed for observability/N/A reasons)</span>
+<span class="n">keyword_hits</span><span class="p">:</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="nb">list</span><span class="p">[</span><span class="nb">str</span><span class="p">]]</span> <span class="o">=</span> <span class="p">{}</span>
+<span class="n">keyword_hit_counts</span><span class="p">:</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="nb">int</span><span class="p">]</span> <span class="o">=</span> <span class="p">{}</span>
+<span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_settings</span><span class="o">.</span><span class="n">enable_keyword_backfill</span> <span class="ow">or</span> <span class="bp">self</span><span class="o">.</span><span class="n">_settings</span><span class="o">.</span><span class="n">track_na_reasons</span><span class="p">:</span>
+    <span class="n">keyword_hits</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_find_keyword_hits</span><span class="p">(</span>
+        <span class="n">transcript</span><span class="o">.</span><span class="n">text</span><span class="p">,</span>
+        <span class="n">cap</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">_settings</span><span class="o">.</span><span class="n">keyword_backfill_cap</span><span class="p">,</span>
+    <span class="p">)</span>
+    <span class="n">keyword_hit_counts</span> <span class="o">=</span> <span class="p">{</span><span class="n">k</span><span class="p">:</span> <span class="nb">len</span><span class="p">(</span><span class="n">v</span><span class="p">)</span> <span class="k">for</span> <span class="n">k</span><span class="p">,</span> <span class="n">v</span> <span class="ow">in</span> <span class="n">keyword_hits</span><span class="o">.</span><span class="n">items</span><span class="p">()}</span>
+
+<span class="c1"># Step 3: Conditional backfill</span>
+<span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_settings</span><span class="o">.</span><span class="n">enable_keyword_backfill</span><span class="p">:</span>
+    <span class="c1"># Merge LLM evidence with keyword hits</span>
+    <span class="n">final_evidence</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_merge_evidence</span><span class="p">(</span>
+        <span class="n">llm_evidence</span><span class="p">,</span> <span class="n">keyword_hits</span><span class="p">,</span> <span class="n">cap</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">_settings</span><span class="o">.</span><span class="n">keyword_backfill_cap</span>
+    <span class="p">)</span>
+<span class="k">else</span><span class="p">:</span>
+    <span class="n">final_evidence</span> <span class="o">=</span> <span class="n">llm_evidence</span>
+
+<span class="c1"># Calculate added evidence from backfill</span>
+<span class="n">keyword_added_counts</span> <span class="o">=</span> <span class="p">{</span>
+    <span class="n">k</span><span class="p">:</span> <span class="nb">len</span><span class="p">(</span><span class="n">final_evidence</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">k</span><span class="p">,</span> <span class="p">[]))</span> <span class="o">-</span> <span class="n">llm_counts</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">k</span><span class="p">,</span> <span class="mi">0</span><span class="p">)</span> <span class="k">for</span> <span class="n">k</span> <span class="ow">in</span> <span class="n">final_evidence</span>
+<span class="p">}</span>
+</code></pre></div>
+<p><strong>Replace with:</strong></p>
+<div class="highlight"><pre><span></span><code><span class="c1"># Use LLM evidence directly (no backfill)</span>
+<span class="n">final_evidence</span> <span class="o">=</span> <span class="n">llm_evidence</span>
+</code></pre></div>
+<p><strong>Update ItemAssessment construction (lines 233-268):</strong></p>
+<div class="highlight"><pre><span></span><code><span class="c1"># BEFORE (lines 235-238)</span>
+<span class="n">evidence_source</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_determine_evidence_source</span><span class="p">(</span>
+    <span class="n">llm_count</span><span class="o">=</span><span class="n">llm_counts</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">legacy_key</span><span class="p">,</span> <span class="mi">0</span><span class="p">),</span>
+    <span class="n">keyword_added_count</span><span class="o">=</span><span class="n">keyword_added_counts</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">legacy_key</span><span class="p">,</span> <span class="mi">0</span><span class="p">),</span>
+<span class="p">)</span>
+
+<span class="c1"># AFTER - inline the simplified logic</span>
+<span class="n">llm_count</span> <span class="o">=</span> <span class="n">llm_counts</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">legacy_key</span><span class="p">,</span> <span class="mi">0</span><span class="p">)</span>
+<span class="n">evidence_source</span> <span class="o">=</span> <span class="s2">&quot;llm&quot;</span> <span class="k">if</span> <span class="n">llm_count</span> <span class="o">&gt;</span> <span class="mi">0</span> <span class="k">else</span> <span class="kc">None</span>
+
+<span class="c1"># BEFORE (lines 240-245)</span>
+<span class="k">if</span> <span class="n">score</span> <span class="ow">is</span> <span class="kc">None</span> <span class="ow">and</span> <span class="bp">self</span><span class="o">.</span><span class="n">_settings</span><span class="o">.</span><span class="n">track_na_reasons</span><span class="p">:</span>
+    <span class="n">na_reason</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_determine_na_reason</span><span class="p">(</span>
+        <span class="n">llm_count</span><span class="o">=</span><span class="n">llm_counts</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">legacy_key</span><span class="p">,</span> <span class="mi">0</span><span class="p">),</span>
+        <span class="n">keyword_count</span><span class="o">=</span><span class="n">keyword_hit_counts</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">legacy_key</span><span class="p">,</span> <span class="mi">0</span><span class="p">),</span>
+        <span class="n">backfill_enabled</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">_settings</span><span class="o">.</span><span class="n">enable_keyword_backfill</span><span class="p">,</span>
+    <span class="p">)</span>
+
+<span class="c1"># AFTER</span>
+<span class="k">if</span> <span class="n">score</span> <span class="ow">is</span> <span class="kc">None</span> <span class="ow">and</span> <span class="bp">self</span><span class="o">.</span><span class="n">_settings</span><span class="o">.</span><span class="n">track_na_reasons</span><span class="p">:</span>
+    <span class="n">na_reason</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_determine_na_reason</span><span class="p">(</span><span class="n">llm_count</span><span class="p">)</span>
+
+<span class="c1"># BEFORE (line 264)</span>
+<span class="n">keyword_evidence_count</span><span class="o">=</span><span class="n">keyword_added_counts</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">legacy_key</span><span class="p">,</span> <span class="mi">0</span><span class="p">),</span>
+
+<span class="c1"># AFTER - remove this line entirely from ItemAssessment constructor</span>
+</code></pre></div>
+<p><strong>Simplify <code>_determine_na_reason()</code> to:</strong></p>
+<div class="highlight"><pre><span></span><code><span class="k">def</span><span class="w"> </span><span class="nf">_determine_na_reason</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">llm_count</span><span class="p">:</span> <span class="nb">int</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">NAReason</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Determine why an item has no score.&quot;&quot;&quot;</span>
+    <span class="k">if</span> <span class="n">llm_count</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>
+        <span class="k">return</span> <span class="n">NAReason</span><span class="o">.</span><span class="n">NO_MENTION</span>
+    <span class="k">return</span> <span class="n">NAReason</span><span class="o">.</span><span class="n">SCORE_NA_WITH_EVIDENCE</span>
+</code></pre></div>
+<p><strong>Remove <code>_determine_evidence_source()</code> method entirely</strong> (lines 509-519) - the simplified logic is inlined above.</p>
+<h4 id="13-nareason-enum-srcai_psychiatristdomainenumspy">1.3 NAReason Enum (<code>src/ai_psychiatrist/domain/enums.py</code>)</h4>
+<p><strong>Remove these enum values:</strong></p>
+<div class="highlight"><pre><span></span><code><span class="c1"># DELETE</span>
+<span class="n">LLM_ONLY_MISSED</span> <span class="o">=</span> <span class="s2">&quot;llm_only_missed&quot;</span>
+<span class="sd">&quot;&quot;&quot;LLM missed evidence that keywords would have found (backfill disabled).&quot;&quot;&quot;</span>
+
+<span class="n">KEYWORDS_INSUFFICIENT</span> <span class="o">=</span> <span class="s2">&quot;keywords_insufficient&quot;</span>
+<span class="sd">&quot;&quot;&quot;Keywords matched but still insufficient for scoring.&quot;&quot;&quot;</span>
+</code></pre></div>
+<p><strong>Keep:</strong>
+- <code>NO_MENTION</code> - Neither LLM nor transcript mentions the symptom
+- <code>SCORE_NA_WITH_EVIDENCE</code> - Evidence exists but scorer abstained</p>
+<h4 id="14-value-objects-srcai_psychiatristdomainvalue_objectspy">1.4 Value Objects (<code>src/ai_psychiatrist/domain/value_objects.py</code>)</h4>
+<p><strong>Remove field:</strong></p>
+<div class="highlight"><pre><span></span><code><span class="c1"># DELETE line 166-167</span>
+<span class="n">keyword_evidence_count</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">0</span>
+<span class="sd">&quot;&quot;&quot;Number of evidence items added from keyword hits (injected into scorer evidence).&quot;&quot;&quot;</span>
+</code></pre></div>
+<p><strong>Update <code>evidence_source</code> type (line 160):</strong></p>
+<div class="highlight"><pre><span></span><code><span class="c1"># BEFORE</span>
+<span class="n">evidence_source</span><span class="p">:</span> <span class="n">Literal</span><span class="p">[</span><span class="s2">&quot;llm&quot;</span><span class="p">,</span> <span class="s2">&quot;keyword&quot;</span><span class="p">,</span> <span class="s2">&quot;both&quot;</span><span class="p">]</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span>
+
+<span class="c1"># AFTER</span>
+<span class="n">evidence_source</span><span class="p">:</span> <span class="n">Literal</span><span class="p">[</span><span class="s2">&quot;llm&quot;</span><span class="p">]</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span>
+</code></pre></div>
+<p><strong>Update docstring:</strong></p>
+<div class="highlight"><pre><span></span><code><span class="n">evidence_source</span><span class="p">:</span> <span class="n">Literal</span><span class="p">[</span><span class="s2">&quot;llm&quot;</span><span class="p">]</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span>
+<span class="sd">&quot;&quot;&quot;Source of evidence provided to the scorer (None means no evidence found).&quot;&quot;&quot;</span>
+</code></pre></div>
+<h4 id="15-prompts-srcai_psychiatristagentspromptsquantitativepy">1.5 Prompts (<code>src/ai_psychiatrist/agents/prompts/quantitative.py</code>)</h4>
+<p><strong>Remove:</strong></p>
+<div class="highlight"><pre><span></span><code><span class="c1"># DELETE lines 20, 35-72</span>
+<span class="n">_KEYWORDS_RESOURCE_PATH</span> <span class="o">=</span> <span class="s2">&quot;resources/phq8_keywords.yaml&quot;</span>
+
+<span class="nd">@lru_cache</span><span class="p">(</span><span class="n">maxsize</span><span class="o">=</span><span class="mi">1</span><span class="p">)</span>
+<span class="k">def</span><span class="w"> </span><span class="nf">_load_domain_keywords</span><span class="p">()</span> <span class="o">-&gt;</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="nb">list</span><span class="p">[</span><span class="nb">str</span><span class="p">]]:</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;...&quot;&quot;&quot;</span>
+    <span class="c1"># ... entire function</span>
+
+<span class="n">DOMAIN_KEYWORDS</span><span class="p">:</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="nb">list</span><span class="p">[</span><span class="nb">str</span><span class="p">]]</span> <span class="o">=</span> <span class="n">_load_domain_keywords</span><span class="p">()</span>
+</code></pre></div>
+<p><strong>Update import in quantitative.py:</strong></p>
+<div class="highlight"><pre><span></span><code><span class="c1"># BEFORE</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">ai_psychiatrist.agents.prompts.quantitative</span><span class="w"> </span><span class="kn">import</span> <span class="p">(</span>
+    <span class="n">DOMAIN_KEYWORDS</span><span class="p">,</span>  <span class="c1"># DELETE THIS</span>
+    <span class="n">QUANTITATIVE_SYSTEM_PROMPT</span><span class="p">,</span>
+    <span class="n">make_evidence_prompt</span><span class="p">,</span>
+    <span class="n">make_scoring_prompt</span><span class="p">,</span>
+<span class="p">)</span>
+
+<span class="c1"># AFTER</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">ai_psychiatrist.agents.prompts.quantitative</span><span class="w"> </span><span class="kn">import</span> <span class="p">(</span>
+    <span class="n">PHQ8_DOMAIN_KEYS</span><span class="p">,</span>  <span class="c1"># USE THIS INSTEAD (already exists)</span>
+    <span class="n">QUANTITATIVE_SYSTEM_PROMPT</span><span class="p">,</span>
+    <span class="n">make_evidence_prompt</span><span class="p">,</span>
+    <span class="n">make_scoring_prompt</span><span class="p">,</span>
+<span class="p">)</span>
+</code></pre></div>
+<p><strong>Update <code>_extract_evidence()</code> method (line 378):</strong></p>
+<div class="highlight"><pre><span></span><code><span class="c1"># BEFORE</span>
+<span class="k">for</span> <span class="n">key</span> <span class="ow">in</span> <span class="n">DOMAIN_KEYWORDS</span><span class="p">:</span>
+
+<span class="c1"># AFTER</span>
+<span class="k">for</span> <span class="n">key</span> <span class="ow">in</span> <span class="n">PHQ8_DOMAIN_KEYS</span><span class="p">:</span>
+</code></pre></div>
+<p><strong>Note:</strong> <code>DOMAIN_KEYWORDS</code> is used in two places:
+1. <code>_extract_evidence()</code> line 378 - only needs keys, use <code>PHQ8_DOMAIN_KEYS</code>
+2. <code>_find_keyword_hits()</code> line 408 - needs keyword lists, but this method is deleted</p>
+<h4 id="16-resources">1.6 Resources</h4>
+<p><strong>Delete file:</strong>
+- <code>src/ai_psychiatrist/resources/phq8_keywords.yaml</code></p>
+<hr />
+<h3 id="phase-2-supporting-code">Phase 2: Supporting Code</h3>
+<h4 id="21-tests">2.1 Tests</h4>
+<p><strong>Delete entirely:</strong>
+- <code>tests/unit/agents/test_quantitative_backfill.py</code></p>
+<p><strong>Update <code>tests/conftest.py</code> (remove from cleanup list):</strong></p>
+<div class="highlight"><pre><span></span><code><span class="c1"># DELETE from _ENV_VARS_TO_CLEAR</span>
+<span class="s2">&quot;QUANTITATIVE_ENABLE_KEYWORD_BACKFILL&quot;</span><span class="p">,</span>
+<span class="s2">&quot;QUANTITATIVE_KEYWORD_BACKFILL_CAP&quot;</span><span class="p">,</span>
+</code></pre></div>
+<p><strong>Update <code>tests/unit/test_config.py</code>:</strong></p>
+<div class="highlight"><pre><span></span><code><span class="c1"># DELETE TestQuantitativeSettings.test_env_override_enable_backfill (lines 47-51)</span>
+<span class="c1"># UPDATE TestQuantitativeSettings.test_defaults to only check track_na_reasons</span>
+<span class="c1"># DELETE assertion: assert settings.keyword_backfill_cap == 3 (line 45)</span>
+</code></pre></div>
+<p><strong>Update <code>tests/unit/agents/test_quantitative.py</code>:</strong></p>
+<div class="highlight"><pre><span></span><code><span class="c1"># UPDATE import (line 27):</span>
+<span class="c1"># BEFORE</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">ai_psychiatrist.agents.prompts.quantitative</span><span class="w"> </span><span class="kn">import</span> <span class="p">(</span>
+    <span class="n">DOMAIN_KEYWORDS</span><span class="p">,</span>
+    <span class="o">...</span>
+<span class="p">)</span>
+<span class="c1"># AFTER</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">ai_psychiatrist.agents.prompts.quantitative</span><span class="w"> </span><span class="kn">import</span> <span class="p">(</span>
+    <span class="n">PHQ8_DOMAIN_KEYS</span><span class="p">,</span>
+    <span class="o">...</span>
+<span class="p">)</span>
+
+<span class="c1"># UPDATE line 374:</span>
+<span class="c1"># BEFORE</span>
+<span class="n">empty_evidence</span> <span class="o">=</span> <span class="n">json</span><span class="o">.</span><span class="n">dumps</span><span class="p">({</span><span class="n">k</span><span class="p">:</span> <span class="p">[]</span> <span class="k">for</span> <span class="n">k</span> <span class="ow">in</span> <span class="n">DOMAIN_KEYWORDS</span><span class="p">})</span>
+<span class="c1"># AFTER</span>
+<span class="n">empty_evidence</span> <span class="o">=</span> <span class="n">json</span><span class="o">.</span><span class="n">dumps</span><span class="p">({</span><span class="n">k</span><span class="p">:</span> <span class="p">[]</span> <span class="k">for</span> <span class="n">k</span> <span class="ow">in</span> <span class="n">PHQ8_DOMAIN_KEYS</span><span class="p">})</span>
+
+<span class="c1"># DELETE entire TestKeywordBackfill class (tests keyword backfill behavior)</span>
+<span class="c1"># DELETE entire TestDomainKeywords class (tests keyword list + normalization)</span>
+</code></pre></div>
+<p><strong>Update <code>tests/unit/agents/test_quantitative_coverage.py</code>:</strong></p>
+<div class="highlight"><pre><span></span><code><span class="c1"># UPDATE import (line 16):</span>
+<span class="c1"># BEFORE</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">ai_psychiatrist.agents.prompts.quantitative</span><span class="w"> </span><span class="kn">import</span> <span class="n">DOMAIN_KEYWORDS</span>
+<span class="c1"># AFTER</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">ai_psychiatrist.agents.prompts.quantitative</span><span class="w"> </span><span class="kn">import</span> <span class="n">PHQ8_DOMAIN_KEYS</span>
+
+<span class="c1"># UPDATE line 25:</span>
+<span class="c1"># BEFORE</span>
+<span class="n">SAMPLE_EVIDENCE_RESPONSE</span> <span class="o">=</span> <span class="n">json</span><span class="o">.</span><span class="n">dumps</span><span class="p">({</span><span class="n">k</span><span class="p">:</span> <span class="p">[</span><span class="s2">&quot;evidence&quot;</span><span class="p">]</span> <span class="k">for</span> <span class="n">k</span> <span class="ow">in</span> <span class="n">DOMAIN_KEYWORDS</span><span class="p">})</span>
+<span class="c1"># AFTER</span>
+<span class="n">SAMPLE_EVIDENCE_RESPONSE</span> <span class="o">=</span> <span class="n">json</span><span class="o">.</span><span class="n">dumps</span><span class="p">({</span><span class="n">k</span><span class="p">:</span> <span class="p">[</span><span class="s2">&quot;evidence&quot;</span><span class="p">]</span> <span class="k">for</span> <span class="n">k</span> <span class="ow">in</span> <span class="n">PHQ8_DOMAIN_KEYS</span><span class="p">})</span>
+</code></pre></div>
+<p><strong>Update <code>tests/unit/domain/test_value_objects.py</code>:</strong></p>
+<ul>
+<li>Remove <code>keyword_evidence_count</code> construction + assertions.</li>
+<li>Narrow <code>evidence_source</code> expectations to <code>"llm"</code> or <code>None</code> only.</li>
+</ul>
+<p><strong>Update <code>tests/unit/scripts/test_evaluate_selective_prediction_confidence.py</code>:</strong></p>
+<ul>
+<li>Remove <code>keyword_evidence_count</code> from synthetic <code>item_signals</code> fixtures.</li>
+</ul>
+<p><strong>Update <code>tests/integration/test_selective_prediction_from_output.py</code>:</strong></p>
+<ul>
+<li>Remove <code>keyword_evidence_count</code> from synthetic <code>item_signals</code> fixtures.</li>
+</ul>
+<p><strong>Add regression tests (new):</strong></p>
+<ul>
+<li><code>tests/unit/test_spec_047_remove_keyword_backfill.py</code></li>
+<li>Asserts keyword backfill config + schema are removed (field-level).</li>
+<li>Asserts run output filename no longer includes <code>backfill-*</code>.</li>
+</ul>
+<h4 id="22-experiment-tracking-srcai_psychiatristservicesexperiment_trackingpy">2.2 Experiment Tracking (<code>src/ai_psychiatrist/services/experiment_tracking.py</code>)</h4>
+<p><strong>Remove field from Run dataclass:</strong></p>
+<div class="highlight"><pre><span></span><code><span class="c1"># DELETE line 141</span>
+<span class="n">enable_keyword_backfill</span><span class="p">:</span> <span class="nb">bool</span>
+</code></pre></div>
+<p><strong>Update <code>from_settings()</code> method:</strong></p>
+<div class="highlight"><pre><span></span><code><span class="c1"># DELETE line 169</span>
+<span class="n">enable_keyword_backfill</span><span class="o">=</span><span class="n">settings</span><span class="o">.</span><span class="n">quantitative</span><span class="o">.</span><span class="n">enable_keyword_backfill</span><span class="p">,</span>
+</code></pre></div>
+<h4 id="23-reproduce-results-script-scriptsreproduce_resultspy">2.3 Reproduce Results Script (<code>scripts/reproduce_results.py</code>)</h4>
+<p><strong>Remove backfill parameter (line 826):</strong></p>
+<div class="highlight"><pre><span></span><code><span class="c1"># DELETE</span>
+<span class="n">backfill</span><span class="o">=</span><span class="n">settings</span><span class="o">.</span><span class="n">quantitative</span><span class="o">.</span><span class="n">enable_keyword_backfill</span><span class="p">,</span>
+</code></pre></div>
+<p><strong>Remove keyword_evidence_count from output serialization (line 305):</strong></p>
+<div class="highlight"><pre><span></span><code><span class="c1"># DELETE</span>
+<span class="s2">&quot;keyword_evidence_count&quot;</span><span class="p">:</span> <span class="n">item_assessment</span><span class="o">.</span><span class="n">keyword_evidence_count</span><span class="p">,</span>
+</code></pre></div>
+<h4 id="24-selective-prediction-evaluation-script-scriptsevaluate_selective_predictionpy">2.4 Selective Prediction Evaluation Script (<code>scripts/evaluate_selective_prediction.py</code>)</h4>
+<p><strong>Update confidence calculation (line 237):</strong></p>
+<div class="highlight"><pre><span></span><code><span class="c1"># BEFORE</span>
+<span class="n">sig</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;keyword_evidence_count&quot;</span><span class="p">,</span> <span class="mi">0</span><span class="p">)</span>
+
+<span class="c1"># AFTER - remove this term from the calculation entirely</span>
+<span class="c1"># The total_evidence calculation becomes: llm_evidence_count only</span>
+</code></pre></div>
+<hr />
+<h3 id="phase-3-documentation">Phase 3: Documentation</h3>
+<h4 id="31-active-documentation-updates">3.1 Active Documentation Updates</h4>
+<table>
+<thead>
+<tr>
+<th>File</th>
+<th>Change</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>.env.example</code></td>
+<td>Remove <code>QUANTITATIVE_ENABLE_KEYWORD_BACKFILL</code> and <code>QUANTITATIVE_KEYWORD_BACKFILL_CAP</code></td>
+</tr>
+<tr>
+<td><code>docs/configs/configuration.md</code></td>
+<td>Remove backfill settings from table</td>
+</tr>
+<tr>
+<td><code>docs/configs/configuration-philosophy.md</code></td>
+<td>Remove backfill from "OFF permanently" section</td>
+</tr>
+<tr>
+<td><code>docs/preflight-checklist/preflight-checklist-zero-shot.md</code></td>
+<td>Remove backfill checks</td>
+</tr>
+<tr>
+<td><code>docs/preflight-checklist/preflight-checklist-few-shot.md</code></td>
+<td>Remove backfill checks</td>
+</tr>
+<tr>
+<td><code>docs/architecture/pipeline.md</code></td>
+<td>Remove backfill mention in quantitative stage</td>
+</tr>
+<tr>
+<td><code>docs/results/run-output-schema.md</code></td>
+<td>Remove <code>keyword_evidence_count</code> from schema</td>
+</tr>
+<tr>
+<td><code>docs/results/reproduction-results.md</code></td>
+<td>Update “Results saved to” filename format</td>
+</tr>
+<tr>
+<td><code>docs/statistics/metrics-and-evaluation.md</code></td>
+<td>Simplify confidence formula (remove <code>+ keyword_evidence_count</code>)</td>
+</tr>
+<tr>
+<td><code>docs/statistics/statistical-methodology-aurc-augrc.md</code></td>
+<td>Remove <code>keyword_evidence_count</code> reference</td>
+</tr>
+<tr>
+<td><code>docs/statistics/coverage.md</code></td>
+<td>Remove backfill ablation mention (feature removed)</td>
+</tr>
+<tr>
+<td><code>docs/research/augrc-improvement-techniques-2026.md</code></td>
+<td>Remove <code>keyword_evidence_count</code> from code sample</td>
+</tr>
+<tr>
+<td><code>docs/_specs/spec-046-selective-prediction-confidence-signals.md</code></td>
+<td>Simplify <code>total_evidence</code> formula</td>
+</tr>
+<tr>
+<td><code>docs/data/artifact-namespace-registry.md</code></td>
+<td>Update outputs filename pattern (no <code>backfill-*</code>)</td>
+</tr>
+</tbody>
+</table>
+<h4 id="32-archive-documentation-leave-as-is">3.2 Archive Documentation (Leave As-Is)</h4>
+<p>Files in <code>docs/_archive/</code> should remain untouched as historical record:
+- <code>docs/_archive/specs/SPEC-003-backfill-toggle.md</code>
+- <code>docs/_archive/concepts/backfill-explained.md</code>
+- etc.</p>
+<hr />
+<h2 id="output-schema-changes">Output Schema Changes</h2>
+<h3 id="before-with-backfill-fields">Before (with backfill fields)</h3>
+<div class="highlight"><pre><span></span><code><span class="p">{</span>
+<span class="w">  </span><span class="nt">&quot;items&quot;</span><span class="p">:</span><span class="w"> </span><span class="p">{</span>
+<span class="w">    </span><span class="nt">&quot;NoInterest&quot;</span><span class="p">:</span><span class="w"> </span><span class="p">{</span>
+<span class="w">      </span><span class="nt">&quot;score&quot;</span><span class="p">:</span><span class="w"> </span><span class="mi">2</span><span class="p">,</span>
+<span class="w">      </span><span class="nt">&quot;evidence&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;...&quot;</span><span class="p">,</span>
+<span class="w">      </span><span class="nt">&quot;reason&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;...&quot;</span><span class="p">,</span>
+<span class="w">      </span><span class="nt">&quot;na_reason&quot;</span><span class="p">:</span><span class="w"> </span><span class="kc">null</span><span class="p">,</span>
+<span class="w">      </span><span class="nt">&quot;evidence_source&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;llm&quot;</span><span class="p">,</span>
+<span class="w">      </span><span class="nt">&quot;llm_evidence_count&quot;</span><span class="p">:</span><span class="w"> </span><span class="mi">2</span><span class="p">,</span>
+<span class="w">      </span><span class="nt">&quot;keyword_evidence_count&quot;</span><span class="p">:</span><span class="w"> </span><span class="mi">0</span><span class="p">,</span><span class="w">  </span><span class="c1">// REMOVED</span>
+<span class="w">      </span><span class="nt">&quot;retrieval_reference_count&quot;</span><span class="p">:</span><span class="w"> </span><span class="mi">2</span><span class="p">,</span>
+<span class="w">      </span><span class="nt">&quot;retrieval_similarity_mean&quot;</span><span class="p">:</span><span class="w"> </span><span class="mf">0.72</span><span class="p">,</span>
+<span class="w">      </span><span class="nt">&quot;retrieval_similarity_max&quot;</span><span class="p">:</span><span class="w"> </span><span class="mf">0.85</span>
+<span class="w">    </span><span class="p">}</span>
+<span class="w">  </span><span class="p">}</span>
+<span class="p">}</span>
+</code></pre></div>
+<h3 id="after">After</h3>
+<div class="highlight"><pre><span></span><code><span class="p">{</span>
+<span class="w">  </span><span class="nt">&quot;items&quot;</span><span class="p">:</span><span class="w"> </span><span class="p">{</span>
+<span class="w">    </span><span class="nt">&quot;NoInterest&quot;</span><span class="p">:</span><span class="w"> </span><span class="p">{</span>
+<span class="w">      </span><span class="nt">&quot;score&quot;</span><span class="p">:</span><span class="w"> </span><span class="mi">2</span><span class="p">,</span>
+<span class="w">      </span><span class="nt">&quot;evidence&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;...&quot;</span><span class="p">,</span>
+<span class="w">      </span><span class="nt">&quot;reason&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;...&quot;</span><span class="p">,</span>
+<span class="w">      </span><span class="nt">&quot;na_reason&quot;</span><span class="p">:</span><span class="w"> </span><span class="kc">null</span><span class="p">,</span>
+<span class="w">      </span><span class="nt">&quot;evidence_source&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;llm&quot;</span><span class="p">,</span>
+<span class="w">      </span><span class="nt">&quot;llm_evidence_count&quot;</span><span class="p">:</span><span class="w"> </span><span class="mi">2</span><span class="p">,</span>
+<span class="w">      </span><span class="nt">&quot;retrieval_reference_count&quot;</span><span class="p">:</span><span class="w"> </span><span class="mi">2</span><span class="p">,</span>
+<span class="w">      </span><span class="nt">&quot;retrieval_similarity_mean&quot;</span><span class="p">:</span><span class="w"> </span><span class="mf">0.72</span><span class="p">,</span>
+<span class="w">      </span><span class="nt">&quot;retrieval_similarity_max&quot;</span><span class="p">:</span><span class="w"> </span><span class="mf">0.85</span>
+<span class="w">    </span><span class="p">}</span>
+<span class="w">  </span><span class="p">}</span>
+<span class="p">}</span>
+</code></pre></div>
+<h3 id="breaking-changes">Breaking Changes</h3>
+<table>
+<thead>
+<tr>
+<th>Field</th>
+<th>Change</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>keyword_evidence_count</code></td>
+<td>Removed</td>
+</tr>
+<tr>
+<td><code>evidence_source</code></td>
+<td>Type narrowed: <code>"keyword"</code> and <code>"both"</code> values no longer possible</td>
+</tr>
+<tr>
+<td><code>na_reason</code></td>
+<td>Values <code>"llm_only_missed"</code> and <code>"keywords_insufficient"</code> no longer possible</td>
+</tr>
+</tbody>
+</table>
+<hr />
+<h2 id="migration">Migration</h2>
+<h3 id="for-users">For Users</h3>
+<ol>
+<li><strong>No action needed</strong> for baseline runs (keyword backfill was removed; no runtime toggle remains).</li>
+<li>After update, remove these from <code>.env</code> if present:</li>
+<li><code>QUANTITATIVE_ENABLE_KEYWORD_BACKFILL</code></li>
+<li><code>QUANTITATIVE_KEYWORD_BACKFILL_CAP</code></li>
+<li>If parsing output JSON, update schemas to remove <code>keyword_evidence_count</code></li>
+</ol>
+<h3 id="for-downstream-analysis-scripts">For Downstream Analysis Scripts</h3>
+<p>Scripts that read <code>keyword_evidence_count</code> or check for <code>evidence_source == "keyword"</code> will need updates.</p>
+<p><strong>Note on historical artifacts</strong>: existing run outputs may still include <code>backfill-off</code> in filenames.
+This is a historical naming convention; new runs after this spec should use the updated naming scheme.</p>
+<hr />
+<h2 id="implementation-order">Implementation Order</h2>
+<p>Execute in this order to maintain test coverage at each step:</p>
+<h3 id="step-1-remove-enum-values-and-narrow-types-domain-layer">Step 1: Remove enum values and narrow types (domain layer)</h3>
+<div class="highlight"><pre><span></span><code><span class="c1"># 1a. Update NAReason enum (domain/enums.py)</span>
+<span class="c1"># Remove LLM_ONLY_MISSED, KEYWORDS_INSUFFICIENT</span>
+
+<span class="c1"># 1b. Update ItemAssessment (domain/value_objects.py)</span>
+<span class="c1"># Remove keyword_evidence_count field</span>
+<span class="c1"># Change evidence_source type: Literal[&quot;llm&quot;, &quot;keyword&quot;, &quot;both&quot;] → Literal[&quot;llm&quot;]</span>
+</code></pre></div>
+<h3 id="step-2-update-configuration-config-layer">Step 2: Update configuration (config layer)</h3>
+<div class="highlight"><pre><span></span><code><span class="c1"># 2a. Update QuantitativeSettings (config.py)</span>
+<span class="c1"># Remove enable_keyword_backfill, keyword_backfill_cap fields</span>
+
+<span class="c1"># 2b. Update conftest.py</span>
+<span class="c1"># Remove QUANTITATIVE_ENABLE_KEYWORD_BACKFILL, QUANTITATIVE_KEYWORD_BACKFILL_CAP from cleanup</span>
+</code></pre></div>
+<h3 id="step-3-delete-keyword-infrastructure-resources-prompts">Step 3: Delete keyword infrastructure (resources + prompts)</h3>
+<div class="highlight"><pre><span></span><code><span class="c1"># 3a. Delete phq8_keywords.yaml</span>
+
+<span class="c1"># 3b. Update prompts/quantitative.py</span>
+<span class="c1"># Remove DOMAIN_KEYWORDS, _load_domain_keywords(), _KEYWORDS_RESOURCE_PATH</span>
+</code></pre></div>
+<h3 id="step-4-update-agent-implementation-agents-layer">Step 4: Update agent implementation (agents layer)</h3>
+<div class="highlight"><pre><span></span><code><span class="c1"># 4a. Update quantitative.py imports</span>
+<span class="c1"># Change DOMAIN_KEYWORDS → PHQ8_DOMAIN_KEYS</span>
+
+<span class="c1"># 4b. Delete _find_keyword_hits() and _merge_evidence() methods</span>
+
+<span class="c1"># 4c. Simplify assess() method</span>
+<span class="c1"># Remove keyword hit computation, backfill logic, keyword counts</span>
+<span class="c1"># Inline evidence_source logic, simplify _determine_na_reason() call</span>
+
+<span class="c1"># 4d. Simplify _determine_na_reason() signature</span>
+<span class="c1"># Remove keyword_count and backfill_enabled parameters</span>
+
+<span class="c1"># 4e. Delete _determine_evidence_source() method</span>
+</code></pre></div>
+<h3 id="step-5-delete-and-update-tests">Step 5: Delete and update tests</h3>
+<div class="highlight"><pre><span></span><code><span class="c1"># 5a. Delete test_quantitative_backfill.py entirely</span>
+
+<span class="c1"># 5b. Update test_config.py</span>
+<span class="c1"># Remove backfill-related tests</span>
+
+<span class="c1"># 5c. Update test_quantitative.py</span>
+<span class="c1"># Change DOMAIN_KEYWORDS → PHQ8_DOMAIN_KEYS</span>
+<span class="c1"># Delete TestDomainKeywords class</span>
+
+<span class="c1"># 5d. Update test_quantitative_coverage.py</span>
+<span class="c1"># Change DOMAIN_KEYWORDS → PHQ8_DOMAIN_KEYS</span>
+</code></pre></div>
+<h3 id="step-6-update-services-and-scripts">Step 6: Update services and scripts</h3>
+<div class="highlight"><pre><span></span><code><span class="c1"># 6a. Update experiment_tracking.py</span>
+<span class="c1"># Remove enable_keyword_backfill field</span>
+
+<span class="c1"># 6b. Update reproduce_results.py</span>
+<span class="c1"># Remove backfill parameter</span>
+<span class="c1"># Remove keyword_evidence_count from output serialization</span>
+
+<span class="c1"># 6c. Update evaluate_selective_prediction.py</span>
+<span class="c1"># Remove keyword_evidence_count from total_evidence calculation</span>
+</code></pre></div>
+<h3 id="step-7-update-documentation">Step 7: Update documentation</h3>
+<div class="highlight"><pre><span></span><code><span class="c1"># 7a. Update .env.example</span>
+<span class="c1"># 7b. Update docs/configs/configuration.md</span>
+<span class="c1"># 7c. Update docs/configs/configuration-philosophy.md</span>
+<span class="c1"># 7d. Update preflight checklists</span>
+<span class="c1"># 7e. Update docs/results/run-output-schema.md</span>
+<span class="c1"># 7f. Update docs/statistics/metrics-and-evaluation.md</span>
+<span class="c1"># 7g. Update docs/statistics/statistical-methodology-aurc-augrc.md</span>
+<span class="c1"># 7h. Update docs/research/augrc-improvement-techniques-2026.md</span>
+<span class="c1"># 7i. Update docs/_specs/spec-046-selective-prediction-confidence-signals.md</span>
+</code></pre></div>
+<h3 id="step-8-verify">Step 8: Verify</h3>
+<div class="highlight"><pre><span></span><code>uv<span class="w"> </span>run<span class="w"> </span>pytest<span class="w"> </span>-v
+rg<span class="w"> </span><span class="s2">&quot;keyword.?backfill|BACKFILL&quot;</span><span class="w"> </span>--type<span class="w"> </span>py<span class="w"> </span>--type<span class="w"> </span>yaml
+</code></pre></div>
+<hr />
+<h2 id="verification">Verification</h2>
+<p>After implementation:</p>
+<div class="highlight"><pre><span></span><code><span class="c1"># 1. Run tests</span>
+uv<span class="w"> </span>run<span class="w"> </span>pytest<span class="w"> </span>-v
+
+<span class="c1"># 2. Check for remaining references</span>
+rg<span class="w"> </span><span class="s2">&quot;keyword.?backfill|BACKFILL&quot;</span><span class="w"> </span>--type<span class="w"> </span>py<span class="w"> </span>--type<span class="w"> </span>yaml
+
+<span class="c1"># 3. Verify .env.example has no backfill settings (expect no output)</span>
+rg<span class="w"> </span>-n<span class="w"> </span><span class="s2">&quot;backfill&quot;</span><span class="w"> </span>.env.example<span class="w"> </span><span class="o">||</span><span class="w"> </span><span class="nb">true</span>
+
+<span class="c1"># 4. Run a quick assessment to verify nothing breaks</span>
+uv<span class="w"> </span>run<span class="w"> </span>python<span class="w"> </span>-c<span class="w"> </span><span class="s2">&quot;</span>
+<span class="s2">from ai_psychiatrist.agents.quantitative import QuantitativeAssessmentAgent</span>
+<span class="s2">from ai_psychiatrist.domain.entities import Transcript</span>
+<span class="s2">print(&#39;Import successful&#39;)</span>
+<span class="s2">&quot;</span>
+</code></pre></div>
+<hr />
+<h2 id="risk-assessment">Risk Assessment</h2>
+<table>
+<thead>
+<tr>
+<th>Risk</th>
+<th>Likelihood</th>
+<th>Impact</th>
+<th>Mitigation</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Breaking downstream scripts</td>
+<td>Low</td>
+<td>Medium</td>
+<td>Document output schema changes</td>
+</tr>
+<tr>
+<td>Historical run comparison</td>
+<td>Low</td>
+<td>Low</td>
+<td>Archive files preserved</td>
+</tr>
+<tr>
+<td>Test coverage drop</td>
+<td>Low</td>
+<td>Low</td>
+<td>~50 lines of test code removed, but it tested dead code</td>
+</tr>
+</tbody>
+</table>
+<hr />
+<h2 id="code-metrics">Code Metrics</h2>
+<p><strong>Files Deleted:</strong>
+- <code>src/ai_psychiatrist/resources/phq8_keywords.yaml</code> (~439 lines)
+- <code>tests/unit/agents/test_quantitative_backfill.py</code> (~276 lines)</p>
+<p><strong>Lines Removed (approximate):</strong>
+- Config fields: ~15 lines
+- Quantitative agent methods: ~75 lines
+- Prompt loading: ~35 lines
+- Test updates: ~30 lines
+- Documentation: ~100 lines across multiple files</p>
+<p><strong>Total:</strong> ~970 lines removed (net reduction in codebase)</p>
+<hr />
+<h2 id="estimated-effort">Estimated Effort</h2>
+<ul>
+<li><strong>Code changes</strong>: ~2 hours</li>
+<li><strong>Testing</strong>: ~1 hour</li>
+<li><strong>Documentation</strong>: ~30 minutes</li>
+<li><strong>Total</strong>: ~3.5 hours</li>
+</ul>
+<hr />
+<h2 id="approval-checklist">Approval Checklist</h2>
+<ul>
+<li>[ ] Spec reviewed by maintainer</li>
+<li>[ ] Output schema changes acceptable</li>
+<li>[ ] No active users depend on backfill feature</li>
+<li>[ ] Archive documentation preserved</li>
+</ul>
+
+
+
+
+
+
+
+
+
+
+
+
+                
+              </article>
+            </div>
+          
+          
+<script>var target=document.getElementById(location.hash.slice(1));target&&target.name&&(target.checked=target.name.startsWith("__tabbed_"))</script>
+        </div>
+        
+      </main>
+      
+        <footer class="md-footer">
+  
+    
+  
+  <div class="md-footer-meta md-typeset">
+    <div class="md-footer-meta__inner md-grid">
+      <div class="md-copyright">
+  
+  
+    Made with
+    <a href="https://squidfunk.github.io/mkdocs-material/" target="_blank" rel="noopener">
+      Material for MkDocs
+    </a>
+  
+</div>
+      
+    </div>
+  </div>
+</footer>
+      
+    </div>
+    <div class="md-dialog" data-md-component="dialog">
+      <div class="md-dialog__inner md-typeset"></div>
+    </div>
+    
+    
+    
+      
+      
+      <script id="__config" type="application/json">{"annotate": null, "base": "../../..", "features": ["content.code.copy", "content.action.edit", "content.action.view", "navigation.tracking", "navigation.sections", "navigation.footer", "navigation.instant"], "search": "../../../assets/javascripts/workers/search.2c215733.min.js", "tags": null, "translations": {"clipboard.copied": "Copied to clipboard", "clipboard.copy": "Copy to clipboard", "search.result.more.one": "1 more on this page", "search.result.more.other": "# more on this page", "search.result.none": "No matching documents", "search.result.one": "1 matching document", "search.result.other": "# matching documents", "search.result.placeholder": "Type to start searching", "search.result.term.missing": "Missing", "select.version": "Select version"}, "version": null}</script>
+    
+    
+      <script src="../../../assets/javascripts/bundle.79ae519e.min.js"></script>
+      
+    
+  </body>
+</html>

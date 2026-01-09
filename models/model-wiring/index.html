@@ -1,0 +1,3971 @@
+
+<!doctype html>
+<html lang="en" class="no-js">
+  <head>
+    
+      <meta charset="utf-8">
+      <meta name="viewport" content="width=device-width,initial-scale=1">
+      
+      
+      
+        <link rel="canonical" href="https://the-obstacle-is-the-way.github.io/ai-psychiatrist/models/model-wiring/">
+      
+      
+        <link rel="prev" href="../model-registry/">
+      
+      
+        <link rel="next" href="../../pipeline-internals/evidence-extraction/">
+      
+      
+        
+      
+      
+      <link rel="icon" href="../../assets/images/favicon.png">
+      <meta name="generator" content="mkdocs-1.6.1, mkdocs-material-9.7.1">
+    
+    
+      
+        <title>Model Wiring: Current State - AI Psychiatrist</title>
+      
+    
+    
+      <link rel="stylesheet" href="../../assets/stylesheets/main.484c7ddc.min.css">
+      
+      
+
+
+    
+    
+      
+    
+    
+      
+        
+        
+        <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+        <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Roboto:300,300i,400,400i,700,700i%7CRoboto+Mono:400,400i,700,700i&display=fallback">
+        <style>:root{--md-text-font:"Roboto";--md-code-font:"Roboto Mono"}</style>
+      
+    
+    
+    <script>__md_scope=new URL("../..",location),__md_hash=e=>[...e].reduce(((e,_)=>(e<<5)-e+_.charCodeAt(0)),0),__md_get=(e,_=localStorage,t=__md_scope)=>JSON.parse(_.getItem(t.pathname+"."+e)),__md_set=(e,_,t=localStorage,a=__md_scope)=>{try{t.setItem(a.pathname+"."+e,JSON.stringify(_))}catch(e){}}</script>
+    
+      
+
+    
+    
+  </head>
+  
+  
+    <body dir="ltr">
+  
+    
+    <input class="md-toggle" data-md-toggle="drawer" type="checkbox" id="__drawer" autocomplete="off">
+    <input class="md-toggle" data-md-toggle="search" type="checkbox" id="__search" autocomplete="off">
+    <label class="md-overlay" for="__drawer"></label>
+    <div data-md-component="skip">
+      
+        
+        <a href="#model-wiring-current-state" class="md-skip">
+          Skip to content
+        </a>
+      
+    </div>
+    <div data-md-component="announce">
+      
+    </div>
+    
+    
+      
+
+  
+
+<header class="md-header md-header--shadow" data-md-component="header">
+  <nav class="md-header__inner md-grid" aria-label="Header">
+    <a href="../.." title="AI Psychiatrist" class="md-header__button md-logo" aria-label="AI Psychiatrist" data-md-component="logo">
+      
+  
+  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 8a3 3 0 0 0 3-3 3 3 0 0 0-3-3 3 3 0 0 0-3 3 3 3 0 0 0 3 3m0 3.54C9.64 9.35 6.5 8 3 8v11c3.5 0 6.64 1.35 9 3.54 2.36-2.19 5.5-3.54 9-3.54V8c-3.5 0-6.64 1.35-9 3.54"/></svg>
+
+    </a>
+    <label class="md-header__button md-icon" for="__drawer">
+      
+      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M3 6h18v2H3zm0 5h18v2H3zm0 5h18v2H3z"/></svg>
+    </label>
+    <div class="md-header__title" data-md-component="header-title">
+      <div class="md-header__ellipsis">
+        <div class="md-header__topic">
+          <span class="md-ellipsis">
+            AI Psychiatrist
+          </span>
+        </div>
+        <div class="md-header__topic" data-md-component="header-topic">
+          <span class="md-ellipsis">
+            
+              Model Wiring: Current State
+            
+          </span>
+        </div>
+      </div>
+    </div>
+    
+    
+      <script>var palette=__md_get("__palette");if(palette&&palette.color){if("(prefers-color-scheme)"===palette.color.media){var media=matchMedia("(prefers-color-scheme: light)"),input=document.querySelector(media.matches?"[data-md-color-media='(prefers-color-scheme: light)']":"[data-md-color-media='(prefers-color-scheme: dark)']");palette.color.media=input.getAttribute("data-md-color-media"),palette.color.scheme=input.getAttribute("data-md-color-scheme"),palette.color.primary=input.getAttribute("data-md-color-primary"),palette.color.accent=input.getAttribute("data-md-color-accent")}for(var[key,value]of Object.entries(palette.color))document.body.setAttribute("data-md-color-"+key,value)}</script>
+    
+    
+    
+      
+      
+        <label class="md-header__button md-icon" for="__search">
+          
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M9.5 3A6.5 6.5 0 0 1 16 9.5c0 1.61-.59 3.09-1.56 4.23l.27.27h.79l5 5-1.5 1.5-5-5v-.79l-.27-.27A6.52 6.52 0 0 1 9.5 16 6.5 6.5 0 0 1 3 9.5 6.5 6.5 0 0 1 9.5 3m0 2C7 5 5 7 5 9.5S7 14 9.5 14 14 12 14 9.5 12 5 9.5 5"/></svg>
+        </label>
+        <div class="md-search" data-md-component="search" role="dialog">
+  <label class="md-search__overlay" for="__search"></label>
+  <div class="md-search__inner" role="search">
+    <form class="md-search__form" name="search">
+      <input type="text" class="md-search__input" name="query" aria-label="Search" placeholder="Search" autocapitalize="off" autocorrect="off" autocomplete="off" spellcheck="false" data-md-component="search-query" required>
+      <label class="md-search__icon md-icon" for="__search">
+        
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M9.5 3A6.5 6.5 0 0 1 16 9.5c0 1.61-.59 3.09-1.56 4.23l.27.27h.79l5 5-1.5 1.5-5-5v-.79l-.27-.27A6.52 6.52 0 0 1 9.5 16 6.5 6.5 0 0 1 3 9.5 6.5 6.5 0 0 1 9.5 3m0 2C7 5 5 7 5 9.5S7 14 9.5 14 14 12 14 9.5 12 5 9.5 5"/></svg>
+        
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M20 11v2H8l5.5 5.5-1.42 1.42L4.16 12l7.92-7.92L13.5 5.5 8 11z"/></svg>
+      </label>
+      <nav class="md-search__options" aria-label="Search">
+        
+        <button type="reset" class="md-search__icon md-icon" title="Clear" aria-label="Clear" tabindex="-1">
+          
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M19 6.41 17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12z"/></svg>
+        </button>
+      </nav>
+      
+    </form>
+    <div class="md-search__output">
+      <div class="md-search__scrollwrap" tabindex="0" data-md-scrollfix>
+        <div class="md-search-result" data-md-component="search-result">
+          <div class="md-search-result__meta">
+            Initializing search
+          </div>
+          <ol class="md-search-result__list" role="presentation"></ol>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+      
+    
+    
+      <div class="md-header__source">
+        <a href="https://github.com/The-Obstacle-Is-The-Way/ai-psychiatrist" title="Go to repository" class="md-source" data-md-component="source">
+  <div class="md-source__icon md-icon">
+    
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 448 512"><!--! Font Awesome Free 7.1.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2025 Fonticons, Inc.--><path d="M439.6 236.1 244 40.5c-5.4-5.5-12.8-8.5-20.4-8.5s-15 3-20.4 8.4L162.5 81l51.5 51.5c27.1-9.1 52.7 16.8 43.4 43.7l49.7 49.7c34.2-11.8 61.2 31 35.5 56.7-26.5 26.5-70.2-2.9-56-37.3L240.3 199v121.9c25.3 12.5 22.3 41.8 9.1 55-6.4 6.4-15.2 10.1-24.3 10.1s-17.8-3.6-24.3-10.1c-17.6-17.6-11.1-46.9 11.2-56v-123c-20.8-8.5-24.6-30.7-18.6-45L142.6 101 8.5 235.1C3 240.6 0 247.9 0 255.5s3 15 8.5 20.4l195.6 195.7c5.4 5.4 12.7 8.4 20.4 8.4s15-3 20.4-8.4l194.7-194.7c5.4-5.4 8.4-12.8 8.4-20.4s-3-15-8.4-20.4"/></svg>
+  </div>
+  <div class="md-source__repository">
+    GitHub
+  </div>
+</a>
+      </div>
+    
+  </nav>
+  
+</header>
+    
+    <div class="md-container" data-md-component="container">
+      
+      
+        
+          
+        
+      
+      <main class="md-main" data-md-component="main">
+        <div class="md-main__inner md-grid">
+          
+            
+              
+              <div class="md-sidebar md-sidebar--primary" data-md-component="sidebar" data-md-type="navigation" >
+                <div class="md-sidebar__scrollwrap">
+                  <div class="md-sidebar__inner">
+                    
+
+
+
+<nav class="md-nav md-nav--primary" aria-label="Navigation" data-md-level="0">
+  <label class="md-nav__title" for="__drawer">
+    <a href="../.." title="AI Psychiatrist" class="md-nav__button md-logo" aria-label="AI Psychiatrist" data-md-component="logo">
+      
+  
+  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 8a3 3 0 0 0 3-3 3 3 0 0 0-3-3 3 3 0 0 0-3 3 3 3 0 0 0 3 3m0 3.54C9.64 9.35 6.5 8 3 8v11c3.5 0 6.64 1.35 9 3.54 2.36-2.19 5.5-3.54 9-3.54V8c-3.5 0-6.64 1.35-9 3.54"/></svg>
+
+    </a>
+    AI Psychiatrist
+  </label>
+  
+    <div class="md-nav__source">
+      <a href="https://github.com/The-Obstacle-Is-The-Way/ai-psychiatrist" title="Go to repository" class="md-source" data-md-component="source">
+  <div class="md-source__icon md-icon">
+    
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 448 512"><!--! Font Awesome Free 7.1.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2025 Fonticons, Inc.--><path d="M439.6 236.1 244 40.5c-5.4-5.5-12.8-8.5-20.4-8.5s-15 3-20.4 8.4L162.5 81l51.5 51.5c27.1-9.1 52.7 16.8 43.4 43.7l49.7 49.7c34.2-11.8 61.2 31 35.5 56.7-26.5 26.5-70.2-2.9-56-37.3L240.3 199v121.9c25.3 12.5 22.3 41.8 9.1 55-6.4 6.4-15.2 10.1-24.3 10.1s-17.8-3.6-24.3-10.1c-17.6-17.6-11.1-46.9 11.2-56v-123c-20.8-8.5-24.6-30.7-18.6-45L142.6 101 8.5 235.1C3 240.6 0 247.9 0 255.5s3 15 8.5 20.4l195.6 195.7c5.4 5.4 12.7 8.4 20.4 8.4s15-3 20.4-8.4l194.7-194.7c5.4-5.4 8.4-12.8 8.4-20.4s-3-15-8.4-20.4"/></svg>
+  </div>
+  <div class="md-source__repository">
+    GitHub
+  </div>
+</a>
+    </div>
+  
+  <ul class="md-nav__list" data-md-scrollfix>
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../.." class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    AI Psychiatrist Documentation
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    
+    
+    
+    
+      
+        
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--section md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_2" >
+        
+          
+          <label class="md-nav__link" for="__nav_2" id="__nav_2_label" tabindex="">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+     research
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_2_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_2">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+     research
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../_research/hypotheses-explained/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Hypotheses Explained: Current State vs Future Improvements
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../_research/hypotheses-for-improvement/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Hypotheses for Improvement: First-Principles Analysis
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../_research/master-bug-audit/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    MASTER BUG AUDIT
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    
+    
+    
+    
+      
+        
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--section md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_3" >
+        
+          
+          <label class="md-nav__link" for="__nav_3" id="__nav_3_label" tabindex="">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Architecture
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_3_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_3">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    Architecture
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../architecture/architecture/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Architecture
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../architecture/future-architecture/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Future Architecture: Agent Orchestration Options
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../architecture/pipeline/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Pipeline
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    
+    
+    
+    
+      
+        
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--section md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_4" >
+        
+          
+          <label class="md-nav__link" for="__nav_4" id="__nav_4_label" tabindex="">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Clinical
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_4_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_4">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    Clinical
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../clinical/clinical-understanding/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Clinical Understanding: How This System Works
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../clinical/glossary/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Glossary
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../clinical/phq8/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    PHQ-8: Patient Health Questionnaire
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../clinical/task-validity/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Task Validity: What Can (and Cannot) Be Inferred from DAIC-WOZ Transcripts
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    
+    
+    
+    
+      
+        
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--section md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_5" >
+        
+          
+          <label class="md-nav__link" for="__nav_5" id="__nav_5_label" tabindex="">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Configs
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_5_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_5">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    Configs
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../configs/agent-sampling-registry/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Agent Sampling Parameter Registry
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../configs/configuration-philosophy/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Configuration Philosophy
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../configs/configuration/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Configuration Reference
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    
+    
+    
+    
+      
+        
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--section md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_6" >
+        
+          
+          <label class="md-nav__link" for="__nav_6" id="__nav_6_label" tabindex="">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Data
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_6_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_6">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    Data
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../data/artifact-namespace-registry/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Artifact Namespace Registry
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../data/daic-woz-preprocessing/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    DAIC-WOZ Transcript Preprocessing (Bias-Aware, Deterministic)
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../data/daic-woz-schema/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    DAIC-WOZ Dataset Schema
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../data/data-splits-overview/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Data Splits Overview
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    
+    
+    
+    
+      
+        
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--section md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_7" >
+        
+          
+          <label class="md-nav__link" for="__nav_7" id="__nav_7_label" tabindex="">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Developer
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_7_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_7">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    Developer
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../developer/api-endpoints/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    API Reference
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../developer/dependency-registry/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Dependency Registry
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../developer/error-handling/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Error Handling and Fail-Fast Philosophy
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../developer/exceptions/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Exception Reference (Domain + Runtime)
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../developer/testing/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Testing Conventions (Markers, Fixtures, and Test Doubles)
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    
+    
+    
+    
+      
+        
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--section md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_8" >
+        
+          
+          <label class="md-nav__link" for="__nav_8" id="__nav_8_label" tabindex="">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Getting started
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_8_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_8">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    Getting started
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../getting-started/quickstart/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Quickstart Guide
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+    
+  
+  
+  
+    
+    
+    
+    
+      
+        
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--active md-nav__item--section md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_9" checked>
+        
+          
+          <label class="md-nav__link" for="__nav_9" id="__nav_9_label" tabindex="">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Models
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_9_label" aria-expanded="true">
+          <label class="md-nav__title" for="__nav_9">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    Models
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../model-registry/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    AI Psychiatrist Model Registry
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+    
+  
+  
+  
+    <li class="md-nav__item md-nav__item--active">
+      
+      <input class="md-nav__toggle md-toggle" type="checkbox" id="__toc">
+      
+      
+        
+      
+      
+        <label class="md-nav__link md-nav__link--active" for="__toc">
+          
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Model Wiring: Current State
+  
+
+    
+  </span>
+  
+  
+
+          <span class="md-nav__icon md-icon"></span>
+        </label>
+      
+      <a href="./" class="md-nav__link md-nav__link--active">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Model Wiring: Current State
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+      
+        
+
+<nav class="md-nav md-nav--secondary" aria-label="Table of contents">
+  
+  
+  
+    
+  
+  
+    <label class="md-nav__title" for="__toc">
+      <span class="md-nav__icon md-icon"></span>
+      Table of contents
+    </label>
+    <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
+      
+        <li class="md-nav__item">
+  <a href="#tldr-the-simple-truth" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        TL;DR - The Simple Truth
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="TL;DR - The Simple Truth">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#default-vs-hard-toggle-the-simple-version" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Default vs Hard Toggle (The Simple Version)
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#gemma-3-27b-all-official-options-dec-2025" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Gemma 3 27B: All Official Options (Dec 2025)
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Gemma 3 27B: All Official Options (Dec 2025)">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#hardware-requirements" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Hardware Requirements
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#ollama-options-official-google-models" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Ollama Options (Official Google Models)
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#what-do-these-abbreviations-mean" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        What Do These Abbreviations Mean?
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#how-quantization-works-simple-version" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        How Quantization Works (Simple Version)
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#quality-ranking-best-worst" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Quality Ranking (Best → Worst)
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#huggingface-options-full-precision" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        HuggingFace Options (Full Precision)
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#other-models-embedding-community" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Other Models (Embedding + Community)
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#gemma-3-27b-options-all-agents" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Gemma 3 27B Options (All Agents)
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#which-model-should-we-use" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Which Model Should We Use?
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#estimated-run-times-full-pipeline-41-transcripts" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Estimated Run Times (Full Pipeline, 41 Transcripts)
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#medgemma-27b-quantitative-agent-only" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        MedGemma 27B (Quantitative Agent ONLY)
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#current-configuration-code-defaults" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Current Configuration (Code Defaults)
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Current Configuration (Code Defaults)">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#backends" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Backends
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#chat-models-all-agents" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Chat Models (All Agents)
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#embedding-model" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Embedding Model
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#embedding-artifacts" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Embedding Artifacts
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#when-embeddings-are-generated" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        When Embeddings Are Generated
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="When Embeddings Are Generated">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#1-data-prep-once" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        1. Data Prep (Once)
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#2-runtime-every-assessment-in-few-shot-mode" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        2. Runtime (Every Assessment in Few-Shot Mode)
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#pipeline-flow" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Pipeline Flow
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#factory-logic-current" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Factory Logic (Current)
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#configuration-scenarios" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Configuration Scenarios
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Configuration Scenarios">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#scenario-1-default-recommended" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Scenario 1: Default (Recommended)
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#scenario-2-pure-ollama-legacy-baseline-lower-quality-similarity" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Scenario 2: Pure Ollama (Legacy Baseline, Lower-Quality Similarity)
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#scenario-3-medgemma-for-quant-agent-appendix-f" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Scenario 3: MedGemma for Quant Agent (Appendix F)
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#scenario-4-full-huggingface-maximum-precision" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Scenario 4: Full HuggingFace (Maximum Precision)
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#what-we-do-not-support-by-design" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        What We Do NOT Support (By Design)
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#final-architecture" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Final Architecture
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Final Architecture">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#default-configuration" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Default Configuration
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#startup-validation" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Startup Validation
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#medgemma-hard-toggle" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        MedGemma: Hard Toggle
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#why-this-design" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Why This Design?
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#references" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        References
+      
+    </span>
+  </a>
+  
+</li>
+      
+    </ul>
+  
+</nav>
+      
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    
+    
+    
+    
+      
+        
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--section md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_10" >
+        
+          
+          <label class="md-nav__link" for="__nav_10" id="__nav_10_label" tabindex="">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Pipeline internals
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_10_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_10">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    Pipeline internals
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../pipeline-internals/evidence-extraction/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Evidence Extraction Mechanism: How It Actually Works
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../pipeline-internals/features/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Feature Reference (Non-Archive Canonical)
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    
+    
+    
+    
+      
+        
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--section md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_11" >
+        
+          
+          <label class="md-nav__link" for="__nav_11" id="__nav_11_label" tabindex="">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Preflight checklist
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_11_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_11">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    Preflight checklist
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../preflight-checklist/preflight-checklist-few-shot/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Preflight Checklist: Few-Shot Reproduction
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../preflight-checklist/preflight-checklist-zero-shot/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Preflight Checklist: Zero-Shot Run
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    
+    
+    
+    
+      
+        
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--section md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_12" >
+        
+          
+          <label class="md-nav__link" for="__nav_12" id="__nav_12_label" tabindex="">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Rag
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_12_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_12">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    Rag
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../rag/artifact-generation/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    RAG Artifact Generation
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../rag/chunk-scoring/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Chunk-Level Scoring (Spec 35) — Schema, Workflow, and Gotchas
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../rag/debugging/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    RAG Debugging (Audit Logs + Guardrails)
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../rag/design-rationale/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    RAG Design Rationale
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../rag/overview/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    RAG Overview: Embeddings and Few-Shot Retrieval
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../rag/runtime-features/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    RAG Runtime Features
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    
+    
+    
+    
+      
+        
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--section md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_13" >
+        
+          
+          <label class="md-nav__link" for="__nav_13" id="__nav_13_label" tabindex="">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Results
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_13_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_13">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    Results
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../results/few-shot-analysis/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Why Few-Shot May Not Beat Zero-Shot: Analysis
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../results/reproduction-results/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Paper Reproduction Results (Current Status)
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../results/run-history/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Complete Run History &amp; Statistical Analysis
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../results/run-output-schema/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Reproduction Run Output Schema (JSON + Registry)
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    
+    
+    
+    
+      
+        
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--section md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_14" >
+        
+          
+          <label class="md-nav__link" for="__nav_14" id="__nav_14_label" tabindex="">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Statistics
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_14_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_14">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    Statistics
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../statistics/coverage/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Coverage Explained: What It Is and Why It Matters
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../statistics/metrics-and-evaluation/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Metrics and Evaluation (Exact Definitions + Output Schema)
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../statistics/statistical-methodology-aurc-augrc/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Statistical Methodology: AURC/AUGRC for Selective Prediction
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+  </ul>
+</nav>
+                  </div>
+                </div>
+              </div>
+            
+            
+              
+              <div class="md-sidebar md-sidebar--secondary" data-md-component="sidebar" data-md-type="toc" >
+                <div class="md-sidebar__scrollwrap">
+                  <div class="md-sidebar__inner">
+                    
+
+<nav class="md-nav md-nav--secondary" aria-label="Table of contents">
+  
+  
+  
+    
+  
+  
+    <label class="md-nav__title" for="__toc">
+      <span class="md-nav__icon md-icon"></span>
+      Table of contents
+    </label>
+    <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
+      
+        <li class="md-nav__item">
+  <a href="#tldr-the-simple-truth" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        TL;DR - The Simple Truth
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="TL;DR - The Simple Truth">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#default-vs-hard-toggle-the-simple-version" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Default vs Hard Toggle (The Simple Version)
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#gemma-3-27b-all-official-options-dec-2025" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Gemma 3 27B: All Official Options (Dec 2025)
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Gemma 3 27B: All Official Options (Dec 2025)">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#hardware-requirements" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Hardware Requirements
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#ollama-options-official-google-models" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Ollama Options (Official Google Models)
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#what-do-these-abbreviations-mean" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        What Do These Abbreviations Mean?
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#how-quantization-works-simple-version" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        How Quantization Works (Simple Version)
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#quality-ranking-best-worst" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Quality Ranking (Best → Worst)
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#huggingface-options-full-precision" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        HuggingFace Options (Full Precision)
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#other-models-embedding-community" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Other Models (Embedding + Community)
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#gemma-3-27b-options-all-agents" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Gemma 3 27B Options (All Agents)
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#which-model-should-we-use" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Which Model Should We Use?
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#estimated-run-times-full-pipeline-41-transcripts" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Estimated Run Times (Full Pipeline, 41 Transcripts)
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#medgemma-27b-quantitative-agent-only" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        MedGemma 27B (Quantitative Agent ONLY)
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#current-configuration-code-defaults" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Current Configuration (Code Defaults)
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Current Configuration (Code Defaults)">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#backends" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Backends
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#chat-models-all-agents" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Chat Models (All Agents)
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#embedding-model" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Embedding Model
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#embedding-artifacts" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Embedding Artifacts
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#when-embeddings-are-generated" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        When Embeddings Are Generated
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="When Embeddings Are Generated">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#1-data-prep-once" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        1. Data Prep (Once)
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#2-runtime-every-assessment-in-few-shot-mode" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        2. Runtime (Every Assessment in Few-Shot Mode)
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#pipeline-flow" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Pipeline Flow
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#factory-logic-current" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Factory Logic (Current)
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#configuration-scenarios" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Configuration Scenarios
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Configuration Scenarios">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#scenario-1-default-recommended" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Scenario 1: Default (Recommended)
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#scenario-2-pure-ollama-legacy-baseline-lower-quality-similarity" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Scenario 2: Pure Ollama (Legacy Baseline, Lower-Quality Similarity)
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#scenario-3-medgemma-for-quant-agent-appendix-f" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Scenario 3: MedGemma for Quant Agent (Appendix F)
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#scenario-4-full-huggingface-maximum-precision" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Scenario 4: Full HuggingFace (Maximum Precision)
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#what-we-do-not-support-by-design" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        What We Do NOT Support (By Design)
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#final-architecture" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Final Architecture
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Final Architecture">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#default-configuration" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Default Configuration
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#startup-validation" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Startup Validation
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#medgemma-hard-toggle" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        MedGemma: Hard Toggle
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#why-this-design" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Why This Design?
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#references" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        References
+      
+    </span>
+  </a>
+  
+</li>
+      
+    </ul>
+  
+</nav>
+                  </div>
+                </div>
+              </div>
+            
+          
+          
+            <div class="md-content" data-md-component="content">
+              
+              <article class="md-content__inner md-typeset">
+                
+                  
+
+
+  
+    <a href="https://github.com/The-Obstacle-Is-The-Way/ai-psychiatrist/edit/main/docs/models/model-wiring.md" title="Edit this page" class="md-content__button md-icon" rel="edit">
+      
+      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M10 20H6V4h7v5h5v3.1l2-2V8l-6-6H6c-1.1 0-2 .9-2 2v16c0 1.1.9 2 2 2h4zm10.2-7c.1 0 .3.1.4.2l1.3 1.3c.2.2.2.6 0 .8l-1 1-2.1-2.1 1-1c.1-.1.2-.2.4-.2m0 3.9L14.1 23H12v-2.1l6.1-6.1z"/></svg>
+    </a>
+  
+  
+    
+      
+    
+    <a href="https://github.com/The-Obstacle-Is-The-Way/ai-psychiatrist/raw/main/docs/models/model-wiring.md" title="View source of this page" class="md-content__button md-icon">
+      
+      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M17 18c.56 0 1 .44 1 1s-.44 1-1 1-1-.44-1-1 .44-1 1-1m0-3c-2.73 0-5.06 1.66-6 4 .94 2.34 3.27 4 6 4s5.06-1.66 6-4c-.94-2.34-3.27-4-6-4m0 6.5a2.5 2.5 0 0 1-2.5-2.5 2.5 2.5 0 0 1 2.5-2.5 2.5 2.5 0 0 1 2.5 2.5 2.5 2.5 0 0 1-2.5 2.5M9.27 20H6V4h7v5h5v4.07c.7.08 1.36.25 2 .49V8l-6-6H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h4.5a8.2 8.2 0 0 1-1.23-2"/></svg>
+    </a>
+  
+
+
+<h1 id="model-wiring-current-state">Model Wiring: Current State</h1>
+<p><strong>Purpose</strong>: Document exactly how models and backends are wired in the codebase.
+<strong>Last Updated</strong>: 2026-01-02
+<strong>Status</strong>: Implemented. <code>LLM_BACKEND</code> for chat, <code>EMBEDDING_BACKEND</code> for embeddings.</p>
+<hr />
+<h2 id="tldr-the-simple-truth">TL;DR - The Simple Truth</h2>
+<table>
+<thead>
+<tr>
+<th>Component</th>
+<th>Backend</th>
+<th>Default Model</th>
+<th>Precision</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Chat (all agents)</td>
+<td><code>LLM_BACKEND=ollama</code></td>
+<td>⭐ <code>gemma3:27b</code></td>
+<td>Q4_K_M (4-bit)</td>
+</tr>
+<tr>
+<td>Chat (quant alt)</td>
+<td><code>LLM_BACKEND=huggingface</code></td>
+<td><code>medgemma:27b</code></td>
+<td>FP16 (16-bit)</td>
+</tr>
+<tr>
+<td><strong>Embedding</strong></td>
+<td><code>EMBEDDING_BACKEND=huggingface</code></td>
+<td><code>qwen3-embedding:8b</code> → <code>Qwen/Qwen3-Embedding-8B</code></td>
+<td><strong>FP16 (16-bit)</strong></td>
+</tr>
+</tbody>
+</table>
+<p><strong>Key decisions:</strong>
+- <strong>Chat</strong>: Ollama default (validated baseline). MedGemma is a hard toggle for quant agent.
+- <strong>Embedding</strong>: HuggingFace default (better precision). Ollama is opt-out fallback.</p>
+<h3 id="default-vs-hard-toggle-the-simple-version">Default vs Hard Toggle (The Simple Version)</h3>
+<table>
+<thead>
+<tr>
+<th>Component</th>
+<th>Default</th>
+<th>Hard Toggle Option</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Qualitative Agent</td>
+<td>Ollama (<code>gemma3:27b</code>)</td>
+<td>—</td>
+</tr>
+<tr>
+<td>Judge Agent</td>
+<td>Ollama (<code>gemma3:27b</code>)</td>
+<td>—</td>
+</tr>
+<tr>
+<td>Meta-Review Agent</td>
+<td>Ollama (<code>gemma3:27b</code>)</td>
+<td>—</td>
+</tr>
+<tr>
+<td><strong>Quant Agent</strong></td>
+<td>Ollama (<code>gemma3:27b</code>)</td>
+<td>HF (<code>medgemma:27b</code>)</td>
+</tr>
+<tr>
+<td><strong>Embeddings</strong></td>
+<td><strong>HF</strong> (<code>qwen3-embedding:8b</code> → <code>Qwen/Qwen3-Embedding-8B</code>)</td>
+<td>Ollama (<code>qwen3-embedding:8b</code>)</td>
+</tr>
+</tbody>
+</table>
+<p><strong>Why this mix?</strong>
+- Ollama = local, no external deps, good baseline
+- HF embeddings = FP16 quality matters for similarity scores
+- MedGemma = only available officially on HF (Ollama version is community upload)</p>
+<hr />
+<h2 id="gemma-3-27b-all-official-options-dec-2025">Gemma 3 27B: All Official Options (Dec 2025)</h2>
+<h3 id="hardware-requirements">Hardware Requirements</h3>
+<table>
+<thead>
+<tr>
+<th>Hardware</th>
+<th>VRAM/Memory</th>
+<th>Max Model Size</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>M1 Max 64GB</td>
+<td>64GB unified</td>
+<td>~54GB (BF16) ✅</td>
+</tr>
+<tr>
+<td>M1 Pro 32GB</td>
+<td>32GB unified</td>
+<td>~29GB (Q8_0) ✅</td>
+</tr>
+<tr>
+<td>RTX 4090</td>
+<td>24GB VRAM</td>
+<td>~17GB (Q4) ✅</td>
+</tr>
+</tbody>
+</table>
+<h3 id="ollama-options-official-google-models">Ollama Options (Official Google Models)</h3>
+<table>
+<thead>
+<tr>
+<th>Tag</th>
+<th>Quantization</th>
+<th>Size</th>
+<th>M1 Max 64GB</th>
+<th>M1 Pro 32GB</th>
+<th>RTX 4090 24GB</th>
+<th>Quality</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>gemma3:27b</code></td>
+<td>Q4_K_M</td>
+<td>17GB</td>
+<td>✅</td>
+<td>✅</td>
+<td>✅</td>
+<td>Good</td>
+</tr>
+<tr>
+<td><code>gemma3:27b-it-qat</code></td>
+<td>Q4_0 (QAT)</td>
+<td>17GB</td>
+<td>✅</td>
+<td>✅</td>
+<td>✅</td>
+<td><strong>Better</strong> (QAT-trained)</td>
+</tr>
+<tr>
+<td><code>gemma3:27b-it-q8_0</code></td>
+<td>Q8_0</td>
+<td>29GB</td>
+<td>✅</td>
+<td>❌</td>
+<td>❌</td>
+<td>Better</td>
+</tr>
+</tbody>
+</table>
+<h3 id="what-do-these-abbreviations-mean">What Do These Abbreviations Mean?</h3>
+<table>
+<thead>
+<tr>
+<th>Abbreviation</th>
+<th>Full Name</th>
+<th>Bits</th>
+<th>What It Means</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><strong>BF16</strong></td>
+<td>Brain Float 16</td>
+<td>16-bit</td>
+<td>Full precision. Each weight is a 16-bit float. No quality loss. Huge memory.</td>
+</tr>
+<tr>
+<td><strong>Q8_0</strong></td>
+<td>Quantized 8-bit</td>
+<td>8-bit</td>
+<td>Weights compressed to 8-bit integers. ~2x smaller than BF16. Small quality loss.</td>
+</tr>
+<tr>
+<td><strong>Q4_K_M</strong></td>
+<td>Quantized 4-bit (K-quant Medium)</td>
+<td>4-bit</td>
+<td>Weights compressed to 4-bit. ~4x smaller than BF16. Noticeable quality loss.</td>
+</tr>
+<tr>
+<td><strong>QAT</strong></td>
+<td>Quantization-Aware Training</td>
+<td>4-bit</td>
+<td>Model was <strong>trained knowing it would be quantized</strong>. Same 4-bit size but better quality than post-hoc Q4.</td>
+</tr>
+</tbody>
+</table>
+<h3 id="how-quantization-works-simple-version">How Quantization Works (Simple Version)</h3>
+<p><strong>Original model (BF16)</strong>: Each of 27 billion weights stored as 16-bit float → 54GB</p>
+<p><strong>Post-hoc quantization (Q4_K_M, Q8_0)</strong>: Take trained model, compress weights after training.
+- Like compressing a JPEG after taking the photo
+- Some information lost in compression</p>
+<p><strong>Quantization-Aware Training (QAT)</strong>: Train the model knowing it will be compressed.
+- Like shooting a photo knowing it will be JPEG - you optimize for the output format
+- Google claims this preserves BF16 quality at Q4 size</p>
+<h3 id="quality-ranking-best-worst">Quality Ranking (Best → Worst)</h3>
+<div class="highlight"><pre><span></span><code>BF16 (54GB) &gt; Q8_0 (29GB) &gt; QAT Q4 (17GB) ≈ Q4_K_M (17GB)
+     ↑              ↑              ↑              ↑
+  Perfect      Very Good    Good (smart)   Good (dumb)
+</code></pre></div>
+<p><strong>Bottom line</strong>: QAT is the sweet spot - same size as Q4_K_M but trained smarter.</p>
+<h3 id="huggingface-options-full-precision">HuggingFace Options (Full Precision)</h3>
+<table>
+<thead>
+<tr>
+<th>Model</th>
+<th>HuggingFace ID</th>
+<th>Precision</th>
+<th>Size</th>
+<th>M1 Max 64GB</th>
+<th>RTX 4090</th>
+<th>Access</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Gemma 3 27B</td>
+<td><code>google/gemma-3-27b-it</code></td>
+<td>BF16</td>
+<td>~54GB</td>
+<td>✅</td>
+<td>❌</td>
+<td>Open</td>
+</tr>
+<tr>
+<td>MedGemma 27B</td>
+<td><code>google/medgemma-27b-text-it</code></td>
+<td>BF16</td>
+<td>~54GB</td>
+<td>✅</td>
+<td>❌</td>
+<td>Gated</td>
+</tr>
+</tbody>
+</table>
+<h3 id="other-models-embedding-community">Other Models (Embedding + Community)</h3>
+<table>
+<thead>
+<tr>
+<th>Model</th>
+<th>Backend</th>
+<th>Tag/ID</th>
+<th>Quantization</th>
+<th>Size</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Qwen3 Embedding 8B</td>
+<td>Ollama</td>
+<td><code>qwen3-embedding:8b</code></td>
+<td>Q4_K_M</td>
+<td>4.7GB</td>
+</tr>
+<tr>
+<td>Qwen3 Embedding 8B</td>
+<td>HuggingFace</td>
+<td><code>Qwen/Qwen3-Embedding-8B</code></td>
+<td>FP16</td>
+<td>~16GB</td>
+</tr>
+<tr>
+<td>MedGemma 27B</td>
+<td>Ollama</td>
+<td><code>alibayram/medgemma:27b</code></td>
+<td>Q4_K_M</td>
+<td>~17GB</td>
+</tr>
+</tbody>
+</table>
+<p><strong>Note</strong>: MedGemma on Ollama is a <strong>community upload</strong>, NOT official Google.</p>
+<h3 id="gemma-3-27b-options-all-agents">Gemma 3 27B Options (All Agents)</h3>
+<table>
+<thead>
+<tr>
+<th>Model</th>
+<th>Backend</th>
+<th>Tag/ID</th>
+<th>Bits</th>
+<th>Size</th>
+<th>M1 Max</th>
+<th>4090</th>
+<th>Speed</th>
+<th>Quality</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Gemma 3 27B</td>
+<td>HF</td>
+<td><code>google/gemma-3-27b-it</code></td>
+<td>16-bit</td>
+<td>54GB</td>
+<td>✅</td>
+<td>❌</td>
+<td>Slow</td>
+<td><strong>Best</strong> (BF16)</td>
+</tr>
+<tr>
+<td>Gemma 3 27B</td>
+<td>Ollama</td>
+<td><code>gemma3:27b-it-q8_0</code></td>
+<td>8-bit</td>
+<td>29GB</td>
+<td>✅</td>
+<td>❌</td>
+<td>Medium</td>
+<td>Very Good</td>
+</tr>
+<tr>
+<td>Gemma 3 27B</td>
+<td>Ollama</td>
+<td><code>gemma3:27b-it-qat</code></td>
+<td>4-bit</td>
+<td>17GB</td>
+<td>✅</td>
+<td>✅</td>
+<td>Fast</td>
+<td>Good (QAT-trained)</td>
+</tr>
+<tr>
+<td>Gemma 3 27B</td>
+<td>Ollama</td>
+<td><code>gemma3:27b</code></td>
+<td>4-bit</td>
+<td>17GB</td>
+<td>✅</td>
+<td>✅</td>
+<td>Fast</td>
+<td>Good (Q4_K_M)</td>
+</tr>
+</tbody>
+</table>
+<p><strong>Paper reality check</strong>: Paper text claims MacBook M3 Pro, but repo has A100 SLURM scripts.
+Paper likely ran <strong>BF16 on A100s</strong> for the reported 0.619 MAE. Our QAT 4-bit zero-shot run achieved <strong>0.717 MAE</strong> (see <code>docs/results/reproduction-results.md</code>).</p>
+<h3 id="which-model-should-we-use">Which Model Should We Use?</h3>
+<table>
+<thead>
+<tr>
+<th>Goal</th>
+<th>Model</th>
+<th>Why</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><strong>⭐ RECOMMENDED</strong></td>
+<td><code>gemma3:27b-it-qat</code> (4-bit)</td>
+<td>QAT-trained, same speed as Q4, claims BF16 quality</td>
+</tr>
+<tr>
+<td>Closer to paper's likely setup</td>
+<td><code>gemma3:27b-it-q8_0</code> (8-bit)</td>
+<td>Paper likely used BF16 on A100s; Q8 is closest but slow</td>
+</tr>
+<tr>
+<td>Paper baseline (current default)</td>
+<td><code>gemma3:27b</code> (4-bit)</td>
+<td>Post-hoc Q4_K_M; stable, widely available on Ollama</td>
+</tr>
+<tr>
+<td>Maximum quality</td>
+<td>HF <code>gemma-3-27b-it</code> (16-bit)</td>
+<td>Full BF16, 54GB, very slow on M1</td>
+</tr>
+</tbody>
+</table>
+<h3 id="estimated-run-times-full-pipeline-41-transcripts">Estimated Run Times (Full Pipeline, 41 Transcripts)</h3>
+<table>
+<thead>
+<tr>
+<th>Model</th>
+<th>Est. Time</th>
+<th>Notes</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Ollama 4-bit (17GB)</td>
+<td>~2-4 hours</td>
+<td>Current default</td>
+</tr>
+<tr>
+<td>Ollama 8-bit (29GB)</td>
+<td>~6-12 hours</td>
+<td><strong>Recommended for reproduction</strong></td>
+</tr>
+<tr>
+<td>HF BF16 (54GB)</td>
+<td>~12-24+ hours</td>
+<td>Memory-bound on M1</td>
+</tr>
+</tbody>
+</table>
+<hr />
+<h3 id="medgemma-27b-quantitative-agent-only">MedGemma 27B (Quantitative Agent ONLY)</h3>
+<p><strong>NOT a general model option.</strong> MedGemma is ONLY for the quantitative agent as a hard toggle.</p>
+<table>
+<thead>
+<tr>
+<th>Model</th>
+<th>Backend</th>
+<th>Tag/ID</th>
+<th>Size</th>
+<th>Access</th>
+<th>Notes</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>MedGemma 27B</td>
+<td>HF</td>
+<td><code>google/medgemma-27b-text-it</code></td>
+<td>54GB</td>
+<td><strong>Gated</strong></td>
+<td>Official, medical fine-tuned</td>
+</tr>
+<tr>
+<td>MedGemma 27B</td>
+<td>Ollama</td>
+<td><code>alibayram/medgemma:27b</code></td>
+<td>17GB</td>
+<td>Open</td>
+<td><strong>Community upload, NOT official</strong></td>
+</tr>
+</tbody>
+</table>
+<p><strong>Paper finding (Appendix F)</strong>: MedGemma got <strong>better MAE (0.505 vs 0.619)</strong> but made <strong>fewer predictions</strong>.
+The paper chose Gemma 3 for main results because MedGemma was too conservative.</p>
+<p>To enable MedGemma:
+<div class="highlight"><pre><span></span><code><span class="nv">LLM_BACKEND</span><span class="o">=</span>huggingface
+<span class="nv">MODEL_QUANTITATIVE_MODEL</span><span class="o">=</span>medgemma:27b
+</code></pre></div></p>
+<hr />
+<h2 id="current-configuration-code-defaults">Current Configuration (Code Defaults)</h2>
+<h3 id="backends">Backends</h3>
+<table>
+<thead>
+<tr>
+<th>Setting</th>
+<th>Default</th>
+<th>Purpose</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>LLM_BACKEND</code></td>
+<td><code>ollama</code></td>
+<td>Chat models (all agents)</td>
+</tr>
+<tr>
+<td><code>EMBEDDING_BACKEND</code></td>
+<td><code>huggingface</code></td>
+<td>Embedding model only</td>
+</tr>
+</tbody>
+</table>
+<p><strong>No runtime fallback.</strong> If configured backend fails → loud error with instructions.</p>
+<h3 id="chat-models-all-agents">Chat Models (All Agents)</h3>
+<table>
+<thead>
+<tr>
+<th>Agent</th>
+<th>Config Key</th>
+<th>Default</th>
+<th>Paper Reference</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Qualitative</td>
+<td><code>MODEL_QUALITATIVE_MODEL</code></td>
+<td><code>gemma3:27b</code></td>
+<td>Section 2.2</td>
+</tr>
+<tr>
+<td>Judge</td>
+<td><code>MODEL_JUDGE_MODEL</code></td>
+<td><code>gemma3:27b</code></td>
+<td>Section 2.2</td>
+</tr>
+<tr>
+<td>Meta-Review</td>
+<td><code>MODEL_META_REVIEW_MODEL</code></td>
+<td><code>gemma3:27b</code></td>
+<td>Section 2.2</td>
+</tr>
+<tr>
+<td>Quantitative</td>
+<td><code>MODEL_QUANTITATIVE_MODEL</code></td>
+<td><code>gemma3:27b</code></td>
+<td>Section 2.2</td>
+</tr>
+</tbody>
+</table>
+<p><strong>MedGemma</strong> (<code>medgemma:27b</code>) is an ALTERNATIVE for quantitative agent only (Appendix F).
+It requires <code>LLM_BACKEND=huggingface</code> for official weights. The Ollama community version may behave differently.</p>
+<h3 id="embedding-model">Embedding Model</h3>
+<table>
+<thead>
+<tr>
+<th>Setting</th>
+<th>Default</th>
+<th>Backend</th>
+<th>Precision</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>MODEL_EMBEDDING_MODEL</code></td>
+<td><code>qwen3-embedding:8b</code></td>
+<td>Resolved per backend</td>
+<td>Q4 (Ollama) / FP16 (HF)</td>
+</tr>
+</tbody>
+</table>
+<p><strong>Why HF default for embeddings?</strong> FP16 embeddings produce better similarity scores than Q4_K_M.
+To use Ollama instead: <code>EMBEDDING_BACKEND=ollama</code> (will use <code>qwen3-embedding:8b</code> Q4_K_M).</p>
+<h3 id="embedding-artifacts">Embedding Artifacts</h3>
+<table>
+<thead>
+<tr>
+<th>Setting</th>
+<th>Default</th>
+<th>Purpose</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>EMBEDDING_EMBEDDINGS_FILE</code></td>
+<td><code>huggingface_qwen3_8b_paper_train_participant_only</code></td>
+<td>Selects <code>{DATA_BASE_DIR}/embeddings/{name}.npz</code> (+ <code>.json</code>, optional <code>.meta.json</code>, optional <code>.tags.json</code>)</td>
+</tr>
+<tr>
+<td><code>DATA_EMBEDDINGS_PATH</code></td>
+<td><code>data/embeddings/huggingface_qwen3_8b_paper_train_participant_only.npz</code></td>
+<td>Full-path override (takes precedence over <code>EMBEDDING_EMBEDDINGS_FILE</code>)</td>
+</tr>
+</tbody>
+</table>
+<hr />
+<h2 id="when-embeddings-are-generated">When Embeddings Are Generated</h2>
+<h3 id="1-data-prep-once">1. Data Prep (Once)</h3>
+<p>Script: <code>scripts/generate_embeddings.py</code>
+Output: <code>data/embeddings/{backend}_{model_slug}_{split_slug}.npz</code> (+ <code>.json</code>, <code>.meta.json</code>, optional <code>.tags.json</code>)</p>
+<p>Generates reference embeddings for training set transcripts. Run once before few-shot mode.</p>
+<h3 id="2-runtime-every-assessment-in-few-shot-mode">2. Runtime (Every Assessment in Few-Shot Mode)</h3>
+<p>Location: <code>EmbeddingService.embed_text()</code> called from <code>QuantitativeAssessmentAgent</code></p>
+<p>Flow:
+<div class="highlight"><pre><span></span><code>Transcript → Extract Evidence → Embed Evidence → Cosine Similarity → Reference Matches
+                                     ↑                    ↑
+                              (runtime embed)    (pre-computed refs)
+</code></pre></div></p>
+<p><strong>Consistency requirement</strong>: Reference embeddings and runtime embeddings should use the same backend for precision consistency.</p>
+<hr />
+<h2 id="pipeline-flow">Pipeline Flow</h2>
+<div class="highlight"><pre><span></span><code>┌────────────────────────────────────────────────────────────────────┐
+│                             PIPELINE                               │
+├────────────────────────────────────────────────────────────────────┤
+│                                                                    │
+│  Transcript                                                        │
+│      │                                                             │
+│      ▼                                                             │
+│  ┌─────────────────────┐                                           │
+│  │ QUALITATIVE AGENT   │  Model: gemma3:27b (chat)                 │
+│  │ (assess symptoms)   │  Backend: LLM_BACKEND (default: ollama)   │
+│  └─────────────────────┘                                           │
+│      │                                                             │
+│      ▼                                                             │
+│  ┌─────────────────────┐                                           │
+│  │ JUDGE AGENT         │  Model: gemma3:27b (chat)                 │
+│  │ (evaluate + refine) │  Backend: LLM_BACKEND                     │
+│  └─────────────────────┘                                           │
+│      │  ↺ feedback loop (max 10 iterations)                        │
+│      ▼                                                             │
+│  ┌─────────────────────┐                                           │
+│  │ QUANTITATIVE AGENT  │  Model: gemma3:27b OR medgemma:27b        │
+│  │ (PHQ-8 scoring)     │  Backend: LLM_BACKEND (default: ollama)   │
+│  │                     │                                           │
+│  │  Few-shot mode:     │                                           │
+│  │  - Embed evidence   │  Model: qwen3-embedding:8b (resolved)     │
+│  │  - Find references  │  Backend: EMBEDDING_BACKEND (default: hf) │
+│  └─────────────────────┘                                           │
+│      │                                                             │
+│      ▼                                                             │
+│  ┌─────────────────────┐                                           │
+│  │ META-REVIEW AGENT   │  Model: gemma3:27b (chat)                 │
+│  │ (final severity)    │  Backend: LLM_BACKEND                     │
+│  └─────────────────────┘                                           │
+│                                                                    │
+└────────────────────────────────────────────────────────────────────┘
+</code></pre></div>
+<hr />
+<h2 id="factory-logic-current">Factory Logic (Current)</h2>
+<div class="highlight"><pre><span></span><code><span class="c1"># factory.py - NO FALLBACK</span>
+<span class="k">def</span><span class="w"> </span><span class="nf">create_llm_client</span><span class="p">(</span><span class="n">settings</span><span class="p">:</span> <span class="n">Settings</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">LLMClient</span><span class="p">:</span>
+    <span class="n">backend</span> <span class="o">=</span> <span class="n">settings</span><span class="o">.</span><span class="n">backend</span><span class="o">.</span><span class="n">backend</span>
+    <span class="k">if</span> <span class="n">backend</span> <span class="o">==</span> <span class="n">LLMBackend</span><span class="o">.</span><span class="n">OLLAMA</span><span class="p">:</span>
+        <span class="k">return</span> <span class="n">OllamaClient</span><span class="p">(</span><span class="n">settings</span><span class="o">.</span><span class="n">ollama</span><span class="p">)</span>
+    <span class="k">if</span> <span class="n">backend</span> <span class="o">==</span> <span class="n">LLMBackend</span><span class="o">.</span><span class="n">HUGGINGFACE</span><span class="p">:</span>
+        <span class="k">return</span> <span class="n">HuggingFaceClient</span><span class="p">(</span><span class="o">...</span><span class="p">)</span>  <span class="c1"># HF deps are loaded lazily at first use</span>
+    <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Unsupported backend: </span><span class="si">{</span><span class="n">backend</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+
+
+<span class="k">def</span><span class="w"> </span><span class="nf">create_embedding_client</span><span class="p">(</span><span class="n">settings</span><span class="p">:</span> <span class="n">Settings</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">EmbeddingClient</span><span class="p">:</span>
+    <span class="n">backend</span> <span class="o">=</span> <span class="n">settings</span><span class="o">.</span><span class="n">embedding_config</span><span class="o">.</span><span class="n">backend</span>
+    <span class="k">if</span> <span class="n">backend</span> <span class="o">==</span> <span class="n">EmbeddingBackend</span><span class="o">.</span><span class="n">OLLAMA</span><span class="p">:</span>
+        <span class="k">return</span> <span class="n">OllamaClient</span><span class="p">(</span><span class="n">settings</span><span class="o">.</span><span class="n">ollama</span><span class="p">)</span>
+    <span class="k">if</span> <span class="n">backend</span> <span class="o">==</span> <span class="n">EmbeddingBackend</span><span class="o">.</span><span class="n">HUGGINGFACE</span><span class="p">:</span>
+        <span class="k">return</span> <span class="n">HuggingFaceClient</span><span class="p">(</span><span class="o">...</span><span class="p">)</span>  <span class="c1"># HF deps are loaded lazily at first use</span>
+    <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Unsupported embedding backend: </span><span class="si">{</span><span class="n">backend</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+</code></pre></div>
+<hr />
+<h2 id="configuration-scenarios">Configuration Scenarios</h2>
+<h3 id="scenario-1-default-recommended">Scenario 1: Default (Recommended)</h3>
+<div class="highlight"><pre><span></span><code><span class="c1"># .env (validated baseline - better embeddings)</span>
+<span class="nv">LLM_BACKEND</span><span class="o">=</span>ollama<span class="w">                </span><span class="c1"># Chat: Ollama Q4_K_M</span>
+<span class="nv">EMBEDDING_BACKEND</span><span class="o">=</span>huggingface<span class="w">     </span><span class="c1"># Embed: HuggingFace FP16</span>
+</code></pre></div>
+<p>Requires: <code>pip install 'ai-psychiatrist[hf]'</code></p>
+<h3 id="scenario-2-pure-ollama-legacy-baseline-lower-quality-similarity">Scenario 2: Pure Ollama (Legacy Baseline, Lower-Quality Similarity)</h3>
+<div class="highlight"><pre><span></span><code><span class="nv">LLM_BACKEND</span><span class="o">=</span>ollama
+<span class="nv">EMBEDDING_BACKEND</span><span class="o">=</span>ollama<span class="w">          </span><span class="c1"># Opt-out of HF embeddings</span>
+</code></pre></div>
+<p>All models Q4_K_M. Matches Paper Section 2.3.5 exactly.</p>
+<h3 id="scenario-3-medgemma-for-quant-agent-appendix-f">Scenario 3: MedGemma for Quant Agent (Appendix F)</h3>
+<div class="highlight"><pre><span></span><code><span class="nv">LLM_BACKEND</span><span class="o">=</span>huggingface<span class="w">           </span><span class="c1"># Required for official MedGemma</span>
+<span class="nv">MODEL_QUANTITATIVE_MODEL</span><span class="o">=</span>medgemma:27b
+<span class="nv">EMBEDDING_BACKEND</span><span class="o">=</span>huggingface<span class="w">     </span><span class="c1"># Keep FP16 embeddings</span>
+</code></pre></div>
+<p>Requires MedGemma access approved on HuggingFace.
+Result: 18% better item MAE (0.505 vs 0.619) but fewer predictions.</p>
+<h3 id="scenario-4-full-huggingface-maximum-precision">Scenario 4: Full HuggingFace (Maximum Precision)</h3>
+<div class="highlight"><pre><span></span><code><span class="nv">LLM_BACKEND</span><span class="o">=</span>huggingface<span class="w">           </span><span class="c1"># Chat: FP16</span>
+<span class="nv">EMBEDDING_BACKEND</span><span class="o">=</span>huggingface<span class="w">     </span><span class="c1"># Embed: FP16</span>
+</code></pre></div>
+<p>Everything FP16. Requires ~54GB VRAM for chat + ~16GB for embeddings.</p>
+<hr />
+<h2 id="what-we-do-not-support-by-design">What We Do NOT Support (By Design)</h2>
+<ol>
+<li><strong>Runtime fallback</strong>: HF unavailable → silently use Ollama (breaks reproducibility)</li>
+<li><strong>Model substitution</strong>: medgemma → gemma3 (different clinical behavior)</li>
+<li><strong>Mixed embedding precision</strong>: FP16 refs + Q4_K_M runtime (breaks similarity scores)</li>
+</ol>
+<hr />
+<h2 id="final-architecture">Final Architecture</h2>
+<h3 id="default-configuration">Default Configuration</h3>
+<div class="highlight"><pre><span></span><code><span class="c1"># .env (defaults)</span>
+<span class="nv">LLM_BACKEND</span><span class="o">=</span>ollama<span class="w">                        </span><span class="c1"># Chat: Ollama (baseline)</span>
+<span class="nv">EMBEDDING_BACKEND</span><span class="o">=</span>huggingface<span class="w">             </span><span class="c1"># Embedding: HuggingFace (better precision)</span>
+<span class="nv">MODEL_QUANTITATIVE_MODEL</span><span class="o">=</span>gemma3:27b
+</code></pre></div>
+<h3 id="startup-validation">Startup Validation</h3>
+<ol>
+<li><strong>HuggingFace deps</strong> (<code>EMBEDDING_BACKEND=huggingface</code>):</li>
+<li>Transformers/torch deps are loaded lazily on first embed/chat call.</li>
+<li>
+<p>If missing, the request fails with an <code>ImportError</code> containing:
+     <code>pip install 'ai-psychiatrist[hf]'</code></p>
+</li>
+<li>
+<p><strong>Reference embedding validation</strong>:</p>
+</li>
+<li>If <code>{artifact}.meta.json</code> exists, <code>ReferenceStore</code> validates:
+     <code>backend</code>, <code>dimension</code>, <code>chunk_size</code>, <code>chunk_step</code>.</li>
+<li>If metadata is missing, validation is skipped (and a warning is logged when
+     <code>EMBEDDING_BACKEND != ollama</code>).</li>
+</ol>
+<h3 id="medgemma-hard-toggle">MedGemma: Hard Toggle</h3>
+<div class="highlight"><pre><span></span><code><span class="nv">LLM_BACKEND</span><span class="o">=</span>huggingface
+<span class="nv">MODEL_QUANTITATIVE_MODEL</span><span class="o">=</span>medgemma:27b
+</code></pre></div>
+<p>If HF unavailable → <strong>FAIL LOUDLY</strong>. No silent substitution.</p>
+<h3 id="why-this-design">Why This Design?</h3>
+<table>
+<thead>
+<tr>
+<th>Decision</th>
+<th>Reason</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>HF embeddings default</td>
+<td>FP16 &gt; Q4_K_M for similarity quality</td>
+</tr>
+<tr>
+<td>Ollama chat default</td>
+<td>Local baseline (Section 2.3.5)</td>
+</tr>
+<tr>
+<td>No runtime fallback</td>
+<td>Reproducibility &gt; convenience</td>
+</tr>
+<tr>
+<td>Precision validation</td>
+<td>Prevent silent embedding mismatch</td>
+</tr>
+<tr>
+<td>Hard toggle for MedGemma</td>
+<td>Different clinical behavior ≠ drop-in replacement</td>
+</tr>
+</tbody>
+</table>
+<hr />
+<h2 id="references">References</h2>
+<ul>
+<li>Paper Section 2.2: Model specification (Gemma 3 27B, Qwen 3 8B Embedding)</li>
+<li>Paper Appendix F: MedGemma evaluation</li>
+<li><code>src/ai_psychiatrist/config.py</code>: All defaults</li>
+<li><code>src/ai_psychiatrist/infrastructure/llm/factory.py</code>: Client creation</li>
+<li><code>src/ai_psychiatrist/infrastructure/llm/model_aliases.py</code>: Backend mapping</li>
+</ul>
+
+
+
+
+
+
+
+
+
+
+
+
+                
+              </article>
+            </div>
+          
+          
+<script>var target=document.getElementById(location.hash.slice(1));target&&target.name&&(target.checked=target.name.startsWith("__tabbed_"))</script>
+        </div>
+        
+      </main>
+      
+        <footer class="md-footer">
+  
+    
+      
+      <nav class="md-footer__inner md-grid" aria-label="Footer" >
+        
+          
+          <a href="../model-registry/" class="md-footer__link md-footer__link--prev" aria-label="Previous: AI Psychiatrist Model Registry">
+            <div class="md-footer__button md-icon">
+              
+              <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M20 11v2H8l5.5 5.5-1.42 1.42L4.16 12l7.92-7.92L13.5 5.5 8 11z"/></svg>
+            </div>
+            <div class="md-footer__title">
+              <span class="md-footer__direction">
+                Previous
+              </span>
+              <div class="md-ellipsis">
+                AI Psychiatrist Model Registry
+              </div>
+            </div>
+          </a>
+        
+        
+          
+          <a href="../../pipeline-internals/evidence-extraction/" class="md-footer__link md-footer__link--next" aria-label="Next: Evidence Extraction Mechanism: How It Actually Works">
+            <div class="md-footer__title">
+              <span class="md-footer__direction">
+                Next
+              </span>
+              <div class="md-ellipsis">
+                Evidence Extraction Mechanism: How It Actually Works
+              </div>
+            </div>
+            <div class="md-footer__button md-icon">
+              
+              <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M4 11v2h12l-5.5 5.5 1.42 1.42L19.84 12l-7.92-7.92L10.5 5.5 16 11z"/></svg>
+            </div>
+          </a>
+        
+      </nav>
+    
+  
+  <div class="md-footer-meta md-typeset">
+    <div class="md-footer-meta__inner md-grid">
+      <div class="md-copyright">
+  
+  
+    Made with
+    <a href="https://squidfunk.github.io/mkdocs-material/" target="_blank" rel="noopener">
+      Material for MkDocs
+    </a>
+  
+</div>
+      
+    </div>
+  </div>
+</footer>
+      
+    </div>
+    <div class="md-dialog" data-md-component="dialog">
+      <div class="md-dialog__inner md-typeset"></div>
+    </div>
+    
+    
+    
+      
+      
+      <script id="__config" type="application/json">{"annotate": null, "base": "../..", "features": ["content.code.copy", "content.action.edit", "content.action.view", "navigation.tracking", "navigation.sections", "navigation.footer", "navigation.instant"], "search": "../../assets/javascripts/workers/search.2c215733.min.js", "tags": null, "translations": {"clipboard.copied": "Copied to clipboard", "clipboard.copy": "Copy to clipboard", "search.result.more.one": "1 more on this page", "search.result.more.other": "# more on this page", "search.result.none": "No matching documents", "search.result.one": "1 matching document", "search.result.other": "# matching documents", "search.result.placeholder": "Type to start searching", "search.result.term.missing": "Missing", "select.version": "Select version"}, "version": null}</script>
+    
+    
+      <script src="../../assets/javascripts/bundle.79ae519e.min.js"></script>
+      
+    
+  </body>
+</html>

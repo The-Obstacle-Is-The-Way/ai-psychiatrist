@@ -1,0 +1,3751 @@
+
+<!doctype html>
+<html lang="en" class="no-js">
+  <head>
+    
+      <meta charset="utf-8">
+      <meta name="viewport" content="width=device-width,initial-scale=1">
+      
+      
+      
+        <link rel="canonical" href="https://the-obstacle-is-the-way.github.io/ai-psychiatrist/_research/hypotheses-for-improvement/">
+      
+      
+        <link rel="prev" href="../hypotheses-explained/">
+      
+      
+        <link rel="next" href="../master-bug-audit/">
+      
+      
+        
+      
+      
+      <link rel="icon" href="../../assets/images/favicon.png">
+      <meta name="generator" content="mkdocs-1.6.1, mkdocs-material-9.7.1">
+    
+    
+      
+        <title>Hypotheses for Improvement: First-Principles Analysis - AI Psychiatrist</title>
+      
+    
+    
+      <link rel="stylesheet" href="../../assets/stylesheets/main.484c7ddc.min.css">
+      
+      
+
+
+    
+    
+      
+    
+    
+      
+        
+        
+        <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+        <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Roboto:300,300i,400,400i,700,700i%7CRoboto+Mono:400,400i,700,700i&display=fallback">
+        <style>:root{--md-text-font:"Roboto";--md-code-font:"Roboto Mono"}</style>
+      
+    
+    
+    <script>__md_scope=new URL("../..",location),__md_hash=e=>[...e].reduce(((e,_)=>(e<<5)-e+_.charCodeAt(0)),0),__md_get=(e,_=localStorage,t=__md_scope)=>JSON.parse(_.getItem(t.pathname+"."+e)),__md_set=(e,_,t=localStorage,a=__md_scope)=>{try{t.setItem(a.pathname+"."+e,JSON.stringify(_))}catch(e){}}</script>
+    
+      
+
+    
+    
+  </head>
+  
+  
+    <body dir="ltr">
+  
+    
+    <input class="md-toggle" data-md-toggle="drawer" type="checkbox" id="__drawer" autocomplete="off">
+    <input class="md-toggle" data-md-toggle="search" type="checkbox" id="__search" autocomplete="off">
+    <label class="md-overlay" for="__drawer"></label>
+    <div data-md-component="skip">
+      
+        
+        <a href="#hypotheses-for-improvement-first-principles-analysis" class="md-skip">
+          Skip to content
+        </a>
+      
+    </div>
+    <div data-md-component="announce">
+      
+    </div>
+    
+    
+      
+
+  
+
+<header class="md-header md-header--shadow" data-md-component="header">
+  <nav class="md-header__inner md-grid" aria-label="Header">
+    <a href="../.." title="AI Psychiatrist" class="md-header__button md-logo" aria-label="AI Psychiatrist" data-md-component="logo">
+      
+  
+  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 8a3 3 0 0 0 3-3 3 3 0 0 0-3-3 3 3 0 0 0-3 3 3 3 0 0 0 3 3m0 3.54C9.64 9.35 6.5 8 3 8v11c3.5 0 6.64 1.35 9 3.54 2.36-2.19 5.5-3.54 9-3.54V8c-3.5 0-6.64 1.35-9 3.54"/></svg>
+
+    </a>
+    <label class="md-header__button md-icon" for="__drawer">
+      
+      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M3 6h18v2H3zm0 5h18v2H3zm0 5h18v2H3z"/></svg>
+    </label>
+    <div class="md-header__title" data-md-component="header-title">
+      <div class="md-header__ellipsis">
+        <div class="md-header__topic">
+          <span class="md-ellipsis">
+            AI Psychiatrist
+          </span>
+        </div>
+        <div class="md-header__topic" data-md-component="header-topic">
+          <span class="md-ellipsis">
+            
+              Hypotheses for Improvement: First-Principles Analysis
+            
+          </span>
+        </div>
+      </div>
+    </div>
+    
+    
+      <script>var palette=__md_get("__palette");if(palette&&palette.color){if("(prefers-color-scheme)"===palette.color.media){var media=matchMedia("(prefers-color-scheme: light)"),input=document.querySelector(media.matches?"[data-md-color-media='(prefers-color-scheme: light)']":"[data-md-color-media='(prefers-color-scheme: dark)']");palette.color.media=input.getAttribute("data-md-color-media"),palette.color.scheme=input.getAttribute("data-md-color-scheme"),palette.color.primary=input.getAttribute("data-md-color-primary"),palette.color.accent=input.getAttribute("data-md-color-accent")}for(var[key,value]of Object.entries(palette.color))document.body.setAttribute("data-md-color-"+key,value)}</script>
+    
+    
+    
+      
+      
+        <label class="md-header__button md-icon" for="__search">
+          
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M9.5 3A6.5 6.5 0 0 1 16 9.5c0 1.61-.59 3.09-1.56 4.23l.27.27h.79l5 5-1.5 1.5-5-5v-.79l-.27-.27A6.52 6.52 0 0 1 9.5 16 6.5 6.5 0 0 1 3 9.5 6.5 6.5 0 0 1 9.5 3m0 2C7 5 5 7 5 9.5S7 14 9.5 14 14 12 14 9.5 12 5 9.5 5"/></svg>
+        </label>
+        <div class="md-search" data-md-component="search" role="dialog">
+  <label class="md-search__overlay" for="__search"></label>
+  <div class="md-search__inner" role="search">
+    <form class="md-search__form" name="search">
+      <input type="text" class="md-search__input" name="query" aria-label="Search" placeholder="Search" autocapitalize="off" autocorrect="off" autocomplete="off" spellcheck="false" data-md-component="search-query" required>
+      <label class="md-search__icon md-icon" for="__search">
+        
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M9.5 3A6.5 6.5 0 0 1 16 9.5c0 1.61-.59 3.09-1.56 4.23l.27.27h.79l5 5-1.5 1.5-5-5v-.79l-.27-.27A6.52 6.52 0 0 1 9.5 16 6.5 6.5 0 0 1 3 9.5 6.5 6.5 0 0 1 9.5 3m0 2C7 5 5 7 5 9.5S7 14 9.5 14 14 12 14 9.5 12 5 9.5 5"/></svg>
+        
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M20 11v2H8l5.5 5.5-1.42 1.42L4.16 12l7.92-7.92L13.5 5.5 8 11z"/></svg>
+      </label>
+      <nav class="md-search__options" aria-label="Search">
+        
+        <button type="reset" class="md-search__icon md-icon" title="Clear" aria-label="Clear" tabindex="-1">
+          
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M19 6.41 17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12z"/></svg>
+        </button>
+      </nav>
+      
+    </form>
+    <div class="md-search__output">
+      <div class="md-search__scrollwrap" tabindex="0" data-md-scrollfix>
+        <div class="md-search-result" data-md-component="search-result">
+          <div class="md-search-result__meta">
+            Initializing search
+          </div>
+          <ol class="md-search-result__list" role="presentation"></ol>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+      
+    
+    
+      <div class="md-header__source">
+        <a href="https://github.com/The-Obstacle-Is-The-Way/ai-psychiatrist" title="Go to repository" class="md-source" data-md-component="source">
+  <div class="md-source__icon md-icon">
+    
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 448 512"><!--! Font Awesome Free 7.1.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2025 Fonticons, Inc.--><path d="M439.6 236.1 244 40.5c-5.4-5.5-12.8-8.5-20.4-8.5s-15 3-20.4 8.4L162.5 81l51.5 51.5c27.1-9.1 52.7 16.8 43.4 43.7l49.7 49.7c34.2-11.8 61.2 31 35.5 56.7-26.5 26.5-70.2-2.9-56-37.3L240.3 199v121.9c25.3 12.5 22.3 41.8 9.1 55-6.4 6.4-15.2 10.1-24.3 10.1s-17.8-3.6-24.3-10.1c-17.6-17.6-11.1-46.9 11.2-56v-123c-20.8-8.5-24.6-30.7-18.6-45L142.6 101 8.5 235.1C3 240.6 0 247.9 0 255.5s3 15 8.5 20.4l195.6 195.7c5.4 5.4 12.7 8.4 20.4 8.4s15-3 20.4-8.4l194.7-194.7c5.4-5.4 8.4-12.8 8.4-20.4s-3-15-8.4-20.4"/></svg>
+  </div>
+  <div class="md-source__repository">
+    GitHub
+  </div>
+</a>
+      </div>
+    
+  </nav>
+  
+</header>
+    
+    <div class="md-container" data-md-component="container">
+      
+      
+        
+          
+        
+      
+      <main class="md-main" data-md-component="main">
+        <div class="md-main__inner md-grid">
+          
+            
+              
+              <div class="md-sidebar md-sidebar--primary" data-md-component="sidebar" data-md-type="navigation" >
+                <div class="md-sidebar__scrollwrap">
+                  <div class="md-sidebar__inner">
+                    
+
+
+
+<nav class="md-nav md-nav--primary" aria-label="Navigation" data-md-level="0">
+  <label class="md-nav__title" for="__drawer">
+    <a href="../.." title="AI Psychiatrist" class="md-nav__button md-logo" aria-label="AI Psychiatrist" data-md-component="logo">
+      
+  
+  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 8a3 3 0 0 0 3-3 3 3 0 0 0-3-3 3 3 0 0 0-3 3 3 3 0 0 0 3 3m0 3.54C9.64 9.35 6.5 8 3 8v11c3.5 0 6.64 1.35 9 3.54 2.36-2.19 5.5-3.54 9-3.54V8c-3.5 0-6.64 1.35-9 3.54"/></svg>
+
+    </a>
+    AI Psychiatrist
+  </label>
+  
+    <div class="md-nav__source">
+      <a href="https://github.com/The-Obstacle-Is-The-Way/ai-psychiatrist" title="Go to repository" class="md-source" data-md-component="source">
+  <div class="md-source__icon md-icon">
+    
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 448 512"><!--! Font Awesome Free 7.1.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2025 Fonticons, Inc.--><path d="M439.6 236.1 244 40.5c-5.4-5.5-12.8-8.5-20.4-8.5s-15 3-20.4 8.4L162.5 81l51.5 51.5c27.1-9.1 52.7 16.8 43.4 43.7l49.7 49.7c34.2-11.8 61.2 31 35.5 56.7-26.5 26.5-70.2-2.9-56-37.3L240.3 199v121.9c25.3 12.5 22.3 41.8 9.1 55-6.4 6.4-15.2 10.1-24.3 10.1s-17.8-3.6-24.3-10.1c-17.6-17.6-11.1-46.9 11.2-56v-123c-20.8-8.5-24.6-30.7-18.6-45L142.6 101 8.5 235.1C3 240.6 0 247.9 0 255.5s3 15 8.5 20.4l195.6 195.7c5.4 5.4 12.7 8.4 20.4 8.4s15-3 20.4-8.4l194.7-194.7c5.4-5.4 8.4-12.8 8.4-20.4s-3-15-8.4-20.4"/></svg>
+  </div>
+  <div class="md-source__repository">
+    GitHub
+  </div>
+</a>
+    </div>
+  
+  <ul class="md-nav__list" data-md-scrollfix>
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../.." class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    AI Psychiatrist Documentation
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+    
+  
+  
+  
+    
+    
+    
+    
+      
+        
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--active md-nav__item--section md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_2" checked>
+        
+          
+          <label class="md-nav__link" for="__nav_2" id="__nav_2_label" tabindex="">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+     research
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_2_label" aria-expanded="true">
+          <label class="md-nav__title" for="__nav_2">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+     research
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../hypotheses-explained/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Hypotheses Explained: Current State vs Future Improvements
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+    
+  
+  
+  
+    <li class="md-nav__item md-nav__item--active">
+      
+      <input class="md-nav__toggle md-toggle" type="checkbox" id="__toc">
+      
+      
+        
+      
+      
+        <label class="md-nav__link md-nav__link--active" for="__toc">
+          
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Hypotheses for Improvement: First-Principles Analysis
+  
+
+    
+  </span>
+  
+  
+
+          <span class="md-nav__icon md-icon"></span>
+        </label>
+      
+      <a href="./" class="md-nav__link md-nav__link--active">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Hypotheses for Improvement: First-Principles Analysis
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+      
+        
+
+<nav class="md-nav md-nav--secondary" aria-label="Table of contents">
+  
+  
+  
+    
+  
+  
+    <label class="md-nav__title" for="__toc">
+      <span class="md-nav__icon md-icon"></span>
+      Table of contents
+    </label>
+    <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
+      
+        <li class="md-nav__item">
+  <a href="#executive-summary" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Executive Summary
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#peer-review-reject-threats-adversarial-list" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Peer-Review “Reject” Threats (Adversarial List)
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Peer-Review “Reject” Threats (Adversarial List)">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#a-construct-validity-phq-8-is-self-report-frequency-transcripts-often-lack-frequency-major" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        A) Construct validity: PHQ-8 is self-report frequency; transcripts often lack frequency (Major)
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#b-few-shot-prompt-confound-fixed-historical-runs-only-major" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        B) Few-shot prompt confound (Fixed; historical runs only) (Major)
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#c-participant-only-transcripts-remove-disambiguating-question-context-major" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        C) Participant-only transcripts remove disambiguating question context (Major)
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#d-privacyethics-risk-log-artifacts-leaking-restricted-text-major" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        D) Privacy/ethics risk: log artifacts leaking restricted text (Major)
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#1-dataset-task-mismatch-critical" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        1. Dataset-Task Mismatch (Critical)
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="1. Dataset-Task Mismatch (Critical)">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#what-daic-woz-was-designed-for" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        What DAIC-WOZ Was Designed For
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#what-phq-8-scoring-requires" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        What PHQ-8 Scoring Requires
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#the-mismatch" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        The Mismatch
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#2-evidence-extraction-paradox" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        2. Evidence Extraction Paradox
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="2. Evidence Extraction Paradox">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#current-prompt-logic" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Current Prompt Logic
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#the-paradox" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        The Paradox
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#hypothesis-2a-frequency-can-be-inferred" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Hypothesis 2A: Frequency Can Be Inferred
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#3-chunk-scoring-validity-issues" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        3. Chunk Scoring Validity Issues
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="3. Chunk Scoring Validity Issues">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#observation-from-scored-chunks" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Observation from Scored Chunks
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#hypothesis-3a-semantic-confusion-in-chunk-scoring" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Hypothesis 3A: Semantic Confusion in Chunk Scoring
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#4-embedding-space-limitations" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        4. Embedding Space Limitations
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="4. Embedding Space Limitations">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#current-approach" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Current Approach
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#hypothesis-4a-semantic-similarity-severity-similarity" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Hypothesis 4A: Semantic Similarity ≠ Severity Similarity
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#hypothesis-4b-score-reranking" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Hypothesis 4B: Score Reranking
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#hypothesis-4c-domain-mismatch-general-embeddings-may-be-suboptimal-major" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Hypothesis 4C: Domain mismatch — general embeddings may be suboptimal (Major)
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#5-na-criteria-analysis" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        5. N/A Criteria Analysis
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="5. N/A Criteria Analysis">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#current-behavior" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Current Behavior
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#hypothesis-5a-over-abstention-on-implicit-evidence" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Hypothesis 5A: Over-Abstention on Implicit Evidence
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#6-frequency-inference-hierarchy" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        6. Frequency Inference Hierarchy
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="6. Frequency Inference Hierarchy">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#proposed-inference-rules-hypothesis" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Proposed Inference Rules (Hypothesis)
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#7-pipeline-architecture-questions" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        7. Pipeline Architecture Questions
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="7. Pipeline Architecture Questions">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#question-7a-evidence-extraction-as-bottleneck" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Question 7A: Evidence Extraction as Bottleneck
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#hypothesis-7c-evidence-extractor-prompt-may-be-inducing-quote-hallucinations-major" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Hypothesis 7C: Evidence extractor prompt may be inducing quote “hallucinations” (Major)
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#question-7b-direct-scoring-vs-evidence-mediated" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Question 7B: Direct Scoring vs. Evidence-Mediated
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#8-ground-truth-reliability" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        8. Ground Truth Reliability
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="8. Ground Truth Reliability">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#the-meta-question" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        The Meta-Question
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#9-summary-of-hypotheses" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        9. Summary of Hypotheses
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#10-recommended-next-steps" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        10. Recommended Next Steps
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="10. Recommended Next Steps">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#immediate-low-effort-testable" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Immediate (Low-effort, testable)
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#research-higher-effort" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Research (Higher effort)
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#fundamental-re-evaluation" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Fundamental Re-evaluation
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#11-related-documentation" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        11. Related Documentation
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#sources" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Sources
+      
+    </span>
+  </a>
+  
+</li>
+      
+    </ul>
+  
+</nav>
+      
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../master-bug-audit/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    MASTER BUG AUDIT
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    
+    
+    
+    
+      
+        
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--section md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_3" >
+        
+          
+          <label class="md-nav__link" for="__nav_3" id="__nav_3_label" tabindex="">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Architecture
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_3_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_3">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    Architecture
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../architecture/architecture/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Architecture
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../architecture/future-architecture/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Future Architecture: Agent Orchestration Options
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../architecture/pipeline/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Pipeline
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    
+    
+    
+    
+      
+        
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--section md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_4" >
+        
+          
+          <label class="md-nav__link" for="__nav_4" id="__nav_4_label" tabindex="">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Clinical
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_4_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_4">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    Clinical
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../clinical/clinical-understanding/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Clinical Understanding: How This System Works
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../clinical/glossary/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Glossary
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../clinical/phq8/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    PHQ-8: Patient Health Questionnaire
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../clinical/task-validity/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Task Validity: What Can (and Cannot) Be Inferred from DAIC-WOZ Transcripts
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    
+    
+    
+    
+      
+        
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--section md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_5" >
+        
+          
+          <label class="md-nav__link" for="__nav_5" id="__nav_5_label" tabindex="">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Configs
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_5_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_5">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    Configs
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../configs/agent-sampling-registry/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Agent Sampling Parameter Registry
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../configs/configuration-philosophy/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Configuration Philosophy
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../configs/configuration/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Configuration Reference
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    
+    
+    
+    
+      
+        
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--section md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_6" >
+        
+          
+          <label class="md-nav__link" for="__nav_6" id="__nav_6_label" tabindex="">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Data
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_6_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_6">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    Data
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../data/artifact-namespace-registry/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Artifact Namespace Registry
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../data/daic-woz-preprocessing/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    DAIC-WOZ Transcript Preprocessing (Bias-Aware, Deterministic)
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../data/daic-woz-schema/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    DAIC-WOZ Dataset Schema
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../data/data-splits-overview/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Data Splits Overview
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    
+    
+    
+    
+      
+        
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--section md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_7" >
+        
+          
+          <label class="md-nav__link" for="__nav_7" id="__nav_7_label" tabindex="">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Developer
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_7_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_7">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    Developer
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../developer/api-endpoints/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    API Reference
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../developer/dependency-registry/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Dependency Registry
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../developer/error-handling/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Error Handling and Fail-Fast Philosophy
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../developer/exceptions/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Exception Reference (Domain + Runtime)
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../developer/testing/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Testing Conventions (Markers, Fixtures, and Test Doubles)
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    
+    
+    
+    
+      
+        
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--section md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_8" >
+        
+          
+          <label class="md-nav__link" for="__nav_8" id="__nav_8_label" tabindex="">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Getting started
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_8_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_8">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    Getting started
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../getting-started/quickstart/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Quickstart Guide
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    
+    
+    
+    
+      
+        
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--section md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_9" >
+        
+          
+          <label class="md-nav__link" for="__nav_9" id="__nav_9_label" tabindex="">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Models
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_9_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_9">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    Models
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../models/model-registry/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    AI Psychiatrist Model Registry
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../models/model-wiring/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Model Wiring: Current State
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    
+    
+    
+    
+      
+        
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--section md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_10" >
+        
+          
+          <label class="md-nav__link" for="__nav_10" id="__nav_10_label" tabindex="">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Pipeline internals
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_10_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_10">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    Pipeline internals
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../pipeline-internals/evidence-extraction/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Evidence Extraction Mechanism: How It Actually Works
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../pipeline-internals/features/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Feature Reference (Non-Archive Canonical)
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    
+    
+    
+    
+      
+        
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--section md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_11" >
+        
+          
+          <label class="md-nav__link" for="__nav_11" id="__nav_11_label" tabindex="">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Preflight checklist
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_11_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_11">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    Preflight checklist
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../preflight-checklist/preflight-checklist-few-shot/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Preflight Checklist: Few-Shot Reproduction
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../preflight-checklist/preflight-checklist-zero-shot/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Preflight Checklist: Zero-Shot Run
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    
+    
+    
+    
+      
+        
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--section md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_12" >
+        
+          
+          <label class="md-nav__link" for="__nav_12" id="__nav_12_label" tabindex="">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Rag
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_12_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_12">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    Rag
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../rag/artifact-generation/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    RAG Artifact Generation
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../rag/chunk-scoring/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Chunk-Level Scoring (Spec 35) — Schema, Workflow, and Gotchas
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../rag/debugging/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    RAG Debugging (Audit Logs + Guardrails)
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../rag/design-rationale/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    RAG Design Rationale
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../rag/overview/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    RAG Overview: Embeddings and Few-Shot Retrieval
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../rag/runtime-features/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    RAG Runtime Features
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    
+    
+    
+    
+      
+        
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--section md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_13" >
+        
+          
+          <label class="md-nav__link" for="__nav_13" id="__nav_13_label" tabindex="">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Results
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_13_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_13">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    Results
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../results/few-shot-analysis/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Why Few-Shot May Not Beat Zero-Shot: Analysis
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../results/reproduction-results/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Paper Reproduction Results (Current Status)
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../results/run-history/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Complete Run History &amp; Statistical Analysis
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../results/run-output-schema/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Reproduction Run Output Schema (JSON + Registry)
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    
+    
+    
+    
+      
+        
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--section md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_14" >
+        
+          
+          <label class="md-nav__link" for="__nav_14" id="__nav_14_label" tabindex="">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Statistics
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_14_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_14">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    Statistics
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../statistics/coverage/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Coverage Explained: What It Is and Why It Matters
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../statistics/metrics-and-evaluation/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Metrics and Evaluation (Exact Definitions + Output Schema)
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../statistics/statistical-methodology-aurc-augrc/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Statistical Methodology: AURC/AUGRC for Selective Prediction
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+  </ul>
+</nav>
+                  </div>
+                </div>
+              </div>
+            
+            
+              
+              <div class="md-sidebar md-sidebar--secondary" data-md-component="sidebar" data-md-type="toc" >
+                <div class="md-sidebar__scrollwrap">
+                  <div class="md-sidebar__inner">
+                    
+
+<nav class="md-nav md-nav--secondary" aria-label="Table of contents">
+  
+  
+  
+    
+  
+  
+    <label class="md-nav__title" for="__toc">
+      <span class="md-nav__icon md-icon"></span>
+      Table of contents
+    </label>
+    <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
+      
+        <li class="md-nav__item">
+  <a href="#executive-summary" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Executive Summary
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#peer-review-reject-threats-adversarial-list" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Peer-Review “Reject” Threats (Adversarial List)
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Peer-Review “Reject” Threats (Adversarial List)">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#a-construct-validity-phq-8-is-self-report-frequency-transcripts-often-lack-frequency-major" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        A) Construct validity: PHQ-8 is self-report frequency; transcripts often lack frequency (Major)
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#b-few-shot-prompt-confound-fixed-historical-runs-only-major" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        B) Few-shot prompt confound (Fixed; historical runs only) (Major)
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#c-participant-only-transcripts-remove-disambiguating-question-context-major" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        C) Participant-only transcripts remove disambiguating question context (Major)
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#d-privacyethics-risk-log-artifacts-leaking-restricted-text-major" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        D) Privacy/ethics risk: log artifacts leaking restricted text (Major)
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#1-dataset-task-mismatch-critical" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        1. Dataset-Task Mismatch (Critical)
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="1. Dataset-Task Mismatch (Critical)">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#what-daic-woz-was-designed-for" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        What DAIC-WOZ Was Designed For
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#what-phq-8-scoring-requires" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        What PHQ-8 Scoring Requires
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#the-mismatch" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        The Mismatch
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#2-evidence-extraction-paradox" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        2. Evidence Extraction Paradox
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="2. Evidence Extraction Paradox">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#current-prompt-logic" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Current Prompt Logic
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#the-paradox" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        The Paradox
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#hypothesis-2a-frequency-can-be-inferred" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Hypothesis 2A: Frequency Can Be Inferred
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#3-chunk-scoring-validity-issues" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        3. Chunk Scoring Validity Issues
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="3. Chunk Scoring Validity Issues">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#observation-from-scored-chunks" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Observation from Scored Chunks
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#hypothesis-3a-semantic-confusion-in-chunk-scoring" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Hypothesis 3A: Semantic Confusion in Chunk Scoring
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#4-embedding-space-limitations" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        4. Embedding Space Limitations
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="4. Embedding Space Limitations">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#current-approach" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Current Approach
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#hypothesis-4a-semantic-similarity-severity-similarity" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Hypothesis 4A: Semantic Similarity ≠ Severity Similarity
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#hypothesis-4b-score-reranking" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Hypothesis 4B: Score Reranking
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#hypothesis-4c-domain-mismatch-general-embeddings-may-be-suboptimal-major" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Hypothesis 4C: Domain mismatch — general embeddings may be suboptimal (Major)
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#5-na-criteria-analysis" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        5. N/A Criteria Analysis
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="5. N/A Criteria Analysis">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#current-behavior" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Current Behavior
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#hypothesis-5a-over-abstention-on-implicit-evidence" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Hypothesis 5A: Over-Abstention on Implicit Evidence
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#6-frequency-inference-hierarchy" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        6. Frequency Inference Hierarchy
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="6. Frequency Inference Hierarchy">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#proposed-inference-rules-hypothesis" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Proposed Inference Rules (Hypothesis)
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#7-pipeline-architecture-questions" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        7. Pipeline Architecture Questions
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="7. Pipeline Architecture Questions">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#question-7a-evidence-extraction-as-bottleneck" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Question 7A: Evidence Extraction as Bottleneck
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#hypothesis-7c-evidence-extractor-prompt-may-be-inducing-quote-hallucinations-major" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Hypothesis 7C: Evidence extractor prompt may be inducing quote “hallucinations” (Major)
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#question-7b-direct-scoring-vs-evidence-mediated" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Question 7B: Direct Scoring vs. Evidence-Mediated
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#8-ground-truth-reliability" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        8. Ground Truth Reliability
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="8. Ground Truth Reliability">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#the-meta-question" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        The Meta-Question
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#9-summary-of-hypotheses" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        9. Summary of Hypotheses
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#10-recommended-next-steps" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        10. Recommended Next Steps
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="10. Recommended Next Steps">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#immediate-low-effort-testable" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Immediate (Low-effort, testable)
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#research-higher-effort" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Research (Higher effort)
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#fundamental-re-evaluation" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Fundamental Re-evaluation
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#11-related-documentation" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        11. Related Documentation
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#sources" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Sources
+      
+    </span>
+  </a>
+  
+</li>
+      
+    </ul>
+  
+</nav>
+                  </div>
+                </div>
+              </div>
+            
+          
+          
+            <div class="md-content" data-md-component="content">
+              
+              <article class="md-content__inner md-typeset">
+                
+                  
+
+
+  
+    <a href="https://github.com/The-Obstacle-Is-The-Way/ai-psychiatrist/edit/main/docs/_research/hypotheses-for-improvement.md" title="Edit this page" class="md-content__button md-icon" rel="edit">
+      
+      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M10 20H6V4h7v5h5v3.1l2-2V8l-6-6H6c-1.1 0-2 .9-2 2v16c0 1.1.9 2 2 2h4zm10.2-7c.1 0 .3.1.4.2l1.3 1.3c.2.2.2.6 0 .8l-1 1-2.1-2.1 1-1c.1-.1.2-.2.4-.2m0 3.9L14.1 23H12v-2.1l6.1-6.1z"/></svg>
+    </a>
+  
+  
+    
+      
+    
+    <a href="https://github.com/The-Obstacle-Is-The-Way/ai-psychiatrist/raw/main/docs/_research/hypotheses-for-improvement.md" title="View source of this page" class="md-content__button md-icon">
+      
+      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M17 18c.56 0 1 .44 1 1s-.44 1-1 1-1-.44-1-1 .44-1 1-1m0-3c-2.73 0-5.06 1.66-6 4 .94 2.34 3.27 4 6 4s5.06-1.66 6-4c-.94-2.34-3.27-4-6-4m0 6.5a2.5 2.5 0 0 1-2.5-2.5 2.5 2.5 0 0 1 2.5-2.5 2.5 2.5 0 0 1 2.5 2.5 2.5 2.5 0 0 1-2.5 2.5M9.27 20H6V4h7v5h5v4.07c.7.08 1.36.25 2 .49V8l-6-6H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h4.5a8.2 8.2 0 0 1-1.23-2"/></svg>
+    </a>
+  
+
+
+<h1 id="hypotheses-for-improvement-first-principles-analysis">Hypotheses for Improvement: First-Principles Analysis</h1>
+<p><strong>Status</strong>: Research findings document
+<strong>Created</strong>: 2026-01-05
+<strong>Analysis Scope</strong>: Full pipeline from DAIC-WOZ → Evidence Extraction → Embedding → Scoring</p>
+<hr />
+<h2 id="executive-summary">Executive Summary</h2>
+<p>A first-principles audit of the PHQ-8 scoring pipeline reveals several fundamental mismatches between the dataset, the task, and our implementation. These are not bugs in the traditional sense—the code executes correctly—but rather <strong>methodological constraints</strong> that limit what is achievable with this approach on this dataset.</p>
+<p><strong>Key Finding</strong>: DAIC-WOZ was designed to capture behavioral indicators of depression, not to elicit explicit PHQ-8 <em>frequency</em> information. Our quantitative prompts are (correctly) conservative about scoring without frequency evidence, but the dataset often does not provide it.</p>
+<blockquote>
+<p><strong>Task Validity SSOT</strong>: <code>docs/clinical/task-validity.md</code> — comprehensive analysis of construct mismatch and valid scientific claims.</p>
+</blockquote>
+<p><strong>Run 13 SSOT snapshot</strong> (clean post-BUG-035 comparative baseline; 41 participants processed in both modes):
+- <strong>Zero-shot</strong>: item MAE = <strong>0.6079</strong>, coverage = <strong>50.0%</strong> (40/41 evaluated; 1 excluded: no evidence)
+- <strong>Few-shot</strong>: item MAE = <strong>0.6571</strong>, coverage = <strong>48.5%</strong> (41/41 evaluated)
+- <strong>Key result</strong>: zero-shot beats few-shot after the BUG-035 fix, so the gap is not a prompt confound artifact.</p>
+<p><strong>Run 12 pipeline stats snapshot</strong> (pre-BUG-035; useful for evidence/grounding/retrieval distributions):
+- Evidence grounding rejects ~<strong>49.5%</strong> of extracted quotes (deduped across modes).
+- Only <strong>32.0%</strong> of item assessments had any grounded LLM evidence (105/328).
+- Few-shot references are sparse: <strong>15.2%</strong> of item assessments had any references (50/328), receiving <strong>52 total</strong> references.</p>
+<p>Run 13 is documented in <code>docs/results/run-history.md</code>. The Run 12 pipeline stats above are derived from Run 12 artifacts in <code>data/outputs/</code> and summarized in <code>docs/results/few-shot-analysis.md</code>.</p>
+<hr />
+<h2 id="peer-review-reject-threats-adversarial-list">Peer-Review “Reject” Threats (Adversarial List)</h2>
+<p>These are the issues most likely to trigger rejection on <em>construct validity</em> / <em>method validity</em> grounds unless explicitly addressed via ablations or wording.</p>
+<h3 id="a-construct-validity-phq-8-is-self-report-frequency-transcripts-often-lack-frequency-major">A) Construct validity: PHQ-8 is self-report frequency; transcripts often lack frequency (Major)</h3>
+<ul>
+<li>PHQ-8 is explicitly a “past two weeks / frequency” instrument; DAIC-WOZ is not a PHQ interview. Most interview statements are qualitative (no explicit day counts).</li>
+<li>Our prompts correctly push the model to abstain when frequency is unclear (<code>src/ai_psychiatrist/agents/prompts/quantitative.py:37-45</code> and <code>src/ai_psychiatrist/agents/prompts/quantitative.py:111-117</code>), but that means the system is fundamentally measuring “inferable PHQ evidence from transcript” rather than PHQ itself.</li>
+</ul>
+<p><strong>Implication for claims</strong>: You must frame the task as <em>selective, evidence-grounded inference</em> rather than “PHQ-8 from transcripts” in an absolute sense.</p>
+<h3 id="b-few-shot-prompt-confound-fixed-historical-runs-only-major">B) Few-shot prompt confound (Fixed; historical runs only) (Major)</h3>
+<p>Historical runs had a prompt confound: few-shot prompting could still differ from zero-shot even
+when retrieval returned <strong>zero</strong> usable references (an empty reference wrapper containing the
+string “No valid evidence found”).</p>
+<p>This is now fixed (BUG-035): empty reference bundles format to <code>""</code> and the <code>&lt;Reference Examples&gt;</code>
+block is omitted, so <strong>few-shot-with-no-refs is byte-identical to zero-shot</strong>.</p>
+<p><strong>Implication</strong>: pre-fix “few-shot vs zero-shot” comparative claims are confounded and require
+post-fix reruns to measure the true retrieval effect.</p>
+<h3 id="c-participant-only-transcripts-remove-disambiguating-question-context-major">C) Participant-only transcripts remove disambiguating question context (Major)</h3>
+<p>Participant-only transcripts are effective at reducing protocol leakage into embeddings, but they also remove the questions that disambiguate short answers (semantic void problem). This can reduce evidence yield and coverage.</p>
+<p><strong>Mitigation</strong>: Ablate against <code>transcripts_participant_qa</code> (minimal question context) and quantify the impact on evidence grounding rate, coverage, and MAE/AUGRC.</p>
+<h3 id="d-privacyethics-risk-log-artifacts-leaking-restricted-text-major">D) Privacy/ethics risk: log artifacts leaking restricted text (Major)</h3>
+<p>Any workflow that logs raw transcript text, retrieved reference text, or LLM outputs can leak
+restricted corpus content into run artifacts.</p>
+<p>Current status:
+- Retrieval audit logs in <code>EmbeddingService</code> are privacy-safe (Spec 064): they emit <code>chunk_hash</code> and
+  <code>chunk_chars</code> (no raw chunk previews).
+- Ensure auxiliary scripts follow the same policy (e.g., chunk scoring should avoid logging
+  <code>chunk_preview</code> / <code>response_preview</code>).</p>
+<hr />
+<h2 id="1-dataset-task-mismatch-critical">1. Dataset-Task Mismatch (Critical)</h2>
+<h3 id="what-daic-woz-was-designed-for">What DAIC-WOZ Was Designed For</h3>
+<p>Per the <a href="https://dcapswoz.ict.usc.edu/">DAIC-WOZ documentation</a>:</p>
+<blockquote>
+<p>"These interviews were collected as part of a larger effort to create a computer agent that interviews people and <strong>identifies verbal and nonverbal indicators of mental illness</strong>."</p>
+</blockquote>
+<p>The virtual interviewer "Ellie" conducts semi-structured interviews designed to:
+- Create interactional situations favorable to assessing distress indicators
+- Capture behavioral markers correlated with depression
+- Collect multimodal data (audio, video, text)</p>
+<h3 id="what-phq-8-scoring-requires">What PHQ-8 Scoring Requires</h3>
+<p>PHQ-8 is a <strong>frequency-based</strong> instrument asking "Over the last 2 weeks, how often have you been bothered by [symptom]?":
+- 0 = Not at all (0-1 days)
+- 1 = Several days (2-6 days)
+- 2 = More than half the days (7-11 days)
+- 3 = Nearly every day (12-14 days)</p>
+<h3 id="the-mismatch">The Mismatch</h3>
+<p><strong>The interview doesn't ask about frequency. Participants don't state frequency.</strong> They say things like:
+- "I've been feeling tired" (no frequency)
+- "I have trouble sleeping sometimes" (vague)
+- "I've been stressed lately" (qualitative)</p>
+<p>This explains why (see Run 12 pipeline stats snapshot above):
+- Only <strong>32.0%</strong> of item assessments have any grounded evidence (105/328)
+- ~<strong>49.5%</strong> of extracted quotes fail evidence grounding
+- Coverage stabilizes around <strong>46–49%</strong> in both modes</p>
+<hr />
+<h2 id="2-evidence-extraction-paradox">2. Evidence Extraction Paradox</h2>
+<h3 id="current-prompt-logic">Current Prompt Logic</h3>
+<p>Our prompts (see <code>src/ai_psychiatrist/agents/prompts/quantitative.py:111-117</code>) say:
+<div class="highlight"><pre><span></span><code>5. If no relevant evidence exists, mark as &quot;N/A&quot; rather than assuming absence
+6. Only assign numeric scores (0-3) when evidence clearly indicates frequency
+</code></pre></div></p>
+<h3 id="the-paradox">The Paradox</h3>
+<p>This is <strong>methodologically correct but practically limiting</strong>:
+- Most transcripts don't contain explicit frequency statements
+- Correct behavior: output N/A for most items
+- Result: ~50% abstention rate</p>
+<h3 id="hypothesis-2a-frequency-can-be-inferred">Hypothesis 2A: Frequency Can Be Inferred</h3>
+<p>A skilled psychiatrist doesn't require patients to say "I felt tired 8 out of 14 days." They infer frequency from:
+- Temporal markers ("lately", "recently", "since [event]")
+- Intensity qualifiers ("always", "sometimes", "occasionally")
+- Impact statements ("I can't function", "it's been hard")
+- Context patterns (multiple mentions across the interview)</p>
+<p><strong>Current Status</strong>: Our prompts discourage inference. They demand explicit frequency.</p>
+<p><strong>Improvement Hypothesis</strong>: Update prompts to allow clinical inference while maintaining transparency:
+<div class="highlight"><pre><span></span><code>When explicit frequency is not stated, you may infer approximate frequency from:
+- Temporal language (&quot;lately&quot; → several days, &quot;always&quot; → nearly every day)
+- Intensity markers (&quot;sometimes&quot; → several days)
+- Functional impact (&quot;can&#39;t work&quot; → more than half the days)
+Document your inference in the reason field.
+</code></pre></div></p>
+<p><strong>Trade-off</strong>: Higher coverage, potentially lower precision. Needs ablation.</p>
+<hr />
+<h2 id="3-chunk-scoring-validity-issues">3. Chunk Scoring Validity Issues</h2>
+<h3 id="observation-from-scored-chunks">Observation from Scored Chunks</h3>
+<p>Examining chunks scored for PHQ8_Sleep (see <code>data/embeddings/*.chunk_scores.json</code>):</p>
+<p><strong>Chunk 303:37 scored Sleep=3</strong>:
+<div class="highlight"><pre><span></span><code>&quot;i need my rest because i&#39;m out there driving that bus...&quot;
+&quot;what am i like irritated tired um lazy&quot;
+&quot;feel like i wanna lay down probably go to sleep&quot;
+</code></pre></div></p>
+<p><strong>Problem</strong>: This participant is expressing:
+- Value for rest ("I need my rest")
+- Desire to sleep ("feel like i wanna lay down")
+- General tiredness</p>
+<p><strong>NOT</strong>: Trouble falling/staying asleep or sleeping too much (the actual PHQ-8 Sleep item)</p>
+<h3 id="hypothesis-3a-semantic-confusion-in-chunk-scoring">Hypothesis 3A: Semantic Confusion in Chunk Scoring</h3>
+<p>The LLM scorer is confusing:
+| What participant said | What LLM inferred | Actual PHQ-8 construct |
+|-----------------------|-------------------|------------------------|
+| "I need rest" | Sleep problems | Not a symptom |
+| "I feel tired" | Sleep issues | Different item (Tired) |
+| "I want to nap" | Sleeping too much | Maybe, context-dependent |</p>
+<p><strong>Improvement Hypothesis</strong>: Add explicit symptom definitions to chunk scoring prompt:
+<div class="highlight"><pre><span></span><code>PHQ8_Sleep asks about: &quot;Trouble falling or staying asleep, OR sleeping too much&quot;
+- Wanting rest is NOT a sleep problem
+- Feeling tired belongs to PHQ8_Tired, not PHQ8_Sleep
+- &quot;Sleeping too much&quot; means actually sleeping excessive hours, not wanting to
+</code></pre></div></p>
+<hr />
+<h2 id="4-embedding-space-limitations">4. Embedding Space Limitations</h2>
+<h3 id="current-approach">Current Approach</h3>
+<ol>
+<li>Extract evidence text from test transcript</li>
+<li>Embed evidence text</li>
+<li>Find similar chunks from reference corpus</li>
+<li>Use reference chunk scores as anchors</li>
+</ol>
+<h3 id="hypothesis-4a-semantic-similarity-severity-similarity">Hypothesis 4A: Semantic Similarity ≠ Severity Similarity</h3>
+<p>Embedding captures <strong>topic similarity</strong>, not <strong>severity similarity</strong>:
+- "I can't sleep at night" (severe) ≈ "I value good rest" (not a symptom)
+- Both are "about sleep" in embedding space
+- One is PHQ8_Sleep=3, one is PHQ8_Sleep=0</p>
+<p><strong>Evidence</strong>: Item-tag filtering helps (Spec 34), but doesn't solve the severity confusion within a topic.</p>
+<h3 id="hypothesis-4b-score-reranking">Hypothesis 4B: Score Reranking</h3>
+<p><strong>Improvement Hypothesis</strong>: After semantic retrieval, rerank by:
+1. Presence of severity markers in reference chunk
+2. Score distribution (prefer balanced exemplars)
+3. Exclude chunks that are topic-adjacent but not symptom-indicative</p>
+<h3 id="hypothesis-4c-domain-mismatch-general-embeddings-may-be-suboptimal-major">Hypothesis 4C: Domain mismatch — general embeddings may be suboptimal (Major)</h3>
+<p>We currently use a general-purpose embedding model (<code>MODEL_EMBEDDING_MODEL=qwen3-embedding:8b</code>). Clinical NLP has multiple domain-adapted models (e.g., ClinicalBERT / PubMedBERT) that may better represent symptom language and reduce topical-but-not-clinical matches.</p>
+<p><strong>Improvement Hypothesis</strong>: Add an embeddings ablation suite:
+- baseline: current <code>qwen3-embedding:8b</code>
+- clinical-domain embedding baseline(s): ClinicalBERT / PubMedBERT style encoders (or a modern clinical embedding model)
+- evaluate: retrieval sparsity, reference score usefulness, downstream MAE/AUGRC</p>
+<p>This must be done as an ablation; do not assume improvements without measurement.</p>
+<hr />
+<h2 id="5-na-criteria-analysis">5. N/A Criteria Analysis</h2>
+<h3 id="current-behavior">Current Behavior</h3>
+<p>Two paths to N/A:
+1. <code>NO_MENTION</code>: LLM evidence count = 0 (no relevant quotes found)
+2. <code>SCORE_NA_WITH_EVIDENCE</code>: LLM found evidence but explicitly said N/A</p>
+<h3 id="hypothesis-5a-over-abstention-on-implicit-evidence">Hypothesis 5A: Over-Abstention on Implicit Evidence</h3>
+<p>Run 12 data: 51.5% abstention (zero-shot), 54% abstention (few-shot).</p>
+<p>Many participants may have depression symptoms visible in their language patterns (word choice, response length, topic avoidance) without explicit symptom mentions.</p>
+<p><strong>Question</strong>: Should we abstain on items where behavioral indicators suggest pathology but explicit frequency is missing?</p>
+<p><strong>Trade-off</strong>:
+- Abstaining is methodologically conservative (no hallucinated scores)
+- But may miss clinically meaningful signals
+- Psychiatrists use holistic assessment, not just verbal frequency statements</p>
+<hr />
+<h2 id="6-frequency-inference-hierarchy">6. Frequency Inference Hierarchy</h2>
+<h3 id="proposed-inference-rules-hypothesis">Proposed Inference Rules (Hypothesis)</h3>
+<table>
+<thead>
+<tr>
+<th>Language Pattern</th>
+<th>Inferred Frequency</th>
+<th>PHQ-8 Score</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>"every day", "constantly", "all the time"</td>
+<td>12-14 days</td>
+<td>3</td>
+</tr>
+<tr>
+<td>"most days", "usually"</td>
+<td>7-11 days</td>
+<td>2</td>
+</tr>
+<tr>
+<td>"sometimes", "a few times", "lately"</td>
+<td>2-6 days</td>
+<td>1</td>
+</tr>
+<tr>
+<td>"once", "rarely", "not really"</td>
+<td>0-1 days</td>
+<td>0</td>
+</tr>
+<tr>
+<td>No temporal marker, only symptom mention</td>
+<td>Ambiguous</td>
+<td>N/A or 1?</td>
+</tr>
+</tbody>
+</table>
+<p><strong>Current behavior</strong>: Ambiguous → N/A
+<strong>Alternative</strong>: Ambiguous → 1 (conservative non-zero) with low confidence</p>
+<hr />
+<h2 id="7-pipeline-architecture-questions">7. Pipeline Architecture Questions</h2>
+<h3 id="question-7a-evidence-extraction-as-bottleneck">Question 7A: Evidence Extraction as Bottleneck</h3>
+<p>The current pipeline:
+<div class="highlight"><pre><span></span><code>Transcript → Evidence Extraction → Embedding → Reference Retrieval → Scoring
+</code></pre></div></p>
+<p>Evidence extraction is a <strong>filter</strong>:
+- Grounded quotes only (substring match)
+- Rejects ~50% of extracted quotes as "hallucinated"</p>
+<p><strong>Hypothesis</strong>: Evidence grounding is too strict. "Hallucinated" quotes may be:
+- Paraphrases (valid signal, wrong words)
+- Composite statements (synthesized from multiple utterances)
+- Reasonable inferences (not literal but implied)</p>
+<p><strong>Improvement Hypothesis</strong>: Fuzzy grounding with semantic similarity instead of substring match.</p>
+<h3 id="hypothesis-7c-evidence-extractor-prompt-may-be-inducing-quote-hallucinations-major">Hypothesis 7C: Evidence extractor prompt may be inducing quote “hallucinations” (Major)</h3>
+<p>The evidence extraction prompt currently asks the model to both (a) extract quotes and (b) “determine the appropriate PHQ-8 score”, but the response schema is quote arrays only (<code>src/ai_psychiatrist/agents/prompts/quantitative.py:47-89</code>). This mixed objective can incentivize the model to synthesize/normalize quotes rather than copy verbatim.</p>
+<p><strong>Improvement Hypothesis</strong>: Rewrite evidence extraction as a pure “verbatim quote finder”:
+- Remove any instruction about scoring in the evidence step.
+- Add stronger constraints: “copy exact substrings; do not paraphrase; do not merge lines.”
+- Evaluate impact on grounding rejection rate and few-shot reference coverage.</p>
+<h3 id="question-7b-direct-scoring-vs-evidence-mediated">Question 7B: Direct Scoring vs. Evidence-Mediated</h3>
+<p>Alternative architecture:
+<div class="highlight"><pre><span></span><code>Transcript → Direct Scoring (no evidence extraction)
+</code></pre></div></p>
+<p>Let the LLM see the full transcript and score directly. Trade-offs:
+- Pro: No evidence extraction bottleneck
+- Con: Less interpretable, harder to ground
+- Con: May increase hallucination</p>
+<hr />
+<h2 id="8-ground-truth-reliability">8. Ground Truth Reliability</h2>
+<h3 id="the-meta-question">The Meta-Question</h3>
+<p>How reliable is the PHQ-8 ground truth?
+- Patients self-report their symptoms
+- Self-report has known biases (social desirability, recall error)
+- The same patient might score differently on different days</p>
+<p><strong>Implication</strong>: Even perfect prediction can't exceed ground truth reliability. MAE floor may be ~0.5 due to label noise, not model error.</p>
+<p><strong>Evidence</strong> (examples of PHQ-8 reliability in the literature):
+- Swedish PHQ-8 psychometrics report <strong>test-retest ICC ≈ 0.83</strong> for total score and Cronbach’s α ≈ 0.85 (Rheumatol Int, 2020; PubMed: 32661929).
+- Another PHQ-8 psychometric study reports Cronbach’s α ≈ 0.922 (Hum Reprod Open, 2022; PubMed: 35591921).</p>
+<p>These are not DAIC-WOZ-specific, but they provide an empirical anchor: the label is not noise-free, and extremely low MAE targets may be unrealistic without additional modalities or repeated measures.</p>
+<hr />
+<h2 id="9-summary-of-hypotheses">9. Summary of Hypotheses</h2>
+<table>
+<thead>
+<tr>
+<th>ID</th>
+<th>Hypothesis</th>
+<th>Type</th>
+<th>Effort</th>
+<th>Status</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>2A</td>
+<td>Allow frequency inference from temporal/intensity markers</td>
+<td>Prompt change</td>
+<td>Low</td>
+<td><strong>→ Spec 063</strong></td>
+</tr>
+<tr>
+<td>3A</td>
+<td>Add explicit symptom definitions to chunk scorer</td>
+<td>Prompt change</td>
+<td>Low</td>
+<td>Proposed</td>
+</tr>
+<tr>
+<td>4A</td>
+<td>Embedding captures topic, not severity</td>
+<td>Architecture</td>
+<td>High</td>
+<td>Research</td>
+</tr>
+<tr>
+<td>4B</td>
+<td>Rerank by severity markers, not just similarity</td>
+<td>Code change</td>
+<td>Medium</td>
+<td>Proposed</td>
+</tr>
+<tr>
+<td>5A</td>
+<td>Consider behavioral indicators beyond verbal frequency</td>
+<td>Research</td>
+<td>High</td>
+<td>Research</td>
+</tr>
+<tr>
+<td>7A</td>
+<td>Fuzzy evidence grounding (semantic similarity)</td>
+<td>Config + code</td>
+<td>Medium</td>
+<td>Proposed</td>
+</tr>
+<tr>
+<td>7B</td>
+<td>Direct scoring without evidence extraction</td>
+<td>Architecture</td>
+<td>High</td>
+<td>Research</td>
+</tr>
+</tbody>
+</table>
+<p><strong>Related Specs</strong> (address task validity):
+- <strong>Spec 061</strong>: Total PHQ-8 Score Prediction (0-24) — <code>docs/_specs/spec-061-total-phq8-score-prediction.md</code>
+- <strong>Spec 062</strong>: Binary Depression Classification — <code>docs/_specs/spec-062-binary-depression-classification.md</code>
+- <strong>Spec 063</strong>: Severity Inference Prompt Policy (implements Hypothesis 2A) — <code>docs/_specs/spec-063-severity-inference-prompt-policy.md</code></p>
+<hr />
+<h2 id="10-recommended-next-steps">10. Recommended Next Steps</h2>
+<h3 id="immediate-low-effort-testable">Immediate (Low-effort, testable)</h3>
+<ol>
+<li><strong>Hypothesis 3A</strong>: Update chunk scoring prompt with explicit symptom definitions</li>
+<li><strong>Hypothesis 2A</strong>: Create a "frequency inference" prompt variant and ablate</li>
+</ol>
+<h3 id="research-higher-effort">Research (Higher effort)</h3>
+<ol>
+<li><strong>Hypothesis 7A</strong>: Implement fuzzy grounding and compare to substring match</li>
+<li><strong>Hypothesis 4B</strong>: Implement severity-aware reranking</li>
+</ol>
+<h3 id="fundamental-re-evaluation">Fundamental Re-evaluation</h3>
+<ol>
+<li>Consider whether PHQ-8 frequency scoring is the right task for this dataset</li>
+<li>Explore alternative tasks: binary depression detection, severity classification (none/mild/moderate/severe)</li>
+</ol>
+<hr />
+<h2 id="11-related-documentation">11. Related Documentation</h2>
+<ul>
+<li><a href="../../clinical/task-validity/">Task Validity</a> — <strong>SSOT</strong>: construct mismatch and valid claims</li>
+<li><a href="../../results/few-shot-analysis/">Few-Shot Analysis</a> — Why few-shot may not beat zero-shot</li>
+<li><a href="../../rag/design-rationale/">RAG Design Rationale</a> — Original design decisions</li>
+<li><a href="../../statistics/metrics-and-evaluation/">Metrics and Evaluation</a> — AURC/AUGRC definitions</li>
+<li><a href="../../_specs/">Specs Index</a> — Implementation specs (061-063 address task validity)</li>
+</ul>
+<hr />
+<h2 id="sources">Sources</h2>
+<ul>
+<li><a href="https://dcapswoz.ict.usc.edu/">DAIC-WOZ Database</a></li>
+<li><a href="https://dcapswoz.ict.usc.edu/wp-content/uploads/2022/02/DAICWOZDepression_Documentation.pdf">DAIC-WOZ Documentation</a></li>
+<li><a href="https://arxiv.org/abs/2404.14463">DAIC-WOZ: On the Validity of Using the Therapist's prompts</a></li>
+<li><a href="https://www.researchgate.net/publication/311643727_The_Distress_Analysis_Interview_Corpus_of_human_and_computer_interviews">The Distress Analysis Interview Corpus</a></li>
+<li>PHQ-8 validation: <a href="https://pubmed.ncbi.nlm.nih.gov/18752852/">The PHQ-8 as a measure of current depression in the general population</a></li>
+<li>PHQ-8 reliability example (test-retest ICC): https://pubmed.ncbi.nlm.nih.gov/32661929/</li>
+<li>PHQ-8 internal consistency example: https://pubmed.ncbi.nlm.nih.gov/35591921/</li>
+<li>DAIC-WOZ + PHQ-8 prediction prior art (LLMs): https://pubmed.ncbi.nlm.nih.gov/40720397/</li>
+<li>DAIC-WOZ + PHQ-8 prediction prior art (text regression): https://pubmed.ncbi.nlm.nih.gov/37398577/</li>
+<li>Selective classification evaluation pitfalls (AUGRC): http://arxiv.org/abs/2407.01032</li>
+<li>Clinical-domain language models (embedding ablations): http://arxiv.org/abs/1904.05342 (ClinicalBERT), http://arxiv.org/abs/2007.15779 (PubMedBERT)</li>
+</ul>
+
+
+
+
+
+
+
+
+
+
+
+
+                
+              </article>
+            </div>
+          
+          
+<script>var target=document.getElementById(location.hash.slice(1));target&&target.name&&(target.checked=target.name.startsWith("__tabbed_"))</script>
+        </div>
+        
+      </main>
+      
+        <footer class="md-footer">
+  
+    
+      
+      <nav class="md-footer__inner md-grid" aria-label="Footer" >
+        
+          
+          <a href="../hypotheses-explained/" class="md-footer__link md-footer__link--prev" aria-label="Previous: Hypotheses Explained: Current State vs Future Improvements">
+            <div class="md-footer__button md-icon">
+              
+              <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M20 11v2H8l5.5 5.5-1.42 1.42L4.16 12l7.92-7.92L13.5 5.5 8 11z"/></svg>
+            </div>
+            <div class="md-footer__title">
+              <span class="md-footer__direction">
+                Previous
+              </span>
+              <div class="md-ellipsis">
+                Hypotheses Explained: Current State vs Future Improvements
+              </div>
+            </div>
+          </a>
+        
+        
+          
+          <a href="../master-bug-audit/" class="md-footer__link md-footer__link--next" aria-label="Next: MASTER BUG AUDIT">
+            <div class="md-footer__title">
+              <span class="md-footer__direction">
+                Next
+              </span>
+              <div class="md-ellipsis">
+                MASTER BUG AUDIT
+              </div>
+            </div>
+            <div class="md-footer__button md-icon">
+              
+              <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M4 11v2h12l-5.5 5.5 1.42 1.42L19.84 12l-7.92-7.92L10.5 5.5 16 11z"/></svg>
+            </div>
+          </a>
+        
+      </nav>
+    
+  
+  <div class="md-footer-meta md-typeset">
+    <div class="md-footer-meta__inner md-grid">
+      <div class="md-copyright">
+  
+  
+    Made with
+    <a href="https://squidfunk.github.io/mkdocs-material/" target="_blank" rel="noopener">
+      Material for MkDocs
+    </a>
+  
+</div>
+      
+    </div>
+  </div>
+</footer>
+      
+    </div>
+    <div class="md-dialog" data-md-component="dialog">
+      <div class="md-dialog__inner md-typeset"></div>
+    </div>
+    
+    
+    
+      
+      
+      <script id="__config" type="application/json">{"annotate": null, "base": "../..", "features": ["content.code.copy", "content.action.edit", "content.action.view", "navigation.tracking", "navigation.sections", "navigation.footer", "navigation.instant"], "search": "../../assets/javascripts/workers/search.2c215733.min.js", "tags": null, "translations": {"clipboard.copied": "Copied to clipboard", "clipboard.copy": "Copy to clipboard", "search.result.more.one": "1 more on this page", "search.result.more.other": "# more on this page", "search.result.none": "No matching documents", "search.result.one": "1 matching document", "search.result.other": "# matching documents", "search.result.placeholder": "Type to start searching", "search.result.term.missing": "Missing", "select.version": "Select version"}, "version": null}</script>
+    
+    
+      <script src="../../assets/javascripts/bundle.79ae519e.min.js"></script>
+      
+    
+  </body>
+</html>

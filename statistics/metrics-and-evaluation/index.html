@@ -1,0 +1,3490 @@
+
+<!doctype html>
+<html lang="en" class="no-js">
+  <head>
+    
+      <meta charset="utf-8">
+      <meta name="viewport" content="width=device-width,initial-scale=1">
+      
+      
+      
+        <link rel="canonical" href="https://the-obstacle-is-the-way.github.io/ai-psychiatrist/statistics/metrics-and-evaluation/">
+      
+      
+        <link rel="prev" href="../coverage/">
+      
+      
+        <link rel="next" href="../statistical-methodology-aurc-augrc/">
+      
+      
+        
+      
+      
+      <link rel="icon" href="../../assets/images/favicon.png">
+      <meta name="generator" content="mkdocs-1.6.1, mkdocs-material-9.7.1">
+    
+    
+      
+        <title>Metrics and Evaluation (Exact Definitions + Output Schema) - AI Psychiatrist</title>
+      
+    
+    
+      <link rel="stylesheet" href="../../assets/stylesheets/main.484c7ddc.min.css">
+      
+      
+
+
+    
+    
+      
+    
+    
+      
+        
+        
+        <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+        <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Roboto:300,300i,400,400i,700,700i%7CRoboto+Mono:400,400i,700,700i&display=fallback">
+        <style>:root{--md-text-font:"Roboto";--md-code-font:"Roboto Mono"}</style>
+      
+    
+    
+    <script>__md_scope=new URL("../..",location),__md_hash=e=>[...e].reduce(((e,_)=>(e<<5)-e+_.charCodeAt(0)),0),__md_get=(e,_=localStorage,t=__md_scope)=>JSON.parse(_.getItem(t.pathname+"."+e)),__md_set=(e,_,t=localStorage,a=__md_scope)=>{try{t.setItem(a.pathname+"."+e,JSON.stringify(_))}catch(e){}}</script>
+    
+      
+
+    
+    
+  </head>
+  
+  
+    <body dir="ltr">
+  
+    
+    <input class="md-toggle" data-md-toggle="drawer" type="checkbox" id="__drawer" autocomplete="off">
+    <input class="md-toggle" data-md-toggle="search" type="checkbox" id="__search" autocomplete="off">
+    <label class="md-overlay" for="__drawer"></label>
+    <div data-md-component="skip">
+      
+        
+        <a href="#metrics-and-evaluation-exact-definitions-output-schema" class="md-skip">
+          Skip to content
+        </a>
+      
+    </div>
+    <div data-md-component="announce">
+      
+    </div>
+    
+    
+      
+
+  
+
+<header class="md-header md-header--shadow" data-md-component="header">
+  <nav class="md-header__inner md-grid" aria-label="Header">
+    <a href="../.." title="AI Psychiatrist" class="md-header__button md-logo" aria-label="AI Psychiatrist" data-md-component="logo">
+      
+  
+  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 8a3 3 0 0 0 3-3 3 3 0 0 0-3-3 3 3 0 0 0-3 3 3 3 0 0 0 3 3m0 3.54C9.64 9.35 6.5 8 3 8v11c3.5 0 6.64 1.35 9 3.54 2.36-2.19 5.5-3.54 9-3.54V8c-3.5 0-6.64 1.35-9 3.54"/></svg>
+
+    </a>
+    <label class="md-header__button md-icon" for="__drawer">
+      
+      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M3 6h18v2H3zm0 5h18v2H3zm0 5h18v2H3z"/></svg>
+    </label>
+    <div class="md-header__title" data-md-component="header-title">
+      <div class="md-header__ellipsis">
+        <div class="md-header__topic">
+          <span class="md-ellipsis">
+            AI Psychiatrist
+          </span>
+        </div>
+        <div class="md-header__topic" data-md-component="header-topic">
+          <span class="md-ellipsis">
+            
+              Metrics and Evaluation (Exact Definitions + Output Schema)
+            
+          </span>
+        </div>
+      </div>
+    </div>
+    
+    
+      <script>var palette=__md_get("__palette");if(palette&&palette.color){if("(prefers-color-scheme)"===palette.color.media){var media=matchMedia("(prefers-color-scheme: light)"),input=document.querySelector(media.matches?"[data-md-color-media='(prefers-color-scheme: light)']":"[data-md-color-media='(prefers-color-scheme: dark)']");palette.color.media=input.getAttribute("data-md-color-media"),palette.color.scheme=input.getAttribute("data-md-color-scheme"),palette.color.primary=input.getAttribute("data-md-color-primary"),palette.color.accent=input.getAttribute("data-md-color-accent")}for(var[key,value]of Object.entries(palette.color))document.body.setAttribute("data-md-color-"+key,value)}</script>
+    
+    
+    
+      
+      
+        <label class="md-header__button md-icon" for="__search">
+          
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M9.5 3A6.5 6.5 0 0 1 16 9.5c0 1.61-.59 3.09-1.56 4.23l.27.27h.79l5 5-1.5 1.5-5-5v-.79l-.27-.27A6.52 6.52 0 0 1 9.5 16 6.5 6.5 0 0 1 3 9.5 6.5 6.5 0 0 1 9.5 3m0 2C7 5 5 7 5 9.5S7 14 9.5 14 14 12 14 9.5 12 5 9.5 5"/></svg>
+        </label>
+        <div class="md-search" data-md-component="search" role="dialog">
+  <label class="md-search__overlay" for="__search"></label>
+  <div class="md-search__inner" role="search">
+    <form class="md-search__form" name="search">
+      <input type="text" class="md-search__input" name="query" aria-label="Search" placeholder="Search" autocapitalize="off" autocorrect="off" autocomplete="off" spellcheck="false" data-md-component="search-query" required>
+      <label class="md-search__icon md-icon" for="__search">
+        
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M9.5 3A6.5 6.5 0 0 1 16 9.5c0 1.61-.59 3.09-1.56 4.23l.27.27h.79l5 5-1.5 1.5-5-5v-.79l-.27-.27A6.52 6.52 0 0 1 9.5 16 6.5 6.5 0 0 1 3 9.5 6.5 6.5 0 0 1 9.5 3m0 2C7 5 5 7 5 9.5S7 14 9.5 14 14 12 14 9.5 12 5 9.5 5"/></svg>
+        
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M20 11v2H8l5.5 5.5-1.42 1.42L4.16 12l7.92-7.92L13.5 5.5 8 11z"/></svg>
+      </label>
+      <nav class="md-search__options" aria-label="Search">
+        
+        <button type="reset" class="md-search__icon md-icon" title="Clear" aria-label="Clear" tabindex="-1">
+          
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M19 6.41 17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12z"/></svg>
+        </button>
+      </nav>
+      
+    </form>
+    <div class="md-search__output">
+      <div class="md-search__scrollwrap" tabindex="0" data-md-scrollfix>
+        <div class="md-search-result" data-md-component="search-result">
+          <div class="md-search-result__meta">
+            Initializing search
+          </div>
+          <ol class="md-search-result__list" role="presentation"></ol>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+      
+    
+    
+      <div class="md-header__source">
+        <a href="https://github.com/The-Obstacle-Is-The-Way/ai-psychiatrist" title="Go to repository" class="md-source" data-md-component="source">
+  <div class="md-source__icon md-icon">
+    
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 448 512"><!--! Font Awesome Free 7.1.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2025 Fonticons, Inc.--><path d="M439.6 236.1 244 40.5c-5.4-5.5-12.8-8.5-20.4-8.5s-15 3-20.4 8.4L162.5 81l51.5 51.5c27.1-9.1 52.7 16.8 43.4 43.7l49.7 49.7c34.2-11.8 61.2 31 35.5 56.7-26.5 26.5-70.2-2.9-56-37.3L240.3 199v121.9c25.3 12.5 22.3 41.8 9.1 55-6.4 6.4-15.2 10.1-24.3 10.1s-17.8-3.6-24.3-10.1c-17.6-17.6-11.1-46.9 11.2-56v-123c-20.8-8.5-24.6-30.7-18.6-45L142.6 101 8.5 235.1C3 240.6 0 247.9 0 255.5s3 15 8.5 20.4l195.6 195.7c5.4 5.4 12.7 8.4 20.4 8.4s15-3 20.4-8.4l194.7-194.7c5.4-5.4 8.4-12.8 8.4-20.4s-3-15-8.4-20.4"/></svg>
+  </div>
+  <div class="md-source__repository">
+    GitHub
+  </div>
+</a>
+      </div>
+    
+  </nav>
+  
+</header>
+    
+    <div class="md-container" data-md-component="container">
+      
+      
+        
+          
+        
+      
+      <main class="md-main" data-md-component="main">
+        <div class="md-main__inner md-grid">
+          
+            
+              
+              <div class="md-sidebar md-sidebar--primary" data-md-component="sidebar" data-md-type="navigation" >
+                <div class="md-sidebar__scrollwrap">
+                  <div class="md-sidebar__inner">
+                    
+
+
+
+<nav class="md-nav md-nav--primary" aria-label="Navigation" data-md-level="0">
+  <label class="md-nav__title" for="__drawer">
+    <a href="../.." title="AI Psychiatrist" class="md-nav__button md-logo" aria-label="AI Psychiatrist" data-md-component="logo">
+      
+  
+  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 8a3 3 0 0 0 3-3 3 3 0 0 0-3-3 3 3 0 0 0-3 3 3 3 0 0 0 3 3m0 3.54C9.64 9.35 6.5 8 3 8v11c3.5 0 6.64 1.35 9 3.54 2.36-2.19 5.5-3.54 9-3.54V8c-3.5 0-6.64 1.35-9 3.54"/></svg>
+
+    </a>
+    AI Psychiatrist
+  </label>
+  
+    <div class="md-nav__source">
+      <a href="https://github.com/The-Obstacle-Is-The-Way/ai-psychiatrist" title="Go to repository" class="md-source" data-md-component="source">
+  <div class="md-source__icon md-icon">
+    
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 448 512"><!--! Font Awesome Free 7.1.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2025 Fonticons, Inc.--><path d="M439.6 236.1 244 40.5c-5.4-5.5-12.8-8.5-20.4-8.5s-15 3-20.4 8.4L162.5 81l51.5 51.5c27.1-9.1 52.7 16.8 43.4 43.7l49.7 49.7c34.2-11.8 61.2 31 35.5 56.7-26.5 26.5-70.2-2.9-56-37.3L240.3 199v121.9c25.3 12.5 22.3 41.8 9.1 55-6.4 6.4-15.2 10.1-24.3 10.1s-17.8-3.6-24.3-10.1c-17.6-17.6-11.1-46.9 11.2-56v-123c-20.8-8.5-24.6-30.7-18.6-45L142.6 101 8.5 235.1C3 240.6 0 247.9 0 255.5s3 15 8.5 20.4l195.6 195.7c5.4 5.4 12.7 8.4 20.4 8.4s15-3 20.4-8.4l194.7-194.7c5.4-5.4 8.4-12.8 8.4-20.4s-3-15-8.4-20.4"/></svg>
+  </div>
+  <div class="md-source__repository">
+    GitHub
+  </div>
+</a>
+    </div>
+  
+  <ul class="md-nav__list" data-md-scrollfix>
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../.." class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    AI Psychiatrist Documentation
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    
+    
+    
+    
+      
+        
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--section md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_2" >
+        
+          
+          <label class="md-nav__link" for="__nav_2" id="__nav_2_label" tabindex="">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+     research
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_2_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_2">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+     research
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../_research/hypotheses-explained/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Hypotheses Explained: Current State vs Future Improvements
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../_research/hypotheses-for-improvement/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Hypotheses for Improvement: First-Principles Analysis
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../_research/master-bug-audit/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    MASTER BUG AUDIT
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    
+    
+    
+    
+      
+        
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--section md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_3" >
+        
+          
+          <label class="md-nav__link" for="__nav_3" id="__nav_3_label" tabindex="">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Architecture
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_3_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_3">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    Architecture
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../architecture/architecture/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Architecture
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../architecture/future-architecture/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Future Architecture: Agent Orchestration Options
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../architecture/pipeline/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Pipeline
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    
+    
+    
+    
+      
+        
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--section md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_4" >
+        
+          
+          <label class="md-nav__link" for="__nav_4" id="__nav_4_label" tabindex="">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Clinical
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_4_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_4">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    Clinical
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../clinical/clinical-understanding/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Clinical Understanding: How This System Works
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../clinical/glossary/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Glossary
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../clinical/phq8/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    PHQ-8: Patient Health Questionnaire
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../clinical/task-validity/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Task Validity: What Can (and Cannot) Be Inferred from DAIC-WOZ Transcripts
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    
+    
+    
+    
+      
+        
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--section md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_5" >
+        
+          
+          <label class="md-nav__link" for="__nav_5" id="__nav_5_label" tabindex="">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Configs
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_5_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_5">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    Configs
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../configs/agent-sampling-registry/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Agent Sampling Parameter Registry
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../configs/configuration-philosophy/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Configuration Philosophy
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../configs/configuration/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Configuration Reference
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    
+    
+    
+    
+      
+        
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--section md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_6" >
+        
+          
+          <label class="md-nav__link" for="__nav_6" id="__nav_6_label" tabindex="">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Data
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_6_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_6">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    Data
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../data/artifact-namespace-registry/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Artifact Namespace Registry
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../data/daic-woz-preprocessing/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    DAIC-WOZ Transcript Preprocessing (Bias-Aware, Deterministic)
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../data/daic-woz-schema/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    DAIC-WOZ Dataset Schema
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../data/data-splits-overview/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Data Splits Overview
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    
+    
+    
+    
+      
+        
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--section md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_7" >
+        
+          
+          <label class="md-nav__link" for="__nav_7" id="__nav_7_label" tabindex="">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Developer
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_7_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_7">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    Developer
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../developer/api-endpoints/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    API Reference
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../developer/dependency-registry/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Dependency Registry
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../developer/error-handling/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Error Handling and Fail-Fast Philosophy
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../developer/exceptions/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Exception Reference (Domain + Runtime)
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../developer/testing/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Testing Conventions (Markers, Fixtures, and Test Doubles)
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    
+    
+    
+    
+      
+        
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--section md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_8" >
+        
+          
+          <label class="md-nav__link" for="__nav_8" id="__nav_8_label" tabindex="">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Getting started
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_8_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_8">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    Getting started
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../getting-started/quickstart/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Quickstart Guide
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    
+    
+    
+    
+      
+        
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--section md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_9" >
+        
+          
+          <label class="md-nav__link" for="__nav_9" id="__nav_9_label" tabindex="">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Models
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_9_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_9">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    Models
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../models/model-registry/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    AI Psychiatrist Model Registry
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../models/model-wiring/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Model Wiring: Current State
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    
+    
+    
+    
+      
+        
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--section md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_10" >
+        
+          
+          <label class="md-nav__link" for="__nav_10" id="__nav_10_label" tabindex="">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Pipeline internals
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_10_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_10">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    Pipeline internals
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../pipeline-internals/evidence-extraction/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Evidence Extraction Mechanism: How It Actually Works
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../pipeline-internals/features/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Feature Reference (Non-Archive Canonical)
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    
+    
+    
+    
+      
+        
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--section md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_11" >
+        
+          
+          <label class="md-nav__link" for="__nav_11" id="__nav_11_label" tabindex="">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Preflight checklist
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_11_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_11">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    Preflight checklist
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../preflight-checklist/preflight-checklist-few-shot/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Preflight Checklist: Few-Shot Reproduction
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../preflight-checklist/preflight-checklist-zero-shot/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Preflight Checklist: Zero-Shot Run
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    
+    
+    
+    
+      
+        
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--section md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_12" >
+        
+          
+          <label class="md-nav__link" for="__nav_12" id="__nav_12_label" tabindex="">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Rag
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_12_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_12">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    Rag
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../rag/artifact-generation/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    RAG Artifact Generation
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../rag/chunk-scoring/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Chunk-Level Scoring (Spec 35) — Schema, Workflow, and Gotchas
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../rag/debugging/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    RAG Debugging (Audit Logs + Guardrails)
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../rag/design-rationale/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    RAG Design Rationale
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../rag/overview/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    RAG Overview: Embeddings and Few-Shot Retrieval
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../rag/runtime-features/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    RAG Runtime Features
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    
+    
+    
+    
+      
+        
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--section md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_13" >
+        
+          
+          <label class="md-nav__link" for="__nav_13" id="__nav_13_label" tabindex="">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Results
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_13_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_13">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    Results
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../results/few-shot-analysis/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Why Few-Shot May Not Beat Zero-Shot: Analysis
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../results/reproduction-results/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Paper Reproduction Results (Current Status)
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../results/run-history/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Complete Run History &amp; Statistical Analysis
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../results/run-output-schema/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Reproduction Run Output Schema (JSON + Registry)
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+    
+  
+  
+  
+    
+    
+    
+    
+      
+        
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--active md-nav__item--section md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_14" checked>
+        
+          
+          <label class="md-nav__link" for="__nav_14" id="__nav_14_label" tabindex="">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Statistics
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_14_label" aria-expanded="true">
+          <label class="md-nav__title" for="__nav_14">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    Statistics
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../coverage/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Coverage Explained: What It Is and Why It Matters
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+    
+  
+  
+  
+    <li class="md-nav__item md-nav__item--active">
+      
+      <input class="md-nav__toggle md-toggle" type="checkbox" id="__toc">
+      
+      
+        
+      
+      
+        <label class="md-nav__link md-nav__link--active" for="__toc">
+          
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Metrics and Evaluation (Exact Definitions + Output Schema)
+  
+
+    
+  </span>
+  
+  
+
+          <span class="md-nav__icon md-icon"></span>
+        </label>
+      
+      <a href="./" class="md-nav__link md-nav__link--active">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Metrics and Evaluation (Exact Definitions + Output Schema)
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+      
+        
+
+<nav class="md-nav md-nav--secondary" aria-label="Table of contents">
+  
+  
+  
+    
+  
+  
+    <label class="md-nav__title" for="__toc">
+      <span class="md-nav__icon md-icon"></span>
+      Table of contents
+    </label>
+    <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
+      
+        <li class="md-nav__item">
+  <a href="#unit-of-evaluation-critical" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Unit of Evaluation (Critical)
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Unit of Evaluation (Critical)">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#participant-failures" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Participant Failures
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#coverage-and-cmax" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Coverage and Cmax
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#confidence-variants" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Confidence Variants
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Confidence Variants">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#calibration-artifacts" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Calibration Artifacts
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#retrieval-signal-availability-spec-046" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Retrieval-Signal Availability (Spec 046)
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#verbalized-confidence-availability-spec-048" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Verbalized-Confidence Availability (Spec 048)
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#token-confidence-availability-spec-051" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Token-Confidence Availability (Spec 051)
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#consistency-signal-availability-spec-050" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Consistency-Signal Availability (Spec 050)
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#loss-functions" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Loss Functions
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#risk-coverage-curve-rc-curve" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Risk-Coverage Curve (RC Curve)
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Risk-Coverage Curve (RC Curve)">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#inputs" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Inputs
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#plateau-tie-handling" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Plateau (Tie) Handling
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#working-point-metrics" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Working Point Metrics
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#aurc-and-augrc-integration-semantics" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        AURC and AUGRC (Integration Semantics)
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="AURC and AUGRC (Integration Semantics)">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#aurc" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        AURC
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#augrc" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        AUGRC
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#optimal-and-excess-metrics-spec-052" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Optimal and Excess Metrics (Spec 052)
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Optimal and Excess Metrics (Spec 052)">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#optimal-baselines-oracle-csf" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Optimal Baselines (Oracle CSF)
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#excess-metrics" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Excess Metrics
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#interpretation" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Interpretation
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#achievable-aurc-convex-hull" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Achievable AURC (Convex Hull)
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#truncated-areas-and-maecoverage" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Truncated Areas and MAE@Coverage
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Truncated Areas and MAE@Coverage">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#truncated-aurcaugrc" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Truncated AURC/AUGRC
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#maecoverage" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        MAE@Coverage
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#bootstrap-confidence-intervals" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Bootstrap Confidence Intervals
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Bootstrap Confidence Intervals">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#paired-deltas-mode-comparisons" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Paired Deltas (Mode Comparisons)
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#metrics-artifact-output-schema" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Metrics Artifact Output Schema
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#how-to-run" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        How To Run
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#related-docs" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Related Docs
+      
+    </span>
+  </a>
+  
+</li>
+      
+    </ul>
+  
+</nav>
+      
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../statistical-methodology-aurc-augrc/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Statistical Methodology: AURC/AUGRC for Selective Prediction
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+  </ul>
+</nav>
+                  </div>
+                </div>
+              </div>
+            
+            
+              
+              <div class="md-sidebar md-sidebar--secondary" data-md-component="sidebar" data-md-type="toc" >
+                <div class="md-sidebar__scrollwrap">
+                  <div class="md-sidebar__inner">
+                    
+
+<nav class="md-nav md-nav--secondary" aria-label="Table of contents">
+  
+  
+  
+    
+  
+  
+    <label class="md-nav__title" for="__toc">
+      <span class="md-nav__icon md-icon"></span>
+      Table of contents
+    </label>
+    <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
+      
+        <li class="md-nav__item">
+  <a href="#unit-of-evaluation-critical" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Unit of Evaluation (Critical)
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Unit of Evaluation (Critical)">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#participant-failures" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Participant Failures
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#coverage-and-cmax" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Coverage and Cmax
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#confidence-variants" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Confidence Variants
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Confidence Variants">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#calibration-artifacts" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Calibration Artifacts
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#retrieval-signal-availability-spec-046" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Retrieval-Signal Availability (Spec 046)
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#verbalized-confidence-availability-spec-048" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Verbalized-Confidence Availability (Spec 048)
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#token-confidence-availability-spec-051" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Token-Confidence Availability (Spec 051)
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#consistency-signal-availability-spec-050" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Consistency-Signal Availability (Spec 050)
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#loss-functions" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Loss Functions
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#risk-coverage-curve-rc-curve" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Risk-Coverage Curve (RC Curve)
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Risk-Coverage Curve (RC Curve)">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#inputs" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Inputs
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#plateau-tie-handling" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Plateau (Tie) Handling
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#working-point-metrics" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Working Point Metrics
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#aurc-and-augrc-integration-semantics" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        AURC and AUGRC (Integration Semantics)
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="AURC and AUGRC (Integration Semantics)">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#aurc" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        AURC
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#augrc" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        AUGRC
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#optimal-and-excess-metrics-spec-052" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Optimal and Excess Metrics (Spec 052)
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Optimal and Excess Metrics (Spec 052)">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#optimal-baselines-oracle-csf" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Optimal Baselines (Oracle CSF)
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#excess-metrics" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Excess Metrics
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#interpretation" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Interpretation
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#achievable-aurc-convex-hull" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Achievable AURC (Convex Hull)
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#truncated-areas-and-maecoverage" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Truncated Areas and MAE@Coverage
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Truncated Areas and MAE@Coverage">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#truncated-aurcaugrc" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Truncated AURC/AUGRC
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#maecoverage" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        MAE@Coverage
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#bootstrap-confidence-intervals" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Bootstrap Confidence Intervals
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Bootstrap Confidence Intervals">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#paired-deltas-mode-comparisons" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Paired Deltas (Mode Comparisons)
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#metrics-artifact-output-schema" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Metrics Artifact Output Schema
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#how-to-run" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        How To Run
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#related-docs" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Related Docs
+      
+    </span>
+  </a>
+  
+</li>
+      
+    </ul>
+  
+</nav>
+                  </div>
+                </div>
+              </div>
+            
+          
+          
+            <div class="md-content" data-md-component="content">
+              
+              <article class="md-content__inner md-typeset">
+                
+                  
+
+
+  
+    <a href="https://github.com/The-Obstacle-Is-The-Way/ai-psychiatrist/edit/main/docs/statistics/metrics-and-evaluation.md" title="Edit this page" class="md-content__button md-icon" rel="edit">
+      
+      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M10 20H6V4h7v5h5v3.1l2-2V8l-6-6H6c-1.1 0-2 .9-2 2v16c0 1.1.9 2 2 2h4zm10.2-7c.1 0 .3.1.4.2l1.3 1.3c.2.2.2.6 0 .8l-1 1-2.1-2.1 1-1c.1-.1.2-.2.4-.2m0 3.9L14.1 23H12v-2.1l6.1-6.1z"/></svg>
+    </a>
+  
+  
+    
+      
+    
+    <a href="https://github.com/The-Obstacle-Is-The-Way/ai-psychiatrist/raw/main/docs/statistics/metrics-and-evaluation.md" title="View source of this page" class="md-content__button md-icon">
+      
+      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M17 18c.56 0 1 .44 1 1s-.44 1-1 1-1-.44-1-1 .44-1 1-1m0-3c-2.73 0-5.06 1.66-6 4 .94 2.34 3.27 4 6 4s5.06-1.66 6-4c-.94-2.34-3.27-4-6-4m0 6.5a2.5 2.5 0 0 1-2.5-2.5 2.5 2.5 0 0 1 2.5-2.5 2.5 2.5 0 0 1 2.5 2.5 2.5 2.5 0 0 1-2.5 2.5M9.27 20H6V4h7v5h5v4.07c.7.08 1.36.25 2 .49V8l-6-6H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h4.5a8.2 8.2 0 0 1-1.23-2"/></svg>
+    </a>
+  
+
+
+<h1 id="metrics-and-evaluation-exact-definitions-output-schema">Metrics and Evaluation (Exact Definitions + Output Schema)</h1>
+<p><strong>Audience</strong>: Researchers who need implementation-accurate metrics
+<strong>Last Updated</strong>: 2026-01-03</p>
+<p>This page is the canonical (non-archive) reference for how this repo computes and reports:
+- <strong>coverage</strong>
+- <strong>risk-coverage curves</strong>
+- <strong>AURC / AUGRC</strong>
+- <strong>MAE@coverage</strong>
+- <strong>bootstrap confidence intervals</strong></p>
+<p>SSOT implementations:
+- <code>src/ai_psychiatrist/metrics/selective_prediction.py</code>
+- <code>src/ai_psychiatrist/metrics/bootstrap.py</code>
+- <code>scripts/evaluate_selective_prediction.py</code></p>
+<hr />
+<h2 id="unit-of-evaluation-critical">Unit of Evaluation (Critical)</h2>
+<p>We evaluate <strong>item instances</strong>: one PHQ-8 item for one participant.</p>
+<p>For each <code>(participant_id, item)</code>:
+- <code>gt</code> is always present (0–3)
+- <code>pred</code> is either (0–3) or <code>None</code> (abstain)
+- <code>confidence</code> is a scalar ranking signal (higher = more confident)</p>
+<h3 id="participant-failures">Participant Failures</h3>
+<p><code>scripts/reproduce_results.py</code> records per-participant success:
+- <code>success=True</code> participants are included in selective prediction metrics.
+- <code>success=False</code> participants are counted as reliability failures and excluded from AURC/AUGRC (by design).</p>
+<p>This is implemented in <code>scripts/evaluate_selective_prediction.py:parse_items()</code>.</p>
+<hr />
+<h2 id="coverage-and-cmax">Coverage and Cmax</h2>
+<p>Let:
+- <code>P</code> = number of <strong>included</strong> participants (<code>success=True</code>)
+- <code>N = P * 8</code> total item instances
+- <code>K</code> = number of predicted items (<code>pred is not None</code>) across the <code>N</code> items</p>
+<p>Then:
+- <code>coverage = K / N</code>
+- <code>Cmax = K / N</code> (same value; named “max achievable coverage” because abstentions bound the curve)</p>
+<p>SSOT: <code>compute_cmax()</code> in <code>src/ai_psychiatrist/metrics/selective_prediction.py</code>.</p>
+<hr />
+<h2 id="confidence-variants">Confidence Variants</h2>
+<p><code>scripts/evaluate_selective_prediction.py</code> supports the following confidence variants:</p>
+<ol>
+<li><code>llm</code>:</li>
+<li><code>confidence = llm_evidence_count</code></li>
+<li><code>total_evidence</code>:</li>
+<li><code>confidence = llm_evidence_count</code> (legacy alias; keyword backfill removed in Spec 047)</li>
+<li><code>retrieval_similarity_mean</code> (Spec 046):</li>
+<li><code>confidence = retrieval_similarity_mean if not null else 0.0</code></li>
+<li><code>retrieval_similarity_max</code> (Spec 046):</li>
+<li><code>confidence = retrieval_similarity_max if not null else 0.0</code></li>
+<li><code>hybrid_evidence_similarity</code> (Spec 046):</li>
+<li><code>e = min(llm_evidence_count, 3) / 3</code></li>
+<li><code>s = retrieval_similarity_mean if not null else 0.0</code></li>
+<li><code>confidence = 0.5 * e + 0.5 * s</code></li>
+<li><code>verbalized</code> (Spec 048):</li>
+<li><code>v = verbalized_confidence</code> (1–5 scale)</li>
+<li><code>confidence = (v - 1) / 4</code> (normalized to 0–1; uses 0.5 if null)</li>
+<li><code>verbalized_calibrated</code> (Spec 048):</li>
+<li>Requires <code>--calibration</code> pointing to a <code>method=temperature_scaling</code> artifact</li>
+<li><code>v = (verbalized_confidence - 1) / 4</code> (0–1; uses 0.5 if null)</li>
+<li><code>confidence = sigmoid(logit(v) / T)</code> where <code>T</code> is fitted on a training run</li>
+<li><code>hybrid_verbalized</code> (Spec 048):</li>
+<li><code>v = (verbalized_confidence - 1) / 4</code> (0–1; uses 0.5 if null)</li>
+<li><code>e = min(llm_evidence_count, 3) / 3</code></li>
+<li><code>s = retrieval_similarity_mean if not null else 0.0</code></li>
+<li><code>confidence = 0.4 * v + 0.3 * e + 0.3 * s</code></li>
+<li><code>calibrated</code> (Spec 049):</li>
+<li>Requires <code>--calibration</code> pointing to a calibrator artifact (e.g., <code>method=logistic</code>)</li>
+<li>Extract features from per-item <code>item_signals</code> using the artifact’s <code>features</code> list</li>
+<li><code>confidence = p_correct</code> (or a calibrated confidence score) produced by the calibrator</li>
+<li><code>token_msp</code> (Spec 051):</li>
+<li>Requires per-item <code>token_msp</code> in <code>item_signals</code></li>
+<li><code>confidence = token_msp</code> (0–1, higher = more confident)</li>
+<li><code>token_pe</code> (Spec 051):</li>
+<li>Requires per-item <code>token_pe</code> in <code>item_signals</code></li>
+<li>Stored value is entropy (lower = more confident)</li>
+<li><code>confidence = 1 / (1 + token_pe)</code> (maps to (0, 1])</li>
+<li><code>token_energy</code> (Spec 051):</li>
+<li>Requires per-item <code>token_energy</code> in <code>item_signals</code></li>
+<li>Stored value is <code>logsumexp(top_logprobs.logprob)</code> over tokens</li>
+<li><code>confidence = exp(token_energy)</code> (interpretable as cumulative mass captured by <code>top_logprobs</code>)</li>
+<li><code>secondary:&lt;csf1&gt;+&lt;csf2&gt;:&lt;average|product&gt;</code> (Spec 051):</li>
+<li>Combines two base CSFs on the fly</li>
+<li>Example: <code>secondary:token_msp+retrieval_similarity_mean:average</code></li>
+<li><code>consistency</code> (Spec 050):</li>
+<li>Requires per-item <code>consistency_modal_confidence</code> in <code>item_signals</code></li>
+<li><code>confidence = consistency_modal_confidence</code></li>
+<li><code>consistency_inverse_std</code> (Spec 050):</li>
+<li>Requires per-item <code>consistency_score_std</code> in <code>item_signals</code></li>
+<li><code>confidence = 1 / (1 + consistency_score_std)</code></li>
+<li><code>hybrid_consistency</code> (Spec 050):</li>
+<li>Requires per-item <code>consistency_modal_confidence</code> in <code>item_signals</code></li>
+<li><code>e = min(llm_evidence_count, 3) / 3</code></li>
+<li><code>s = retrieval_similarity_mean if not null else 0.0</code></li>
+<li><code>confidence = 0.4 * consistency_modal_confidence + 0.3 * e + 0.3 * s</code></li>
+</ol>
+<p>These are derived from <code>item_signals</code> in the run output JSON.</p>
+<h3 id="calibration-artifacts">Calibration Artifacts</h3>
+<p>Calibration maps raw confidence to calibrated probabilities (typically P(correct)). Artifacts are JSON files generated by training scripts.</p>
+<p><strong>Generating calibrators</strong>:
+<div class="highlight"><pre><span></span><code><span class="c1"># Temperature scaling for verbalized confidence (Spec 048)</span>
+uv<span class="w"> </span>run<span class="w"> </span>python<span class="w"> </span>scripts/calibrate_verbalized_confidence.py<span class="w"> </span><span class="se">\</span>
+<span class="w">  </span>--input<span class="w"> </span>data/outputs/train_run.json<span class="w"> </span><span class="se">\</span>
+<span class="w">  </span>--mode<span class="w"> </span>few_shot<span class="w"> </span><span class="se">\</span>
+<span class="w">  </span>--output<span class="w"> </span>data/outputs/calibration_verbalized_temperature_scaling_fewshot.json
+
+<span class="c1"># Supervised calibrator (Spec 049)</span>
+uv<span class="w"> </span>run<span class="w"> </span>python<span class="w"> </span>scripts/train_confidence_calibrator.py<span class="w"> </span><span class="se">\</span>
+<span class="w">  </span>--input<span class="w"> </span>data/outputs/train_run.json<span class="w"> </span><span class="se">\</span>
+<span class="w">  </span>--mode<span class="w"> </span>few_shot<span class="w"> </span><span class="se">\</span>
+<span class="w">  </span>--method<span class="w"> </span>logistic<span class="w"> </span><span class="se">\</span>
+<span class="w">  </span>--features<span class="w"> </span>verbalized_confidence,retrieval_similarity_mean<span class="w"> </span><span class="se">\</span>
+<span class="w">  </span>--output<span class="w"> </span>data/outputs/calibration_logistic_fewshot.json
+</code></pre></div></p>
+<p><strong>Calibrator types</strong> (SSOT: <code>src/ai_psychiatrist/calibration/calibrators.py</code>):</p>
+<table>
+<thead>
+<tr>
+<th>Type</th>
+<th>Description</th>
+<th>Use Case</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>TemperatureScalingCalibrator</code></td>
+<td>Single-param scaling: <code>sigmoid(logit(p)/T)</code></td>
+<td>Verbalized confidence</td>
+</tr>
+<tr>
+<td><code>LogisticCalibrator</code></td>
+<td>Logistic regression on feature vector</td>
+<td>Multi-feature supervised</td>
+</tr>
+<tr>
+<td><code>LinearCalibrator</code></td>
+<td>Linear regression (for continuous targets)</td>
+<td>Regression-style calibration</td>
+</tr>
+<tr>
+<td><code>IsotonicCalibrator</code></td>
+<td>Piecewise-linear monotonic</td>
+<td>Non-parametric calibration</td>
+</tr>
+</tbody>
+</table>
+<p><strong>Calibration metrics</strong>:
+- <strong>ECE (Expected Calibration Error)</strong>: Mean |accuracy - confidence| across bins. SSOT: <code>compute_ece()</code> in <code>calibrators.py</code>.
+- <strong>NLL (Negative Log-Likelihood)</strong>: Log-loss for binary correctness. SSOT: <code>compute_binary_nll()</code> in <code>calibrators.py</code>.</p>
+<p><strong>Feature extraction</strong>: <code>CalibratorFeatureExtractor</code> in <code>src/ai_psychiatrist/calibration/feature_extraction.py</code> extracts numeric features from <code>item_signals</code> with conservative defaults for missing values.</p>
+<h3 id="retrieval-signal-availability-spec-046">Retrieval-Signal Availability (Spec 046)</h3>
+<p>The retrieval-based confidence variants require the following per-item keys inside
+<code>item_signals</code>:
+- <code>retrieval_reference_count</code>
+- <code>retrieval_similarity_mean</code>
+- <code>retrieval_similarity_max</code></p>
+<p>Run artifacts produced by older versions of <code>scripts/reproduce_results.py</code> will not
+contain these keys. In that case, <code>scripts/evaluate_selective_prediction.py</code> will raise
+a clear error if a retrieval-based confidence variant is requested (it will not silently
+substitute missing values).</p>
+<h3 id="verbalized-confidence-availability-spec-048">Verbalized-Confidence Availability (Spec 048)</h3>
+<p>The verbalized confidence variants require the following per-item key inside
+<code>item_signals</code>:
+- <code>verbalized_confidence</code></p>
+<p>Artifacts produced by older versions of <code>scripts/reproduce_results.py</code> will not contain
+this key. In that case, <code>scripts/evaluate_selective_prediction.py</code> will raise a clear
+error if a verbalized-confidence variant is requested.</p>
+<h3 id="token-confidence-availability-spec-051">Token-Confidence Availability (Spec 051)</h3>
+<p>The token-level confidence variants require the following per-item keys inside
+<code>item_signals</code>:
+- <code>token_msp</code>
+- <code>token_pe</code>
+- <code>token_energy</code></p>
+<p>These values are only populated when the quantitative scorer backend returns logprobs.
+If the backend does not support logprobs, the keys may be present but null; requesting
+<code>token_*</code> confidence variants will then raise a clear error (no silent fallback).</p>
+<h3 id="consistency-signal-availability-spec-050">Consistency-Signal Availability (Spec 050)</h3>
+<p>The consistency-based confidence variants require the following per-item keys inside
+<code>item_signals</code>:
+- <code>consistency_modal_confidence</code>
+- <code>consistency_score_std</code></p>
+<p>These are only populated when the run was produced with multi-sample scoring enabled
+(<code>--consistency-samples &gt; 1</code> in <code>scripts/reproduce_results.py</code> or <code>CONSISTENCY_ENABLED=true</code>).</p>
+<hr />
+<h2 id="loss-functions">Loss Functions</h2>
+<p>Two loss functions are supported:</p>
+<ul>
+<li><code>abs</code>: <code>|pred - gt|</code></li>
+<li><code>abs_norm</code>: <code>|pred - gt| / 3</code> (range 0–1)</li>
+</ul>
+<p>SSOT: <code>_compute_loss()</code> in <code>src/ai_psychiatrist/metrics/selective_prediction.py</code>.</p>
+<hr />
+<h2 id="risk-coverage-curve-rc-curve">Risk-Coverage Curve (RC Curve)</h2>
+<h3 id="inputs">Inputs</h3>
+<p>Given all <code>N</code> item instances:
+1. Filter to predicted items <code>S = {i | pred_i is not None}</code>.
+2. Compute loss for each <code>i ∈ S</code>.
+3. Sort <code>S</code> by <code>confidence</code> descending.</p>
+<h3 id="plateau-tie-handling">Plateau (Tie) Handling</h3>
+<p>Confidence is often discrete (evidence counts). We compute working points by <strong>grouping equal confidence values</strong>:
+- Each unique confidence value defines a working point.
+- We add all items from that confidence plateau at once.</p>
+<p>SSOT: <code>compute_risk_coverage_curve()</code> in <code>src/ai_psychiatrist/metrics/selective_prediction.py</code>.</p>
+<h3 id="working-point-metrics">Working Point Metrics</h3>
+<p>At working point <code>j</code> after accepting <code>k_j</code> items:
+- <code>coverage_j = k_j / N</code>
+- <code>selective_risk_j = (sum loss of accepted) / k_j</code>
+- <code>generalized_risk_j = (sum loss of accepted) / N</code></p>
+<hr />
+<h2 id="aurc-and-augrc-integration-semantics">AURC and AUGRC (Integration Semantics)</h2>
+<p>We integrate using trapezoidal rule over <code>[0, Cmax]</code> with an explicit augmentation at <code>coverage=0</code>.</p>
+<p>SSOT: <code>_integrate_curve()</code> in <code>src/ai_psychiatrist/metrics/selective_prediction.py</code>.</p>
+<h3 id="aurc">AURC</h3>
+<ul>
+<li>x-axis: coverage</li>
+<li>y-axis: selective risk</li>
+<li>augmentation: <strong>right-continuous</strong> at 0</li>
+<li><code>risk(0) = risk(coverage_1)</code></li>
+</ul>
+<h3 id="augrc">AUGRC</h3>
+<ul>
+<li>x-axis: coverage</li>
+<li>y-axis: generalized risk</li>
+<li>augmentation:</li>
+<li><code>generalized_risk(0) = 0</code></li>
+</ul>
+<hr />
+<h2 id="optimal-and-excess-metrics-spec-052">Optimal and Excess Metrics (Spec 052)</h2>
+<p>Added in Jan 2026 to measure distance from the theoretical limit.</p>
+<h3 id="optimal-baselines-oracle-csf">Optimal Baselines (Oracle CSF)</h3>
+<ul>
+<li><strong>AURC_optimal</strong>: The AURC achievable if items were perfectly ranked by loss (ascending).</li>
+<li><strong>AUGRC_optimal</strong>: The AUGRC achievable under perfect ranking.</li>
+</ul>
+<h3 id="excess-metrics">Excess Metrics</h3>
+<ul>
+<li><strong>e-AURC</strong> = <code>AURC - AURC_optimal</code></li>
+<li><strong>e-AUGRC</strong> = <code>AUGRC - AUGRC_optimal</code></li>
+</ul>
+<h3 id="interpretation">Interpretation</h3>
+<ul>
+<li><code>e-AURC = 0</code> implies the confidence signal perfectly ranks correctness.</li>
+<li><code>aurc_gap_pct</code> = <code>(e-AURC / AURC_optimal) * 100</code> shows the percentage room for improvement.</li>
+</ul>
+<h3 id="achievable-aurc-convex-hull">Achievable AURC (Convex Hull)</h3>
+<ul>
+<li><strong>AURC_achievable</strong>: The AURC of the lower convex hull of the risk-coverage curve.</li>
+<li>Represents the performance achievable by optimally selecting working points (filtering out suboptimal confidence thresholds).</li>
+</ul>
+<hr />
+<h2 id="truncated-areas-and-maecoverage">Truncated Areas and MAE@Coverage</h2>
+<h3 id="truncated-aurcaugrc">Truncated AURC/AUGRC</h3>
+<p>We compute truncated areas up to a requested maximum coverage <code>C'</code>:
+- <code>AURC@C'</code>
+- <code>AUGRC@C'</code></p>
+<p>If <code>C' &gt; Cmax</code>, the effective <code>C'</code> becomes <code>Cmax</code>.</p>
+<p>SSOT: <code>_integrate_truncated()</code> in <code>src/ai_psychiatrist/metrics/selective_prediction.py</code> (includes linear interpolation to land exactly on <code>C'</code>).</p>
+<h3 id="maecoverage">MAE@Coverage</h3>
+<p><code>MAE@coverage=c</code> is defined as:
+- take the first working point where <code>coverage &gt;= c</code>
+- return its selective risk</p>
+<p>If no working point reaches the requested coverage (i.e., <code>c &gt; Cmax</code>), the value is <code>None</code>.</p>
+<p>SSOT: <code>compute_risk_at_coverage()</code> in <code>src/ai_psychiatrist/metrics/selective_prediction.py</code>.</p>
+<hr />
+<h2 id="bootstrap-confidence-intervals">Bootstrap Confidence Intervals</h2>
+<p>We use <strong>participant-cluster bootstrap</strong>:
+- resample participants with replacement
+- include all 8 items per sampled participant
+- recompute metrics on the resampled set</p>
+<p>SSOT: <code>bootstrap_by_participant()</code> in <code>src/ai_psychiatrist/metrics/bootstrap.py</code>.</p>
+<h3 id="paired-deltas-mode-comparisons">Paired Deltas (Mode Comparisons)</h3>
+<p>When evaluating two modes on the same run artifact, we can compute paired deltas:
+- <code>delta = metric_right - metric_left</code>
+- bootstrap resamples are applied at the participant level across both inputs</p>
+<p>SSOT: <code>paired_bootstrap_delta_by_participant()</code> in <code>src/ai_psychiatrist/metrics/bootstrap.py</code>.</p>
+<hr />
+<h2 id="metrics-artifact-output-schema">Metrics Artifact Output Schema</h2>
+<p><code>scripts/evaluate_selective_prediction.py</code> produces a JSON artifact:</p>
+<div class="highlight"><pre><span></span><code><span class="p">{</span>
+<span class="w">  </span><span class="nt">&quot;schema_version&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;1&quot;</span><span class="p">,</span>
+<span class="w">  </span><span class="nt">&quot;created_at&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;2026-01-03T00:00:00Z&quot;</span><span class="p">,</span>
+<span class="w">  </span><span class="nt">&quot;inputs&quot;</span><span class="p">:</span><span class="w"> </span><span class="p">[</span>
+<span class="w">    </span><span class="p">{</span><span class="nt">&quot;path&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;...&quot;</span><span class="p">,</span><span class="w"> </span><span class="nt">&quot;run_id&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;...&quot;</span><span class="p">,</span><span class="w"> </span><span class="nt">&quot;git_commit&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;...&quot;</span><span class="p">,</span><span class="w"> </span><span class="nt">&quot;mode&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;few_shot&quot;</span><span class="p">}</span>
+<span class="w">  </span><span class="p">],</span>
+<span class="w">  </span><span class="nt">&quot;population&quot;</span><span class="p">:</span><span class="w"> </span><span class="p">{</span>
+<span class="w">    </span><span class="nt">&quot;participants_total&quot;</span><span class="p">:</span><span class="w"> </span><span class="mi">41</span><span class="p">,</span>
+<span class="w">    </span><span class="nt">&quot;participants_included&quot;</span><span class="p">:</span><span class="w"> </span><span class="mi">40</span><span class="p">,</span>
+<span class="w">    </span><span class="nt">&quot;participants_failed&quot;</span><span class="p">:</span><span class="w"> </span><span class="mi">1</span><span class="p">,</span>
+<span class="w">    </span><span class="nt">&quot;items_total&quot;</span><span class="p">:</span><span class="w"> </span><span class="mi">320</span>
+<span class="w">  </span><span class="p">},</span>
+<span class="w">  </span><span class="nt">&quot;loss&quot;</span><span class="p">:</span><span class="w"> </span><span class="p">{</span>
+<span class="w">    </span><span class="nt">&quot;name&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;abs_norm&quot;</span><span class="p">,</span>
+<span class="w">    </span><span class="nt">&quot;definition&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;abs(pred - gt) / 3&quot;</span><span class="p">,</span>
+<span class="w">    </span><span class="nt">&quot;raw_multiplier&quot;</span><span class="p">:</span><span class="w"> </span><span class="mi">3</span>
+<span class="w">  </span><span class="p">},</span>
+<span class="w">  </span><span class="nt">&quot;confidence_variants&quot;</span><span class="p">:</span><span class="w"> </span><span class="p">{</span>
+<span class="w">    </span><span class="nt">&quot;llm&quot;</span><span class="p">:</span><span class="w"> </span><span class="p">{</span>
+<span class="w">      </span><span class="nt">&quot;cmax&quot;</span><span class="p">:</span><span class="w"> </span><span class="mf">0.655</span><span class="p">,</span>
+<span class="w">      </span><span class="nt">&quot;aurc_full&quot;</span><span class="p">:</span><span class="w"> </span><span class="mf">0.192</span><span class="p">,</span>
+<span class="w">      </span><span class="nt">&quot;augrc_full&quot;</span><span class="p">:</span><span class="w"> </span><span class="mf">0.058</span><span class="p">,</span>
+<span class="w">      </span><span class="nt">&quot;aurc_optimal&quot;</span><span class="p">:</span><span class="w"> </span><span class="mf">0.110</span><span class="p">,</span>
+<span class="w">      </span><span class="nt">&quot;augrc_optimal&quot;</span><span class="p">:</span><span class="w"> </span><span class="mf">0.035</span><span class="p">,</span>
+<span class="w">      </span><span class="nt">&quot;eaurc&quot;</span><span class="p">:</span><span class="w"> </span><span class="mf">0.082</span><span class="p">,</span>
+<span class="w">      </span><span class="nt">&quot;eaugrc&quot;</span><span class="p">:</span><span class="w"> </span><span class="mf">0.023</span><span class="p">,</span>
+<span class="w">      </span><span class="nt">&quot;aurc_achievable&quot;</span><span class="p">:</span><span class="w"> </span><span class="mf">0.170</span><span class="p">,</span>
+<span class="w">      </span><span class="nt">&quot;interpretation&quot;</span><span class="p">:</span><span class="w"> </span><span class="p">{</span>
+<span class="w">        </span><span class="nt">&quot;aurc_gap_pct&quot;</span><span class="p">:</span><span class="w"> </span><span class="mf">74.3</span><span class="p">,</span>
+<span class="w">        </span><span class="nt">&quot;augrc_gap_pct&quot;</span><span class="p">:</span><span class="w"> </span><span class="mf">65.7</span><span class="p">,</span>
+<span class="w">        </span><span class="nt">&quot;achievable_gain_pct&quot;</span><span class="p">:</span><span class="w"> </span><span class="mf">11.5</span>
+<span class="w">      </span><span class="p">},</span>
+<span class="w">      </span><span class="nt">&quot;aurc_at_c&quot;</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="nt">&quot;requested&quot;</span><span class="p">:</span><span class="w"> </span><span class="mf">0.5</span><span class="p">,</span><span class="w"> </span><span class="nt">&quot;used&quot;</span><span class="p">:</span><span class="w"> </span><span class="mf">0.5</span><span class="p">,</span><span class="w"> </span><span class="nt">&quot;value&quot;</span><span class="p">:</span><span class="w"> </span><span class="mf">0.123</span><span class="p">},</span>
+<span class="w">      </span><span class="nt">&quot;augrc_at_c&quot;</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="nt">&quot;requested&quot;</span><span class="p">:</span><span class="w"> </span><span class="mf">0.5</span><span class="p">,</span><span class="w"> </span><span class="nt">&quot;used&quot;</span><span class="p">:</span><span class="w"> </span><span class="mf">0.5</span><span class="p">,</span><span class="w"> </span><span class="nt">&quot;value&quot;</span><span class="p">:</span><span class="w"> </span><span class="mf">0.041</span><span class="p">},</span>
+<span class="w">      </span><span class="nt">&quot;mae_at_coverage&quot;</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="nt">&quot;0.10&quot;</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="nt">&quot;requested&quot;</span><span class="p">:</span><span class="w"> </span><span class="mf">0.1</span><span class="p">,</span><span class="w"> </span><span class="nt">&quot;achieved&quot;</span><span class="p">:</span><span class="w"> </span><span class="mf">0.123</span><span class="p">,</span><span class="w"> </span><span class="nt">&quot;value&quot;</span><span class="p">:</span><span class="w"> </span><span class="mf">0.5</span><span class="p">}},</span>
+<span class="w">      </span><span class="nt">&quot;bootstrap&quot;</span><span class="p">:</span><span class="w"> </span><span class="p">{</span>
+<span class="w">        </span><span class="nt">&quot;seed&quot;</span><span class="p">:</span><span class="w"> </span><span class="mi">42</span><span class="p">,</span>
+<span class="w">        </span><span class="nt">&quot;n_resamples&quot;</span><span class="p">:</span><span class="w"> </span><span class="mi">10000</span><span class="p">,</span>
+<span class="w">        </span><span class="nt">&quot;ci95&quot;</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="nt">&quot;cmax&quot;</span><span class="p">:</span><span class="w"> </span><span class="p">[</span><span class="mf">0.6</span><span class="p">,</span><span class="w"> </span><span class="mf">0.7</span><span class="p">],</span><span class="w"> </span><span class="nt">&quot;aurc_full&quot;</span><span class="p">:</span><span class="w"> </span><span class="p">[</span><span class="mf">0.1</span><span class="p">,</span><span class="w"> </span><span class="mf">0.2</span><span class="p">]}</span>
+<span class="w">      </span><span class="p">},</span>
+<span class="w">      </span><span class="nt">&quot;curve&quot;</span><span class="p">:</span><span class="w"> </span><span class="p">{</span>
+<span class="w">        </span><span class="nt">&quot;coverage&quot;</span><span class="p">:</span><span class="w"> </span><span class="p">[</span><span class="mf">0.123</span><span class="p">,</span><span class="w"> </span><span class="mf">0.234</span><span class="p">],</span>
+<span class="w">        </span><span class="nt">&quot;selective_risk&quot;</span><span class="p">:</span><span class="w"> </span><span class="p">[</span><span class="mf">0.500</span><span class="p">,</span><span class="w"> </span><span class="mf">0.700</span><span class="p">],</span>
+<span class="w">        </span><span class="nt">&quot;generalized_risk&quot;</span><span class="p">:</span><span class="w"> </span><span class="p">[</span><span class="mf">0.062</span><span class="p">,</span><span class="w"> </span><span class="mf">0.164</span><span class="p">],</span>
+<span class="w">        </span><span class="nt">&quot;threshold&quot;</span><span class="p">:</span><span class="w"> </span><span class="p">[</span><span class="mf">3.0</span><span class="p">,</span><span class="w"> </span><span class="mf">2.0</span><span class="p">]</span>
+<span class="w">      </span><span class="p">}</span>
+<span class="w">    </span><span class="p">}</span>
+<span class="w">  </span><span class="p">},</span>
+<span class="w">  </span><span class="nt">&quot;comparison&quot;</span><span class="p">:</span><span class="w"> </span><span class="p">{</span>
+<span class="w">    </span><span class="nt">&quot;enabled&quot;</span><span class="p">:</span><span class="w"> </span><span class="kc">false</span><span class="p">,</span>
+<span class="w">    </span><span class="nt">&quot;intersection_only&quot;</span><span class="p">:</span><span class="w"> </span><span class="kc">false</span><span class="p">,</span>
+<span class="w">    </span><span class="nt">&quot;deltas&quot;</span><span class="p">:</span><span class="w"> </span><span class="kc">null</span>
+<span class="w">  </span><span class="p">}</span>
+<span class="p">}</span>
+</code></pre></div>
+<p>Exact keys and nesting are defined in <code>scripts/evaluate_selective_prediction.py</code> (constructs <code>artifact</code> near the end of <code>main()</code>).</p>
+<hr />
+<h2 id="how-to-run">How To Run</h2>
+<div class="highlight"><pre><span></span><code>uv<span class="w"> </span>run<span class="w"> </span>python<span class="w"> </span>scripts/evaluate_selective_prediction.py<span class="w"> </span><span class="se">\</span>
+<span class="w">  </span>--input<span class="w"> </span>data/outputs/your_run.json<span class="w"> </span><span class="se">\</span>
+<span class="w">  </span>--mode<span class="w"> </span>few_shot<span class="w"> </span><span class="se">\</span>
+<span class="w">  </span>--confidence<span class="w"> </span>default<span class="w"> </span><span class="se">\</span>
+<span class="w">  </span>--loss<span class="w"> </span>abs<span class="w"> </span><span class="se">\</span>
+<span class="w">  </span>--bootstrap-resamples<span class="w"> </span><span class="m">10000</span><span class="w"> </span><span class="se">\</span>
+<span class="w">  </span>--seed<span class="w"> </span><span class="m">42</span>
+</code></pre></div>
+<p>For paired comparisons:</p>
+<div class="highlight"><pre><span></span><code>uv<span class="w"> </span>run<span class="w"> </span>python<span class="w"> </span>scripts/evaluate_selective_prediction.py<span class="w"> </span><span class="se">\</span>
+<span class="w">  </span>--input<span class="w"> </span>data/outputs/your_run.json<span class="w"> </span>--mode<span class="w"> </span>zero_shot<span class="w"> </span><span class="se">\</span>
+<span class="w">  </span>--input<span class="w"> </span>data/outputs/your_run.json<span class="w"> </span>--mode<span class="w"> </span>few_shot<span class="w"> </span><span class="se">\</span>
+<span class="w">  </span>--loss<span class="w"> </span>abs<span class="w"> </span><span class="se">\</span>
+<span class="w">  </span>--seed<span class="w"> </span><span class="m">42</span>
+</code></pre></div>
+<hr />
+<h2 id="related-docs">Related Docs</h2>
+<ul>
+<li>Why AURC/AUGRC matter: <code>docs/statistics/statistical-methodology-aurc-augrc.md</code></li>
+<li>Run output format / provenance: <code>docs/results/run-history.md</code></li>
+</ul>
+
+
+
+
+
+
+
+
+
+
+
+
+                
+              </article>
+            </div>
+          
+          
+<script>var target=document.getElementById(location.hash.slice(1));target&&target.name&&(target.checked=target.name.startsWith("__tabbed_"))</script>
+        </div>
+        
+      </main>
+      
+        <footer class="md-footer">
+  
+    
+      
+      <nav class="md-footer__inner md-grid" aria-label="Footer" >
+        
+          
+          <a href="../coverage/" class="md-footer__link md-footer__link--prev" aria-label="Previous: Coverage Explained: What It Is and Why It Matters">
+            <div class="md-footer__button md-icon">
+              
+              <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M20 11v2H8l5.5 5.5-1.42 1.42L4.16 12l7.92-7.92L13.5 5.5 8 11z"/></svg>
+            </div>
+            <div class="md-footer__title">
+              <span class="md-footer__direction">
+                Previous
+              </span>
+              <div class="md-ellipsis">
+                Coverage Explained: What It Is and Why It Matters
+              </div>
+            </div>
+          </a>
+        
+        
+          
+          <a href="../statistical-methodology-aurc-augrc/" class="md-footer__link md-footer__link--next" aria-label="Next: Statistical Methodology: AURC/AUGRC for Selective Prediction">
+            <div class="md-footer__title">
+              <span class="md-footer__direction">
+                Next
+              </span>
+              <div class="md-ellipsis">
+                Statistical Methodology: AURC/AUGRC for Selective Prediction
+              </div>
+            </div>
+            <div class="md-footer__button md-icon">
+              
+              <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M4 11v2h12l-5.5 5.5 1.42 1.42L19.84 12l-7.92-7.92L10.5 5.5 16 11z"/></svg>
+            </div>
+          </a>
+        
+      </nav>
+    
+  
+  <div class="md-footer-meta md-typeset">
+    <div class="md-footer-meta__inner md-grid">
+      <div class="md-copyright">
+  
+  
+    Made with
+    <a href="https://squidfunk.github.io/mkdocs-material/" target="_blank" rel="noopener">
+      Material for MkDocs
+    </a>
+  
+</div>
+      
+    </div>
+  </div>
+</footer>
+      
+    </div>
+    <div class="md-dialog" data-md-component="dialog">
+      <div class="md-dialog__inner md-typeset"></div>
+    </div>
+    
+    
+    
+      
+      
+      <script id="__config" type="application/json">{"annotate": null, "base": "../..", "features": ["content.code.copy", "content.action.edit", "content.action.view", "navigation.tracking", "navigation.sections", "navigation.footer", "navigation.instant"], "search": "../../assets/javascripts/workers/search.2c215733.min.js", "tags": null, "translations": {"clipboard.copied": "Copied to clipboard", "clipboard.copy": "Copy to clipboard", "search.result.more.one": "1 more on this page", "search.result.more.other": "# more on this page", "search.result.none": "No matching documents", "search.result.one": "1 matching document", "search.result.other": "# matching documents", "search.result.placeholder": "Type to start searching", "search.result.term.missing": "Missing", "select.version": "Select version"}, "version": null}</script>
+    
+    
+      <script src="../../assets/javascripts/bundle.79ae519e.min.js"></script>
+      
+    
+  </body>
+</html>

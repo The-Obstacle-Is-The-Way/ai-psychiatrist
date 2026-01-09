@@ -1,0 +1,4058 @@
+
+<!doctype html>
+<html lang="en" class="no-js">
+  <head>
+    
+      <meta charset="utf-8">
+      <meta name="viewport" content="width=device-width,initial-scale=1">
+      
+      
+      
+        <link rel="canonical" href="https://the-obstacle-is-the-way.github.io/ai-psychiatrist/_archive/bugs/bug-018-reproduction-friction/">
+      
+      
+      
+      
+        
+      
+      
+      <link rel="icon" href="../../../assets/images/favicon.png">
+      <meta name="generator" content="mkdocs-1.6.1, mkdocs-material-9.7.1">
+    
+    
+      
+        <title>BUG-018: Reproduction Friction Log - AI Psychiatrist</title>
+      
+    
+    
+      <link rel="stylesheet" href="../../../assets/stylesheets/main.484c7ddc.min.css">
+      
+      
+
+
+    
+    
+      
+    
+    
+      
+        
+        
+        <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+        <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Roboto:300,300i,400,400i,700,700i%7CRoboto+Mono:400,400i,700,700i&display=fallback">
+        <style>:root{--md-text-font:"Roboto";--md-code-font:"Roboto Mono"}</style>
+      
+    
+    
+    <script>__md_scope=new URL("../../..",location),__md_hash=e=>[...e].reduce(((e,_)=>(e<<5)-e+_.charCodeAt(0)),0),__md_get=(e,_=localStorage,t=__md_scope)=>JSON.parse(_.getItem(t.pathname+"."+e)),__md_set=(e,_,t=localStorage,a=__md_scope)=>{try{t.setItem(a.pathname+"."+e,JSON.stringify(_))}catch(e){}}</script>
+    
+      
+
+    
+    
+  </head>
+  
+  
+    <body dir="ltr">
+  
+    
+    <input class="md-toggle" data-md-toggle="drawer" type="checkbox" id="__drawer" autocomplete="off">
+    <input class="md-toggle" data-md-toggle="search" type="checkbox" id="__search" autocomplete="off">
+    <label class="md-overlay" for="__drawer"></label>
+    <div data-md-component="skip">
+      
+        
+        <a href="#bug-018-reproduction-friction-log" class="md-skip">
+          Skip to content
+        </a>
+      
+    </div>
+    <div data-md-component="announce">
+      
+    </div>
+    
+    
+      
+
+  
+
+<header class="md-header md-header--shadow" data-md-component="header">
+  <nav class="md-header__inner md-grid" aria-label="Header">
+    <a href="../../.." title="AI Psychiatrist" class="md-header__button md-logo" aria-label="AI Psychiatrist" data-md-component="logo">
+      
+  
+  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 8a3 3 0 0 0 3-3 3 3 0 0 0-3-3 3 3 0 0 0-3 3 3 3 0 0 0 3 3m0 3.54C9.64 9.35 6.5 8 3 8v11c3.5 0 6.64 1.35 9 3.54 2.36-2.19 5.5-3.54 9-3.54V8c-3.5 0-6.64 1.35-9 3.54"/></svg>
+
+    </a>
+    <label class="md-header__button md-icon" for="__drawer">
+      
+      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M3 6h18v2H3zm0 5h18v2H3zm0 5h18v2H3z"/></svg>
+    </label>
+    <div class="md-header__title" data-md-component="header-title">
+      <div class="md-header__ellipsis">
+        <div class="md-header__topic">
+          <span class="md-ellipsis">
+            AI Psychiatrist
+          </span>
+        </div>
+        <div class="md-header__topic" data-md-component="header-topic">
+          <span class="md-ellipsis">
+            
+              BUG-018: Reproduction Friction Log
+            
+          </span>
+        </div>
+      </div>
+    </div>
+    
+    
+      <script>var palette=__md_get("__palette");if(palette&&palette.color){if("(prefers-color-scheme)"===palette.color.media){var media=matchMedia("(prefers-color-scheme: light)"),input=document.querySelector(media.matches?"[data-md-color-media='(prefers-color-scheme: light)']":"[data-md-color-media='(prefers-color-scheme: dark)']");palette.color.media=input.getAttribute("data-md-color-media"),palette.color.scheme=input.getAttribute("data-md-color-scheme"),palette.color.primary=input.getAttribute("data-md-color-primary"),palette.color.accent=input.getAttribute("data-md-color-accent")}for(var[key,value]of Object.entries(palette.color))document.body.setAttribute("data-md-color-"+key,value)}</script>
+    
+    
+    
+      
+      
+        <label class="md-header__button md-icon" for="__search">
+          
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M9.5 3A6.5 6.5 0 0 1 16 9.5c0 1.61-.59 3.09-1.56 4.23l.27.27h.79l5 5-1.5 1.5-5-5v-.79l-.27-.27A6.52 6.52 0 0 1 9.5 16 6.5 6.5 0 0 1 3 9.5 6.5 6.5 0 0 1 9.5 3m0 2C7 5 5 7 5 9.5S7 14 9.5 14 14 12 14 9.5 12 5 9.5 5"/></svg>
+        </label>
+        <div class="md-search" data-md-component="search" role="dialog">
+  <label class="md-search__overlay" for="__search"></label>
+  <div class="md-search__inner" role="search">
+    <form class="md-search__form" name="search">
+      <input type="text" class="md-search__input" name="query" aria-label="Search" placeholder="Search" autocapitalize="off" autocorrect="off" autocomplete="off" spellcheck="false" data-md-component="search-query" required>
+      <label class="md-search__icon md-icon" for="__search">
+        
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M9.5 3A6.5 6.5 0 0 1 16 9.5c0 1.61-.59 3.09-1.56 4.23l.27.27h.79l5 5-1.5 1.5-5-5v-.79l-.27-.27A6.52 6.52 0 0 1 9.5 16 6.5 6.5 0 0 1 3 9.5 6.5 6.5 0 0 1 9.5 3m0 2C7 5 5 7 5 9.5S7 14 9.5 14 14 12 14 9.5 12 5 9.5 5"/></svg>
+        
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M20 11v2H8l5.5 5.5-1.42 1.42L4.16 12l7.92-7.92L13.5 5.5 8 11z"/></svg>
+      </label>
+      <nav class="md-search__options" aria-label="Search">
+        
+        <button type="reset" class="md-search__icon md-icon" title="Clear" aria-label="Clear" tabindex="-1">
+          
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M19 6.41 17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12z"/></svg>
+        </button>
+      </nav>
+      
+    </form>
+    <div class="md-search__output">
+      <div class="md-search__scrollwrap" tabindex="0" data-md-scrollfix>
+        <div class="md-search-result" data-md-component="search-result">
+          <div class="md-search-result__meta">
+            Initializing search
+          </div>
+          <ol class="md-search-result__list" role="presentation"></ol>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+      
+    
+    
+      <div class="md-header__source">
+        <a href="https://github.com/The-Obstacle-Is-The-Way/ai-psychiatrist" title="Go to repository" class="md-source" data-md-component="source">
+  <div class="md-source__icon md-icon">
+    
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 448 512"><!--! Font Awesome Free 7.1.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2025 Fonticons, Inc.--><path d="M439.6 236.1 244 40.5c-5.4-5.5-12.8-8.5-20.4-8.5s-15 3-20.4 8.4L162.5 81l51.5 51.5c27.1-9.1 52.7 16.8 43.4 43.7l49.7 49.7c34.2-11.8 61.2 31 35.5 56.7-26.5 26.5-70.2-2.9-56-37.3L240.3 199v121.9c25.3 12.5 22.3 41.8 9.1 55-6.4 6.4-15.2 10.1-24.3 10.1s-17.8-3.6-24.3-10.1c-17.6-17.6-11.1-46.9 11.2-56v-123c-20.8-8.5-24.6-30.7-18.6-45L142.6 101 8.5 235.1C3 240.6 0 247.9 0 255.5s3 15 8.5 20.4l195.6 195.7c5.4 5.4 12.7 8.4 20.4 8.4s15-3 20.4-8.4l194.7-194.7c5.4-5.4 8.4-12.8 8.4-20.4s-3-15-8.4-20.4"/></svg>
+  </div>
+  <div class="md-source__repository">
+    GitHub
+  </div>
+</a>
+      </div>
+    
+  </nav>
+  
+</header>
+    
+    <div class="md-container" data-md-component="container">
+      
+      
+        
+          
+        
+      
+      <main class="md-main" data-md-component="main">
+        <div class="md-main__inner md-grid">
+          
+            
+              
+              <div class="md-sidebar md-sidebar--primary" data-md-component="sidebar" data-md-type="navigation" >
+                <div class="md-sidebar__scrollwrap">
+                  <div class="md-sidebar__inner">
+                    
+
+
+
+<nav class="md-nav md-nav--primary" aria-label="Navigation" data-md-level="0">
+  <label class="md-nav__title" for="__drawer">
+    <a href="../../.." title="AI Psychiatrist" class="md-nav__button md-logo" aria-label="AI Psychiatrist" data-md-component="logo">
+      
+  
+  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 8a3 3 0 0 0 3-3 3 3 0 0 0-3-3 3 3 0 0 0-3 3 3 3 0 0 0 3 3m0 3.54C9.64 9.35 6.5 8 3 8v11c3.5 0 6.64 1.35 9 3.54 2.36-2.19 5.5-3.54 9-3.54V8c-3.5 0-6.64 1.35-9 3.54"/></svg>
+
+    </a>
+    AI Psychiatrist
+  </label>
+  
+    <div class="md-nav__source">
+      <a href="https://github.com/The-Obstacle-Is-The-Way/ai-psychiatrist" title="Go to repository" class="md-source" data-md-component="source">
+  <div class="md-source__icon md-icon">
+    
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 448 512"><!--! Font Awesome Free 7.1.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2025 Fonticons, Inc.--><path d="M439.6 236.1 244 40.5c-5.4-5.5-12.8-8.5-20.4-8.5s-15 3-20.4 8.4L162.5 81l51.5 51.5c27.1-9.1 52.7 16.8 43.4 43.7l49.7 49.7c34.2-11.8 61.2 31 35.5 56.7-26.5 26.5-70.2-2.9-56-37.3L240.3 199v121.9c25.3 12.5 22.3 41.8 9.1 55-6.4 6.4-15.2 10.1-24.3 10.1s-17.8-3.6-24.3-10.1c-17.6-17.6-11.1-46.9 11.2-56v-123c-20.8-8.5-24.6-30.7-18.6-45L142.6 101 8.5 235.1C3 240.6 0 247.9 0 255.5s3 15 8.5 20.4l195.6 195.7c5.4 5.4 12.7 8.4 20.4 8.4s15-3 20.4-8.4l194.7-194.7c5.4-5.4 8.4-12.8 8.4-20.4s-3-15-8.4-20.4"/></svg>
+  </div>
+  <div class="md-source__repository">
+    GitHub
+  </div>
+</a>
+    </div>
+  
+  <ul class="md-nav__list" data-md-scrollfix>
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../.." class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    AI Psychiatrist Documentation
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    
+    
+    
+    
+      
+        
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--section md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_2" >
+        
+          
+          <label class="md-nav__link" for="__nav_2" id="__nav_2_label" tabindex="">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+     research
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_2_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_2">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+     research
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../_research/hypotheses-explained/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Hypotheses Explained: Current State vs Future Improvements
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../_research/hypotheses-for-improvement/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Hypotheses for Improvement: First-Principles Analysis
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../_research/master-bug-audit/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    MASTER BUG AUDIT
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    
+    
+    
+    
+      
+        
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--section md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_3" >
+        
+          
+          <label class="md-nav__link" for="__nav_3" id="__nav_3_label" tabindex="">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Architecture
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_3_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_3">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    Architecture
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../architecture/architecture/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Architecture
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../architecture/future-architecture/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Future Architecture: Agent Orchestration Options
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../architecture/pipeline/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Pipeline
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    
+    
+    
+    
+      
+        
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--section md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_4" >
+        
+          
+          <label class="md-nav__link" for="__nav_4" id="__nav_4_label" tabindex="">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Clinical
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_4_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_4">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    Clinical
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../clinical/clinical-understanding/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Clinical Understanding: How This System Works
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../clinical/glossary/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Glossary
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../clinical/phq8/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    PHQ-8: Patient Health Questionnaire
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../clinical/task-validity/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Task Validity: What Can (and Cannot) Be Inferred from DAIC-WOZ Transcripts
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    
+    
+    
+    
+      
+        
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--section md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_5" >
+        
+          
+          <label class="md-nav__link" for="__nav_5" id="__nav_5_label" tabindex="">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Configs
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_5_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_5">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    Configs
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../configs/agent-sampling-registry/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Agent Sampling Parameter Registry
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../configs/configuration-philosophy/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Configuration Philosophy
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../configs/configuration/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Configuration Reference
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    
+    
+    
+    
+      
+        
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--section md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_6" >
+        
+          
+          <label class="md-nav__link" for="__nav_6" id="__nav_6_label" tabindex="">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Data
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_6_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_6">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    Data
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../data/artifact-namespace-registry/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Artifact Namespace Registry
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../data/daic-woz-preprocessing/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    DAIC-WOZ Transcript Preprocessing (Bias-Aware, Deterministic)
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../data/daic-woz-schema/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    DAIC-WOZ Dataset Schema
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../data/data-splits-overview/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Data Splits Overview
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    
+    
+    
+    
+      
+        
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--section md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_7" >
+        
+          
+          <label class="md-nav__link" for="__nav_7" id="__nav_7_label" tabindex="">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Developer
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_7_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_7">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    Developer
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../developer/api-endpoints/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    API Reference
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../developer/dependency-registry/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Dependency Registry
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../developer/error-handling/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Error Handling and Fail-Fast Philosophy
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../developer/exceptions/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Exception Reference (Domain + Runtime)
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../developer/testing/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Testing Conventions (Markers, Fixtures, and Test Doubles)
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    
+    
+    
+    
+      
+        
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--section md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_8" >
+        
+          
+          <label class="md-nav__link" for="__nav_8" id="__nav_8_label" tabindex="">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Getting started
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_8_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_8">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    Getting started
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../getting-started/quickstart/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Quickstart Guide
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    
+    
+    
+    
+      
+        
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--section md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_9" >
+        
+          
+          <label class="md-nav__link" for="__nav_9" id="__nav_9_label" tabindex="">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Models
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_9_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_9">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    Models
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../models/model-registry/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    AI Psychiatrist Model Registry
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../models/model-wiring/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Model Wiring: Current State
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    
+    
+    
+    
+      
+        
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--section md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_10" >
+        
+          
+          <label class="md-nav__link" for="__nav_10" id="__nav_10_label" tabindex="">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Pipeline internals
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_10_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_10">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    Pipeline internals
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../pipeline-internals/evidence-extraction/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Evidence Extraction Mechanism: How It Actually Works
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../pipeline-internals/features/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Feature Reference (Non-Archive Canonical)
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    
+    
+    
+    
+      
+        
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--section md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_11" >
+        
+          
+          <label class="md-nav__link" for="__nav_11" id="__nav_11_label" tabindex="">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Preflight checklist
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_11_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_11">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    Preflight checklist
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../preflight-checklist/preflight-checklist-few-shot/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Preflight Checklist: Few-Shot Reproduction
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../preflight-checklist/preflight-checklist-zero-shot/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Preflight Checklist: Zero-Shot Run
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    
+    
+    
+    
+      
+        
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--section md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_12" >
+        
+          
+          <label class="md-nav__link" for="__nav_12" id="__nav_12_label" tabindex="">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Rag
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_12_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_12">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    Rag
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../rag/artifact-generation/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    RAG Artifact Generation
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../rag/chunk-scoring/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Chunk-Level Scoring (Spec 35) — Schema, Workflow, and Gotchas
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../rag/debugging/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    RAG Debugging (Audit Logs + Guardrails)
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../rag/design-rationale/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    RAG Design Rationale
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../rag/overview/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    RAG Overview: Embeddings and Few-Shot Retrieval
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../rag/runtime-features/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    RAG Runtime Features
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    
+    
+    
+    
+      
+        
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--section md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_13" >
+        
+          
+          <label class="md-nav__link" for="__nav_13" id="__nav_13_label" tabindex="">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Results
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_13_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_13">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    Results
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../results/few-shot-analysis/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Why Few-Shot May Not Beat Zero-Shot: Analysis
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../results/reproduction-results/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Paper Reproduction Results (Current Status)
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../results/run-history/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Complete Run History &amp; Statistical Analysis
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../results/run-output-schema/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Reproduction Run Output Schema (JSON + Registry)
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    
+    
+    
+    
+      
+        
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--section md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_14" >
+        
+          
+          <label class="md-nav__link" for="__nav_14" id="__nav_14_label" tabindex="">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Statistics
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_14_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_14">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    Statistics
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../statistics/coverage/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Coverage Explained: What It Is and Why It Matters
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../statistics/metrics-and-evaluation/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Metrics and Evaluation (Exact Definitions + Output Schema)
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../statistics/statistical-methodology-aurc-augrc/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Statistical Methodology: AURC/AUGRC for Selective Prediction
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+  </ul>
+</nav>
+                  </div>
+                </div>
+              </div>
+            
+            
+              
+              <div class="md-sidebar md-sidebar--secondary" data-md-component="sidebar" data-md-type="toc" >
+                <div class="md-sidebar__scrollwrap">
+                  <div class="md-sidebar__inner">
+                    
+
+<nav class="md-nav md-nav--secondary" aria-label="Table of contents">
+  
+  
+  
+    
+  
+  
+    <label class="md-nav__title" for="__toc">
+      <span class="md-nav__icon md-icon"></span>
+      Table of contents
+    </label>
+    <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
+      
+        <li class="md-nav__item">
+  <a href="#resolution-summary" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Resolution Summary
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#original-friction-log-historical-context" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Original Friction Log (Historical Context)
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#critical-fixed-mae-methodology-was-fundamentally-wrong" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        ⚠️ CRITICAL (Fixed): MAE Methodology Was Fundamentally Wrong
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="⚠️ CRITICAL (Fixed): MAE Methodology Was Fundamentally Wrong">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#the-core-problem" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        The Core Problem
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#timeline-of-events-historical" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Timeline of Events (Historical)
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#the-old-code-wrong" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        The OLD Code (Wrong)
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#the-new-code-correct-used-in-paper-text-parity-run" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        The NEW Code (Correct; used in paper-text-parity run)
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#why-8-050-was-wrong" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Why "÷8 ≈ 0.50" Was Wrong
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#action-workflow-exists-ground-truth-splits-required" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Action (Workflow exists; ground truth splits required)
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#fix-summary" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Fix Summary
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#bug-018a-medgemma-produces-all-na-scores-critical" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        BUG-018a: MedGemma Produces All N/A Scores (CRITICAL)
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="BUG-018a: MedGemma Produces All N/A Scores (CRITICAL)">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#symptom" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Symptom
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#root-cause" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Root Cause
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#evidence-historical-community-ollama-conversion" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Evidence (Historical; community Ollama conversion)
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#files-changed" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Files Changed
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#open-question" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Open Question
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#bug-018b-env-overrides-config-defaults-critical" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        BUG-018b: .env Overrides Config Defaults (CRITICAL)
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="BUG-018b: .env Overrides Config Defaults (CRITICAL)">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#symptom_1" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Symptom
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#root-cause_1" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Root Cause
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#files-changed_1" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Files Changed
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#lesson" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Lesson
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#bug-018c-datasettings-attribute-name-mismatch-medium" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        BUG-018c: DataSettings Attribute Name Mismatch (MEDIUM)
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="BUG-018c: DataSettings Attribute Name Mismatch (MEDIUM)">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#symptom_2" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Symptom
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#root-cause_2" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Root Cause
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#files-changed_2" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Files Changed
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#lesson_1" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Lesson
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#bug-018d-inline-imports-violate-linting-rules-minor" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        BUG-018d: Inline Imports Violate Linting Rules (MINOR)
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="BUG-018d: Inline Imports Violate Linting Rules (MINOR)">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#symptom_3" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Symptom
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#root-cause_3" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Root Cause
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#files-changed_3" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Files Changed
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#bug-018e-timeout-too-short-for-long-transcripts-medium-investigated" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        BUG-018e: Timeout Too Short for Long Transcripts (MEDIUM) - INVESTIGATED
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="BUG-018e: Timeout Too Short for Long Transcripts (MEDIUM) - INVESTIGATED">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#symptom_4" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Symptom
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#affected-participants" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Affected Participants
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#investigation-results-2025-12-22" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Investigation Results (2025-12-22)
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#root-cause_4" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Root Cause
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#recommendation" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Recommendation
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#bug-018f-json-parsing-failures-medium-mitigated" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        BUG-018f: JSON Parsing Failures (MEDIUM) - MITIGATED
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="BUG-018f: JSON Parsing Failures (MEDIUM) - MITIGATED">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#symptom_5" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Symptom
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#root-cause_5" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Root Cause
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#current-mitigation-in-production-code" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Current Mitigation (in production code)
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#conclusion" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Conclusion
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#bug-018g-model-underestimates-severe-depression-research" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        BUG-018g: Model Underestimates Severe Depression (RESEARCH)
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="BUG-018g: Model Underestimates Severe Depression (RESEARCH)">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#symptom_6" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Symptom
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#root-cause_6" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Root Cause
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#files-not-changed-needs-investigation" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Files NOT Changed (needs investigation)
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#bug-018h-orphaned-datakeywords-directory-low-documented" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        BUG-018h: Orphaned data/keywords/ Directory (LOW) - DOCUMENTED
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="BUG-018h: Orphaned data/keywords/ Directory (LOW) - DOCUMENTED">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#symptom_7" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Symptom
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#investigation-results-2025-12-22_1" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Investigation Results (2025-12-22)
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#root-cause_7" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Root Cause
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#recommendation_1" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Recommendation
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#bug-018i-item-level-vs-total-score-mae-critical-methodology-error" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        BUG-018i: Item-Level vs Total-Score MAE (CRITICAL METHODOLOGY ERROR)
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="BUG-018i: Item-Level vs Total-Score MAE (CRITICAL METHODOLOGY ERROR)">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#symptom_8" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Symptom
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#root-cause-deep-analysis-2025-12-22" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Root Cause (Deep Analysis 2025-12-22)
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#the-8-handwave-was-invalid" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        The "÷8" Handwave Was Invalid
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#files-changed-paper-parity-fix" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Files Changed (Paper-Parity Fix)
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#current-status" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Current Status
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#action-required" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Action Required
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#summary-of-all-changes-made" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Summary of ALL Changes Made
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Summary of ALL Changes Made">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#config-changes" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Config Changes
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#new-files-created" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        New Files Created
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#critical-questions-answered" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Critical Questions - ANSWERED
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Critical Questions - ANSWERED">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#1-why-was-medgemma-the-default-who-set-this-and-did-they-test-it" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        1. Why was MedGemma the default? Who set this and did they test it?
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#2-is-the-env-wiring-pattern-correct" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        2. Is the .env wiring pattern correct?
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#3-why-does-medgemma-produce-all-na" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        3. Why does MedGemma produce all N/A?
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#4-should-timeout-be-configurable-per-model" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        4. Should timeout be configurable per-model?
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#5-is-the-keyword-backfill-working" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        5. Is the keyword backfill working?
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#6-what-is-datakeywords-for" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        6. What is data/keywords/ for?
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#7-should-we-calculate-item-level-mae" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        7. Should we calculate item-level MAE?
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#8-why-does-model-underestimate-severe-cases" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        8. Why does model underestimate severe cases?
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#cleanup-actions" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Cleanup Actions
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#next-steps-required-before-any-further-work" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        NEXT STEPS (Required Before Any Further Work)
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#reproduction-run-log-2025-12-23" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Reproduction Run Log (2025-12-23)
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Reproduction Run Log (2025-12-23)">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#pre-flight-status" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Pre-flight Status
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#embedding-generation-paper-train" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Embedding Generation (paper-train)
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#test-run-3-participants" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Test Run (3 participants)
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#full-run-41-participants" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Full Run (41 participants)
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#friction-points-encountered" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Friction Points Encountered
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Friction Points Encountered">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#f-001-paper-embeddings-required-separate-generation" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        F-001: Paper Embeddings Required Separate Generation
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#f-002-json-parsing-warning-in-evidence-extraction" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        F-002: JSON Parsing Warning in Evidence Extraction
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#f-003-high-na-rate-50-in-test-run" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        F-003: High N/A Rate (50% in test run)
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#namespaceartifact-registry-created" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Namespace/Artifact Registry Created
+      
+    </span>
+  </a>
+  
+</li>
+      
+    </ul>
+  
+</nav>
+                  </div>
+                </div>
+              </div>
+            
+          
+          
+            <div class="md-content" data-md-component="content">
+              
+              <article class="md-content__inner md-typeset">
+                
+                  
+
+
+  
+    <a href="https://github.com/The-Obstacle-Is-The-Way/ai-psychiatrist/edit/main/docs/_archive/bugs/bug-018-reproduction-friction.md" title="Edit this page" class="md-content__button md-icon" rel="edit">
+      
+      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M10 20H6V4h7v5h5v3.1l2-2V8l-6-6H6c-1.1 0-2 .9-2 2v16c0 1.1.9 2 2 2h4zm10.2-7c.1 0 .3.1.4.2l1.3 1.3c.2.2.2.6 0 .8l-1 1-2.1-2.1 1-1c.1-.1.2-.2.4-.2m0 3.9L14.1 23H12v-2.1l6.1-6.1z"/></svg>
+    </a>
+  
+  
+    
+      
+    
+    <a href="https://github.com/The-Obstacle-Is-The-Way/ai-psychiatrist/raw/main/docs/_archive/bugs/bug-018-reproduction-friction.md" title="View source of this page" class="md-content__button md-icon">
+      
+      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M17 18c.56 0 1 .44 1 1s-.44 1-1 1-1-.44-1-1 .44-1 1-1m0-3c-2.73 0-5.06 1.66-6 4 .94 2.34 3.27 4 6 4s5.06-1.66 6-4c-.94-2.34-3.27-4-6-4m0 6.5a2.5 2.5 0 0 1-2.5-2.5 2.5 2.5 0 0 1 2.5-2.5 2.5 2.5 0 0 1 2.5 2.5 2.5 2.5 0 0 1-2.5 2.5M9.27 20H6V4h7v5h5v4.07c.7.08 1.36.25 2 .49V8l-6-6H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h4.5a8.2 8.2 0 0 1-1.23-2"/></svg>
+    </a>
+  
+
+
+<h1 id="bug-018-reproduction-friction-log">BUG-018: Reproduction Friction Log</h1>
+<p><strong>Status</strong>: ✅ ARCHIVED - Most issues fixed, remaining items are research questions
+<strong>Archived</strong>: 2025-12-26
+<strong>Original Date</strong>: 2025-12-22</p>
+<hr />
+<h2 id="resolution-summary">Resolution Summary</h2>
+<p>This was a friction log for reproduction attempts. <strong>Most issues have been fixed:</strong></p>
+<table>
+<thead>
+<tr>
+<th>Sub-bug</th>
+<th>Issue</th>
+<th>Status</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>018a</td>
+<td>MedGemma default</td>
+<td>✅ Fixed - gemma3:27b is default</td>
+</tr>
+<tr>
+<td>018b</td>
+<td>.env overrides</td>
+<td>✅ Documented - expected behavior</td>
+</tr>
+<tr>
+<td>018c</td>
+<td>DataSettings attribute</td>
+<td>✅ Fixed</td>
+</tr>
+<tr>
+<td>018d</td>
+<td>Inline imports</td>
+<td>✅ Fixed</td>
+</tr>
+<tr>
+<td>018e</td>
+<td>Timeouts</td>
+<td>✅ Configurable via <code>OLLAMA_TIMEOUT_SECONDS</code></td>
+</tr>
+<tr>
+<td>018f</td>
+<td>JSON malformation</td>
+<td>⚠️ Mitigated - Pydantic AI adds retries</td>
+</tr>
+<tr>
+<td>018g</td>
+<td>Severe underestimation</td>
+<td>📊 Open research question</td>
+</tr>
+<tr>
+<td>018h</td>
+<td>Orphaned keywords dir</td>
+<td>✅ Documented</td>
+</tr>
+<tr>
+<td>018i</td>
+<td>MAE methodology</td>
+<td>✅ Fixed - item-level MAE implemented</td>
+</tr>
+</tbody>
+</table>
+<p><strong>Remaining open items:</strong>
+- <strong>018f</strong> (JSON malformation): Mitigated by Pydantic AI structured outputs with retries
+- <strong>018g</strong> (severe underestimation): This is a research question about model behavior, not a bug</p>
+<p><strong>Key insight</strong>: The reproduction workflow works end-to-end. The MAE gap (0.778 vs 0.619) is explained by Q4_K_M vs BF16 quantization (see <a href="../../../models/model-wiring/"><code>model-wiring.md</code></a>).</p>
+<hr />
+<h2 id="original-friction-log-historical-context">Original Friction Log (Historical Context)</h2>
+<p><strong>Original Date</strong>: 2025-12-22
+<strong>Original Status</strong>: INVESTIGATED - paper-text parity workflow runs end-to-end; MAE/coverage parity not yet achieved
+<strong>Severity</strong>: HIGH - initially blocked paper-text parity evaluation
+<strong>Updated</strong>: 2025-12-24 - paper-style split + embeddings + evaluation executed; metrics still diverge (see investigation-026 / analysis-027)</p>
+<p>This document captures ALL friction points encountered when attempting to reproduce the paper's PHQ-8 assessment results.</p>
+<p>Terminology note (SSOT): “paper parity” has two plausible meanings because the paper text and the public repo diverge.
+This doc uses <strong>paper-text parity</strong> (methodology as written; keyword backfill not described). For the code-level mismatch,
+see <a href="../analysis-027-paper-implementation-comparison/"><code>analysis-027-paper-implementation-comparison.md</code></a>.</p>
+<p>Note: <code>.env</code> is gitignored; any <code>.env</code> references below describe <strong>local developer configuration</strong>
+changes made during reproduction attempts.</p>
+<hr />
+<h2 id="critical-fixed-mae-methodology-was-fundamentally-wrong">⚠️ CRITICAL (Fixed): MAE Methodology Was Fundamentally Wrong</h2>
+<h3 id="the-core-problem">The Core Problem</h3>
+<p>We were computing a <strong>completely different metric</strong> than the paper:</p>
+<table>
+<thead>
+<tr>
+<th>Our Implementation</th>
+<th>Paper's Implementation</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Total-score MAE (0-24 scale)</td>
+<td>Item-level MAE (0-3 scale)</td>
+</tr>
+<tr>
+<td><code>\|predicted_total - gt_total\|</code></td>
+<td><code>mean(\|pred_item - gt_item\|)</code> per item</td>
+</tr>
+<tr>
+<td>N/A items = 0 in sum</td>
+<td>N/A items excluded from MAE</td>
+</tr>
+<tr>
+<td>Reported MAE ~4.02</td>
+<td>Paper reports MAE ~0.619</td>
+</tr>
+</tbody>
+</table>
+<h3 id="timeline-of-events-historical">Timeline of Events (Historical)</h3>
+<ol>
+<li><strong>04:01 AM Dec 22</strong>: Ran reproduction with OLD script → MAE 4.02 (WRONG)</li>
+<li><strong>Later Dec 22</strong>: Rewrote <code>scripts/reproduce_results.py</code> to match paper methodology</li>
+<li><strong>2025-12-23</strong>: Paper-parity workflow executed end-to-end; see <code>docs/results/reproduction-results.md</code> (MAE still above paper)</li>
+<li><strong>2025-12-24</strong>: Paper-text-parity run executed; see <a href="../investigation-026-reproduction-mae-divergence/"><code>investigation-026-reproduction-mae-divergence.md</code></a></li>
+</ol>
+<h3 id="the-old-code-wrong">The OLD Code (Wrong)</h3>
+<div class="highlight"><pre><span></span><code><span class="c1"># scripts/reproduce_results.py (BEFORE fix)</span>
+<span class="n">predicted</span> <span class="o">=</span> <span class="n">assessment</span><span class="o">.</span><span class="n">total_score</span>  <span class="c1"># Sum of 8 items (0-24)</span>
+<span class="n">absolute_error</span> <span class="o">=</span> <span class="nb">abs</span><span class="p">(</span><span class="n">predicted</span> <span class="o">-</span> <span class="n">ground_truth</span><span class="p">)</span>  <span class="c1"># Total vs total</span>
+</code></pre></div>
+<h3 id="the-new-code-correct-used-in-paper-text-parity-run">The NEW Code (Correct; used in paper-text-parity run)</h3>
+<div class="highlight"><pre><span></span><code><span class="c1"># scripts/reproduce_results.py (AFTER fix, in main)</span>
+<span class="n">predicted_items</span> <span class="o">=</span> <span class="p">{</span><span class="n">item</span><span class="p">:</span> <span class="n">assessment</span><span class="o">.</span><span class="n">items</span><span class="p">[</span><span class="n">item</span><span class="p">]</span><span class="o">.</span><span class="n">score</span> <span class="k">for</span> <span class="n">item</span> <span class="ow">in</span> <span class="n">PHQ8Item</span><span class="o">.</span><span class="n">all_items</span><span class="p">()}</span>
+<span class="n">errors</span><span class="p">:</span> <span class="nb">list</span><span class="p">[</span><span class="nb">int</span><span class="p">]</span> <span class="o">=</span> <span class="p">[]</span>
+<span class="k">for</span> <span class="n">item</span> <span class="ow">in</span> <span class="n">PHQ8Item</span><span class="o">.</span><span class="n">all_items</span><span class="p">():</span>
+    <span class="n">pred</span> <span class="o">=</span> <span class="n">predicted_items</span><span class="p">[</span><span class="n">item</span><span class="p">]</span>
+    <span class="k">if</span> <span class="n">pred</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>  <span class="c1"># Skip N/A - paper excludes these!</span>
+        <span class="k">continue</span>
+    <span class="n">errors</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="nb">abs</span><span class="p">(</span><span class="n">pred</span> <span class="o">-</span> <span class="n">ground_truth_items</span><span class="p">[</span><span class="n">item</span><span class="p">]))</span>  <span class="c1"># Per-item comparison</span>
+<span class="n">mae_available</span> <span class="o">=</span> <span class="nb">float</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">mean</span><span class="p">(</span><span class="n">errors</span><span class="p">))</span>  <span class="c1"># Average of per-item errors</span>
+</code></pre></div>
+<h3 id="why-8-050-was-wrong">Why "÷8 ≈ 0.50" Was Wrong</h3>
+<p>The handwave <code>4.02 ÷ 8 ≈ 0.50</code> is <strong>not</strong> equivalent to the paper's methodology because:
+1. N/A handling differs (we sum, paper excludes)
+2. Coverage differs (paper reports % of predictions made)
+3. Aggregation differs (paper has multiple views: weighted, by-item, by-subject)</p>
+<h3 id="action-workflow-exists-ground-truth-splits-required">Action (Workflow exists; ground truth splits required)</h3>
+<p>✅ Paper-text-parity reproduction workflow exists end-to-end. It must be run using the paper’s <strong>ground truth</strong> split membership (not the legacy seeded algorithmic split).
+<div class="highlight"><pre><span></span><code><span class="c1"># Paper-text-parity workflow (paper-style split + paper embeddings + evaluation on paper test)</span>
+uv<span class="w"> </span>run<span class="w"> </span>python<span class="w"> </span>scripts/create_paper_split.py<span class="w"> </span>--verify
+uv<span class="w"> </span>run<span class="w"> </span>python<span class="w"> </span>scripts/generate_embeddings.py<span class="w"> </span>--split<span class="w"> </span>paper-train
+uv<span class="w"> </span>run<span class="w"> </span>python<span class="w"> </span>scripts/reproduce_results.py<span class="w"> </span>--split<span class="w"> </span>paper<span class="w"> </span>--few-shot-only
+
+<span class="c1"># Quick sanity check (AVEC dev split; has per-item labels)</span>
+uv<span class="w"> </span>run<span class="w"> </span>python<span class="w"> </span>scripts/reproduce_results.py<span class="w"> </span>--split<span class="w"> </span>dev
+</code></pre></div></p>
+<p>The output file <code>data/outputs/reproduction_results_20251222_040100.json</code> is <strong>INVALID</strong> and should be ignored.
+See <a href="../investigation-026-reproduction-mae-divergence/"><code>investigation-026-reproduction-mae-divergence.md</code></a> and
+<a href="../analysis-027-paper-implementation-comparison/"><code>analysis-027-paper-implementation-comparison.md</code></a> for current metrics and divergence hypotheses.</p>
+<hr />
+<h2 id="fix-summary">Fix Summary</h2>
+<table>
+<thead>
+<tr>
+<th>Sub-bug</th>
+<th>Issue</th>
+<th>Status</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>BUG-018a</td>
+<td>Misconfigured quantitative model default (MedGemma)</td>
+<td>✅ FIXED - paper-text-parity defaults use gemma3:27b</td>
+</tr>
+<tr>
+<td>BUG-018b</td>
+<td><code>.env</code> overrides code defaults</td>
+<td>✅ DOCUMENTED - expected Pydantic behavior; templates updated</td>
+</tr>
+<tr>
+<td>BUG-018c</td>
+<td>DataSettings attribute</td>
+<td>✅ FIXED - script updated</td>
+</tr>
+<tr>
+<td>BUG-018d</td>
+<td>Inline imports</td>
+<td>✅ FIXED - imports at top</td>
+</tr>
+<tr>
+<td>BUG-018e</td>
+<td>Timeouts on long transcripts</td>
+<td>✅ INVESTIGATED - configurable via <code>OLLAMA_TIMEOUT_SECONDS</code></td>
+</tr>
+<tr>
+<td>BUG-018f</td>
+<td>Evidence-extraction JSON malformation</td>
+<td>⚠️ MITIGATED - tolerant fixups + keyword backfill; still observed intermittently</td>
+</tr>
+<tr>
+<td>BUG-018g</td>
+<td>Model underestimates severe</td>
+<td>⚠️ RESEARCH ITEM</td>
+</tr>
+<tr>
+<td>BUG-018h</td>
+<td>Orphaned <code>data/keywords/</code> directory</td>
+<td>✅ DOCUMENTED - historical/local-only; not used by code</td>
+</tr>
+<tr>
+<td>BUG-018i</td>
+<td>Item-level MAE methodology</td>
+<td>✅ FIXED + RE-RUN (paper-style workflow executed)</td>
+</tr>
+</tbody>
+</table>
+<hr />
+<h2 id="bug-018a-medgemma-produces-all-na-scores-critical">BUG-018a: MedGemma Produces All N/A Scores (CRITICAL)</h2>
+<h3 id="symptom">Symptom</h3>
+<p>When running quantitative assessment with default config, ALL participants received:
+- <code>na_count = 8</code> (all 8 PHQ-8 items marked N/A)
+- <code>total_score = 0</code> (because N/A contributes 0)
+- MAE = 6.75 (catastrophically wrong)</p>
+<h3 id="root-cause">Root Cause</h3>
+<p>Default <code>quantitative_model</code> was set to <code>alibayram/medgemma:27b</code> based on Paper Appendix F claiming better MAE (0.505 vs 0.619).</p>
+<p><strong>Paper Appendix F actually says:</strong></p>
+<blockquote>
+<p>"The few-shot approach with MedGemma 27B achieved an improved average MAE of 0.505 <strong>but detected fewer relevant chunks, making fewer predictions overall</strong>"</p>
+</blockquote>
+<p>The caveat "fewer predictions" means MedGemma is too conservative and marks items as N/A when evidence is ambiguous.</p>
+<h3 id="evidence-historical-community-ollama-conversion">Evidence (Historical; community Ollama conversion)</h3>
+<p>Participant 308 (ground truth = 22, severe depression):
+- Transcript: "yeah it's pretty depressing", "i can't find a fucking job", sleep problems
+- MedGemma: predicted 0, na_count = 8
+- gemma3:27b: predicted 10, na_count = 4</p>
+<h3 id="files-changed">Files Changed</h3>
+<ol>
+<li><code>src/ai_psychiatrist/config.py</code> (<code>ModelSettings.quantitative_model</code>)</li>
+<li>OLD: <code>default="alibayram/medgemma:27b"</code> (historical)</li>
+<li>
+<p>NEW: <code>default="gemma3:27b"</code></p>
+</li>
+<li>
+<p><code>tests/unit/test_config.py</code> (<code>TestModelSettings.test_paper_optimal_defaults</code>)</p>
+</li>
+<li>
+<p>Updated test assertion and added docstring explaining why</p>
+</li>
+<li>
+<p><code>.env.example</code></p>
+</li>
+<li>OLD: <code>MODEL_QUANTITATIVE_MODEL=alibayram/medgemma:27b</code></li>
+<li>NEW: <code>MODEL_QUANTITATIVE_MODEL=gemma3:27b</code></li>
+</ol>
+<h3 id="open-question">Open Question</h3>
+<p>Why does MedGemma behave this way? Is it:
+- Over-trained to be conservative on medical data?
+- Prompt incompatibility?
+- Different expected output format?</p>
+<hr />
+<h2 id="bug-018b-env-overrides-config-defaults-critical">BUG-018b: .env Overrides Config Defaults (CRITICAL)</h2>
+<h3 id="symptom_1">Symptom</h3>
+<p>After fixing the default in <code>src/ai_psychiatrist/config.py</code>, the script STILL used MedGemma.</p>
+<h3 id="root-cause_1">Root Cause</h3>
+<p>User's <code>.env</code> file contained:
+<div class="highlight"><pre><span></span><code>MODEL_QUANTITATIVE_MODEL=alibayram/medgemma:27b
+</code></pre></div></p>
+<p>Pydantic settings load <code>.env</code> which OVERRIDES code defaults.</p>
+<h3 id="files-changed_1">Files Changed</h3>
+<ol>
+<li><code>.env</code> (local, gitignored)</li>
+<li>OLD: <code>MODEL_QUANTITATIVE_MODEL=alibayram/medgemma:27b</code></li>
+<li>NEW: <code>MODEL_QUANTITATIVE_MODEL=gemma3:27b</code></li>
+</ol>
+<h3 id="lesson">Lesson</h3>
+<p>When changing defaults in <code>src/ai_psychiatrist/config.py</code>, MUST also:
+1. Update <code>.env.example</code>
+2. Update user's <code>.env</code> if it exists
+3. Check for environment variable overrides</p>
+<hr />
+<h2 id="bug-018c-datasettings-attribute-name-mismatch-medium">BUG-018c: DataSettings Attribute Name Mismatch (MEDIUM)</h2>
+<h3 id="symptom_2">Symptom</h3>
+<p>Reproduction script crashed with:
+<div class="highlight"><pre><span></span><code>AttributeError: &#39;DataSettings&#39; object has no attribute &#39;data_dir&#39;. Did you mean: &#39;base_dir&#39;?
+</code></pre></div></p>
+<h3 id="root-cause_2">Root Cause</h3>
+<p>Script used <code>data_settings.data_dir</code> but actual attribute is <code>data_settings.base_dir</code>.</p>
+<h3 id="files-changed_2">Files Changed</h3>
+<p><code>scripts/reproduce_results.py</code>:
+- Line 356: <code>data_settings.data_dir</code> → <code>data_settings.base_dir</code>
+- Line 365: <code>data_settings.data_dir</code> → <code>data_settings.base_dir</code>
+- Line 428: <code>data_settings.data_dir</code> → <code>data_settings.base_dir</code></p>
+<h3 id="lesson_1">Lesson</h3>
+<p>Check actual config class definitions before using attributes.</p>
+<hr />
+<h2 id="bug-018d-inline-imports-violate-linting-rules-minor">BUG-018d: Inline Imports Violate Linting Rules (MINOR)</h2>
+<h3 id="symptom_3">Symptom</h3>
+<p>Ruff linter complained:
+<div class="highlight"><pre><span></span><code>PLC0415 `import` should be at the top-level of a file
+</code></pre></div></p>
+<h3 id="root-cause_3">Root Cause</h3>
+<p><code>scripts/reproduce_results.py</code> had:
+- <code>import numpy as np</code> inside <code>compute_metrics()</code> function
+- <code>from ai_psychiatrist.config import get_settings</code> inside <code>run_experiment()</code> function</p>
+<h3 id="files-changed_3">Files Changed</h3>
+<p><code>scripts/reproduce_results.py</code>:
+- Moved <code>import numpy as np</code> to top of file (line 39)
+- Removed duplicate imports from functions</p>
+<hr />
+<h2 id="bug-018e-timeout-too-short-for-long-transcripts-medium-investigated">BUG-018e: Timeout Too Short for Long Transcripts (MEDIUM) - INVESTIGATED</h2>
+<h3 id="symptom_4">Symptom</h3>
+<p>6 out of 47 participants (13%) failed with:
+<div class="highlight"><pre><span></span><code>LLM request timed out (configured timeout reached)
+</code></pre></div></p>
+<h3 id="affected-participants">Affected Participants</h3>
+<ul>
+<li>407 (ground truth 3) - <strong>28K transcript</strong></li>
+<li>421 (ground truth 10) - <strong>16K transcript</strong></li>
+<li>424 (ground truth 3) - <strong>24K transcript</strong></li>
+<li>450 (ground truth 9) - <strong>24K transcript</strong></li>
+<li>466 (ground truth 9) - <strong>28K transcript</strong></li>
+<li>481 (ground truth 7) - <strong>24K transcript</strong></li>
+</ul>
+<h3 id="investigation-results-2025-12-22">Investigation Results (2025-12-22)</h3>
+<p><strong>Transcript size correlation confirmed:</strong>
+- Timed-out participants average ~24K transcript size
+- Successful participants average ~16K transcript size
+- Largest timeouts (407, 466) are 28K - double the successful average</p>
+<p><strong>Contributing factors:</strong>
+1. 27B model on M1 Pro Max with concurrent workloads (Arc mesh training)
+2. Two LLM calls per participant (evidence extraction + scoring)
+3. Timeout applies per call (evidence extraction + scoring), so each call can timeout independently
+4. No timeout issues correlated with ground truth severity</p>
+<h3 id="root-cause_4">Root Cause</h3>
+<p>Timeout is appropriate for most transcripts (87% success rate). Failures occur on:
+1. Transcripts larger than ~20K
+2. When GPU/CPU is shared with other workloads</p>
+<h3 id="recommendation">Recommendation</h3>
+<p>For users with concurrent GPU workloads or larger transcripts:
+<div class="highlight"><pre><span></span><code><span class="nv">OLLAMA_TIMEOUT_SECONDS</span><span class="o">=</span><span class="m">600</span><span class="w">  </span><span class="c1"># default; increase (e.g. 3600) for very large transcripts / slow hardware</span>
+</code></pre></div></p>
+<p>Timeout behavior is environmental and workload-dependent. The current default is 600s, but very
+long transcripts may still require a higher value.</p>
+<hr />
+<h2 id="bug-018f-json-parsing-failures-medium-mitigated">BUG-018f: JSON Parsing Failures (MEDIUM) - MITIGATED</h2>
+<h3 id="symptom_5">Symptom</h3>
+<p>In some runs, the quantitative scoring step can fail to parse the LLM's JSON output, e.g.:
+<div class="highlight"><pre><span></span><code>Failed to parse quantitative response after all attempts
+</code></pre></div>
+Resulting in <code>na_count = 8</code>, <code>total_score = 0</code></p>
+<h3 id="root-cause_5">Root Cause</h3>
+<p>LLM output is not guaranteed to be strict JSON. Common failure modes include:
+- Markdown fences around JSON
+- Smart quotes / non-ASCII punctuation
+- Trailing commas
+- Partial / truncated objects</p>
+<h3 id="current-mitigation-in-production-code">Current Mitigation (in production code)</h3>
+<p>The quantitative agent uses a multi-level repair cascade:
+1. <code>_strip_json_block()</code> - Tag/code-fence stripping
+2. <code>_tolerant_fixups()</code> - Syntax repair (smart quotes, trailing commas)
+3. <code>json.loads(...)</code> - Parse attempt
+4. <code>_llm_repair()</code> - LLM-based JSON repair (best-effort)
+5. Fallback skeleton - Ensures an assessment object is still returned</p>
+<h3 id="conclusion">Conclusion</h3>
+<p>JSON parsing failures are <strong>mitigated</strong>, not eliminated. In a paper-text-parity run (2025-12-24),
+we observed two participants where the quantitative scoring response could not be parsed after all
+attempts (all items N/A), and the run continued normally (see
+<a href="../investigation-026-reproduction-mae-divergence/"><code>investigation-026-reproduction-mae-divergence.md</code></a>).</p>
+<p>However, because malformed JSON can reappear due to model variability and long generations, treat
+this as <strong>mitigated</strong>, not permanently “resolved”.</p>
+<hr />
+<h2 id="bug-018g-model-underestimates-severe-depression-research">BUG-018g: Model Underestimates Severe Depression (RESEARCH)</h2>
+<h3 id="symptom_6">Symptom</h3>
+<p>For participants with high ground truth (≥15), model consistently predicts lower:</p>
+<table>
+<thead>
+<tr>
+<th>Participant</th>
+<th>Ground Truth</th>
+<th>Predicted</th>
+<th>Error</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>308</td>
+<td>22</td>
+<td>10</td>
+<td>12</td>
+</tr>
+<tr>
+<td>311</td>
+<td>21</td>
+<td>11</td>
+<td>10</td>
+</tr>
+<tr>
+<td>354</td>
+<td>18</td>
+<td>7</td>
+<td>11</td>
+</tr>
+<tr>
+<td>405</td>
+<td>17</td>
+<td>7</td>
+<td>10</td>
+</tr>
+<tr>
+<td>453</td>
+<td>17</td>
+<td>5</td>
+<td>12</td>
+</tr>
+</tbody>
+</table>
+<h3 id="root-cause_6">Root Cause</h3>
+<p>Unknown. Possible causes:
+1. Prompt instructs conservative N/A scoring
+2. Severe symptoms not explicitly discussed in interviews
+3. Model calibration issue
+4. Few-shot might help (not tested)</p>
+<h3 id="files-not-changed-needs-investigation">Files NOT Changed (needs investigation)</h3>
+<ul>
+<li>Prompt templates in <code>src/ai_psychiatrist/agents/prompts/quantitative.py</code></li>
+<li>Consider prompt engineering for severe cases</li>
+</ul>
+<hr />
+<h2 id="bug-018h-orphaned-datakeywords-directory-low-documented">BUG-018h: Orphaned <code>data/keywords/</code> Directory (LOW) - DOCUMENTED</h2>
+<h3 id="symptom_7">Symptom</h3>
+<p>Some earlier local runs referenced an orphan <code>data/keywords/</code> directory. This directory may exist
+locally (and is gitignored due to DAIC-WOZ licensing), but <strong>no production code depends on it</strong>.</p>
+<h3 id="investigation-results-2025-12-22_1">Investigation Results (2025-12-22)</h3>
+<p><strong>Code search for "keywords" found:</strong>
+- Actual keywords are in <code>src/ai_psychiatrist/resources/phq8_keywords.yaml</code>
+- No code references <code>data/keywords/</code> anywhere
+- Git history shows no commits ever added files to this directory</p>
+<p><strong>The real keyword system:</strong>
+<div class="highlight"><pre><span></span><code><span class="c1"># src/ai_psychiatrist/agents/prompts/quantitative.py (_KEYWORDS_RESOURCE_PATH)</span>
+<span class="n">_KEYWORDS_RESOURCE_PATH</span> <span class="o">=</span> <span class="s2">&quot;resources/phq8_keywords.yaml&quot;</span>
+</code></pre></div></p>
+<p>Keywords are bundled with the package as a resource file, NOT in <code>data/</code>.</p>
+<h3 id="root-cause_7">Root Cause</h3>
+<p><strong>Orphaned directory</strong> - likely created manually during development but never used.
+No code references it. The actual keywords are correctly located in <code>src/ai_psychiatrist/resources/</code>.</p>
+<h3 id="recommendation_1">Recommendation</h3>
+<p>This is a local cleanup item (the repo gitignores <code>data/</code>).</p>
+<p><strong>If present in your local environment, safe to delete:</strong>
+<div class="highlight"><pre><span></span><code>rm<span class="w"> </span>-rf<span class="w"> </span>data/keywords/
+</code></pre></div></p>
+<p>This is a cleanup item, not a bug. The actual keyword-based backfill system works correctly.</p>
+<hr />
+<h2 id="bug-018i-item-level-vs-total-score-mae-critical-methodology-error">BUG-018i: Item-Level vs Total-Score MAE (CRITICAL METHODOLOGY ERROR)</h2>
+<h3 id="symptom_8">Symptom</h3>
+<p>Paper reports MAE ~0.619 (few-shot) / 0.796 (zero-shot), but our script showed MAE ~4.02.</p>
+<h3 id="root-cause-deep-analysis-2025-12-22">Root Cause (Deep Analysis 2025-12-22)</h3>
+<p><strong>We were computing a fundamentally different metric:</strong></p>
+<table>
+<thead>
+<tr>
+<th>Aspect</th>
+<th>OLD Script (Wrong)</th>
+<th>Paper's Method</th>
+<th>NEW Script (Correct)</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Scale</td>
+<td>0-24 (total score)</td>
+<td>0-3 (per item)</td>
+<td>0-3 (per item)</td>
+</tr>
+<tr>
+<td>N/A handling</td>
+<td>N/A = 0 in sum</td>
+<td>N/A excluded</td>
+<td>N/A excluded</td>
+</tr>
+<tr>
+<td>Calculation</td>
+<td><code>\|Σpred - Σgt\|</code></td>
+<td><code>mean(\|pred_i - gt_i\|)</code></td>
+<td><code>mean(\|pred_i - gt_i\|)</code></td>
+</tr>
+<tr>
+<td>Ground truth</td>
+<td>Total score only</td>
+<td>Per-item scores</td>
+<td>Per-item scores</td>
+</tr>
+<tr>
+<td>Data split</td>
+<td>Test (no item labels!)</td>
+<td>Train/dev (has labels)</td>
+<td>Train/dev</td>
+</tr>
+</tbody>
+</table>
+<h3 id="the-8-handwave-was-invalid">The "÷8" Handwave Was Invalid</h3>
+<p>Claiming <code>4.02 ÷ 8 ≈ 0.50</code> does NOT equal the paper's methodology because:
+1. Division by 8 assumes all items predicted - but some were N/A
+2. Paper EXCLUDES N/A from both numerator AND denominator
+3. Paper reports coverage (% of items with predictions) separately
+4. Total-score errors don't distribute evenly across items</p>
+<h3 id="files-changed-paper-parity-fix">Files Changed (Paper-Parity Fix)</h3>
+<p>Complete rewrite of <code>scripts/reproduce_results.py</code>:
+- Changed from total-score to item-level MAE
+- Added per-item ground truth loading from AVEC2017 CSVs
+- Changed from test split (no item labels) to train/dev splits (has item labels)
+- Added coverage metrics and multiple MAE aggregation views
+- Added N/A exclusion matching paper methodology</p>
+<h3 id="current-status">Current Status</h3>
+<p>The paper-text-parity evaluation workflow exists (item-level MAE + paper-style split support), but a full
+run reproducing the paper’s reported MAE values has not been completed yet.</p>
+<p>The file <code>data/outputs/reproduction_results_20251222_040100.json</code> contains results from the OLD (wrong) methodology and should be ignored.</p>
+<h3 id="action-required">Action Required</h3>
+<p>Run paper-text-parity evaluation:
+<div class="highlight"><pre><span></span><code>uv<span class="w"> </span>run<span class="w"> </span>python<span class="w"> </span>scripts/create_paper_split.py<span class="w"> </span>--verify
+uv<span class="w"> </span>run<span class="w"> </span>python<span class="w"> </span>scripts/generate_embeddings.py<span class="w"> </span>--split<span class="w"> </span>paper-train
+uv<span class="w"> </span>run<span class="w"> </span>python<span class="w"> </span>scripts/reproduce_results.py<span class="w"> </span>--split<span class="w"> </span>paper<span class="w"> </span>--few-shot-only
+</code></pre></div></p>
+<hr />
+<h2 id="summary-of-all-changes-made">Summary of ALL Changes Made</h2>
+<h3 id="config-changes">Config Changes</h3>
+<table>
+<thead>
+<tr>
+<th>File</th>
+<th>Line</th>
+<th>Old</th>
+<th>New</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>src/ai_psychiatrist/config.py</code></td>
+<td>62-66</td>
+<td>MedGemma docstring</td>
+<td>Updated note about N/A issue</td>
+</tr>
+<tr>
+<td><code>src/ai_psychiatrist/config.py</code></td>
+<td>86-91</td>
+<td><code>alibayram/medgemma:27b</code></td>
+<td><code>gemma3:27b</code></td>
+</tr>
+<tr>
+<td><code>tests/unit/test_config.py</code></td>
+<td>84-96</td>
+<td>MedGemma assertion</td>
+<td>gemma3:27b with docstring</td>
+</tr>
+<tr>
+<td><code>.env.example</code></td>
+<td>9-18</td>
+<td>MedGemma default</td>
+<td>gemma3:27b with note</td>
+</tr>
+<tr>
+<td><code>.env</code></td>
+<td>(local)</td>
+<td>MedGemma override</td>
+<td>gemma3:27b (recommended for parity)</td>
+</tr>
+</tbody>
+</table>
+<h3 id="new-files-created">New Files Created</h3>
+<table>
+<thead>
+<tr>
+<th>File</th>
+<th>Purpose</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>scripts/reproduce_results.py</code></td>
+<td>Batch evaluation script</td>
+</tr>
+<tr>
+<td><code>docs/results/reproduction-results.md</code></td>
+<td>Results documentation</td>
+</tr>
+<tr>
+<td><code>docs/archive/bugs/bug-018-reproduction-friction.md</code></td>
+<td>This file</td>
+</tr>
+<tr>
+<td><code>data/outputs/reproduction_results_*.json</code></td>
+<td>Raw results</td>
+</tr>
+</tbody>
+</table>
+<hr />
+<h2 id="critical-questions-answered">Critical Questions - ANSWERED</h2>
+<h3 id="1-why-was-medgemma-the-default-who-set-this-and-did-they-test-it">1. Why was MedGemma the default? Who set this and did they test it?</h3>
+<p><strong>Answer:</strong> Appendix F shows MedGemma as an ALTERNATIVE evaluation, not the primary model. The caveat
+"fewer predictions overall" is easy to miss. Also, Ollama does not publish an official MedGemma
+library model; any MedGemma tag in Ollama is a community conversion.</p>
+<p><strong>Fixed:</strong> Default changed to <code>gemma3:27b</code> to match Section 2.2 paper baseline.</p>
+<h3 id="2-is-the-env-wiring-pattern-correct">2. Is the .env wiring pattern correct?</h3>
+<p><strong>Answer:</strong> Yes, but documentation was missing. Pydantic correctly prioritizes: env vars &gt; .env &gt; code defaults. This is expected behavior but requires updating .env when code defaults change.</p>
+<p><strong>Fixed:</strong> Both <code>.env</code> and <code>.env.example</code> now have consistent gemma3:27b default.</p>
+<h3 id="3-why-does-medgemma-produce-all-na">3. Why does MedGemma produce all N/A?</h3>
+<p><strong>Answer:</strong> The paper acknowledges this behavior in Appendix F: MedGemma produces fewer predictions
+overall (more N/A / lower coverage). Additionally, different community conversions/quantizations may
+vary in behavior. This needs controlled evaluation using the paper’s MAE + coverage definitions.</p>
+<p><strong>Resolution:</strong> Use <code>gemma3:27b</code> for paper-text-parity baseline; treat MedGemma as an optional alternative
+for the quantitative agent only.</p>
+<h3 id="4-should-timeout-be-configurable-per-model">4. Should timeout be configurable per-model?</h3>
+<p><strong>Answer:</strong> Current per-request timeout (via <code>timeout_seconds</code> parameter) is configurable. Users
+with large transcripts or concurrent GPU workloads can increase via <code>OLLAMA_TIMEOUT_SECONDS</code>.</p>
+<p><strong>No change needed.</strong> Environmental issue, not a code deficiency.</p>
+<h3 id="5-is-the-keyword-backfill-working">5. Is the keyword backfill working?</h3>
+<p><strong>Answer:</strong> Yes! Keyword backfill runs AFTER evidence extraction, not affected by JSON parsing. The cascade is:
+1. LLM extracts evidence
+2. Parse JSON (with repair cascade)
+3. Keyword backfill enriches missing items</p>
+<p><strong>Verified working</strong> - no code changes needed.</p>
+<h3 id="6-what-is-datakeywords-for">6. What is data/keywords/ for?</h3>
+<p><strong>Answer:</strong> It's a historical/local-only orphan directory (not present in this repo tree). Real
+keywords are in <code>src/ai_psychiatrist/resources/phq8_keywords.yaml</code>.</p>
+<p><strong>Resolution:</strong> Safe to delete. Added to cleanup list.</p>
+<h3 id="7-should-we-calculate-item-level-mae">7. Should we calculate item-level MAE?</h3>
+<p><strong>Answer:</strong> YES - and the current <code>scripts/reproduce_results.py</code> computes:
+- Load per-item ground truth from AVEC2017 CSVs
+- Calculate item-level MAE with N/A exclusion
+- Report multiple aggregation views (weighted, by-item, by-subject)
+- Track prediction coverage</p>
+<p><strong>Code is correct. Reproduction NOT re-run.</strong> The old output file uses wrong methodology.</p>
+<h3 id="8-why-does-model-underestimate-severe-cases">8. Why does model underestimate severe cases?</h3>
+<p><strong>Answer:</strong> RESEARCH ITEM - requires investigation. Possible causes:
+1. Severe symptoms may not be explicitly discussed in interviews
+2. Model may be calibrated toward moderate predictions
+3. Few-shot might help (needs testing)
+4. Prompt may need adjustment for severe cases</p>
+<p><strong>Status:</strong> Open research question for future improvement.</p>
+<hr />
+<h2 id="cleanup-actions">Cleanup Actions</h2>
+<ul>
+<li>[x] Delete <code>data/keywords/</code> if present locally (historical orphan)</li>
+<li>[ ] Consider increasing default timeout for HPC environments</li>
+<li>[ ] Research severe depression underestimation (BUG-018g)</li>
+</ul>
+<hr />
+<h2 id="next-steps-required-before-any-further-work">NEXT STEPS (Required Before Any Further Work)</h2>
+<ol>
+<li>
+<p><strong>Run paper-text-parity reproduction</strong>:
+   <div class="highlight"><pre><span></span><code>uv<span class="w"> </span>run<span class="w"> </span>python<span class="w"> </span>scripts/create_paper_split.py<span class="w"> </span>--verify
+uv<span class="w"> </span>run<span class="w"> </span>python<span class="w"> </span>scripts/generate_embeddings.py<span class="w"> </span>--split<span class="w"> </span>paper-train
+uv<span class="w"> </span>run<span class="w"> </span>python<span class="w"> </span>scripts/reproduce_results.py<span class="w"> </span>--split<span class="w"> </span>paper<span class="w"> </span>--few-shot-only
+</code></pre></div></p>
+</li>
+<li>
+<p><strong>Compare results</strong> to paper's reported values:</p>
+</li>
+<li>Paper few-shot MAE: 0.619</li>
+<li>Paper zero-shot MAE: 0.796</li>
+<li>
+<p>Paper MedGemma MAE: 0.505 (fewer predictions)</p>
+</li>
+<li>
+<p><strong>Update documentation</strong> with correct results once obtained</p>
+</li>
+</ol>
+<p><strong>DO NOT proceed with other work until reproduction is validated with correct methodology.</strong></p>
+<hr />
+<h2 id="reproduction-run-log-2025-12-23">Reproduction Run Log (2025-12-23)</h2>
+<h3 id="pre-flight-status">Pre-flight Status</h3>
+<table>
+<thead>
+<tr>
+<th>Item</th>
+<th>Status</th>
+<th>Notes</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Paper splits</td>
+<td>✅ Exist</td>
+<td>58/43/41 counts match paper; membership not published (see <code>docs/archive/bugs/gap-001-paper-unspecified-parameters.md</code>)</td>
+</tr>
+<tr>
+<td>AVEC embeddings</td>
+<td>✅ Exist</td>
+<td><code>reference_embeddings.npz</code> (107 participants)</td>
+</tr>
+<tr>
+<td>Paper embeddings</td>
+<td>⚠️ Missing</td>
+<td>Had to generate with <code>--split paper-train</code></td>
+</tr>
+<tr>
+<td>Transcripts</td>
+<td>✅ Exist</td>
+<td>189 participant folders (plus directory entries)</td>
+</tr>
+</tbody>
+</table>
+<h3 id="embedding-generation-paper-train">Embedding Generation (paper-train)</h3>
+<ul>
+<li><strong>Duration</strong>: ~65 minutes for 58 participants</li>
+<li><strong>Output</strong>: <code>paper_reference_embeddings.npz</code> (101.44 MB), 6998 total chunks</li>
+<li><strong>Status</strong>: ✅ Completed successfully</li>
+</ul>
+<h3 id="test-run-3-participants">Test Run (3 participants)</h3>
+<table>
+<thead>
+<tr>
+<th>Metric</th>
+<th>Value</th>
+<th>Note</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>MAE_item</td>
+<td>0.233</td>
+<td>Not statistically meaningful (n=3)</td>
+</tr>
+<tr>
+<td>Coverage</td>
+<td>50%</td>
+<td>4/8 items N/A per participant</td>
+</tr>
+<tr>
+<td>Time</td>
+<td>16 min</td>
+<td>~5 min per participant</td>
+</tr>
+</tbody>
+</table>
+<h3 id="full-run-41-participants">Full Run (41 participants)</h3>
+<ul>
+<li><strong>Start</strong>: 2025-12-23 02:50 UTC</li>
+<li><strong>Estimated Duration</strong>: ~3.5 hours</li>
+<li><strong>Status</strong>: Completed (see <code>docs/results/reproduction-results.md</code>)</li>
+</ul>
+<h3 id="friction-points-encountered">Friction Points Encountered</h3>
+<h4 id="f-001-paper-embeddings-required-separate-generation">F-001: Paper Embeddings Required Separate Generation</h4>
+<p><strong>Issue</strong>: Paper embeddings (<code>paper_reference_embeddings.npz</code>) did not exist, requiring a 65-minute generation step before reproduction could begin.</p>
+<p><strong>Impact</strong>: Adds significant time to first-time reproduction.</p>
+<p><strong>Recommendation</strong>: Document this requirement prominently; consider adding pre-generated embeddings to releases.</p>
+<h4 id="f-002-json-parsing-warning-in-evidence-extraction">F-002: JSON Parsing Warning in Evidence Extraction</h4>
+<p><strong>Symptom</strong>:
+<div class="highlight"><pre><span></span><code>Failed to parse evidence JSON, using empty evidence
+</code></pre></div></p>
+<p><strong>Location</strong>: <code>src/ai_psychiatrist/agents/quantitative.py</code> (<code>QuantitativeAssessmentAgent._extract_evidence</code>)</p>
+<p><strong>Root Cause Analysis</strong> (2025-12-23):</p>
+<p>The LLM (e.g., <code>gemma3:27b</code>) can occasionally produce malformed JSON during evidence extraction
+(unescaped quotes, truncated arrays/objects, or other formatting errors). When this happens, the
+parser falls back to an empty evidence dict. If <code>QUANTITATIVE_ENABLE_KEYWORD_BACKFILL=true</code>,
+keyword hits can still be injected later; if backfill is OFF (paper-text parity default), the
+empty evidence will typically propagate to more N/A items.</p>
+<p>Example shape (illustrative):</p>
+<div class="highlight"><pre><span></span><code><span class="p">{</span>
+<span class="w">  </span><span class="nt">&quot;PHQ8_NoInterest&quot;</span><span class="p">:</span><span class="w"> </span><span class="p">[],</span>
+<span class="w">  </span><span class="nt">&quot;PHQ8_Depressed&quot;</span><span class="p">:</span><span class="w"> </span><span class="p">[</span><span class="err">&quot;i had been having a lot of deaths around me...</span>
+</code></pre></div>
+<p>The exact malformed pattern varies by model/backend and is surfaced in logs via the
+<code>response_preview</code> field.</p>
+<p><strong>Parsing Pipeline</strong>:
+1. <code>_strip_json_block()</code> - Handles markdown code fences ✅
+2. <code>_tolerant_fixups()</code> - Handles smart quotes, trailing commas (best effort)
+3. Falls through to empty evidence fallback on parse failure</p>
+<p><strong>Impact</strong>:
+- Evidence extraction fails → empty evidence dict returned
+- If <code>QUANTITATIVE_ENABLE_KEYWORD_BACKFILL=true</code>, keyword hits are injected via
+  <code>_find_keyword_hits()</code> + <code>_merge_evidence()</code>
+- Result: Only keyword-matched evidence (2 items in test case) instead of LLM-extracted evidence
+- May contribute to N/A predictions for items without keyword matches</p>
+<p><strong>Possible Fixes (for future consideration)</strong>:
+1. Add <code>""</code> → <code>"</code> fixup in <code>_tolerant_fixups()</code>
+2. Add LLM repair for evidence extraction (currently only used for scoring response)
+3. Prompt engineering to prevent the malformed output</p>
+<p><strong>Status</strong>: DOCUMENTED - keyword backfill provides partial mitigation; evidence JSON malformation still occurs intermittently.</p>
+<h4 id="f-003-high-na-rate-50-in-test-run">F-003: High N/A Rate (50% in test run)</h4>
+<p><strong>Observation</strong>: Test run showed 4/8 items as N/A per participant (50% coverage).</p>
+<p><strong>Paper Context</strong>: Paper Section 3.2 reports that “in 50% of cases” the model was unable to provide a prediction due to insufficient evidence, but it does not fully specify the denominator (subject-level exclusion vs item-level missingness) or a coverage definition identical to ours.</p>
+<p><strong>Status</strong>: Monitoring in full run - if consistent, may explain differences from paper results.</p>
+<hr />
+<h2 id="namespaceartifact-registry-created">Namespace/Artifact Registry Created</h2>
+<p>During this run, created <code>docs/data/artifact-namespace-registry.md</code> to document:
+- Split naming conventions (AVEC vs paper)
+- Embedding file naming
+- Script input/output mapping
+- Configuration parameters</p>
+
+
+
+
+
+
+
+
+
+
+
+
+                
+              </article>
+            </div>
+          
+          
+<script>var target=document.getElementById(location.hash.slice(1));target&&target.name&&(target.checked=target.name.startsWith("__tabbed_"))</script>
+        </div>
+        
+      </main>
+      
+        <footer class="md-footer">
+  
+    
+  
+  <div class="md-footer-meta md-typeset">
+    <div class="md-footer-meta__inner md-grid">
+      <div class="md-copyright">
+  
+  
+    Made with
+    <a href="https://squidfunk.github.io/mkdocs-material/" target="_blank" rel="noopener">
+      Material for MkDocs
+    </a>
+  
+</div>
+      
+    </div>
+  </div>
+</footer>
+      
+    </div>
+    <div class="md-dialog" data-md-component="dialog">
+      <div class="md-dialog__inner md-typeset"></div>
+    </div>
+    
+    
+    
+      
+      
+      <script id="__config" type="application/json">{"annotate": null, "base": "../../..", "features": ["content.code.copy", "content.action.edit", "content.action.view", "navigation.tracking", "navigation.sections", "navigation.footer", "navigation.instant"], "search": "../../../assets/javascripts/workers/search.2c215733.min.js", "tags": null, "translations": {"clipboard.copied": "Copied to clipboard", "clipboard.copy": "Copy to clipboard", "search.result.more.one": "1 more on this page", "search.result.more.other": "# more on this page", "search.result.none": "No matching documents", "search.result.one": "1 matching document", "search.result.other": "# matching documents", "search.result.placeholder": "Type to start searching", "search.result.term.missing": "Missing", "select.version": "Select version"}, "version": null}</script>
+    
+    
+      <script src="../../../assets/javascripts/bundle.79ae519e.min.js"></script>
+      
+    
+  </body>
+</html>

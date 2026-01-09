@@ -1,0 +1,3423 @@
+
+<!doctype html>
+<html lang="en" class="no-js">
+  <head>
+    
+      <meta charset="utf-8">
+      <meta name="viewport" content="width=device-width,initial-scale=1">
+      
+      
+      
+        <link rel="canonical" href="https://the-obstacle-is-the-way.github.io/ai-psychiatrist/results/few-shot-analysis/">
+      
+      
+        <link rel="prev" href="../../rag/runtime-features/">
+      
+      
+        <link rel="next" href="../reproduction-results/">
+      
+      
+        
+      
+      
+      <link rel="icon" href="../../assets/images/favicon.png">
+      <meta name="generator" content="mkdocs-1.6.1, mkdocs-material-9.7.1">
+    
+    
+      
+        <title>Why Few-Shot May Not Beat Zero-Shot: Analysis - AI Psychiatrist</title>
+      
+    
+    
+      <link rel="stylesheet" href="../../assets/stylesheets/main.484c7ddc.min.css">
+      
+      
+
+
+    
+    
+      
+    
+    
+      
+        
+        
+        <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+        <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Roboto:300,300i,400,400i,700,700i%7CRoboto+Mono:400,400i,700,700i&display=fallback">
+        <style>:root{--md-text-font:"Roboto";--md-code-font:"Roboto Mono"}</style>
+      
+    
+    
+    <script>__md_scope=new URL("../..",location),__md_hash=e=>[...e].reduce(((e,_)=>(e<<5)-e+_.charCodeAt(0)),0),__md_get=(e,_=localStorage,t=__md_scope)=>JSON.parse(_.getItem(t.pathname+"."+e)),__md_set=(e,_,t=localStorage,a=__md_scope)=>{try{t.setItem(a.pathname+"."+e,JSON.stringify(_))}catch(e){}}</script>
+    
+      
+
+    
+    
+  </head>
+  
+  
+    <body dir="ltr">
+  
+    
+    <input class="md-toggle" data-md-toggle="drawer" type="checkbox" id="__drawer" autocomplete="off">
+    <input class="md-toggle" data-md-toggle="search" type="checkbox" id="__search" autocomplete="off">
+    <label class="md-overlay" for="__drawer"></label>
+    <div data-md-component="skip">
+      
+        
+        <a href="#why-few-shot-may-not-beat-zero-shot-analysis" class="md-skip">
+          Skip to content
+        </a>
+      
+    </div>
+    <div data-md-component="announce">
+      
+    </div>
+    
+    
+      
+
+  
+
+<header class="md-header md-header--shadow" data-md-component="header">
+  <nav class="md-header__inner md-grid" aria-label="Header">
+    <a href="../.." title="AI Psychiatrist" class="md-header__button md-logo" aria-label="AI Psychiatrist" data-md-component="logo">
+      
+  
+  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 8a3 3 0 0 0 3-3 3 3 0 0 0-3-3 3 3 0 0 0-3 3 3 3 0 0 0 3 3m0 3.54C9.64 9.35 6.5 8 3 8v11c3.5 0 6.64 1.35 9 3.54 2.36-2.19 5.5-3.54 9-3.54V8c-3.5 0-6.64 1.35-9 3.54"/></svg>
+
+    </a>
+    <label class="md-header__button md-icon" for="__drawer">
+      
+      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M3 6h18v2H3zm0 5h18v2H3zm0 5h18v2H3z"/></svg>
+    </label>
+    <div class="md-header__title" data-md-component="header-title">
+      <div class="md-header__ellipsis">
+        <div class="md-header__topic">
+          <span class="md-ellipsis">
+            AI Psychiatrist
+          </span>
+        </div>
+        <div class="md-header__topic" data-md-component="header-topic">
+          <span class="md-ellipsis">
+            
+              Why Few-Shot May Not Beat Zero-Shot: Analysis
+            
+          </span>
+        </div>
+      </div>
+    </div>
+    
+    
+      <script>var palette=__md_get("__palette");if(palette&&palette.color){if("(prefers-color-scheme)"===palette.color.media){var media=matchMedia("(prefers-color-scheme: light)"),input=document.querySelector(media.matches?"[data-md-color-media='(prefers-color-scheme: light)']":"[data-md-color-media='(prefers-color-scheme: dark)']");palette.color.media=input.getAttribute("data-md-color-media"),palette.color.scheme=input.getAttribute("data-md-color-scheme"),palette.color.primary=input.getAttribute("data-md-color-primary"),palette.color.accent=input.getAttribute("data-md-color-accent")}for(var[key,value]of Object.entries(palette.color))document.body.setAttribute("data-md-color-"+key,value)}</script>
+    
+    
+    
+      
+      
+        <label class="md-header__button md-icon" for="__search">
+          
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M9.5 3A6.5 6.5 0 0 1 16 9.5c0 1.61-.59 3.09-1.56 4.23l.27.27h.79l5 5-1.5 1.5-5-5v-.79l-.27-.27A6.52 6.52 0 0 1 9.5 16 6.5 6.5 0 0 1 3 9.5 6.5 6.5 0 0 1 9.5 3m0 2C7 5 5 7 5 9.5S7 14 9.5 14 14 12 14 9.5 12 5 9.5 5"/></svg>
+        </label>
+        <div class="md-search" data-md-component="search" role="dialog">
+  <label class="md-search__overlay" for="__search"></label>
+  <div class="md-search__inner" role="search">
+    <form class="md-search__form" name="search">
+      <input type="text" class="md-search__input" name="query" aria-label="Search" placeholder="Search" autocapitalize="off" autocorrect="off" autocomplete="off" spellcheck="false" data-md-component="search-query" required>
+      <label class="md-search__icon md-icon" for="__search">
+        
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M9.5 3A6.5 6.5 0 0 1 16 9.5c0 1.61-.59 3.09-1.56 4.23l.27.27h.79l5 5-1.5 1.5-5-5v-.79l-.27-.27A6.52 6.52 0 0 1 9.5 16 6.5 6.5 0 0 1 3 9.5 6.5 6.5 0 0 1 9.5 3m0 2C7 5 5 7 5 9.5S7 14 9.5 14 14 12 14 9.5 12 5 9.5 5"/></svg>
+        
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M20 11v2H8l5.5 5.5-1.42 1.42L4.16 12l7.92-7.92L13.5 5.5 8 11z"/></svg>
+      </label>
+      <nav class="md-search__options" aria-label="Search">
+        
+        <button type="reset" class="md-search__icon md-icon" title="Clear" aria-label="Clear" tabindex="-1">
+          
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M19 6.41 17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12z"/></svg>
+        </button>
+      </nav>
+      
+    </form>
+    <div class="md-search__output">
+      <div class="md-search__scrollwrap" tabindex="0" data-md-scrollfix>
+        <div class="md-search-result" data-md-component="search-result">
+          <div class="md-search-result__meta">
+            Initializing search
+          </div>
+          <ol class="md-search-result__list" role="presentation"></ol>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+      
+    
+    
+      <div class="md-header__source">
+        <a href="https://github.com/The-Obstacle-Is-The-Way/ai-psychiatrist" title="Go to repository" class="md-source" data-md-component="source">
+  <div class="md-source__icon md-icon">
+    
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 448 512"><!--! Font Awesome Free 7.1.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2025 Fonticons, Inc.--><path d="M439.6 236.1 244 40.5c-5.4-5.5-12.8-8.5-20.4-8.5s-15 3-20.4 8.4L162.5 81l51.5 51.5c27.1-9.1 52.7 16.8 43.4 43.7l49.7 49.7c34.2-11.8 61.2 31 35.5 56.7-26.5 26.5-70.2-2.9-56-37.3L240.3 199v121.9c25.3 12.5 22.3 41.8 9.1 55-6.4 6.4-15.2 10.1-24.3 10.1s-17.8-3.6-24.3-10.1c-17.6-17.6-11.1-46.9 11.2-56v-123c-20.8-8.5-24.6-30.7-18.6-45L142.6 101 8.5 235.1C3 240.6 0 247.9 0 255.5s3 15 8.5 20.4l195.6 195.7c5.4 5.4 12.7 8.4 20.4 8.4s15-3 20.4-8.4l194.7-194.7c5.4-5.4 8.4-12.8 8.4-20.4s-3-15-8.4-20.4"/></svg>
+  </div>
+  <div class="md-source__repository">
+    GitHub
+  </div>
+</a>
+      </div>
+    
+  </nav>
+  
+</header>
+    
+    <div class="md-container" data-md-component="container">
+      
+      
+        
+          
+        
+      
+      <main class="md-main" data-md-component="main">
+        <div class="md-main__inner md-grid">
+          
+            
+              
+              <div class="md-sidebar md-sidebar--primary" data-md-component="sidebar" data-md-type="navigation" >
+                <div class="md-sidebar__scrollwrap">
+                  <div class="md-sidebar__inner">
+                    
+
+
+
+<nav class="md-nav md-nav--primary" aria-label="Navigation" data-md-level="0">
+  <label class="md-nav__title" for="__drawer">
+    <a href="../.." title="AI Psychiatrist" class="md-nav__button md-logo" aria-label="AI Psychiatrist" data-md-component="logo">
+      
+  
+  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 8a3 3 0 0 0 3-3 3 3 0 0 0-3-3 3 3 0 0 0-3 3 3 3 0 0 0 3 3m0 3.54C9.64 9.35 6.5 8 3 8v11c3.5 0 6.64 1.35 9 3.54 2.36-2.19 5.5-3.54 9-3.54V8c-3.5 0-6.64 1.35-9 3.54"/></svg>
+
+    </a>
+    AI Psychiatrist
+  </label>
+  
+    <div class="md-nav__source">
+      <a href="https://github.com/The-Obstacle-Is-The-Way/ai-psychiatrist" title="Go to repository" class="md-source" data-md-component="source">
+  <div class="md-source__icon md-icon">
+    
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 448 512"><!--! Font Awesome Free 7.1.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2025 Fonticons, Inc.--><path d="M439.6 236.1 244 40.5c-5.4-5.5-12.8-8.5-20.4-8.5s-15 3-20.4 8.4L162.5 81l51.5 51.5c27.1-9.1 52.7 16.8 43.4 43.7l49.7 49.7c34.2-11.8 61.2 31 35.5 56.7-26.5 26.5-70.2-2.9-56-37.3L240.3 199v121.9c25.3 12.5 22.3 41.8 9.1 55-6.4 6.4-15.2 10.1-24.3 10.1s-17.8-3.6-24.3-10.1c-17.6-17.6-11.1-46.9 11.2-56v-123c-20.8-8.5-24.6-30.7-18.6-45L142.6 101 8.5 235.1C3 240.6 0 247.9 0 255.5s3 15 8.5 20.4l195.6 195.7c5.4 5.4 12.7 8.4 20.4 8.4s15-3 20.4-8.4l194.7-194.7c5.4-5.4 8.4-12.8 8.4-20.4s-3-15-8.4-20.4"/></svg>
+  </div>
+  <div class="md-source__repository">
+    GitHub
+  </div>
+</a>
+    </div>
+  
+  <ul class="md-nav__list" data-md-scrollfix>
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../.." class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    AI Psychiatrist Documentation
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    
+    
+    
+    
+      
+        
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--section md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_2" >
+        
+          
+          <label class="md-nav__link" for="__nav_2" id="__nav_2_label" tabindex="">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+     research
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_2_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_2">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+     research
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../_research/hypotheses-explained/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Hypotheses Explained: Current State vs Future Improvements
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../_research/hypotheses-for-improvement/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Hypotheses for Improvement: First-Principles Analysis
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../_research/master-bug-audit/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    MASTER BUG AUDIT
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    
+    
+    
+    
+      
+        
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--section md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_3" >
+        
+          
+          <label class="md-nav__link" for="__nav_3" id="__nav_3_label" tabindex="">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Architecture
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_3_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_3">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    Architecture
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../architecture/architecture/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Architecture
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../architecture/future-architecture/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Future Architecture: Agent Orchestration Options
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../architecture/pipeline/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Pipeline
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    
+    
+    
+    
+      
+        
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--section md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_4" >
+        
+          
+          <label class="md-nav__link" for="__nav_4" id="__nav_4_label" tabindex="">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Clinical
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_4_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_4">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    Clinical
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../clinical/clinical-understanding/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Clinical Understanding: How This System Works
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../clinical/glossary/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Glossary
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../clinical/phq8/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    PHQ-8: Patient Health Questionnaire
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../clinical/task-validity/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Task Validity: What Can (and Cannot) Be Inferred from DAIC-WOZ Transcripts
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    
+    
+    
+    
+      
+        
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--section md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_5" >
+        
+          
+          <label class="md-nav__link" for="__nav_5" id="__nav_5_label" tabindex="">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Configs
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_5_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_5">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    Configs
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../configs/agent-sampling-registry/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Agent Sampling Parameter Registry
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../configs/configuration-philosophy/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Configuration Philosophy
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../configs/configuration/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Configuration Reference
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    
+    
+    
+    
+      
+        
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--section md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_6" >
+        
+          
+          <label class="md-nav__link" for="__nav_6" id="__nav_6_label" tabindex="">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Data
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_6_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_6">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    Data
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../data/artifact-namespace-registry/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Artifact Namespace Registry
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../data/daic-woz-preprocessing/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    DAIC-WOZ Transcript Preprocessing (Bias-Aware, Deterministic)
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../data/daic-woz-schema/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    DAIC-WOZ Dataset Schema
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../data/data-splits-overview/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Data Splits Overview
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    
+    
+    
+    
+      
+        
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--section md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_7" >
+        
+          
+          <label class="md-nav__link" for="__nav_7" id="__nav_7_label" tabindex="">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Developer
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_7_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_7">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    Developer
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../developer/api-endpoints/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    API Reference
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../developer/dependency-registry/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Dependency Registry
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../developer/error-handling/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Error Handling and Fail-Fast Philosophy
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../developer/exceptions/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Exception Reference (Domain + Runtime)
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../developer/testing/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Testing Conventions (Markers, Fixtures, and Test Doubles)
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    
+    
+    
+    
+      
+        
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--section md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_8" >
+        
+          
+          <label class="md-nav__link" for="__nav_8" id="__nav_8_label" tabindex="">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Getting started
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_8_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_8">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    Getting started
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../getting-started/quickstart/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Quickstart Guide
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    
+    
+    
+    
+      
+        
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--section md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_9" >
+        
+          
+          <label class="md-nav__link" for="__nav_9" id="__nav_9_label" tabindex="">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Models
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_9_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_9">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    Models
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../models/model-registry/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    AI Psychiatrist Model Registry
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../models/model-wiring/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Model Wiring: Current State
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    
+    
+    
+    
+      
+        
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--section md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_10" >
+        
+          
+          <label class="md-nav__link" for="__nav_10" id="__nav_10_label" tabindex="">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Pipeline internals
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_10_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_10">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    Pipeline internals
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../pipeline-internals/evidence-extraction/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Evidence Extraction Mechanism: How It Actually Works
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../pipeline-internals/features/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Feature Reference (Non-Archive Canonical)
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    
+    
+    
+    
+      
+        
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--section md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_11" >
+        
+          
+          <label class="md-nav__link" for="__nav_11" id="__nav_11_label" tabindex="">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Preflight checklist
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_11_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_11">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    Preflight checklist
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../preflight-checklist/preflight-checklist-few-shot/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Preflight Checklist: Few-Shot Reproduction
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../preflight-checklist/preflight-checklist-zero-shot/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Preflight Checklist: Zero-Shot Run
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    
+    
+    
+    
+      
+        
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--section md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_12" >
+        
+          
+          <label class="md-nav__link" for="__nav_12" id="__nav_12_label" tabindex="">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Rag
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_12_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_12">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    Rag
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../rag/artifact-generation/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    RAG Artifact Generation
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../rag/chunk-scoring/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Chunk-Level Scoring (Spec 35) — Schema, Workflow, and Gotchas
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../rag/debugging/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    RAG Debugging (Audit Logs + Guardrails)
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../rag/design-rationale/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    RAG Design Rationale
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../rag/overview/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    RAG Overview: Embeddings and Few-Shot Retrieval
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../rag/runtime-features/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    RAG Runtime Features
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+    
+  
+  
+  
+    
+    
+    
+    
+      
+        
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--active md-nav__item--section md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_13" checked>
+        
+          
+          <label class="md-nav__link" for="__nav_13" id="__nav_13_label" tabindex="">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Results
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_13_label" aria-expanded="true">
+          <label class="md-nav__title" for="__nav_13">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    Results
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+    
+  
+  
+  
+    <li class="md-nav__item md-nav__item--active">
+      
+      <input class="md-nav__toggle md-toggle" type="checkbox" id="__toc">
+      
+      
+        
+      
+      
+        <label class="md-nav__link md-nav__link--active" for="__toc">
+          
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Why Few-Shot May Not Beat Zero-Shot: Analysis
+  
+
+    
+  </span>
+  
+  
+
+          <span class="md-nav__icon md-icon"></span>
+        </label>
+      
+      <a href="./" class="md-nav__link md-nav__link--active">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Why Few-Shot May Not Beat Zero-Shot: Analysis
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+      
+        
+
+<nav class="md-nav md-nav--secondary" aria-label="Table of contents">
+  
+  
+  
+    
+  
+  
+    <label class="md-nav__title" for="__toc">
+      <span class="md-nav__icon md-icon"></span>
+      Table of contents
+    </label>
+    <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
+      
+        <li class="md-nav__item">
+  <a href="#executive-summary" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Executive Summary
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#run-13-results-post-bug-035-clean-comparative-baseline" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Run 13 Results (Post BUG-035; Clean Comparative Baseline)
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#run-14-severity-inference-infer-ablation-spec-063" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Run 14: Severity Inference (infer) Ablation (Spec 063)
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#historical-context-run-12-pre-bug-035-fix-confounded" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Historical Context: Run 12 (Pre BUG-035 Fix; Confounded)
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#core-reason-evidence-limited-not-knowledge-limited" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Core Reason: Evidence-Limited, Not Knowledge-Limited
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#why-few-shot-may-not-improve-or-can-hurt" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Why Few-Shot May Not Improve (Or Can Hurt)
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Why Few-Shot May Not Improve (Or Can Hurt)">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#1-embedding-similarity-severity-similarity" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        1. Embedding Similarity ≠ Severity Similarity
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#2-reference-label-noise" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        2. Reference-Label Noise
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#3-anchoring-dominates-evidence" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        3. Anchoring Dominates Evidence
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#4-reference-bundle-too-small-narrow" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        4. Reference Bundle Too Small / Narrow
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#5-guardrails-reduce-effective-retrieval" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        5. Guardrails Reduce Effective Retrieval
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#6-prompt-interference-cognitive-load" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        6. Prompt Interference / Cognitive Load
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#7-coverage-can-legitimately-shift" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        7. Coverage Can Legitimately Shift
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#8-ceilingheadroom" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        8. Ceiling/Headroom
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#9-small-n-heterogeneity" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        9. Small-N + Heterogeneity
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#10-rag-helps-only-for-specific-failure-modes" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        10. RAG Helps Only for Specific Failure Modes
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#run-8-vs-run-12-what-changed" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Run 8 vs Run 12: What Changed?
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#per-item-analysis-run-8-run-12" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Per-Item Analysis (Run 8 → Run 12)
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Per-Item Analysis (Run 8 → Run 12)">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#zero-shot-improved-across-the-board" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Zero-shot: Improved across the board
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#few-shot-mixed-results" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Few-shot: Mixed results
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#evidence-from-optimal-metrics" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Evidence from Optimal Metrics
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#what-would-validate-few-shot-truly-helps" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        What Would Validate "Few-Shot Truly Helps"
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#implications-for-future-work" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Implications for Future Work
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Implications for Future Work">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#option-a-accept-current-state" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Option A: Accept Current State
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#option-b-tune-evidence-grounding" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Option B: Tune Evidence Grounding
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#option-c-improve-reference-quality" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Option C: Improve Reference Quality
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#option-d-disable-evidence-grounding-for-comparison" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Option D: Disable Evidence Grounding for Comparison
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#summary" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Summary
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#related-documentation" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Related Documentation
+      
+    </span>
+  </a>
+  
+</li>
+      
+    </ul>
+  
+</nav>
+      
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../reproduction-results/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Paper Reproduction Results (Current Status)
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../run-history/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Complete Run History &amp; Statistical Analysis
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../run-output-schema/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Reproduction Run Output Schema (JSON + Registry)
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    
+    
+    
+    
+      
+        
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--section md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_14" >
+        
+          
+          <label class="md-nav__link" for="__nav_14" id="__nav_14_label" tabindex="">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Statistics
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_14_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_14">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    Statistics
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../statistics/coverage/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Coverage Explained: What It Is and Why It Matters
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../statistics/metrics-and-evaluation/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Metrics and Evaluation (Exact Definitions + Output Schema)
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../statistics/statistical-methodology-aurc-augrc/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Statistical Methodology: AURC/AUGRC for Selective Prediction
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+  </ul>
+</nav>
+                  </div>
+                </div>
+              </div>
+            
+            
+              
+              <div class="md-sidebar md-sidebar--secondary" data-md-component="sidebar" data-md-type="toc" >
+                <div class="md-sidebar__scrollwrap">
+                  <div class="md-sidebar__inner">
+                    
+
+<nav class="md-nav md-nav--secondary" aria-label="Table of contents">
+  
+  
+  
+    
+  
+  
+    <label class="md-nav__title" for="__toc">
+      <span class="md-nav__icon md-icon"></span>
+      Table of contents
+    </label>
+    <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
+      
+        <li class="md-nav__item">
+  <a href="#executive-summary" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Executive Summary
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#run-13-results-post-bug-035-clean-comparative-baseline" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Run 13 Results (Post BUG-035; Clean Comparative Baseline)
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#run-14-severity-inference-infer-ablation-spec-063" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Run 14: Severity Inference (infer) Ablation (Spec 063)
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#historical-context-run-12-pre-bug-035-fix-confounded" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Historical Context: Run 12 (Pre BUG-035 Fix; Confounded)
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#core-reason-evidence-limited-not-knowledge-limited" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Core Reason: Evidence-Limited, Not Knowledge-Limited
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#why-few-shot-may-not-improve-or-can-hurt" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Why Few-Shot May Not Improve (Or Can Hurt)
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Why Few-Shot May Not Improve (Or Can Hurt)">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#1-embedding-similarity-severity-similarity" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        1. Embedding Similarity ≠ Severity Similarity
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#2-reference-label-noise" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        2. Reference-Label Noise
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#3-anchoring-dominates-evidence" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        3. Anchoring Dominates Evidence
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#4-reference-bundle-too-small-narrow" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        4. Reference Bundle Too Small / Narrow
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#5-guardrails-reduce-effective-retrieval" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        5. Guardrails Reduce Effective Retrieval
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#6-prompt-interference-cognitive-load" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        6. Prompt Interference / Cognitive Load
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#7-coverage-can-legitimately-shift" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        7. Coverage Can Legitimately Shift
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#8-ceilingheadroom" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        8. Ceiling/Headroom
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#9-small-n-heterogeneity" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        9. Small-N + Heterogeneity
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#10-rag-helps-only-for-specific-failure-modes" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        10. RAG Helps Only for Specific Failure Modes
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#run-8-vs-run-12-what-changed" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Run 8 vs Run 12: What Changed?
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#per-item-analysis-run-8-run-12" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Per-Item Analysis (Run 8 → Run 12)
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Per-Item Analysis (Run 8 → Run 12)">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#zero-shot-improved-across-the-board" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Zero-shot: Improved across the board
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#few-shot-mixed-results" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Few-shot: Mixed results
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#evidence-from-optimal-metrics" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Evidence from Optimal Metrics
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#what-would-validate-few-shot-truly-helps" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        What Would Validate "Few-Shot Truly Helps"
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#implications-for-future-work" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Implications for Future Work
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Implications for Future Work">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#option-a-accept-current-state" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Option A: Accept Current State
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#option-b-tune-evidence-grounding" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Option B: Tune Evidence Grounding
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#option-c-improve-reference-quality" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Option C: Improve Reference Quality
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#option-d-disable-evidence-grounding-for-comparison" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Option D: Disable Evidence Grounding for Comparison
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#summary" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Summary
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#related-documentation" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Related Documentation
+      
+    </span>
+  </a>
+  
+</li>
+      
+    </ul>
+  
+</nav>
+                  </div>
+                </div>
+              </div>
+            
+          
+          
+            <div class="md-content" data-md-component="content">
+              
+              <article class="md-content__inner md-typeset">
+                
+                  
+
+
+  
+    <a href="https://github.com/The-Obstacle-Is-The-Way/ai-psychiatrist/edit/main/docs/results/few-shot-analysis.md" title="Edit this page" class="md-content__button md-icon" rel="edit">
+      
+      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M10 20H6V4h7v5h5v3.1l2-2V8l-6-6H6c-1.1 0-2 .9-2 2v16c0 1.1.9 2 2 2h4zm10.2-7c.1 0 .3.1.4.2l1.3 1.3c.2.2.2.6 0 .8l-1 1-2.1-2.1 1-1c.1-.1.2-.2.4-.2m0 3.9L14.1 23H12v-2.1l6.1-6.1z"/></svg>
+    </a>
+  
+  
+    
+      
+    
+    <a href="https://github.com/The-Obstacle-Is-The-Way/ai-psychiatrist/raw/main/docs/results/few-shot-analysis.md" title="View source of this page" class="md-content__button md-icon">
+      
+      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M17 18c.56 0 1 .44 1 1s-.44 1-1 1-1-.44-1-1 .44-1 1-1m0-3c-2.73 0-5.06 1.66-6 4 .94 2.34 3.27 4 6 4s5.06-1.66 6-4c-.94-2.34-3.27-4-6-4m0 6.5a2.5 2.5 0 0 1-2.5-2.5 2.5 2.5 0 0 1 2.5-2.5 2.5 2.5 0 0 1 2.5 2.5 2.5 2.5 0 0 1-2.5 2.5M9.27 20H6V4h7v5h5v4.07c.7.08 1.36.25 2 .49V8l-6-6H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h4.5a8.2 8.2 0 0 1-1.23-2"/></svg>
+    </a>
+  
+
+
+<h1 id="why-few-shot-may-not-beat-zero-shot-analysis">Why Few-Shot May Not Beat Zero-Shot: Analysis</h1>
+<p><strong>Created</strong>: 2026-01-05
+<strong>Last Updated</strong>: 2026-01-08
+<strong>Status</strong>: Living document; updated with Run 13 baseline + Run 14 severity inference ablation</p>
+<hr />
+<blockquote>
+<p><strong>BUG-035 CONTEXT (Fixed 2026-01-06)</strong>: Runs 1–12 are confounded because few-shot prompts could
+still differ from zero-shot when retrieval returned zero references (a sentinel wrapper containing
+“No valid evidence found”). Run 13 is the first clean post-fix comparative run; use it for any
+zero-shot vs few-shot claims.
+See <a href="../../_archive/bugs/BUG-035_FEW_SHOT_PROMPT_CONFOUND/">BUG-035</a> and <code>docs/results/run-history.md</code>.</p>
+</blockquote>
+<hr />
+<h2 id="executive-summary">Executive Summary</h2>
+<p>Run 13 (the first clean post-BUG-035 comparative run) confirms that <strong>zero-shot outperforms few-shot</strong>
+on MAE_item (0.6079 vs 0.6571) at similar coverage (~50.0% vs ~48.5%). Few-shot underperformance is
+therefore attributable to retrieval/reference quality issues and evidence bottlenecks, not prompt
+confounding. This document explains why few-shot can be neutral or harmful from first principles.</p>
+<p>Run 12 shows the same directional pattern, but is pre-fix and should be treated as historical context.</p>
+<hr />
+<h2 id="run-13-results-post-bug-035-clean-comparative-baseline">Run 13 Results (Post BUG-035; Clean Comparative Baseline)</h2>
+<p>From <code>data/outputs/both_paper-test_20260107_134730.json</code> (Run 13):</p>
+<table>
+<thead>
+<tr>
+<th>Mode</th>
+<th>N_eval</th>
+<th>MAE_item</th>
+<th>Coverage</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Zero-shot</td>
+<td>40/41</td>
+<td><strong>0.6079</strong></td>
+<td>50.0%</td>
+</tr>
+<tr>
+<td>Few-shot</td>
+<td>41/41</td>
+<td>0.6571</td>
+<td>48.5%</td>
+</tr>
+</tbody>
+</table>
+<p>Key confirmation: zero-shot still beats few-shot after the confound fix, so retrieval quality (not prompt contamination) is the bottleneck.</p>
+<hr />
+<h2 id="run-14-severity-inference-infer-ablation-spec-063">Run 14: Severity Inference (<code>infer</code>) Ablation (Spec 063)</h2>
+<p>From <code>data/outputs/both_paper-test_20260108_114058.json</code> (Run 14; <code>--severity-inference infer</code>):</p>
+<table>
+<thead>
+<tr>
+<th>Mode</th>
+<th>N_eval</th>
+<th>MAE_item</th>
+<th>Coverage</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Zero-shot</td>
+<td>41/41</td>
+<td>0.7030</td>
+<td>60.1%</td>
+</tr>
+<tr>
+<td>Few-shot</td>
+<td>40/41</td>
+<td>0.7843</td>
+<td>57.5%</td>
+</tr>
+</tbody>
+</table>
+<p>Selective prediction (abs_norm, 1,000 bootstrap resamples):
+- Zero-shot best AURC/AUGRC: <code>hybrid_consistency</code> (AURC 0.1258, AUGRC 0.0377)
+- Few-shot best AURC: <code>consistency_inverse_std</code> (AURC 0.1391)
+- Few-shot best AUGRC: <code>token_energy</code> (AUGRC 0.0394)</p>
+<p><strong>Interpretation</strong>:
+- Severity inference increases coverage substantially vs Run 13 (~+8–11 points Cmax), but <strong>degrades AURC/AUGRC</strong> relative to the strict baseline.
+- Few-shot still does not outperform zero-shot under <code>infer</code>; the evidence/reference bottleneck remains, and additional “inferred” predictions appear to be harder cases the strict prompt would have abstained on.</p>
+<hr />
+<h2 id="historical-context-run-12-pre-bug-035-fix-confounded">Historical Context: Run 12 (Pre BUG-035 Fix; Confounded)</h2>
+<table>
+<thead>
+<tr>
+<th>Mode</th>
+<th>N_eval</th>
+<th>MAE_item</th>
+<th>Coverage</th>
+<th>AURC</th>
+<th>AUGRC</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Zero-shot</td>
+<td>41/41</td>
+<td><strong>0.5715</strong></td>
+<td>48.5%</td>
+<td>0.1019</td>
+<td>0.0252</td>
+</tr>
+<tr>
+<td>Few-shot</td>
+<td>41/41</td>
+<td>0.6159</td>
+<td>46.0%</td>
+<td>0.1085</td>
+<td>0.0242</td>
+</tr>
+</tbody>
+</table>
+<p><strong>Paired comparison</strong> (few − zero, default confidence):
+- ΔAURC = +0.0066, 95% CI: [-0.014, +0.026] — includes zero
+- ΔAUGRC = -0.001, 95% CI: [-0.007, +0.004] — includes zero</p>
+<p><strong>Neither difference is statistically significant.</strong></p>
+<hr />
+<h2 id="core-reason-evidence-limited-not-knowledge-limited">Core Reason: Evidence-Limited, Not Knowledge-Limited</h2>
+<p>PHQ-8 scoring requires <strong>frequency over 2 weeks</strong> (0-3 scale based on how many days). DAIC-WOZ transcripts often don't state frequency explicitly.</p>
+<p><strong>The bottleneck is "missing evidence", not "missing rubric knowledge".</strong></p>
+<ul>
+<li>Few-shot can't add evidence to the test transcript</li>
+<li>It only changes how the model interprets what's already there</li>
+<li>If the transcript doesn't support a frequency claim, the best behavior is still N/A</li>
+</ul>
+<hr />
+<h2 id="why-few-shot-may-not-improve-or-can-hurt">Why Few-Shot May Not Improve (Or Can Hurt)</h2>
+<h3 id="1-embedding-similarity-severity-similarity">1. Embedding Similarity ≠ Severity Similarity</h3>
+<p>"Sleep problems" matches "sleep problems", but not necessarily score 0 vs 3. Retrieved examples can be semantically on-topic but severity-mismatched.</p>
+<h3 id="2-reference-label-noise">2. Reference-Label Noise</h3>
+<p>Even with chunk-level scoring (Spec 35), chunk scores can be wrong or underspecified. One misleading exemplar can anchor the model to the wrong score.</p>
+<h3 id="3-anchoring-dominates-evidence">3. Anchoring Dominates Evidence</h3>
+<p>Showing explicit scores in references can cause the scorer to overweight them versus the test participant's actual quotes.</p>
+<h3 id="4-reference-bundle-too-small-narrow">4. Reference Bundle Too Small / Narrow</h3>
+<p>After guardrails + truncation, many items get 0-1 exemplars. The "few-shot" is brittle and can be worse than none.</p>
+<p><strong>Run 12 data</strong>: Only 15.2% of item assessments (50 of 328) had any references retrieved; those 50 items received 52 references total.</p>
+<h3 id="5-guardrails-reduce-effective-retrieval">5. Guardrails Reduce Effective Retrieval</h3>
+<p>Item-tag filtering + similarity thresholds can make references sparse/uneven. Some items get (possibly noisy) references; others get none.</p>
+<h3 id="6-prompt-interference-cognitive-load">6. Prompt Interference / Cognitive Load</h3>
+<p>More instructions + more context can reduce attention on the primary evidence, especially when references are not perfectly aligned.</p>
+<h3 id="7-coverage-can-legitimately-shift">7. Coverage Can Legitimately Shift</h3>
+<p>Even with identical evidence extraction, the scorer sees different context in few-shot and can become more conservative (or overconfident). Similar coverage is reassuring; different coverage isn't automatically a bug.</p>
+<h3 id="8-ceilingheadroom">8. Ceiling/Headroom</h3>
+<p>If zero-shot is already strong (e.g., consistency sampling + better prompting), few-shot has little room to help and more ways to hurt.</p>
+<h3 id="9-small-n-heterogeneity">9. Small-N + Heterogeneity</h3>
+<p>With 41 participants, true effects can be small relative to variance. You can see "no clear win" even if few-shot helps a subset and hurts another subset.</p>
+<h3 id="10-rag-helps-only-for-specific-failure-modes">10. RAG Helps Only for Specific Failure Modes</h3>
+<p>Few-shot helps most when the model is miscalibrated about what a 1 vs 2 vs 3 looks like for a symptom. If your main failure mode is "no frequency evidence", RAG won't move the needle.</p>
+<hr />
+<h2 id="run-8-vs-run-12-what-changed">Run 8 vs Run 12: What Changed?</h2>
+<table>
+<thead>
+<tr>
+<th>Factor</th>
+<th>Run 8 (few-shot won)</th>
+<th>Run 12 (zero-shot won)</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Evidence grounding</td>
+<td>Not enabled</td>
+<td>Enabled (Spec 053)</td>
+</tr>
+<tr>
+<td>Items with LLM evidence</td>
+<td>61.3%</td>
+<td><strong>32.0%</strong></td>
+</tr>
+<tr>
+<td>Items with references</td>
+<td>Higher (inferred)</td>
+<td><strong>15.2%</strong></td>
+</tr>
+<tr>
+<td>Consistency sampling</td>
+<td>No</td>
+<td>Yes (n=5, temp=0.2)</td>
+</tr>
+</tbody>
+</table>
+<p><strong>Key finding</strong>: Evidence grounding (Spec 053) rejects ~50% of extracted quotes as "hallucinated" (substring match fails). This breaks the few-shot retrieval chain:</p>
+<ol>
+<li>Less evidence → fewer embedding queries</li>
+<li>Fewer queries → fewer references retrieved</li>
+<li>Fewer references → few-shot operates like zero-shot</li>
+<li>Consistency sampling improves zero-shot dramatically (26% MAE reduction)</li>
+<li>Consistency sampling doesn't help few-shot (already like zero-shot)</li>
+</ol>
+<hr />
+<h2 id="per-item-analysis-run-8-run-12">Per-Item Analysis (Run 8 → Run 12)</h2>
+<h3 id="zero-shot-improved-across-the-board">Zero-shot: Improved across the board</h3>
+<table>
+<thead>
+<tr>
+<th>Item</th>
+<th>Run 8 MAE</th>
+<th>Run 12 MAE</th>
+<th>Change</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>NoInterest</td>
+<td>0.632</td>
+<td>0.444</td>
+<td>-0.187 ↓</td>
+</tr>
+<tr>
+<td>Tired</td>
+<td>0.960</td>
+<td>0.800</td>
+<td>-0.160 ↓</td>
+</tr>
+<tr>
+<td>Appetite</td>
+<td>1.200</td>
+<td>0.333</td>
+<td>-0.867 ↓</td>
+</tr>
+<tr>
+<td>Concentrating</td>
+<td>0.824</td>
+<td>0.588</td>
+<td>-0.235 ↓</td>
+</tr>
+</tbody>
+</table>
+<h3 id="few-shot-mixed-results">Few-shot: Mixed results</h3>
+<table>
+<thead>
+<tr>
+<th>Item</th>
+<th>Run 8 MAE</th>
+<th>Run 12 MAE</th>
+<th>Change</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>NoInterest</td>
+<td>0.571</td>
+<td>0.462</td>
+<td>-0.110 ↓</td>
+</tr>
+<tr>
+<td><strong>Tired</strong></td>
+<td>0.885</td>
+<td>0.957</td>
+<td>+0.072 ↑</td>
+</tr>
+<tr>
+<td><strong>Appetite</strong></td>
+<td>0.000</td>
+<td>0.333</td>
+<td>+0.333 ↑</td>
+</tr>
+<tr>
+<td><strong>Failure</strong></td>
+<td>0.750</td>
+<td>0.833</td>
+<td>+0.083 ↑</td>
+</tr>
+<tr>
+<td><strong>Moving</strong></td>
+<td>0.500</td>
+<td>0.571</td>
+<td>+0.071 ↑</td>
+</tr>
+</tbody>
+</table>
+<p><strong>Consistency sampling improved zero-shot universally but had mixed effects on few-shot.</strong></p>
+<hr />
+<h2 id="evidence-from-optimal-metrics">Evidence from Optimal Metrics</h2>
+<p>The selective prediction metrics files include <code>aurc_optimal</code> and <code>augrc_optimal</code> (the best achievable AURC/AUGRC with oracle confidence). Comparing actual vs optimal:</p>
+<table>
+<thead>
+<tr>
+<th>Mode</th>
+<th>AURC</th>
+<th>AURC_optimal</th>
+<th>e-AURC (gap)</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Zero-shot</td>
+<td>0.102</td>
+<td>0.033</td>
+<td>0.069 (212%)</td>
+</tr>
+<tr>
+<td>Few-shot</td>
+<td>0.109</td>
+<td>0.038</td>
+<td>0.071 (189%)</td>
+</tr>
+</tbody>
+</table>
+<p><strong>Key insight</strong>: Few-shot's optimal AURC is <em>worse</em> than zero-shot's optimal (0.038 vs 0.033). This means even with perfect confidence estimation, few-shot predictions are inherently less accurate than zero-shot predictions in Run 12.</p>
+<p>This points to <strong>retrieval/reference noise + anchoring</strong> as the primary cause, not a confidence-signal artifact.</p>
+<hr />
+<h2 id="what-would-validate-few-shot-truly-helps">What Would Validate "Few-Shot Truly Helps"</h2>
+<p>To claim few-shot is genuinely beneficial, we would need:</p>
+<ol>
+<li><strong>Item-level deltas</strong>: Some items improve consistently (e.g., sleep/energy) while others don't</li>
+<li><strong>Retrieval sanity</strong>: Retrieved reference scores correlate with test ground truth conditional on item (not just semantic similarity)</li>
+<li><strong>Ablations</strong>:</li>
+<li>References without scores (tests anchoring harm)</li>
+<li>Random references vs retrieved references (tests whether retrieval does anything)</li>
+<li>More exemplars per item (tests "k too small")</li>
+<li>Reranking (tests "similarity ≠ severity")</li>
+</ol>
+<hr />
+<h2 id="implications-for-future-work">Implications for Future Work</h2>
+<h3 id="option-a-accept-current-state">Option A: Accept Current State</h3>
+<ul>
+<li>Evidence grounding is methodologically correct (prevents hallucination contamination)</li>
+<li>Few-shot with strict grounding ≈ zero-shot</li>
+<li>Zero-shot + consistency is the recommended approach</li>
+</ul>
+<h3 id="option-b-tune-evidence-grounding">Option B: Tune Evidence Grounding</h3>
+<ul>
+<li>Try <code>QUANTITATIVE_EVIDENCE_QUOTE_VALIDATION_MODE="fuzzy"</code> with lower threshold</li>
+<li>Accept more quotes, risk more hallucination contamination</li>
+<li>Re-run to see if few-shot recovers</li>
+</ul>
+<h3 id="option-c-improve-reference-quality">Option C: Improve Reference Quality</h3>
+<ul>
+<li>Better chunk scoring (higher-quality labels)</li>
+<li>Rerank by severity similarity, not just semantic similarity</li>
+<li>Increase reference count per item (currently sparse after filtering)</li>
+</ul>
+<h3 id="option-d-disable-evidence-grounding-for-comparison">Option D: Disable Evidence Grounding for Comparison</h3>
+<ul>
+<li><code>QUANTITATIVE_EVIDENCE_QUOTE_VALIDATION_ENABLED=false</code></li>
+<li>Replicate Run 8 conditions</li>
+<li>Use only for research comparison, not production</li>
+</ul>
+<hr />
+<h2 id="summary">Summary</h2>
+<p><strong>The codebase is correct.</strong> The finding that few-shot ≈ zero-shot (or worse) is a valid research result, not a bug. It reflects:</p>
+<ol>
+<li><strong>Evidence grounding</strong> correctly rejecting hallucinated quotes, but starving few-shot of data</li>
+<li><strong>Consistency sampling</strong> benefiting zero-shot more than few-shot</li>
+<li><strong>Fundamental limitations</strong> of RAG for this task (evidence-limited, not knowledge-limited)</li>
+</ol>
+<p>For DAIC-WOZ PHQ-8 scoring with strict evidence grounding, <strong>zero-shot with consistency sampling is the recommended approach</strong>.</p>
+<hr />
+<h2 id="related-documentation">Related Documentation</h2>
+<ul>
+<li><a href="../../rag/design-rationale/">RAG Design Rationale</a> — Participant-level score problem, zero-shot inflation hypothesis</li>
+<li><a href="../../rag/chunk-scoring/">Chunk-level Scoring</a> — Spec 35 implementation</li>
+<li><a href="../../configs/configuration/">Configuration</a> — Evidence grounding settings</li>
+<li><a href="../run-history/">Run History</a> — Full run details</li>
+</ul>
+
+
+
+
+
+
+
+
+
+
+
+
+                
+              </article>
+            </div>
+          
+          
+<script>var target=document.getElementById(location.hash.slice(1));target&&target.name&&(target.checked=target.name.startsWith("__tabbed_"))</script>
+        </div>
+        
+      </main>
+      
+        <footer class="md-footer">
+  
+    
+      
+      <nav class="md-footer__inner md-grid" aria-label="Footer" >
+        
+          
+          <a href="../../rag/runtime-features/" class="md-footer__link md-footer__link--prev" aria-label="Previous: RAG Runtime Features">
+            <div class="md-footer__button md-icon">
+              
+              <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M20 11v2H8l5.5 5.5-1.42 1.42L4.16 12l7.92-7.92L13.5 5.5 8 11z"/></svg>
+            </div>
+            <div class="md-footer__title">
+              <span class="md-footer__direction">
+                Previous
+              </span>
+              <div class="md-ellipsis">
+                RAG Runtime Features
+              </div>
+            </div>
+          </a>
+        
+        
+          
+          <a href="../reproduction-results/" class="md-footer__link md-footer__link--next" aria-label="Next: Paper Reproduction Results (Current Status)">
+            <div class="md-footer__title">
+              <span class="md-footer__direction">
+                Next
+              </span>
+              <div class="md-ellipsis">
+                Paper Reproduction Results (Current Status)
+              </div>
+            </div>
+            <div class="md-footer__button md-icon">
+              
+              <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M4 11v2h12l-5.5 5.5 1.42 1.42L19.84 12l-7.92-7.92L10.5 5.5 16 11z"/></svg>
+            </div>
+          </a>
+        
+      </nav>
+    
+  
+  <div class="md-footer-meta md-typeset">
+    <div class="md-footer-meta__inner md-grid">
+      <div class="md-copyright">
+  
+  
+    Made with
+    <a href="https://squidfunk.github.io/mkdocs-material/" target="_blank" rel="noopener">
+      Material for MkDocs
+    </a>
+  
+</div>
+      
+    </div>
+  </div>
+</footer>
+      
+    </div>
+    <div class="md-dialog" data-md-component="dialog">
+      <div class="md-dialog__inner md-typeset"></div>
+    </div>
+    
+    
+    
+      
+      
+      <script id="__config" type="application/json">{"annotate": null, "base": "../..", "features": ["content.code.copy", "content.action.edit", "content.action.view", "navigation.tracking", "navigation.sections", "navigation.footer", "navigation.instant"], "search": "../../assets/javascripts/workers/search.2c215733.min.js", "tags": null, "translations": {"clipboard.copied": "Copied to clipboard", "clipboard.copy": "Copy to clipboard", "search.result.more.one": "1 more on this page", "search.result.more.other": "# more on this page", "search.result.none": "No matching documents", "search.result.one": "1 matching document", "search.result.other": "# matching documents", "search.result.placeholder": "Type to start searching", "search.result.term.missing": "Missing", "select.version": "Select version"}, "version": null}</script>
+    
+    
+      <script src="../../assets/javascripts/bundle.79ae519e.min.js"></script>
+      
+    
+  </body>
+</html>

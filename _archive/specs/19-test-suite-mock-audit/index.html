@@ -1,0 +1,2973 @@
+
+<!doctype html>
+<html lang="en" class="no-js">
+  <head>
+    
+      <meta charset="utf-8">
+      <meta name="viewport" content="width=device-width,initial-scale=1">
+      
+      
+      
+        <link rel="canonical" href="https://the-obstacle-is-the-way.github.io/ai-psychiatrist/_archive/specs/19-test-suite-mock-audit/">
+      
+      
+      
+      
+        
+      
+      
+      <link rel="icon" href="../../../assets/images/favicon.png">
+      <meta name="generator" content="mkdocs-1.6.1, mkdocs-material-9.7.1">
+    
+    
+      
+        <title>Spec 19: Test Suite Mock Audit - AI Psychiatrist</title>
+      
+    
+    
+      <link rel="stylesheet" href="../../../assets/stylesheets/main.484c7ddc.min.css">
+      
+      
+
+
+    
+    
+      
+    
+    
+      
+        
+        
+        <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+        <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Roboto:300,300i,400,400i,700,700i%7CRoboto+Mono:400,400i,700,700i&display=fallback">
+        <style>:root{--md-text-font:"Roboto";--md-code-font:"Roboto Mono"}</style>
+      
+    
+    
+    <script>__md_scope=new URL("../../..",location),__md_hash=e=>[...e].reduce(((e,_)=>(e<<5)-e+_.charCodeAt(0)),0),__md_get=(e,_=localStorage,t=__md_scope)=>JSON.parse(_.getItem(t.pathname+"."+e)),__md_set=(e,_,t=localStorage,a=__md_scope)=>{try{t.setItem(a.pathname+"."+e,JSON.stringify(_))}catch(e){}}</script>
+    
+      
+
+    
+    
+  </head>
+  
+  
+    <body dir="ltr">
+  
+    
+    <input class="md-toggle" data-md-toggle="drawer" type="checkbox" id="__drawer" autocomplete="off">
+    <input class="md-toggle" data-md-toggle="search" type="checkbox" id="__search" autocomplete="off">
+    <label class="md-overlay" for="__drawer"></label>
+    <div data-md-component="skip">
+      
+        
+        <a href="#spec-19-test-suite-mock-audit" class="md-skip">
+          Skip to content
+        </a>
+      
+    </div>
+    <div data-md-component="announce">
+      
+    </div>
+    
+    
+      
+
+  
+
+<header class="md-header md-header--shadow" data-md-component="header">
+  <nav class="md-header__inner md-grid" aria-label="Header">
+    <a href="../../.." title="AI Psychiatrist" class="md-header__button md-logo" aria-label="AI Psychiatrist" data-md-component="logo">
+      
+  
+  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 8a3 3 0 0 0 3-3 3 3 0 0 0-3-3 3 3 0 0 0-3 3 3 3 0 0 0 3 3m0 3.54C9.64 9.35 6.5 8 3 8v11c3.5 0 6.64 1.35 9 3.54 2.36-2.19 5.5-3.54 9-3.54V8c-3.5 0-6.64 1.35-9 3.54"/></svg>
+
+    </a>
+    <label class="md-header__button md-icon" for="__drawer">
+      
+      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M3 6h18v2H3zm0 5h18v2H3zm0 5h18v2H3z"/></svg>
+    </label>
+    <div class="md-header__title" data-md-component="header-title">
+      <div class="md-header__ellipsis">
+        <div class="md-header__topic">
+          <span class="md-ellipsis">
+            AI Psychiatrist
+          </span>
+        </div>
+        <div class="md-header__topic" data-md-component="header-topic">
+          <span class="md-ellipsis">
+            
+              Spec 19: Test Suite Mock Audit
+            
+          </span>
+        </div>
+      </div>
+    </div>
+    
+    
+      <script>var palette=__md_get("__palette");if(palette&&palette.color){if("(prefers-color-scheme)"===palette.color.media){var media=matchMedia("(prefers-color-scheme: light)"),input=document.querySelector(media.matches?"[data-md-color-media='(prefers-color-scheme: light)']":"[data-md-color-media='(prefers-color-scheme: dark)']");palette.color.media=input.getAttribute("data-md-color-media"),palette.color.scheme=input.getAttribute("data-md-color-scheme"),palette.color.primary=input.getAttribute("data-md-color-primary"),palette.color.accent=input.getAttribute("data-md-color-accent")}for(var[key,value]of Object.entries(palette.color))document.body.setAttribute("data-md-color-"+key,value)}</script>
+    
+    
+    
+      
+      
+        <label class="md-header__button md-icon" for="__search">
+          
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M9.5 3A6.5 6.5 0 0 1 16 9.5c0 1.61-.59 3.09-1.56 4.23l.27.27h.79l5 5-1.5 1.5-5-5v-.79l-.27-.27A6.52 6.52 0 0 1 9.5 16 6.5 6.5 0 0 1 3 9.5 6.5 6.5 0 0 1 9.5 3m0 2C7 5 5 7 5 9.5S7 14 9.5 14 14 12 14 9.5 12 5 9.5 5"/></svg>
+        </label>
+        <div class="md-search" data-md-component="search" role="dialog">
+  <label class="md-search__overlay" for="__search"></label>
+  <div class="md-search__inner" role="search">
+    <form class="md-search__form" name="search">
+      <input type="text" class="md-search__input" name="query" aria-label="Search" placeholder="Search" autocapitalize="off" autocorrect="off" autocomplete="off" spellcheck="false" data-md-component="search-query" required>
+      <label class="md-search__icon md-icon" for="__search">
+        
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M9.5 3A6.5 6.5 0 0 1 16 9.5c0 1.61-.59 3.09-1.56 4.23l.27.27h.79l5 5-1.5 1.5-5-5v-.79l-.27-.27A6.52 6.52 0 0 1 9.5 16 6.5 6.5 0 0 1 3 9.5 6.5 6.5 0 0 1 9.5 3m0 2C7 5 5 7 5 9.5S7 14 9.5 14 14 12 14 9.5 12 5 9.5 5"/></svg>
+        
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M20 11v2H8l5.5 5.5-1.42 1.42L4.16 12l7.92-7.92L13.5 5.5 8 11z"/></svg>
+      </label>
+      <nav class="md-search__options" aria-label="Search">
+        
+        <button type="reset" class="md-search__icon md-icon" title="Clear" aria-label="Clear" tabindex="-1">
+          
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M19 6.41 17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12z"/></svg>
+        </button>
+      </nav>
+      
+    </form>
+    <div class="md-search__output">
+      <div class="md-search__scrollwrap" tabindex="0" data-md-scrollfix>
+        <div class="md-search-result" data-md-component="search-result">
+          <div class="md-search-result__meta">
+            Initializing search
+          </div>
+          <ol class="md-search-result__list" role="presentation"></ol>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+      
+    
+    
+      <div class="md-header__source">
+        <a href="https://github.com/The-Obstacle-Is-The-Way/ai-psychiatrist" title="Go to repository" class="md-source" data-md-component="source">
+  <div class="md-source__icon md-icon">
+    
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 448 512"><!--! Font Awesome Free 7.1.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2025 Fonticons, Inc.--><path d="M439.6 236.1 244 40.5c-5.4-5.5-12.8-8.5-20.4-8.5s-15 3-20.4 8.4L162.5 81l51.5 51.5c27.1-9.1 52.7 16.8 43.4 43.7l49.7 49.7c34.2-11.8 61.2 31 35.5 56.7-26.5 26.5-70.2-2.9-56-37.3L240.3 199v121.9c25.3 12.5 22.3 41.8 9.1 55-6.4 6.4-15.2 10.1-24.3 10.1s-17.8-3.6-24.3-10.1c-17.6-17.6-11.1-46.9 11.2-56v-123c-20.8-8.5-24.6-30.7-18.6-45L142.6 101 8.5 235.1C3 240.6 0 247.9 0 255.5s3 15 8.5 20.4l195.6 195.7c5.4 5.4 12.7 8.4 20.4 8.4s15-3 20.4-8.4l194.7-194.7c5.4-5.4 8.4-12.8 8.4-20.4s-3-15-8.4-20.4"/></svg>
+  </div>
+  <div class="md-source__repository">
+    GitHub
+  </div>
+</a>
+      </div>
+    
+  </nav>
+  
+</header>
+    
+    <div class="md-container" data-md-component="container">
+      
+      
+        
+          
+        
+      
+      <main class="md-main" data-md-component="main">
+        <div class="md-main__inner md-grid">
+          
+            
+              
+              <div class="md-sidebar md-sidebar--primary" data-md-component="sidebar" data-md-type="navigation" >
+                <div class="md-sidebar__scrollwrap">
+                  <div class="md-sidebar__inner">
+                    
+
+
+
+<nav class="md-nav md-nav--primary" aria-label="Navigation" data-md-level="0">
+  <label class="md-nav__title" for="__drawer">
+    <a href="../../.." title="AI Psychiatrist" class="md-nav__button md-logo" aria-label="AI Psychiatrist" data-md-component="logo">
+      
+  
+  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 8a3 3 0 0 0 3-3 3 3 0 0 0-3-3 3 3 0 0 0-3 3 3 3 0 0 0 3 3m0 3.54C9.64 9.35 6.5 8 3 8v11c3.5 0 6.64 1.35 9 3.54 2.36-2.19 5.5-3.54 9-3.54V8c-3.5 0-6.64 1.35-9 3.54"/></svg>
+
+    </a>
+    AI Psychiatrist
+  </label>
+  
+    <div class="md-nav__source">
+      <a href="https://github.com/The-Obstacle-Is-The-Way/ai-psychiatrist" title="Go to repository" class="md-source" data-md-component="source">
+  <div class="md-source__icon md-icon">
+    
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 448 512"><!--! Font Awesome Free 7.1.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2025 Fonticons, Inc.--><path d="M439.6 236.1 244 40.5c-5.4-5.5-12.8-8.5-20.4-8.5s-15 3-20.4 8.4L162.5 81l51.5 51.5c27.1-9.1 52.7 16.8 43.4 43.7l49.7 49.7c34.2-11.8 61.2 31 35.5 56.7-26.5 26.5-70.2-2.9-56-37.3L240.3 199v121.9c25.3 12.5 22.3 41.8 9.1 55-6.4 6.4-15.2 10.1-24.3 10.1s-17.8-3.6-24.3-10.1c-17.6-17.6-11.1-46.9 11.2-56v-123c-20.8-8.5-24.6-30.7-18.6-45L142.6 101 8.5 235.1C3 240.6 0 247.9 0 255.5s3 15 8.5 20.4l195.6 195.7c5.4 5.4 12.7 8.4 20.4 8.4s15-3 20.4-8.4l194.7-194.7c5.4-5.4 8.4-12.8 8.4-20.4s-3-15-8.4-20.4"/></svg>
+  </div>
+  <div class="md-source__repository">
+    GitHub
+  </div>
+</a>
+    </div>
+  
+  <ul class="md-nav__list" data-md-scrollfix>
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../.." class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    AI Psychiatrist Documentation
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    
+    
+    
+    
+      
+        
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--section md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_2" >
+        
+          
+          <label class="md-nav__link" for="__nav_2" id="__nav_2_label" tabindex="">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+     research
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_2_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_2">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+     research
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../_research/hypotheses-explained/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Hypotheses Explained: Current State vs Future Improvements
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../_research/hypotheses-for-improvement/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Hypotheses for Improvement: First-Principles Analysis
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../_research/master-bug-audit/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    MASTER BUG AUDIT
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    
+    
+    
+    
+      
+        
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--section md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_3" >
+        
+          
+          <label class="md-nav__link" for="__nav_3" id="__nav_3_label" tabindex="">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Architecture
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_3_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_3">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    Architecture
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../architecture/architecture/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Architecture
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../architecture/future-architecture/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Future Architecture: Agent Orchestration Options
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../architecture/pipeline/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Pipeline
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    
+    
+    
+    
+      
+        
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--section md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_4" >
+        
+          
+          <label class="md-nav__link" for="__nav_4" id="__nav_4_label" tabindex="">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Clinical
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_4_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_4">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    Clinical
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../clinical/clinical-understanding/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Clinical Understanding: How This System Works
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../clinical/glossary/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Glossary
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../clinical/phq8/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    PHQ-8: Patient Health Questionnaire
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../clinical/task-validity/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Task Validity: What Can (and Cannot) Be Inferred from DAIC-WOZ Transcripts
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    
+    
+    
+    
+      
+        
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--section md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_5" >
+        
+          
+          <label class="md-nav__link" for="__nav_5" id="__nav_5_label" tabindex="">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Configs
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_5_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_5">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    Configs
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../configs/agent-sampling-registry/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Agent Sampling Parameter Registry
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../configs/configuration-philosophy/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Configuration Philosophy
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../configs/configuration/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Configuration Reference
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    
+    
+    
+    
+      
+        
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--section md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_6" >
+        
+          
+          <label class="md-nav__link" for="__nav_6" id="__nav_6_label" tabindex="">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Data
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_6_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_6">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    Data
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../data/artifact-namespace-registry/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Artifact Namespace Registry
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../data/daic-woz-preprocessing/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    DAIC-WOZ Transcript Preprocessing (Bias-Aware, Deterministic)
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../data/daic-woz-schema/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    DAIC-WOZ Dataset Schema
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../data/data-splits-overview/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Data Splits Overview
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    
+    
+    
+    
+      
+        
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--section md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_7" >
+        
+          
+          <label class="md-nav__link" for="__nav_7" id="__nav_7_label" tabindex="">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Developer
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_7_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_7">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    Developer
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../developer/api-endpoints/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    API Reference
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../developer/dependency-registry/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Dependency Registry
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../developer/error-handling/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Error Handling and Fail-Fast Philosophy
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../developer/exceptions/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Exception Reference (Domain + Runtime)
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../developer/testing/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Testing Conventions (Markers, Fixtures, and Test Doubles)
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    
+    
+    
+    
+      
+        
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--section md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_8" >
+        
+          
+          <label class="md-nav__link" for="__nav_8" id="__nav_8_label" tabindex="">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Getting started
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_8_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_8">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    Getting started
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../getting-started/quickstart/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Quickstart Guide
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    
+    
+    
+    
+      
+        
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--section md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_9" >
+        
+          
+          <label class="md-nav__link" for="__nav_9" id="__nav_9_label" tabindex="">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Models
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_9_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_9">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    Models
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../models/model-registry/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    AI Psychiatrist Model Registry
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../models/model-wiring/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Model Wiring: Current State
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    
+    
+    
+    
+      
+        
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--section md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_10" >
+        
+          
+          <label class="md-nav__link" for="__nav_10" id="__nav_10_label" tabindex="">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Pipeline internals
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_10_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_10">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    Pipeline internals
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../pipeline-internals/evidence-extraction/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Evidence Extraction Mechanism: How It Actually Works
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../pipeline-internals/features/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Feature Reference (Non-Archive Canonical)
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    
+    
+    
+    
+      
+        
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--section md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_11" >
+        
+          
+          <label class="md-nav__link" for="__nav_11" id="__nav_11_label" tabindex="">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Preflight checklist
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_11_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_11">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    Preflight checklist
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../preflight-checklist/preflight-checklist-few-shot/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Preflight Checklist: Few-Shot Reproduction
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../preflight-checklist/preflight-checklist-zero-shot/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Preflight Checklist: Zero-Shot Run
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    
+    
+    
+    
+      
+        
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--section md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_12" >
+        
+          
+          <label class="md-nav__link" for="__nav_12" id="__nav_12_label" tabindex="">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Rag
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_12_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_12">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    Rag
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../rag/artifact-generation/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    RAG Artifact Generation
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../rag/chunk-scoring/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Chunk-Level Scoring (Spec 35) — Schema, Workflow, and Gotchas
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../rag/debugging/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    RAG Debugging (Audit Logs + Guardrails)
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../rag/design-rationale/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    RAG Design Rationale
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../rag/overview/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    RAG Overview: Embeddings and Few-Shot Retrieval
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../rag/runtime-features/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    RAG Runtime Features
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    
+    
+    
+    
+      
+        
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--section md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_13" >
+        
+          
+          <label class="md-nav__link" for="__nav_13" id="__nav_13_label" tabindex="">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Results
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_13_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_13">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    Results
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../results/few-shot-analysis/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Why Few-Shot May Not Beat Zero-Shot: Analysis
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../results/reproduction-results/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Paper Reproduction Results (Current Status)
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../results/run-history/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Complete Run History &amp; Statistical Analysis
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../results/run-output-schema/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Reproduction Run Output Schema (JSON + Registry)
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    
+    
+    
+    
+      
+        
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--section md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_14" >
+        
+          
+          <label class="md-nav__link" for="__nav_14" id="__nav_14_label" tabindex="">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Statistics
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_14_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_14">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    Statistics
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../statistics/coverage/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Coverage Explained: What It Is and Why It Matters
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../statistics/metrics-and-evaluation/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Metrics and Evaluation (Exact Definitions + Output Schema)
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../statistics/statistical-methodology-aurc-augrc/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Statistical Methodology: AURC/AUGRC for Selective Prediction
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+  </ul>
+</nav>
+                  </div>
+                </div>
+              </div>
+            
+            
+              
+              <div class="md-sidebar md-sidebar--secondary" data-md-component="sidebar" data-md-type="toc" >
+                <div class="md-sidebar__scrollwrap">
+                  <div class="md-sidebar__inner">
+                    
+
+<nav class="md-nav md-nav--secondary" aria-label="Table of contents">
+  
+  
+  
+    
+  
+  
+    <label class="md-nav__title" for="__toc">
+      <span class="md-nav__icon md-icon"></span>
+      Table of contents
+    </label>
+    <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
+      
+        <li class="md-nav__item">
+  <a href="#executive-summary" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Executive Summary
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#audit-scope" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Audit Scope
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Audit Scope">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#files-reviewed" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Files Reviewed
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#standards-applied" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Standards Applied
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#positive-findings-things-done-right" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Positive Findings (Things Done Right)
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Positive Findings (Things Done Right)">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#1-mockllmclient-properly-located" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        1. MockLLMClient Properly Located ✅
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#2-protocol-based-testing" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        2. Protocol-Based Testing ✅
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#21-mockllmclient-protocol-compliance" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        2.1 MockLLMClient Protocol Compliance ✅
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#3-e2e-tests-with-real-ollama" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        3. E2E Tests with Real Ollama ✅
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#4-pydantic-ai-extractors-properly-tested" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        4. Pydantic AI Extractors Properly Tested ✅
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#5-asyncsync-mock-separation" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        5. Async/Sync Mock Separation ✅
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#6-test-isolation-via-conftestpy" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        6. Test Isolation via conftest.py ✅
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#7-comprehensive-edge-case-coverage" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        7. Comprehensive Edge Case Coverage ✅
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#issues-found" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Issues Found
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Issues Found">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#p1-pydantic-ai-execution-path-not-covered-by-default-test-runs-ci-risk-resolved" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        P1: Pydantic AI Execution Path Not Covered by Default Test Runs (CI Risk) — RESOLVED
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#p2-contract-drift-risk-from-unspecced-magicmock-asyncmock-resolved" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        P2: Contract Drift Risk from Unspecced MagicMock / AsyncMock — RESOLVED
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#p3-tests-rely-on-enum-iteration-order-resolved" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        P3: Tests Rely on Enum Iteration Order — RESOLVED
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#p5-large-hardcoded-response-strings" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        P5: Large Hardcoded Response Strings
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#issues-not-found-false-concerns-addressed" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Issues NOT Found (False Concerns Addressed)
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Issues NOT Found (False Concerns Addressed)">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#over-mocking-testing-the-mock" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        ❌ "Over-mocking / Testing the Mock"
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#low-coverage" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        ❌ "Low Coverage"
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#mocks-dont-match-implementations" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        ❌ "Mocks Don't Match Implementations"
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#asyncmock-warnings" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        ❌ "AsyncMock Warnings"
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#best-practices-assessment-2025" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Best Practices Assessment (2025)
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#recommendations-summary" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Recommendations Summary
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#remediation-summary" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Remediation Summary
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#acceptance-criteria" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Acceptance Criteria
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#references" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        References
+      
+    </span>
+  </a>
+  
+</li>
+      
+    </ul>
+  
+</nav>
+                  </div>
+                </div>
+              </div>
+            
+          
+          
+            <div class="md-content" data-md-component="content">
+              
+              <article class="md-content__inner md-typeset">
+                
+                  
+
+
+  
+    <a href="https://github.com/The-Obstacle-Is-The-Way/ai-psychiatrist/edit/main/docs/_archive/specs/19-test-suite-mock-audit.md" title="Edit this page" class="md-content__button md-icon" rel="edit">
+      
+      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M10 20H6V4h7v5h5v3.1l2-2V8l-6-6H6c-1.1 0-2 .9-2 2v16c0 1.1.9 2 2 2h4zm10.2-7c.1 0 .3.1.4.2l1.3 1.3c.2.2.2.6 0 .8l-1 1-2.1-2.1 1-1c.1-.1.2-.2.4-.2m0 3.9L14.1 23H12v-2.1l6.1-6.1z"/></svg>
+    </a>
+  
+  
+    
+      
+    
+    <a href="https://github.com/The-Obstacle-Is-The-Way/ai-psychiatrist/raw/main/docs/_archive/specs/19-test-suite-mock-audit.md" title="View source of this page" class="md-content__button md-icon">
+      
+      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M17 18c.56 0 1 .44 1 1s-.44 1-1 1-1-.44-1-1 .44-1 1-1m0-3c-2.73 0-5.06 1.66-6 4 .94 2.34 3.27 4 6 4s5.06-1.66 6-4c-.94-2.34-3.27-4-6-4m0 6.5a2.5 2.5 0 0 1-2.5-2.5 2.5 2.5 0 0 1 2.5-2.5 2.5 2.5 0 0 1 2.5 2.5 2.5 2.5 0 0 1-2.5 2.5M9.27 20H6V4h7v5h5v4.07c.7.08 1.36.25 2 .49V8l-6-6H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h4.5a8.2 8.2 0 0 1-1.23-2"/></svg>
+    </a>
+  
+
+
+<h1 id="spec-19-test-suite-mock-audit">Spec 19: Test Suite Mock Audit</h1>
+<blockquote>
+<p><strong>STATUS: AUDIT COMPLETE — IMPROVEMENTS IMPLEMENTED (ARCHIVED)</strong></p>
+<p><strong>GitHub Issue</strong>: #59</p>
+<p><strong>Priority</strong>: Medium (test coverage + mock hygiene)</p>
+<p><strong>Last Updated</strong>: 2025-12-31</p>
+</blockquote>
+<hr />
+<h2 id="executive-summary">Executive Summary</h2>
+<p>A comprehensive audit of the test suite was conducted to evaluate:
+1. Whether mocks are appropriate given extensive refactoring
+2. Whether assertions match current codebase behavior
+3. Whether the mocking strategy follows 2025 ML testing best practices</p>
+<p><strong>Overall Verdict: The test suite is healthy and the prior high-impact gaps are now closed.</strong></p>
+<p>The codebase went through significant refactoring (Pydantic AI integration, embedding backend decoupling, model wiring fixes), and the tests have been properly updated.</p>
+<p>This spec originally identified two higher-impact gaps (P1/P2 below). Both have since been addressed:
+1. Offline unit tests now exercise the Pydantic AI <code>.run(...)</code> path for all core agents (no network required).
+2. Contract-bearing mocks were hardened (use of <code>spec_set</code> and real settings objects).</p>
+<hr />
+<h2 id="audit-scope">Audit Scope</h2>
+<h3 id="files-reviewed">Files Reviewed</h3>
+<table>
+<thead>
+<tr>
+<th>Category</th>
+<th>Files Reviewed</th>
+<th>Coverage</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Mock Infrastructure</td>
+<td><code>tests/fixtures/mock_llm.py</code>, <code>tests/conftest.py</code></td>
+<td>100%</td>
+</tr>
+<tr>
+<td>Agent Unit Tests</td>
+<td><code>test_quantitative.py</code>, <code>test_judge.py</code>, <code>test_qualitative.py</code>, <code>test_meta_review.py</code></td>
+<td>100%</td>
+</tr>
+<tr>
+<td>Service Tests</td>
+<td><code>test_feedback_loop.py</code>, <code>test_embedding.py</code>, <code>test_reference_store.py</code></td>
+<td>100%</td>
+</tr>
+<tr>
+<td>Extractor Tests</td>
+<td><code>test_pydantic_ai_extractors.py</code></td>
+<td>100%</td>
+</tr>
+<tr>
+<td>Integration Tests</td>
+<td><code>test_dual_path_pipeline.py</code>, <code>test_qualitative_pipeline.py</code></td>
+<td>100%</td>
+</tr>
+<tr>
+<td>E2E Tests</td>
+<td><code>test_agents_real_ollama.py</code>, <code>test_ollama_smoke.py</code>, <code>test_server_real_ollama.py</code></td>
+<td>100%</td>
+</tr>
+</tbody>
+</table>
+<h3 id="standards-applied">Standards Applied</h3>
+<ol>
+<li><strong>Clean Architecture</strong> (Robert C. Martin): test doubles live in <code>tests/</code>, not <code>src/</code></li>
+<li><strong>Google Testing Best Practices</strong>: test behavior, not implementation</li>
+<li><strong>pytest Best Practices</strong>: deterministic unit tests, strict markers, fixture isolation</li>
+<li><strong>ML Testing Best Practices</strong>: mock LLM I/O boundaries, stress parsing/validation paths</li>
+</ol>
+<hr />
+<h2 id="positive-findings-things-done-right">Positive Findings (Things Done Right)</h2>
+<h3 id="1-mockllmclient-properly-located">1. MockLLMClient Properly Located ✅</h3>
+<p><strong>Location</strong>: <code>tests/fixtures/mock_llm.py</code></p>
+<p><strong>Standard</strong>: Clean Architecture (test/prod separation)</p>
+<p>Per BUG-001 resolution, <code>MockLLMClient</code> was moved from <code>src/</code> to <code>tests/fixtures/</code>. This ensures:
+- Test doubles are not shipped in production artifacts
+- Reduced risk of mock contamination in production paths
+- Clear separation of test and production environments</p>
+<h3 id="2-protocol-based-testing">2. Protocol-Based Testing ✅</h3>
+<p><strong>Location</strong>: <code>test_quantitative.py:560-593</code>, <code>test_qualitative.py:386-417</code></p>
+<p>Tests verify that <code>MockLLMClient</code> implements <code>SimpleChatClient</code> protocol:</p>
+<div class="highlight"><pre><span></span><code><span class="k">def</span><span class="w"> </span><span class="nf">test_mock_client_implements_protocol</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;MockLLMClient should implement SimpleChatClient protocol.&quot;&quot;&quot;</span>
+    <span class="n">client</span> <span class="o">=</span> <span class="n">MockLLMClient</span><span class="p">()</span>
+    <span class="k">assert</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">client</span><span class="p">,</span> <span class="n">SimpleChatClient</span><span class="p">)</span>
+</code></pre></div>
+<p>This follows the Dependency Inversion Principle - agents depend on protocols, not implementations.</p>
+<h3 id="21-mockllmclient-protocol-compliance">2.1 MockLLMClient Protocol Compliance ✅</h3>
+<p><strong>Location</strong>: <code>tests/unit/infrastructure/llm/test_mock.py</code></p>
+<p>In addition to <code>SimpleChatClient</code> compatibility, the mock is validated against the protocol surface used by production services:
+- <code>ChatClient</code>
+- <code>EmbeddingClient</code>
+- <code>LLMClient</code></p>
+<p>This meaningfully reduces the chance of “fossilized mocks” silently diverging from the real request/response contracts.</p>
+<h3 id="3-e2e-tests-with-real-ollama">3. E2E Tests with Real Ollama ✅</h3>
+<p><strong>Location</strong>: <code>tests/e2e/test_agents_real_ollama.py</code>, <code>tests/e2e/test_server_real_ollama.py</code></p>
+<p>The codebase has opt-in e2e tests that exercise real Ollama integration (agent-level checks and the FastAPI <code>/full_pipeline</code> endpoint):</p>
+<div class="highlight"><pre><span></span><code><span class="n">pytestmark</span> <span class="o">=</span> <span class="n">pytest</span><span class="o">.</span><span class="n">mark</span><span class="o">.</span><span class="n">e2e</span>
+
+<span class="nd">@pytest</span><span class="o">.</span><span class="n">mark</span><span class="o">.</span><span class="n">ollama</span>
+<span class="nd">@pytest</span><span class="o">.</span><span class="n">mark</span><span class="o">.</span><span class="n">slow</span>
+<span class="k">class</span><span class="w"> </span><span class="nc">TestAgentsRealOllama</span><span class="p">:</span>
+    <span class="k">async</span> <span class="k">def</span><span class="w"> </span><span class="nf">test_qualitative_agent_assess_real_ollama</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="o">...</span><span class="p">):</span>
+        <span class="o">...</span>
+</code></pre></div>
+<p>Run with: <code>AI_PSYCHIATRIST_OLLAMA_TESTS=1 make test-e2e</code></p>
+<p>This addresses BUG-007's concern about "testing the mock" by having real LLM integration tests.</p>
+<h3 id="4-pydantic-ai-extractors-properly-tested">4. Pydantic AI Extractors Properly Tested ✅</h3>
+<p><strong>Location</strong>: <code>tests/unit/agents/test_pydantic_ai_extractors.py</code></p>
+<p>Extractors that raise <code>ModelRetry</code> on validation failure are thoroughly tested:</p>
+<div class="highlight"><pre><span></span><code><span class="k">def</span><span class="w"> </span><span class="nf">test_extract_quantitative_missing_answer_tags_retries</span><span class="p">()</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+    <span class="k">with</span> <span class="n">pytest</span><span class="o">.</span><span class="n">raises</span><span class="p">(</span><span class="n">ModelRetry</span><span class="p">):</span>
+        <span class="n">extract_quantitative</span><span class="p">(</span><span class="s2">&quot;no answer tags here&quot;</span><span class="p">)</span>
+
+<span class="k">def</span><span class="w"> </span><span class="nf">test_extract_quantitative_invalid_json_retries</span><span class="p">()</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+    <span class="k">with</span> <span class="n">pytest</span><span class="o">.</span><span class="n">raises</span><span class="p">(</span><span class="n">ModelRetry</span><span class="p">):</span>
+        <span class="n">extract_quantitative</span><span class="p">(</span><span class="s2">&quot;&lt;answer&gt;{not valid json}&lt;/answer&gt;&quot;</span><span class="p">)</span>
+</code></pre></div>
+<p>This tests the Pydantic AI validation + retry contract independently.</p>
+<h3 id="5-asyncsync-mock-separation">5. Async/Sync Mock Separation ✅</h3>
+<p><strong>Location</strong>: <code>tests/unit/services/test_feedback_loop.py:57-58</code></p>
+<p>Per BUG-005 resolution, <code>get_feedback_for_low_scores()</code> (sync method) is mocked as <code>Mock</code>, not <code>AsyncMock</code>:</p>
+<div class="highlight"><pre><span></span><code><span class="n">agent</span><span class="o">.</span><span class="n">get_feedback_for_low_scores</span> <span class="o">=</span> <span class="n">Mock</span><span class="p">(</span><span class="n">return_value</span><span class="o">=</span><span class="p">{})</span>
+</code></pre></div>
+<p>This avoids the "coroutine was never awaited" RuntimeWarning.</p>
+<h3 id="6-test-isolation-via-conftestpy">6. Test Isolation via conftest.py ✅</h3>
+<p><strong>Location</strong>: <code>tests/conftest.py:1-84</code></p>
+<p>Proper test isolation is implemented:
+- <code>TESTING=1</code> env var prevents <code>.env</code> loading in unit tests
+- 37 environment variables explicitly cleared
+- <code>get_settings.cache_clear()</code> ensures fresh config reads
+- Tests are explicitly marked via module-level <code>pytestmark = pytest.mark.unit|integration|e2e</code></p>
+<h3 id="7-comprehensive-edge-case-coverage">7. Comprehensive Edge Case Coverage ✅</h3>
+<p><strong>Location</strong>: <code>test_quantitative.py:262-411</code>, <code>test_embedding.py:574-763</code></p>
+<p>Tests cover:
+- JSON parsing with smart quotes, trailing commas, markdown blocks
+- Missing PHQ-8 items filled with defaults
+- Embedding dimension mismatches
+- Similarity transformation edge cases (cos=-1 → 0.0, cos=0 → 0.5, cos=1 → 1.0)</p>
+<hr />
+<h2 id="issues-found">Issues Found</h2>
+<h3 id="p1-pydantic-ai-execution-path-not-covered-by-default-test-runs-ci-risk-resolved">P1: Pydantic AI Execution Path Not Covered by Default Test Runs (CI Risk) — RESOLVED</h3>
+<p><strong>Severity</strong>: P1 (High)</p>
+<p><strong>What was wrong (historical)</strong>: The core agents originally had a legacy <code>simple_chat</code> execution path alongside Pydantic AI. This made it possible for tests (and even production misconfiguration) to run without exercising the Pydantic AI <code>.run(...)</code> path.</p>
+<p><strong>Current state</strong>: Legacy fallback is disabled. When <code>pydantic_ai.enabled</code> is true, agents require <code>ollama_base_url</code> and raise immediately if it is missing. This enforces fail-fast research behavior and makes it impossible for tests to “accidentally” validate only the legacy path.</p>
+<p><strong>Fix implemented</strong>: Offline unit tests now exercise the Pydantic AI <code>.run(...)</code> path for all core agents (no network required) by patching <code>create_*_agent()</code> factories and providing <code>ollama_base_url</code>:
+- <code>tests/unit/agents/test_quantitative.py</code> (<code>test_pydantic_ai_path_success</code>)
+- <code>tests/unit/agents/test_judge.py</code> (<code>test_pydantic_ai_path_success</code>)
+- <code>tests/unit/agents/test_meta_review.py</code> (<code>test_pydantic_ai_path_success</code>)
+- <code>tests/unit/agents/test_qualitative.py</code> (<code>test_pydantic_ai_path_success</code>)</p>
+<p><strong>Evidence</strong> (representative; repeated across agents): when enabled but missing base URL, agents raise (no silent fallback):</p>
+<div class="highlight"><pre><span></span><code><span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_pydantic_ai</span><span class="o">.</span><span class="n">enabled</span><span class="p">:</span>
+    <span class="k">if</span> <span class="ow">not</span> <span class="bp">self</span><span class="o">.</span><span class="n">_ollama_base_url</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span>
+            <span class="s2">&quot;Pydantic AI enabled but no ollama_base_url provided. &quot;</span>
+            <span class="s2">&quot;Legacy fallback is disabled.&quot;</span>
+        <span class="p">)</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_scoring_agent</span> <span class="o">=</span> <span class="n">create_quantitative_agent</span><span class="p">(</span><span class="o">...</span><span class="p">)</span>
+</code></pre></div>
+<hr />
+<h3 id="p2-contract-drift-risk-from-unspecced-magicmock-asyncmock-resolved">P2: Contract Drift Risk from Unspecced MagicMock / AsyncMock — RESOLVED</h3>
+<p><strong>Severity</strong>: P2 (Medium)</p>
+<p><strong>What was wrong</strong>: Some tests used “free-form” mocks for collaborators that represent real interfaces (settings objects and agent/service boundaries). Unspecced mocks can silently accept new/incorrect attribute and method usage, masking breaking changes.</p>
+<p><strong>Fix implemented</strong>:
+- <code>tests/unit/services/test_embedding.py</code> now uses real <code>EmbeddingSettings(...)</code> objects instead of free-form mocks.
+- <code>tests/unit/services/test_feedback_loop.py</code> now uses <code>AsyncMock(spec_set=QualitativeAssessmentAgent)</code> and <code>AsyncMock(spec_set=JudgeAgent)</code>.
+- <code>tests/unit/services/test_reference_store.py</code> now uses <code>MagicMock(spec_set=numpy.lib.npyio.NpzFile)</code>.
+- Agent tests now use <code>AsyncMock(spec_set=pydantic_ai.Agent)</code>.</p>
+<p><strong>Outcome</strong>: Contract drift is less likely to slip through because mocks/settings now enforce real attribute/method surfaces.</p>
+<hr />
+<h3 id="p3-tests-rely-on-enum-iteration-order-resolved">P3: Tests Rely on Enum Iteration Order — RESOLVED</h3>
+<p><strong>Severity</strong>: P3 (Low)
+<strong>Location</strong>: <code>tests/unit/agents/test_judge.py:88-107, 117-138</code></p>
+<p><strong>What was wrong</strong>: Tests relied on <code>EvaluationMetric</code> enum iteration order, which is fragile if the enum changes.</p>
+<p><strong>Fix implemented</strong>: <code>tests/unit/agents/test_judge.py</code> now uses <code>MockLLMClient(chat_function=...)</code> to return responses based on prompt content, making the tests stable regardless of enum order:</p>
+<div class="highlight"><pre><span></span><code><span class="k">def</span><span class="w"> </span><span class="nf">response_by_metric</span><span class="p">(</span><span class="n">request</span><span class="p">:</span> <span class="n">ChatRequest</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span>
+    <span class="k">if</span> <span class="s2">&quot;coherence&quot;</span> <span class="ow">in</span> <span class="n">request</span><span class="o">.</span><span class="n">messages</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span><span class="o">.</span><span class="n">content</span><span class="o">.</span><span class="n">lower</span><span class="p">():</span>
+        <span class="k">return</span> <span class="s2">&quot;Explanation: Good</span><span class="se">\n</span><span class="s2">Score: 5&quot;</span>
+    <span class="k">elif</span> <span class="s2">&quot;completeness&quot;</span> <span class="ow">in</span> <span class="n">request</span><span class="o">.</span><span class="n">messages</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span><span class="o">.</span><span class="n">content</span><span class="o">.</span><span class="n">lower</span><span class="p">():</span>
+        <span class="k">return</span> <span class="s2">&quot;Explanation: Bad</span><span class="se">\n</span><span class="s2">Score: 2&quot;</span>
+    <span class="o">...</span>
+
+<span class="n">mock_client</span> <span class="o">=</span> <span class="n">MockLLMClient</span><span class="p">(</span><span class="n">chat_function</span><span class="o">=</span><span class="n">response_by_metric</span><span class="p">)</span>
+</code></pre></div>
+<hr />
+<h3 id="p5-large-hardcoded-response-strings">P5: Large Hardcoded Response Strings</h3>
+<p><strong>Severity</strong>: P5 (Cosmetic)
+<strong>Location</strong>: <code>test_dual_path_pipeline.py:39-152</code>, <code>test_quantitative.py:63-91</code></p>
+<p><strong>Issue</strong>: Large response strings like <code>SAMPLE_QUALITATIVE_RESPONSE</code>, <code>SAMPLE_QUANT_SCORING_RESPONSE</code> are defined in test files.</p>
+<p><strong>Impact</strong>: None functional. The strings are readable and explicit.</p>
+<p><strong>Recommendation</strong>: No action needed. Current approach is acceptable per "explicit is better than implicit" principle.</p>
+<hr />
+<h2 id="issues-not-found-false-concerns-addressed">Issues NOT Found (False Concerns Addressed)</h2>
+<h3 id="over-mocking-testing-the-mock">❌ "Over-mocking / Testing the Mock"</h3>
+<p><strong>Status</strong>: Mostly mitigated (note: e2e is opt-in)</p>
+<p>Per BUG-020's validation, this was already addressed:
+- E2E tests with real Ollama exist
+- Unit tests verify protocol compatibility
+- Integration tests exercise full pipelines</p>
+<h3 id="low-coverage">❌ "Low Coverage"</h3>
+<p><strong>Status</strong>: Coverage is enforced; absolute % will drift</p>
+<p>Coverage is enforced via <code>pyproject.toml</code> pytest <code>addopts</code> (<code>--cov-fail-under=80</code>). Treat any single percentage as a measurement at a point in time, not a permanent guarantee.</p>
+<h3 id="mocks-dont-match-implementations">❌ "Mocks Don't Match Implementations"</h3>
+<p><strong>Status</strong>: Mitigated</p>
+<p>The <code>MockLLMClient</code> is validated against <code>ChatClient</code> / <code>EmbeddingClient</code> / <code>LLMClient</code> (and <code>SimpleChatClient</code> in agent tests), which strongly limits drift. Additional contract-bearing mocks were hardened as part of P2.</p>
+<h3 id="asyncmock-warnings">❌ "AsyncMock Warnings"</h3>
+<p><strong>Status</strong>: Resolved in BUG-005</p>
+<p>The feedback loop tests now use sync <code>Mock</code> for sync methods.</p>
+<hr />
+<h2 id="best-practices-assessment-2025">Best Practices Assessment (2025)</h2>
+<table>
+<thead>
+<tr>
+<th>Practice</th>
+<th>Status</th>
+<th>Notes</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Test doubles in tests/, not src/</td>
+<td>✅</td>
+<td>BUG-001 resolved</td>
+</tr>
+<tr>
+<td>Protocol-based mocking</td>
+<td>✅</td>
+<td><code>ChatClient</code> / <code>EmbeddingClient</code> / <code>LLMClient</code> + <code>SimpleChatClient</code></td>
+</tr>
+<tr>
+<td>Separate unit/integration/E2E</td>
+<td>✅</td>
+<td>Directory structure + markers</td>
+</tr>
+<tr>
+<td>Real LLM integration tests</td>
+<td>✅</td>
+<td>opt-in E2E with Ollama</td>
+</tr>
+<tr>
+<td>Test edge cases (parsing, validation)</td>
+<td>✅</td>
+<td>Extensive coverage</td>
+</tr>
+<tr>
+<td>Async/sync mock separation</td>
+<td>✅</td>
+<td>BUG-005 resolved</td>
+</tr>
+<tr>
+<td>Test isolation (env vars, caching)</td>
+<td>✅</td>
+<td>conftest.py</td>
+</tr>
+<tr>
+<td>Auto-applied test markers</td>
+<td>✅</td>
+<td><code>pytest_collection_modifyitems</code> in <code>tests/conftest.py</code></td>
+</tr>
+<tr>
+<td>Pydantic AI retry/validation testing</td>
+<td>✅</td>
+<td>Extractors tested</td>
+</tr>
+<tr>
+<td>Avoid unspecced mocks for interfaces</td>
+<td>✅</td>
+<td>All core mocks now have <code>spec_set</code>.</td>
+</tr>
+</tbody>
+</table>
+<hr />
+<h2 id="recommendations-summary">Recommendations Summary</h2>
+<table>
+<thead>
+<tr>
+<th>Priority</th>
+<th>Issue</th>
+<th>Recommendation</th>
+<th>Effort</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>P1</td>
+<td>Pydantic AI path not covered in default runs</td>
+<td>✅ Implemented: offline unit tests cover <code>.run(...)</code> path</td>
+<td>-</td>
+</tr>
+<tr>
+<td>P2</td>
+<td>Unspecced mocks for contract interfaces</td>
+<td>✅ Implemented: real settings + <code>spec_set</code> mocks</td>
+<td>-</td>
+</tr>
+<tr>
+<td>P3</td>
+<td>Enum order reliance in judge tests</td>
+<td>✅ Implemented: <code>chat_function</code>-based responses</td>
+<td>-</td>
+</tr>
+<tr>
+<td>P5</td>
+<td>Large hardcoded response strings</td>
+<td>No action needed</td>
+<td>-</td>
+</tr>
+</tbody>
+</table>
+<hr />
+<h2 id="remediation-summary">Remediation Summary</h2>
+<p>The remediations described in P1/P2/P3 are implemented and run in the default unit suite:</p>
+<ul>
+<li>P1: Offline <code>.run(...)</code>-path tests for all agents (patch <code>create_*_agent()</code> factories in each agent test module).</li>
+<li>P2: Hardened contract mocks (use <code>spec_set</code> for agent/service boundaries; use real settings objects where practical).</li>
+<li>P3: Removed enum-order reliance in judge tests via <code>MockLLMClient(chat_function=...)</code>.</li>
+</ul>
+<hr />
+<h2 id="acceptance-criteria">Acceptance Criteria</h2>
+<ul>
+<li>[x] Audit completed with documented findings</li>
+<li>[x] 2025 best practices verified</li>
+<li>[x] P1 issue addressed (offline unit tests cover Pydantic AI <code>.run(...)</code> path)</li>
+<li>[x] P2 issue addressed (real settings + <code>spec_set</code> mocks for contract-bearing collaborators)</li>
+<li>[x] P3 issue addressed (no enum-order reliance in judge tests)</li>
+</ul>
+<hr />
+<h2 id="references">References</h2>
+<ul>
+<li>BUG-001: MockLLMClient in Production Path (resolved)</li>
+<li>BUG-005: AsyncMock Warning in Feedback Loop Tests (resolved)</li>
+<li>BUG-019: Code Quality Audit (resolved)</li>
+<li>BUG-020: Jules Audit Findings (resolved)</li>
+<li>Spec 13: Pydantic AI Structured Outputs (implemented)</li>
+<li>Spec 17: Test Suite Marker Consistency (implemented)</li>
+<li>Spec 18: Qualitative Agent Robustness (implemented)</li>
+<li><a href="https://docs.pytest.org/en/stable/explanation/goodpractices.html">pytest Best Practices</a></li>
+<li><a href="https://blog.cleancoder.com/uncle-bob/2014/05/14/TheLittleMocker.html">Clean Architecture - Test Doubles</a></li>
+</ul>
+
+
+
+
+
+
+
+
+
+
+
+
+                
+              </article>
+            </div>
+          
+          
+<script>var target=document.getElementById(location.hash.slice(1));target&&target.name&&(target.checked=target.name.startsWith("__tabbed_"))</script>
+        </div>
+        
+      </main>
+      
+        <footer class="md-footer">
+  
+    
+  
+  <div class="md-footer-meta md-typeset">
+    <div class="md-footer-meta__inner md-grid">
+      <div class="md-copyright">
+  
+  
+    Made with
+    <a href="https://squidfunk.github.io/mkdocs-material/" target="_blank" rel="noopener">
+      Material for MkDocs
+    </a>
+  
+</div>
+      
+    </div>
+  </div>
+</footer>
+      
+    </div>
+    <div class="md-dialog" data-md-component="dialog">
+      <div class="md-dialog__inner md-typeset"></div>
+    </div>
+    
+    
+    
+      
+      
+      <script id="__config" type="application/json">{"annotate": null, "base": "../../..", "features": ["content.code.copy", "content.action.edit", "content.action.view", "navigation.tracking", "navigation.sections", "navigation.footer", "navigation.instant"], "search": "../../../assets/javascripts/workers/search.2c215733.min.js", "tags": null, "translations": {"clipboard.copied": "Copied to clipboard", "clipboard.copy": "Copy to clipboard", "search.result.more.one": "1 more on this page", "search.result.more.other": "# more on this page", "search.result.none": "No matching documents", "search.result.one": "1 matching document", "search.result.other": "# matching documents", "search.result.placeholder": "Type to start searching", "search.result.term.missing": "Missing", "select.version": "Select version"}, "version": null}</script>
+    
+    
+      <script src="../../../assets/javascripts/bundle.79ae519e.min.js"></script>
+      
+    
+  </body>
+</html>

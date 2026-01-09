@@ -1,0 +1,4206 @@
+
+<!doctype html>
+<html lang="en" class="no-js">
+  <head>
+    
+      <meta charset="utf-8">
+      <meta name="viewport" content="width=device-width,initial-scale=1">
+      
+      
+      
+        <link rel="canonical" href="https://the-obstacle-is-the-way.github.io/ai-psychiatrist/_archive/bugs/bug-031-few-shot-retrieval-mismatch/">
+      
+      
+      
+      
+        
+      
+      
+      <link rel="icon" href="../../../assets/images/favicon.png">
+      <meta name="generator" content="mkdocs-1.6.1, mkdocs-material-9.7.1">
+    
+    
+      
+        <title>BUG-031: Few-Shot Retrieval Issues - AI Psychiatrist</title>
+      
+    
+    
+      <link rel="stylesheet" href="../../../assets/stylesheets/main.484c7ddc.min.css">
+      
+      
+
+
+    
+    
+      
+    
+    
+      
+        
+        
+        <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+        <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Roboto:300,300i,400,400i,700,700i%7CRoboto+Mono:400,400i,700,700i&display=fallback">
+        <style>:root{--md-text-font:"Roboto";--md-code-font:"Roboto Mono"}</style>
+      
+    
+    
+    <script>__md_scope=new URL("../../..",location),__md_hash=e=>[...e].reduce(((e,_)=>(e<<5)-e+_.charCodeAt(0)),0),__md_get=(e,_=localStorage,t=__md_scope)=>JSON.parse(_.getItem(t.pathname+"."+e)),__md_set=(e,_,t=localStorage,a=__md_scope)=>{try{t.setItem(a.pathname+"."+e,JSON.stringify(_))}catch(e){}}</script>
+    
+      
+
+    
+    
+  </head>
+  
+  
+    <body dir="ltr">
+  
+    
+    <input class="md-toggle" data-md-toggle="drawer" type="checkbox" id="__drawer" autocomplete="off">
+    <input class="md-toggle" data-md-toggle="search" type="checkbox" id="__search" autocomplete="off">
+    <label class="md-overlay" for="__drawer"></label>
+    <div data-md-component="skip">
+      
+        
+        <a href="#bug-031-few-shot-retrieval-issues" class="md-skip">
+          Skip to content
+        </a>
+      
+    </div>
+    <div data-md-component="announce">
+      
+    </div>
+    
+    
+      
+
+  
+
+<header class="md-header md-header--shadow" data-md-component="header">
+  <nav class="md-header__inner md-grid" aria-label="Header">
+    <a href="../../.." title="AI Psychiatrist" class="md-header__button md-logo" aria-label="AI Psychiatrist" data-md-component="logo">
+      
+  
+  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 8a3 3 0 0 0 3-3 3 3 0 0 0-3-3 3 3 0 0 0-3 3 3 3 0 0 0 3 3m0 3.54C9.64 9.35 6.5 8 3 8v11c3.5 0 6.64 1.35 9 3.54 2.36-2.19 5.5-3.54 9-3.54V8c-3.5 0-6.64 1.35-9 3.54"/></svg>
+
+    </a>
+    <label class="md-header__button md-icon" for="__drawer">
+      
+      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M3 6h18v2H3zm0 5h18v2H3zm0 5h18v2H3z"/></svg>
+    </label>
+    <div class="md-header__title" data-md-component="header-title">
+      <div class="md-header__ellipsis">
+        <div class="md-header__topic">
+          <span class="md-ellipsis">
+            AI Psychiatrist
+          </span>
+        </div>
+        <div class="md-header__topic" data-md-component="header-topic">
+          <span class="md-ellipsis">
+            
+              BUG-031: Few-Shot Retrieval Issues
+            
+          </span>
+        </div>
+      </div>
+    </div>
+    
+    
+      <script>var palette=__md_get("__palette");if(palette&&palette.color){if("(prefers-color-scheme)"===palette.color.media){var media=matchMedia("(prefers-color-scheme: light)"),input=document.querySelector(media.matches?"[data-md-color-media='(prefers-color-scheme: light)']":"[data-md-color-media='(prefers-color-scheme: dark)']");palette.color.media=input.getAttribute("data-md-color-media"),palette.color.scheme=input.getAttribute("data-md-color-scheme"),palette.color.primary=input.getAttribute("data-md-color-primary"),palette.color.accent=input.getAttribute("data-md-color-accent")}for(var[key,value]of Object.entries(palette.color))document.body.setAttribute("data-md-color-"+key,value)}</script>
+    
+    
+    
+      
+      
+        <label class="md-header__button md-icon" for="__search">
+          
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M9.5 3A6.5 6.5 0 0 1 16 9.5c0 1.61-.59 3.09-1.56 4.23l.27.27h.79l5 5-1.5 1.5-5-5v-.79l-.27-.27A6.52 6.52 0 0 1 9.5 16 6.5 6.5 0 0 1 3 9.5 6.5 6.5 0 0 1 9.5 3m0 2C7 5 5 7 5 9.5S7 14 9.5 14 14 12 14 9.5 12 5 9.5 5"/></svg>
+        </label>
+        <div class="md-search" data-md-component="search" role="dialog">
+  <label class="md-search__overlay" for="__search"></label>
+  <div class="md-search__inner" role="search">
+    <form class="md-search__form" name="search">
+      <input type="text" class="md-search__input" name="query" aria-label="Search" placeholder="Search" autocapitalize="off" autocorrect="off" autocomplete="off" spellcheck="false" data-md-component="search-query" required>
+      <label class="md-search__icon md-icon" for="__search">
+        
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M9.5 3A6.5 6.5 0 0 1 16 9.5c0 1.61-.59 3.09-1.56 4.23l.27.27h.79l5 5-1.5 1.5-5-5v-.79l-.27-.27A6.52 6.52 0 0 1 9.5 16 6.5 6.5 0 0 1 3 9.5 6.5 6.5 0 0 1 9.5 3m0 2C7 5 5 7 5 9.5S7 14 9.5 14 14 12 14 9.5 12 5 9.5 5"/></svg>
+        
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M20 11v2H8l5.5 5.5-1.42 1.42L4.16 12l7.92-7.92L13.5 5.5 8 11z"/></svg>
+      </label>
+      <nav class="md-search__options" aria-label="Search">
+        
+        <button type="reset" class="md-search__icon md-icon" title="Clear" aria-label="Clear" tabindex="-1">
+          
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M19 6.41 17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12z"/></svg>
+        </button>
+      </nav>
+      
+    </form>
+    <div class="md-search__output">
+      <div class="md-search__scrollwrap" tabindex="0" data-md-scrollfix>
+        <div class="md-search-result" data-md-component="search-result">
+          <div class="md-search-result__meta">
+            Initializing search
+          </div>
+          <ol class="md-search-result__list" role="presentation"></ol>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+      
+    
+    
+      <div class="md-header__source">
+        <a href="https://github.com/The-Obstacle-Is-The-Way/ai-psychiatrist" title="Go to repository" class="md-source" data-md-component="source">
+  <div class="md-source__icon md-icon">
+    
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 448 512"><!--! Font Awesome Free 7.1.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2025 Fonticons, Inc.--><path d="M439.6 236.1 244 40.5c-5.4-5.5-12.8-8.5-20.4-8.5s-15 3-20.4 8.4L162.5 81l51.5 51.5c27.1-9.1 52.7 16.8 43.4 43.7l49.7 49.7c34.2-11.8 61.2 31 35.5 56.7-26.5 26.5-70.2-2.9-56-37.3L240.3 199v121.9c25.3 12.5 22.3 41.8 9.1 55-6.4 6.4-15.2 10.1-24.3 10.1s-17.8-3.6-24.3-10.1c-17.6-17.6-11.1-46.9 11.2-56v-123c-20.8-8.5-24.6-30.7-18.6-45L142.6 101 8.5 235.1C3 240.6 0 247.9 0 255.5s3 15 8.5 20.4l195.6 195.7c5.4 5.4 12.7 8.4 20.4 8.4s15-3 20.4-8.4l194.7-194.7c5.4-5.4 8.4-12.8 8.4-20.4s-3-15-8.4-20.4"/></svg>
+  </div>
+  <div class="md-source__repository">
+    GitHub
+  </div>
+</a>
+      </div>
+    
+  </nav>
+  
+</header>
+    
+    <div class="md-container" data-md-component="container">
+      
+      
+        
+          
+        
+      
+      <main class="md-main" data-md-component="main">
+        <div class="md-main__inner md-grid">
+          
+            
+              
+              <div class="md-sidebar md-sidebar--primary" data-md-component="sidebar" data-md-type="navigation" >
+                <div class="md-sidebar__scrollwrap">
+                  <div class="md-sidebar__inner">
+                    
+
+
+
+<nav class="md-nav md-nav--primary" aria-label="Navigation" data-md-level="0">
+  <label class="md-nav__title" for="__drawer">
+    <a href="../../.." title="AI Psychiatrist" class="md-nav__button md-logo" aria-label="AI Psychiatrist" data-md-component="logo">
+      
+  
+  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 8a3 3 0 0 0 3-3 3 3 0 0 0-3-3 3 3 0 0 0-3 3 3 3 0 0 0 3 3m0 3.54C9.64 9.35 6.5 8 3 8v11c3.5 0 6.64 1.35 9 3.54 2.36-2.19 5.5-3.54 9-3.54V8c-3.5 0-6.64 1.35-9 3.54"/></svg>
+
+    </a>
+    AI Psychiatrist
+  </label>
+  
+    <div class="md-nav__source">
+      <a href="https://github.com/The-Obstacle-Is-The-Way/ai-psychiatrist" title="Go to repository" class="md-source" data-md-component="source">
+  <div class="md-source__icon md-icon">
+    
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 448 512"><!--! Font Awesome Free 7.1.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2025 Fonticons, Inc.--><path d="M439.6 236.1 244 40.5c-5.4-5.5-12.8-8.5-20.4-8.5s-15 3-20.4 8.4L162.5 81l51.5 51.5c27.1-9.1 52.7 16.8 43.4 43.7l49.7 49.7c34.2-11.8 61.2 31 35.5 56.7-26.5 26.5-70.2-2.9-56-37.3L240.3 199v121.9c25.3 12.5 22.3 41.8 9.1 55-6.4 6.4-15.2 10.1-24.3 10.1s-17.8-3.6-24.3-10.1c-17.6-17.6-11.1-46.9 11.2-56v-123c-20.8-8.5-24.6-30.7-18.6-45L142.6 101 8.5 235.1C3 240.6 0 247.9 0 255.5s3 15 8.5 20.4l195.6 195.7c5.4 5.4 12.7 8.4 20.4 8.4s15-3 20.4-8.4l194.7-194.7c5.4-5.4 8.4-12.8 8.4-20.4s-3-15-8.4-20.4"/></svg>
+  </div>
+  <div class="md-source__repository">
+    GitHub
+  </div>
+</a>
+    </div>
+  
+  <ul class="md-nav__list" data-md-scrollfix>
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../.." class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    AI Psychiatrist Documentation
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    
+    
+    
+    
+      
+        
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--section md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_2" >
+        
+          
+          <label class="md-nav__link" for="__nav_2" id="__nav_2_label" tabindex="">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+     research
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_2_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_2">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+     research
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../_research/hypotheses-explained/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Hypotheses Explained: Current State vs Future Improvements
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../_research/hypotheses-for-improvement/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Hypotheses for Improvement: First-Principles Analysis
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../_research/master-bug-audit/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    MASTER BUG AUDIT
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    
+    
+    
+    
+      
+        
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--section md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_3" >
+        
+          
+          <label class="md-nav__link" for="__nav_3" id="__nav_3_label" tabindex="">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Architecture
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_3_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_3">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    Architecture
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../architecture/architecture/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Architecture
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../architecture/future-architecture/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Future Architecture: Agent Orchestration Options
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../architecture/pipeline/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Pipeline
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    
+    
+    
+    
+      
+        
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--section md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_4" >
+        
+          
+          <label class="md-nav__link" for="__nav_4" id="__nav_4_label" tabindex="">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Clinical
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_4_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_4">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    Clinical
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../clinical/clinical-understanding/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Clinical Understanding: How This System Works
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../clinical/glossary/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Glossary
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../clinical/phq8/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    PHQ-8: Patient Health Questionnaire
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../clinical/task-validity/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Task Validity: What Can (and Cannot) Be Inferred from DAIC-WOZ Transcripts
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    
+    
+    
+    
+      
+        
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--section md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_5" >
+        
+          
+          <label class="md-nav__link" for="__nav_5" id="__nav_5_label" tabindex="">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Configs
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_5_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_5">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    Configs
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../configs/agent-sampling-registry/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Agent Sampling Parameter Registry
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../configs/configuration-philosophy/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Configuration Philosophy
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../configs/configuration/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Configuration Reference
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    
+    
+    
+    
+      
+        
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--section md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_6" >
+        
+          
+          <label class="md-nav__link" for="__nav_6" id="__nav_6_label" tabindex="">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Data
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_6_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_6">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    Data
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../data/artifact-namespace-registry/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Artifact Namespace Registry
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../data/daic-woz-preprocessing/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    DAIC-WOZ Transcript Preprocessing (Bias-Aware, Deterministic)
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../data/daic-woz-schema/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    DAIC-WOZ Dataset Schema
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../data/data-splits-overview/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Data Splits Overview
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    
+    
+    
+    
+      
+        
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--section md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_7" >
+        
+          
+          <label class="md-nav__link" for="__nav_7" id="__nav_7_label" tabindex="">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Developer
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_7_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_7">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    Developer
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../developer/api-endpoints/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    API Reference
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../developer/dependency-registry/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Dependency Registry
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../developer/error-handling/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Error Handling and Fail-Fast Philosophy
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../developer/exceptions/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Exception Reference (Domain + Runtime)
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../developer/testing/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Testing Conventions (Markers, Fixtures, and Test Doubles)
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    
+    
+    
+    
+      
+        
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--section md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_8" >
+        
+          
+          <label class="md-nav__link" for="__nav_8" id="__nav_8_label" tabindex="">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Getting started
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_8_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_8">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    Getting started
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../getting-started/quickstart/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Quickstart Guide
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    
+    
+    
+    
+      
+        
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--section md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_9" >
+        
+          
+          <label class="md-nav__link" for="__nav_9" id="__nav_9_label" tabindex="">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Models
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_9_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_9">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    Models
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../models/model-registry/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    AI Psychiatrist Model Registry
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../models/model-wiring/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Model Wiring: Current State
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    
+    
+    
+    
+      
+        
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--section md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_10" >
+        
+          
+          <label class="md-nav__link" for="__nav_10" id="__nav_10_label" tabindex="">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Pipeline internals
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_10_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_10">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    Pipeline internals
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../pipeline-internals/evidence-extraction/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Evidence Extraction Mechanism: How It Actually Works
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../pipeline-internals/features/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Feature Reference (Non-Archive Canonical)
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    
+    
+    
+    
+      
+        
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--section md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_11" >
+        
+          
+          <label class="md-nav__link" for="__nav_11" id="__nav_11_label" tabindex="">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Preflight checklist
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_11_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_11">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    Preflight checklist
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../preflight-checklist/preflight-checklist-few-shot/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Preflight Checklist: Few-Shot Reproduction
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../preflight-checklist/preflight-checklist-zero-shot/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Preflight Checklist: Zero-Shot Run
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    
+    
+    
+    
+      
+        
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--section md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_12" >
+        
+          
+          <label class="md-nav__link" for="__nav_12" id="__nav_12_label" tabindex="">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Rag
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_12_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_12">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    Rag
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../rag/artifact-generation/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    RAG Artifact Generation
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../rag/chunk-scoring/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Chunk-Level Scoring (Spec 35) — Schema, Workflow, and Gotchas
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../rag/debugging/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    RAG Debugging (Audit Logs + Guardrails)
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../rag/design-rationale/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    RAG Design Rationale
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../rag/overview/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    RAG Overview: Embeddings and Few-Shot Retrieval
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../rag/runtime-features/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    RAG Runtime Features
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    
+    
+    
+    
+      
+        
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--section md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_13" >
+        
+          
+          <label class="md-nav__link" for="__nav_13" id="__nav_13_label" tabindex="">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Results
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_13_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_13">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    Results
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../results/few-shot-analysis/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Why Few-Shot May Not Beat Zero-Shot: Analysis
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../results/reproduction-results/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Paper Reproduction Results (Current Status)
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../results/run-history/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Complete Run History &amp; Statistical Analysis
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../results/run-output-schema/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Reproduction Run Output Schema (JSON + Registry)
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    
+    
+    
+    
+      
+        
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--section md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_14" >
+        
+          
+          <label class="md-nav__link" for="__nav_14" id="__nav_14_label" tabindex="">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Statistics
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_14_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_14">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    Statistics
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../statistics/coverage/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Coverage Explained: What It Is and Why It Matters
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../statistics/metrics-and-evaluation/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Metrics and Evaluation (Exact Definitions + Output Schema)
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../statistics/statistical-methodology-aurc-augrc/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Statistical Methodology: AURC/AUGRC for Selective Prediction
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+  </ul>
+</nav>
+                  </div>
+                </div>
+              </div>
+            
+            
+              
+              <div class="md-sidebar md-sidebar--secondary" data-md-component="sidebar" data-md-type="toc" >
+                <div class="md-sidebar__scrollwrap">
+                  <div class="md-sidebar__inner">
+                    
+
+<nav class="md-nav md-nav--secondary" aria-label="Table of contents">
+  
+  
+  
+    
+  
+  
+    <label class="md-nav__title" for="__toc">
+      <span class="md-nav__icon md-icon"></span>
+      Table of contents
+    </label>
+    <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
+      
+        <li class="md-nav__item">
+  <a href="#executive-summary" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Executive Summary
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Executive Summary">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#issues-found" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Issues Found
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#critical-distinction" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Critical Distinction
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#epistemic-status" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Epistemic Status
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#verified-divergences" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Verified Divergences
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Verified Divergences">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#paper-methodology-section-242" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Paper Methodology (Section 2.4.2)
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#notebook-implementation-embedding_quantitative_analysisipynb" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Notebook Implementation (embedding_quantitative_analysis.ipynb)
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#format-divergence-same-notebook-cell" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Format Divergence (Same Notebook Cell)
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#data-structure-analysis" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Data Structure Analysis
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Data Structure Analysis">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#embeddings-json-dataembeddingspaper_reference_embeddingsjson" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Embeddings JSON (data/embeddings/paper_reference_embeddings.json)
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#ground-truth-csv-datatrain_split_depression_avec2017csv" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Ground Truth CSV (data/train_split_Depression_AVEC2017.csv)
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#score-lookup-code-reference_storepy563-589" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Score Lookup Code (reference_store.py:563-589)
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#concrete-example-participant-321-phq8_sleep3" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Concrete Example: Participant 321 (PHQ8_Sleep=3)
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#architectural-constraint" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Architectural Constraint
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#hypothesis-how-score-chunk-mismatch-may-cause-confusion" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Hypothesis: How Score-Chunk Mismatch May Cause Confusion
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Hypothesis: How Score-Chunk Mismatch May Cause Confusion">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#the-potential-problem-hypothesis" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        The Potential Problem (Hypothesis)
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#why-this-may-break-few-shot-learning-hypothesis" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Why This May Break Few-Shot Learning (Hypothesis)
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#paper-vs-our-results" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Paper vs Our Results
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Paper vs Our Results">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#papers-claim" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Paper's Claim
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#different-metrics-approaches" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Different Metrics Approaches
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#our-findings" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Our Findings
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#issue-1-score-chunk-mismatch-paper-methodology" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Issue 1: Score-Chunk Mismatch (Paper Methodology)
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Issue 1: Score-Chunk Mismatch (Paper Methodology)">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#status-correctly-implemented" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Status: CORRECTLY IMPLEMENTED
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#location" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Location
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#the-design" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        The Design
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#why-this-design-may-be-flawed" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Why This Design May Be Flawed
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#example" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Example
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#recommendation" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Recommendation
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#bug-2-reference-format-mismatch" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Bug 2: Reference Format Mismatch
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Bug 2: Reference Format Mismatch">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#location_1" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Location
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#papers-format-source-notebook-cell-49f51ff5" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Paper's Format (Source: Notebook cell 49f51ff5)
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#our-format" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Our Format
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#why-this-is-wrong" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Why This Is Wrong
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#impact" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Impact
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#bug-3-missing-domain-labels-in-score-tags" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Bug 3: Missing Domain Labels in Score Tags
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Bug 3: Missing Domain Labels in Score Tags">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#location_2" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Location
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#papers-format" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Paper's Format
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#our-format_1" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Our Format
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#why-this-is-wrong_1" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Why This Is Wrong
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#root-cause-analysis" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Root Cause Analysis
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Root Cause Analysis">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#architectural-issue" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Architectural Issue
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#why-zero-shot-wins" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Why Zero-Shot Wins
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#evidence" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Evidence
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Evidence">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#statistical-evidence" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Statistical Evidence
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#code-evidence" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Code Evidence
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#research-evidence" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Research Evidence
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#proposed-fixes-for-senior-review" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Proposed Fixes (For Senior Review)
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Proposed Fixes (For Senior Review)">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#fix-1-format-alignment-required-fixes-bugs-2-3" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Fix 1: Format Alignment (REQUIRED - Fixes Bugs 2 &amp; 3)
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#added-senior-review-implementation-ready-spec-for-fix-1-paper-parity" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        ✅ ADDED (Senior Review): Implementation-Ready Spec for Fix 1 (Paper Parity)
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="✅ ADDED (Senior Review): Implementation-Ready Spec for Fix 1 (Paper Parity)">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#scope-what-changes-what-doesnt" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Scope (what changes, what doesn’t)
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#files-exact-locations" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Files + exact locations
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#ground-truth-from-paper-notebook-cell-49f51ff5" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Ground truth from paper notebook (cell 49f51ff5)
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#exact-output-specification-character-by-character" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Exact output specification (character-by-character)
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#exact-before-vs-after-code-copypaste" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Exact “before” vs “after” code (copy/paste)
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#edge-cases-explicit-behavior" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Edge cases (explicit behavior)
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#verification-criteria-how-to-prove-parity" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Verification criteria (how to prove parity)
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#implementation-order-dependencies-so-you-dont-get-stuck" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Implementation order + dependencies (so you don’t get stuck)
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#test-updates-required-exact-expectations" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Test updates required (exact expectations)
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#future-work-separate-spec-required-item-tagged-chunks" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Future Work (separate spec required): Item-Tagged Chunks
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#future-work-separate-spec-required-chunk-level-scoring" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Future Work (separate spec required): Chunk-Level Scoring
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#not-recommended-disable-few-shot" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        NOT Recommended: Disable Few-Shot
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#alternative-explanations-not-yet-ruled-out" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Alternative Explanations (Not Yet Ruled Out)
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#action-items" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Action Items
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#2025-state-of-the-art-solutions" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        2025 State-of-the-Art Solutions
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="2025 State-of-the-Art Solutions">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#the-problem-literature-terms" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        The Problem (Literature Terms)
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#solution-1-crag-corrective-rag" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Solution 1: CRAG (Corrective RAG)
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#solution-2-contextual-retrieval-anthropic" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Solution 2: Contextual Retrieval (Anthropic)
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#solution-3-pre-compute-chunk-scores" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Solution 3: Pre-Compute Chunk Scores
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#solution-4-hybrid-pre-compute-crag" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Solution 4: Hybrid (Pre-Compute + CRAG)
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#recommended-implementation" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Recommended Implementation
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Recommended Implementation">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#priority-1-fix-format-divergences-required-for-paper-parity" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Priority 1: Fix Format Divergences (REQUIRED for Paper Parity)
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#priority-2-add-retrieval-diagnostics-required-for-causality-claims" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Priority 2: Add Retrieval Diagnostics (REQUIRED for Causality Claims)
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#future-work-separate-spec-required-relevance-filtering" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Future Work (separate spec required): Relevance Filtering
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#references" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        References
+      
+    </span>
+  </a>
+  
+</li>
+      
+    </ul>
+  
+</nav>
+                  </div>
+                </div>
+              </div>
+            
+          
+          
+            <div class="md-content" data-md-component="content">
+              
+              <article class="md-content__inner md-typeset">
+                
+                  
+
+
+  
+    <a href="https://github.com/The-Obstacle-Is-The-Way/ai-psychiatrist/edit/main/docs/_archive/bugs/bug-031-few-shot-retrieval-mismatch.md" title="Edit this page" class="md-content__button md-icon" rel="edit">
+      
+      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M10 20H6V4h7v5h5v3.1l2-2V8l-6-6H6c-1.1 0-2 .9-2 2v16c0 1.1.9 2 2 2h4zm10.2-7c.1 0 .3.1.4.2l1.3 1.3c.2.2.2.6 0 .8l-1 1-2.1-2.1 1-1c.1-.1.2-.2.4-.2m0 3.9L14.1 23H12v-2.1l6.1-6.1z"/></svg>
+    </a>
+  
+  
+    
+      
+    
+    <a href="https://github.com/The-Obstacle-Is-The-Way/ai-psychiatrist/raw/main/docs/_archive/bugs/bug-031-few-shot-retrieval-mismatch.md" title="View source of this page" class="md-content__button md-icon">
+      
+      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M17 18c.56 0 1 .44 1 1s-.44 1-1 1-1-.44-1-1 .44-1 1-1m0-3c-2.73 0-5.06 1.66-6 4 .94 2.34 3.27 4 6 4s5.06-1.66 6-4c-.94-2.34-3.27-4-6-4m0 6.5a2.5 2.5 0 0 1-2.5-2.5 2.5 2.5 0 0 1 2.5-2.5 2.5 2.5 0 0 1 2.5 2.5 2.5 2.5 0 0 1-2.5 2.5M9.27 20H6V4h7v5h5v4.07c.7.08 1.36.25 2 .49V8l-6-6H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h4.5a8.2 8.2 0 0 1-1.23-2"/></svg>
+    </a>
+  
+
+
+<h1 id="bug-031-few-shot-retrieval-issues">BUG-031: Few-Shot Retrieval Issues</h1>
+<blockquote>
+<p><strong>📦 ARCHIVED</strong>: 2025-12-30
+<strong>Resolution</strong>: Core issues addressed by Specs 31-34.
+- <strong>Spec 31</strong>: Fixed format divergences (unified <code>&lt;Reference Examples&gt;</code> block, inline domain labels)
+- <strong>Spec 32</strong>: Added retrieval diagnostics logging
+- <strong>Spec 33</strong>: Added retrieval quality guardrails
+- <strong>Spec 34</strong>: Added item-tagged reference embeddings
+<strong>Action Taken</strong>: Implementation complete. Remaining ideas tracked in Spec 35/36.</p>
+</blockquote>
+<p><strong>Status</strong>: ✅ CLOSED - Resolved by Specs 31-34
+<strong>Severity</strong>: HIGH - Potential contributor to zero-shot outperforming few-shot
+<strong>Discovered</strong>: 2025-12-28
+<strong>Related</strong>: <a href="../../misc/investigation-zero-shot-beats-few-shot/">Investigation Document</a></p>
+<hr />
+<h2 id="executive-summary">Executive Summary</h2>
+<p>Investigation into why zero-shot (AURC 0.134) outperforms few-shot (AURC 0.214) in our runs identified paper-parity divergences in the embedding-based retrieval mechanism:</p>
+<h3 id="issues-found">Issues Found</h3>
+<table>
+<thead>
+<tr>
+<th>Issue</th>
+<th>Type</th>
+<th>Impact</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><strong>Score-Chunk Mismatch</strong></td>
+<td>Paper methodology (correctly implemented)</td>
+<td>Participant-level scores for chunk-level matches</td>
+</tr>
+<tr>
+<td><strong>Format Mismatch</strong></td>
+<td>OUR DIVERGENCE</td>
+<td>8 separate sections vs paper's 1 unified block</td>
+</tr>
+<tr>
+<td><strong>Missing Domain Labels</strong></td>
+<td>OUR DIVERGENCE</td>
+<td><code>(Score: 2)</code> vs paper's <code>(PHQ8_Sleep Score: 2)</code></td>
+</tr>
+</tbody>
+</table>
+<h3 id="critical-distinction">Critical Distinction</h3>
+<p><strong>Issue 1 is NOT a bug in our code</strong> - it's the paper's methodology. From Section 2.4.2:</p>
+<blockquote>
+<p>"For each chunk, we identified its associated participant ID in the dataset and <strong>attached its ground-truth PHQ-8 score</strong>."</p>
+</blockquote>
+<p>The paper intentionally uses participant-level scores. We correctly implemented this.</p>
+<p><strong>Issues 2 and 3 ARE divergences</strong> - our format differs from the paper's notebook implementation.</p>
+<h3 id="epistemic-status">Epistemic Status</h3>
+<p><strong>HYPOTHESIS, NOT PROVEN.</strong> We have not yet run ablations to prove these divergences <em>caused</em> the performance inversion. Correlation ≠ causation.</p>
+<hr />
+<h2 id="verified-divergences">Verified Divergences</h2>
+<h3 id="paper-methodology-section-242">Paper Methodology (Section 2.4.2)</h3>
+<blockquote>
+<p>"For each chunk, we identified its associated participant ID in the dataset and <strong>attached its ground-truth PHQ-8 score</strong>."</p>
+</blockquote>
+<h3 id="notebook-implementation-embedding_quantitative_analysisipynb">Notebook Implementation (embedding_quantitative_analysis.ipynb)</h3>
+<p>From cell <code>49f51ff5</code>, the <code>process_evidence_for_references</code> function:</p>
+<div class="highlight"><pre><span></span><code><span class="k">for</span> <span class="n">chunk_info</span> <span class="ow">in</span> <span class="n">similar_chunks</span><span class="p">:</span>
+    <span class="n">participant_id</span> <span class="o">=</span> <span class="n">chunk_info</span><span class="p">[</span><span class="s1">&#39;participant_id&#39;</span><span class="p">]</span>
+    <span class="n">raw_text</span> <span class="o">=</span> <span class="n">chunk_info</span><span class="p">[</span><span class="s1">&#39;raw_text&#39;</span><span class="p">]</span>
+
+    <span class="c1"># Look up PARTICIPANT-LEVEL ground truth (matches paper Section 2.4.2)</span>
+    <span class="n">participant_data</span> <span class="o">=</span> <span class="n">phq8_ground_truths</span><span class="o">.</span><span class="n">loc</span><span class="p">[</span>
+        <span class="n">phq8_ground_truths</span><span class="p">[</span><span class="s1">&#39;Participant_ID&#39;</span><span class="p">]</span> <span class="o">==</span> <span class="n">participant_id</span>
+    <span class="p">]</span>
+
+    <span class="k">if</span> <span class="ow">not</span> <span class="n">participant_data</span><span class="o">.</span><span class="n">empty</span><span class="p">:</span>
+        <span class="c1"># Get the PARTICIPANT&#39;s overall score - this is the paper&#39;s methodology</span>
+        <span class="n">score</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="n">participant_data</span><span class="p">[</span><span class="n">evidence_key</span><span class="p">]</span><span class="o">.</span><span class="n">values</span><span class="p">[</span><span class="mi">0</span><span class="p">])</span>
+        <span class="n">reference_entry</span> <span class="o">=</span> <span class="sa">f</span><span class="s2">&quot;(</span><span class="si">{</span><span class="n">evidence_key</span><span class="si">}</span><span class="s2"> Score: </span><span class="si">{</span><span class="n">score</span><span class="si">}</span><span class="s2">)</span><span class="se">\n</span><span class="si">{</span><span class="n">raw_text</span><span class="si">}</span><span class="s2">&quot;</span>
+</code></pre></div>
+<p><strong>Verified</strong>: Both paper text and notebook code attach participant-level scores to chunk matches. We correctly implement this.</p>
+<h3 id="format-divergence-same-notebook-cell">Format Divergence (Same Notebook Cell)</h3>
+<div class="highlight"><pre><span></span><code><span class="c1"># Paper&#39;s format: SINGLE unified block, same tag opens and closes</span>
+<span class="n">reference_evidence</span> <span class="o">=</span> <span class="s2">&quot;&lt;Reference Examples&gt;</span><span class="se">\n\n</span><span class="s2">&quot;</span> <span class="o">+</span> <span class="s2">&quot;</span><span class="se">\n\n</span><span class="s2">&quot;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">all_references</span><span class="p">)</span> <span class="o">+</span> <span class="s2">&quot;</span><span class="se">\n\n</span><span class="s2">&lt;Reference Examples&gt;&quot;</span>
+</code></pre></div>
+<p><strong>Note</strong>: Paper uses <code>&lt;Reference Examples&gt;</code> for BOTH opening AND closing (not <code>&lt;/Reference Examples&gt;</code>). This unusual format may be intentional as a delimiter.</p>
+<p><strong>Verified divergences</strong>:
+1. Paper uses single <code>&lt;Reference Examples&gt;</code> block, we use 8 separate blocks
+2. Paper uses same tag to open and close, we use XML-style <code>&lt;/Reference Examples&gt;</code>
+3. Paper omits items with no evidence/matches, we emit per-item <code>"No valid evidence found"</code> blocks</p>
+<hr />
+<h2 id="data-structure-analysis">Data Structure Analysis</h2>
+<p>The current data structure only supports participant-level scoring.</p>
+<h3 id="embeddings-json-dataembeddingspaper_reference_embeddingsjson">Embeddings JSON (<code>data/embeddings/paper_reference_embeddings.json</code>)</h3>
+<div class="highlight"><pre><span></span><code><span class="p">{</span>
+<span class="w">  </span><span class="nt">&quot;303&quot;</span><span class="p">:</span><span class="w"> </span><span class="p">[</span>
+<span class="w">    </span><span class="s2">&quot;Ellie: hi i&#39;m ellie thanks for coming...&quot;</span><span class="p">,</span><span class="w">   </span><span class="c1">// Just text, NO score</span>
+<span class="w">    </span><span class="s2">&quot;Participant: okay how &#39;bout yourself...&quot;</span><span class="p">,</span><span class="w">    </span><span class="c1">// Just text, NO score</span>
+<span class="w">    </span><span class="err">...</span>
+<span class="w">  </span><span class="p">],</span>
+<span class="w">  </span><span class="nt">&quot;304&quot;</span><span class="p">:</span><span class="w"> </span><span class="p">[</span><span class="err">...</span><span class="p">]</span>
+<span class="p">}</span>
+</code></pre></div>
+<p><strong>Chunks are PLAIN TEXT.</strong> No scores embedded. No chunk identifiers.</p>
+<h3 id="ground-truth-csv-datatrain_split_depression_avec2017csv">Ground Truth CSV (<code>data/train_split_Depression_AVEC2017.csv</code>)</h3>
+<div class="highlight"><pre><span></span><code>Participant_ID,PHQ8_NoInterest,PHQ8_Depressed,PHQ8_Sleep,...
+303,0,0,0,...
+304,0,1,1,...
+321,2,3,3,...  ← Severe depression
+</code></pre></div>
+<p><strong>One row per participant.</strong> Scores are participant-level only.</p>
+<h3 id="score-lookup-code-reference_storepy563-589">Score Lookup Code (<code>reference_store.py:563-589</code>)</h3>
+<div class="highlight"><pre><span></span><code><span class="k">def</span><span class="w"> </span><span class="nf">get_score</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">participant_id</span><span class="p">:</span> <span class="nb">int</span><span class="p">,</span> <span class="n">item</span><span class="p">:</span> <span class="n">PHQ8Item</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">int</span> <span class="o">|</span> <span class="kc">None</span><span class="p">:</span>
+    <span class="n">df</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_load_scores</span><span class="p">()</span>  <span class="c1"># Load CSV</span>
+    <span class="n">row</span> <span class="o">=</span> <span class="n">df</span><span class="p">[</span><span class="n">df</span><span class="p">[</span><span class="s2">&quot;Participant_ID&quot;</span><span class="p">]</span> <span class="o">==</span> <span class="n">participant_id</span><span class="p">]</span>
+    <span class="k">return</span> <span class="nb">int</span><span class="p">(</span><span class="n">row</span><span class="p">[</span><span class="n">col_name</span><span class="p">]</span><span class="o">.</span><span class="n">iloc</span><span class="p">[</span><span class="mi">0</span><span class="p">])</span>  <span class="c1"># Participant-level lookup</span>
+</code></pre></div>
+<p><strong>Scores are keyed by <code>(participant_id, item)</code> — NOT by chunk.</strong></p>
+<h3 id="concrete-example-participant-321-phq8_sleep3">Concrete Example: Participant 321 (PHQ8_Sleep=3)</h3>
+<p>Participant 321 has <strong>115+ chunks</strong> from their interview:
+- <strong>~7% discuss sleep</strong> (severe insomnia, waking every 1-3 hours)
+- <strong>~93% discuss other topics</strong> (work, family, PTSD history, hobbies)</p>
+<p><strong>ALL 115 chunks get attached Score 3 (PHQ8_Sleep)</strong> when retrieved for sleep queries.</p>
+<p>A chunk like:</p>
+<blockquote>
+<p>"I'm proud of my children and grandchildren"</p>
+</blockquote>
+<p>Gets attached: <code>(PHQ8_Sleep Score: 3)</code> ← <strong>Makes no sense</strong></p>
+<h3 id="architectural-constraint">Architectural Constraint</h3>
+<table>
+<thead>
+<tr>
+<th>Component</th>
+<th>What It Contains</th>
+<th>Chunk-Level Scores?</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>paper_reference_embeddings.json</code></td>
+<td>Text chunks only</td>
+<td><strong>NO</strong></td>
+</tr>
+<tr>
+<td><code>train_split_Depression_AVEC2017.csv</code></td>
+<td>Participant-level PHQ-8</td>
+<td><strong>NO</strong></td>
+</tr>
+<tr>
+<td>Score lookup</td>
+<td><code>get_score(participant_id, item)</code></td>
+<td><strong>NO</strong></td>
+</tr>
+</tbody>
+</table>
+<p><strong>Chunk-level scoring would require</strong>:
+1. New data structure with chunk IDs and per-chunk scores
+2. LLM annotation of each chunk during embedding generation
+3. Architectural changes</p>
+<p>This is not supported by the current data structure. The paper's methodology uses participant-level scores, which we correctly implement.</p>
+<hr />
+<h2 id="hypothesis-how-score-chunk-mismatch-may-cause-confusion">Hypothesis: How Score-Chunk Mismatch May Cause Confusion</h2>
+<h3 id="the-potential-problem-hypothesis">The Potential Problem (Hypothesis)</h3>
+<p>Imagine a participant who says in their interview:</p>
+<ul>
+<li><strong>Minute 5</strong>: "I slept fine last week"</li>
+<li><strong>Minute 15</strong>: "I've been having terrible insomnia for months"</li>
+<li><strong>Minute 30</strong>: "Yeah the sleep thing is really bad, every single night"</li>
+</ul>
+<p>Their <strong>overall PHQ8_Sleep score</strong>: 3 (nearly every day) - because the WHOLE interview reveals severe sleep problems.</p>
+<p><strong>The paper's approach</strong>:
+1. Chunk the transcript into 8-line windows
+2. Find a chunk that's similar to your query
+3. Attach the participant's <strong>OVERALL</strong> score to that tiny chunk</p>
+<p><strong>So the LLM might see</strong>:</p>
+<div class="highlight"><pre><span></span><code>(Score: 3)
+&quot;I slept fine last week, just had one bad night after coffee&quot;
+</code></pre></div>
+<p><strong>The LLM thinks</strong>: "Wait... 'slept fine' with 'one bad night' = Score 3 (nearly every day)??"</p>
+<p><strong>That makes no sense.</strong> The score doesn't match the chunk.</p>
+<h3 id="why-this-may-break-few-shot-learning-hypothesis">Why This May Break Few-Shot Learning (Hypothesis)</h3>
+<p>Few-shot works by showing the LLM: "Here's an example, here's the score, learn the pattern."</p>
+<p><strong>If</strong> the examples are semantically contradictory:
+- "Occasional coffee-related sleep issue" → Score 3
+- "I can't sleep at all every night" → Score 1</p>
+<p>The LLM may learn inconsistent patterns.</p>
+<p><strong>Caveat</strong>: We have not empirically verified that retrieved chunks are actually contradictory. This requires retrieval audits (logging retrieved chunks + manual review).</p>
+<hr />
+<h2 id="paper-vs-our-results">Paper vs Our Results</h2>
+<h3 id="papers-claim">Paper's Claim</h3>
+<table>
+<thead>
+<tr>
+<th>Mode</th>
+<th>MAE</th>
+<th>Improvement</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Zero-shot</td>
+<td>0.796</td>
+<td>-</td>
+</tr>
+<tr>
+<td>Few-shot</td>
+<td>0.619</td>
+<td>22%</td>
+</tr>
+</tbody>
+</table>
+<h3 id="different-metrics-approaches">Different Metrics Approaches</h3>
+<table>
+<thead>
+<tr>
+<th>Metric</th>
+<th>What It Measures</th>
+<th>When Valid</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>MAE (paper)</td>
+<td>Error on non-N/A predictions</td>
+<td>Valid if coverages are similar</td>
+</tr>
+<tr>
+<td>AURC/AUGRC (ours)</td>
+<td>Integrated risk over all coverage levels</td>
+<td>Better when coverages differ</td>
+</tr>
+</tbody>
+</table>
+<p><strong>Note</strong>: MAE at Cmax is the "selective risk" at maximum coverage. It's not invalid, but incomplete when comparing systems with different coverage rates.</p>
+<h3 id="our-findings">Our Findings</h3>
+<table>
+<thead>
+<tr>
+<th>Mode</th>
+<th>AURC</th>
+<th>Coverage</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Zero-shot</td>
+<td><strong>0.134</strong></td>
+<td>55.5%</td>
+</tr>
+<tr>
+<td>Few-shot</td>
+<td>0.214</td>
+<td>71.9%</td>
+</tr>
+</tbody>
+</table>
+<p><strong>In our runs</strong>: Zero-shot has lower AURC (better). The 95% CIs do not overlap, suggesting significance.</p>
+<p><strong>Caveats</strong>:
+1. Bootstrap CIs capture participant sampling uncertainty, not LLM stochasticity
+2. We have not run multiple runs to assess LLM variance
+3. Paired deltas on same participants would be more rigorous than non-overlapping CIs</p>
+<hr />
+<h2 id="issue-1-score-chunk-mismatch-paper-methodology">Issue 1: Score-Chunk Mismatch (Paper Methodology)</h2>
+<h3 id="status-correctly-implemented">Status: CORRECTLY IMPLEMENTED</h3>
+<p>This is <strong>NOT a bug in our code</strong>. The paper explicitly describes this behavior in Section 2.4.2:</p>
+<blockquote>
+<p>"For each chunk, we identified its associated participant ID in the dataset and <strong>attached its ground-truth PHQ-8 score</strong>."</p>
+</blockquote>
+<p>We correctly implemented this. However, the design itself may be flawed.</p>
+<h3 id="location">Location</h3>
+<p><code>src/ai_psychiatrist/services/embedding.py:199</code></p>
+<h3 id="the-design">The Design</h3>
+<div class="highlight"><pre><span></span><code><span class="c1"># In _compute_similarities() method</span>
+<span class="k">for</span> <span class="n">participant_id</span><span class="p">,</span> <span class="n">chunks</span> <span class="ow">in</span> <span class="n">all_refs</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
+    <span class="k">for</span> <span class="n">chunk_text</span><span class="p">,</span> <span class="n">embedding</span> <span class="ow">in</span> <span class="n">chunks</span><span class="p">:</span>
+        <span class="c1"># ... compute similarity ...</span>
+
+        <span class="c1"># This follows paper Section 2.4.2: &quot;attached its ground-truth PHQ-8 score&quot;</span>
+        <span class="n">score</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_reference_store</span><span class="o">.</span><span class="n">get_score</span><span class="p">(</span><span class="n">participant_id</span><span class="p">,</span> <span class="n">lookup_item</span><span class="p">)</span>
+
+        <span class="n">matches</span><span class="o">.</span><span class="n">append</span><span class="p">(</span>
+            <span class="n">SimilarityMatch</span><span class="p">(</span>
+                <span class="n">chunk</span><span class="o">=</span><span class="n">TranscriptChunk</span><span class="p">(</span><span class="n">text</span><span class="o">=</span><span class="n">chunk_text</span><span class="p">,</span> <span class="o">...</span><span class="p">),</span>
+                <span class="n">similarity</span><span class="o">=</span><span class="n">sim</span><span class="p">,</span>
+                <span class="n">reference_score</span><span class="o">=</span><span class="n">score</span><span class="p">,</span>  <span class="c1"># PARTICIPANT-LEVEL per paper design</span>
+            <span class="p">)</span>
+        <span class="p">)</span>
+</code></pre></div>
+<h3 id="why-this-design-may-be-flawed">Why This Design May Be Flawed</h3>
+<p>When we retrieve a chunk from Participant 789 that is semantically similar to "I can't sleep":</p>
+<table>
+<thead>
+<tr>
+<th>What we get (per paper)</th>
+<th>What might be better</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Participant 789's overall PHQ8_Sleep score (e.g., 3)</td>
+<td>Score specific to THIS chunk's content</td>
+</tr>
+<tr>
+<td>May come from OTHER parts of their interview</td>
+<td>Should reflect severity described IN this chunk</td>
+</tr>
+</tbody>
+</table>
+<h3 id="example">Example</h3>
+<div class="highlight"><pre><span></span><code>Query Evidence: &quot;I wake up at 3am every night&quot; (clearly severe)
+
+Retrieved Chunk (Participant 789):
+  &quot;I have trouble falling asleep after drinking coffee&quot;
+  (Situational, implies occasional/mild)
+
+Attached Score: 3 (Participant 789&#39;s overall PHQ8_Sleep - per paper design)
+
+LLM sees:
+  &quot;(Score: 3)
+   I have trouble falling asleep after drinking coffee&quot;
+
+LLM interprets: &quot;Occasional coffee-related sleep issues = Score 3??&quot;
+Result: CONFUSION
+</code></pre></div>
+<h3 id="recommendation">Recommendation</h3>
+<p>The paper's design creates a semantic mismatch. However:
+- <strong>For paper parity</strong>: Keep as-is (we correctly follow the paper)
+- <strong>For best practices</strong>: Consider chunk-level scoring (but this diverges from paper)</p>
+<hr />
+<h2 id="bug-2-reference-format-mismatch">Bug 2: Reference Format Mismatch</h2>
+<h3 id="location_1">Location</h3>
+<p><code>src/ai_psychiatrist/services/embedding.py:40-70</code> (<code>ReferenceBundle.format_for_prompt</code>)</p>
+<h3 id="papers-format-source-notebook-cell-49f51ff5">Paper's Format (Source: Notebook cell 49f51ff5)</h3>
+<p>Single unified block with inline domain labels. Note: Paper uses same tag to open and close:
+<div class="highlight"><pre><span></span><code>&lt;Reference Examples&gt;
+
+(PHQ8_Sleep Score: 2)
+Patient: I&#39;ve been having trouble sleeping lately.
+Therapist: How many nights a week?
+Patient: Maybe 3 or 4 nights.
+
+(PHQ8_Tired Score: 1)
+Patient: I feel tired sometimes but I can still function.
+
+(PHQ8_Depressed Score: 3)
+Patient: I feel hopeless every single day.
+
+&lt;Reference Examples&gt;
+</code></pre></div></p>
+<h3 id="our-format">Our Format</h3>
+<p>8 separate blocks, domain label in section header:
+<div class="highlight"><pre><span></span><code>[Sleep]
+&lt;Reference Examples&gt;
+
+(Score: 2)
+Patient: I&#39;ve been having trouble sleeping lately.
+Therapist: How many nights a week?
+Patient: Maybe 3 or 4 nights.
+
+&lt;/Reference Examples&gt;
+
+[Tired]
+&lt;Reference Examples&gt;
+
+(Score: 1)
+Patient: I feel tired sometimes but I can still function.
+
+&lt;/Reference Examples&gt;
+
+[Depressed]
+&lt;Reference Examples&gt;
+
+(Score: 3)
+Patient: I feel hopeless every single day.
+
+&lt;/Reference Examples&gt;
+</code></pre></div></p>
+<h3 id="why-this-is-wrong">Why This Is Wrong</h3>
+<table>
+<thead>
+<tr>
+<th>Aspect</th>
+<th>Paper</th>
+<th>Ours</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>LLM sees</td>
+<td>All domains together, can cross-reference</td>
+<td>8 isolated problems</td>
+</tr>
+<tr>
+<td>Symptom patterns</td>
+<td>Can recognize co-occurrence</td>
+<td>Compartmentalized</td>
+</tr>
+<tr>
+<td>Context integration</td>
+<td>Holistic psychiatric view</td>
+<td>Fragmented assessment</td>
+</tr>
+</tbody>
+</table>
+<h3 id="impact">Impact</h3>
+<ul>
+<li>LLM can't recognize that Sleep + Tired + Depressed often co-occur</li>
+<li>Each domain assessed in isolation, losing clinical context</li>
+<li>Zero-shot (holistic direct analysis) outperforms fragmented few-shot</li>
+</ul>
+<hr />
+<h2 id="bug-3-missing-domain-labels-in-score-tags">Bug 3: Missing Domain Labels in Score Tags</h2>
+<h3 id="location_2">Location</h3>
+<p><code>src/ai_psychiatrist/services/embedding.py:58-62</code></p>
+<h3 id="papers-format">Paper's Format</h3>
+<div class="highlight"><pre><span></span><code><span class="c1"># Paper notebook:</span>
+<span class="n">reference_entry</span> <span class="o">=</span> <span class="sa">f</span><span class="s2">&quot;(</span><span class="si">{</span><span class="n">evidence_key</span><span class="si">}</span><span class="s2"> Score: </span><span class="si">{</span><span class="n">score</span><span class="si">}</span><span class="s2">)</span><span class="se">\n</span><span class="si">{</span><span class="n">raw_text</span><span class="si">}</span><span class="s2">&quot;</span>
+<span class="c1"># Example: &quot;(PHQ8_Sleep Score: 2)&quot;</span>
+</code></pre></div>
+<h3 id="our-format_1">Our Format</h3>
+<div class="highlight"><pre><span></span><code><span class="c1"># Our code:</span>
+<span class="n">score_text</span> <span class="o">=</span> <span class="sa">f</span><span class="s2">&quot;(Score: </span><span class="si">{</span><span class="n">match</span><span class="o">.</span><span class="n">reference_score</span><span class="si">}</span><span class="s2">)&quot;</span>
+<span class="c1"># Example: &quot;(Score: 2)&quot;</span>
+</code></pre></div>
+<h3 id="why-this-is-wrong_1">Why This Is Wrong</h3>
+<ul>
+<li>Paper's inline label: <code>(PHQ8_Sleep Score: 2)</code> - domain embedded in tag</li>
+<li>Our label: <code>(Score: 2)</code> - domain only in section header</li>
+<li>LLM can't easily map score back to domain within the chunk context</li>
+</ul>
+<hr />
+<h2 id="root-cause-analysis">Root Cause Analysis</h2>
+<h3 id="architectural-issue">Architectural Issue</h3>
+<p>The reference embedding system has a <strong>fundamental mismatch</strong>:</p>
+<table>
+<thead>
+<tr>
+<th>Component</th>
+<th>What We Store</th>
+<th>What We Query</th>
+<th>What We Attach</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Chunks</td>
+<td>Generic 8-line windows</td>
+<td>Item-specific evidence</td>
+<td>Participant-level scores</td>
+</tr>
+</tbody>
+</table>
+<p>Chunks are NOT tagged with PHQ-8 items at generation time. The score lookup happens at retrieval time and uses participant-level ground truth, not chunk-level analysis.</p>
+<h3 id="why-zero-shot-wins">Why Zero-Shot Wins</h3>
+<table>
+<thead>
+<tr>
+<th>Zero-Shot</th>
+<th>Few-Shot</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>LLM analyzes evidence directly</td>
+<td>LLM sees conflicting references</td>
+</tr>
+<tr>
+<td>No mismatched score signals</td>
+<td>Scores don't match chunk content</td>
+</tr>
+<tr>
+<td>Holistic transcript analysis</td>
+<td>Fragmented 8-domain structure</td>
+</tr>
+<tr>
+<td>Works as designed</td>
+<td>Confused by reference quality</td>
+</tr>
+</tbody>
+</table>
+<hr />
+<h2 id="evidence">Evidence</h2>
+<h3 id="statistical-evidence">Statistical Evidence</h3>
+<table>
+<thead>
+<tr>
+<th>Mode</th>
+<th>AURC</th>
+<th>95% CI</th>
+<th>Coverage</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Zero-shot</td>
+<td><strong>0.134</strong></td>
+<td>[0.094, 0.176]</td>
+<td>55.5%</td>
+</tr>
+<tr>
+<td>Few-shot</td>
+<td>0.214</td>
+<td>[0.160, 0.278]</td>
+<td>71.9%</td>
+</tr>
+</tbody>
+</table>
+<ul>
+<li>Non-overlapping CIs suggest significant difference (but paired deltas would be more rigorous)</li>
+<li>Few-shot predicts MORE (higher coverage) but with higher risk per unit coverage</li>
+<li>This pattern is <em>consistent with</em> overconfidence, but not proven to be caused by our divergences</li>
+</ul>
+<h3 id="code-evidence">Code Evidence</h3>
+<ol>
+<li><code>embedding.py:199</code> - <code>get_score(participant_id, lookup_item)</code> returns participant-level score</li>
+<li><code>reference_store.py:563-589</code> - <code>get_score()</code> queries ground truth CSV, not chunk content</li>
+<li><code>generate_embeddings.py:94-135</code> - Chunks created as generic windows, no item tagging</li>
+</ol>
+<h3 id="research-evidence">Research Evidence</h3>
+<p>2025 RAG best practices (<a href="https://www.llamaindex.ai/blog/evaluating-the-ideal-chunk-size-for-a-rag-system-using-llamaindex-6207e5d3fec5">LlamaIndex</a>):</p>
+<blockquote>
+<p>"Vital information might not be among the top retrieved chunks, especially if the similarity_top_k setting is as restrictive as 2."</p>
+</blockquote>
+<hr />
+<h2 id="proposed-fixes-for-senior-review">Proposed Fixes (For Senior Review)</h2>
+<h3 id="fix-1-format-alignment-required-fixes-bugs-2-3">Fix 1: Format Alignment (REQUIRED - Fixes Bugs 2 &amp; 3)</h3>
+<p><strong>Priority</strong>: HIGH - This is a real divergence from paper's implementation.</p>
+<p>Update <code>ReferenceBundle.format_for_prompt()</code> in <code>embedding.py:40-70</code>:</p>
+<p><strong>Current (incorrect)</strong>:
+<div class="highlight"><pre><span></span><code>[Sleep]
+&lt;Reference Examples&gt;
+
+(Score: 2)
+{chunk}
+
+&lt;/Reference Examples&gt;
+
+[Tired]
+&lt;Reference Examples&gt;
+
+(Score: 1)
+{chunk}
+
+&lt;/Reference Examples&gt;
+</code></pre></div></p>
+<p><strong>Target (paper's format)</strong>:
+<div class="highlight"><pre><span></span><code>&lt;Reference Examples&gt;
+
+(PHQ8_Sleep Score: 2)
+{chunk about sleep}
+
+(PHQ8_Tired Score: 1)
+{chunk about fatigue}
+
+&lt;Reference Examples&gt;
+</code></pre></div></p>
+<p><strong>Note</strong>: Paper uses <code>&lt;Reference Examples&gt;</code> for both opening AND closing (not XML-style <code>&lt;/...&gt;</code>).</p>
+<p><strong>Changes needed</strong>:
+1. Single unified <code>&lt;Reference Examples&gt;</code> block
+2. Inline domain labels: <code>(PHQ8_Sleep Score: X)</code> not <code>(Score: X)</code>
+3. Remove per-item section headers (e.g., <code>[Sleep]</code>)</p>
+<hr />
+<h2 id="added-senior-review-implementation-ready-spec-for-fix-1-paper-parity">✅ ADDED (Senior Review): Implementation-Ready Spec for Fix 1 (Paper Parity)</h2>
+<p><strong>Canonical spec</strong>: <code>docs/archive/specs/31-paper-parity-reference-examples-format.md</code> (this section should match it).</p>
+<p>This section is intentionally <strong>copy/paste-able</strong> and contains the exact behavior required to match the paper notebook.</p>
+<h3 id="scope-what-changes-what-doesnt">Scope (what changes, what doesn’t)</h3>
+<ul>
+<li><strong>Change</strong>: <code>ReferenceBundle.format_for_prompt()</code> formatting only.</li>
+<li><strong>Do NOT change</strong>: retrieval logic, score lookup logic, evidence extraction, <code>top_k</code>, or embeddings.</li>
+<li><strong>Why</strong>: Fix 1 is about <strong>paper-parity prompt formatting</strong>, not redesigning the method.</li>
+</ul>
+<h3 id="files-exact-locations">Files + exact locations</h3>
+<ul>
+<li><strong>Production code</strong>: <code>src/ai_psychiatrist/services/embedding.py:40</code> (<code>ReferenceBundle.format_for_prompt</code>)</li>
+<li><strong>Unit tests</strong>: <code>tests/unit/services/test_embedding.py:55</code> (<code>TestReferenceBundle</code> expectations)</li>
+</ul>
+<h3 id="ground-truth-from-paper-notebook-cell-49f51ff5">Ground truth from paper notebook (cell <code>49f51ff5</code>)</h3>
+<p>The notebook builds the reference string exactly like this:</p>
+<div class="highlight"><pre><span></span><code><span class="k">if</span> <span class="n">all_references</span><span class="p">:</span>
+    <span class="n">reference_evidence</span> <span class="o">=</span> <span class="s2">&quot;&lt;Reference Examples&gt;</span><span class="se">\n\n</span><span class="s2">&quot;</span> <span class="o">+</span> <span class="s2">&quot;</span><span class="se">\n\n</span><span class="s2">&quot;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">all_references</span><span class="p">)</span> <span class="o">+</span> <span class="s2">&quot;</span><span class="se">\n\n</span><span class="s2">&lt;Reference Examples&gt;&quot;</span>
+<span class="k">else</span><span class="p">:</span>
+    <span class="n">reference_evidence</span> <span class="o">=</span> <span class="s2">&quot;&lt;Reference Examples&gt;</span><span class="se">\n</span><span class="s2">No valid evidence found</span><span class="se">\n</span><span class="s2">&lt;Reference Examples&gt;&quot;</span>
+</code></pre></div>
+<p>And each <code>reference_entry</code> is exactly:</p>
+<div class="highlight"><pre><span></span><code><span class="n">reference_entry</span> <span class="o">=</span> <span class="sa">f</span><span class="s2">&quot;(</span><span class="si">{</span><span class="n">evidence_key</span><span class="si">}</span><span class="s2"> Score: </span><span class="si">{</span><span class="n">score</span><span class="si">}</span><span class="s2">)</span><span class="se">\n</span><span class="si">{</span><span class="n">raw_text</span><span class="si">}</span><span class="s2">&quot;</span>
+</code></pre></div>
+<p>Where <code>evidence_key</code> is one of:
+<code>PHQ8_NoInterest, PHQ8_Depressed, PHQ8_Sleep, PHQ8_Tired, PHQ8_Appetite, PHQ8_Failure, PHQ8_Concentrating, PHQ8_Moving</code>.</p>
+<h3 id="exact-output-specification-character-by-character">Exact output specification (character-by-character)</h3>
+<p>Define <code>entries</code> as a list of strings. Each entry is:</p>
+<div class="highlight"><pre><span></span><code>({EVIDENCE_KEY} Score: {SCORE})
+{CHUNK_TEXT}
+</code></pre></div>
+<p>Where:
+- <code>{EVIDENCE_KEY}</code> must be exactly <code>PHQ8_{item.value}</code> (e.g. <code>PHQ8_Sleep</code>, <code>PHQ8_NoInterest</code>).
+- <code>{SCORE}</code> must be an <strong>integer 0–3</strong>.
+- <code>{CHUNK_TEXT}</code> must be the chunk text exactly as stored (including internal newlines).</p>
+<p>Then <code>format_for_prompt()</code> must return:</p>
+<ul>
+<li><strong>If at least 1 entry exists</strong>:</li>
+</ul>
+<div class="highlight"><pre><span></span><code>&lt;Reference Examples&gt;\n\n
+{entry_1}\n\n
+{entry_2}\n\n
+...\n\n
+&lt;Reference Examples&gt;
+</code></pre></div>
+<p>Equivalently (exact):</p>
+<div class="highlight"><pre><span></span><code><span class="s2">&quot;&lt;Reference Examples&gt;</span><span class="se">\n\n</span><span class="s2">&quot;</span> <span class="o">+</span> <span class="s2">&quot;</span><span class="se">\n\n</span><span class="s2">&quot;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">entries</span><span class="p">)</span> <span class="o">+</span> <span class="s2">&quot;</span><span class="se">\n\n</span><span class="s2">&lt;Reference Examples&gt;&quot;</span>
+</code></pre></div>
+<ul>
+<li><strong>If no entries exist</strong>:</li>
+</ul>
+<div class="highlight"><pre><span></span><code><span class="s2">&quot;&lt;Reference Examples&gt;</span><span class="se">\n</span><span class="s2">No valid evidence found</span><span class="se">\n</span><span class="s2">&lt;Reference Examples&gt;&quot;</span>
+</code></pre></div>
+<h3 id="exact-before-vs-after-code-copypaste">Exact “before” vs “after” code (copy/paste)</h3>
+<p><strong>Before</strong> (current behavior; paper-divergent): <code>src/ai_psychiatrist/services/embedding.py:40</code></p>
+<ul>
+<li>Emits <strong>8 sections</strong> (one per PHQ-8 item).</li>
+<li>Emits <code>(Score: X)</code> without domain labels.</li>
+<li>Emits XML-style closing tag <code>&lt;/Reference Examples&gt;</code>.</li>
+<li>Emits <code>"No valid evidence found"</code> <strong>inside each empty item block</strong>.</li>
+</ul>
+<p><strong>After</strong> (paper-parity target): replace <code>ReferenceBundle.format_for_prompt()</code> with:</p>
+<div class="highlight"><pre><span></span><code><span class="k">def</span><span class="w"> </span><span class="nf">format_for_prompt</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Format references as prompt text (paper-parity).</span>
+
+<span class="sd">    Paper notebook behavior (cell 49f51ff5):</span>
+<span class="sd">    - Single unified &lt;Reference Examples&gt; block.</span>
+<span class="sd">    - Each reference entry is labeled like: (PHQ8_Sleep Score: 2)</span>
+<span class="sd">    - Items with no matches are omitted (no empty per-item blocks).</span>
+<span class="sd">    - Uses the same literal tag to open and close: &lt;Reference Examples&gt;</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">entries</span><span class="p">:</span> <span class="nb">list</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span> <span class="o">=</span> <span class="p">[]</span>
+
+    <span class="k">for</span> <span class="n">item</span> <span class="ow">in</span> <span class="n">PHQ8Item</span><span class="o">.</span><span class="n">all_items</span><span class="p">():</span>
+        <span class="n">evidence_key</span> <span class="o">=</span> <span class="sa">f</span><span class="s2">&quot;PHQ8_</span><span class="si">{</span><span class="n">item</span><span class="o">.</span><span class="n">value</span><span class="si">}</span><span class="s2">&quot;</span>
+        <span class="k">for</span> <span class="n">match</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">item_references</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">item</span><span class="p">,</span> <span class="p">[]):</span>
+            <span class="c1"># Match notebook behavior: only include references with available ground truth.</span>
+            <span class="k">if</span> <span class="n">match</span><span class="o">.</span><span class="n">reference_score</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+                <span class="k">continue</span>
+            <span class="n">entries</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;(</span><span class="si">{</span><span class="n">evidence_key</span><span class="si">}</span><span class="s2"> Score: </span><span class="si">{</span><span class="n">match</span><span class="o">.</span><span class="n">reference_score</span><span class="si">}</span><span class="s2">)</span><span class="se">\n</span><span class="si">{</span><span class="n">match</span><span class="o">.</span><span class="n">chunk</span><span class="o">.</span><span class="n">text</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+
+    <span class="k">if</span> <span class="n">entries</span><span class="p">:</span>
+        <span class="k">return</span> <span class="s2">&quot;&lt;Reference Examples&gt;</span><span class="se">\n\n</span><span class="s2">&quot;</span> <span class="o">+</span> <span class="s2">&quot;</span><span class="se">\n\n</span><span class="s2">&quot;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">entries</span><span class="p">)</span> <span class="o">+</span> <span class="s2">&quot;</span><span class="se">\n\n</span><span class="s2">&lt;Reference Examples&gt;&quot;</span>
+
+    <span class="k">return</span> <span class="s2">&quot;&lt;Reference Examples&gt;</span><span class="se">\n</span><span class="s2">No valid evidence found</span><span class="se">\n</span><span class="s2">&lt;Reference Examples&gt;&quot;</span>
+</code></pre></div>
+<h3 id="edge-cases-explicit-behavior">Edge cases (explicit behavior)</h3>
+<ul>
+<li><strong>No evidence for an item</strong>: omit that item entirely from the reference block (no empty section).</li>
+<li><strong>No entries at all</strong>: return exactly <code>&lt;Reference Examples&gt;\nNo valid evidence found\n&lt;Reference Examples&gt;</code>.</li>
+<li><strong><code>reference_score is None</code></strong>: omit that match (paper notebook only appends entries when ground truth exists).</li>
+<li><strong>Very low similarity</strong>: no filtering in Fix 1; low-similarity chunks are still included if retrieved.</li>
+<li><strong>Empty chunk text</strong>: should be impossible in production because <code>TranscriptChunk</code> rejects empty text; if it occurs due to bad artifacts, this will raise earlier when the chunk is constructed.</li>
+</ul>
+<h3 id="verification-criteria-how-to-prove-parity">Verification criteria (how to prove parity)</h3>
+<ol>
+<li><strong>Unit tests</strong></li>
+<li>Update <code>tests/unit/services/test_embedding.py:55</code> to reflect the new format (see below).</li>
+<li>
+<p>Run: <code>uv run pytest tests/unit/services/test_embedding.py -q</code></p>
+</li>
+<li>
+<p><strong>Golden-string checks</strong></p>
+</li>
+<li>Add a test that builds a small <code>ReferenceBundle</code> and asserts exact string equality including newlines.</li>
+<li>
+<p>The test must assert:</p>
+<ul>
+<li>output starts with <code>&lt;Reference Examples&gt;\n\n</code></li>
+<li>output ends with <code>\n\n&lt;Reference Examples&gt;</code></li>
+<li>output contains <code>"(PHQ8_Sleep Score: 2)\n..."</code> (not <code>(Score: 2)</code>)</li>
+<li>output does <strong>not</strong> contain any <code>[</code> section headers</li>
+<li>output does <strong>not</strong> contain <code>&lt;/Reference Examples&gt;</code></li>
+</ul>
+</li>
+<li>
+<p><strong>Ablation rerun</strong></p>
+</li>
+<li>Re-run reproduction: <code>uv run python scripts/reproduce_results.py --split paper-test</code></li>
+<li>Compute paired deltas:
+     <code>uv run python scripts/evaluate_selective_prediction.py --input data/outputs/&lt;RUN&gt;.json --mode zero_shot --input data/outputs/&lt;RUN&gt;.json --mode few_shot --intersection-only</code></li>
+</ol>
+<h3 id="implementation-order-dependencies-so-you-dont-get-stuck">Implementation order + dependencies (so you don’t get stuck)</h3>
+<ol>
+<li><strong>Update production code first</strong> (<code>src/ai_psychiatrist/services/embedding.py</code>).</li>
+<li><strong>Immediately update unit tests</strong> (<code>tests/unit/services/test_embedding.py</code>) so CI goes green.</li>
+<li><strong>Run unit tests</strong> (fast feedback): <code>uv run pytest tests/unit/services/test_embedding.py -q</code></li>
+<li><strong>Only then run expensive ablations</strong> (<code>scripts/reproduce_results.py</code> + <code>scripts/evaluate_selective_prediction.py</code>).</li>
+</ol>
+<p>Parallelizable work:
+- Retrieval diagnostics logging can be implemented in parallel with Fix 1, but interpret logs <strong>only after</strong> Fix 1 lands (otherwise you’re auditing a non-parity prompt).</p>
+<h3 id="test-updates-required-exact-expectations">Test updates required (exact expectations)</h3>
+<p>Update <code>tests/unit/services/test_embedding.py</code>:</p>
+<ul>
+<li><code>test_format_empty_bundle</code>: must now assert the output is exactly:</li>
+</ul>
+<div class="highlight"><pre><span></span><code>&lt;Reference Examples&gt;
+No valid evidence found
+&lt;Reference Examples&gt;
+</code></pre></div>
+<ul>
+<li><code>test_format_with_matches</code>: must now assert:</li>
+<li>output contains <code>&lt;Reference Examples&gt;</code></li>
+<li>output contains <code>(PHQ8_NoInterest Score: 2)</code> for a <code>PHQ8Item.NO_INTEREST</code> match</li>
+<li>output does <strong>not</strong> contain <code>[NoInterest]</code></li>
+<li>
+<p>output does <strong>not</strong> contain <code>&lt;/Reference Examples&gt;</code></p>
+</li>
+<li>
+<p>Add a new test: <strong>skips empty items</strong> (i.e., bundle has <code>Sleep</code> matches but <code>Depressed</code> has none → output contains only <code>PHQ8_Sleep</code> entries).</p>
+</li>
+</ul>
+<p>✅ ADDED (Senior Review): Copy/paste test code (drop-in replacement for <code>TestReferenceBundle</code>)</p>
+<div class="highlight"><pre><span></span><code><span class="k">class</span><span class="w"> </span><span class="nc">TestReferenceBundle</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Tests for ReferenceBundle.&quot;&quot;&quot;</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="nf">test_format_empty_bundle</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Should format empty bundle as notebook &#39;no valid evidence&#39; sentinel.&quot;&quot;&quot;</span>
+        <span class="n">bundle</span> <span class="o">=</span> <span class="n">ReferenceBundle</span><span class="p">(</span><span class="n">item_references</span><span class="o">=</span><span class="p">{})</span>
+        <span class="n">formatted</span> <span class="o">=</span> <span class="n">bundle</span><span class="o">.</span><span class="n">format_for_prompt</span><span class="p">()</span>
+        <span class="k">assert</span> <span class="n">formatted</span> <span class="o">==</span> <span class="s2">&quot;&lt;Reference Examples&gt;</span><span class="se">\n</span><span class="s2">No valid evidence found</span><span class="se">\n</span><span class="s2">&lt;Reference Examples&gt;&quot;</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="nf">test_format_with_matches</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Should format bundle with labeled references correctly.&quot;&quot;&quot;</span>
+        <span class="n">match</span> <span class="o">=</span> <span class="n">SimilarityMatch</span><span class="p">(</span>
+            <span class="n">chunk</span><span class="o">=</span><span class="n">TranscriptChunk</span><span class="p">(</span><span class="n">text</span><span class="o">=</span><span class="s2">&quot;I can&#39;t enjoy anything anymore&quot;</span><span class="p">,</span> <span class="n">participant_id</span><span class="o">=</span><span class="mi">123</span><span class="p">),</span>
+            <span class="n">similarity</span><span class="o">=</span><span class="mf">0.95</span><span class="p">,</span>
+            <span class="n">reference_score</span><span class="o">=</span><span class="mi">2</span><span class="p">,</span>
+        <span class="p">)</span>
+
+        <span class="n">bundle</span> <span class="o">=</span> <span class="n">ReferenceBundle</span><span class="p">(</span><span class="n">item_references</span><span class="o">=</span><span class="p">{</span><span class="n">PHQ8Item</span><span class="o">.</span><span class="n">NO_INTEREST</span><span class="p">:</span> <span class="p">[</span><span class="n">match</span><span class="p">]})</span>
+        <span class="n">formatted</span> <span class="o">=</span> <span class="n">bundle</span><span class="o">.</span><span class="n">format_for_prompt</span><span class="p">()</span>
+
+        <span class="k">assert</span> <span class="n">formatted</span><span class="o">.</span><span class="n">startswith</span><span class="p">(</span><span class="s2">&quot;&lt;Reference Examples&gt;</span><span class="se">\n\n</span><span class="s2">&quot;</span><span class="p">)</span>
+        <span class="k">assert</span> <span class="n">formatted</span><span class="o">.</span><span class="n">endswith</span><span class="p">(</span><span class="s2">&quot;</span><span class="se">\n\n</span><span class="s2">&lt;Reference Examples&gt;&quot;</span><span class="p">)</span>
+        <span class="k">assert</span> <span class="s2">&quot;(PHQ8_NoInterest Score: 2)</span><span class="se">\n</span><span class="s2">I can&#39;t enjoy anything anymore&quot;</span> <span class="ow">in</span> <span class="n">formatted</span>
+        <span class="k">assert</span> <span class="s2">&quot;[NoInterest]&quot;</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">formatted</span>
+        <span class="k">assert</span> <span class="s2">&quot;&lt;/Reference Examples&gt;&quot;</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">formatted</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="nf">test_format_skips_none_score</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Notebook behavior: skip references without available ground truth.&quot;&quot;&quot;</span>
+        <span class="n">match</span> <span class="o">=</span> <span class="n">SimilarityMatch</span><span class="p">(</span>
+            <span class="n">chunk</span><span class="o">=</span><span class="n">TranscriptChunk</span><span class="p">(</span><span class="n">text</span><span class="o">=</span><span class="s2">&quot;Some text&quot;</span><span class="p">,</span> <span class="n">participant_id</span><span class="o">=</span><span class="mi">123</span><span class="p">),</span>
+            <span class="n">similarity</span><span class="o">=</span><span class="mf">0.8</span><span class="p">,</span>
+            <span class="n">reference_score</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+        <span class="p">)</span>
+        <span class="n">bundle</span> <span class="o">=</span> <span class="n">ReferenceBundle</span><span class="p">(</span><span class="n">item_references</span><span class="o">=</span><span class="p">{</span><span class="n">PHQ8Item</span><span class="o">.</span><span class="n">SLEEP</span><span class="p">:</span> <span class="p">[</span><span class="n">match</span><span class="p">]})</span>
+        <span class="n">formatted</span> <span class="o">=</span> <span class="n">bundle</span><span class="o">.</span><span class="n">format_for_prompt</span><span class="p">()</span>
+        <span class="k">assert</span> <span class="n">formatted</span> <span class="o">==</span> <span class="s2">&quot;&lt;Reference Examples&gt;</span><span class="se">\n</span><span class="s2">No valid evidence found</span><span class="se">\n</span><span class="s2">&lt;Reference Examples&gt;&quot;</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="nf">test_format_multiple_matches_and_items</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Should include multiple references in a single unified block.&quot;&quot;&quot;</span>
+        <span class="n">sleep_match</span> <span class="o">=</span> <span class="n">SimilarityMatch</span><span class="p">(</span>
+            <span class="n">chunk</span><span class="o">=</span><span class="n">TranscriptChunk</span><span class="p">(</span><span class="n">text</span><span class="o">=</span><span class="s2">&quot;sleep ref&quot;</span><span class="p">,</span> <span class="n">participant_id</span><span class="o">=</span><span class="mi">100</span><span class="p">),</span>
+            <span class="n">similarity</span><span class="o">=</span><span class="mf">0.9</span><span class="p">,</span>
+            <span class="n">reference_score</span><span class="o">=</span><span class="mi">3</span><span class="p">,</span>
+        <span class="p">)</span>
+        <span class="n">tired_match</span> <span class="o">=</span> <span class="n">SimilarityMatch</span><span class="p">(</span>
+            <span class="n">chunk</span><span class="o">=</span><span class="n">TranscriptChunk</span><span class="p">(</span><span class="n">text</span><span class="o">=</span><span class="s2">&quot;tired ref&quot;</span><span class="p">,</span> <span class="n">participant_id</span><span class="o">=</span><span class="mi">101</span><span class="p">),</span>
+            <span class="n">similarity</span><span class="o">=</span><span class="mf">0.85</span><span class="p">,</span>
+            <span class="n">reference_score</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span>
+        <span class="p">)</span>
+        <span class="n">bundle</span> <span class="o">=</span> <span class="n">ReferenceBundle</span><span class="p">(</span>
+            <span class="n">item_references</span><span class="o">=</span><span class="p">{</span>
+                <span class="n">PHQ8Item</span><span class="o">.</span><span class="n">SLEEP</span><span class="p">:</span> <span class="p">[</span><span class="n">sleep_match</span><span class="p">],</span>
+                <span class="n">PHQ8Item</span><span class="o">.</span><span class="n">TIRED</span><span class="p">:</span> <span class="p">[</span><span class="n">tired_match</span><span class="p">],</span>
+            <span class="p">}</span>
+        <span class="p">)</span>
+        <span class="n">formatted</span> <span class="o">=</span> <span class="n">bundle</span><span class="o">.</span><span class="n">format_for_prompt</span><span class="p">()</span>
+        <span class="k">assert</span> <span class="s2">&quot;(PHQ8_Sleep Score: 3)</span><span class="se">\n</span><span class="s2">sleep ref&quot;</span> <span class="ow">in</span> <span class="n">formatted</span>
+        <span class="k">assert</span> <span class="s2">&quot;(PHQ8_Tired Score: 1)</span><span class="se">\n</span><span class="s2">tired ref&quot;</span> <span class="ow">in</span> <span class="n">formatted</span>
+        <span class="k">assert</span> <span class="s2">&quot;[Sleep]&quot;</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">formatted</span>
+</code></pre></div>
+<hr />
+<h3 id="future-work-separate-spec-required-item-tagged-chunks">Future Work (separate spec required): Item-Tagged Chunks</h3>
+<p><strong>Priority</strong>: DEFER (not needed for paper-parity reproduction)</p>
+<p><strong>Status</strong>: NOT IMPLEMENTATION-READY in this document.</p>
+<p>This is a legitimate research direction, but it requires a separate design spec (new artifact formats + new indexing pipeline + evaluation protocol). Keeping it here as a “Fix” is misleading.</p>
+<p><strong>Action</strong>: Implement only from a dedicated spec (now tracked as <code>docs/archive/specs/34-item-tagged-reference-embeddings.md</code>).</p>
+<p><strong>Why</strong>: A developer should not attempt this based only on BUG-031.</p>
+<p>When generating embeddings, tag chunks with which PHQ-8 items they address:</p>
+<ol>
+<li><strong>During embedding generation</strong> (<code>generate_embeddings.py</code>):</li>
+<li>For each chunk, use LLM to identify which PHQ-8 items it discusses</li>
+<li>
+<p>Store: <code>{chunk_text, embedding, item_tags: [PHQ8_Sleep, PHQ8_Tired]}</code></p>
+</li>
+<li>
+<p><strong>During retrieval</strong> (<code>embedding.py</code>):</p>
+</li>
+<li>Only retrieve chunks tagged with the relevant item</li>
+<li>
+<p>Ensures retrieved chunk is actually about the queried symptom</p>
+</li>
+<li>
+<p><strong>Benefits</strong>:</p>
+</li>
+<li>Reduces semantic mismatch</li>
+<li>Chunks are guaranteed to be about the right topic</li>
+<li>Still uses participant-level scores (paper parity) but with better relevance</li>
+</ol>
+<hr />
+<h3 id="future-work-separate-spec-required-chunk-level-scoring">Future Work (separate spec required): Chunk-Level Scoring</h3>
+<p><strong>Priority</strong>: DEFER (new-method research; high circularity risk)</p>
+<p><strong>Status</strong>: Implemented as a new-method experiment (not paper-parity).</p>
+<p><strong>Spec</strong>: <code>docs/archive/specs/35-offline-chunk-level-phq8-scoring.md</code></p>
+<p>This is not a “bug fix” or “paper parity” change. It requires:
+- a new labeling pipeline,
+- new artifact formats,
+- explicit controls against leakage/circularity,
+- and separate reporting.</p>
+<p>The most correct approach, but diverges significantly from paper:</p>
+<ol>
+<li><strong>During embedding generation</strong>:</li>
+<li>For each chunk, use LLM to assign chunk-specific PHQ-8 scores</li>
+<li>
+<p>Store: <code>{chunk_text, embedding, chunk_scores: {sleep: 2, tired: 1, ...}}</code></p>
+</li>
+<li>
+<p><strong>During retrieval</strong>:</p>
+</li>
+<li>Use chunk's own score, not participant's overall score</li>
+<li>
+<p>Perfect semantic alignment between chunk content and score</p>
+</li>
+<li>
+<p><strong>Tradeoffs</strong>:</p>
+</li>
+<li>Expensive: requires LLM call per chunk during embedding generation</li>
+<li>Diverges from paper methodology</li>
+<li>But: most semantically correct approach</li>
+</ol>
+<hr />
+<h3 id="not-recommended-disable-few-shot">NOT Recommended: Disable Few-Shot</h3>
+<p>While zero-shot currently outperforms few-shot, this is likely due to the bugs above. After fixing format issues (Fix 1), few-shot may work as intended. Only consider disabling few-shot if fixes don't improve performance.</p>
+<hr />
+<h2 id="alternative-explanations-not-yet-ruled-out">Alternative Explanations (Not Yet Ruled Out)</h2>
+<p>The performance inversion may have causes beyond our identified divergences:</p>
+<table>
+<thead>
+<tr>
+<th>Alternative</th>
+<th>Description</th>
+<th>How to Test</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><strong>Prompt length/context dilution</strong></td>
+<td>Few-shot adds many tokens; LLM may attend less to transcript</td>
+<td>Compare attention patterns or test with shorter references</td>
+</tr>
+<tr>
+<td><strong>Scoring prompt mismatch</strong></td>
+<td>Our scoring prompt may differ from notebook beyond reference format</td>
+<td>Diff entire prompt structure against notebook</td>
+</tr>
+<tr>
+<td><strong>Model/quantization mismatch</strong></td>
+<td>Paper's Gemma3 27B variant/precision may differ</td>
+<td>Test with paper's exact model config</td>
+</tr>
+<tr>
+<td><strong>Failure rate correlation</strong></td>
+<td>Few-shot had 1 participant failure (390); may correlate with prompt length</td>
+<td>Analyze failure patterns</td>
+</tr>
+<tr>
+<td><strong>LLM stochasticity</strong></td>
+<td>Single run; LLM variance not captured</td>
+<td>Run multiple times, compute variance</td>
+</tr>
+</tbody>
+</table>
+<p><strong>Until these are ruled out, we cannot claim our divergences are the root cause.</strong></p>
+<hr />
+<h2 id="action-items">Action Items</h2>
+<ul>
+<li>[ ] <strong>Fix format divergences</strong> - Match paper's unified block format</li>
+<li>[ ] <strong>Run ablation</strong> - Does fixing format improve few-shot?</li>
+<li>[ ] <strong>Add retrieval diagnostics</strong> - Log retrieved chunks + similarity scores</li>
+<li>[ ] <strong>Manual audit</strong> - Review stratified sample of retrieved chunks</li>
+<li>[ ] <strong>Multiple runs</strong> - Assess LLM variance</li>
+<li>[ ] <strong>Paired evaluation</strong> - Use same-participant deltas for significance</li>
+</ul>
+<hr />
+<hr />
+<h2 id="2025-state-of-the-art-solutions">2025 State-of-the-Art Solutions</h2>
+<p>This is a <strong>known problem in RAG</strong> with established solutions.</p>
+<h3 id="the-problem-literature-terms">The Problem (Literature Terms)</h3>
+<table>
+<thead>
+<tr>
+<th>Our Finding</th>
+<th>Literature Term</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Chunks get participant-level scores</td>
+<td>Label misalignment</td>
+</tr>
+<tr>
+<td>Chunk content may not match attached score</td>
+<td>Semantic mismatch</td>
+</tr>
+<tr>
+<td>Retrieval finds topic, not severity</td>
+<td>Context loss</td>
+</tr>
+</tbody>
+</table>
+<h3 id="solution-1-crag-corrective-rag">Solution 1: CRAG (Corrective RAG)</h3>
+<p><strong>Tracking spec</strong>: <code>docs/archive/specs/36-crag-reference-validation.md</code></p>
+<p>From <a href="https://langchain-ai.github.io/langgraph/tutorials/rag/langgraph_crag/">LangChain CRAG</a>:</p>
+<blockquote>
+<p>"The evaluator is a language model responsible for classifying a retrieved text as correct, incorrect, or ambiguous."</p>
+</blockquote>
+<p><strong>Architecture</strong>: Add LLM judge to validate chunks before using them.</p>
+<div class="highlight"><pre><span></span><code>Retrieve chunks → LLM JUDGE → Filter misaligned → Use good chunks
+                     ↓
+         &quot;Does this chunk match Score 3?&quot;
+</code></pre></div>
+<p><strong>Performance</strong>: Self-CRAG delivers 320% improvement on PopQA (<a href="https://medium.com/data-science-collective/rag-architectures-a-complete-guide-for-2025-daf98a2ede8c">Source</a>)</p>
+<h3 id="solution-2-contextual-retrieval-anthropic">Solution 2: Contextual Retrieval (Anthropic)</h3>
+<p>From <a href="https://www.anthropic.com/news/contextual-retrieval">Anthropic</a>:</p>
+<blockquote>
+<p>"Contextual retrieval fixes the problem of lost context by generating and adding a short, context-specific explanation to each chunk before embedding."</p>
+</blockquote>
+<p><strong>Result</strong>: 49% reduction in retrieval errors, 67% reduction in top-20 failure rate.</p>
+<h3 id="solution-3-pre-compute-chunk-scores">Solution 3: Pre-Compute Chunk Scores</h3>
+<p>Score each chunk at embedding generation time, not at runtime.</p>
+<div class="highlight"><pre><span></span><code><span class="c1"># During embedding generation (one-time cost)</span>
+<span class="k">for</span> <span class="n">chunk</span> <span class="ow">in</span> <span class="n">all_chunks</span><span class="p">:</span>
+    <span class="n">embedding</span> <span class="o">=</span> <span class="n">embed</span><span class="p">(</span><span class="n">chunk</span><span class="o">.</span><span class="n">text</span><span class="p">)</span>
+    <span class="n">chunk_scores</span> <span class="o">=</span> <span class="n">llm</span><span class="o">.</span><span class="n">score_chunk</span><span class="p">(</span><span class="n">chunk</span><span class="o">.</span><span class="n">text</span><span class="p">)</span>  <span class="c1"># &quot;What severity does this describe?&quot;</span>
+    <span class="n">store</span><span class="p">(</span><span class="n">chunk</span><span class="p">,</span> <span class="n">embedding</span><span class="p">,</span> <span class="n">chunk_scores</span><span class="p">)</span>
+
+<span class="c1"># During retrieval (zero runtime cost)</span>
+<span class="k">for</span> <span class="n">chunk</span> <span class="ow">in</span> <span class="n">retrieved_chunks</span><span class="p">:</span>
+    <span class="n">score</span> <span class="o">=</span> <span class="n">chunk</span><span class="o">.</span><span class="n">chunk_scores</span><span class="p">[</span><span class="n">item</span><span class="p">]</span>  <span class="c1"># Semantically aligned!</span>
+</code></pre></div>
+<p><strong>Potential benefit</strong>: LLM-estimated chunk scores may better match chunk content than participant-level scores.</p>
+<p><strong>⚠️ WARNING - Circularity Risk</strong>: Using an LLM to fabricate labels that steer another LLM is potentially circular. This could improve apparent performance without improving truth alignment, and diverges significantly from the paper. If implemented, treat as a <strong>new method</strong>, not reproduction.</p>
+<h3 id="solution-4-hybrid-pre-compute-crag">Solution 4: Hybrid (Pre-Compute + CRAG)</h3>
+<p>Best of both worlds:
+1. Pre-compute chunk scores at index time (handles 95% of cases)
+2. Optional CRAG validation at runtime (safety net for edge cases)</p>
+<hr />
+<h2 id="recommended-implementation">Recommended Implementation</h2>
+<h3 id="priority-1-fix-format-divergences-required-for-paper-parity">Priority 1: Fix Format Divergences (REQUIRED for Paper Parity)</h3>
+<p><strong>Effort</strong>: Low | <strong>Impact</strong>: Establishes baseline</p>
+<ul>
+<li>Match paper's unified <code>&lt;Reference Examples&gt;</code> block format</li>
+<li>Use same tag for open/close: <code>&lt;Reference Examples&gt;</code> not <code>&lt;/Reference Examples&gt;</code></li>
+<li>Add inline domain labels: <code>(PHQ8_Sleep Score: 2)</code> not <code>(Score: 2)</code></li>
+<li>Skip items with no evidence (paper does this)</li>
+</ul>
+<p><strong>After fixing</strong>: Re-run evaluation to see if few-shot improves. This is the only clean way to determine if divergences caused the inversion.</p>
+<h3 id="priority-2-add-retrieval-diagnostics-required-for-causality-claims">Priority 2: Add Retrieval Diagnostics (REQUIRED for Causality Claims)</h3>
+<p><strong>Effort</strong>: Low | <strong>Impact</strong>: Enables empirical verification</p>
+<p>✅ ADDED (Senior Review): Implementation spec is now canonicalized in <code>docs/archive/specs/32-few-shot-retrieval-diagnostics.md</code>.</p>
+<ul>
+<li><strong>File</strong>: <code>src/ai_psychiatrist/services/embedding.py</code></li>
+<li><strong>Function</strong>: <code>EmbeddingService.build_reference_bundle</code> (around <code>src/ai_psychiatrist/services/embedding.py:238</code>)</li>
+<li><strong>Where to add</strong>: immediately after <code>top_matches = matches[: self._top_k]</code> (around <code>src/ai_psychiatrist/services/embedding.py:285</code>)</li>
+</ul>
+<p>If you still want the quick “copy/paste” version: inside the <code>for item in PHQ8Item.all_items():</code> loop, after <code>top_matches</code> is computed:</p>
+<div class="highlight"><pre><span></span><code><span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_enable_retrieval_audit</span><span class="p">:</span>
+    <span class="n">evidence_key</span> <span class="o">=</span> <span class="sa">f</span><span class="s2">&quot;PHQ8_</span><span class="si">{</span><span class="n">item</span><span class="o">.</span><span class="n">value</span><span class="si">}</span><span class="s2">&quot;</span>
+    <span class="k">for</span> <span class="n">rank</span><span class="p">,</span> <span class="n">match</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">top_matches</span><span class="p">,</span> <span class="n">start</span><span class="o">=</span><span class="mi">1</span><span class="p">):</span>
+        <span class="n">logger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span>
+            <span class="s2">&quot;retrieved_reference&quot;</span><span class="p">,</span>
+            <span class="n">item</span><span class="o">=</span><span class="n">item</span><span class="o">.</span><span class="n">value</span><span class="p">,</span>
+            <span class="n">evidence_key</span><span class="o">=</span><span class="n">evidence_key</span><span class="p">,</span>
+            <span class="n">rank</span><span class="o">=</span><span class="n">rank</span><span class="p">,</span>
+            <span class="n">similarity</span><span class="o">=</span><span class="n">match</span><span class="o">.</span><span class="n">similarity</span><span class="p">,</span>
+            <span class="n">participant_id</span><span class="o">=</span><span class="n">match</span><span class="o">.</span><span class="n">chunk</span><span class="o">.</span><span class="n">participant_id</span><span class="p">,</span>
+            <span class="n">reference_score</span><span class="o">=</span><span class="n">match</span><span class="o">.</span><span class="n">reference_score</span><span class="p">,</span>
+            <span class="n">chunk_preview</span><span class="o">=</span><span class="n">match</span><span class="o">.</span><span class="n">chunk</span><span class="o">.</span><span class="n">text</span><span class="p">[:</span><span class="mi">160</span><span class="p">],</span>
+            <span class="n">chunk_chars</span><span class="o">=</span><span class="nb">len</span><span class="p">(</span><span class="n">match</span><span class="o">.</span><span class="n">chunk</span><span class="o">.</span><span class="n">text</span><span class="p">),</span>
+        <span class="p">)</span>
+</code></pre></div>
+<p><strong>Logging behavior / safety</strong>:
+- Uses <code>chunk_preview</code> only (no full chunk) to reduce accidental data leakage.
+- Uses <code>logger.info(...)</code> so it will show in <code>scripts/reproduce_results.py</code> runs (that script sets log level INFO by default).
+- Is <strong>opt-in</strong> via <code>EMBEDDING_ENABLE_RETRIEVAL_AUDIT=true</code> (see Spec 32).</p>
+<p>Then manually audit a stratified sample to verify if retrieved chunks are actually misaligned.</p>
+<h3 id="future-work-separate-spec-required-relevance-filtering">Future Work (separate spec required): Relevance Filtering</h3>
+<p><strong>Priority</strong>: DEFER (not needed for parity ablation)</p>
+<p><strong>Related specs</strong>:
+- <code>docs/archive/specs/33-retrieval-quality-guardrails.md</code> (similarity threshold + context budget)
+- <code>docs/archive/specs/34-item-tagged-reference-embeddings.md</code> (index-time item tags)</p>
+<p>This could be a non-circular improvement, but it is <strong>not implementation-ready</strong> here because it requires explicit decisions:
+- which keyword source (LLM evidence vs <code>DOMAIN_KEYWORDS</code> vs curated list),
+- whether to apply as hard filter vs reranking,
+- and how to evaluate without inducing bias.</p>
+<p>Do not implement this from BUG-031; write a dedicated spec first.</p>
+<hr />
+<h2 id="references">References</h2>
+<ul>
+<li>Investigation document: <code>docs/brainstorming/investigation-zero-shot-beats-few-shot.md</code></li>
+<li>Paper notebook (source of truth): <code>_reference/ai_psychiatrist/quantitative_assessment/embedding_quantitative_analysis.ipynb</code></li>
+<li>2025 RAG research:</li>
+<li><a href="https://www.anthropic.com/news/contextual-retrieval">Anthropic Contextual Retrieval</a></li>
+<li><a href="https://langchain-ai.github.io/langgraph/tutorials/rag/langgraph_crag/">LangChain CRAG Tutorial</a></li>
+<li><a href="https://medium.com/data-science-collective/rag-architectures-a-complete-guide-for-2025-daf98a2ede8c">RAG Architectures 2025</a></li>
+<li><a href="https://research.google/blog/deeper-insights-into-retrieval-augmented-generation-the-role-of-sufficient-context/">Google Sufficient Context (ICLR 2025)</a></li>
+<li><a href="https://blog.voyageai.com/2025/07/23/voyage-context-3/">Voyage-Context-3</a></li>
+</ul>
+
+
+
+
+
+
+
+
+
+
+
+
+                
+              </article>
+            </div>
+          
+          
+<script>var target=document.getElementById(location.hash.slice(1));target&&target.name&&(target.checked=target.name.startsWith("__tabbed_"))</script>
+        </div>
+        
+      </main>
+      
+        <footer class="md-footer">
+  
+    
+  
+  <div class="md-footer-meta md-typeset">
+    <div class="md-footer-meta__inner md-grid">
+      <div class="md-copyright">
+  
+  
+    Made with
+    <a href="https://squidfunk.github.io/mkdocs-material/" target="_blank" rel="noopener">
+      Material for MkDocs
+    </a>
+  
+</div>
+      
+    </div>
+  </div>
+</footer>
+      
+    </div>
+    <div class="md-dialog" data-md-component="dialog">
+      <div class="md-dialog__inner md-typeset"></div>
+    </div>
+    
+    
+    
+      
+      
+      <script id="__config" type="application/json">{"annotate": null, "base": "../../..", "features": ["content.code.copy", "content.action.edit", "content.action.view", "navigation.tracking", "navigation.sections", "navigation.footer", "navigation.instant"], "search": "../../../assets/javascripts/workers/search.2c215733.min.js", "tags": null, "translations": {"clipboard.copied": "Copied to clipboard", "clipboard.copy": "Copy to clipboard", "search.result.more.one": "1 more on this page", "search.result.more.other": "# more on this page", "search.result.none": "No matching documents", "search.result.one": "1 matching document", "search.result.other": "# matching documents", "search.result.placeholder": "Type to start searching", "search.result.term.missing": "Missing", "select.version": "Select version"}, "version": null}</script>
+    
+    
+      <script src="../../../assets/javascripts/bundle.79ae519e.min.js"></script>
+      
+    
+  </body>
+</html>

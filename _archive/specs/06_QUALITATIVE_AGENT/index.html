@@ -1,0 +1,3030 @@
+
+<!doctype html>
+<html lang="en" class="no-js">
+  <head>
+    
+      <meta charset="utf-8">
+      <meta name="viewport" content="width=device-width,initial-scale=1">
+      
+      
+      
+        <link rel="canonical" href="https://the-obstacle-is-the-way.github.io/ai-psychiatrist/_archive/specs/06_QUALITATIVE_AGENT/">
+      
+      
+      
+      
+        
+      
+      
+      <link rel="icon" href="../../../assets/images/favicon.png">
+      <meta name="generator" content="mkdocs-1.6.1, mkdocs-material-9.7.1">
+    
+    
+      
+        <title>Spec 06: Qualitative Assessment Agent - AI Psychiatrist</title>
+      
+    
+    
+      <link rel="stylesheet" href="../../../assets/stylesheets/main.484c7ddc.min.css">
+      
+      
+
+
+    
+    
+      
+    
+    
+      
+        
+        
+        <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+        <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Roboto:300,300i,400,400i,700,700i%7CRoboto+Mono:400,400i,700,700i&display=fallback">
+        <style>:root{--md-text-font:"Roboto";--md-code-font:"Roboto Mono"}</style>
+      
+    
+    
+    <script>__md_scope=new URL("../../..",location),__md_hash=e=>[...e].reduce(((e,_)=>(e<<5)-e+_.charCodeAt(0)),0),__md_get=(e,_=localStorage,t=__md_scope)=>JSON.parse(_.getItem(t.pathname+"."+e)),__md_set=(e,_,t=localStorage,a=__md_scope)=>{try{t.setItem(a.pathname+"."+e,JSON.stringify(_))}catch(e){}}</script>
+    
+      
+
+    
+    
+  </head>
+  
+  
+    <body dir="ltr">
+  
+    
+    <input class="md-toggle" data-md-toggle="drawer" type="checkbox" id="__drawer" autocomplete="off">
+    <input class="md-toggle" data-md-toggle="search" type="checkbox" id="__search" autocomplete="off">
+    <label class="md-overlay" for="__drawer"></label>
+    <div data-md-component="skip">
+      
+        
+        <a href="#spec-06-qualitative-assessment-agent" class="md-skip">
+          Skip to content
+        </a>
+      
+    </div>
+    <div data-md-component="announce">
+      
+    </div>
+    
+    
+      
+
+  
+
+<header class="md-header md-header--shadow" data-md-component="header">
+  <nav class="md-header__inner md-grid" aria-label="Header">
+    <a href="../../.." title="AI Psychiatrist" class="md-header__button md-logo" aria-label="AI Psychiatrist" data-md-component="logo">
+      
+  
+  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 8a3 3 0 0 0 3-3 3 3 0 0 0-3-3 3 3 0 0 0-3 3 3 3 0 0 0 3 3m0 3.54C9.64 9.35 6.5 8 3 8v11c3.5 0 6.64 1.35 9 3.54 2.36-2.19 5.5-3.54 9-3.54V8c-3.5 0-6.64 1.35-9 3.54"/></svg>
+
+    </a>
+    <label class="md-header__button md-icon" for="__drawer">
+      
+      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M3 6h18v2H3zm0 5h18v2H3zm0 5h18v2H3z"/></svg>
+    </label>
+    <div class="md-header__title" data-md-component="header-title">
+      <div class="md-header__ellipsis">
+        <div class="md-header__topic">
+          <span class="md-ellipsis">
+            AI Psychiatrist
+          </span>
+        </div>
+        <div class="md-header__topic" data-md-component="header-topic">
+          <span class="md-ellipsis">
+            
+              Spec 06: Qualitative Assessment Agent
+            
+          </span>
+        </div>
+      </div>
+    </div>
+    
+    
+      <script>var palette=__md_get("__palette");if(palette&&palette.color){if("(prefers-color-scheme)"===palette.color.media){var media=matchMedia("(prefers-color-scheme: light)"),input=document.querySelector(media.matches?"[data-md-color-media='(prefers-color-scheme: light)']":"[data-md-color-media='(prefers-color-scheme: dark)']");palette.color.media=input.getAttribute("data-md-color-media"),palette.color.scheme=input.getAttribute("data-md-color-scheme"),palette.color.primary=input.getAttribute("data-md-color-primary"),palette.color.accent=input.getAttribute("data-md-color-accent")}for(var[key,value]of Object.entries(palette.color))document.body.setAttribute("data-md-color-"+key,value)}</script>
+    
+    
+    
+      
+      
+        <label class="md-header__button md-icon" for="__search">
+          
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M9.5 3A6.5 6.5 0 0 1 16 9.5c0 1.61-.59 3.09-1.56 4.23l.27.27h.79l5 5-1.5 1.5-5-5v-.79l-.27-.27A6.52 6.52 0 0 1 9.5 16 6.5 6.5 0 0 1 3 9.5 6.5 6.5 0 0 1 9.5 3m0 2C7 5 5 7 5 9.5S7 14 9.5 14 14 12 14 9.5 12 5 9.5 5"/></svg>
+        </label>
+        <div class="md-search" data-md-component="search" role="dialog">
+  <label class="md-search__overlay" for="__search"></label>
+  <div class="md-search__inner" role="search">
+    <form class="md-search__form" name="search">
+      <input type="text" class="md-search__input" name="query" aria-label="Search" placeholder="Search" autocapitalize="off" autocorrect="off" autocomplete="off" spellcheck="false" data-md-component="search-query" required>
+      <label class="md-search__icon md-icon" for="__search">
+        
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M9.5 3A6.5 6.5 0 0 1 16 9.5c0 1.61-.59 3.09-1.56 4.23l.27.27h.79l5 5-1.5 1.5-5-5v-.79l-.27-.27A6.52 6.52 0 0 1 9.5 16 6.5 6.5 0 0 1 3 9.5 6.5 6.5 0 0 1 9.5 3m0 2C7 5 5 7 5 9.5S7 14 9.5 14 14 12 14 9.5 12 5 9.5 5"/></svg>
+        
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M20 11v2H8l5.5 5.5-1.42 1.42L4.16 12l7.92-7.92L13.5 5.5 8 11z"/></svg>
+      </label>
+      <nav class="md-search__options" aria-label="Search">
+        
+        <button type="reset" class="md-search__icon md-icon" title="Clear" aria-label="Clear" tabindex="-1">
+          
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M19 6.41 17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12z"/></svg>
+        </button>
+      </nav>
+      
+    </form>
+    <div class="md-search__output">
+      <div class="md-search__scrollwrap" tabindex="0" data-md-scrollfix>
+        <div class="md-search-result" data-md-component="search-result">
+          <div class="md-search-result__meta">
+            Initializing search
+          </div>
+          <ol class="md-search-result__list" role="presentation"></ol>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+      
+    
+    
+      <div class="md-header__source">
+        <a href="https://github.com/The-Obstacle-Is-The-Way/ai-psychiatrist" title="Go to repository" class="md-source" data-md-component="source">
+  <div class="md-source__icon md-icon">
+    
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 448 512"><!--! Font Awesome Free 7.1.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2025 Fonticons, Inc.--><path d="M439.6 236.1 244 40.5c-5.4-5.5-12.8-8.5-20.4-8.5s-15 3-20.4 8.4L162.5 81l51.5 51.5c27.1-9.1 52.7 16.8 43.4 43.7l49.7 49.7c34.2-11.8 61.2 31 35.5 56.7-26.5 26.5-70.2-2.9-56-37.3L240.3 199v121.9c25.3 12.5 22.3 41.8 9.1 55-6.4 6.4-15.2 10.1-24.3 10.1s-17.8-3.6-24.3-10.1c-17.6-17.6-11.1-46.9 11.2-56v-123c-20.8-8.5-24.6-30.7-18.6-45L142.6 101 8.5 235.1C3 240.6 0 247.9 0 255.5s3 15 8.5 20.4l195.6 195.7c5.4 5.4 12.7 8.4 20.4 8.4s15-3 20.4-8.4l194.7-194.7c5.4-5.4 8.4-12.8 8.4-20.4s-3-15-8.4-20.4"/></svg>
+  </div>
+  <div class="md-source__repository">
+    GitHub
+  </div>
+</a>
+      </div>
+    
+  </nav>
+  
+</header>
+    
+    <div class="md-container" data-md-component="container">
+      
+      
+        
+          
+        
+      
+      <main class="md-main" data-md-component="main">
+        <div class="md-main__inner md-grid">
+          
+            
+              
+              <div class="md-sidebar md-sidebar--primary" data-md-component="sidebar" data-md-type="navigation" >
+                <div class="md-sidebar__scrollwrap">
+                  <div class="md-sidebar__inner">
+                    
+
+
+
+<nav class="md-nav md-nav--primary" aria-label="Navigation" data-md-level="0">
+  <label class="md-nav__title" for="__drawer">
+    <a href="../../.." title="AI Psychiatrist" class="md-nav__button md-logo" aria-label="AI Psychiatrist" data-md-component="logo">
+      
+  
+  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 8a3 3 0 0 0 3-3 3 3 0 0 0-3-3 3 3 0 0 0-3 3 3 3 0 0 0 3 3m0 3.54C9.64 9.35 6.5 8 3 8v11c3.5 0 6.64 1.35 9 3.54 2.36-2.19 5.5-3.54 9-3.54V8c-3.5 0-6.64 1.35-9 3.54"/></svg>
+
+    </a>
+    AI Psychiatrist
+  </label>
+  
+    <div class="md-nav__source">
+      <a href="https://github.com/The-Obstacle-Is-The-Way/ai-psychiatrist" title="Go to repository" class="md-source" data-md-component="source">
+  <div class="md-source__icon md-icon">
+    
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 448 512"><!--! Font Awesome Free 7.1.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2025 Fonticons, Inc.--><path d="M439.6 236.1 244 40.5c-5.4-5.5-12.8-8.5-20.4-8.5s-15 3-20.4 8.4L162.5 81l51.5 51.5c27.1-9.1 52.7 16.8 43.4 43.7l49.7 49.7c34.2-11.8 61.2 31 35.5 56.7-26.5 26.5-70.2-2.9-56-37.3L240.3 199v121.9c25.3 12.5 22.3 41.8 9.1 55-6.4 6.4-15.2 10.1-24.3 10.1s-17.8-3.6-24.3-10.1c-17.6-17.6-11.1-46.9 11.2-56v-123c-20.8-8.5-24.6-30.7-18.6-45L142.6 101 8.5 235.1C3 240.6 0 247.9 0 255.5s3 15 8.5 20.4l195.6 195.7c5.4 5.4 12.7 8.4 20.4 8.4s15-3 20.4-8.4l194.7-194.7c5.4-5.4 8.4-12.8 8.4-20.4s-3-15-8.4-20.4"/></svg>
+  </div>
+  <div class="md-source__repository">
+    GitHub
+  </div>
+</a>
+    </div>
+  
+  <ul class="md-nav__list" data-md-scrollfix>
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../.." class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    AI Psychiatrist Documentation
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    
+    
+    
+    
+      
+        
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--section md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_2" >
+        
+          
+          <label class="md-nav__link" for="__nav_2" id="__nav_2_label" tabindex="">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+     research
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_2_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_2">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+     research
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../_research/hypotheses-explained/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Hypotheses Explained: Current State vs Future Improvements
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../_research/hypotheses-for-improvement/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Hypotheses for Improvement: First-Principles Analysis
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../_research/master-bug-audit/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    MASTER BUG AUDIT
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    
+    
+    
+    
+      
+        
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--section md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_3" >
+        
+          
+          <label class="md-nav__link" for="__nav_3" id="__nav_3_label" tabindex="">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Architecture
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_3_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_3">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    Architecture
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../architecture/architecture/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Architecture
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../architecture/future-architecture/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Future Architecture: Agent Orchestration Options
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../architecture/pipeline/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Pipeline
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    
+    
+    
+    
+      
+        
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--section md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_4" >
+        
+          
+          <label class="md-nav__link" for="__nav_4" id="__nav_4_label" tabindex="">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Clinical
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_4_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_4">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    Clinical
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../clinical/clinical-understanding/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Clinical Understanding: How This System Works
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../clinical/glossary/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Glossary
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../clinical/phq8/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    PHQ-8: Patient Health Questionnaire
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../clinical/task-validity/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Task Validity: What Can (and Cannot) Be Inferred from DAIC-WOZ Transcripts
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    
+    
+    
+    
+      
+        
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--section md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_5" >
+        
+          
+          <label class="md-nav__link" for="__nav_5" id="__nav_5_label" tabindex="">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Configs
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_5_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_5">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    Configs
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../configs/agent-sampling-registry/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Agent Sampling Parameter Registry
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../configs/configuration-philosophy/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Configuration Philosophy
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../configs/configuration/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Configuration Reference
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    
+    
+    
+    
+      
+        
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--section md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_6" >
+        
+          
+          <label class="md-nav__link" for="__nav_6" id="__nav_6_label" tabindex="">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Data
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_6_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_6">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    Data
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../data/artifact-namespace-registry/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Artifact Namespace Registry
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../data/daic-woz-preprocessing/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    DAIC-WOZ Transcript Preprocessing (Bias-Aware, Deterministic)
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../data/daic-woz-schema/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    DAIC-WOZ Dataset Schema
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../data/data-splits-overview/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Data Splits Overview
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    
+    
+    
+    
+      
+        
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--section md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_7" >
+        
+          
+          <label class="md-nav__link" for="__nav_7" id="__nav_7_label" tabindex="">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Developer
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_7_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_7">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    Developer
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../developer/api-endpoints/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    API Reference
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../developer/dependency-registry/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Dependency Registry
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../developer/error-handling/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Error Handling and Fail-Fast Philosophy
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../developer/exceptions/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Exception Reference (Domain + Runtime)
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../developer/testing/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Testing Conventions (Markers, Fixtures, and Test Doubles)
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    
+    
+    
+    
+      
+        
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--section md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_8" >
+        
+          
+          <label class="md-nav__link" for="__nav_8" id="__nav_8_label" tabindex="">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Getting started
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_8_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_8">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    Getting started
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../getting-started/quickstart/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Quickstart Guide
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    
+    
+    
+    
+      
+        
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--section md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_9" >
+        
+          
+          <label class="md-nav__link" for="__nav_9" id="__nav_9_label" tabindex="">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Models
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_9_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_9">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    Models
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../models/model-registry/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    AI Psychiatrist Model Registry
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../models/model-wiring/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Model Wiring: Current State
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    
+    
+    
+    
+      
+        
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--section md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_10" >
+        
+          
+          <label class="md-nav__link" for="__nav_10" id="__nav_10_label" tabindex="">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Pipeline internals
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_10_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_10">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    Pipeline internals
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../pipeline-internals/evidence-extraction/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Evidence Extraction Mechanism: How It Actually Works
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../pipeline-internals/features/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Feature Reference (Non-Archive Canonical)
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    
+    
+    
+    
+      
+        
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--section md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_11" >
+        
+          
+          <label class="md-nav__link" for="__nav_11" id="__nav_11_label" tabindex="">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Preflight checklist
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_11_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_11">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    Preflight checklist
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../preflight-checklist/preflight-checklist-few-shot/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Preflight Checklist: Few-Shot Reproduction
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../preflight-checklist/preflight-checklist-zero-shot/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Preflight Checklist: Zero-Shot Run
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    
+    
+    
+    
+      
+        
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--section md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_12" >
+        
+          
+          <label class="md-nav__link" for="__nav_12" id="__nav_12_label" tabindex="">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Rag
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_12_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_12">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    Rag
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../rag/artifact-generation/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    RAG Artifact Generation
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../rag/chunk-scoring/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Chunk-Level Scoring (Spec 35) — Schema, Workflow, and Gotchas
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../rag/debugging/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    RAG Debugging (Audit Logs + Guardrails)
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../rag/design-rationale/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    RAG Design Rationale
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../rag/overview/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    RAG Overview: Embeddings and Few-Shot Retrieval
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../rag/runtime-features/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    RAG Runtime Features
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    
+    
+    
+    
+      
+        
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--section md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_13" >
+        
+          
+          <label class="md-nav__link" for="__nav_13" id="__nav_13_label" tabindex="">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Results
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_13_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_13">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    Results
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../results/few-shot-analysis/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Why Few-Shot May Not Beat Zero-Shot: Analysis
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../results/reproduction-results/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Paper Reproduction Results (Current Status)
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../results/run-history/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Complete Run History &amp; Statistical Analysis
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../results/run-output-schema/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Reproduction Run Output Schema (JSON + Registry)
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    
+    
+    
+    
+      
+        
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--section md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_14" >
+        
+          
+          <label class="md-nav__link" for="__nav_14" id="__nav_14_label" tabindex="">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Statistics
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_14_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_14">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    Statistics
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../statistics/coverage/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Coverage Explained: What It Is and Why It Matters
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../statistics/metrics-and-evaluation/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Metrics and Evaluation (Exact Definitions + Output Schema)
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../statistics/statistical-methodology-aurc-augrc/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Statistical Methodology: AURC/AUGRC for Selective Prediction
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+  </ul>
+</nav>
+                  </div>
+                </div>
+              </div>
+            
+            
+              
+              <div class="md-sidebar md-sidebar--secondary" data-md-component="sidebar" data-md-type="toc" >
+                <div class="md-sidebar__scrollwrap">
+                  <div class="md-sidebar__inner">
+                    
+
+<nav class="md-nav md-nav--secondary" aria-label="Table of contents">
+  
+  
+  
+    
+  
+  
+    <label class="md-nav__title" for="__toc">
+      <span class="md-nav__icon md-icon"></span>
+      Table of contents
+    </label>
+    <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
+      
+        <li class="md-nav__item">
+  <a href="#objective" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Objective
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#paper-reference" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Paper Reference
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#as-is-implementation-repo" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        As-Is Implementation (Repo)
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="As-Is Implementation (Repo)">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#research-script-cluster" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Research Script (Cluster)
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#deliverables" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Deliverables
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#implementation" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Implementation
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Implementation">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#1-prompt-templates-promptsqualitativepy" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        1. Prompt Templates (prompts/qualitative.py)
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="1. Prompt Templates (prompts/qualitative.py)">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#as-is-prompt-verbatim-from-agentsqualitative_assessor_fpy" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        As-Is Prompt (Verbatim from agents/qualitative_assessor_f.py)
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#target-prompt-paper-aligned-schema" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Target Prompt (Paper-Aligned Schema)
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#2-qualitative-agent-agentsqualitativepy" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        2. Qualitative Agent (agents/qualitative.py)
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#3-tests-test_qualitativepy" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        3. Tests (test_qualitative.py)
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#acceptance-criteria" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Acceptance Criteria
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#dependencies" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Dependencies
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#specs-that-depend-on-this" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Specs That Depend on This
+      
+    </span>
+  </a>
+  
+</li>
+      
+    </ul>
+  
+</nav>
+                  </div>
+                </div>
+              </div>
+            
+          
+          
+            <div class="md-content" data-md-component="content">
+              
+              <article class="md-content__inner md-typeset">
+                
+                  
+
+
+  
+    <a href="https://github.com/The-Obstacle-Is-The-Way/ai-psychiatrist/edit/main/docs/_archive/specs/06_QUALITATIVE_AGENT.md" title="Edit this page" class="md-content__button md-icon" rel="edit">
+      
+      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M10 20H6V4h7v5h5v3.1l2-2V8l-6-6H6c-1.1 0-2 .9-2 2v16c0 1.1.9 2 2 2h4zm10.2-7c.1 0 .3.1.4.2l1.3 1.3c.2.2.2.6 0 .8l-1 1-2.1-2.1 1-1c.1-.1.2-.2.4-.2m0 3.9L14.1 23H12v-2.1l6.1-6.1z"/></svg>
+    </a>
+  
+  
+    
+      
+    
+    <a href="https://github.com/The-Obstacle-Is-The-Way/ai-psychiatrist/raw/main/docs/_archive/specs/06_QUALITATIVE_AGENT.md" title="View source of this page" class="md-content__button md-icon">
+      
+      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M17 18c.56 0 1 .44 1 1s-.44 1-1 1-1-.44-1-1 .44-1 1-1m0-3c-2.73 0-5.06 1.66-6 4 .94 2.34 3.27 4 6 4s5.06-1.66 6-4c-.94-2.34-3.27-4-6-4m0 6.5a2.5 2.5 0 0 1-2.5-2.5 2.5 2.5 0 0 1 2.5-2.5 2.5 2.5 0 0 1 2.5 2.5 2.5 2.5 0 0 1-2.5 2.5M9.27 20H6V4h7v5h5v4.07c.7.08 1.36.25 2 .49V8l-6-6H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h4.5a8.2 8.2 0 0 1-1.23-2"/></svg>
+    </a>
+  
+
+
+<h1 id="spec-06-qualitative-assessment-agent">Spec 06: Qualitative Assessment Agent</h1>
+<h2 id="objective">Objective</h2>
+<p>Implement the qualitative assessment agent that analyzes interview transcripts to identify PHQ-8 symptoms, risk factors, and generates clinical summaries.</p>
+<h2 id="paper-reference">Paper Reference</h2>
+<ul>
+<li><strong>Section 2.3.1</strong>: Qualitative Assessment Agent</li>
+<li><strong>Appendix B</strong>: Four assessment domains (PHQ-8 symptoms, biological, social, risk factors)</li>
+</ul>
+<h2 id="as-is-implementation-repo">As-Is Implementation (Repo)</h2>
+<ul>
+<li>Demo qualitative agent used by <code>server.py</code>: <code>agents/qualitative_assessor_f.py:QualitativeAssessor</code></li>
+<li>Transport: <code>POST /api/generate</code> (streaming) with a <strong>single prompt string</strong> (no system/user separation)</li>
+<li>Default model (demo): <code>"llama3"</code></li>
+<li>Return type (demo): raw model text; no XML parsing/validation</li>
+<li>Known issue: the embedded “XML template” in the prompt contains malformed tags (documented below verbatim for parity)</li>
+</ul>
+<h3 id="research-script-cluster">Research Script (Cluster)</h3>
+<ul>
+<li>File: <code>qualitative_assessment/qual_assessment.py</code></li>
+<li>Uses <code>POST /api/chat</code> with a separate <code>system_prompt</code> and multiple user prompts (overall, per-symptom, social, biological, risk)</li>
+<li>Typical model: <code>"gemma3:27b"</code></li>
+<li>Options: <code>{"temperature": 0, "top_k": 20, "top_p": 0.9}</code></li>
+<li>Output tags (as requested by the script): <code>&lt;assessment&gt;...&lt;/assessment&gt;</code> and <code>&lt;quotes&gt;...&lt;/quotes&gt;</code></li>
+</ul>
+<h2 id="deliverables">Deliverables</h2>
+<ol>
+<li><code>src/ai_psychiatrist/agents/qualitative.py</code> - Qualitative assessment agent</li>
+<li><code>src/ai_psychiatrist/agents/prompts/qualitative.py</code> - Prompt templates</li>
+<li><code>tests/unit/agents/test_qualitative.py</code> - Comprehensive tests</li>
+</ol>
+<h2 id="implementation">Implementation</h2>
+<h3 id="1-prompt-templates-promptsqualitativepy">1. Prompt Templates (prompts/qualitative.py)</h3>
+<h4 id="as-is-prompt-verbatim-from-agentsqualitative_assessor_fpy">As-Is Prompt (Verbatim from <code>agents/qualitative_assessor_f.py</code>)</h4>
+<div class="highlight"><pre><span></span><code><span class="n">prompt</span> <span class="o">=</span> <span class="sa">f</span><span class="s2">&quot;&quot;&quot;</span>
+<span class="s2">            You are a psychiatrist. Your job is to assess and diagnose patients for depression. Be as objective, concise, and accurate as possible. Be specific and avoid vague generalities. Use exact quotes from the transcript to support your assessment for each tag.</span>
+
+<span class="s2">            The following is an interview transcript from a psychiatric assessment of a subject who is being screened for depression. Please note that &#39;Ellie&#39; is the interviewer, and &#39;Participant&#39; is the subject being assessed.</span>
+<span class="s2">            </span><span class="si">{</span><span class="n">interview_text</span><span class="si">}</span>
+
+<span class="s2">               Please:</span>
+<span class="s2">              1. Provide an overall qualitative assessment of the subject&#39;s mental health.</span>
+<span class="s2">              2. Summarize PHQ-8 symptoms if available (if not, state &#39;not available&#39;), as well as frequency and severity if available.</span>
+<span class="s2">              3. Summarize social aspects that may influence the subject&#39;s mental health. (for example, familial relationships, frienship dynamics, work environment, etc. that are relevant to the subjects mental health)</span>
+<span class="s2">              4. Summarize biological aspects that may influence the subject&#39;s mental health. (for example, famillial history of mental health issues, previous or pre-existing mental health issues, stress levels, etc. that are relevant to the subjects mental health)</span>
+<span class="s2">              5. Identify potential risk factors the subject may be experiencing.</span>
+<span class="s2">              6. Use exact quotes from the transcript to support your assessment for each tag.</span>
+
+<span class="s2">              Output should be formatted as bullet points with headings for each section using stars. Example: **Tiredness** &lt;explanation of tiredness&gt;. Do not include any additional text outside the bullet points</span>
+<span class="s2">              Please answer in this XML format with each tag on a new line, properly indented. Use straight quotes instead of curly quotes, and do not include any additional text outside the XML tags:</span>
+
+<span class="s2">              &lt;assessment&gt;</span>
+<span class="s2">                &lt;!-- Summary of participant&#39;s overall mental health --&gt;</span>
+<span class="s2">               &lt;exact_quotes&gt;</span>
+<span class="s2">                &lt;!-- Quotes from the transcript that support the assessment --&gt;</span>
+<span class="s2">                &lt;/exact_quotes&gt;</span>
+<span class="s2">              &lt;/assessment&gt;</span>
+
+<span class="s2">              &lt;PHQ8_symptoms&gt;</span>
+<span class="s2">                &lt;!-- Summary of PHQ-8 symptoms mentioned in the trancript:</span>
+<span class="s2">                - Little interest or pleasure in doing things</span>
+<span class="s2">                - Feeling down, depressed, or hopeless</span>
+<span class="s2">                - Trouble falling or staying asleep, or sleeping too much</span>
+<span class="s2">                - Feeling tired or having little energy</span>
+<span class="s2">                - Poor appetite or overeating</span>
+<span class="s2">                - Feeling bad about yourself — or that you are a failure or have let yourself or your family down</span>
+<span class="s2">                - Trouble concentrating on things, such as reading the newspaper or watching television</span>
+<span class="s2">                - Moving or speaking so slowly that other people could have noticed? Or the opposite — being so fidgety or restless that you have been moving around a lot more than usual</span>
+
+<span class="s2">                 For each symptom present, note:</span>
+<span class="s2">                - Frequency (not at all, several days, more than half the days, nearly every day)</span>
+<span class="s2">                - Duration (how long experienced)</span>
+<span class="s2">                - Severity/impact on functioning</span>
+
+<span class="s2">               If symptoms are not discussed, state &quot;not assessed in interview&quot; --&gt;</span>
+
+<span class="s2">               &lt;little_interest_or_pleasure&gt;</span>
+<span class="s2">                &lt;!-- Details on this symptom --&gt;</span>
+<span class="s2">                &lt;!-- Frequency, duration, severity if available --&gt;</span>
+<span class="s2">               &lt;/little_interest or pleasure&gt;</span>
+
+<span class="s2">                &lt;feeling_down_depressed_hopeless&gt;</span>
+<span class="s2">                &lt;!-- Details on this symptom --&gt;</span>
+<span class="s2">                &lt;!-- Frequency, duration, severity if available --&gt;</span>
+<span class="s2">                &lt;/feeling_down_depressed_hopeless&gt;</span>
+
+<span class="s2">                &lt;trouble_sleeping&gt;</span>
+<span class="s2">                &lt;!-- Details on this symptom --&gt;</span>
+<span class="s2">                &lt;!-- Frequency, duration, severity if available --&gt;</span>
+<span class="s2">                &lt;/trouble_sleeping&gt;</span>
+
+<span class="s2">                &lt;feeling_tired_little_energy&gt;</span>
+<span class="s2">                &lt;!-- Details on this symptom --&gt;</span>
+<span class="s2">                &lt;!-- Frequency, duration, severity if available --&gt;</span>
+<span class="s2">                &lt;/feeling_tired_little_energy&gt;</span>
+
+<span class="s2">                &lt;poor_appetite_overeating&gt;</span>
+<span class="s2">                &lt;!-- Details on this symptom --&gt;</span>
+<span class="s2">                &lt;!-- Frequency, duration, severity if available --&gt;</span>
+<span class="s2">                &lt;/poor_appetite_overeating&gt;</span>
+
+<span class="s2">                &lt;feeling_bad_about_self&gt;</span>
+<span class="s2">                &lt;!-- Details on this symptom --&gt;</span>
+<span class="s2">                &lt;!-- Frequency, duration, severity if available --&gt;</span>
+<span class="s2">                &lt;/feeling_bad_about_self&gt;</span>
+
+<span class="s2">                &lt;trouble_concentrating&gt;</span>
+<span class="s2">                &lt;!-- Details on this symptom --&gt;</span>
+<span class="s2">                &lt;!-- Frequency, duration, severity if available --&gt;</span>
+<span class="s2">                &lt;/trouble_concentrating&gt;</span>
+
+<span class="s2">                &lt;moving_speaking_slowly_or_fidgety&gt;</span>
+<span class="s2">                &lt;!-- Details on this symptom --&gt;</span>
+<span class="s2">                &lt;!-- Frequency, duration, severity if available --&gt;</span>
+<span class="s2">                &lt;/moving_speaking_slowly_or_fidgety&gt;</span>
+
+
+<span class="s2">               &lt;exact_quotes&gt;</span>
+<span class="s2">                &lt;!-- Quotes from the transcript that support the assessment --&gt;</span>
+<span class="s2">                &lt;/exact_quotes&gt;</span>
+<span class="s2">              &lt;/PHQ8_symptoms&gt;</span>
+
+<span class="s2">              &lt;social_factors&gt;</span>
+<span class="s2">                &lt;!-- Summary of social influences on patient&#39;s health --&gt;</span>
+<span class="s2">                &lt;exact_quotes&gt;</span>
+<span class="s2">              &lt;/social_factors&gt;</span>
+
+<span class="s2">              &lt;biological_factors&gt;</span>
+<span class="s2">                &lt;!-- Summary of biological influences on patient&#39;s health --&gt;</span>
+<span class="s2">               &lt;exact_quotes&gt;</span>
+<span class="s2">                &lt;!-- Quotes from the transcript that support the assessment --&gt;</span>
+<span class="s2">                &lt;/exact_quotes&gt;</span>
+<span class="s2">              &lt;/biological_factors&gt;</span>
+
+<span class="s2">              &lt;risk_factors&gt;</span>
+<span class="s2">                &lt;!-- Summary of potential risk factors --&gt;</span>
+<span class="s2">                 &lt;exact_quotes&gt;</span>
+<span class="s2">               &lt;!-- Quotes from the transcript that support the assessment --&gt;</span>
+<span class="s2">               &lt;/exact_quotes&gt;</span>
+<span class="s2">              &lt;/risk_factors&gt;</span>
+<span class="s2">            &quot;&quot;&quot;</span>
+</code></pre></div>
+<h4 id="target-prompt-paper-aligned-schema">Target Prompt (Paper-Aligned Schema)</h4>
+<div class="highlight"><pre><span></span><code><span class="sd">&quot;&quot;&quot;Prompt templates for qualitative assessment.&quot;&quot;&quot;</span>
+
+<span class="kn">from</span><span class="w"> </span><span class="nn">__future__</span><span class="w"> </span><span class="kn">import</span> <span class="n">annotations</span>
+
+
+<span class="n">QUALITATIVE_SYSTEM_PROMPT</span> <span class="o">=</span> <span class="s2">&quot;&quot;&quot;You are a psychiatrist. Your job is to assess and diagnose patients for depression. Be as objective, concise, and accurate as possible. Be specific and avoid vague generalities. Use exact quotes from the transcript to support your assessment for each tag.&quot;&quot;&quot;</span>
+
+
+<span class="k">def</span><span class="w"> </span><span class="nf">make_qualitative_prompt</span><span class="p">(</span><span class="n">transcript</span><span class="p">:</span> <span class="nb">str</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Generate qualitative assessment prompt.</span>
+
+<span class="sd">    Args:</span>
+<span class="sd">        transcript: Interview transcript text.</span>
+
+<span class="sd">    Returns:</span>
+<span class="sd">        Formatted user prompt.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+<span class="k">return</span> <span class="sa">f</span><span class="s2">&quot;&quot;&quot;The following is an interview transcript from a psychiatric assessment of a subject who is being screened for depression. Please note that &#39;Ellie&#39; is the interviewer, and &#39;Participant&#39; is the subject being assessed.</span>
+<span class="si">{</span><span class="n">transcript</span><span class="si">}</span>
+
+<span class="s2">Please produce a qualitative assessment across these domains:</span>
+<span class="s2">1) Overall assessment of the subject&#39;s mental health</span>
+<span class="s2">2) PHQ-8 symptoms discussed (include frequency/duration/severity when available)</span>
+<span class="s2">3) Social factors that may influence mental health</span>
+<span class="s2">4) Biological factors that may influence mental health</span>
+<span class="s2">5) Risk factors the subject may be experiencing</span>
+
+<span class="s2">Examples (for format only, do NOT reuse content):</span>
+<span class="s2">- PHQ-8 symptoms: &quot;I don&#39;t enjoy anything anymore&quot; (frequency: nearly every day)</span>
+<span class="s2">- Social factors: &quot;Things have been tense at home&quot;</span>
+<span class="s2">- Biological factors: &quot;My mother had depression&quot;</span>
+<span class="s2">- Risk factors: &quot;I feel isolated since losing my job&quot;</span>
+
+<span class="s2">Requirements:</span>
+<span class="s2">- Be objective, concise, and clinically grounded (avoid vague generalities).</span>
+<span class="s2">- Use exact quotes from the transcript as evidence within each domain.</span>
+<span class="s2">- Collect all quoted evidence again in &lt;exact_quotes&gt; as bullet points.</span>
+<span class="s2">- If a domain is not covered in the interview, write </span><span class="se">\&quot;</span><span class="s2">not assessed in interview</span><span class="se">\&quot;</span><span class="s2">.</span>
+
+<span class="s2">Return ONLY this XML (each tag on its own line; no additional text outside the tags):</span>
+
+<span class="s2">&lt;assessment&gt;...&lt;/assessment&gt;</span>
+<span class="s2">&lt;PHQ8_symptoms&gt;...&lt;/PHQ8_symptoms&gt;</span>
+<span class="s2">&lt;social_factors&gt;...&lt;/social_factors&gt;</span>
+<span class="s2">&lt;biological_factors&gt;...&lt;/biological_factors&gt;</span>
+<span class="s2">&lt;risk_factors&gt;...&lt;/risk_factors&gt;</span>
+<span class="s2">&lt;exact_quotes&gt;...&lt;/exact_quotes&gt;</span>
+<span class="s2">&quot;&quot;&quot;</span>
+
+
+<span class="k">def</span><span class="w"> </span><span class="nf">make_feedback_prompt</span><span class="p">(</span>
+    <span class="n">original_assessment</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span>
+    <span class="n">feedback</span><span class="p">:</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="nb">str</span><span class="p">],</span>
+    <span class="n">transcript</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span>
+<span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Generate prompt for assessment refinement based on feedback.</span>
+
+<span class="sd">    Args:</span>
+<span class="sd">        original_assessment: Previous assessment output.</span>
+<span class="sd">        feedback: Dictionary of metric -&gt; feedback text.</span>
+<span class="sd">        transcript: Original transcript.</span>
+
+<span class="sd">    Returns:</span>
+<span class="sd">        Formatted refinement prompt.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">feedback_text</span> <span class="o">=</span> <span class="s2">&quot;</span><span class="se">\n</span><span class="s2">&quot;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span>
+        <span class="sa">f</span><span class="s2">&quot;- **</span><span class="si">{</span><span class="n">metric</span><span class="o">.</span><span class="n">upper</span><span class="p">()</span><span class="si">}</span><span class="s2">**: </span><span class="si">{</span><span class="n">text</span><span class="si">}</span><span class="s2">&quot;</span> <span class="k">for</span> <span class="n">metric</span><span class="p">,</span> <span class="n">text</span> <span class="ow">in</span> <span class="n">feedback</span><span class="o">.</span><span class="n">items</span><span class="p">()</span>
+    <span class="p">)</span>
+
+    <span class="k">return</span> <span class="sa">f</span><span class="s2">&quot;&quot;&quot;The following qualitative assessment has been evaluated and needs improvement.</span>
+
+<span class="s2">EVALUATION FEEDBACK:</span>
+<span class="si">{</span><span class="n">feedback_text</span><span class="si">}</span>
+
+<span class="s2">ORIGINAL ASSESSMENT:</span>
+<span class="si">{</span><span class="n">original_assessment</span><span class="si">}</span>
+
+<span class="s2">TRANSCRIPT:</span>
+<span class="si">{</span><span class="n">transcript</span><span class="si">}</span>
+
+<span class="s2">Please provide an improved assessment that addresses the feedback above. Use the same XML format:</span>
+
+<span class="s2">&lt;assessment&gt;...&lt;/assessment&gt;</span>
+<span class="s2">&lt;PHQ8_symptoms&gt;...&lt;/PHQ8_symptoms&gt;</span>
+<span class="s2">&lt;social_factors&gt;...&lt;/social_factors&gt;</span>
+<span class="s2">&lt;biological_factors&gt;...&lt;/biological_factors&gt;</span>
+<span class="s2">&lt;risk_factors&gt;...&lt;/risk_factors&gt;</span>
+<span class="s2">&lt;exact_quotes&gt;...&lt;/exact_quotes&gt;</span>
+
+<span class="s2">Ensure:</span>
+<span class="s2">1. More specific evidence with exact quotes</span>
+<span class="s2">2. Complete coverage of all PHQ-8 symptoms</span>
+<span class="s2">3. Logical consistency throughout</span>
+<span class="s2">4. Accurate alignment with clinical criteria</span>
+
+<span class="s2">Return only the XML (no additional text outside the tags).&quot;&quot;&quot;</span>
+</code></pre></div>
+<h3 id="2-qualitative-agent-agentsqualitativepy">2. Qualitative Agent (agents/qualitative.py)</h3>
+<div class="highlight"><pre><span></span><code><span class="sd">&quot;&quot;&quot;Qualitative assessment agent implementation.&quot;&quot;&quot;</span>
+
+<span class="kn">from</span><span class="w"> </span><span class="nn">__future__</span><span class="w"> </span><span class="kn">import</span> <span class="n">annotations</span>
+
+<span class="kn">import</span><span class="w"> </span><span class="nn">re</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">typing</span><span class="w"> </span><span class="kn">import</span> <span class="n">ClassVar</span><span class="p">,</span> <span class="n">Protocol</span><span class="p">,</span> <span class="n">runtime_checkable</span>
+
+<span class="kn">from</span><span class="w"> </span><span class="nn">ai_psychiatrist.agents.prompts.qualitative</span><span class="w"> </span><span class="kn">import</span> <span class="p">(</span>
+    <span class="n">QUALITATIVE_SYSTEM_PROMPT</span><span class="p">,</span>
+    <span class="n">make_feedback_prompt</span><span class="p">,</span>
+    <span class="n">make_qualitative_prompt</span><span class="p">,</span>
+<span class="p">)</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">ai_psychiatrist.domain.entities</span><span class="w"> </span><span class="kn">import</span> <span class="n">QualitativeAssessment</span><span class="p">,</span> <span class="n">Transcript</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">ai_psychiatrist.infrastructure.llm.responses</span><span class="w"> </span><span class="kn">import</span> <span class="n">extract_xml_tags</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">ai_psychiatrist.infrastructure.logging</span><span class="w"> </span><span class="kn">import</span> <span class="n">get_logger</span>
+
+<span class="n">logger</span> <span class="o">=</span> <span class="n">get_logger</span><span class="p">(</span><span class="vm">__name__</span><span class="p">)</span>
+
+
+<span class="nd">@runtime_checkable</span>
+<span class="k">class</span><span class="w"> </span><span class="nc">ChatClient</span><span class="p">(</span><span class="n">Protocol</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Protocol for LLM clients with simple_chat method.&quot;&quot;&quot;</span>
+
+    <span class="k">async</span> <span class="k">def</span><span class="w"> </span><span class="nf">simple_chat</span><span class="p">(</span>
+        <span class="bp">self</span><span class="p">,</span>
+        <span class="n">user_prompt</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span>
+        <span class="n">system_prompt</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s2">&quot;&quot;</span><span class="p">,</span>
+        <span class="n">model</span><span class="p">:</span> <span class="nb">str</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+        <span class="n">temperature</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="mf">0.2</span><span class="p">,</span>
+        <span class="n">top_k</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">20</span><span class="p">,</span>
+        <span class="n">top_p</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="mf">0.8</span><span class="p">,</span>
+    <span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Send a simple chat prompt and return response.&quot;&quot;&quot;</span>
+        <span class="o">...</span>
+
+
+<span class="k">class</span><span class="w"> </span><span class="nc">QualitativeAssessmentAgent</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Agent for generating qualitative assessments from interview transcripts.</span>
+
+<span class="sd">    This agent implements the qualitative assessment described in Section 2.3.1</span>
+<span class="sd">    of the paper. It analyzes transcripts to identify:</span>
+<span class="sd">    - PHQ-8 symptoms with supporting evidence</span>
+<span class="sd">    - Social factors affecting mental health</span>
+<span class="sd">    - Biological factors and history</span>
+<span class="sd">    - Risk factors and warning signs</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="c1"># XML tags to extract from LLM response</span>
+    <span class="n">ASSESSMENT_TAGS</span><span class="p">:</span> <span class="n">ClassVar</span><span class="p">[</span><span class="nb">list</span><span class="p">[</span><span class="nb">str</span><span class="p">]]</span> <span class="o">=</span> <span class="p">[</span>
+        <span class="s2">&quot;assessment&quot;</span><span class="p">,</span>
+        <span class="s2">&quot;PHQ8_symptoms&quot;</span><span class="p">,</span>
+        <span class="s2">&quot;social_factors&quot;</span><span class="p">,</span>
+        <span class="s2">&quot;biological_factors&quot;</span><span class="p">,</span>
+        <span class="s2">&quot;risk_factors&quot;</span><span class="p">,</span>
+    <span class="p">]</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">llm_client</span><span class="p">:</span> <span class="n">ChatClient</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Initialize qualitative assessment agent.</span>
+
+<span class="sd">        Args:</span>
+<span class="sd">            llm_client: LLM client for chat completions.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_llm_client</span> <span class="o">=</span> <span class="n">llm_client</span>
+
+    <span class="k">async</span> <span class="k">def</span><span class="w"> </span><span class="nf">assess</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">transcript</span><span class="p">:</span> <span class="n">Transcript</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">QualitativeAssessment</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Generate qualitative assessment for a transcript.</span>
+
+<span class="sd">        Args:</span>
+<span class="sd">            transcript: Interview transcript to assess.</span>
+
+<span class="sd">        Returns:</span>
+<span class="sd">            Qualitative assessment with all domains.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">logger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span>
+            <span class="s2">&quot;Starting qualitative assessment&quot;</span><span class="p">,</span>
+            <span class="n">participant_id</span><span class="o">=</span><span class="n">transcript</span><span class="o">.</span><span class="n">participant_id</span><span class="p">,</span>
+            <span class="n">word_count</span><span class="o">=</span><span class="n">transcript</span><span class="o">.</span><span class="n">word_count</span><span class="p">,</span>
+        <span class="p">)</span>
+
+        <span class="c1"># Generate assessment prompt</span>
+        <span class="n">user_prompt</span> <span class="o">=</span> <span class="n">make_qualitative_prompt</span><span class="p">(</span><span class="n">transcript</span><span class="o">.</span><span class="n">text</span><span class="p">)</span>
+
+        <span class="c1"># Call LLM</span>
+        <span class="n">raw_response</span> <span class="o">=</span> <span class="k">await</span> <span class="bp">self</span><span class="o">.</span><span class="n">_llm_client</span><span class="o">.</span><span class="n">simple_chat</span><span class="p">(</span>
+            <span class="n">user_prompt</span><span class="o">=</span><span class="n">user_prompt</span><span class="p">,</span>
+            <span class="n">system_prompt</span><span class="o">=</span><span class="n">QUALITATIVE_SYSTEM_PROMPT</span><span class="p">,</span>
+        <span class="p">)</span>
+
+        <span class="c1"># Parse response</span>
+        <span class="n">assessment</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_parse_response</span><span class="p">(</span><span class="n">raw_response</span><span class="p">,</span> <span class="n">transcript</span><span class="o">.</span><span class="n">participant_id</span><span class="p">)</span>
+
+        <span class="n">logger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span>
+            <span class="s2">&quot;Qualitative assessment complete&quot;</span><span class="p">,</span>
+            <span class="n">participant_id</span><span class="o">=</span><span class="n">transcript</span><span class="o">.</span><span class="n">participant_id</span><span class="p">,</span>
+            <span class="n">overall_length</span><span class="o">=</span><span class="nb">len</span><span class="p">(</span><span class="n">assessment</span><span class="o">.</span><span class="n">overall</span><span class="p">),</span>
+        <span class="p">)</span>
+
+        <span class="k">return</span> <span class="n">assessment</span>
+
+    <span class="k">async</span> <span class="k">def</span><span class="w"> </span><span class="nf">refine</span><span class="p">(</span>
+        <span class="bp">self</span><span class="p">,</span>
+        <span class="n">original_assessment</span><span class="p">:</span> <span class="n">QualitativeAssessment</span><span class="p">,</span>
+        <span class="n">feedback</span><span class="p">:</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="nb">str</span><span class="p">],</span>
+        <span class="n">transcript</span><span class="p">:</span> <span class="n">Transcript</span><span class="p">,</span>
+    <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">QualitativeAssessment</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Refine assessment based on evaluation feedback.</span>
+
+<span class="sd">        Args:</span>
+<span class="sd">            original_assessment: Previous assessment to improve.</span>
+<span class="sd">            feedback: Dictionary of metric -&gt; feedback text.</span>
+<span class="sd">            transcript: Original transcript.</span>
+
+<span class="sd">        Returns:</span>
+<span class="sd">            Improved qualitative assessment.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">logger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span>
+            <span class="s2">&quot;Refining qualitative assessment&quot;</span><span class="p">,</span>
+            <span class="n">participant_id</span><span class="o">=</span><span class="n">transcript</span><span class="o">.</span><span class="n">participant_id</span><span class="p">,</span>
+            <span class="n">feedback_metrics</span><span class="o">=</span><span class="nb">list</span><span class="p">(</span><span class="n">feedback</span><span class="o">.</span><span class="n">keys</span><span class="p">()),</span>
+        <span class="p">)</span>
+
+        <span class="n">user_prompt</span> <span class="o">=</span> <span class="n">make_feedback_prompt</span><span class="p">(</span>
+            <span class="n">original_assessment</span><span class="o">=</span><span class="n">original_assessment</span><span class="o">.</span><span class="n">full_text</span><span class="p">,</span>
+            <span class="n">feedback</span><span class="o">=</span><span class="n">feedback</span><span class="p">,</span>
+            <span class="n">transcript</span><span class="o">=</span><span class="n">transcript</span><span class="o">.</span><span class="n">text</span><span class="p">,</span>
+        <span class="p">)</span>
+
+        <span class="n">raw_response</span> <span class="o">=</span> <span class="k">await</span> <span class="bp">self</span><span class="o">.</span><span class="n">_llm_client</span><span class="o">.</span><span class="n">simple_chat</span><span class="p">(</span>
+            <span class="n">user_prompt</span><span class="o">=</span><span class="n">user_prompt</span><span class="p">,</span>
+            <span class="n">system_prompt</span><span class="o">=</span><span class="n">QUALITATIVE_SYSTEM_PROMPT</span><span class="p">,</span>
+        <span class="p">)</span>
+
+        <span class="n">assessment</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_parse_response</span><span class="p">(</span><span class="n">raw_response</span><span class="p">,</span> <span class="n">transcript</span><span class="o">.</span><span class="n">participant_id</span><span class="p">)</span>
+
+        <span class="n">logger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span>
+            <span class="s2">&quot;Assessment refinement complete&quot;</span><span class="p">,</span>
+            <span class="n">participant_id</span><span class="o">=</span><span class="n">transcript</span><span class="o">.</span><span class="n">participant_id</span><span class="p">,</span>
+        <span class="p">)</span>
+
+        <span class="k">return</span> <span class="n">assessment</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="nf">_parse_response</span><span class="p">(</span>
+        <span class="bp">self</span><span class="p">,</span>
+        <span class="n">raw_response</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span>
+        <span class="n">participant_id</span><span class="p">:</span> <span class="nb">int</span><span class="p">,</span>
+    <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">QualitativeAssessment</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Parse LLM response into QualitativeAssessment.</span>
+
+<span class="sd">        Args:</span>
+<span class="sd">            raw_response: Raw LLM output with XML tags.</span>
+<span class="sd">            participant_id: Participant identifier.</span>
+
+<span class="sd">        Returns:</span>
+<span class="sd">            Parsed QualitativeAssessment entity.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="c1"># Extract XML tags</span>
+        <span class="n">extracted</span> <span class="o">=</span> <span class="n">extract_xml_tags</span><span class="p">(</span><span class="n">raw_response</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">ASSESSMENT_TAGS</span><span class="p">)</span>
+
+        <span class="c1"># Extract quotes if present or embedded inline</span>
+        <span class="n">quotes</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_extract_quotes</span><span class="p">(</span><span class="n">raw_response</span><span class="p">,</span> <span class="n">extracted</span><span class="p">)</span>
+
+        <span class="k">return</span> <span class="n">QualitativeAssessment</span><span class="p">(</span>
+            <span class="n">overall</span><span class="o">=</span><span class="n">extracted</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;assessment&quot;</span><span class="p">)</span> <span class="ow">or</span> <span class="s2">&quot;Assessment not generated&quot;</span><span class="p">,</span>
+            <span class="n">phq8_symptoms</span><span class="o">=</span><span class="n">extracted</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;PHQ8_symptoms&quot;</span><span class="p">)</span> <span class="ow">or</span> <span class="s2">&quot;Not assessed&quot;</span><span class="p">,</span>
+            <span class="n">social_factors</span><span class="o">=</span><span class="n">extracted</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;social_factors&quot;</span><span class="p">)</span> <span class="ow">or</span> <span class="s2">&quot;Not assessed&quot;</span><span class="p">,</span>
+            <span class="n">biological_factors</span><span class="o">=</span><span class="n">extracted</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;biological_factors&quot;</span><span class="p">)</span> <span class="ow">or</span> <span class="s2">&quot;Not assessed&quot;</span><span class="p">,</span>
+            <span class="n">risk_factors</span><span class="o">=</span><span class="n">extracted</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;risk_factors&quot;</span><span class="p">)</span> <span class="ow">or</span> <span class="s2">&quot;Not assessed&quot;</span><span class="p">,</span>
+            <span class="n">supporting_quotes</span><span class="o">=</span><span class="n">quotes</span><span class="p">,</span>
+            <span class="n">participant_id</span><span class="o">=</span><span class="n">participant_id</span><span class="p">,</span>
+        <span class="p">)</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="nf">_extract_quotes</span><span class="p">(</span>
+        <span class="bp">self</span><span class="p">,</span>
+        <span class="n">raw_response</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span>
+        <span class="n">extracted</span><span class="p">:</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="nb">str</span><span class="p">],</span>
+    <span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">list</span><span class="p">[</span><span class="nb">str</span><span class="p">]:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Extract supporting quotes from response.&quot;&quot;&quot;</span>
+        <span class="n">quotes</span><span class="p">:</span> <span class="nb">list</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span> <span class="o">=</span> <span class="p">[]</span>
+
+        <span class="k">if</span> <span class="s2">&quot;exact_quotes&quot;</span> <span class="ow">in</span> <span class="n">raw_response</span><span class="o">.</span><span class="n">lower</span><span class="p">():</span>
+            <span class="n">quotes_section</span> <span class="o">=</span> <span class="n">extract_xml_tags</span><span class="p">(</span><span class="n">raw_response</span><span class="p">,</span> <span class="p">[</span><span class="s2">&quot;exact_quotes&quot;</span><span class="p">])</span>
+            <span class="k">if</span> <span class="n">quotes_section</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;exact_quotes&quot;</span><span class="p">):</span>
+                <span class="n">quotes</span> <span class="o">=</span> <span class="p">[</span>
+                    <span class="bp">self</span><span class="o">.</span><span class="n">_clean_quote_line</span><span class="p">(</span><span class="n">line</span><span class="p">)</span>
+                    <span class="k">for</span> <span class="n">line</span> <span class="ow">in</span> <span class="n">quotes_section</span><span class="p">[</span><span class="s2">&quot;exact_quotes&quot;</span><span class="p">]</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s2">&quot;</span><span class="se">\n</span><span class="s2">&quot;</span><span class="p">)</span>
+                <span class="p">]</span>
+                <span class="n">quotes</span> <span class="o">=</span> <span class="p">[</span><span class="n">q</span> <span class="k">for</span> <span class="n">q</span> <span class="ow">in</span> <span class="n">quotes</span> <span class="k">if</span> <span class="n">q</span><span class="p">]</span>
+
+        <span class="k">if</span> <span class="ow">not</span> <span class="n">quotes</span><span class="p">:</span>
+            <span class="n">combined</span> <span class="o">=</span> <span class="s2">&quot;</span><span class="se">\n</span><span class="s2">&quot;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">value</span> <span class="k">for</span> <span class="n">value</span> <span class="ow">in</span> <span class="n">extracted</span><span class="o">.</span><span class="n">values</span><span class="p">()</span> <span class="k">if</span> <span class="n">value</span><span class="p">)</span>
+            <span class="n">quotes</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_extract_inline_quotes</span><span class="p">(</span><span class="n">combined</span><span class="p">)</span>
+
+        <span class="k">return</span> <span class="n">quotes</span>
+
+    <span class="nd">@staticmethod</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">_clean_quote_line</span><span class="p">(</span><span class="n">line</span><span class="p">:</span> <span class="nb">str</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Normalize a quote line from an exact_quotes block.&quot;&quot;&quot;</span>
+        <span class="n">cleaned</span> <span class="o">=</span> <span class="n">line</span><span class="o">.</span><span class="n">strip</span><span class="p">()</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="n">cleaned</span> <span class="ow">or</span> <span class="n">cleaned</span> <span class="o">==</span> <span class="s2">&quot;-&quot;</span><span class="p">:</span>
+            <span class="k">return</span> <span class="s2">&quot;&quot;</span>
+        <span class="k">if</span> <span class="n">cleaned</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="ow">in</span> <span class="p">{</span><span class="s2">&quot;-&quot;</span><span class="p">,</span> <span class="s2">&quot;*&quot;</span><span class="p">,</span> <span class="s2">&quot;•&quot;</span><span class="p">}:</span>
+            <span class="n">cleaned</span> <span class="o">=</span> <span class="n">cleaned</span><span class="p">[</span><span class="mi">1</span><span class="p">:]</span><span class="o">.</span><span class="n">strip</span><span class="p">()</span>
+        <span class="k">return</span> <span class="n">cleaned</span>
+
+    <span class="nd">@staticmethod</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">_extract_inline_quotes</span><span class="p">(</span><span class="n">text</span><span class="p">:</span> <span class="nb">str</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">list</span><span class="p">[</span><span class="nb">str</span><span class="p">]:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Extract quoted substrings from assessment sections.&quot;&quot;&quot;</span>
+        <span class="n">matches</span><span class="p">:</span> <span class="nb">list</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span> <span class="o">=</span> <span class="p">[]</span>
+        <span class="k">for</span> <span class="n">match</span> <span class="ow">in</span> <span class="n">re</span><span class="o">.</span><span class="n">finditer</span><span class="p">(</span><span class="sa">r</span><span class="s1">&#39;&quot;([^&quot;]+)&quot;|</span><span class="se">\&#39;</span><span class="s1">([^</span><span class="se">\&#39;</span><span class="s1">]+)</span><span class="se">\&#39;</span><span class="s1">&#39;</span><span class="p">,</span> <span class="n">text</span><span class="p">):</span>
+            <span class="n">value</span> <span class="o">=</span> <span class="n">match</span><span class="o">.</span><span class="n">group</span><span class="p">(</span><span class="mi">1</span><span class="p">)</span> <span class="ow">or</span> <span class="n">match</span><span class="o">.</span><span class="n">group</span><span class="p">(</span><span class="mi">2</span><span class="p">)</span> <span class="ow">or</span> <span class="s2">&quot;&quot;</span>
+            <span class="n">cleaned</span> <span class="o">=</span> <span class="n">value</span><span class="o">.</span><span class="n">strip</span><span class="p">()</span>
+            <span class="k">if</span> <span class="n">cleaned</span><span class="p">:</span>
+                <span class="n">matches</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">cleaned</span><span class="p">)</span>
+
+        <span class="n">deduped</span><span class="p">:</span> <span class="nb">list</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span> <span class="o">=</span> <span class="p">[]</span>
+        <span class="n">seen</span><span class="p">:</span> <span class="nb">set</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span> <span class="o">=</span> <span class="nb">set</span><span class="p">()</span>
+        <span class="k">for</span> <span class="n">quote</span> <span class="ow">in</span> <span class="n">matches</span><span class="p">:</span>
+            <span class="k">if</span> <span class="n">quote</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">seen</span><span class="p">:</span>
+                <span class="n">seen</span><span class="o">.</span><span class="n">add</span><span class="p">(</span><span class="n">quote</span><span class="p">)</span>
+                <span class="n">deduped</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">quote</span><span class="p">)</span>
+
+        <span class="k">return</span> <span class="n">deduped</span>
+</code></pre></div>
+<h3 id="3-tests-test_qualitativepy">3. Tests (test_qualitative.py)</h3>
+<div class="highlight"><pre><span></span><code><span class="sd">&quot;&quot;&quot;Tests for qualitative assessment agent.&quot;&quot;&quot;</span>
+
+<span class="kn">from</span><span class="w"> </span><span class="nn">__future__</span><span class="w"> </span><span class="kn">import</span> <span class="n">annotations</span>
+
+<span class="kn">import</span><span class="w"> </span><span class="nn">pytest</span>
+
+<span class="kn">from</span><span class="w"> </span><span class="nn">ai_psychiatrist.agents.qualitative</span><span class="w"> </span><span class="kn">import</span> <span class="n">QualitativeAssessmentAgent</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">ai_psychiatrist.domain.entities</span><span class="w"> </span><span class="kn">import</span> <span class="n">Transcript</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">tests.fixtures.mock_llm</span><span class="w"> </span><span class="kn">import</span> <span class="n">MockLLMClient</span>
+
+
+<span class="k">class</span><span class="w"> </span><span class="nc">TestQualitativeAssessmentAgent</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Tests for QualitativeAssessmentAgent.&quot;&quot;&quot;</span>
+
+    <span class="nd">@pytest</span><span class="o">.</span><span class="n">fixture</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">sample_llm_response</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Sample LLM response with all XML tags.&quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="s2">&quot;&quot;&quot;</span>
+<span class="s2">&lt;assessment&gt;</span>
+<span class="s2">The participant shows signs of moderate depression.</span>
+<span class="s2">&lt;/assessment&gt;</span>
+
+<span class="s2">&lt;PHQ8_symptoms&gt;</span>
+<span class="s2">&lt;little_interest_or_pleasure&gt;</span>
+<span class="s2">Participant expresses lack of interest.</span>
+<span class="s2">&lt;/little_interest_or_pleasure&gt;</span>
+<span class="s2">&lt;/PHQ8_symptoms&gt;</span>
+
+<span class="s2">&lt;social_factors&gt;</span>
+<span class="s2">Lives with children.</span>
+<span class="s2">&lt;/social_factors&gt;</span>
+
+<span class="s2">&lt;biological_factors&gt;</span>
+<span class="s2">History of suicide attempt.</span>
+<span class="s2">&lt;/biological_factors&gt;</span>
+
+<span class="s2">&lt;risk_factors&gt;</span>
+<span class="s2">Current thoughts of &quot;not waking up&quot;.</span>
+<span class="s2">&lt;/risk_factors&gt;</span>
+<span class="s2">&quot;&quot;&quot;</span>
+
+    <span class="nd">@pytest</span><span class="o">.</span><span class="n">fixture</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">mock_client</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">sample_llm_response</span><span class="p">:</span> <span class="nb">str</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">MockLLMClient</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Create mock LLM client with sample response.&quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="n">MockLLMClient</span><span class="p">(</span><span class="n">chat_responses</span><span class="o">=</span><span class="p">[</span><span class="n">sample_llm_response</span><span class="p">])</span>
+
+    <span class="nd">@pytest</span><span class="o">.</span><span class="n">fixture</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">sample_transcript</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Transcript</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Create sample transcript.&quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="n">Transcript</span><span class="p">(</span>
+            <span class="n">participant_id</span><span class="o">=</span><span class="mi">123</span><span class="p">,</span>
+            <span class="n">text</span><span class="o">=</span><span class="s2">&quot;Ellie: How are you?</span><span class="se">\n</span><span class="s2">Participant: Not great, feeling down.&quot;</span><span class="p">,</span>
+        <span class="p">)</span>
+
+    <span class="nd">@pytest</span><span class="o">.</span><span class="n">mark</span><span class="o">.</span><span class="n">asyncio</span>
+    <span class="k">async</span> <span class="k">def</span><span class="w"> </span><span class="nf">test_assess_returns_all_domains</span><span class="p">(</span>
+        <span class="bp">self</span><span class="p">,</span>
+        <span class="n">mock_client</span><span class="p">:</span> <span class="n">MockLLMClient</span><span class="p">,</span>
+        <span class="n">sample_transcript</span><span class="p">:</span> <span class="n">Transcript</span><span class="p">,</span>
+    <span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Assessment should include all required domains.&quot;&quot;&quot;</span>
+        <span class="n">agent</span> <span class="o">=</span> <span class="n">QualitativeAssessmentAgent</span><span class="p">(</span><span class="n">llm_client</span><span class="o">=</span><span class="n">mock_client</span><span class="p">)</span>
+        <span class="n">result</span> <span class="o">=</span> <span class="k">await</span> <span class="n">agent</span><span class="o">.</span><span class="n">assess</span><span class="p">(</span><span class="n">sample_transcript</span><span class="p">)</span>
+
+        <span class="k">assert</span> <span class="n">result</span><span class="o">.</span><span class="n">overall</span>
+        <span class="k">assert</span> <span class="n">result</span><span class="o">.</span><span class="n">phq8_symptoms</span>
+        <span class="k">assert</span> <span class="n">result</span><span class="o">.</span><span class="n">social_factors</span>
+        <span class="k">assert</span> <span class="n">result</span><span class="o">.</span><span class="n">biological_factors</span>
+        <span class="k">assert</span> <span class="n">result</span><span class="o">.</span><span class="n">risk_factors</span>
+        <span class="k">assert</span> <span class="n">result</span><span class="o">.</span><span class="n">participant_id</span> <span class="o">==</span> <span class="mi">123</span>
+</code></pre></div>
+<h2 id="acceptance-criteria">Acceptance Criteria</h2>
+<ul>
+<li>[ ] Generates assessment covering all 4 domains (PHQ-8, social, biological, risk)</li>
+<li>[ ] Extracts and includes supporting quotes from transcript</li>
+<li>[ ] Uses XML format matching paper description</li>
+<li>[ ] Includes domain examples in the prompt (paper Section 2.3.1)</li>
+<li>[ ] Supports refinement based on feedback</li>
+<li>[ ] Handles malformed LLM responses gracefully</li>
+<li>[ ] Logs assessment progress and metrics</li>
+<li>[ ] Full test coverage with mocked LLM</li>
+</ul>
+<h2 id="dependencies">Dependencies</h2>
+<ul>
+<li><strong>Spec 02</strong>: Domain entities (QualitativeAssessment, Transcript)</li>
+<li><strong>Spec 04</strong>: LLM infrastructure (OllamaClient)</li>
+</ul>
+<h2 id="specs-that-depend-on-this">Specs That Depend on This</h2>
+<ul>
+<li><strong>Spec 07</strong>: Judge Agent (evaluates qualitative output)</li>
+<li><strong>Spec 10</strong>: Meta-Review Agent</li>
+<li><strong>Spec 11</strong>: Full Pipeline</li>
+</ul>
+
+
+
+
+
+
+
+
+
+
+
+
+                
+              </article>
+            </div>
+          
+          
+<script>var target=document.getElementById(location.hash.slice(1));target&&target.name&&(target.checked=target.name.startsWith("__tabbed_"))</script>
+        </div>
+        
+      </main>
+      
+        <footer class="md-footer">
+  
+    
+  
+  <div class="md-footer-meta md-typeset">
+    <div class="md-footer-meta__inner md-grid">
+      <div class="md-copyright">
+  
+  
+    Made with
+    <a href="https://squidfunk.github.io/mkdocs-material/" target="_blank" rel="noopener">
+      Material for MkDocs
+    </a>
+  
+</div>
+      
+    </div>
+  </div>
+</footer>
+      
+    </div>
+    <div class="md-dialog" data-md-component="dialog">
+      <div class="md-dialog__inner md-typeset"></div>
+    </div>
+    
+    
+    
+      
+      
+      <script id="__config" type="application/json">{"annotate": null, "base": "../../..", "features": ["content.code.copy", "content.action.edit", "content.action.view", "navigation.tracking", "navigation.sections", "navigation.footer", "navigation.instant"], "search": "../../../assets/javascripts/workers/search.2c215733.min.js", "tags": null, "translations": {"clipboard.copied": "Copied to clipboard", "clipboard.copy": "Copy to clipboard", "search.result.more.one": "1 more on this page", "search.result.more.other": "# more on this page", "search.result.none": "No matching documents", "search.result.one": "1 matching document", "search.result.other": "# matching documents", "search.result.placeholder": "Type to start searching", "search.result.term.missing": "Missing", "select.version": "Select version"}, "version": null}</script>
+    
+    
+      <script src="../../../assets/javascripts/bundle.79ae519e.min.js"></script>
+      
+    
+  </body>
+</html>

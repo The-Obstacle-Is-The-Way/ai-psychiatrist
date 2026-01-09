@@ -1,0 +1,3321 @@
+
+<!doctype html>
+<html lang="en" class="no-js">
+  <head>
+    
+      <meta charset="utf-8">
+      <meta name="viewport" content="width=device-width,initial-scale=1">
+      
+      
+      
+        <link rel="canonical" href="https://the-obstacle-is-the-way.github.io/ai-psychiatrist/_archive/specs/40-fail-fast-embedding-generation/">
+      
+      
+      
+      
+        
+      
+      
+      <link rel="icon" href="../../../assets/images/favicon.png">
+      <meta name="generator" content="mkdocs-1.6.1, mkdocs-material-9.7.1">
+    
+    
+      
+        <title>Spec 40: Fail-Fast Embedding Generation - AI Psychiatrist</title>
+      
+    
+    
+      <link rel="stylesheet" href="../../../assets/stylesheets/main.484c7ddc.min.css">
+      
+      
+
+
+    
+    
+      
+    
+    
+      
+        
+        
+        <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+        <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Roboto:300,300i,400,400i,700,700i%7CRoboto+Mono:400,400i,700,700i&display=fallback">
+        <style>:root{--md-text-font:"Roboto";--md-code-font:"Roboto Mono"}</style>
+      
+    
+    
+    <script>__md_scope=new URL("../../..",location),__md_hash=e=>[...e].reduce(((e,_)=>(e<<5)-e+_.charCodeAt(0)),0),__md_get=(e,_=localStorage,t=__md_scope)=>JSON.parse(_.getItem(t.pathname+"."+e)),__md_set=(e,_,t=localStorage,a=__md_scope)=>{try{t.setItem(a.pathname+"."+e,JSON.stringify(_))}catch(e){}}</script>
+    
+      
+
+    
+    
+  </head>
+  
+  
+    <body dir="ltr">
+  
+    
+    <input class="md-toggle" data-md-toggle="drawer" type="checkbox" id="__drawer" autocomplete="off">
+    <input class="md-toggle" data-md-toggle="search" type="checkbox" id="__search" autocomplete="off">
+    <label class="md-overlay" for="__drawer"></label>
+    <div data-md-component="skip">
+      
+        
+        <a href="#spec-40-fail-fast-embedding-generation" class="md-skip">
+          Skip to content
+        </a>
+      
+    </div>
+    <div data-md-component="announce">
+      
+    </div>
+    
+    
+      
+
+  
+
+<header class="md-header md-header--shadow" data-md-component="header">
+  <nav class="md-header__inner md-grid" aria-label="Header">
+    <a href="../../.." title="AI Psychiatrist" class="md-header__button md-logo" aria-label="AI Psychiatrist" data-md-component="logo">
+      
+  
+  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 8a3 3 0 0 0 3-3 3 3 0 0 0-3-3 3 3 0 0 0-3 3 3 3 0 0 0 3 3m0 3.54C9.64 9.35 6.5 8 3 8v11c3.5 0 6.64 1.35 9 3.54 2.36-2.19 5.5-3.54 9-3.54V8c-3.5 0-6.64 1.35-9 3.54"/></svg>
+
+    </a>
+    <label class="md-header__button md-icon" for="__drawer">
+      
+      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M3 6h18v2H3zm0 5h18v2H3zm0 5h18v2H3z"/></svg>
+    </label>
+    <div class="md-header__title" data-md-component="header-title">
+      <div class="md-header__ellipsis">
+        <div class="md-header__topic">
+          <span class="md-ellipsis">
+            AI Psychiatrist
+          </span>
+        </div>
+        <div class="md-header__topic" data-md-component="header-topic">
+          <span class="md-ellipsis">
+            
+              Spec 40: Fail-Fast Embedding Generation
+            
+          </span>
+        </div>
+      </div>
+    </div>
+    
+    
+      <script>var palette=__md_get("__palette");if(palette&&palette.color){if("(prefers-color-scheme)"===palette.color.media){var media=matchMedia("(prefers-color-scheme: light)"),input=document.querySelector(media.matches?"[data-md-color-media='(prefers-color-scheme: light)']":"[data-md-color-media='(prefers-color-scheme: dark)']");palette.color.media=input.getAttribute("data-md-color-media"),palette.color.scheme=input.getAttribute("data-md-color-scheme"),palette.color.primary=input.getAttribute("data-md-color-primary"),palette.color.accent=input.getAttribute("data-md-color-accent")}for(var[key,value]of Object.entries(palette.color))document.body.setAttribute("data-md-color-"+key,value)}</script>
+    
+    
+    
+      
+      
+        <label class="md-header__button md-icon" for="__search">
+          
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M9.5 3A6.5 6.5 0 0 1 16 9.5c0 1.61-.59 3.09-1.56 4.23l.27.27h.79l5 5-1.5 1.5-5-5v-.79l-.27-.27A6.52 6.52 0 0 1 9.5 16 6.5 6.5 0 0 1 3 9.5 6.5 6.5 0 0 1 9.5 3m0 2C7 5 5 7 5 9.5S7 14 9.5 14 14 12 14 9.5 12 5 9.5 5"/></svg>
+        </label>
+        <div class="md-search" data-md-component="search" role="dialog">
+  <label class="md-search__overlay" for="__search"></label>
+  <div class="md-search__inner" role="search">
+    <form class="md-search__form" name="search">
+      <input type="text" class="md-search__input" name="query" aria-label="Search" placeholder="Search" autocapitalize="off" autocorrect="off" autocomplete="off" spellcheck="false" data-md-component="search-query" required>
+      <label class="md-search__icon md-icon" for="__search">
+        
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M9.5 3A6.5 6.5 0 0 1 16 9.5c0 1.61-.59 3.09-1.56 4.23l.27.27h.79l5 5-1.5 1.5-5-5v-.79l-.27-.27A6.52 6.52 0 0 1 9.5 16 6.5 6.5 0 0 1 3 9.5 6.5 6.5 0 0 1 9.5 3m0 2C7 5 5 7 5 9.5S7 14 9.5 14 14 12 14 9.5 12 5 9.5 5"/></svg>
+        
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M20 11v2H8l5.5 5.5-1.42 1.42L4.16 12l7.92-7.92L13.5 5.5 8 11z"/></svg>
+      </label>
+      <nav class="md-search__options" aria-label="Search">
+        
+        <button type="reset" class="md-search__icon md-icon" title="Clear" aria-label="Clear" tabindex="-1">
+          
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M19 6.41 17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12z"/></svg>
+        </button>
+      </nav>
+      
+    </form>
+    <div class="md-search__output">
+      <div class="md-search__scrollwrap" tabindex="0" data-md-scrollfix>
+        <div class="md-search-result" data-md-component="search-result">
+          <div class="md-search-result__meta">
+            Initializing search
+          </div>
+          <ol class="md-search-result__list" role="presentation"></ol>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+      
+    
+    
+      <div class="md-header__source">
+        <a href="https://github.com/The-Obstacle-Is-The-Way/ai-psychiatrist" title="Go to repository" class="md-source" data-md-component="source">
+  <div class="md-source__icon md-icon">
+    
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 448 512"><!--! Font Awesome Free 7.1.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2025 Fonticons, Inc.--><path d="M439.6 236.1 244 40.5c-5.4-5.5-12.8-8.5-20.4-8.5s-15 3-20.4 8.4L162.5 81l51.5 51.5c27.1-9.1 52.7 16.8 43.4 43.7l49.7 49.7c34.2-11.8 61.2 31 35.5 56.7-26.5 26.5-70.2-2.9-56-37.3L240.3 199v121.9c25.3 12.5 22.3 41.8 9.1 55-6.4 6.4-15.2 10.1-24.3 10.1s-17.8-3.6-24.3-10.1c-17.6-17.6-11.1-46.9 11.2-56v-123c-20.8-8.5-24.6-30.7-18.6-45L142.6 101 8.5 235.1C3 240.6 0 247.9 0 255.5s3 15 8.5 20.4l195.6 195.7c5.4 5.4 12.7 8.4 20.4 8.4s15-3 20.4-8.4l194.7-194.7c5.4-5.4 8.4-12.8 8.4-20.4s-3-15-8.4-20.4"/></svg>
+  </div>
+  <div class="md-source__repository">
+    GitHub
+  </div>
+</a>
+      </div>
+    
+  </nav>
+  
+</header>
+    
+    <div class="md-container" data-md-component="container">
+      
+      
+        
+          
+        
+      
+      <main class="md-main" data-md-component="main">
+        <div class="md-main__inner md-grid">
+          
+            
+              
+              <div class="md-sidebar md-sidebar--primary" data-md-component="sidebar" data-md-type="navigation" >
+                <div class="md-sidebar__scrollwrap">
+                  <div class="md-sidebar__inner">
+                    
+
+
+
+<nav class="md-nav md-nav--primary" aria-label="Navigation" data-md-level="0">
+  <label class="md-nav__title" for="__drawer">
+    <a href="../../.." title="AI Psychiatrist" class="md-nav__button md-logo" aria-label="AI Psychiatrist" data-md-component="logo">
+      
+  
+  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 8a3 3 0 0 0 3-3 3 3 0 0 0-3-3 3 3 0 0 0-3 3 3 3 0 0 0 3 3m0 3.54C9.64 9.35 6.5 8 3 8v11c3.5 0 6.64 1.35 9 3.54 2.36-2.19 5.5-3.54 9-3.54V8c-3.5 0-6.64 1.35-9 3.54"/></svg>
+
+    </a>
+    AI Psychiatrist
+  </label>
+  
+    <div class="md-nav__source">
+      <a href="https://github.com/The-Obstacle-Is-The-Way/ai-psychiatrist" title="Go to repository" class="md-source" data-md-component="source">
+  <div class="md-source__icon md-icon">
+    
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 448 512"><!--! Font Awesome Free 7.1.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2025 Fonticons, Inc.--><path d="M439.6 236.1 244 40.5c-5.4-5.5-12.8-8.5-20.4-8.5s-15 3-20.4 8.4L162.5 81l51.5 51.5c27.1-9.1 52.7 16.8 43.4 43.7l49.7 49.7c34.2-11.8 61.2 31 35.5 56.7-26.5 26.5-70.2-2.9-56-37.3L240.3 199v121.9c25.3 12.5 22.3 41.8 9.1 55-6.4 6.4-15.2 10.1-24.3 10.1s-17.8-3.6-24.3-10.1c-17.6-17.6-11.1-46.9 11.2-56v-123c-20.8-8.5-24.6-30.7-18.6-45L142.6 101 8.5 235.1C3 240.6 0 247.9 0 255.5s3 15 8.5 20.4l195.6 195.7c5.4 5.4 12.7 8.4 20.4 8.4s15-3 20.4-8.4l194.7-194.7c5.4-5.4 8.4-12.8 8.4-20.4s-3-15-8.4-20.4"/></svg>
+  </div>
+  <div class="md-source__repository">
+    GitHub
+  </div>
+</a>
+    </div>
+  
+  <ul class="md-nav__list" data-md-scrollfix>
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../.." class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    AI Psychiatrist Documentation
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    
+    
+    
+    
+      
+        
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--section md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_2" >
+        
+          
+          <label class="md-nav__link" for="__nav_2" id="__nav_2_label" tabindex="">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+     research
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_2_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_2">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+     research
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../_research/hypotheses-explained/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Hypotheses Explained: Current State vs Future Improvements
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../_research/hypotheses-for-improvement/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Hypotheses for Improvement: First-Principles Analysis
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../_research/master-bug-audit/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    MASTER BUG AUDIT
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    
+    
+    
+    
+      
+        
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--section md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_3" >
+        
+          
+          <label class="md-nav__link" for="__nav_3" id="__nav_3_label" tabindex="">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Architecture
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_3_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_3">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    Architecture
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../architecture/architecture/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Architecture
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../architecture/future-architecture/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Future Architecture: Agent Orchestration Options
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../architecture/pipeline/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Pipeline
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    
+    
+    
+    
+      
+        
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--section md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_4" >
+        
+          
+          <label class="md-nav__link" for="__nav_4" id="__nav_4_label" tabindex="">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Clinical
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_4_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_4">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    Clinical
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../clinical/clinical-understanding/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Clinical Understanding: How This System Works
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../clinical/glossary/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Glossary
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../clinical/phq8/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    PHQ-8: Patient Health Questionnaire
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../clinical/task-validity/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Task Validity: What Can (and Cannot) Be Inferred from DAIC-WOZ Transcripts
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    
+    
+    
+    
+      
+        
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--section md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_5" >
+        
+          
+          <label class="md-nav__link" for="__nav_5" id="__nav_5_label" tabindex="">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Configs
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_5_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_5">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    Configs
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../configs/agent-sampling-registry/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Agent Sampling Parameter Registry
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../configs/configuration-philosophy/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Configuration Philosophy
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../configs/configuration/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Configuration Reference
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    
+    
+    
+    
+      
+        
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--section md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_6" >
+        
+          
+          <label class="md-nav__link" for="__nav_6" id="__nav_6_label" tabindex="">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Data
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_6_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_6">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    Data
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../data/artifact-namespace-registry/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Artifact Namespace Registry
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../data/daic-woz-preprocessing/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    DAIC-WOZ Transcript Preprocessing (Bias-Aware, Deterministic)
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../data/daic-woz-schema/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    DAIC-WOZ Dataset Schema
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../data/data-splits-overview/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Data Splits Overview
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    
+    
+    
+    
+      
+        
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--section md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_7" >
+        
+          
+          <label class="md-nav__link" for="__nav_7" id="__nav_7_label" tabindex="">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Developer
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_7_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_7">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    Developer
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../developer/api-endpoints/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    API Reference
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../developer/dependency-registry/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Dependency Registry
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../developer/error-handling/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Error Handling and Fail-Fast Philosophy
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../developer/exceptions/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Exception Reference (Domain + Runtime)
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../developer/testing/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Testing Conventions (Markers, Fixtures, and Test Doubles)
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    
+    
+    
+    
+      
+        
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--section md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_8" >
+        
+          
+          <label class="md-nav__link" for="__nav_8" id="__nav_8_label" tabindex="">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Getting started
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_8_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_8">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    Getting started
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../getting-started/quickstart/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Quickstart Guide
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    
+    
+    
+    
+      
+        
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--section md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_9" >
+        
+          
+          <label class="md-nav__link" for="__nav_9" id="__nav_9_label" tabindex="">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Models
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_9_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_9">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    Models
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../models/model-registry/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    AI Psychiatrist Model Registry
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../models/model-wiring/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Model Wiring: Current State
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    
+    
+    
+    
+      
+        
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--section md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_10" >
+        
+          
+          <label class="md-nav__link" for="__nav_10" id="__nav_10_label" tabindex="">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Pipeline internals
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_10_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_10">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    Pipeline internals
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../pipeline-internals/evidence-extraction/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Evidence Extraction Mechanism: How It Actually Works
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../pipeline-internals/features/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Feature Reference (Non-Archive Canonical)
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    
+    
+    
+    
+      
+        
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--section md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_11" >
+        
+          
+          <label class="md-nav__link" for="__nav_11" id="__nav_11_label" tabindex="">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Preflight checklist
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_11_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_11">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    Preflight checklist
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../preflight-checklist/preflight-checklist-few-shot/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Preflight Checklist: Few-Shot Reproduction
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../preflight-checklist/preflight-checklist-zero-shot/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Preflight Checklist: Zero-Shot Run
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    
+    
+    
+    
+      
+        
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--section md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_12" >
+        
+          
+          <label class="md-nav__link" for="__nav_12" id="__nav_12_label" tabindex="">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Rag
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_12_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_12">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    Rag
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../rag/artifact-generation/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    RAG Artifact Generation
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../rag/chunk-scoring/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Chunk-Level Scoring (Spec 35) — Schema, Workflow, and Gotchas
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../rag/debugging/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    RAG Debugging (Audit Logs + Guardrails)
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../rag/design-rationale/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    RAG Design Rationale
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../rag/overview/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    RAG Overview: Embeddings and Few-Shot Retrieval
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../rag/runtime-features/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    RAG Runtime Features
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    
+    
+    
+    
+      
+        
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--section md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_13" >
+        
+          
+          <label class="md-nav__link" for="__nav_13" id="__nav_13_label" tabindex="">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Results
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_13_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_13">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    Results
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../results/few-shot-analysis/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Why Few-Shot May Not Beat Zero-Shot: Analysis
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../results/reproduction-results/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Paper Reproduction Results (Current Status)
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../results/run-history/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Complete Run History &amp; Statistical Analysis
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../results/run-output-schema/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Reproduction Run Output Schema (JSON + Registry)
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    
+    
+    
+    
+      
+        
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--section md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_14" >
+        
+          
+          <label class="md-nav__link" for="__nav_14" id="__nav_14_label" tabindex="">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Statistics
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_14_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_14">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    Statistics
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../statistics/coverage/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Coverage Explained: What It Is and Why It Matters
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../statistics/metrics-and-evaluation/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Metrics and Evaluation (Exact Definitions + Output Schema)
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../statistics/statistical-methodology-aurc-augrc/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Statistical Methodology: AURC/AUGRC for Selective Prediction
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+  </ul>
+</nav>
+                  </div>
+                </div>
+              </div>
+            
+            
+              
+              <div class="md-sidebar md-sidebar--secondary" data-md-component="sidebar" data-md-type="toc" >
+                <div class="md-sidebar__scrollwrap">
+                  <div class="md-sidebar__inner">
+                    
+
+<nav class="md-nav md-nav--secondary" aria-label="Table of contents">
+  
+  
+  
+    
+  
+  
+    <label class="md-nav__title" for="__toc">
+      <span class="md-nav__icon md-icon"></span>
+      Table of contents
+    </label>
+    <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
+      
+        <li class="md-nav__item">
+  <a href="#problem-statement" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Problem Statement
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Problem Statement">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#code-evidence" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Code Evidence
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#why-this-is-wrong" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Why This Is Wrong
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#correct-behavior-fail-fast-contract" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Correct Behavior (Fail-Fast Contract)
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Correct Behavior (Fail-Fast Contract)">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#default-strict-mode-no-flags-required" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Default: Strict Mode (No Flags Required)
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#opt-in-partial-mode-allow-partial" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Opt-In: Partial Mode (--allow-partial)
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#implementation-plan" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Implementation Plan
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Implementation Plan">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#step-1-add-allow-partial-cli-argument" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Step 1 — Add --allow-partial CLI Argument
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#step-2-define-custom-exception" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Step 2 — Define Custom Exception
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#step-3-refactor-process_participant-for-fail-fast" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Step 3 — Refactor process_participant() for Fail-Fast
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#step-4-add-skip-tracking-to-run_generation_loop" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Step 4 — Add Skip Tracking to run_generation_loop()
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#step-5-update-exit-codes-partial-manifest" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Step 5 — Update Exit Codes + Partial Manifest
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#step-6-make-save_embeddings-atomic-no-half-artifacts" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Step 6 — Make save_embeddings() Atomic (No Half-Artifacts)
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#step-7-update-script-docstring" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Step 7 — Update Script Docstring
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#tests" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Tests
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Tests">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#new-test-file-testsunitscriptstest_generate_embeddings_fail_fastpy" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        New Test File: tests/unit/scripts/test_generate_embeddings_fail_fast.py
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#verification-criteria" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Verification Criteria
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Verification Criteria">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#strict-mode-default" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Strict Mode (Default)
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#partial-mode-allow-partial" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Partial Mode (--allow-partial)
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#backwards-compatibility" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Backwards Compatibility
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#saving-all-modes" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Saving (All Modes)
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#why-this-is-correct-for-research" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Why This Is Correct for Research
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#related" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Related
+      
+    </span>
+  </a>
+  
+</li>
+      
+    </ul>
+  
+</nav>
+                  </div>
+                </div>
+              </div>
+            
+          
+          
+            <div class="md-content" data-md-component="content">
+              
+              <article class="md-content__inner md-typeset">
+                
+                  
+
+
+  
+    <a href="https://github.com/The-Obstacle-Is-The-Way/ai-psychiatrist/edit/main/docs/_archive/specs/40-fail-fast-embedding-generation.md" title="Edit this page" class="md-content__button md-icon" rel="edit">
+      
+      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M10 20H6V4h7v5h5v3.1l2-2V8l-6-6H6c-1.1 0-2 .9-2 2v16c0 1.1.9 2 2 2h4zm10.2-7c.1 0 .3.1.4.2l1.3 1.3c.2.2.2.6 0 .8l-1 1-2.1-2.1 1-1c.1-.1.2-.2.4-.2m0 3.9L14.1 23H12v-2.1l6.1-6.1z"/></svg>
+    </a>
+  
+  
+    
+      
+    
+    <a href="https://github.com/The-Obstacle-Is-The-Way/ai-psychiatrist/raw/main/docs/_archive/specs/40-fail-fast-embedding-generation.md" title="View source of this page" class="md-content__button md-icon">
+      
+      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M17 18c.56 0 1 .44 1 1s-.44 1-1 1-1-.44-1-1 .44-1 1-1m0-3c-2.73 0-5.06 1.66-6 4 .94 2.34 3.27 4 6 4s5.06-1.66 6-4c-.94-2.34-3.27-4-6-4m0 6.5a2.5 2.5 0 0 1-2.5-2.5 2.5 2.5 0 0 1 2.5-2.5 2.5 2.5 0 0 1 2.5 2.5 2.5 2.5 0 0 1-2.5 2.5M9.27 20H6V4h7v5h5v4.07c.7.08 1.36.25 2 .49V8l-6-6H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h4.5a8.2 8.2 0 0 1-1.23-2"/></svg>
+    </a>
+  
+
+
+<h1 id="spec-40-fail-fast-embedding-generation">Spec 40: Fail-Fast Embedding Generation</h1>
+<table>
+<thead>
+<tr>
+<th>Field</th>
+<th>Value</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><strong>Status</strong></td>
+<td>IMPLEMENTED</td>
+</tr>
+<tr>
+<td><strong>Priority</strong></td>
+<td>HIGH</td>
+</tr>
+<tr>
+<td><strong>Addresses</strong></td>
+<td>BUG-042 (embedding generation silently skips participants/chunks)</td>
+</tr>
+<tr>
+<td><strong>Effort</strong></td>
+<td>~0.5 day</td>
+</tr>
+<tr>
+<td><strong>Impact</strong></td>
+<td>Research reproducibility - guarantees complete embeddings or explicit failure</td>
+</tr>
+</tbody>
+</table>
+<hr />
+<h2 id="problem-statement">Problem Statement</h2>
+<p><code>scripts/generate_embeddings.py</code> silently skips:</p>
+<ol>
+<li><strong>Entire participants</strong> when transcript loading fails (returns <code>[], []</code>)</li>
+<li><strong>Individual chunks</strong> when embedding fails (<code>continue</code> without error)</li>
+</ol>
+<p>This produces "successful" embeddings artifacts that are <strong>silently incomplete</strong>. Downstream evaluation proceeds with missing data, corrupting research results without any indication.</p>
+<h3 id="code-evidence">Code Evidence</h3>
+<p><strong>Participant-Level Silent Skip</strong> (<code>scripts/generate_embeddings.py:315-323</code>):</p>
+<div class="highlight"><pre><span></span><code><span class="k">try</span><span class="p">:</span>
+    <span class="n">transcript</span> <span class="o">=</span> <span class="n">transcript_service</span><span class="o">.</span><span class="n">load_transcript</span><span class="p">(</span><span class="n">participant_id</span><span class="p">)</span>
+<span class="k">except</span> <span class="p">(</span><span class="n">DomainError</span><span class="p">,</span> <span class="ne">ValueError</span><span class="p">,</span> <span class="ne">OSError</span><span class="p">)</span> <span class="k">as</span> <span class="n">e</span><span class="p">:</span>
+    <span class="n">logger</span><span class="o">.</span><span class="n">warning</span><span class="p">(</span><span class="s2">&quot;Failed to load transcript&quot;</span><span class="p">,</span> <span class="n">participant_id</span><span class="o">=</span><span class="n">participant_id</span><span class="p">,</span> <span class="n">error</span><span class="o">=</span><span class="nb">str</span><span class="p">(</span><span class="n">e</span><span class="p">))</span>
+    <span class="k">return</span> <span class="p">[],</span> <span class="p">[]</span>  <span class="c1"># SILENT SKIP</span>
+</code></pre></div>
+<p><strong>Chunk-Level Silent Skip</strong> (<code>scripts/generate_embeddings.py:333-349</code>):</p>
+<div class="highlight"><pre><span></span><code><span class="k">try</span><span class="p">:</span>
+    <span class="n">embedding</span> <span class="o">=</span> <span class="k">await</span> <span class="n">generate_embedding</span><span class="p">(</span><span class="n">client</span><span class="p">,</span> <span class="n">chunk</span><span class="p">,</span> <span class="n">model</span><span class="p">,</span> <span class="n">dimension</span><span class="p">)</span>
+    <span class="n">results</span><span class="o">.</span><span class="n">append</span><span class="p">((</span><span class="n">chunk</span><span class="p">,</span> <span class="n">embedding</span><span class="p">))</span>
+    <span class="o">...</span>
+<span class="k">except</span> <span class="p">(</span><span class="n">DomainError</span><span class="p">,</span> <span class="ne">ValueError</span><span class="p">,</span> <span class="ne">OSError</span><span class="p">)</span> <span class="k">as</span> <span class="n">e</span><span class="p">:</span>
+    <span class="n">logger</span><span class="o">.</span><span class="n">warning</span><span class="p">(</span><span class="s2">&quot;Failed to embed chunk&quot;</span><span class="p">,</span> <span class="n">participant_id</span><span class="o">=</span><span class="n">participant_id</span><span class="p">,</span> <span class="n">error</span><span class="o">=</span><span class="nb">str</span><span class="p">(</span><span class="n">e</span><span class="p">))</span>
+    <span class="k">continue</span>  <span class="c1"># SILENT SKIP</span>
+</code></pre></div>
+<p><strong>Main Loop Ignores Empty Results</strong> (<code>scripts/generate_embeddings.py:498-501</code>):</p>
+<div class="highlight"><pre><span></span><code><span class="k">if</span> <span class="n">results</span><span class="p">:</span>  <span class="c1"># Silently drops failed participants</span>
+    <span class="n">all_embeddings</span><span class="p">[</span><span class="n">pid</span><span class="p">]</span> <span class="o">=</span> <span class="n">results</span>
+    <span class="n">all_tags</span><span class="p">[</span><span class="n">pid</span><span class="p">]</span> <span class="o">=</span> <span class="n">chunk_tags</span>
+    <span class="n">total_chunks</span> <span class="o">+=</span> <span class="nb">len</span><span class="p">(</span><span class="n">results</span><span class="p">)</span>
+</code></pre></div>
+<h3 id="why-this-is-wrong">Why This Is Wrong</h3>
+<table>
+<thead>
+<tr>
+<th>Scenario</th>
+<th>Current Behavior</th>
+<th>Correct Behavior</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>1 of 107 transcripts missing</td>
+<td>Log warning, output 106 participants, exit 0</td>
+<td><strong>CRASH</strong> with clear error</td>
+</tr>
+<tr>
+<td>Embedding API timeout on 1 chunk</td>
+<td>Log warning, output incomplete participant, exit 0</td>
+<td><strong>CRASH</strong> with clear error</td>
+</tr>
+<tr>
+<td>All transcripts missing</td>
+<td>Log 107 warnings, output empty file, exit 0</td>
+<td><strong>CRASH</strong> with clear error</td>
+</tr>
+</tbody>
+</table>
+<p>A "successful" run with incomplete data is <strong>infinitely worse</strong> than a crash with a clear error.</p>
+<hr />
+<h2 id="correct-behavior-fail-fast-contract">Correct Behavior (Fail-Fast Contract)</h2>
+<h3 id="default-strict-mode-no-flags-required">Default: Strict Mode (No Flags Required)</h3>
+<ol>
+<li><strong>Any transcript load failure</strong> → <strong>CRASH</strong> with participant ID and error</li>
+<li><strong>Any chunk embedding failure</strong> → <strong>CRASH</strong> with participant ID, chunk index, and error</li>
+<li>Exit code: <strong>non-zero</strong> on any failure</li>
+</ol>
+<h3 id="opt-in-partial-mode-allow-partial">Opt-In: Partial Mode (<code>--allow-partial</code>)</h3>
+<p>If explicit best-effort is needed for debugging/development:</p>
+<ol>
+<li><strong>Transcript failure</strong> → Log warning, skip participant, continue</li>
+<li><strong>Chunk failure</strong> → Log warning, skip chunk, continue</li>
+<li><strong>At end of run</strong>:</li>
+<li>Write a <code>{output}.partial.json</code> manifest (counts + skipped IDs + skipped chunk count)</li>
+<li>Print a short summary + the manifest path</li>
+<li>Exit code: <strong>2</strong> (partial success) if any skips occurred</li>
+<li>Exit code: <strong>0</strong> only if zero skips</li>
+</ol>
+<hr />
+<h2 id="implementation-plan">Implementation Plan</h2>
+<h3 id="step-1-add-allow-partial-cli-argument">Step 1 — Add <code>--allow-partial</code> CLI Argument</h3>
+<p><strong>File</strong>: <code>scripts/generate_embeddings.py</code></p>
+<p><strong>Location</strong>: <code>main()</code> argument parser (around lines 654-688)</p>
+<p><strong>Add</strong>:</p>
+<div class="highlight"><pre><span></span><code><span class="n">parser</span><span class="o">.</span><span class="n">add_argument</span><span class="p">(</span>
+    <span class="s2">&quot;--allow-partial&quot;</span><span class="p">,</span>
+    <span class="n">action</span><span class="o">=</span><span class="s2">&quot;store_true&quot;</span><span class="p">,</span>
+    <span class="n">default</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
+    <span class="n">help</span><span class="o">=</span><span class="s2">&quot;Allow partial output on failures (exit 2). Default: strict mode (crash on any failure).&quot;</span><span class="p">,</span>
+<span class="p">)</span>
+</code></pre></div>
+<p><strong>Update <code>GenerationConfig</code> dataclass</strong> (around lines 85-121):</p>
+<div class="highlight"><pre><span></span><code><span class="nd">@dataclass</span>
+<span class="k">class</span><span class="w"> </span><span class="nc">GenerationConfig</span><span class="p">:</span>
+    <span class="c1"># ... existing fields ...</span>
+    <span class="n">allow_partial</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span>
+</code></pre></div>
+<p><strong>Update <code>prepare_config()</code></strong> to pass through:</p>
+<div class="highlight"><pre><span></span><code><span class="n">allow_partial</span><span class="o">=</span><span class="n">args</span><span class="o">.</span><span class="n">allow_partial</span><span class="p">,</span>
+</code></pre></div>
+<hr />
+<h3 id="step-2-define-custom-exception">Step 2 — Define Custom Exception</h3>
+<p><strong>File</strong>: <code>scripts/generate_embeddings.py</code></p>
+<p><strong>Location</strong>: After imports (around line 66)</p>
+<p><strong>Add</strong>:</p>
+<div class="highlight"><pre><span></span><code><span class="k">class</span><span class="w"> </span><span class="nc">EmbeddingGenerationError</span><span class="p">(</span><span class="ne">Exception</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Raised when embedding generation fails in strict mode.&quot;&quot;&quot;</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">message</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="n">participant_id</span><span class="p">:</span> <span class="nb">int</span><span class="p">,</span> <span class="o">*</span><span class="p">,</span> <span class="n">chunk_index</span><span class="p">:</span> <span class="nb">int</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">participant_id</span> <span class="o">=</span> <span class="n">participant_id</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">chunk_index</span> <span class="o">=</span> <span class="n">chunk_index</span>
+        <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="n">message</span><span class="p">)</span>
+</code></pre></div>
+<hr />
+<h3 id="step-3-refactor-process_participant-for-fail-fast">Step 3 — Refactor <code>process_participant()</code> for Fail-Fast</h3>
+<p><strong>File</strong>: <code>scripts/generate_embeddings.py</code></p>
+<p><strong>Location</strong>: <code>process_participant()</code> function (lines 286-351)</p>
+<p><strong>Change signature</strong> to accept <code>allow_partial</code>:</p>
+<div class="highlight"><pre><span></span><code><span class="k">async</span> <span class="k">def</span><span class="w"> </span><span class="nf">process_participant</span><span class="p">(</span>
+    <span class="n">client</span><span class="p">:</span> <span class="n">EmbeddingClient</span><span class="p">,</span>
+    <span class="n">transcript_service</span><span class="p">:</span> <span class="n">TranscriptService</span><span class="p">,</span>
+    <span class="n">participant_id</span><span class="p">:</span> <span class="nb">int</span><span class="p">,</span>
+    <span class="n">model</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span>
+    <span class="n">dimension</span><span class="p">:</span> <span class="nb">int</span><span class="p">,</span>
+    <span class="n">chunk_size</span><span class="p">:</span> <span class="nb">int</span><span class="p">,</span>
+    <span class="n">step_size</span><span class="p">:</span> <span class="nb">int</span><span class="p">,</span>
+    <span class="n">min_chars</span><span class="p">:</span> <span class="nb">int</span><span class="p">,</span>
+    <span class="o">*</span><span class="p">,</span>
+    <span class="n">tagger</span><span class="p">:</span> <span class="n">KeywordTagger</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+    <span class="n">allow_partial</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span><span class="p">,</span>  <span class="c1"># NEW PARAMETER</span>
+<span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">tuple</span><span class="p">[</span><span class="nb">list</span><span class="p">[</span><span class="nb">tuple</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="nb">list</span><span class="p">[</span><span class="nb">float</span><span class="p">]]],</span> <span class="nb">list</span><span class="p">[</span><span class="nb">list</span><span class="p">[</span><span class="nb">str</span><span class="p">]],</span> <span class="nb">int</span><span class="p">]:</span>
+</code></pre></div>
+<p><strong>Add skip tracking</strong> (local state in <code>process_participant()</code>):</p>
+<div class="highlight"><pre><span></span><code><span class="n">skipped_chunks</span> <span class="o">=</span> <span class="mi">0</span>
+</code></pre></div>
+<p><strong>Replace transcript loading</strong> (lines 315-323):</p>
+<div class="highlight"><pre><span></span><code><span class="c1"># BEFORE (silent skip):</span>
+<span class="k">try</span><span class="p">:</span>
+    <span class="n">transcript</span> <span class="o">=</span> <span class="n">transcript_service</span><span class="o">.</span><span class="n">load_transcript</span><span class="p">(</span><span class="n">participant_id</span><span class="p">)</span>
+<span class="k">except</span> <span class="p">(</span><span class="n">DomainError</span><span class="p">,</span> <span class="ne">ValueError</span><span class="p">,</span> <span class="ne">OSError</span><span class="p">)</span> <span class="k">as</span> <span class="n">e</span><span class="p">:</span>
+    <span class="n">logger</span><span class="o">.</span><span class="n">warning</span><span class="p">(</span><span class="s2">&quot;Failed to load transcript&quot;</span><span class="p">,</span> <span class="n">participant_id</span><span class="o">=</span><span class="n">participant_id</span><span class="p">,</span> <span class="n">error</span><span class="o">=</span><span class="nb">str</span><span class="p">(</span><span class="n">e</span><span class="p">))</span>
+    <span class="k">return</span> <span class="p">[],</span> <span class="p">[]</span>
+
+<span class="c1"># AFTER (fail-fast or explicit skip):</span>
+<span class="k">try</span><span class="p">:</span>
+    <span class="n">transcript</span> <span class="o">=</span> <span class="n">transcript_service</span><span class="o">.</span><span class="n">load_transcript</span><span class="p">(</span><span class="n">participant_id</span><span class="p">)</span>
+<span class="k">except</span> <span class="ne">Exception</span> <span class="k">as</span> <span class="n">e</span><span class="p">:</span>
+    <span class="k">if</span> <span class="n">allow_partial</span><span class="p">:</span>
+        <span class="n">logger</span><span class="o">.</span><span class="n">warning</span><span class="p">(</span>
+            <span class="s2">&quot;Failed to load transcript (skipping participant)&quot;</span><span class="p">,</span>
+            <span class="n">participant_id</span><span class="o">=</span><span class="n">participant_id</span><span class="p">,</span>
+            <span class="n">error</span><span class="o">=</span><span class="nb">str</span><span class="p">(</span><span class="n">e</span><span class="p">),</span>
+        <span class="p">)</span>
+        <span class="k">return</span> <span class="p">[],</span> <span class="p">[],</span> <span class="mi">0</span>
+    <span class="k">raise</span> <span class="n">EmbeddingGenerationError</span><span class="p">(</span>
+        <span class="sa">f</span><span class="s2">&quot;Failed to load transcript for participant </span><span class="si">{</span><span class="n">participant_id</span><span class="si">}</span><span class="s2">: </span><span class="si">{</span><span class="n">e</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">,</span>
+        <span class="n">participant_id</span><span class="o">=</span><span class="n">participant_id</span><span class="p">,</span>
+    <span class="p">)</span> <span class="kn">from</span><span class="w"> </span><span class="nn">e</span>
+</code></pre></div>
+<p><strong>Add an explicit check for empty chunking</strong> (immediately after <code>create_sliding_chunks(...)</code>):</p>
+<div class="highlight"><pre><span></span><code><span class="n">chunks</span> <span class="o">=</span> <span class="n">create_sliding_chunks</span><span class="p">(</span><span class="n">transcript</span><span class="o">.</span><span class="n">text</span><span class="p">,</span> <span class="n">chunk_size</span><span class="p">,</span> <span class="n">step_size</span><span class="p">)</span>
+<span class="k">if</span> <span class="ow">not</span> <span class="n">chunks</span><span class="p">:</span>
+    <span class="k">if</span> <span class="n">allow_partial</span><span class="p">:</span>
+        <span class="n">logger</span><span class="o">.</span><span class="n">warning</span><span class="p">(</span>
+            <span class="s2">&quot;No chunks produced for transcript (skipping participant)&quot;</span><span class="p">,</span>
+            <span class="n">participant_id</span><span class="o">=</span><span class="n">participant_id</span><span class="p">,</span>
+        <span class="p">)</span>
+        <span class="k">return</span> <span class="p">[],</span> <span class="p">[],</span> <span class="mi">0</span>
+    <span class="k">raise</span> <span class="n">EmbeddingGenerationError</span><span class="p">(</span>
+        <span class="sa">f</span><span class="s2">&quot;No chunks produced for participant </span><span class="si">{</span><span class="n">participant_id</span><span class="si">}</span><span class="s2"> (empty transcript)&quot;</span><span class="p">,</span>
+        <span class="n">participant_id</span><span class="o">=</span><span class="n">participant_id</span><span class="p">,</span>
+    <span class="p">)</span>
+</code></pre></div>
+<p><strong>Replace chunk embedding</strong> (lines 333-349):</p>
+<div class="highlight"><pre><span></span><code><span class="c1"># BEFORE (silent continue):</span>
+<span class="k">try</span><span class="p">:</span>
+    <span class="n">embedding</span> <span class="o">=</span> <span class="k">await</span> <span class="n">generate_embedding</span><span class="p">(</span><span class="n">client</span><span class="p">,</span> <span class="n">chunk</span><span class="p">,</span> <span class="n">model</span><span class="p">,</span> <span class="n">dimension</span><span class="p">)</span>
+    <span class="n">results</span><span class="o">.</span><span class="n">append</span><span class="p">((</span><span class="n">chunk</span><span class="p">,</span> <span class="n">embedding</span><span class="p">))</span>
+    <span class="k">if</span> <span class="n">tagger</span><span class="p">:</span>
+        <span class="n">tags</span> <span class="o">=</span> <span class="n">tagger</span><span class="o">.</span><span class="n">tag_chunk</span><span class="p">(</span><span class="n">chunk</span><span class="p">)</span>
+        <span class="n">chunk_tags</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">tags</span><span class="p">)</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="n">chunk_tags</span><span class="o">.</span><span class="n">append</span><span class="p">([])</span>
+<span class="k">except</span> <span class="p">(</span><span class="n">DomainError</span><span class="p">,</span> <span class="ne">ValueError</span><span class="p">,</span> <span class="ne">OSError</span><span class="p">)</span> <span class="k">as</span> <span class="n">e</span><span class="p">:</span>
+    <span class="n">logger</span><span class="o">.</span><span class="n">warning</span><span class="p">(</span><span class="s2">&quot;Failed to embed chunk&quot;</span><span class="p">,</span> <span class="n">participant_id</span><span class="o">=</span><span class="n">participant_id</span><span class="p">,</span> <span class="n">error</span><span class="o">=</span><span class="nb">str</span><span class="p">(</span><span class="n">e</span><span class="p">))</span>
+    <span class="k">continue</span>
+
+<span class="c1"># AFTER (fail-fast or explicit skip):</span>
+<span class="k">try</span><span class="p">:</span>
+    <span class="n">embedding</span> <span class="o">=</span> <span class="k">await</span> <span class="n">generate_embedding</span><span class="p">(</span><span class="n">client</span><span class="p">,</span> <span class="n">chunk</span><span class="p">,</span> <span class="n">model</span><span class="p">,</span> <span class="n">dimension</span><span class="p">)</span>
+    <span class="n">results</span><span class="o">.</span><span class="n">append</span><span class="p">((</span><span class="n">chunk</span><span class="p">,</span> <span class="n">embedding</span><span class="p">))</span>
+<span class="k">except</span> <span class="ne">Exception</span> <span class="k">as</span> <span class="n">e</span><span class="p">:</span>
+    <span class="k">if</span> <span class="n">allow_partial</span><span class="p">:</span>
+        <span class="n">logger</span><span class="o">.</span><span class="n">warning</span><span class="p">(</span>
+            <span class="s2">&quot;Failed to embed chunk (skipping)&quot;</span><span class="p">,</span>
+            <span class="n">participant_id</span><span class="o">=</span><span class="n">participant_id</span><span class="p">,</span>
+            <span class="n">chunk_index</span><span class="o">=</span><span class="n">chunk_idx</span><span class="p">,</span>
+            <span class="n">error</span><span class="o">=</span><span class="nb">str</span><span class="p">(</span><span class="n">e</span><span class="p">),</span>
+        <span class="p">)</span>
+        <span class="n">skipped_chunks</span> <span class="o">+=</span> <span class="mi">1</span>
+        <span class="k">continue</span>
+    <span class="k">raise</span> <span class="n">EmbeddingGenerationError</span><span class="p">(</span>
+        <span class="sa">f</span><span class="s2">&quot;Failed to embed chunk </span><span class="si">{</span><span class="n">chunk_idx</span><span class="si">}</span><span class="s2"> for participant </span><span class="si">{</span><span class="n">participant_id</span><span class="si">}</span><span class="s2">: </span><span class="si">{</span><span class="n">e</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">,</span>
+        <span class="n">participant_id</span><span class="o">=</span><span class="n">participant_id</span><span class="p">,</span>
+        <span class="n">chunk_index</span><span class="o">=</span><span class="n">chunk_idx</span><span class="p">,</span>
+    <span class="p">)</span> <span class="kn">from</span><span class="w"> </span><span class="nn">e</span>
+
+<span class="c1"># Tagging should remain fail-fast even in --allow-partial mode.</span>
+<span class="k">if</span> <span class="n">tagger</span><span class="p">:</span>
+    <span class="k">try</span><span class="p">:</span>
+        <span class="n">tags</span> <span class="o">=</span> <span class="n">tagger</span><span class="o">.</span><span class="n">tag_chunk</span><span class="p">(</span><span class="n">chunk</span><span class="p">)</span>
+    <span class="k">except</span> <span class="ne">Exception</span> <span class="k">as</span> <span class="n">e</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="n">EmbeddingGenerationError</span><span class="p">(</span>
+            <span class="sa">f</span><span class="s2">&quot;Failed to tag chunk </span><span class="si">{</span><span class="n">chunk_idx</span><span class="si">}</span><span class="s2"> for participant </span><span class="si">{</span><span class="n">participant_id</span><span class="si">}</span><span class="s2">: </span><span class="si">{</span><span class="n">e</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">,</span>
+            <span class="n">participant_id</span><span class="o">=</span><span class="n">participant_id</span><span class="p">,</span>
+            <span class="n">chunk_index</span><span class="o">=</span><span class="n">chunk_idx</span><span class="p">,</span>
+        <span class="p">)</span> <span class="kn">from</span><span class="w"> </span><span class="nn">e</span>
+    <span class="n">chunk_tags</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">tags</span><span class="p">)</span>
+<span class="k">else</span><span class="p">:</span>
+    <span class="n">chunk_tags</span><span class="o">.</span><span class="n">append</span><span class="p">([])</span>
+</code></pre></div>
+<p><strong>Note</strong>: Add <code>enumerate()</code> to track <code>chunk_idx</code>:</p>
+<div class="highlight"><pre><span></span><code><span class="k">for</span> <span class="n">chunk_idx</span><span class="p">,</span> <span class="n">chunk</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">chunks</span><span class="p">):</span>
+    <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">chunk</span><span class="o">.</span><span class="n">strip</span><span class="p">())</span> <span class="o">&lt;</span> <span class="n">min_chars</span><span class="p">:</span>
+        <span class="k">continue</span>
+    <span class="c1"># ... rest of loop</span>
+</code></pre></div>
+<p><strong>Add an explicit check for “no embedded chunks”</strong> (right before the return):</p>
+<div class="highlight"><pre><span></span><code><span class="k">if</span> <span class="ow">not</span> <span class="n">results</span><span class="p">:</span>
+    <span class="k">if</span> <span class="n">allow_partial</span><span class="p">:</span>
+        <span class="n">logger</span><span class="o">.</span><span class="n">warning</span><span class="p">(</span>
+            <span class="s2">&quot;No chunks embedded for participant (skipping participant)&quot;</span><span class="p">,</span>
+            <span class="n">participant_id</span><span class="o">=</span><span class="n">participant_id</span><span class="p">,</span>
+        <span class="p">)</span>
+        <span class="k">return</span> <span class="p">[],</span> <span class="p">[],</span> <span class="n">skipped_chunks</span>
+    <span class="k">raise</span> <span class="n">EmbeddingGenerationError</span><span class="p">(</span>
+        <span class="sa">f</span><span class="s2">&quot;No chunks embedded for participant </span><span class="si">{</span><span class="n">participant_id</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">,</span>
+        <span class="n">participant_id</span><span class="o">=</span><span class="n">participant_id</span><span class="p">,</span>
+    <span class="p">)</span>
+
+<span class="k">return</span> <span class="n">results</span><span class="p">,</span> <span class="n">chunk_tags</span><span class="p">,</span> <span class="n">skipped_chunks</span>
+</code></pre></div>
+<hr />
+<h3 id="step-4-add-skip-tracking-to-run_generation_loop">Step 4 — Add Skip Tracking to <code>run_generation_loop()</code></h3>
+<p><strong>File</strong>: <code>scripts/generate_embeddings.py</code></p>
+<p><strong>Location</strong>: <code>run_generation_loop()</code> function (lines 449-503)</p>
+<p><strong>Add tracking state</strong>:</p>
+<div class="highlight"><pre><span></span><code><span class="k">async</span> <span class="k">def</span><span class="w"> </span><span class="nf">run_generation_loop</span><span class="p">(</span>
+    <span class="n">config</span><span class="p">:</span> <span class="n">GenerationConfig</span><span class="p">,</span>
+    <span class="n">client</span><span class="p">:</span> <span class="n">EmbeddingClient</span><span class="p">,</span>
+    <span class="n">transcript_service</span><span class="p">:</span> <span class="n">TranscriptService</span><span class="p">,</span>
+<span class="p">)</span> <span class="o">-&gt;</span> <span class="n">GenerationResult</span><span class="p">:</span>
+    <span class="c1"># ... existing setup code ...</span>
+
+    <span class="c1"># Track skips for partial mode reporting</span>
+    <span class="n">skipped_participants</span><span class="p">:</span> <span class="nb">list</span><span class="p">[</span><span class="nb">int</span><span class="p">]</span> <span class="o">=</span> <span class="p">[]</span>
+    <span class="n">total_skipped_chunks</span> <span class="o">=</span> <span class="mi">0</span>
+
+    <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;</span><span class="se">\n</span><span class="s2">Processing </span><span class="si">{</span><span class="nb">len</span><span class="p">(</span><span class="n">participant_ids</span><span class="p">)</span><span class="si">}</span><span class="s2"> participants...&quot;</span><span class="p">)</span>
+    <span class="k">for</span> <span class="n">idx</span><span class="p">,</span> <span class="n">pid</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">participant_ids</span><span class="p">,</span> <span class="mi">1</span><span class="p">):</span>
+        <span class="k">if</span> <span class="n">idx</span> <span class="o">%</span> <span class="mi">10</span> <span class="o">==</span> <span class="mi">0</span> <span class="ow">or</span> <span class="n">idx</span> <span class="o">==</span> <span class="nb">len</span><span class="p">(</span><span class="n">participant_ids</span><span class="p">):</span>
+            <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;  Progress: </span><span class="si">{</span><span class="n">idx</span><span class="si">}</span><span class="s2">/</span><span class="si">{</span><span class="nb">len</span><span class="p">(</span><span class="n">participant_ids</span><span class="p">)</span><span class="si">}</span><span class="s2"> participants...&quot;</span><span class="p">)</span>
+
+        <span class="n">results</span><span class="p">,</span> <span class="n">chunk_tags</span><span class="p">,</span> <span class="n">skipped_chunks</span> <span class="o">=</span> <span class="k">await</span> <span class="n">process_participant</span><span class="p">(</span>
+            <span class="n">client</span><span class="p">,</span>
+            <span class="n">transcript_service</span><span class="p">,</span>
+            <span class="n">pid</span><span class="p">,</span>
+            <span class="n">config</span><span class="o">.</span><span class="n">model</span><span class="p">,</span>
+            <span class="n">config</span><span class="o">.</span><span class="n">dimension</span><span class="p">,</span>
+            <span class="n">config</span><span class="o">.</span><span class="n">chunk_size</span><span class="p">,</span>
+            <span class="n">config</span><span class="o">.</span><span class="n">step_size</span><span class="p">,</span>
+            <span class="n">config</span><span class="o">.</span><span class="n">min_chars</span><span class="p">,</span>
+            <span class="n">tagger</span><span class="o">=</span><span class="n">tagger</span><span class="p">,</span>
+            <span class="n">allow_partial</span><span class="o">=</span><span class="n">config</span><span class="o">.</span><span class="n">allow_partial</span><span class="p">,</span>  <span class="c1"># PASS THROUGH</span>
+        <span class="p">)</span>
+
+        <span class="n">total_skipped_chunks</span> <span class="o">+=</span> <span class="n">skipped_chunks</span>
+
+        <span class="k">if</span> <span class="n">results</span><span class="p">:</span>
+            <span class="n">all_embeddings</span><span class="p">[</span><span class="n">pid</span><span class="p">]</span> <span class="o">=</span> <span class="n">results</span>
+            <span class="n">all_tags</span><span class="p">[</span><span class="n">pid</span><span class="p">]</span> <span class="o">=</span> <span class="n">chunk_tags</span>
+            <span class="n">total_chunks</span> <span class="o">+=</span> <span class="nb">len</span><span class="p">(</span><span class="n">results</span><span class="p">)</span>
+        <span class="k">elif</span> <span class="n">config</span><span class="o">.</span><span class="n">allow_partial</span><span class="p">:</span>
+            <span class="c1"># Only reachable in partial mode (strict mode would have crashed)</span>
+            <span class="n">skipped_participants</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">pid</span><span class="p">)</span>
+
+    <span class="k">return</span> <span class="n">GenerationResult</span><span class="p">(</span>
+        <span class="n">embeddings</span><span class="o">=</span><span class="n">all_embeddings</span><span class="p">,</span>
+        <span class="n">tags</span><span class="o">=</span><span class="n">all_tags</span><span class="p">,</span>
+        <span class="n">total_chunks</span><span class="o">=</span><span class="n">total_chunks</span><span class="p">,</span>
+        <span class="n">skipped_participants</span><span class="o">=</span><span class="n">skipped_participants</span><span class="p">,</span>  <span class="c1"># NEW FIELD</span>
+        <span class="n">total_skipped_chunks</span><span class="o">=</span><span class="n">total_skipped_chunks</span><span class="p">,</span>  <span class="c1"># NEW FIELD</span>
+    <span class="p">)</span>
+</code></pre></div>
+<p><strong>Update <code>GenerationResult</code> dataclass</strong> (around lines 124-132):</p>
+<div class="highlight"><pre><span></span><code><span class="nd">@dataclass</span>
+<span class="k">class</span><span class="w"> </span><span class="nc">GenerationResult</span><span class="p">:</span>
+    <span class="n">embeddings</span><span class="p">:</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">int</span><span class="p">,</span> <span class="nb">list</span><span class="p">[</span><span class="nb">tuple</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="nb">list</span><span class="p">[</span><span class="nb">float</span><span class="p">]]]]</span>
+    <span class="n">tags</span><span class="p">:</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">int</span><span class="p">,</span> <span class="nb">list</span><span class="p">[</span><span class="nb">list</span><span class="p">[</span><span class="nb">str</span><span class="p">]]]</span>
+    <span class="n">total_chunks</span><span class="p">:</span> <span class="nb">int</span>
+    <span class="n">skipped_participants</span><span class="p">:</span> <span class="nb">list</span><span class="p">[</span><span class="nb">int</span><span class="p">]</span> <span class="o">=</span> <span class="n">field</span><span class="p">(</span><span class="n">default_factory</span><span class="o">=</span><span class="nb">list</span><span class="p">)</span>  <span class="c1"># NEW</span>
+    <span class="n">total_skipped_chunks</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">0</span>  <span class="c1"># NEW</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">has_skips</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">bool</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;True if any participants or chunks were skipped.&quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">skipped_participants</span><span class="p">)</span> <span class="o">&gt;</span> <span class="mi">0</span> <span class="ow">or</span> <span class="bp">self</span><span class="o">.</span><span class="n">total_skipped_chunks</span> <span class="o">&gt;</span> <span class="mi">0</span>
+</code></pre></div>
+<p><strong>Also update imports</strong> at the top of the script:</p>
+<div class="highlight"><pre><span></span><code><span class="kn">from</span><span class="w"> </span><span class="nn">dataclasses</span><span class="w"> </span><span class="kn">import</span> <span class="n">dataclass</span><span class="p">,</span> <span class="n">field</span>
+</code></pre></div>
+<hr />
+<h3 id="step-5-update-exit-codes-partial-manifest">Step 5 — Update Exit Codes + Partial Manifest</h3>
+<p><strong>File</strong>: <code>scripts/generate_embeddings.py</code></p>
+<p><strong>Location</strong>: <code>main_async()</code> function (around lines 586-627)</p>
+<p><strong>Define exit codes at module level</strong>:</p>
+<div class="highlight"><pre><span></span><code><span class="n">EXIT_SUCCESS</span> <span class="o">=</span> <span class="mi">0</span>
+<span class="n">EXIT_FAILURE</span> <span class="o">=</span> <span class="mi">1</span>
+<span class="n">EXIT_PARTIAL</span> <span class="o">=</span> <span class="mi">2</span>  <span class="c1"># Partial success (some skips in --allow-partial mode)</span>
+</code></pre></div>
+<p><strong>Update <code>main_async()</code> to handle strict/partial mode</strong>:</p>
+<div class="highlight"><pre><span></span><code><span class="k">async</span> <span class="k">def</span><span class="w"> </span><span class="nf">main_async</span><span class="p">(</span><span class="n">args</span><span class="p">:</span> <span class="n">argparse</span><span class="o">.</span><span class="n">Namespace</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">int</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Async main entry point.&quot;&quot;&quot;</span>
+    <span class="n">setup_logging</span><span class="p">(</span><span class="n">LoggingSettings</span><span class="p">(</span><span class="n">level</span><span class="o">=</span><span class="s2">&quot;INFO&quot;</span><span class="p">,</span> <span class="nb">format</span><span class="o">=</span><span class="s2">&quot;console&quot;</span><span class="p">))</span>
+
+    <span class="n">settings</span> <span class="o">=</span> <span class="n">get_settings</span><span class="p">()</span>
+    <span class="n">config</span> <span class="o">=</span> <span class="n">prepare_config</span><span class="p">(</span><span class="n">args</span><span class="p">,</span> <span class="n">settings</span><span class="o">=</span><span class="n">settings</span><span class="p">)</span>
+
+    <span class="c1"># ... existing configuration printout ...</span>
+
+    <span class="k">if</span> <span class="n">config</span><span class="o">.</span><span class="n">dry_run</span><span class="p">:</span>
+        <span class="k">return</span> <span class="n">EXIT_SUCCESS</span>
+
+    <span class="n">transcript_service</span> <span class="o">=</span> <span class="n">TranscriptService</span><span class="p">(</span><span class="n">config</span><span class="o">.</span><span class="n">data_settings</span><span class="p">)</span>
+    <span class="n">client</span> <span class="o">=</span> <span class="n">create_embedding_client</span><span class="p">(</span><span class="n">settings</span><span class="p">)</span>
+
+    <span class="k">try</span><span class="p">:</span>
+        <span class="n">result</span> <span class="o">=</span> <span class="k">await</span> <span class="n">run_generation_loop</span><span class="p">(</span><span class="n">config</span><span class="p">,</span> <span class="n">client</span><span class="p">,</span> <span class="n">transcript_service</span><span class="p">)</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="n">result</span><span class="o">.</span><span class="n">embeddings</span><span class="p">:</span>
+            <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;</span><span class="se">\n</span><span class="s2">ERROR: No embeddings generated (0 participants succeeded).&quot;</span><span class="p">,</span> <span class="n">file</span><span class="o">=</span><span class="n">sys</span><span class="o">.</span><span class="n">stderr</span><span class="p">)</span>
+            <span class="k">return</span> <span class="n">EXIT_FAILURE</span>
+        <span class="n">save_embeddings</span><span class="p">(</span><span class="n">result</span><span class="p">,</span> <span class="n">config</span><span class="p">)</span>
+    <span class="k">except</span> <span class="n">EmbeddingGenerationError</span> <span class="k">as</span> <span class="n">e</span><span class="p">:</span>
+        <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;</span><span class="se">\n</span><span class="s2">ERROR: </span><span class="si">{</span><span class="n">e</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">,</span> <span class="n">file</span><span class="o">=</span><span class="n">sys</span><span class="o">.</span><span class="n">stderr</span><span class="p">)</span>
+        <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;  Participant: </span><span class="si">{</span><span class="n">e</span><span class="o">.</span><span class="n">participant_id</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">,</span> <span class="n">file</span><span class="o">=</span><span class="n">sys</span><span class="o">.</span><span class="n">stderr</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">e</span><span class="o">.</span><span class="n">chunk_index</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;  Chunk index: </span><span class="si">{</span><span class="n">e</span><span class="o">.</span><span class="n">chunk_index</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">,</span> <span class="n">file</span><span class="o">=</span><span class="n">sys</span><span class="o">.</span><span class="n">stderr</span><span class="p">)</span>
+        <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;</span><span class="se">\n</span><span class="s2">Hint: Use --allow-partial to skip failures and continue.&quot;</span><span class="p">,</span> <span class="n">file</span><span class="o">=</span><span class="n">sys</span><span class="o">.</span><span class="n">stderr</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">EXIT_FAILURE</span>
+    <span class="k">except</span> <span class="ne">FileNotFoundError</span> <span class="k">as</span> <span class="n">e</span><span class="p">:</span>
+        <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;</span><span class="se">\n</span><span class="s2">ERROR: </span><span class="si">{</span><span class="n">e</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">,</span> <span class="n">file</span><span class="o">=</span><span class="n">sys</span><span class="o">.</span><span class="n">stderr</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">EXIT_FAILURE</span>
+    <span class="k">finally</span><span class="p">:</span>
+        <span class="k">await</span> <span class="n">client</span><span class="o">.</span><span class="n">close</span><span class="p">()</span>
+
+    <span class="c1"># Report skips in partial mode (after saving artifacts)</span>
+    <span class="k">if</span> <span class="n">config</span><span class="o">.</span><span class="n">allow_partial</span> <span class="ow">and</span> <span class="n">result</span><span class="o">.</span><span class="n">has_skips</span><span class="p">:</span>
+        <span class="n">manifest_path</span> <span class="o">=</span> <span class="n">config</span><span class="o">.</span><span class="n">output_path</span><span class="o">.</span><span class="n">with_suffix</span><span class="p">(</span><span class="s2">&quot;.partial.json&quot;</span><span class="p">)</span>
+        <span class="n">manifest</span> <span class="o">=</span> <span class="p">{</span>
+            <span class="s2">&quot;output_npz&quot;</span><span class="p">:</span> <span class="nb">str</span><span class="p">(</span><span class="n">config</span><span class="o">.</span><span class="n">output_path</span><span class="p">),</span>
+            <span class="s2">&quot;skipped_participants&quot;</span><span class="p">:</span> <span class="n">result</span><span class="o">.</span><span class="n">skipped_participants</span><span class="p">,</span>
+            <span class="s2">&quot;skipped_chunks&quot;</span><span class="p">:</span> <span class="n">result</span><span class="o">.</span><span class="n">total_skipped_chunks</span><span class="p">,</span>
+        <span class="p">}</span>
+        <span class="k">with</span> <span class="n">manifest_path</span><span class="o">.</span><span class="n">open</span><span class="p">(</span><span class="s2">&quot;w&quot;</span><span class="p">,</span> <span class="n">encoding</span><span class="o">=</span><span class="s2">&quot;utf-8&quot;</span><span class="p">)</span> <span class="k">as</span> <span class="n">f</span><span class="p">:</span>
+            <span class="n">json</span><span class="o">.</span><span class="n">dump</span><span class="p">(</span><span class="n">manifest</span><span class="p">,</span> <span class="n">f</span><span class="p">,</span> <span class="n">indent</span><span class="o">=</span><span class="mi">2</span><span class="p">)</span>
+
+        <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;</span><span class="se">\n</span><span class="s2">&quot;</span> <span class="o">+</span> <span class="s2">&quot;=&quot;</span> <span class="o">*</span> <span class="mi">60</span><span class="p">)</span>
+        <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;WARNING: PARTIAL OUTPUT (some data was skipped)&quot;</span><span class="p">)</span>
+        <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;=&quot;</span> <span class="o">*</span> <span class="mi">60</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">result</span><span class="o">.</span><span class="n">skipped_participants</span><span class="p">:</span>
+            <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;  Skipped participants (</span><span class="si">{</span><span class="nb">len</span><span class="p">(</span><span class="n">result</span><span class="o">.</span><span class="n">skipped_participants</span><span class="p">)</span><span class="si">}</span><span class="s2">): </span><span class="si">{</span><span class="n">result</span><span class="o">.</span><span class="n">skipped_participants</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">result</span><span class="o">.</span><span class="n">total_skipped_chunks</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="p">:</span>
+            <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;  Skipped chunks: </span><span class="si">{</span><span class="n">result</span><span class="o">.</span><span class="n">total_skipped_chunks</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+        <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;  Manifest: </span><span class="si">{</span><span class="n">manifest_path</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+        <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;</span><span class="se">\n</span><span class="s2">This artifact is INCOMPLETE. Do not use for final evaluation.&quot;</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">EXIT_PARTIAL</span>
+
+    <span class="k">return</span> <span class="n">EXIT_SUCCESS</span>
+</code></pre></div>
+<hr />
+<h3 id="step-6-make-save_embeddings-atomic-no-half-artifacts">Step 6 — Make <code>save_embeddings()</code> Atomic (No Half-Artifacts)</h3>
+<p><strong>File</strong>: <code>scripts/generate_embeddings.py</code></p>
+<p><strong>Location</strong>: <code>save_embeddings()</code> function (lines 506-584)</p>
+<p><strong>Goal</strong>: If a write fails, do not leave a misleading “valid-looking” partial artifact on disk.</p>
+<p><strong>Change</strong>: Write to temp files first, then rename into place only after all writes succeed:</p>
+<div class="highlight"><pre><span></span><code><span class="c1"># Final paths</span>
+<span class="n">npz_path</span> <span class="o">=</span> <span class="n">config</span><span class="o">.</span><span class="n">output_path</span>
+<span class="n">json_path</span> <span class="o">=</span> <span class="n">config</span><span class="o">.</span><span class="n">output_path</span><span class="o">.</span><span class="n">with_suffix</span><span class="p">(</span><span class="s2">&quot;.json&quot;</span><span class="p">)</span>
+<span class="n">meta_path</span> <span class="o">=</span> <span class="n">config</span><span class="o">.</span><span class="n">output_path</span><span class="o">.</span><span class="n">with_suffix</span><span class="p">(</span><span class="s2">&quot;.meta.json&quot;</span><span class="p">)</span>
+<span class="n">tags_path</span> <span class="o">=</span> <span class="n">config</span><span class="o">.</span><span class="n">output_path</span><span class="o">.</span><span class="n">with_suffix</span><span class="p">(</span><span class="s2">&quot;.tags.json&quot;</span><span class="p">)</span>
+
+<span class="c1"># Temp paths (must end with the final suffix so libraries don’t append extensions)</span>
+<span class="n">tmp_npz_path</span> <span class="o">=</span> <span class="n">config</span><span class="o">.</span><span class="n">output_path</span><span class="o">.</span><span class="n">with_suffix</span><span class="p">(</span><span class="s2">&quot;.tmp.npz&quot;</span><span class="p">)</span>
+<span class="n">tmp_json_path</span> <span class="o">=</span> <span class="n">config</span><span class="o">.</span><span class="n">output_path</span><span class="o">.</span><span class="n">with_suffix</span><span class="p">(</span><span class="s2">&quot;.tmp.json&quot;</span><span class="p">)</span>
+<span class="n">tmp_meta_path</span> <span class="o">=</span> <span class="n">config</span><span class="o">.</span><span class="n">output_path</span><span class="o">.</span><span class="n">with_suffix</span><span class="p">(</span><span class="s2">&quot;.tmp.meta.json&quot;</span><span class="p">)</span>
+<span class="n">tmp_tags_path</span> <span class="o">=</span> <span class="n">config</span><span class="o">.</span><span class="n">output_path</span><span class="o">.</span><span class="n">with_suffix</span><span class="p">(</span><span class="s2">&quot;.tmp.tags.json&quot;</span><span class="p">)</span>
+
+<span class="c1"># 1) Write all temp files</span>
+<span class="c1"># 2) Replace() temp → final (atomic rename on most filesystems)</span>
+</code></pre></div>
+<p><strong>On any exception</strong> while writing:
+- Delete any temp files that exist.
+- Re-raise (exit code 1).</p>
+<p><strong>Tags file rule</strong>:
+- If <code>--write-item-tags</code> is set, always write <code>{output}.tags.json</code> (even if empty <code>{}</code>) so the presence/absence of the sidecar is unambiguous.</p>
+<hr />
+<h3 id="step-7-update-script-docstring">Step 7 — Update Script Docstring</h3>
+<p><strong>File</strong>: <code>scripts/generate_embeddings.py</code></p>
+<p><strong>Location</strong>: Module docstring (lines 1-22)</p>
+<p><strong>Add to Usage section</strong>:</p>
+<div class="highlight"><pre><span></span><code><span class="sd">&quot;&quot;&quot;Generate reference embeddings for few-shot prompting.</span>
+
+<span class="sd">...</span>
+
+<span class="sd">Usage:</span>
+<span class="sd">    # Generate embeddings (strict mode - crash on any failure)</span>
+<span class="sd">    python scripts/generate_embeddings.py</span>
+
+<span class="sd">    # Override backend</span>
+<span class="sd">    python scripts/generate_embeddings.py --backend huggingface</span>
+
+<span class="sd">    # Allow partial output for debugging (exit 2 if skips occur)</span>
+<span class="sd">    python scripts/generate_embeddings.py --allow-partial</span>
+
+<span class="sd">Exit Codes:</span>
+<span class="sd">    0 - Success (all participants and chunks processed)</span>
+<span class="sd">    1 - Failure (error in strict mode, or fatal error)</span>
+<span class="sd">    2 - Partial success (--allow-partial mode with skips)</span>
+
+<span class="sd">Sidecars (partial mode only):</span>
+<span class="sd">    - `{output}.partial.json`: machine-readable summary of skipped items</span>
+
+<span class="sd">...</span>
+<span class="sd">&quot;&quot;&quot;</span>
+</code></pre></div>
+<hr />
+<h2 id="tests">Tests</h2>
+<h3 id="new-test-file-testsunitscriptstest_generate_embeddings_fail_fastpy">New Test File: <code>tests/unit/scripts/test_generate_embeddings_fail_fast.py</code></h3>
+<p>Create a new test file so we don’t disturb existing helper tests in <code>tests/unit/scripts/test_generate_embeddings.py</code>:</p>
+<div class="highlight"><pre><span></span><code><span class="sd">&quot;&quot;&quot;Unit tests for scripts/generate_embeddings.py fail-fast behavior.&quot;&quot;&quot;</span>
+
+<span class="kn">from</span><span class="w"> </span><span class="nn">unittest.mock</span><span class="w"> </span><span class="kn">import</span> <span class="n">AsyncMock</span><span class="p">,</span> <span class="n">MagicMock</span>
+
+<span class="kn">import</span><span class="w"> </span><span class="nn">pytest</span>
+
+<span class="kn">from</span><span class="w"> </span><span class="nn">scripts.generate_embeddings</span><span class="w"> </span><span class="kn">import</span> <span class="p">(</span>
+    <span class="n">EmbeddingGenerationError</span><span class="p">,</span>
+    <span class="n">EXIT_FAILURE</span><span class="p">,</span>
+    <span class="n">EXIT_PARTIAL</span><span class="p">,</span>
+    <span class="n">EXIT_SUCCESS</span><span class="p">,</span>
+    <span class="n">process_participant</span><span class="p">,</span>
+<span class="p">)</span>
+
+
+<span class="k">class</span><span class="w"> </span><span class="nc">TestProcessParticipantStrictMode</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Tests for default strict mode (allow_partial=False).&quot;&quot;&quot;</span>
+
+    <span class="nd">@pytest</span><span class="o">.</span><span class="n">mark</span><span class="o">.</span><span class="n">asyncio</span>
+    <span class="k">async</span> <span class="k">def</span><span class="w"> </span><span class="nf">test_transcript_load_failure_raises</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Transcript load failure must raise in strict mode.&quot;&quot;&quot;</span>
+        <span class="n">mock_client</span> <span class="o">=</span> <span class="n">AsyncMock</span><span class="p">()</span>
+        <span class="n">mock_transcript_service</span> <span class="o">=</span> <span class="n">MagicMock</span><span class="p">()</span>
+        <span class="n">mock_transcript_service</span><span class="o">.</span><span class="n">load_transcript</span><span class="o">.</span><span class="n">side_effect</span> <span class="o">=</span> <span class="ne">FileNotFoundError</span><span class="p">(</span><span class="s2">&quot;missing&quot;</span><span class="p">)</span>
+
+        <span class="k">with</span> <span class="n">pytest</span><span class="o">.</span><span class="n">raises</span><span class="p">(</span><span class="n">EmbeddingGenerationError</span><span class="p">)</span> <span class="k">as</span> <span class="n">exc_info</span><span class="p">:</span>
+            <span class="k">await</span> <span class="n">process_participant</span><span class="p">(</span>
+                <span class="n">client</span><span class="o">=</span><span class="n">mock_client</span><span class="p">,</span>
+                <span class="n">transcript_service</span><span class="o">=</span><span class="n">mock_transcript_service</span><span class="p">,</span>
+                <span class="n">participant_id</span><span class="o">=</span><span class="mi">100</span><span class="p">,</span>
+                <span class="n">model</span><span class="o">=</span><span class="s2">&quot;test&quot;</span><span class="p">,</span>
+                <span class="n">dimension</span><span class="o">=</span><span class="mi">3</span><span class="p">,</span>
+                <span class="n">chunk_size</span><span class="o">=</span><span class="mi">8</span><span class="p">,</span>
+                <span class="n">step_size</span><span class="o">=</span><span class="mi">2</span><span class="p">,</span>
+                <span class="n">min_chars</span><span class="o">=</span><span class="mi">50</span><span class="p">,</span>
+                <span class="n">allow_partial</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>  <span class="c1"># STRICT MODE</span>
+            <span class="p">)</span>
+
+        <span class="k">assert</span> <span class="n">exc_info</span><span class="o">.</span><span class="n">value</span><span class="o">.</span><span class="n">participant_id</span> <span class="o">==</span> <span class="mi">100</span>
+        <span class="k">assert</span> <span class="n">exc_info</span><span class="o">.</span><span class="n">value</span><span class="o">.</span><span class="n">chunk_index</span> <span class="ow">is</span> <span class="kc">None</span>
+        <span class="k">assert</span> <span class="s2">&quot;participant 100&quot;</span> <span class="ow">in</span> <span class="nb">str</span><span class="p">(</span><span class="n">exc_info</span><span class="o">.</span><span class="n">value</span><span class="p">)</span>
+
+    <span class="nd">@pytest</span><span class="o">.</span><span class="n">mark</span><span class="o">.</span><span class="n">asyncio</span>
+    <span class="k">async</span> <span class="k">def</span><span class="w"> </span><span class="nf">test_empty_transcript_raises</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Empty transcript must raise (otherwise participant is silently dropped).&quot;&quot;&quot;</span>
+        <span class="n">mock_client</span> <span class="o">=</span> <span class="n">AsyncMock</span><span class="p">()</span>
+        <span class="n">mock_client</span><span class="o">.</span><span class="n">embed</span><span class="o">.</span><span class="n">return_value</span> <span class="o">=</span> <span class="n">MagicMock</span><span class="p">(</span><span class="n">embedding</span><span class="o">=</span><span class="p">[</span><span class="mf">1.0</span><span class="p">]</span> <span class="o">*</span> <span class="mi">3</span><span class="p">)</span>
+
+        <span class="n">mock_transcript_service</span> <span class="o">=</span> <span class="n">MagicMock</span><span class="p">()</span>
+        <span class="n">mock_transcript_service</span><span class="o">.</span><span class="n">load_transcript</span><span class="o">.</span><span class="n">return_value</span> <span class="o">=</span> <span class="n">MagicMock</span><span class="p">(</span><span class="n">text</span><span class="o">=</span><span class="s2">&quot;&quot;</span><span class="p">)</span>
+
+        <span class="k">with</span> <span class="n">pytest</span><span class="o">.</span><span class="n">raises</span><span class="p">(</span><span class="n">EmbeddingGenerationError</span><span class="p">)</span> <span class="k">as</span> <span class="n">exc_info</span><span class="p">:</span>
+            <span class="k">await</span> <span class="n">process_participant</span><span class="p">(</span>
+                <span class="n">client</span><span class="o">=</span><span class="n">mock_client</span><span class="p">,</span>
+                <span class="n">transcript_service</span><span class="o">=</span><span class="n">mock_transcript_service</span><span class="p">,</span>
+                <span class="n">participant_id</span><span class="o">=</span><span class="mi">100</span><span class="p">,</span>
+                <span class="n">model</span><span class="o">=</span><span class="s2">&quot;test&quot;</span><span class="p">,</span>
+                <span class="n">dimension</span><span class="o">=</span><span class="mi">3</span><span class="p">,</span>
+                <span class="n">chunk_size</span><span class="o">=</span><span class="mi">8</span><span class="p">,</span>
+                <span class="n">step_size</span><span class="o">=</span><span class="mi">2</span><span class="p">,</span>
+                <span class="n">min_chars</span><span class="o">=</span><span class="mi">10</span><span class="p">,</span>
+                <span class="n">allow_partial</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
+            <span class="p">)</span>
+
+        <span class="k">assert</span> <span class="n">exc_info</span><span class="o">.</span><span class="n">value</span><span class="o">.</span><span class="n">participant_id</span> <span class="o">==</span> <span class="mi">100</span>
+        <span class="k">assert</span> <span class="n">exc_info</span><span class="o">.</span><span class="n">value</span><span class="o">.</span><span class="n">chunk_index</span> <span class="ow">is</span> <span class="kc">None</span>
+
+    <span class="nd">@pytest</span><span class="o">.</span><span class="n">mark</span><span class="o">.</span><span class="n">asyncio</span>
+    <span class="k">async</span> <span class="k">def</span><span class="w"> </span><span class="nf">test_embedding_failure_raises</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Chunk embedding failure must raise in strict mode.&quot;&quot;&quot;</span>
+        <span class="n">mock_client</span> <span class="o">=</span> <span class="n">AsyncMock</span><span class="p">()</span>
+        <span class="n">mock_client</span><span class="o">.</span><span class="n">embed</span><span class="o">.</span><span class="n">side_effect</span> <span class="o">=</span> <span class="ne">RuntimeError</span><span class="p">(</span><span class="s2">&quot;API timeout&quot;</span><span class="p">)</span>
+
+        <span class="n">mock_transcript_service</span> <span class="o">=</span> <span class="n">MagicMock</span><span class="p">()</span>
+        <span class="n">mock_transcript</span> <span class="o">=</span> <span class="n">MagicMock</span><span class="p">()</span>
+        <span class="n">mock_transcript</span><span class="o">.</span><span class="n">text</span> <span class="o">=</span> <span class="s2">&quot;Line 1</span><span class="se">\n</span><span class="s2">Line 2</span><span class="se">\n</span><span class="s2">Line 3</span><span class="se">\n</span><span class="s2">Line 4</span><span class="se">\n</span><span class="s2">Line 5</span><span class="se">\n</span><span class="s2">Line 6</span><span class="se">\n</span><span class="s2">Line 7</span><span class="se">\n</span><span class="s2">Line 8</span><span class="se">\n</span><span class="s2">&quot;</span> <span class="o">*</span> <span class="mi">10</span>
+        <span class="n">mock_transcript_service</span><span class="o">.</span><span class="n">load_transcript</span><span class="o">.</span><span class="n">return_value</span> <span class="o">=</span> <span class="n">mock_transcript</span>
+
+        <span class="k">with</span> <span class="n">pytest</span><span class="o">.</span><span class="n">raises</span><span class="p">(</span><span class="n">EmbeddingGenerationError</span><span class="p">)</span> <span class="k">as</span> <span class="n">exc_info</span><span class="p">:</span>
+            <span class="k">await</span> <span class="n">process_participant</span><span class="p">(</span>
+                <span class="n">client</span><span class="o">=</span><span class="n">mock_client</span><span class="p">,</span>
+                <span class="n">transcript_service</span><span class="o">=</span><span class="n">mock_transcript_service</span><span class="p">,</span>
+                <span class="n">participant_id</span><span class="o">=</span><span class="mi">100</span><span class="p">,</span>
+                <span class="n">model</span><span class="o">=</span><span class="s2">&quot;test&quot;</span><span class="p">,</span>
+                <span class="n">dimension</span><span class="o">=</span><span class="mi">3</span><span class="p">,</span>
+                <span class="n">chunk_size</span><span class="o">=</span><span class="mi">8</span><span class="p">,</span>
+                <span class="n">step_size</span><span class="o">=</span><span class="mi">2</span><span class="p">,</span>
+                <span class="n">min_chars</span><span class="o">=</span><span class="mi">10</span><span class="p">,</span>
+                <span class="n">allow_partial</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>  <span class="c1"># STRICT MODE</span>
+            <span class="p">)</span>
+
+        <span class="k">assert</span> <span class="n">exc_info</span><span class="o">.</span><span class="n">value</span><span class="o">.</span><span class="n">participant_id</span> <span class="o">==</span> <span class="mi">100</span>
+        <span class="k">assert</span> <span class="n">exc_info</span><span class="o">.</span><span class="n">value</span><span class="o">.</span><span class="n">chunk_index</span> <span class="o">==</span> <span class="mi">0</span>  <span class="c1"># First chunk</span>
+        <span class="k">assert</span> <span class="s2">&quot;chunk 0&quot;</span> <span class="ow">in</span> <span class="nb">str</span><span class="p">(</span><span class="n">exc_info</span><span class="o">.</span><span class="n">value</span><span class="p">)</span>
+
+
+<span class="k">class</span><span class="w"> </span><span class="nc">TestProcessParticipantPartialMode</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Tests for explicit partial mode (allow_partial=True).&quot;&quot;&quot;</span>
+
+    <span class="nd">@pytest</span><span class="o">.</span><span class="n">mark</span><span class="o">.</span><span class="n">asyncio</span>
+    <span class="k">async</span> <span class="k">def</span><span class="w"> </span><span class="nf">test_transcript_load_failure_returns_empty</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Transcript load failure returns empty in partial mode.&quot;&quot;&quot;</span>
+        <span class="n">mock_client</span> <span class="o">=</span> <span class="n">AsyncMock</span><span class="p">()</span>
+        <span class="n">mock_transcript_service</span> <span class="o">=</span> <span class="n">MagicMock</span><span class="p">()</span>
+        <span class="n">mock_transcript_service</span><span class="o">.</span><span class="n">load_transcript</span><span class="o">.</span><span class="n">side_effect</span> <span class="o">=</span> <span class="ne">FileNotFoundError</span><span class="p">(</span><span class="s2">&quot;missing&quot;</span><span class="p">)</span>
+
+        <span class="n">results</span><span class="p">,</span> <span class="n">tags</span><span class="p">,</span> <span class="n">skipped_chunks</span> <span class="o">=</span> <span class="k">await</span> <span class="n">process_participant</span><span class="p">(</span>
+            <span class="n">client</span><span class="o">=</span><span class="n">mock_client</span><span class="p">,</span>
+            <span class="n">transcript_service</span><span class="o">=</span><span class="n">mock_transcript_service</span><span class="p">,</span>
+            <span class="n">participant_id</span><span class="o">=</span><span class="mi">100</span><span class="p">,</span>
+            <span class="n">model</span><span class="o">=</span><span class="s2">&quot;test&quot;</span><span class="p">,</span>
+            <span class="n">dimension</span><span class="o">=</span><span class="mi">3</span><span class="p">,</span>
+            <span class="n">chunk_size</span><span class="o">=</span><span class="mi">8</span><span class="p">,</span>
+            <span class="n">step_size</span><span class="o">=</span><span class="mi">2</span><span class="p">,</span>
+            <span class="n">min_chars</span><span class="o">=</span><span class="mi">50</span><span class="p">,</span>
+            <span class="n">allow_partial</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>  <span class="c1"># PARTIAL MODE</span>
+        <span class="p">)</span>
+
+        <span class="k">assert</span> <span class="n">results</span> <span class="o">==</span> <span class="p">[]</span>
+        <span class="k">assert</span> <span class="n">tags</span> <span class="o">==</span> <span class="p">[]</span>
+        <span class="k">assert</span> <span class="n">skipped_chunks</span> <span class="o">==</span> <span class="mi">0</span>
+
+    <span class="nd">@pytest</span><span class="o">.</span><span class="n">mark</span><span class="o">.</span><span class="n">asyncio</span>
+    <span class="k">async</span> <span class="k">def</span><span class="w"> </span><span class="nf">test_empty_transcript_returns_empty</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Empty transcript skips participant in partial mode.&quot;&quot;&quot;</span>
+        <span class="n">mock_client</span> <span class="o">=</span> <span class="n">AsyncMock</span><span class="p">()</span>
+        <span class="n">mock_client</span><span class="o">.</span><span class="n">embed</span><span class="o">.</span><span class="n">return_value</span> <span class="o">=</span> <span class="n">MagicMock</span><span class="p">(</span><span class="n">embedding</span><span class="o">=</span><span class="p">[</span><span class="mf">1.0</span><span class="p">]</span> <span class="o">*</span> <span class="mi">3</span><span class="p">)</span>
+
+        <span class="n">mock_transcript_service</span> <span class="o">=</span> <span class="n">MagicMock</span><span class="p">()</span>
+        <span class="n">mock_transcript_service</span><span class="o">.</span><span class="n">load_transcript</span><span class="o">.</span><span class="n">return_value</span> <span class="o">=</span> <span class="n">MagicMock</span><span class="p">(</span><span class="n">text</span><span class="o">=</span><span class="s2">&quot;&quot;</span><span class="p">)</span>
+
+        <span class="n">results</span><span class="p">,</span> <span class="n">tags</span><span class="p">,</span> <span class="n">skipped_chunks</span> <span class="o">=</span> <span class="k">await</span> <span class="n">process_participant</span><span class="p">(</span>
+            <span class="n">client</span><span class="o">=</span><span class="n">mock_client</span><span class="p">,</span>
+            <span class="n">transcript_service</span><span class="o">=</span><span class="n">mock_transcript_service</span><span class="p">,</span>
+            <span class="n">participant_id</span><span class="o">=</span><span class="mi">100</span><span class="p">,</span>
+            <span class="n">model</span><span class="o">=</span><span class="s2">&quot;test&quot;</span><span class="p">,</span>
+            <span class="n">dimension</span><span class="o">=</span><span class="mi">3</span><span class="p">,</span>
+            <span class="n">chunk_size</span><span class="o">=</span><span class="mi">8</span><span class="p">,</span>
+            <span class="n">step_size</span><span class="o">=</span><span class="mi">2</span><span class="p">,</span>
+            <span class="n">min_chars</span><span class="o">=</span><span class="mi">10</span><span class="p">,</span>
+            <span class="n">allow_partial</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
+        <span class="p">)</span>
+
+        <span class="k">assert</span> <span class="n">results</span> <span class="o">==</span> <span class="p">[]</span>
+        <span class="k">assert</span> <span class="n">tags</span> <span class="o">==</span> <span class="p">[]</span>
+        <span class="k">assert</span> <span class="n">skipped_chunks</span> <span class="o">==</span> <span class="mi">0</span>
+
+    <span class="nd">@pytest</span><span class="o">.</span><span class="n">mark</span><span class="o">.</span><span class="n">asyncio</span>
+    <span class="k">async</span> <span class="k">def</span><span class="w"> </span><span class="nf">test_embedding_failure_skips_chunk</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Chunk embedding failure skips chunk in partial mode.&quot;&quot;&quot;</span>
+        <span class="n">mock_client</span> <span class="o">=</span> <span class="n">AsyncMock</span><span class="p">()</span>
+        <span class="c1"># First call fails, second succeeds</span>
+        <span class="n">mock_client</span><span class="o">.</span><span class="n">embed</span><span class="o">.</span><span class="n">side_effect</span> <span class="o">=</span> <span class="p">[</span>
+            <span class="ne">RuntimeError</span><span class="p">(</span><span class="s2">&quot;API timeout&quot;</span><span class="p">),</span>
+            <span class="n">MagicMock</span><span class="p">(</span><span class="n">embedding</span><span class="o">=</span><span class="p">[</span><span class="mf">1.0</span><span class="p">]</span> <span class="o">*</span> <span class="mi">3</span><span class="p">),</span>
+        <span class="p">]</span>
+
+        <span class="n">mock_transcript_service</span> <span class="o">=</span> <span class="n">MagicMock</span><span class="p">()</span>
+        <span class="n">mock_transcript</span> <span class="o">=</span> <span class="n">MagicMock</span><span class="p">()</span>
+        <span class="c1"># Create enough text for 2 chunks</span>
+        <span class="n">mock_transcript</span><span class="o">.</span><span class="n">text</span> <span class="o">=</span> <span class="p">(</span><span class="s2">&quot;Line content here.</span><span class="se">\n</span><span class="s2">&quot;</span> <span class="o">*</span> <span class="mi">8</span><span class="p">)</span> <span class="o">*</span> <span class="mi">2</span>
+        <span class="n">mock_transcript_service</span><span class="o">.</span><span class="n">load_transcript</span><span class="o">.</span><span class="n">return_value</span> <span class="o">=</span> <span class="n">mock_transcript</span>
+
+        <span class="n">results</span><span class="p">,</span> <span class="n">tags</span><span class="p">,</span> <span class="n">skipped_chunks</span> <span class="o">=</span> <span class="k">await</span> <span class="n">process_participant</span><span class="p">(</span>
+            <span class="n">client</span><span class="o">=</span><span class="n">mock_client</span><span class="p">,</span>
+            <span class="n">transcript_service</span><span class="o">=</span><span class="n">mock_transcript_service</span><span class="p">,</span>
+            <span class="n">participant_id</span><span class="o">=</span><span class="mi">100</span><span class="p">,</span>
+            <span class="n">model</span><span class="o">=</span><span class="s2">&quot;test&quot;</span><span class="p">,</span>
+            <span class="n">dimension</span><span class="o">=</span><span class="mi">3</span><span class="p">,</span>
+            <span class="n">chunk_size</span><span class="o">=</span><span class="mi">8</span><span class="p">,</span>
+            <span class="n">step_size</span><span class="o">=</span><span class="mi">8</span><span class="p">,</span>  <span class="c1"># No overlap for predictable chunks</span>
+            <span class="n">min_chars</span><span class="o">=</span><span class="mi">10</span><span class="p">,</span>
+            <span class="n">allow_partial</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>  <span class="c1"># PARTIAL MODE</span>
+        <span class="p">)</span>
+
+        <span class="c1"># Should have 1 result (second chunk), first was skipped</span>
+        <span class="k">assert</span> <span class="nb">len</span><span class="p">(</span><span class="n">results</span><span class="p">)</span> <span class="o">==</span> <span class="mi">1</span>
+        <span class="k">assert</span> <span class="n">skipped_chunks</span> <span class="o">==</span> <span class="mi">1</span>
+
+    <span class="nd">@pytest</span><span class="o">.</span><span class="n">mark</span><span class="o">.</span><span class="n">asyncio</span>
+    <span class="k">async</span> <span class="k">def</span><span class="w"> </span><span class="nf">test_tagger_failure_raises_even_in_partial</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Tagging failures must remain fail-fast when tagger is enabled.&quot;&quot;&quot;</span>
+        <span class="n">mock_client</span> <span class="o">=</span> <span class="n">AsyncMock</span><span class="p">()</span>
+        <span class="n">mock_client</span><span class="o">.</span><span class="n">embed</span><span class="o">.</span><span class="n">return_value</span> <span class="o">=</span> <span class="n">MagicMock</span><span class="p">(</span><span class="n">embedding</span><span class="o">=</span><span class="p">[</span><span class="mf">1.0</span><span class="p">]</span> <span class="o">*</span> <span class="mi">3</span><span class="p">)</span>
+
+        <span class="n">mock_transcript_service</span> <span class="o">=</span> <span class="n">MagicMock</span><span class="p">()</span>
+        <span class="n">mock_transcript_service</span><span class="o">.</span><span class="n">load_transcript</span><span class="o">.</span><span class="n">return_value</span> <span class="o">=</span> <span class="n">MagicMock</span><span class="p">(</span>
+            <span class="n">text</span><span class="o">=</span><span class="p">(</span><span class="s2">&quot;Line content here.</span><span class="se">\n</span><span class="s2">&quot;</span> <span class="o">*</span> <span class="mi">8</span><span class="p">),</span>
+        <span class="p">)</span>
+
+        <span class="n">tagger</span> <span class="o">=</span> <span class="n">MagicMock</span><span class="p">()</span>
+        <span class="n">tagger</span><span class="o">.</span><span class="n">tag_chunk</span><span class="o">.</span><span class="n">side_effect</span> <span class="o">=</span> <span class="ne">RuntimeError</span><span class="p">(</span><span class="s2">&quot;tagger broke&quot;</span><span class="p">)</span>
+
+        <span class="k">with</span> <span class="n">pytest</span><span class="o">.</span><span class="n">raises</span><span class="p">(</span><span class="n">EmbeddingGenerationError</span><span class="p">)</span> <span class="k">as</span> <span class="n">exc_info</span><span class="p">:</span>
+            <span class="k">await</span> <span class="n">process_participant</span><span class="p">(</span>
+                <span class="n">client</span><span class="o">=</span><span class="n">mock_client</span><span class="p">,</span>
+                <span class="n">transcript_service</span><span class="o">=</span><span class="n">mock_transcript_service</span><span class="p">,</span>
+                <span class="n">participant_id</span><span class="o">=</span><span class="mi">100</span><span class="p">,</span>
+                <span class="n">model</span><span class="o">=</span><span class="s2">&quot;test&quot;</span><span class="p">,</span>
+                <span class="n">dimension</span><span class="o">=</span><span class="mi">3</span><span class="p">,</span>
+                <span class="n">chunk_size</span><span class="o">=</span><span class="mi">8</span><span class="p">,</span>
+                <span class="n">step_size</span><span class="o">=</span><span class="mi">8</span><span class="p">,</span>
+                <span class="n">min_chars</span><span class="o">=</span><span class="mi">10</span><span class="p">,</span>
+                <span class="n">tagger</span><span class="o">=</span><span class="n">tagger</span><span class="p">,</span>
+                <span class="n">allow_partial</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
+            <span class="p">)</span>
+
+        <span class="k">assert</span> <span class="n">exc_info</span><span class="o">.</span><span class="n">value</span><span class="o">.</span><span class="n">participant_id</span> <span class="o">==</span> <span class="mi">100</span>
+        <span class="k">assert</span> <span class="n">exc_info</span><span class="o">.</span><span class="n">value</span><span class="o">.</span><span class="n">chunk_index</span> <span class="o">==</span> <span class="mi">0</span>
+
+
+<span class="k">class</span><span class="w"> </span><span class="nc">TestExitCodes</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Tests for correct exit codes.&quot;&quot;&quot;</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="nf">test_exit_codes_defined</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Exit codes must be correctly defined.&quot;&quot;&quot;</span>
+        <span class="k">assert</span> <span class="n">EXIT_SUCCESS</span> <span class="o">==</span> <span class="mi">0</span>
+        <span class="k">assert</span> <span class="n">EXIT_FAILURE</span> <span class="o">==</span> <span class="mi">1</span>
+        <span class="k">assert</span> <span class="n">EXIT_PARTIAL</span> <span class="o">==</span> <span class="mi">2</span>
+</code></pre></div>
+<hr />
+<h2 id="verification-criteria">Verification Criteria</h2>
+<h3 id="strict-mode-default">Strict Mode (Default)</h3>
+<ul>
+<li>[ ] Missing transcript file → Script crashes with <code>EmbeddingGenerationError</code>, exit 1</li>
+<li>[ ] Embedding API failure → Script crashes with <code>EmbeddingGenerationError</code>, exit 1</li>
+<li>[ ] If <code>--write-item-tags</code> is set and tagging fails → Script crashes (fail-fast; no partial tags)</li>
+<li>[ ] Error message includes participant ID</li>
+<li>[ ] Error message includes chunk index (for chunk failures)</li>
+<li>[ ] Error message suggests <code>--allow-partial</code> as workaround</li>
+</ul>
+<h3 id="partial-mode-allow-partial">Partial Mode (<code>--allow-partial</code>)</h3>
+<ul>
+<li>[ ] Missing transcript → Log warning, skip participant, continue</li>
+<li>[ ] Embedding failure → Log warning, skip chunk, continue</li>
+<li>[ ] Manifest written: <code>{output}.partial.json</code> includes skipped participant IDs + skipped chunk count</li>
+<li>[ ] Summary printed at end: skipped participant IDs, skipped chunk count, manifest path</li>
+<li>[ ] Exit code 2 if any skips occurred</li>
+<li>[ ] Exit code 0 only if zero skips</li>
+</ul>
+<h3 id="backwards-compatibility">Backwards Compatibility</h3>
+<ul>
+<li>[ ] Existing successful runs (no failures) behave identically</li>
+<li>[ ] No new required arguments</li>
+<li>[ ] Default behavior is stricter (fail-fast), not looser</li>
+</ul>
+<h3 id="saving-all-modes">Saving (All Modes)</h3>
+<ul>
+<li>[ ] If any file write fails, <code>{output}.npz</code> / <code>{output}.json</code> / <code>{output}.meta.json</code> are not left in a half-written state (atomic temp→rename)</li>
+<li>[ ] If <code>--write-item-tags</code> is set, <code>{output}.tags.json</code> is always written (even if <code>{}</code>)</li>
+</ul>
+<hr />
+<h2 id="why-this-is-correct-for-research">Why This Is Correct for Research</h2>
+<ol>
+<li><strong>Explicit over implicit</strong>: Failures are visible, not hidden in logs</li>
+<li><strong>Reproducibility</strong>: Same input always produces same output (or fails)</li>
+<li><strong>No silent data corruption</strong>: Incomplete artifacts are impossible in strict mode</li>
+<li><strong>Opt-in flexibility</strong>: <code>--allow-partial</code> exists for debugging, clearly marked as non-production</li>
+<li><strong>Machine-readable</strong>: Exit codes allow CI/scripts to detect partial success</li>
+</ol>
+<hr />
+<h2 id="related">Related</h2>
+<ul>
+<li><strong>Supersedes</strong>: None (this is a new spec)</li>
+<li><strong>Implements</strong>: BUG-042</li>
+<li><strong>Pattern</strong>: Follows Spec 38 "Skip-If-Disabled, Crash-If-Broken" philosophy</li>
+</ul>
+
+
+
+
+
+
+
+
+
+
+
+
+                
+              </article>
+            </div>
+          
+          
+<script>var target=document.getElementById(location.hash.slice(1));target&&target.name&&(target.checked=target.name.startsWith("__tabbed_"))</script>
+        </div>
+        
+      </main>
+      
+        <footer class="md-footer">
+  
+    
+  
+  <div class="md-footer-meta md-typeset">
+    <div class="md-footer-meta__inner md-grid">
+      <div class="md-copyright">
+  
+  
+    Made with
+    <a href="https://squidfunk.github.io/mkdocs-material/" target="_blank" rel="noopener">
+      Material for MkDocs
+    </a>
+  
+</div>
+      
+    </div>
+  </div>
+</footer>
+      
+    </div>
+    <div class="md-dialog" data-md-component="dialog">
+      <div class="md-dialog__inner md-typeset"></div>
+    </div>
+    
+    
+    
+      
+      
+      <script id="__config" type="application/json">{"annotate": null, "base": "../../..", "features": ["content.code.copy", "content.action.edit", "content.action.view", "navigation.tracking", "navigation.sections", "navigation.footer", "navigation.instant"], "search": "../../../assets/javascripts/workers/search.2c215733.min.js", "tags": null, "translations": {"clipboard.copied": "Copied to clipboard", "clipboard.copy": "Copy to clipboard", "search.result.more.one": "1 more on this page", "search.result.more.other": "# more on this page", "search.result.none": "No matching documents", "search.result.one": "1 matching document", "search.result.other": "# matching documents", "search.result.placeholder": "Type to start searching", "search.result.term.missing": "Missing", "select.version": "Select version"}, "version": null}</script>
+    
+    
+      <script src="../../../assets/javascripts/bundle.79ae519e.min.js"></script>
+      
+    
+  </body>
+</html>

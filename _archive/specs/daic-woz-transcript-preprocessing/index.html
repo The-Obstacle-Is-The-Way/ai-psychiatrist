@@ -1,0 +1,3028 @@
+
+<!doctype html>
+<html lang="en" class="no-js">
+  <head>
+    
+      <meta charset="utf-8">
+      <meta name="viewport" content="width=device-width,initial-scale=1">
+      
+      
+      
+        <link rel="canonical" href="https://the-obstacle-is-the-way.github.io/ai-psychiatrist/_archive/specs/daic-woz-transcript-preprocessing/">
+      
+      
+      
+      
+        
+      
+      
+      <link rel="icon" href="../../../assets/images/favicon.png">
+      <meta name="generator" content="mkdocs-1.6.1, mkdocs-material-9.7.1">
+    
+    
+      
+        <title>Spec: DAIC-WOZ Transcript Preprocessing (Bias-Aware, Deterministic Variants) - AI Psychiatrist</title>
+      
+    
+    
+      <link rel="stylesheet" href="../../../assets/stylesheets/main.484c7ddc.min.css">
+      
+      
+
+
+    
+    
+      
+    
+    
+      
+        
+        
+        <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+        <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Roboto:300,300i,400,400i,700,700i%7CRoboto+Mono:400,400i,700,700i&display=fallback">
+        <style>:root{--md-text-font:"Roboto";--md-code-font:"Roboto Mono"}</style>
+      
+    
+    
+    <script>__md_scope=new URL("../../..",location),__md_hash=e=>[...e].reduce(((e,_)=>(e<<5)-e+_.charCodeAt(0)),0),__md_get=(e,_=localStorage,t=__md_scope)=>JSON.parse(_.getItem(t.pathname+"."+e)),__md_set=(e,_,t=localStorage,a=__md_scope)=>{try{t.setItem(a.pathname+"."+e,JSON.stringify(_))}catch(e){}}</script>
+    
+      
+
+    
+    
+  </head>
+  
+  
+    <body dir="ltr">
+  
+    
+    <input class="md-toggle" data-md-toggle="drawer" type="checkbox" id="__drawer" autocomplete="off">
+    <input class="md-toggle" data-md-toggle="search" type="checkbox" id="__search" autocomplete="off">
+    <label class="md-overlay" for="__drawer"></label>
+    <div data-md-component="skip">
+      
+        
+        <a href="#spec-daic-woz-transcript-preprocessing-bias-aware-deterministic-variants" class="md-skip">
+          Skip to content
+        </a>
+      
+    </div>
+    <div data-md-component="announce">
+      
+    </div>
+    
+    
+      
+
+  
+
+<header class="md-header md-header--shadow" data-md-component="header">
+  <nav class="md-header__inner md-grid" aria-label="Header">
+    <a href="../../.." title="AI Psychiatrist" class="md-header__button md-logo" aria-label="AI Psychiatrist" data-md-component="logo">
+      
+  
+  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 8a3 3 0 0 0 3-3 3 3 0 0 0-3-3 3 3 0 0 0-3 3 3 3 0 0 0 3 3m0 3.54C9.64 9.35 6.5 8 3 8v11c3.5 0 6.64 1.35 9 3.54 2.36-2.19 5.5-3.54 9-3.54V8c-3.5 0-6.64 1.35-9 3.54"/></svg>
+
+    </a>
+    <label class="md-header__button md-icon" for="__drawer">
+      
+      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M3 6h18v2H3zm0 5h18v2H3zm0 5h18v2H3z"/></svg>
+    </label>
+    <div class="md-header__title" data-md-component="header-title">
+      <div class="md-header__ellipsis">
+        <div class="md-header__topic">
+          <span class="md-ellipsis">
+            AI Psychiatrist
+          </span>
+        </div>
+        <div class="md-header__topic" data-md-component="header-topic">
+          <span class="md-ellipsis">
+            
+              Spec: DAIC-WOZ Transcript Preprocessing (Bias-Aware, Deterministic Variants)
+            
+          </span>
+        </div>
+      </div>
+    </div>
+    
+    
+      <script>var palette=__md_get("__palette");if(palette&&palette.color){if("(prefers-color-scheme)"===palette.color.media){var media=matchMedia("(prefers-color-scheme: light)"),input=document.querySelector(media.matches?"[data-md-color-media='(prefers-color-scheme: light)']":"[data-md-color-media='(prefers-color-scheme: dark)']");palette.color.media=input.getAttribute("data-md-color-media"),palette.color.scheme=input.getAttribute("data-md-color-scheme"),palette.color.primary=input.getAttribute("data-md-color-primary"),palette.color.accent=input.getAttribute("data-md-color-accent")}for(var[key,value]of Object.entries(palette.color))document.body.setAttribute("data-md-color-"+key,value)}</script>
+    
+    
+    
+      
+      
+        <label class="md-header__button md-icon" for="__search">
+          
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M9.5 3A6.5 6.5 0 0 1 16 9.5c0 1.61-.59 3.09-1.56 4.23l.27.27h.79l5 5-1.5 1.5-5-5v-.79l-.27-.27A6.52 6.52 0 0 1 9.5 16 6.5 6.5 0 0 1 3 9.5 6.5 6.5 0 0 1 9.5 3m0 2C7 5 5 7 5 9.5S7 14 9.5 14 14 12 14 9.5 12 5 9.5 5"/></svg>
+        </label>
+        <div class="md-search" data-md-component="search" role="dialog">
+  <label class="md-search__overlay" for="__search"></label>
+  <div class="md-search__inner" role="search">
+    <form class="md-search__form" name="search">
+      <input type="text" class="md-search__input" name="query" aria-label="Search" placeholder="Search" autocapitalize="off" autocorrect="off" autocomplete="off" spellcheck="false" data-md-component="search-query" required>
+      <label class="md-search__icon md-icon" for="__search">
+        
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M9.5 3A6.5 6.5 0 0 1 16 9.5c0 1.61-.59 3.09-1.56 4.23l.27.27h.79l5 5-1.5 1.5-5-5v-.79l-.27-.27A6.52 6.52 0 0 1 9.5 16 6.5 6.5 0 0 1 3 9.5 6.5 6.5 0 0 1 9.5 3m0 2C7 5 5 7 5 9.5S7 14 9.5 14 14 12 14 9.5 12 5 9.5 5"/></svg>
+        
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M20 11v2H8l5.5 5.5-1.42 1.42L4.16 12l7.92-7.92L13.5 5.5 8 11z"/></svg>
+      </label>
+      <nav class="md-search__options" aria-label="Search">
+        
+        <button type="reset" class="md-search__icon md-icon" title="Clear" aria-label="Clear" tabindex="-1">
+          
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M19 6.41 17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12z"/></svg>
+        </button>
+      </nav>
+      
+    </form>
+    <div class="md-search__output">
+      <div class="md-search__scrollwrap" tabindex="0" data-md-scrollfix>
+        <div class="md-search-result" data-md-component="search-result">
+          <div class="md-search-result__meta">
+            Initializing search
+          </div>
+          <ol class="md-search-result__list" role="presentation"></ol>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+      
+    
+    
+      <div class="md-header__source">
+        <a href="https://github.com/The-Obstacle-Is-The-Way/ai-psychiatrist" title="Go to repository" class="md-source" data-md-component="source">
+  <div class="md-source__icon md-icon">
+    
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 448 512"><!--! Font Awesome Free 7.1.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2025 Fonticons, Inc.--><path d="M439.6 236.1 244 40.5c-5.4-5.5-12.8-8.5-20.4-8.5s-15 3-20.4 8.4L162.5 81l51.5 51.5c27.1-9.1 52.7 16.8 43.4 43.7l49.7 49.7c34.2-11.8 61.2 31 35.5 56.7-26.5 26.5-70.2-2.9-56-37.3L240.3 199v121.9c25.3 12.5 22.3 41.8 9.1 55-6.4 6.4-15.2 10.1-24.3 10.1s-17.8-3.6-24.3-10.1c-17.6-17.6-11.1-46.9 11.2-56v-123c-20.8-8.5-24.6-30.7-18.6-45L142.6 101 8.5 235.1C3 240.6 0 247.9 0 255.5s3 15 8.5 20.4l195.6 195.7c5.4 5.4 12.7 8.4 20.4 8.4s15-3 20.4-8.4l194.7-194.7c5.4-5.4 8.4-12.8 8.4-20.4s-3-15-8.4-20.4"/></svg>
+  </div>
+  <div class="md-source__repository">
+    GitHub
+  </div>
+</a>
+      </div>
+    
+  </nav>
+  
+</header>
+    
+    <div class="md-container" data-md-component="container">
+      
+      
+        
+          
+        
+      
+      <main class="md-main" data-md-component="main">
+        <div class="md-main__inner md-grid">
+          
+            
+              
+              <div class="md-sidebar md-sidebar--primary" data-md-component="sidebar" data-md-type="navigation" >
+                <div class="md-sidebar__scrollwrap">
+                  <div class="md-sidebar__inner">
+                    
+
+
+
+<nav class="md-nav md-nav--primary" aria-label="Navigation" data-md-level="0">
+  <label class="md-nav__title" for="__drawer">
+    <a href="../../.." title="AI Psychiatrist" class="md-nav__button md-logo" aria-label="AI Psychiatrist" data-md-component="logo">
+      
+  
+  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 8a3 3 0 0 0 3-3 3 3 0 0 0-3-3 3 3 0 0 0-3 3 3 3 0 0 0 3 3m0 3.54C9.64 9.35 6.5 8 3 8v11c3.5 0 6.64 1.35 9 3.54 2.36-2.19 5.5-3.54 9-3.54V8c-3.5 0-6.64 1.35-9 3.54"/></svg>
+
+    </a>
+    AI Psychiatrist
+  </label>
+  
+    <div class="md-nav__source">
+      <a href="https://github.com/The-Obstacle-Is-The-Way/ai-psychiatrist" title="Go to repository" class="md-source" data-md-component="source">
+  <div class="md-source__icon md-icon">
+    
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 448 512"><!--! Font Awesome Free 7.1.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2025 Fonticons, Inc.--><path d="M439.6 236.1 244 40.5c-5.4-5.5-12.8-8.5-20.4-8.5s-15 3-20.4 8.4L162.5 81l51.5 51.5c27.1-9.1 52.7 16.8 43.4 43.7l49.7 49.7c34.2-11.8 61.2 31 35.5 56.7-26.5 26.5-70.2-2.9-56-37.3L240.3 199v121.9c25.3 12.5 22.3 41.8 9.1 55-6.4 6.4-15.2 10.1-24.3 10.1s-17.8-3.6-24.3-10.1c-17.6-17.6-11.1-46.9 11.2-56v-123c-20.8-8.5-24.6-30.7-18.6-45L142.6 101 8.5 235.1C3 240.6 0 247.9 0 255.5s3 15 8.5 20.4l195.6 195.7c5.4 5.4 12.7 8.4 20.4 8.4s15-3 20.4-8.4l194.7-194.7c5.4-5.4 8.4-12.8 8.4-20.4s-3-15-8.4-20.4"/></svg>
+  </div>
+  <div class="md-source__repository">
+    GitHub
+  </div>
+</a>
+    </div>
+  
+  <ul class="md-nav__list" data-md-scrollfix>
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../.." class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    AI Psychiatrist Documentation
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    
+    
+    
+    
+      
+        
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--section md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_2" >
+        
+          
+          <label class="md-nav__link" for="__nav_2" id="__nav_2_label" tabindex="">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+     research
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_2_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_2">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+     research
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../_research/hypotheses-explained/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Hypotheses Explained: Current State vs Future Improvements
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../_research/hypotheses-for-improvement/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Hypotheses for Improvement: First-Principles Analysis
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../_research/master-bug-audit/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    MASTER BUG AUDIT
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    
+    
+    
+    
+      
+        
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--section md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_3" >
+        
+          
+          <label class="md-nav__link" for="__nav_3" id="__nav_3_label" tabindex="">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Architecture
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_3_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_3">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    Architecture
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../architecture/architecture/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Architecture
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../architecture/future-architecture/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Future Architecture: Agent Orchestration Options
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../architecture/pipeline/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Pipeline
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    
+    
+    
+    
+      
+        
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--section md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_4" >
+        
+          
+          <label class="md-nav__link" for="__nav_4" id="__nav_4_label" tabindex="">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Clinical
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_4_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_4">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    Clinical
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../clinical/clinical-understanding/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Clinical Understanding: How This System Works
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../clinical/glossary/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Glossary
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../clinical/phq8/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    PHQ-8: Patient Health Questionnaire
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../clinical/task-validity/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Task Validity: What Can (and Cannot) Be Inferred from DAIC-WOZ Transcripts
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    
+    
+    
+    
+      
+        
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--section md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_5" >
+        
+          
+          <label class="md-nav__link" for="__nav_5" id="__nav_5_label" tabindex="">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Configs
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_5_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_5">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    Configs
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../configs/agent-sampling-registry/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Agent Sampling Parameter Registry
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../configs/configuration-philosophy/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Configuration Philosophy
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../configs/configuration/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Configuration Reference
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    
+    
+    
+    
+      
+        
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--section md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_6" >
+        
+          
+          <label class="md-nav__link" for="__nav_6" id="__nav_6_label" tabindex="">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Data
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_6_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_6">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    Data
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../data/artifact-namespace-registry/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Artifact Namespace Registry
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../data/daic-woz-preprocessing/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    DAIC-WOZ Transcript Preprocessing (Bias-Aware, Deterministic)
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../data/daic-woz-schema/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    DAIC-WOZ Dataset Schema
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../data/data-splits-overview/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Data Splits Overview
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    
+    
+    
+    
+      
+        
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--section md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_7" >
+        
+          
+          <label class="md-nav__link" for="__nav_7" id="__nav_7_label" tabindex="">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Developer
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_7_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_7">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    Developer
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../developer/api-endpoints/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    API Reference
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../developer/dependency-registry/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Dependency Registry
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../developer/error-handling/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Error Handling and Fail-Fast Philosophy
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../developer/exceptions/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Exception Reference (Domain + Runtime)
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../developer/testing/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Testing Conventions (Markers, Fixtures, and Test Doubles)
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    
+    
+    
+    
+      
+        
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--section md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_8" >
+        
+          
+          <label class="md-nav__link" for="__nav_8" id="__nav_8_label" tabindex="">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Getting started
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_8_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_8">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    Getting started
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../getting-started/quickstart/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Quickstart Guide
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    
+    
+    
+    
+      
+        
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--section md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_9" >
+        
+          
+          <label class="md-nav__link" for="__nav_9" id="__nav_9_label" tabindex="">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Models
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_9_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_9">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    Models
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../models/model-registry/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    AI Psychiatrist Model Registry
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../models/model-wiring/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Model Wiring: Current State
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    
+    
+    
+    
+      
+        
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--section md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_10" >
+        
+          
+          <label class="md-nav__link" for="__nav_10" id="__nav_10_label" tabindex="">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Pipeline internals
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_10_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_10">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    Pipeline internals
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../pipeline-internals/evidence-extraction/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Evidence Extraction Mechanism: How It Actually Works
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../pipeline-internals/features/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Feature Reference (Non-Archive Canonical)
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    
+    
+    
+    
+      
+        
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--section md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_11" >
+        
+          
+          <label class="md-nav__link" for="__nav_11" id="__nav_11_label" tabindex="">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Preflight checklist
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_11_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_11">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    Preflight checklist
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../preflight-checklist/preflight-checklist-few-shot/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Preflight Checklist: Few-Shot Reproduction
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../preflight-checklist/preflight-checklist-zero-shot/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Preflight Checklist: Zero-Shot Run
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    
+    
+    
+    
+      
+        
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--section md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_12" >
+        
+          
+          <label class="md-nav__link" for="__nav_12" id="__nav_12_label" tabindex="">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Rag
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_12_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_12">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    Rag
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../rag/artifact-generation/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    RAG Artifact Generation
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../rag/chunk-scoring/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Chunk-Level Scoring (Spec 35) — Schema, Workflow, and Gotchas
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../rag/debugging/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    RAG Debugging (Audit Logs + Guardrails)
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../rag/design-rationale/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    RAG Design Rationale
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../rag/overview/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    RAG Overview: Embeddings and Few-Shot Retrieval
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../rag/runtime-features/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    RAG Runtime Features
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    
+    
+    
+    
+      
+        
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--section md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_13" >
+        
+          
+          <label class="md-nav__link" for="__nav_13" id="__nav_13_label" tabindex="">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Results
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_13_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_13">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    Results
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../results/few-shot-analysis/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Why Few-Shot May Not Beat Zero-Shot: Analysis
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../results/reproduction-results/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Paper Reproduction Results (Current Status)
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../results/run-history/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Complete Run History &amp; Statistical Analysis
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../results/run-output-schema/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Reproduction Run Output Schema (JSON + Registry)
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    
+    
+    
+    
+      
+        
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--section md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_14" >
+        
+          
+          <label class="md-nav__link" for="__nav_14" id="__nav_14_label" tabindex="">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Statistics
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_14_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_14">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    Statistics
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../statistics/coverage/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Coverage Explained: What It Is and Why It Matters
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../statistics/metrics-and-evaluation/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Metrics and Evaluation (Exact Definitions + Output Schema)
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../statistics/statistical-methodology-aurc-augrc/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Statistical Methodology: AURC/AUGRC for Selective Prediction
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+  </ul>
+</nav>
+                  </div>
+                </div>
+              </div>
+            
+            
+              
+              <div class="md-sidebar md-sidebar--secondary" data-md-component="sidebar" data-md-type="toc" >
+                <div class="md-sidebar__scrollwrap">
+                  <div class="md-sidebar__inner">
+                    
+
+<nav class="md-nav md-nav--secondary" aria-label="Table of contents">
+  
+  
+  
+    
+  
+  
+    <label class="md-nav__title" for="__toc">
+      <span class="md-nav__icon md-icon"></span>
+      Table of contents
+    </label>
+    <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
+      
+        <li class="md-nav__item">
+  <a href="#0-problem-statement" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        0. Problem Statement
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#1-goals-non-goals" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        1. Goals / Non-Goals
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="1. Goals / Non-Goals">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#11-goals" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        1.1 Goals
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#12-non-goals" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        1.2 Non-Goals
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#2-inputs-raw-untouched" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        2. Inputs (Raw, Untouched)
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="2. Inputs (Raw, Untouched)">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#21-canonical-raw-layout" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        2.1 Canonical raw layout
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#22-raw-data-must-not-be-modified" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        2.2 Raw data must not be modified
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#3-outputs-processed-variants" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        3. Outputs (Processed Variants)
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="3. Outputs (Processed Variants)">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#31-output-directory-convention" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        3.1 Output directory convention
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#32-variant-selection-in-runtime-code" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        3.2 Variant selection in runtime code
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#4-dataset-facts-reference-tool-local-audit" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        4. Dataset Facts (Reference Tool + Local Audit)
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="4. Dataset Facts (Reference Tool + Local Audit)">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#41-known-transcript-mechanical-issues-reference-tool-config" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        4.1 Known transcript mechanical issues (reference tool config)
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#42-local-raw-transcript-audit-expectations" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        4.2 Local raw transcript audit expectations
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#5-variant-definitions" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        5. Variant Definitions
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="5. Variant Definitions">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#51-both_speakers_clean" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        5.1 both_speakers_clean
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#52-participant_only-recommended-for-embeddingsretrieval" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        5.2 participant_only (recommended for embeddings/retrieval)
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#53-participant_qa-minimal-question-context" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        5.3 participant_qa (minimal question context)
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#6-deterministic-cleaning-rules-applied-to-all-variants" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        6. Deterministic Cleaning Rules (Applied to All Variants)
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="6. Deterministic Cleaning Rules (Applied to All Variants)">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#61-parse-schema-validation-fail-fast" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        6.1 Parse + schema validation (fail-fast)
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#62-speaker-normalization-validation-fail-fast" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        6.2 Speaker normalization + validation (fail-fast)
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#63-pre-interview-removal-drop-preamble" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        6.3 Pre-interview removal (drop “preamble”)
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#64-sync-marker-removal" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        6.4 Sync marker removal
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#65-interruption-window-removal-text-safe" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        6.5 Interruption window removal (text-safe)
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#66-preserve-nonverbal-annotations-and-original-case-default" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        6.6 Preserve nonverbal annotations and original case (default)
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#7-preprocessing-cli-contract" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        7. Preprocessing CLI Contract
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="7. Preprocessing CLI Contract">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#71-script-entrypoint" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        7.1 Script entrypoint
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#72-required-flags-behavior" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        7.2 Required flags / behavior
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#8-ground-truth-integrity-phq-8-csvs" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        8. Ground Truth Integrity (PHQ-8 CSVs)
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="8. Ground Truth Integrity (PHQ-8 CSVs)">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#81-missing-phq-8-item-cell-repair-when-applicable" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        8.1 Missing PHQ-8 item cell repair (when applicable)
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#82-phq8_binary-consistency-rule" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        8.2 PHQ8_Binary consistency rule
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#9-collision-free-artifact-workflow-embeddings-tags-chunk-scores" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        9. Collision-Free Artifact Workflow (Embeddings, Tags, Chunk Scores)
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#10-acceptance-criteria-validation" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        10. Acceptance Criteria / Validation
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="10. Acceptance Criteria / Validation">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#101-preprocessing-correctness" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        10.1 Preprocessing correctness
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#102-reproducibility-and-auditability" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        10.2 Reproducibility and auditability
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#103-downstream-compatibility" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        10.3 Downstream compatibility
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#11-related-docs" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        11. Related Docs
+      
+    </span>
+  </a>
+  
+</li>
+      
+    </ul>
+  
+</nav>
+                  </div>
+                </div>
+              </div>
+            
+          
+          
+            <div class="md-content" data-md-component="content">
+              
+              <article class="md-content__inner md-typeset">
+                
+                  
+
+
+  
+    <a href="https://github.com/The-Obstacle-Is-The-Way/ai-psychiatrist/edit/main/docs/_archive/specs/daic-woz-transcript-preprocessing.md" title="Edit this page" class="md-content__button md-icon" rel="edit">
+      
+      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M10 20H6V4h7v5h5v3.1l2-2V8l-6-6H6c-1.1 0-2 .9-2 2v16c0 1.1.9 2 2 2h4zm10.2-7c.1 0 .3.1.4.2l1.3 1.3c.2.2.2.6 0 .8l-1 1-2.1-2.1 1-1c.1-.1.2-.2.4-.2m0 3.9L14.1 23H12v-2.1l6.1-6.1z"/></svg>
+    </a>
+  
+  
+    
+      
+    
+    <a href="https://github.com/The-Obstacle-Is-The-Way/ai-psychiatrist/raw/main/docs/_archive/specs/daic-woz-transcript-preprocessing.md" title="View source of this page" class="md-content__button md-icon">
+      
+      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M17 18c.56 0 1 .44 1 1s-.44 1-1 1-1-.44-1-1 .44-1 1-1m0-3c-2.73 0-5.06 1.66-6 4 .94 2.34 3.27 4 6 4s5.06-1.66 6-4c-.94-2.34-3.27-4-6-4m0 6.5a2.5 2.5 0 0 1-2.5-2.5 2.5 2.5 0 0 1 2.5-2.5 2.5 2.5 0 0 1 2.5 2.5 2.5 2.5 0 0 1-2.5 2.5M9.27 20H6V4h7v5h5v4.07c.7.08 1.36.25 2 .49V8l-6-6H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h4.5a8.2 8.2 0 0 1-1.23-2"/></svg>
+    </a>
+  
+
+
+<h1 id="spec-daic-woz-transcript-preprocessing-bias-aware-deterministic-variants">Spec: DAIC-WOZ Transcript Preprocessing (Bias-Aware, Deterministic Variants)</h1>
+<p><strong>Status</strong>: Implemented
+<strong>Primary implementation</strong>: <code>scripts/preprocess_daic_woz_transcripts.py</code>
+<strong>Integration points</strong>: <code>src/ai_psychiatrist/config.py</code> (<code>DATA_TRANSCRIPTS_DIR</code>), <code>src/ai_psychiatrist/services/transcript.py</code>
+<strong>Verification</strong>: <code>uv run pytest tests/ --tb=short</code> (2026-01-02)</p>
+<h2 id="0-problem-statement">0. Problem Statement</h2>
+<p>DAIC-WOZ transcripts contain:</p>
+<p>1) <strong>Interviewer prompt leakage</strong>: Ellie’s prompts can leak protocol patterns into embedding-based retrieval, biasing few-shot selection before the LLM is prompted.
+2) <strong>Known "mechanical" transcript issues</strong>: e.g., interruption windows and missing Ellie transcripts (sessions 451, 458, 480).
+3) <strong>Potential integrity issues in split CSVs</strong> (depending on upstream copy): missing PHQ-8 item cells and known label inconsistencies (e.g., <code>PHQ8_Binary</code> mismatch).</p>
+<p>We need a deterministic, reproducible preprocessing workflow that creates <strong>collision-free transcript variants</strong> without modifying raw data.</p>
+<h2 id="1-goals-non-goals">1. Goals / Non-Goals</h2>
+<h3 id="11-goals">1.1 Goals</h3>
+<ul>
+<li>Produce <strong>bias-aware transcript variants</strong> (notably participant-only) for embeddings/retrieval.</li>
+<li>Apply deterministic cleanup for known transcript mechanical issues (sync markers, interruptions).</li>
+<li>Guarantee <strong>raw vs processed</strong> inputs never collide (no in-place overwrites).</li>
+<li>Maintain the <strong>directory + filename convention</strong> expected by the codebase.</li>
+<li>Provide a <strong>machine-readable manifest</strong> (counts + warnings; no transcript text) for auditability.</li>
+</ul>
+<h3 id="12-non-goals">1.2 Non-Goals</h3>
+<ul>
+<li>Audio preprocessing / audio-text alignment fixes (reference tool flags misaligned audio sessions; not required for text-only runs).</li>
+<li>“Classical ML” token stripping (e.g., removing <code>&lt;laughter&gt;</code> tokens) by default; this is an explicit ablation, not the default.</li>
+<li>Downloading/unzipping DAIC-WOZ data (handled by dataset prep tooling; this spec focuses on transcript variants once <code>data/transcripts/</code> exists).</li>
+</ul>
+<h2 id="2-inputs-raw-untouched">2. Inputs (Raw, Untouched)</h2>
+<h3 id="21-canonical-raw-layout">2.1 Canonical raw layout</h3>
+<p>Raw transcripts are expected in:</p>
+<div class="highlight"><pre><span></span><code>data/
+  transcripts/
+    300_P/300_TRANSCRIPT.csv
+    ...
+</code></pre></div>
+<p>The transcript file is tab-separated with required columns:</p>
+<div class="highlight"><pre><span></span><code>start_time    stop_time    speaker    value
+</code></pre></div>
+<p>See: <code>docs/data/daic-woz-schema.md</code>.</p>
+<h3 id="22-raw-data-must-not-be-modified">2.2 Raw data must not be modified</h3>
+<ul>
+<li>The preprocessing workflow <strong>must never overwrite</strong> anything under <code>data/transcripts/</code>.</li>
+<li>Processed variants must be written to a distinct directory root (see Section 3).</li>
+</ul>
+<h2 id="3-outputs-processed-variants">3. Outputs (Processed Variants)</h2>
+<h3 id="31-output-directory-convention">3.1 Output directory convention</h3>
+<p>Processed transcripts are written to a new transcripts root that preserves the same on-disk convention:</p>
+<div class="highlight"><pre><span></span><code>data/
+  transcripts_&lt;variant_name&gt;/
+    300_P/300_TRANSCRIPT.csv
+    ...
+</code></pre></div>
+<h3 id="32-variant-selection-in-runtime-code">3.2 Variant selection in runtime code</h3>
+<p>The runtime transcript loader is already configurable via <code>DATA_TRANSCRIPTS_DIR</code>:</p>
+<ul>
+<li><code>src/ai_psychiatrist/config.py</code>: <code>DataSettings.transcripts_dir</code> (env prefix <code>DATA_</code>)</li>
+<li><code>src/ai_psychiatrist/services/transcript.py</code>: <code>TranscriptService</code> reads <code>data_settings.transcripts_dir</code></li>
+</ul>
+<p>Example:</p>
+<div class="highlight"><pre><span></span><code><span class="nb">export</span><span class="w"> </span><span class="nv">DATA_TRANSCRIPTS_DIR</span><span class="o">=</span>data/transcripts_participant_only
+</code></pre></div>
+<p>No code changes are required to select a variant: only configuration changes.</p>
+<h2 id="4-dataset-facts-reference-tool-local-audit">4. Dataset Facts (Reference Tool + Local Audit)</h2>
+<p>This implementation is aligned with the widely used Bailey/Plumbley DAIC-WOZ preprocessing tool mirrored under <code>_reference/daic_woz_process/</code>.</p>
+<h3 id="41-known-transcript-mechanical-issues-reference-tool-config">4.1 Known transcript mechanical issues (reference tool config)</h3>
+<p>From <code>_reference/daic_woz_process/config_files/config_process.py</code>:</p>
+<ul>
+<li><strong>Interruption windows</strong> (drop rows overlapping these time ranges):</li>
+<li><code>373</code>: <code>[395, 428]</code> seconds</li>
+<li><code>444</code>: <code>[286, 387]</code> seconds</li>
+<li><strong>Missing Ellie transcripts</strong> (participant-only transcripts exist):</li>
+<li><code>451</code>, <code>458</code>, <code>480</code></li>
+<li><strong>Audio-text misalignment offsets</strong> (text is usable; offsets for audio sync):</li>
+<li><code>318</code>: <code>34.319917</code> seconds</li>
+<li><code>321</code>: <code>3.8379167</code> seconds</li>
+<li><code>341</code>: <code>6.1892</code> seconds</li>
+<li><code>362</code>: <code>16.8582</code> seconds</li>
+<li><strong>Known label issue</strong>:</li>
+<li><code>wrong_labels = {409: 1}</code> (<code>PHQ8_Binary</code> mismatch for score ≥ 10)</li>
+<li><strong>Absent sessions</strong> (no data at all):</li>
+<li><code>excluded_sessions = [342, 394, 398, 460]</code></li>
+</ul>
+<h3 id="42-local-raw-transcript-audit-expectations">4.2 Local raw transcript audit expectations</h3>
+<p>On a complete DAIC-WOZ transcript dump under <code>data/transcripts/</code>, the following checks should hold:</p>
+<ul>
+<li>Transcript file count: <code>189</code></li>
+<li>Speakers present: only <code>Ellie</code> and <code>Participant</code></li>
+<li>Missing Ellie sessions: <code>451</code>, <code>458</code>, <code>480</code> contain no Ellie rows</li>
+<li>Interruption-window overlap counts (rows removed if applying interruption rule):</li>
+<li><code>373</code>: <code>5</code> rows overlap <code>[395, 428]</code></li>
+<li><code>444</code>: <code>37</code> rows overlap <code>[286, 387]</code></li>
+</ul>
+<p>These are <strong>data-validation expectations</strong>, not hard-coded invariants: the preprocessing should handle deviations by warning/fail-fast depending on severity (see Section 6).</p>
+<h2 id="5-variant-definitions">5. Variant Definitions</h2>
+<p>All variants apply the same <strong>deterministic cleaning rules</strong> (Section 6) first, then apply a variant-specific speaker selection rule.</p>
+<h3 id="51-both_speakers_clean">5.1 <code>both_speakers_clean</code></h3>
+<ul>
+<li>Keep all cleaned rows for both speakers.</li>
+<li>Intended for “paper-parity-ish” text runs where you want noise removal without removing Ellie entirely.</li>
+</ul>
+<h3 id="52-participant_only-recommended-for-embeddingsretrieval">5.2 <code>participant_only</code> (recommended for embeddings/retrieval)</h3>
+<ul>
+<li>Keep only rows where <code>speaker == "Participant"</code> after cleaning.</li>
+<li>Rationale: minimizes interviewer protocol leakage in embedding generation and retrieval.</li>
+</ul>
+<h3 id="53-participant_qa-minimal-question-context">5.3 <code>participant_qa</code> (minimal question context)</h3>
+<ul>
+<li>Keep all participant rows, plus the most recent prior Ellie prompt <strong>once</strong> per contiguous participant block.</li>
+</ul>
+<p>Deterministic rule:
+- When a participant row is kept, include the most recent prior Ellie row (if any) <strong>exactly once</strong> until another Ellie row appears.</p>
+<h2 id="6-deterministic-cleaning-rules-applied-to-all-variants">6. Deterministic Cleaning Rules (Applied to All Variants)</h2>
+<h3 id="61-parse-schema-validation-fail-fast">6.1 Parse + schema validation (fail-fast)</h3>
+<p>For each <code>{pid}_TRANSCRIPT.csv</code>:</p>
+<ul>
+<li>Must contain columns: <code>start_time</code>, <code>stop_time</code>, <code>speaker</code>, <code>value</code></li>
+<li>If required columns are missing: <strong>fail</strong> preprocessing for that transcript (do not silently continue)</li>
+<li>Drop rows where <code>speaker</code> or <code>value</code> is missing/NaN</li>
+</ul>
+<h3 id="62-speaker-normalization-validation-fail-fast">6.2 Speaker normalization + validation (fail-fast)</h3>
+<p>Normalize <code>speaker</code> values by trimming and case-folding:</p>
+<ul>
+<li><code>"ellie"</code> → <code>"Ellie"</code></li>
+<li><code>"participant"</code> → <code>"Participant"</code></li>
+</ul>
+<p>After normalization:
+- If any speaker value is not in <code>{Ellie, Participant}</code>: <strong>fail</strong> preprocessing for that transcript.</p>
+<h3 id="63-pre-interview-removal-drop-preamble">6.3 Pre-interview removal (drop “preamble”)</h3>
+<p>If Ellie is present:
+- Find the first row where <code>speaker == "Ellie"</code>.
+- Drop all rows before it.</p>
+<p>If Ellie is not present:
+- This is expected only for sessions <code>{451, 458, 480}</code>.
+- Drop leading sync markers / empty rows until the first non-empty, non-sync row.
+- If Ellie is absent for a session not in the known list: do not fail; emit a <strong>warning</strong> (to avoid hard-coding assumptions that may vary across dataset copies).</p>
+<h3 id="64-sync-marker-removal">6.4 Sync marker removal</h3>
+<p>Drop rows whose <code>value</code> is a sync marker.</p>
+<p>Must match these canonical markers (case-insensitive, whitespace-trimmed), tolerating minor punctuation:</p>
+<ul>
+<li><code>&lt;sync&gt;</code>, <code>&lt;synch&gt;</code></li>
+<li><code>[sync]</code>, <code>[synch]</code>, <code>[syncing]</code>, <code>[synching]</code></li>
+<li>plus any value whose normalized form starts with <code>&lt;sync</code> or <code>[sync</code></li>
+</ul>
+<h3 id="65-interruption-window-removal-text-safe">6.5 Interruption window removal (text-safe)</h3>
+<p>Drop rows overlapping known interruption windows:</p>
+<ul>
+<li><code>373</code>: <code>[395, 428]</code></li>
+<li><code>444</code>: <code>[286, 387]</code></li>
+</ul>
+<p>Row/window overlap definition:</p>
+<div class="highlight"><pre><span></span><code>row_start &lt; window_end AND row_end &gt; window_start
+</code></pre></div>
+<h3 id="66-preserve-nonverbal-annotations-and-original-case-default">6.6 Preserve nonverbal annotations and original case (default)</h3>
+<p>Do not delete tokens like <code>&lt;laughter&gt;</code> / <code>&lt;sigh&gt;</code> by default, because these can carry affective signal for LLM reasoning.</p>
+<p>Do not lowercase text. The reference tool lowercases all text (for Word2Vec), but LLMs can use case as a signal (e.g., "I'm REALLY tired" vs "i'm really tired").</p>
+<p><strong>Differences from reference tool (intentional)</strong>:</p>
+<table>
+<thead>
+<tr>
+<th>Behavior</th>
+<th>Reference Tool</th>
+<th>This Spec (Default)</th>
+<th>Rationale</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Lowercase text</td>
+<td>✓ <code>.lower()</code></td>
+<td>✗ Preserve case</td>
+<td>LLM affective signal</td>
+</tr>
+<tr>
+<td>Strip <code>xxx</code>/<code>xxxx</code></td>
+<td>✓</td>
+<td>✗ Preserve</td>
+<td>Placeholder may indicate hesitation</td>
+</tr>
+<tr>
+<td>Strip <code>&lt; &gt; [ ]</code> tokens</td>
+<td>✓ All such tokens</td>
+<td>✗ Preserve</td>
+<td><code>&lt;laughter&gt;</code> is affectively informative</td>
+</tr>
+</tbody>
+</table>
+<p>The reference tool (<code>_reference/daic_woz_process/utils/utilities.py</code>, <code>remove_words_symbols()</code>) strips:</p>
+<ul>
+<li><code>words_to_remove = {'xxx', 'xxxx', ' ', '  ', '   ', '    ', '     '}</code></li>
+<li>Any token containing <code>symbols_to_remove = ['&lt;', '&gt;', '[', ']']</code></li>
+</ul>
+<p>These behaviors are appropriate for Word2Vec/classical ML but not for LLM-based reasoning. If an ablation requires reference-parity stripping, implement it as a separate variant (<code>participant_only_stripped</code>).</p>
+<h2 id="7-preprocessing-cli-contract">7. Preprocessing CLI Contract</h2>
+<h3 id="71-script-entrypoint">7.1 Script entrypoint</h3>
+<p>Provide a deterministic CLI at:</p>
+<ul>
+<li><code>scripts/preprocess_daic_woz_transcripts.py</code></li>
+</ul>
+<h3 id="72-required-flags-behavior">7.2 Required flags / behavior</h3>
+<ul>
+<li><code>--input-dir</code> (default <code>data/transcripts</code>)</li>
+<li><code>--output-dir</code> (required)</li>
+<li><code>--variant</code> in <code>{both_speakers_clean, participant_only, participant_qa}</code> (default <code>participant_only</code>)</li>
+<li><code>--overwrite</code> to delete an existing output dir (explicit opt-in)</li>
+<li><code>--dry-run</code> to validate and compute stats without writing outputs</li>
+</ul>
+<p>Safety constraints:</p>
+<ul>
+<li>Refuse to run if <code>--output-dir</code> resolves to the same path as <code>--input-dir</code>.</li>
+</ul>
+<p>Atomicity:</p>
+<ul>
+<li>Write outputs to a staging directory (e.g., <code>output_dir.tmp</code>) and rename to <code>output_dir</code> only on success.</li>
+<li>On failure, remove staging output to avoid partial/corrupt processed datasets.</li>
+</ul>
+<p>Audit output:</p>
+<ul>
+<li>When writing outputs (non-dry-run), write <code>preprocess_manifest.json</code> containing:</li>
+<li>counts (rows in/out)</li>
+<li>per-file removals by category</li>
+<li>warnings</li>
+<li>no transcript text</li>
+</ul>
+<h2 id="8-ground-truth-integrity-phq-8-csvs">8. Ground Truth Integrity (PHQ-8 CSVs)</h2>
+<p>These are deterministic repairs and should be treated as integrity fixes, not statistical imputation.</p>
+<h3 id="81-missing-phq-8-item-cell-repair-when-applicable">8.1 Missing PHQ-8 item cell repair (when applicable)</h3>
+<p>If exactly one PHQ-8 item is missing and <code>PHQ8_Score</code> is present:</p>
+<div class="highlight"><pre><span></span><code>missing_item = PHQ8_Score - sum(known_items)
+</code></pre></div>
+<p>Tooling:</p>
+<ul>
+<li><code>uv run python scripts/patch_missing_phq8_values.py --dry-run</code></li>
+<li><code>uv run python scripts/patch_missing_phq8_values.py --apply</code></li>
+</ul>
+<p>Doc: <code>docs/data/patch-missing-phq8-values.md</code></p>
+<h3 id="82-phq8_binary-consistency-rule">8.2 <code>PHQ8_Binary</code> consistency rule</h3>
+<p>Treat:</p>
+<div class="highlight"><pre><span></span><code>PHQ8_Binary = 1 iff PHQ8_Score &gt;= 10
+</code></pre></div>
+<p>Known upstream issue to account for: Participant <code>409</code> has been observed with <code>PHQ8_Score=10</code> but <code>PHQ8_Binary=0</code> in some copies.</p>
+<h2 id="9-collision-free-artifact-workflow-embeddings-tags-chunk-scores">9. Collision-Free Artifact Workflow (Embeddings, Tags, Chunk Scores)</h2>
+<p>To avoid mixing artifacts from different transcript variants:</p>
+<p>1) Keep raw transcripts in <code>data/transcripts/</code>
+2) Generate a processed variant in <code>data/transcripts_&lt;variant&gt;/</code>
+3) Set <code>DATA_TRANSCRIPTS_DIR</code> to that variant
+4) Generate embeddings with a variant-stamped artifact name
+5) Ensure <code>.tags.json</code> and <code>.chunk_scores.json</code> correspond to the same embeddings base name</p>
+<p>See:</p>
+<ul>
+<li><code>docs/data/artifact-namespace-registry.md</code></li>
+<li><code>docs/embeddings/embedding-generation.md</code></li>
+</ul>
+<h2 id="10-acceptance-criteria-validation">10. Acceptance Criteria / Validation</h2>
+<h3 id="101-preprocessing-correctness">10.1 Preprocessing correctness</h3>
+<ul>
+<li>Preprocessing completes without error across all transcripts in <code>data/transcripts/</code>.</li>
+<li>Output transcript files preserve the <code>{pid}_P/{pid}_TRANSCRIPT.csv</code> convention.</li>
+<li>Every output transcript contains at least one participant utterance.</li>
+<li>Sessions <code>451/458/480</code> are processed without failure (Ellie absent).</li>
+<li>Sessions <code>373/444</code> have rows removed overlapping the specified windows.</li>
+</ul>
+<h3 id="102-reproducibility-and-auditability">10.2 Reproducibility and auditability</h3>
+<ul>
+<li>Output directory includes <code>preprocess_manifest.json</code> (no transcript text).</li>
+<li>Re-running with identical inputs and settings produces identical outputs.</li>
+</ul>
+<h3 id="103-downstream-compatibility">10.3 Downstream compatibility</h3>
+<ul>
+<li>Setting <code>DATA_TRANSCRIPTS_DIR</code> to the output directory results in successful transcript loads via <code>TranscriptService</code>.</li>
+<li>Embeddings generation succeeds against the processed transcripts directory when configured.</li>
+</ul>
+<h2 id="11-related-docs">11. Related Docs</h2>
+<ul>
+<li>User-facing guide (overview + rationale): <code>docs/data/daic-woz-preprocessing.md</code></li>
+<li>Local audit notes: <code>docs/_brainstorming/daic-woz-preprocessing.md</code></li>
+<li>DAIC-WOZ schema: <code>docs/data/daic-woz-schema.md</code></li>
+<li>Reference preprocessing repo mirror: <code>_reference/daic_woz_process/</code></li>
+</ul>
+
+
+
+
+
+
+
+
+
+
+
+
+                
+              </article>
+            </div>
+          
+          
+<script>var target=document.getElementById(location.hash.slice(1));target&&target.name&&(target.checked=target.name.startsWith("__tabbed_"))</script>
+        </div>
+        
+      </main>
+      
+        <footer class="md-footer">
+  
+    
+  
+  <div class="md-footer-meta md-typeset">
+    <div class="md-footer-meta__inner md-grid">
+      <div class="md-copyright">
+  
+  
+    Made with
+    <a href="https://squidfunk.github.io/mkdocs-material/" target="_blank" rel="noopener">
+      Material for MkDocs
+    </a>
+  
+</div>
+      
+    </div>
+  </div>
+</footer>
+      
+    </div>
+    <div class="md-dialog" data-md-component="dialog">
+      <div class="md-dialog__inner md-typeset"></div>
+    </div>
+    
+    
+    
+      
+      
+      <script id="__config" type="application/json">{"annotate": null, "base": "../../..", "features": ["content.code.copy", "content.action.edit", "content.action.view", "navigation.tracking", "navigation.sections", "navigation.footer", "navigation.instant"], "search": "../../../assets/javascripts/workers/search.2c215733.min.js", "tags": null, "translations": {"clipboard.copied": "Copied to clipboard", "clipboard.copy": "Copy to clipboard", "search.result.more.one": "1 more on this page", "search.result.more.other": "# more on this page", "search.result.none": "No matching documents", "search.result.one": "1 matching document", "search.result.other": "# matching documents", "search.result.placeholder": "Type to start searching", "search.result.term.missing": "Missing", "select.version": "Select version"}, "version": null}</script>
+    
+    
+      <script src="../../../assets/javascripts/bundle.79ae519e.min.js"></script>
+      
+    
+  </body>
+</html>
